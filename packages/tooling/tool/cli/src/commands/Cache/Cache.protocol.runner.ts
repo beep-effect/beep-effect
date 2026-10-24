@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { $RepoCliId } from "@beep/identity/packages";
 import { CacheClientPin } from "@beep/repo-configs/cache";
 import { Sha256HexFromBytes } from "@beep/schema";
 import * as A from "effect/Array";
@@ -42,13 +43,27 @@ import { CacheProtocolObservation } from "./Cache.protocol.schemas.ts";
 import { validateCacheProtocolExecution } from "./Cache.protocol.ts";
 import { CacheCommandError } from "./Cache.schemas.ts";
 
+const $I = $RepoCliId.create("commands/Cache/Cache.protocol.runner");
 const CacheProtocolJson = S.fromJsonString(S.Json);
 
 const cases = CacheProtocolIsolationRoot.fields.case;
 const extraCase = S.is(CacheProtocolReadFailure.fields.case);
 const hashBytes = S.decodeEffect(Sha256HexFromBytes);
 const bound = OutputBound.make({ maxChars: 64 * 1024, truncatedNotice: "capture exceeded bound" });
-const systemMounts = [
+/**
+ * Read-only host system mounts shared by the bubblewrap sandboxes that run native Turbo.
+ *
+ * **Example** (Inspect the sandbox mounts)
+ * ```ts
+ * import { cacheProtocolSandboxMounts } from "@beep/repo-cli/commands/Cache"
+ * console.assert(cacheProtocolSandboxMounts.includes("--die-with-parent"))
+ * ```
+ *
+ * @internal
+ * @category fixtures
+ * @since 0.0.0
+ */
+export const cacheProtocolSandboxMounts: ReadonlyArray<string> = [
   "--die-with-parent",
   "--new-session",
   "--ro-bind",
@@ -70,18 +85,40 @@ const systemMounts = [
   "--tmpfs",
   "/tmp",
 ];
-// External Turbo summary boundary: select evidence, never trust an asserted hit.
-const NativeSummary = S.Struct({
-  turboVersion: S.NonEmptyString,
-  tasks: S.Array(
-    S.Struct({
-      taskId: S.NonEmptyString,
-      hash: S.NonEmptyString,
-      cache: S.Struct({ status: S.Literals(["HIT", "MISS"]), source: S.OptionFromOptionalKey(S.String) }),
-      execution: S.Struct({ exitCode: S.Int }),
+/**
+ * External Turbo `--summarize` boundary: select evidence, never trust an asserted hit.
+ *
+ * **Example** (Inspect the summary task fields)
+ * ```ts
+ * import { CacheProtocolNativeSummary } from "@beep/repo-cli/commands/Cache"
+ * console.assert("tasks" in CacheProtocolNativeSummary.fields)
+ * ```
+ *
+ * @internal
+ * @category schemas
+ * @since 0.0.0
+ */
+export class CacheProtocolNativeSummary extends S.Opaque<
+  CacheProtocolNativeSummary,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    turboVersion: S.NonEmptyString,
+    tasks: S.Array(
+      S.Struct({
+        taskId: S.NonEmptyString,
+        hash: S.NonEmptyString,
+        cache: S.Struct({ status: S.Literals(["HIT", "MISS"]), source: S.OptionFromOptionalKey(S.String) }),
+        execution: S.Struct({ exitCode: S.Int }),
+      })
+    ),
+  }).pipe(
+    $I.annoteSchema("CacheProtocolNativeSummary", {
+      description:
+        "Selected fields of one native Turbo run summary; a reported hit is evidence only with wire receipts.",
     })
-  ),
-});
+  )
+) {}
 
 const verifyPrivateNetwork = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
@@ -224,7 +261,7 @@ export const runCacheProtocolWorker = Effect.fn("CacheProtocol.worker")(
           "--unshare-pid",
           "--unshare-ipc",
           "--unshare-uts",
-          ...systemMounts,
+          ...cacheProtocolSandboxMounts,
           "--dir",
           "/tools",
           "--ro-bind",
@@ -272,7 +309,7 @@ export const runCacheProtocolWorker = Effect.fn("CacheProtocol.worker")(
       if (names.length !== 1) return yield* CacheCommandError.new("Protocol run requires exactly one native summary.");
       const bytes = yield* readCacheExperimentBytes(work, path.join(".turbo/runs", O.getOrThrow(A.head(names))));
       const summary = yield* decodeCacheExperimentText(bytes).pipe(
-        Effect.flatMap(JsonStringCodec(NativeSummary).decode)
+        Effect.flatMap(JsonStringCodec(CacheProtocolNativeSummary).decode)
       );
       const task = yield* A.head(summary.tasks).pipe(
         Effect.fromOption(() => CacheCommandError.new("Protocol task did not execute."))
@@ -458,7 +495,7 @@ export const runCacheProtocolExperiment = Effect.fn("CacheProtocol.experiment")(
           command: "/usr/bin/bwrap",
           args: [
             "--unshare-all",
-            ...systemMounts,
+            ...cacheProtocolSandboxMounts,
             "--ro-bind",
             root,
             root,

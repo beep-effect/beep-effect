@@ -1,0 +1,74 @@
+{
+  "schemaVersion": "cache-conformance-evidence/v1",
+  "source": "goals/turborepo-cache-conformance/research/aws-lab-c1023a.json",
+  "observedAt": "2026-10-24",
+  "profile": "disposable-deployment",
+  "topologies": ["beep-incumbent"],
+  "checks": [
+    {
+      "case": "RC-012",
+      "dimension": "beep-security-policy",
+      "verdict": "pass",
+      "expectation": "reader-role-storage-write-denied",
+      "detail": "IAM simulate-principal-policy on the lab read role: s3:PutObject and s3:DeleteObject implicitDeny on the lab bucket."
+    },
+    {
+      "case": "RC-029",
+      "dimension": "observability",
+      "verdict": "pass",
+      "expectation": "expiry-rule-explicit",
+      "detail": "Bucket lifecycle rule expire-stale-cache-artifacts: enabled, 30-day expiry, incomplete multipart abort after 1 day."
+    },
+    {
+      "case": "RC-029",
+      "dimension": "beep-security-policy",
+      "verdict": "fail",
+      "expectation": "namespace-scoped-cleanup",
+      "detail": "Bucket policy DenyObjectAccessOutsideCacheRoles denies every object action outside the cache roles and neither role may delete, so no namespace or epoch can be cleaned up selectively; only whole-bucket expiry. Attributed to the deliberate no-delete integrity design."
+    },
+    {
+      "case": "RC-030",
+      "dimension": "observability",
+      "verdict": "pass",
+      "expectation": "no-secret-or-content-in-logs",
+      "detail": "All three function log groups searched for a synthetic bearer, a synthetic tag value, an artifact-content marker and both lab bearers: no occurrence."
+    },
+    {
+      "case": "RC-030",
+      "dimension": "beep-security-policy",
+      "verdict": "pass",
+      "expectation": "no-secret-or-content-in-logs",
+      "detail": "Same scan; bearer and content values are absent from reader, writer and authorizer logs."
+    },
+    {
+      "case": "RC-031",
+      "dimension": "observability",
+      "verdict": "fail",
+      "expectation": "client-backend-correlation",
+      "detail": "The client-visible apigw-requestid of a PUT and a GET appears in no function log; the stage has no access logs; neither the Lambda RequestId nor the shim reqId reaches the client."
+    },
+    {
+      "case": "RC-013",
+      "dimension": "beep-security-policy",
+      "verdict": "pass",
+      "expectation": "writer-direct-invoke-requires-signature",
+      "detail": "Direct lambda:Invoke of the writer with a PUT event lacking the authorizer signature returned statusCode 403 and created no object. Run as the operator principal: proves the HMAC gate, not invoke permissions of other principals."
+    },
+    {
+      "case": "RC-032",
+      "dimension": "beep-security-policy",
+      "verdict": "pass",
+      "expectation": "rehearsed-cutback-no-mixed-writes",
+      "detail": "AWS drill 2026-10-24: prior incumbent write Y (200); cutover write X to the evolved endpoint (200, readable there); cutback: incumbent GET X 404 (no mixed restore), incumbent GET Y 200 with identical bytes; incumbent write Z 200 and evolved GET Z 404. Endpoints, buckets and epochs stay disjoint; the deployed ZIP (sha256 f865fed9\u2026) and shim integrity are pinned in aws-lab-c1023a.json."
+    }
+  ],
+  "obligations": [
+    {
+      "gate": 12,
+      "obligation": "maintenance",
+      "verdict": "pass",
+      "expectation": "upstream-release-cadence",
+      "detail": "Registry and GitHub release queries on 2026-10-23: Bruno 4.0.18/4.0.19/4.0.20 on 09-08/10-05/10-13; Ducktors 2.14.2/2.14.3/2.14.4 on 10-02/10-07/10-23. The incumbent shim pins Ducktors 2.12.0, two minors behind an active upstream. All MIT."
+    }
+  ]
+}

@@ -1,0 +1,1788 @@
+{
+  "schemaVersion": "cache-conformance-run/v1",
+  "profile": "local-container",
+  "representative": false,
+  "executors": ["native"],
+  "clients": [
+    {
+      "channel": "stable",
+      "version": "2.11.10",
+      "executableSha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6"
+    }
+  ],
+  "topology": "beep-incumbent-evolved",
+  "backend": {
+    "id": "turborepo-remote-cache",
+    "release": "2.12.0+tag-passthrough",
+    "digest": "sha512-X34C/eyL+cIDQRDBAln0zEa5QsqpCbbbxS7qtiIhgmNGKlQQPFPo6snbOyq7xhRfVKFeyVEIAypTrR7XDZV6pw=="
+  },
+  "policy": {
+    "readerWriterSplit": true,
+    "tenantBinding": false
+  },
+  "corpus": {
+    "specSha256": "1080314512226dc48535fe24648fc0abb10c1cd405c1fd74eacfdc95e22d70b8",
+    "sourcePlanSha256": "20ab0c9fdf030c3941be72dc780ee2cc48fb7432e7edbfbc86366846abc35b8b"
+  },
+  "startedAt": "2026-10-24T02:46:49.259Z",
+  "cases": [
+    {
+      "id": "RC-001",
+      "executor": "wire",
+      "exchanges": [],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        },
+        "published-stable-client": {
+          "verdict": "not-applicable"
+        },
+        "published-canary-client": {
+          "verdict": "not-applicable"
+        },
+        "beep-security-policy": {
+          "verdict": "not-applicable"
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-002",
+      "executor": "wire",
+      "exchanges": [],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        },
+        "published-stable-client": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        },
+        "published-canary-client": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        },
+        "beep-security-policy": {
+          "verdict": "not-applicable"
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-003",
+      "executor": "wire",
+      "exchanges": [],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        },
+        "published-stable-client": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        },
+        "published-canary-client": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        },
+        "beep-security-policy": {
+          "verdict": "not-applicable"
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-004",
+      "executor": "wire",
+      "exchanges": [],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        },
+        "published-stable-client": {
+          "verdict": "not-applicable"
+        },
+        "published-canary-client": {
+          "verdict": "not-applicable"
+        },
+        "beep-security-policy": {
+          "verdict": "not-applicable"
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-005",
+      "executor": "wire",
+      "exchanges": [],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        },
+        "published-stable-client": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        },
+        "published-canary-client": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        },
+        "beep-security-policy": {
+          "verdict": "not-applicable"
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-006",
+      "executor": "wire",
+      "exchanges": [],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        },
+        "published-stable-client": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        },
+        "published-canary-client": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        },
+        "beep-security-policy": {
+          "verdict": "not-applicable"
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-007",
+      "executor": "wire",
+      "exchanges": [],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        },
+        "published-stable-client": {
+          "verdict": "not-applicable"
+        },
+        "published-canary-client": {
+          "verdict": "not-applicable"
+        },
+        "beep-security-policy": {
+          "verdict": "not-applicable"
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-008",
+      "executor": "wire",
+      "exchanges": [],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        },
+        "published-stable-client": {
+          "verdict": "not-applicable"
+        },
+        "published-canary-client": {
+          "verdict": "not-applicable"
+        },
+        "beep-security-policy": {
+          "verdict": "not-applicable"
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-009",
+      "executor": "native",
+      "exchanges": [
+        {
+          "step": "proxy-get-producer",
+          "role": "writer",
+          "method": "GET",
+          "route": "/v8/artifacts/status",
+          "operationId": "getArtifactStatus",
+          "strictScored": true,
+          "selector": "run-epoch",
+          "hash": "none",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 40,
+          "responseSha256": "8f4844620c64d31cc24eb736e3b52790752b39744f98cf32810bf3e1225cfd53",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 5
+        },
+        {
+          "step": "proxy-get-producer",
+          "role": "writer",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "run-epoch",
+          "hash": "valid",
+          "outcome": "miss",
+          "status": 404,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 73,
+          "responseSha256": "55ad7b77f22f6772ef7d6dcb18f1a77d9e33b351b4d7e01b5d998fbc6b6e01e4",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 3
+        },
+        {
+          "step": "proxy-post-producer",
+          "role": "writer",
+          "method": "POST",
+          "route": "/v8/artifacts/events",
+          "operationId": "recordCacheEvents",
+          "strictScored": true,
+          "selector": "run-epoch",
+          "hash": "none",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 126,
+          "requestSha256": "de15077588d92a69ff19baa79542d908ac93d15a1cf39ceb7297feb6b4f166eb",
+          "requestTagSha256": null,
+          "responseBytes": 2,
+          "responseSha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 2
+        },
+        {
+          "step": "proxy-put-producer",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "run-epoch",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 193,
+          "requestSha256": "2dda93702fe0abdef7d97ce962c77a2c4fe476fd79ffddac428da13a1a47f18e",
+          "requestTagSha256": "b80543b1f12e5f089f8117283395d292b53faad131fa7156d86e01e424134a69",
+          "responseBytes": 54,
+          "responseSha256": "6e87b80d6100cbae0a6eed810671cd496232532d2fc662042b7146d4e3ba6a34",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 4
+        },
+        {
+          "step": "proxy-get-replay",
+          "role": "reader",
+          "method": "GET",
+          "route": "/v8/artifacts/status",
+          "operationId": "getArtifactStatus",
+          "strictScored": true,
+          "selector": "run-epoch",
+          "hash": "none",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 40,
+          "responseSha256": "8f4844620c64d31cc24eb736e3b52790752b39744f98cf32810bf3e1225cfd53",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 2
+        },
+        {
+          "step": "proxy-get-replay",
+          "role": "reader",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "run-epoch",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 193,
+          "responseSha256": "2dda93702fe0abdef7d97ce962c77a2c4fe476fd79ffddac428da13a1a47f18e",
+          "tagPresent": true,
+          "tagSha256": "b80543b1f12e5f089f8117283395d292b53faad131fa7156d86e01e424134a69",
+          "durationPresent": false,
+          "elapsedMs": 5
+        },
+        {
+          "step": "proxy-post-replay",
+          "role": "reader",
+          "method": "POST",
+          "route": "/v8/artifacts/events",
+          "operationId": "recordCacheEvents",
+          "strictScored": true,
+          "selector": "run-epoch",
+          "hash": "none",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 125,
+          "requestSha256": "f9fb31110d2cc651b80561d1044fa8a994c204e4444754f6a30a72646fff441f",
+          "requestTagSha256": null,
+          "responseBytes": 2,
+          "responseSha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        }
+      ],
+      "notes": [
+        "producer: exit 0, MISS, output present",
+        "replay: exit 0, HIT REMOTE, output present"
+      ],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-executed",
+          "reason": "The native run scores only client dimensions and RC-022 namespace isolation."
+        },
+        "published-stable-client": {
+          "verdict": "pass"
+        },
+        "published-canary-client": {
+          "verdict": "not-executed",
+          "reason": "Scored by the other channel's native run."
+        },
+        "beep-security-policy": {
+          "verdict": "not-applicable"
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-010",
+      "executor": "native",
+      "exchanges": [
+        {
+          "step": "proxy-get-producer",
+          "role": "writer",
+          "method": "GET",
+          "route": "/v8/artifacts/status",
+          "operationId": "getArtifactStatus",
+          "strictScored": true,
+          "selector": "run-epoch",
+          "hash": "none",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 40,
+          "responseSha256": "8f4844620c64d31cc24eb736e3b52790752b39744f98cf32810bf3e1225cfd53",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 5
+        },
+        {
+          "step": "proxy-get-producer",
+          "role": "writer",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "run-epoch",
+          "hash": "valid",
+          "outcome": "miss",
+          "status": 404,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 73,
+          "responseSha256": "55ad7b77f22f6772ef7d6dcb18f1a77d9e33b351b4d7e01b5d998fbc6b6e01e4",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 3
+        },
+        {
+          "step": "proxy-post-producer",
+          "role": "writer",
+          "method": "POST",
+          "route": "/v8/artifacts/events",
+          "operationId": "recordCacheEvents",
+          "strictScored": true,
+          "selector": "run-epoch",
+          "hash": "none",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 126,
+          "requestSha256": "de15077588d92a69ff19baa79542d908ac93d15a1cf39ceb7297feb6b4f166eb",
+          "requestTagSha256": null,
+          "responseBytes": 2,
+          "responseSha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 2
+        },
+        {
+          "step": "proxy-put-producer",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "run-epoch",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 193,
+          "requestSha256": "2dda93702fe0abdef7d97ce962c77a2c4fe476fd79ffddac428da13a1a47f18e",
+          "requestTagSha256": "b80543b1f12e5f089f8117283395d292b53faad131fa7156d86e01e424134a69",
+          "responseBytes": 54,
+          "responseSha256": "6e87b80d6100cbae0a6eed810671cd496232532d2fc662042b7146d4e3ba6a34",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 4
+        }
+      ],
+      "notes": ["producer: exit 0, MISS, output present"],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-executed",
+          "reason": "The native run scores only client dimensions and RC-022 namespace isolation."
+        },
+        "published-stable-client": {
+          "verdict": "pass"
+        },
+        "published-canary-client": {
+          "verdict": "not-executed",
+          "reason": "Scored by the other channel's native run."
+        },
+        "beep-security-policy": {
+          "verdict": "not-applicable"
+        },
+        "observability": {
+          "verdict": "not-executed",
+          "reason": "The native run scores only client dimensions and RC-022 namespace isolation."
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-011",
+      "executor": "wire",
+      "exchanges": [],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        },
+        "published-stable-client": {
+          "verdict": "not-applicable"
+        },
+        "published-canary-client": {
+          "verdict": "not-applicable"
+        },
+        "beep-security-policy": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-012",
+      "executor": "wire",
+      "exchanges": [],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        },
+        "published-stable-client": {
+          "verdict": "not-applicable"
+        },
+        "published-canary-client": {
+          "verdict": "not-applicable"
+        },
+        "beep-security-policy": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-013",
+      "executor": "lab",
+      "exchanges": [],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-applicable"
+        },
+        "published-stable-client": {
+          "verdict": "not-applicable"
+        },
+        "published-canary-client": {
+          "verdict": "not-applicable"
+        },
+        "beep-security-policy": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-014",
+      "executor": "wire",
+      "exchanges": [],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        },
+        "published-stable-client": {
+          "verdict": "not-applicable"
+        },
+        "published-canary-client": {
+          "verdict": "not-applicable"
+        },
+        "beep-security-policy": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-015",
+      "executor": "wire",
+      "exchanges": [],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        },
+        "published-stable-client": {
+          "verdict": "not-applicable"
+        },
+        "published-canary-client": {
+          "verdict": "not-applicable"
+        },
+        "beep-security-policy": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-016",
+      "executor": "wire",
+      "exchanges": [],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        },
+        "published-stable-client": {
+          "verdict": "not-applicable"
+        },
+        "published-canary-client": {
+          "verdict": "not-applicable"
+        },
+        "beep-security-policy": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-017",
+      "executor": "native",
+      "exchanges": [
+        {
+          "step": "proxy-get-producer",
+          "role": "writer",
+          "method": "GET",
+          "route": "/v8/artifacts/status",
+          "operationId": "getArtifactStatus",
+          "strictScored": true,
+          "selector": "run-epoch",
+          "hash": "none",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 40,
+          "responseSha256": "8f4844620c64d31cc24eb736e3b52790752b39744f98cf32810bf3e1225cfd53",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 5
+        },
+        {
+          "step": "proxy-get-producer",
+          "role": "writer",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "run-epoch",
+          "hash": "valid",
+          "outcome": "miss",
+          "status": 404,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 73,
+          "responseSha256": "55ad7b77f22f6772ef7d6dcb18f1a77d9e33b351b4d7e01b5d998fbc6b6e01e4",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 3
+        },
+        {
+          "step": "proxy-post-producer",
+          "role": "writer",
+          "method": "POST",
+          "route": "/v8/artifacts/events",
+          "operationId": "recordCacheEvents",
+          "strictScored": true,
+          "selector": "run-epoch",
+          "hash": "none",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 126,
+          "requestSha256": "de15077588d92a69ff19baa79542d908ac93d15a1cf39ceb7297feb6b4f166eb",
+          "requestTagSha256": null,
+          "responseBytes": 2,
+          "responseSha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 2
+        },
+        {
+          "step": "proxy-put-producer",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "run-epoch",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 193,
+          "requestSha256": "2dda93702fe0abdef7d97ce962c77a2c4fe476fd79ffddac428da13a1a47f18e",
+          "requestTagSha256": "b80543b1f12e5f089f8117283395d292b53faad131fa7156d86e01e424134a69",
+          "responseBytes": 54,
+          "responseSha256": "6e87b80d6100cbae0a6eed810671cd496232532d2fc662042b7146d4e3ba6a34",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 4
+        },
+        {
+          "step": "proxy-get-replay",
+          "role": "reader",
+          "method": "GET",
+          "route": "/v8/artifacts/status",
+          "operationId": "getArtifactStatus",
+          "strictScored": true,
+          "selector": "run-epoch",
+          "hash": "none",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 40,
+          "responseSha256": "8f4844620c64d31cc24eb736e3b52790752b39744f98cf32810bf3e1225cfd53",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 2
+        },
+        {
+          "step": "proxy-get-replay",
+          "role": "reader",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "run-epoch",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 193,
+          "responseSha256": "2dda93702fe0abdef7d97ce962c77a2c4fe476fd79ffddac428da13a1a47f18e",
+          "tagPresent": true,
+          "tagSha256": "b80543b1f12e5f089f8117283395d292b53faad131fa7156d86e01e424134a69",
+          "durationPresent": false,
+          "elapsedMs": 5
+        },
+        {
+          "step": "proxy-post-replay",
+          "role": "reader",
+          "method": "POST",
+          "route": "/v8/artifacts/events",
+          "operationId": "recordCacheEvents",
+          "strictScored": true,
+          "selector": "run-epoch",
+          "hash": "none",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 125,
+          "requestSha256": "f9fb31110d2cc651b80561d1044fa8a994c204e4444754f6a30a72646fff441f",
+          "requestTagSha256": null,
+          "responseBytes": 2,
+          "responseSha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        }
+      ],
+      "notes": [
+        "producer: exit 0, MISS, output present",
+        "replay: exit 0, HIT REMOTE, output present"
+      ],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-applicable"
+        },
+        "published-stable-client": {
+          "verdict": "pass"
+        },
+        "published-canary-client": {
+          "verdict": "not-executed",
+          "reason": "Scored by the other channel's native run."
+        },
+        "beep-security-policy": {
+          "verdict": "not-applicable"
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-018",
+      "executor": "native",
+      "exchanges": [
+        {
+          "step": "proxy-get-missing-tag",
+          "role": "reader",
+          "method": "GET",
+          "route": "/v8/artifacts/status",
+          "operationId": "getArtifactStatus",
+          "strictScored": true,
+          "selector": "run-epoch",
+          "hash": "none",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 40,
+          "responseSha256": "8f4844620c64d31cc24eb736e3b52790752b39744f98cf32810bf3e1225cfd53",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 2
+        },
+        {
+          "step": "proxy-get-missing-tag",
+          "role": "reader",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": false,
+          "selector": "run-epoch",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 193,
+          "responseSha256": "2dda93702fe0abdef7d97ce962c77a2c4fe476fd79ffddac428da13a1a47f18e",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 5
+        }
+      ],
+      "notes": ["missing-tag: exit 42, MISS, output absent"],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-applicable"
+        },
+        "published-stable-client": {
+          "verdict": "pass"
+        },
+        "published-canary-client": {
+          "verdict": "not-executed",
+          "reason": "Scored by the other channel's native run."
+        },
+        "beep-security-policy": {
+          "verdict": "not-applicable"
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-019",
+      "executor": "native",
+      "exchanges": [
+        {
+          "step": "proxy-get-tampered-tag",
+          "role": "reader",
+          "method": "GET",
+          "route": "/v8/artifacts/status",
+          "operationId": "getArtifactStatus",
+          "strictScored": true,
+          "selector": "run-epoch",
+          "hash": "none",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 40,
+          "responseSha256": "8f4844620c64d31cc24eb736e3b52790752b39744f98cf32810bf3e1225cfd53",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        },
+        {
+          "step": "proxy-get-tampered-tag",
+          "role": "reader",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": false,
+          "selector": "run-epoch",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 193,
+          "responseSha256": "2dda93702fe0abdef7d97ce962c77a2c4fe476fd79ffddac428da13a1a47f18e",
+          "tagPresent": true,
+          "tagSha256": "61ff7f15908ca5cc677b9eb2c3a9545d9bbacb2f577e9a662d55aed599c3f5bb",
+          "durationPresent": false,
+          "elapsedMs": 6
+        }
+      ],
+      "notes": ["tampered-tag: exit 42, MISS, output absent"],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-applicable"
+        },
+        "published-stable-client": {
+          "verdict": "pass"
+        },
+        "published-canary-client": {
+          "verdict": "not-executed",
+          "reason": "Scored by the other channel's native run."
+        },
+        "beep-security-policy": {
+          "verdict": "not-applicable"
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-020",
+      "executor": "native",
+      "exchanges": [
+        {
+          "step": "proxy-get-tampered-body",
+          "role": "reader",
+          "method": "GET",
+          "route": "/v8/artifacts/status",
+          "operationId": "getArtifactStatus",
+          "strictScored": true,
+          "selector": "run-epoch",
+          "hash": "none",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 40,
+          "responseSha256": "8f4844620c64d31cc24eb736e3b52790752b39744f98cf32810bf3e1225cfd53",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 2
+        },
+        {
+          "step": "proxy-get-tampered-body",
+          "role": "reader",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": false,
+          "selector": "run-epoch",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 193,
+          "responseSha256": "0f0209a44c27ca652ca83e54c272e54d12f958c464f8d50d825608ea6fdd6489",
+          "tagPresent": true,
+          "tagSha256": "b80543b1f12e5f089f8117283395d292b53faad131fa7156d86e01e424134a69",
+          "durationPresent": false,
+          "elapsedMs": 4
+        }
+      ],
+      "notes": ["tampered-body: exit 42, MISS, output absent"],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-applicable"
+        },
+        "published-stable-client": {
+          "verdict": "pass"
+        },
+        "published-canary-client": {
+          "verdict": "not-executed",
+          "reason": "Scored by the other channel's native run."
+        },
+        "beep-security-policy": {
+          "verdict": "not-applicable"
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-021",
+      "executor": "native",
+      "exchanges": [
+        {
+          "step": "proxy-get-foreign-producer",
+          "role": "writer",
+          "method": "GET",
+          "route": "/v8/artifacts/status",
+          "operationId": "getArtifactStatus",
+          "strictScored": true,
+          "selector": "run-epoch",
+          "hash": "none",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 40,
+          "responseSha256": "8f4844620c64d31cc24eb736e3b52790752b39744f98cf32810bf3e1225cfd53",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        },
+        {
+          "step": "proxy-get-foreign-producer",
+          "role": "writer",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "run-epoch",
+          "hash": "valid",
+          "outcome": "miss",
+          "status": 404,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 73,
+          "responseSha256": "55ad7b77f22f6772ef7d6dcb18f1a77d9e33b351b4d7e01b5d998fbc6b6e01e4",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 3
+        },
+        {
+          "step": "proxy-post-foreign-producer",
+          "role": "writer",
+          "method": "POST",
+          "route": "/v8/artifacts/events",
+          "operationId": "recordCacheEvents",
+          "strictScored": true,
+          "selector": "run-epoch",
+          "hash": "none",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 126,
+          "requestSha256": "5e719e21ed80537e07d1d8c7a04c975b17fd03325bfcf97325069fcd4da7b9d3",
+          "requestTagSha256": null,
+          "responseBytes": 2,
+          "responseSha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        },
+        {
+          "step": "proxy-put-foreign-producer",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "run-epoch",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 193,
+          "requestSha256": "2dda93702fe0abdef7d97ce962c77a2c4fe476fd79ffddac428da13a1a47f18e",
+          "requestTagSha256": "dac6264f835a51691d0062760fdb9ce925328f4445dd997d4a2265992684402e",
+          "responseBytes": 58,
+          "responseSha256": "3f9c356852b53665725786ebb5a6f6c55726e9cbfd9c825b6ec4ad8beb8fd5eb",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 4
+        },
+        {
+          "step": "proxy-get-wrong-team",
+          "role": "reader",
+          "method": "GET",
+          "route": "/v8/artifacts/status",
+          "operationId": "getArtifactStatus",
+          "strictScored": true,
+          "selector": "run-epoch",
+          "hash": "none",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 40,
+          "responseSha256": "8f4844620c64d31cc24eb736e3b52790752b39744f98cf32810bf3e1225cfd53",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 2
+        },
+        {
+          "step": "proxy-get-wrong-team",
+          "role": "reader",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": false,
+          "selector": "run-epoch",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 193,
+          "responseSha256": "2dda93702fe0abdef7d97ce962c77a2c4fe476fd79ffddac428da13a1a47f18e",
+          "tagPresent": true,
+          "tagSha256": "dac6264f835a51691d0062760fdb9ce925328f4445dd997d4a2265992684402e",
+          "durationPresent": false,
+          "elapsedMs": 1
+        }
+      ],
+      "notes": [
+        "foreign-producer: exit 0, MISS, output present",
+        "wrong-team: exit 42, MISS, output absent"
+      ],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-applicable"
+        },
+        "published-stable-client": {
+          "verdict": "pass"
+        },
+        "published-canary-client": {
+          "verdict": "not-executed",
+          "reason": "Scored by the other channel's native run."
+        },
+        "beep-security-policy": {
+          "verdict": "not-applicable"
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-022",
+      "executor": "native",
+      "exchanges": [
+        {
+          "step": "proxy-get-epoch-fresh-namespace",
+          "role": "reader",
+          "method": "GET",
+          "route": "/v8/artifacts/status",
+          "operationId": "getArtifactStatus",
+          "strictScored": true,
+          "selector": "run-epoch",
+          "hash": "none",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 40,
+          "responseSha256": "8f4844620c64d31cc24eb736e3b52790752b39744f98cf32810bf3e1225cfd53",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 2
+        },
+        {
+          "step": "proxy-get-epoch-fresh-namespace",
+          "role": "reader",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "run-epoch",
+          "hash": "valid",
+          "outcome": "miss",
+          "status": 404,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 73,
+          "responseSha256": "55ad7b77f22f6772ef7d6dcb18f1a77d9e33b351b4d7e01b5d998fbc6b6e01e4",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 3
+        },
+        {
+          "step": "proxy-post-epoch-fresh-namespace",
+          "role": "reader",
+          "method": "POST",
+          "route": "/v8/artifacts/events",
+          "operationId": "recordCacheEvents",
+          "strictScored": true,
+          "selector": "run-epoch",
+          "hash": "none",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 126,
+          "requestSha256": "4578c013bc003f17c3d35313537c308aa597030e2a9f85f89ac4be8e7d0e7aa0",
+          "requestTagSha256": null,
+          "responseBytes": 2,
+          "responseSha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 2
+        },
+        {
+          "step": "proxy-get-epoch-old-namespace",
+          "role": "reader",
+          "method": "GET",
+          "route": "/v8/artifacts/status",
+          "operationId": "getArtifactStatus",
+          "strictScored": true,
+          "selector": "run-epoch",
+          "hash": "none",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 40,
+          "responseSha256": "8f4844620c64d31cc24eb736e3b52790752b39744f98cf32810bf3e1225cfd53",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 2
+        },
+        {
+          "step": "proxy-get-epoch-old-namespace",
+          "role": "reader",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "run-epoch",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 193,
+          "responseSha256": "2dda93702fe0abdef7d97ce962c77a2c4fe476fd79ffddac428da13a1a47f18e",
+          "tagPresent": true,
+          "tagSha256": "b80543b1f12e5f089f8117283395d292b53faad131fa7156d86e01e424134a69",
+          "durationPresent": false,
+          "elapsedMs": 5
+        }
+      ],
+      "notes": [
+        "epoch-fresh-namespace: exit 42, MISS, output absent",
+        "epoch-old-namespace: exit 42, MISS, output absent"
+      ],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-applicable"
+        },
+        "published-stable-client": {
+          "verdict": "pass"
+        },
+        "published-canary-client": {
+          "verdict": "not-executed",
+          "reason": "Scored by the other channel's native run."
+        },
+        "beep-security-policy": {
+          "verdict": "pass"
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-023",
+      "executor": "wire",
+      "exchanges": [],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        },
+        "published-stable-client": {
+          "verdict": "not-applicable"
+        },
+        "published-canary-client": {
+          "verdict": "not-applicable"
+        },
+        "beep-security-policy": {
+          "verdict": "not-applicable"
+        },
+        "observability": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-024",
+      "executor": "wire",
+      "exchanges": [],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        },
+        "published-stable-client": {
+          "verdict": "not-applicable"
+        },
+        "published-canary-client": {
+          "verdict": "not-applicable"
+        },
+        "beep-security-policy": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-025",
+      "executor": "wire",
+      "exchanges": [],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        },
+        "published-stable-client": {
+          "verdict": "not-applicable"
+        },
+        "published-canary-client": {
+          "verdict": "not-applicable"
+        },
+        "beep-security-policy": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-026",
+      "executor": "wire",
+      "exchanges": [],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        },
+        "published-stable-client": {
+          "verdict": "not-applicable"
+        },
+        "published-canary-client": {
+          "verdict": "not-applicable"
+        },
+        "beep-security-policy": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-027",
+      "executor": "lab",
+      "exchanges": [],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-applicable"
+        },
+        "published-stable-client": {
+          "verdict": "not-applicable"
+        },
+        "published-canary-client": {
+          "verdict": "not-applicable"
+        },
+        "beep-security-policy": {
+          "verdict": "not-applicable"
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        }
+      }
+    },
+    {
+      "id": "RC-028",
+      "executor": "lab",
+      "exchanges": [],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-applicable"
+        },
+        "published-stable-client": {
+          "verdict": "not-applicable"
+        },
+        "published-canary-client": {
+          "verdict": "not-applicable"
+        },
+        "beep-security-policy": {
+          "verdict": "not-applicable"
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        }
+      }
+    },
+    {
+      "id": "RC-029",
+      "executor": "lab",
+      "exchanges": [],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-applicable"
+        },
+        "published-stable-client": {
+          "verdict": "not-applicable"
+        },
+        "published-canary-client": {
+          "verdict": "not-applicable"
+        },
+        "beep-security-policy": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        },
+        "observability": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-030",
+      "executor": "lab",
+      "exchanges": [],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-applicable"
+        },
+        "published-stable-client": {
+          "verdict": "not-applicable"
+        },
+        "published-canary-client": {
+          "verdict": "not-applicable"
+        },
+        "beep-security-policy": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        },
+        "observability": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-031",
+      "executor": "lab",
+      "exchanges": [],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-applicable"
+        },
+        "published-stable-client": {
+          "verdict": "not-applicable"
+        },
+        "published-canary-client": {
+          "verdict": "not-applicable"
+        },
+        "beep-security-policy": {
+          "verdict": "not-applicable"
+        },
+        "observability": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-032",
+      "executor": "lab",
+      "exchanges": [],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-applicable"
+        },
+        "published-stable-client": {
+          "verdict": "not-applicable"
+        },
+        "published-canary-client": {
+          "verdict": "not-applicable"
+        },
+        "beep-security-policy": {
+          "verdict": "not-executed",
+          "reason": "Not part of the native run; the wire and lab runs score it."
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    }
+  ],
+  "summary": [
+    {
+      "dimension": "strict-openapi",
+      "pass": 0,
+      "fail": 0,
+      "unsupportedOptional": 0,
+      "notApplicable": 13,
+      "notExecuted": 19
+    },
+    {
+      "dimension": "published-stable-client",
+      "pass": 8,
+      "fail": 0,
+      "unsupportedOptional": 0,
+      "notApplicable": 20,
+      "notExecuted": 4
+    },
+    {
+      "dimension": "published-canary-client",
+      "pass": 0,
+      "fail": 0,
+      "unsupportedOptional": 0,
+      "notApplicable": 20,
+      "notExecuted": 12
+    },
+    {
+      "dimension": "beep-security-policy",
+      "pass": 1,
+      "fail": 0,
+      "unsupportedOptional": 0,
+      "notApplicable": 19,
+      "notExecuted": 12
+    },
+    {
+      "dimension": "observability",
+      "pass": 0,
+      "fail": 0,
+      "unsupportedOptional": 0,
+      "notApplicable": 27,
+      "notExecuted": 5
+    },
+    {
+      "dimension": "performance-envelope",
+      "pass": 0,
+      "fail": 0,
+      "unsupportedOptional": 0,
+      "notApplicable": 30,
+      "notExecuted": 2
+    }
+  ]
+}

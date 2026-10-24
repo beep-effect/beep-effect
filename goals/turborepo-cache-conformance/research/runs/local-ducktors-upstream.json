@@ -1,0 +1,3476 @@
+{
+  "schemaVersion": "cache-conformance-run/v1",
+  "profile": "local-container",
+  "representative": false,
+  "executors": ["wire"],
+  "clients": [],
+  "topology": "ducktors-upstream",
+  "backend": {
+    "id": "turborepo-remote-cache",
+    "release": "2.14.3",
+    "digest": "sha512-FlW1gm1kjJseDc8Dcj92WUfsnMYLG2k5IYTIL3A3jQi8E5eUY2RGYC6RHqPJSxZJK5pbyOVTSJpoe9qqH7JcSA=="
+  },
+  "policy": {
+    "readerWriterSplit": false,
+    "tenantBinding": false
+  },
+  "corpus": {
+    "specSha256": "1080314512226dc48535fe24648fc0abb10c1cd405c1fd74eacfdc95e22d70b8",
+    "sourcePlanSha256": "20ab0c9fdf030c3941be72dc780ee2cc48fb7432e7edbfbc86366846abc35b8b"
+  },
+  "startedAt": "2026-10-24T02:47:17.999Z",
+  "cases": [
+    {
+      "id": "RC-001",
+      "executor": "wire",
+      "exchanges": [
+        {
+          "step": "writer-status",
+          "role": "writer",
+          "method": "GET",
+          "route": "/v8/artifacts/status",
+          "operationId": "getArtifactStatus",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "none",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 40,
+          "responseSha256": "8f4844620c64d31cc24eb736e3b52790752b39744f98cf32810bf3e1225cfd53",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 3
+        },
+        {
+          "step": "reader-status",
+          "role": "reader",
+          "method": "GET",
+          "route": "/v8/artifacts/status",
+          "operationId": "getArtifactStatus",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "none",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 40,
+          "responseSha256": "8f4844620c64d31cc24eb736e3b52790752b39744f98cf32810bf3e1225cfd53",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        }
+      ],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "pass"
+        },
+        "published-stable-client": {
+          "verdict": "not-applicable"
+        },
+        "published-canary-client": {
+          "verdict": "not-applicable"
+        },
+        "beep-security-policy": {
+          "verdict": "not-applicable"
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-002",
+      "executor": "wire",
+      "exchanges": [
+        {
+          "step": "writer-put",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "requestTagSha256": "0df73f1466636350ddfadd317a265c4e0b697d16a00bd4d0b8d988b1449eaf85",
+          "responseBytes": 54,
+          "responseSha256": "b4026e8c0ef910b12bdfd43678914f96e71574dc8e35c2dc1dcb11232f4d0d7f",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 6
+        },
+        {
+          "step": "reader-head",
+          "role": "reader",
+          "method": "HEAD",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "artifactExists",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": null,
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 0,
+          "responseSha256": null,
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        },
+        {
+          "step": "reader-get",
+          "role": "reader",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 0,
+          "responseSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        }
+      ],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "fail",
+          "expectation": "head-content-length",
+          "detail": "head-content-length: HEAD Content-Length equals the stored byte count | tag-round-trip: GET returns the opaque x-artifact-tag the writer sent"
+        },
+        "published-stable-client": {
+          "verdict": "not-executed",
+          "reason": "Client acceptance is scored only by native runs (cache conformance-native)."
+        },
+        "published-canary-client": {
+          "verdict": "not-executed",
+          "reason": "Client acceptance is scored only by native runs (cache conformance-native)."
+        },
+        "beep-security-policy": {
+          "verdict": "not-applicable"
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-003",
+      "executor": "wire",
+      "exchanges": [
+        {
+          "step": "writer-put",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 4096,
+          "requestSha256": "66733ac973143169f9a6e72ff105052d44e17ded1a0657d74fc35f3722dbcccf",
+          "requestTagSha256": "fe72e58092c75c2d95e6385699e3a1292df3c82aa0436d900cfa6e12b8a71cae",
+          "responseBytes": 54,
+          "responseSha256": "e37c62a98898b62cf44def2cc7b6d045ecd7e947a1e237998259cbb61a7fd800",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        },
+        {
+          "step": "reader-head",
+          "role": "reader",
+          "method": "HEAD",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "artifactExists",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": null,
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 0,
+          "responseSha256": null,
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        },
+        {
+          "step": "reader-get",
+          "role": "reader",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 4096,
+          "responseSha256": "66733ac973143169f9a6e72ff105052d44e17ded1a0657d74fc35f3722dbcccf",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        }
+      ],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "fail",
+          "expectation": "head-content-length",
+          "detail": "head-content-length: HEAD Content-Length equals the stored byte count | tag-round-trip: GET returns the opaque x-artifact-tag the writer sent"
+        },
+        "published-stable-client": {
+          "verdict": "not-executed",
+          "reason": "Client acceptance is scored only by native runs (cache conformance-native)."
+        },
+        "published-canary-client": {
+          "verdict": "not-executed",
+          "reason": "Client acceptance is scored only by native runs (cache conformance-native)."
+        },
+        "beep-security-policy": {
+          "verdict": "not-applicable"
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-004",
+      "executor": "wire",
+      "exchanges": [
+        {
+          "step": "writer-put-octet-stream",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 64,
+          "requestSha256": "6d3541d54f437a4553665ed17ee565a252bf61156aedcecdc08c4ef1cb2a1152",
+          "requestTagSha256": "c3df8dac17cdea3cf48c2e6b987beba44db0cc35436383960f3dffb246d4b2b0",
+          "responseBytes": 54,
+          "responseSha256": "f6e89f1fec2229283742a60f2185a45412f2f350cb08bc259118332dc79aae98",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        },
+        {
+          "step": "writer-put-text-plain",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": false,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "client-error",
+          "status": 400,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 64,
+          "requestSha256": "58aa600b22d2be96fdc8e2b99d2210cfab0acff270b388e46ae40e3eff8291c2",
+          "requestTagSha256": "7af3467344da912ed7728e339b7bbff86e812c90aa1247b041e380650c0d38fc",
+          "responseBytes": 60,
+          "responseSha256": "7578fa66b3e6e533f2adc0b8f1b0f6e09aa9dc38494e0047db7ebadf329020eb",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 2
+        },
+        {
+          "step": "writer-head-text-plain",
+          "role": "writer",
+          "method": "HEAD",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "artifactExists",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "miss",
+          "status": 404,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 0,
+          "responseSha256": null,
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        }
+      ],
+      "notes": [
+        "A request without Content-Length is not sent; fetch always frames byte bodies."
+      ],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "pass"
+        },
+        "published-stable-client": {
+          "verdict": "not-applicable"
+        },
+        "published-canary-client": {
+          "verdict": "not-applicable"
+        },
+        "beep-security-policy": {
+          "verdict": "not-applicable"
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-005",
+      "executor": "wire",
+      "exchanges": [
+        {
+          "step": "writer-put-duration",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 32,
+          "requestSha256": "523cddd0fa3091506159c39b621e1147998a551829bbf295826cfa9198a187f2",
+          "requestTagSha256": "0e3c28c93558c1b5f27c120af48dbaf88ac3cce913739712dd4b36cd88439fac",
+          "responseBytes": 54,
+          "responseSha256": "2c9eb85b2f776aae8689b97e336816ee58c10473a78cfd4b3886a5699b23082e",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        },
+        {
+          "step": "reader-head-duration",
+          "role": "reader",
+          "method": "HEAD",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "artifactExists",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": null,
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 0,
+          "responseSha256": null,
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        },
+        {
+          "step": "reader-get-duration",
+          "role": "reader",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 32,
+          "responseSha256": "523cddd0fa3091506159c39b621e1147998a551829bbf295826cfa9198a187f2",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        },
+        {
+          "step": "writer-put-no-duration",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 32,
+          "requestSha256": "523cddd0fa3091506159c39b621e1147998a551829bbf295826cfa9198a187f2",
+          "requestTagSha256": "f81f09133a942eefa3dd50d58a98138c8523bd4d15745ab5e90462bce1b42641",
+          "responseBytes": 54,
+          "responseSha256": "49ef53a253dc3cd1fd6c836da14dba884d947d15238b6152f15eb7a9e51cc3b4",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        },
+        {
+          "step": "reader-get-no-duration",
+          "role": "reader",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 32,
+          "responseSha256": "523cddd0fa3091506159c39b621e1147998a551829bbf295826cfa9198a187f2",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 4
+        },
+        {
+          "step": "writer-put-malformed-duration",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 32,
+          "requestSha256": "523cddd0fa3091506159c39b621e1147998a551829bbf295826cfa9198a187f2",
+          "requestTagSha256": "7f7892aba93a261a2ea793b4ad9789eba366c47f882e0f4d563826a5d629d7b5",
+          "responseBytes": 54,
+          "responseSha256": "5c4f0da7e4990bae22b51015eccf6b2e16e9f6a8cc3e35893968d0f29107611d",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        }
+      ],
+      "notes": [
+        "malformed duration upload: writer-put-malformed-duration answered 200 (success)"
+      ],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "fail",
+          "expectation": "duration-round-trip-head",
+          "detail": "duration-round-trip-head: reader-head-duration answered 200 (success) | duration-round-trip-get: reader-get-duration answered 200 (success)"
+        },
+        "published-stable-client": {
+          "verdict": "not-executed",
+          "reason": "Client acceptance is scored only by native runs (cache conformance-native)."
+        },
+        "published-canary-client": {
+          "verdict": "not-executed",
+          "reason": "Client acceptance is scored only by native runs (cache conformance-native)."
+        },
+        "beep-security-policy": {
+          "verdict": "not-applicable"
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-006",
+      "executor": "wire",
+      "exchanges": [
+        {
+          "step": "writer-put-metadata",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 48,
+          "requestSha256": "fd718bdbf96c25524fa85c13d7d8d3f7056d0e9261da7d71fc516f6d63900eb7",
+          "requestTagSha256": "63330bc9c63cf4b6a6608d4610a9f2ee5d258c6be5b086c6fb33e32daba3c1cd",
+          "responseBytes": 54,
+          "responseSha256": "d7feb7d9a735b5ab21439c02211683b0227a7127aaf822f87283c1bf2c6982a0",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        },
+        {
+          "step": "reader-get-metadata",
+          "role": "reader",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 48,
+          "responseSha256": "fd718bdbf96c25524fa85c13d7d8d3f7056d0e9261da7d71fc516f6d63900eb7",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        },
+        {
+          "step": "reader-head-metadata",
+          "role": "reader",
+          "method": "HEAD",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "artifactExists",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": null,
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 0,
+          "responseSha256": null,
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        }
+      ],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "fail",
+          "expectation": "tag-preserved",
+          "detail": "tag-preserved: reader-get-metadata answered 200 (success) | sha-preserved: reader-get-metadata answered 200 (success) | dirty-hash-preserved: reader-get-metadata answered 200 (success) | head-sha-preserved: reader-head-metadata answered 200 (success)"
+        },
+        "published-stable-client": {
+          "verdict": "not-executed",
+          "reason": "Client acceptance is scored only by native runs (cache conformance-native)."
+        },
+        "published-canary-client": {
+          "verdict": "not-executed",
+          "reason": "Client acceptance is scored only by native runs (cache conformance-native)."
+        },
+        "beep-security-policy": {
+          "verdict": "not-applicable"
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-007",
+      "executor": "wire",
+      "exchanges": [
+        {
+          "step": "writer-put-seed",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 24,
+          "requestSha256": "9706334d5c4be78e85249c5b9979ccec29377275a86a0c8739d0fe120fd53b20",
+          "requestTagSha256": "aaefe910cc1cbea4e754c43e54a099fd157a2d04cc4d7e6e102e0705df104845",
+          "responseBytes": 54,
+          "responseSha256": "d8919b8ed3acc82bb023f502c1aa538e6d1446b2a52b6b1299eba83f23cbd9e4",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        },
+        {
+          "step": "reader-post-query",
+          "role": "reader",
+          "method": "POST",
+          "route": "/v8/artifacts",
+          "operationId": "queryArtifacts",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "none",
+          "outcome": "not-found",
+          "status": 404,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 82,
+          "requestSha256": "be82633dd3a174116fc702bcc2f585b55bde811ba3a288999b0c86e89055af4d",
+          "requestTagSha256": null,
+          "responseBytes": 101,
+          "responseSha256": "722b266693e1296a1fc2e30a4ae1bddccae51fd739cfee530b4d4cc24a9f343d",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        }
+      ],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "unsupported-optional",
+          "reason": "/v8/artifacts is absent (reader-post-query answered 404 (not-found)); the route is optional."
+        },
+        "published-stable-client": {
+          "verdict": "not-applicable"
+        },
+        "published-canary-client": {
+          "verdict": "not-applicable"
+        },
+        "beep-security-policy": {
+          "verdict": "not-applicable"
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-008",
+      "executor": "wire",
+      "exchanges": [
+        {
+          "step": "writer-put-seed",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 24,
+          "requestSha256": "8b4eb0fb3cd872a02fe2066dc9cac8c0b32596806c24dbea04adf648e7f99bfb",
+          "requestTagSha256": "054e8becc6a4c25133a181b36b45c567526718ba9e0f83cb032b391f7a89939e",
+          "responseBytes": 54,
+          "responseSha256": "a641b89d30e91b02ed01fc2447d7d3751924e01096eb3657bbc81b7a2ab98cf6",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        },
+        {
+          "step": "reader-post-events",
+          "role": "reader",
+          "method": "POST",
+          "route": "/v8/artifacts/events",
+          "operationId": "recordCacheEvents",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "none",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 142,
+          "requestSha256": "f7b83abc33c8c06740ca1f9de9d137de5a42adf80ac119bf4b561423eac7b567",
+          "requestTagSha256": null,
+          "responseBytes": 2,
+          "responseSha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        }
+      ],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "pass"
+        },
+        "published-stable-client": {
+          "verdict": "not-applicable"
+        },
+        "published-canary-client": {
+          "verdict": "not-applicable"
+        },
+        "beep-security-policy": {
+          "verdict": "not-applicable"
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-009",
+      "executor": "wire",
+      "exchanges": [
+        {
+          "step": "writer-put",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 16,
+          "requestSha256": "b4f0b63720bd88e0b43e9f7a45d8817f1b90d3ed58103f5c6f43353d1afef9e1",
+          "requestTagSha256": "6b742d39dd2d313db60ee7fdc6bc2ca5f03d9f2097a555408343665dbbbc8420",
+          "responseBytes": 54,
+          "responseSha256": "b10f28cc61b446352d504f0eccb946f50b29a8ed8f82a6b1557cdce4bea4066b",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        }
+      ],
+      "notes": [
+        "Upload writer-put answered 200 (success); the OpenAPI documents 200 and 202, while client acceptance of any 2xx is scored by native runs."
+      ],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "pass"
+        },
+        "published-stable-client": {
+          "verdict": "not-executed",
+          "reason": "Client acceptance is scored only by native runs (cache conformance-native)."
+        },
+        "published-canary-client": {
+          "verdict": "not-executed",
+          "reason": "Client acceptance is scored only by native runs (cache conformance-native)."
+        },
+        "beep-security-policy": {
+          "verdict": "not-applicable"
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-010",
+      "executor": "wire",
+      "exchanges": [
+        {
+          "step": "reader-get-unwritten",
+          "role": "reader",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "miss",
+          "status": 404,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 69,
+          "responseSha256": "7616fc8319e605f2f47854b072a164471a28a408b7139eb3ad3cb55081048d86",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        },
+        {
+          "step": "reader-head-unwritten",
+          "role": "reader",
+          "method": "HEAD",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "artifactExists",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "miss",
+          "status": 404,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 0,
+          "responseSha256": null,
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        }
+      ],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "pass"
+        },
+        "published-stable-client": {
+          "verdict": "not-executed",
+          "reason": "Client acceptance is scored only by native runs (cache conformance-native)."
+        },
+        "published-canary-client": {
+          "verdict": "not-executed",
+          "reason": "Client acceptance is scored only by native runs (cache conformance-native)."
+        },
+        "beep-security-policy": {
+          "verdict": "not-applicable"
+        },
+        "observability": {
+          "verdict": "not-executed",
+          "reason": "Needs backend log capture; the wire runner records only direct receipts."
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-011",
+      "executor": "wire",
+      "exchanges": [
+        {
+          "step": "writer-put-seed",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 32,
+          "requestSha256": "d7b1c6a3a734f55b9660d82bf21ef9e32b0d9571b261ca57ee263fb1ab99376c",
+          "requestTagSha256": "d7851eb77a3ebaf9b5f90fd5ce06436185ef90d8f186757ae01914b66890c2d7",
+          "responseBytes": 54,
+          "responseSha256": "b8f36e8ee60a6949c0356704599841bf3d0a382b1cc7a079de08e939f9433f64",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        },
+        {
+          "step": "missing-get",
+          "role": "missing",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "client-error",
+          "status": 400,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 42,
+          "responseSha256": "6822ec1eb9ff38d2d71d6dc7095a65c72a3e35c7b00be161ef926fd00949efa3",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        },
+        {
+          "step": "malformed-get",
+          "role": "malformed",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "unauthorized",
+          "status": 401,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 41,
+          "responseSha256": "2b68130abd703f1e2c7c6102d8558f9dc43bea302c3061cf7786d8f006fcd52d",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        },
+        {
+          "step": "unknown-get",
+          "role": "unknown",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "unauthorized",
+          "status": 401,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 41,
+          "responseSha256": "2b68130abd703f1e2c7c6102d8558f9dc43bea302c3061cf7786d8f006fcd52d",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        },
+        {
+          "step": "reader-get",
+          "role": "reader",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 32,
+          "responseSha256": "d7b1c6a3a734f55b9660d82bf21ef9e32b0d9571b261ca57ee263fb1ab99376c",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        },
+        {
+          "step": "writer-get",
+          "role": "writer",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 32,
+          "responseSha256": "d7b1c6a3a734f55b9660d82bf21ef9e32b0d9571b261ca57ee263fb1ab99376c",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        },
+        {
+          "step": "missing-status",
+          "role": "missing",
+          "method": "GET",
+          "route": "/v8/artifacts/status",
+          "operationId": "getArtifactStatus",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "none",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 40,
+          "responseSha256": "8f4844620c64d31cc24eb736e3b52790752b39744f98cf32810bf3e1225cfd53",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        }
+      ],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "pass"
+        },
+        "published-stable-client": {
+          "verdict": "not-applicable"
+        },
+        "published-canary-client": {
+          "verdict": "not-applicable"
+        },
+        "beep-security-policy": {
+          "verdict": "fail",
+          "expectation": "deny-missing-bearer",
+          "detail": "deny-missing-bearer: missing-get answered 400 (client-error) | status-requires-bearer: missing-status answered 200 (success)"
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-012",
+      "executor": "wire",
+      "exchanges": [
+        {
+          "step": "writer-put-seed",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 32,
+          "requestSha256": "951ea6cdbc662c3b61e05ee4524a00e4c1fd571cf036336e82e2a7b3a2ec236d",
+          "requestTagSha256": "1ec4c9d5263e5dff2e015cb0894c4f65ce66c6063cb397d341a8c8333967e574",
+          "responseBytes": 54,
+          "responseSha256": "edf10ed1dec9df6ff59db4665a1fc8a33bdbbf3608d93d5eefbadb917887389c",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        },
+        {
+          "step": "reader-put-new",
+          "role": "reader",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 32,
+          "requestSha256": "074fd08d0d05bb4b2f36b443a995870fc25fd5819fe81484cab6213d7690592a",
+          "requestTagSha256": "42cb616cd8c4628326b9f63e52d0f24b011207d21a7138b16a356052b9273e70",
+          "responseBytes": 54,
+          "responseSha256": "b1f89990b96c8bc2057842da90043cfeb6271e4244badd36527e8b9ea8f2a6b7",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        },
+        {
+          "step": "writer-head-new",
+          "role": "writer",
+          "method": "HEAD",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "artifactExists",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": null,
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 0,
+          "responseSha256": null,
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        },
+        {
+          "step": "reader-put-existing",
+          "role": "reader",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 32,
+          "requestSha256": "074fd08d0d05bb4b2f36b443a995870fc25fd5819fe81484cab6213d7690592a",
+          "requestTagSha256": "1fbc929fe10624ac76620697f9c684207b0c6e4fef50477bcf9e69e0a9990445",
+          "responseBytes": 54,
+          "responseSha256": "edf10ed1dec9df6ff59db4665a1fc8a33bdbbf3608d93d5eefbadb917887389c",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        },
+        {
+          "step": "writer-get-existing",
+          "role": "writer",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 32,
+          "responseSha256": "074fd08d0d05bb4b2f36b443a995870fc25fd5819fe81484cab6213d7690592a",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        }
+      ],
+      "notes": [
+        "The reader execution role's storage denial is deployed-IAM evidence and stays a lab case."
+      ],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "pass"
+        },
+        "published-stable-client": {
+          "verdict": "not-applicable"
+        },
+        "published-canary-client": {
+          "verdict": "not-applicable"
+        },
+        "beep-security-policy": {
+          "verdict": "fail",
+          "expectation": "reader-put-denied",
+          "detail": "reader-put-denied: reader-put-new answered 200 (success). The topology does not claim a reader/writer split; the failure is attributed to that design. | reader-put-created-nothing: writer-head-new answered 200 (success). The topology does not claim a reader/writer split; the failure is attributed to that design. | reader-overwrite-denied: reader-put-existing answered 200 (success). The topology does not claim a reader/writer split; the failure is attributed to that design. | prior-object-intact: writer-get-existing answered 200 (success)"
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-013",
+      "executor": "lab",
+      "exchanges": [],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-applicable"
+        },
+        "published-stable-client": {
+          "verdict": "not-applicable"
+        },
+        "published-canary-client": {
+          "verdict": "not-applicable"
+        },
+        "beep-security-policy": {
+          "verdict": "not-executed",
+          "reason": "Requires a deployed boundary or measured load the local lab cannot supply. Direct writer invocation outside the gateway needs the deployed Lambda/IAM boundary."
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-014",
+      "executor": "wire",
+      "exchanges": [
+        {
+          "step": "writer-put-seed",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 32,
+          "requestSha256": "017ca764397067fae8fe1e1614f020d4108c7b8d2aa28f1db240d19b7ab00646",
+          "requestTagSha256": "0673e27dfe88034bf4b796eae0ed7dc92187a6a435f0370cc86c8ba984be7107",
+          "responseBytes": 54,
+          "responseSha256": "45bb726aafa92c95ef502bb68b4c353fb234e1e1c9fa654a0efec993b658fa6e",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        },
+        {
+          "step": "foreign-get-own-namespace",
+          "role": "foreign",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 32,
+          "responseSha256": "017ca764397067fae8fe1e1614f020d4108c7b8d2aa28f1db240d19b7ab00646",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        },
+        {
+          "step": "foreign-put-own-namespace",
+          "role": "foreign",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 32,
+          "requestSha256": "e40829947729510a8436643b1b5f751165ee9c3572b33cba17ae8312cdb17a4e",
+          "requestTagSha256": "779047ef7cb97fdd626e099c930b4931c06933efb2c3d89503698bb3acca81d4",
+          "responseBytes": 54,
+          "responseSha256": "02e7bc756778ce7888be310da70ef6935175aebb49f3781cc62ab993223c6949",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        },
+        {
+          "step": "writer-head-planted",
+          "role": "writer",
+          "method": "HEAD",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "artifactExists",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": null,
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 0,
+          "responseSha256": null,
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        },
+        {
+          "step": "writer-get-foreign-namespace",
+          "role": "writer",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "foreign-team-id",
+          "hash": "valid",
+          "outcome": "not-found",
+          "status": 404,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 69,
+          "responseSha256": "7616fc8319e605f2f47854b072a164471a28a408b7139eb3ad3cb55081048d86",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        },
+        {
+          "step": "writer-put-foreign-namespace",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "foreign-team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 32,
+          "requestSha256": "e40829947729510a8436643b1b5f751165ee9c3572b33cba17ae8312cdb17a4e",
+          "requestTagSha256": "e673c5e9203bde67582e6221c6f230d5b450916ff2cb4932068b19398eec1bb0",
+          "responseBytes": 58,
+          "responseSha256": "09de88d1a57347e310ec718444c8b8641d49fe8fa48cb147f7621e951cfdad81",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        },
+        {
+          "step": "foreign-head-foreign-namespace",
+          "role": "foreign",
+          "method": "HEAD",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "artifactExists",
+          "strictScored": true,
+          "selector": "foreign-team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": null,
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 0,
+          "responseSha256": null,
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        }
+      ],
+      "notes": ["namespace pair is distinct"],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "pass"
+        },
+        "published-stable-client": {
+          "verdict": "not-applicable"
+        },
+        "published-canary-client": {
+          "verdict": "not-applicable"
+        },
+        "beep-security-policy": {
+          "verdict": "fail",
+          "expectation": "foreign-read-denied",
+          "detail": "foreign-read-denied: foreign-get-own-namespace answered 200 (success). The topology does not claim tenant binding; the failure is attributed to that design. | foreign-write-denied: foreign-put-own-namespace answered 200 (success). The topology does not claim tenant binding; the failure is attributed to that design. | foreign-write-created-nothing: writer-head-planted answered 200 (success). The topology does not claim tenant binding; the failure is attributed to that design. | cross-namespace-write-denied: writer-put-foreign-namespace answered 200 (success). The topology does not claim tenant binding; the failure is attributed to that design. | cross-namespace-write-created-nothing: foreign-head-foreign-namespace answered 200 (success). The topology does not claim tenant binding; the failure is attributed to that design."
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-015",
+      "executor": "wire",
+      "exchanges": [
+        {
+          "step": "writer-put-seed",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 32,
+          "requestSha256": "15a287f7508d4358dd13bf200810e4be2b83e9b4c18311c4bc34cdc6d546d15d",
+          "requestTagSha256": "e61a9bd324d83c729e8e9dba0a53e84383c95a3c4b68f491edf346cbcdb404a5",
+          "responseBytes": 54,
+          "responseSha256": "8bf1ba9fcf1dc2aa8d8fc95446d2b89e9cc6c866bf175894871e00df0eccb24a",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        },
+        {
+          "step": "writer-get-selector-empty",
+          "role": "writer",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "empty",
+          "hash": "valid",
+          "outcome": "client-error",
+          "status": 400,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 62,
+          "responseSha256": "39e80ea68318c91b88932c902b748e8a38333445dc40f0efef10f264f240c828",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        },
+        {
+          "step": "writer-put-selector-empty",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "empty",
+          "hash": "valid",
+          "outcome": "client-error",
+          "status": 400,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 32,
+          "requestSha256": "e4df9edeaca2dc6571fedb7f194b1bb34a87e61d204f024202705a910a69303d",
+          "requestTagSha256": "8d88f0c9b31c87ab65489f43d09673bb4f8c2b4a3d80a1d54e5e5a589dce9884",
+          "responseBytes": 62,
+          "responseSha256": "39e80ea68318c91b88932c902b748e8a38333445dc40f0efef10f264f240c828",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        },
+        {
+          "step": "writer-head-selector-empty",
+          "role": "writer",
+          "method": "HEAD",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "artifactExists",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "miss",
+          "status": 404,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 0,
+          "responseSha256": null,
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        },
+        {
+          "step": "writer-get-selector-conflicting",
+          "role": "writer",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "conflicting",
+          "hash": "valid",
+          "outcome": "client-error",
+          "status": 400,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 47,
+          "responseSha256": "f7a438a9b13922819aa6edb1c91ed45485ec30836234d404aa0295c736d13b53",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        },
+        {
+          "step": "writer-put-selector-conflicting",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "conflicting",
+          "hash": "valid",
+          "outcome": "client-error",
+          "status": 400,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 32,
+          "requestSha256": "e4df9edeaca2dc6571fedb7f194b1bb34a87e61d204f024202705a910a69303d",
+          "requestTagSha256": "23205069ab05b318895f6d35d0f3f96ed8f52ed0eddcb0512e34f25dcc58be3f",
+          "responseBytes": 47,
+          "responseSha256": "f7a438a9b13922819aa6edb1c91ed45485ec30836234d404aa0295c736d13b53",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        },
+        {
+          "step": "writer-head-selector-conflicting",
+          "role": "writer",
+          "method": "HEAD",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "artifactExists",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "miss",
+          "status": 404,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 0,
+          "responseSha256": null,
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        },
+        {
+          "step": "writer-get-selector-slug-conflict",
+          "role": "writer",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "slug-conflict",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 32,
+          "responseSha256": "15a287f7508d4358dd13bf200810e4be2b83e9b4c18311c4bc34cdc6d546d15d",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        },
+        {
+          "step": "writer-put-selector-slug-conflict",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "slug-conflict",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 32,
+          "requestSha256": "e4df9edeaca2dc6571fedb7f194b1bb34a87e61d204f024202705a910a69303d",
+          "requestTagSha256": "209087e18605d5874028a34b86c4805b53ace19db5987216edce03f931f61c88",
+          "responseBytes": 54,
+          "responseSha256": "5980534edaa61201f96f37b46a830297ba63f3395d5b82ae13fe320fc96916bd",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        },
+        {
+          "step": "writer-head-selector-slug-conflict",
+          "role": "writer",
+          "method": "HEAD",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "artifactExists",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": null,
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 0,
+          "responseSha256": null,
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        },
+        {
+          "step": "writer-get-selector-traversal",
+          "role": "writer",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "traversal",
+          "hash": "valid",
+          "outcome": "client-error",
+          "status": 400,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 26,
+          "responseSha256": "72ae73c19295ed47e90d67fc4c3f1d10445ae700045b66c8459bb1f9c96d1cb3",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        },
+        {
+          "step": "writer-put-selector-traversal",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "traversal",
+          "hash": "valid",
+          "outcome": "client-error",
+          "status": 400,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 32,
+          "requestSha256": "e4df9edeaca2dc6571fedb7f194b1bb34a87e61d204f024202705a910a69303d",
+          "requestTagSha256": "68814c7809cf365b5f19ccde2af8ba5d21ca0988d81c54f649977d201e25f1f5",
+          "responseBytes": 26,
+          "responseSha256": "72ae73c19295ed47e90d67fc4c3f1d10445ae700045b66c8459bb1f9c96d1cb3",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        },
+        {
+          "step": "writer-head-selector-traversal",
+          "role": "writer",
+          "method": "HEAD",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "artifactExists",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "miss",
+          "status": 404,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 0,
+          "responseSha256": null,
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        },
+        {
+          "step": "writer-get-selector-encoded",
+          "role": "writer",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "encoded",
+          "hash": "valid",
+          "outcome": "client-error",
+          "status": 400,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 26,
+          "responseSha256": "72ae73c19295ed47e90d67fc4c3f1d10445ae700045b66c8459bb1f9c96d1cb3",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        },
+        {
+          "step": "writer-put-selector-encoded",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "encoded",
+          "hash": "valid",
+          "outcome": "client-error",
+          "status": 400,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 32,
+          "requestSha256": "e4df9edeaca2dc6571fedb7f194b1bb34a87e61d204f024202705a910a69303d",
+          "requestTagSha256": "549b0e6c3a9b33a4b056019487a28819df7705d25f5d00c61e46a9bafc83c07a",
+          "responseBytes": 26,
+          "responseSha256": "72ae73c19295ed47e90d67fc4c3f1d10445ae700045b66c8459bb1f9c96d1cb3",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        },
+        {
+          "step": "writer-head-selector-encoded",
+          "role": "writer",
+          "method": "HEAD",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "artifactExists",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "miss",
+          "status": 404,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 0,
+          "responseSha256": null,
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        },
+        {
+          "step": "writer-get-selector-oversized",
+          "role": "writer",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "oversized",
+          "hash": "valid",
+          "outcome": "server-error",
+          "status": 500,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 4257,
+          "responseSha256": "ff32829848b178273ebf222d900bb719e2a0126ec6792d3102b19044eac8155a",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        },
+        {
+          "step": "writer-put-selector-oversized",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "oversized",
+          "hash": "valid",
+          "outcome": "client-error",
+          "status": 412,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 32,
+          "requestSha256": "e4df9edeaca2dc6571fedb7f194b1bb34a87e61d204f024202705a910a69303d",
+          "requestTagSha256": "0da609b81ce53d547e38f99bfc7098f9b65fc531b563ec4b527c11b818c6df8d",
+          "responseBytes": 4284,
+          "responseSha256": "598f254d0dc6cb2d46e4ce27c05f3aa0ecbfb71044b10ef02610f1d407a2727f",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        },
+        {
+          "step": "writer-head-selector-oversized",
+          "role": "writer",
+          "method": "HEAD",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "artifactExists",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "miss",
+          "status": 404,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 0,
+          "responseSha256": null,
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        }
+      ],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "fail",
+          "expectation": "documented-status:downloadArtifact",
+          "detail": "documented-status:downloadArtifact: writer-get-selector-oversized answered 500; documented 200, 400, 401, 403, 404 | documented-status:uploadArtifact: writer-put-selector-oversized answered 412; documented 200, 202, 400, 401, 403"
+        },
+        "published-stable-client": {
+          "verdict": "not-applicable"
+        },
+        "published-canary-client": {
+          "verdict": "not-applicable"
+        },
+        "beep-security-policy": {
+          "verdict": "fail",
+          "expectation": "selector-slug-conflict-read-fails-closed",
+          "detail": "selector-slug-conflict-read-fails-closed: writer-get-selector-slug-conflict answered 200 (success) | selector-slug-conflict-write-fails-closed: writer-put-selector-slug-conflict answered 200 (success) | selector-slug-conflict-created-nothing: writer-head-selector-slug-conflict answered 200 (success) | selector-oversized-read-fails-closed: writer-get-selector-oversized answered 500 (server-error)"
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-016",
+      "executor": "wire",
+      "exchanges": [
+        {
+          "step": "writer-put-hash-non-hex",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "non-hex",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 32,
+          "requestSha256": "d330ee85a1f008829360e5d56ffb631f6398cb265f49146f19693a4aa52cf8da",
+          "requestTagSha256": "ce263b63f5c06eb798e202d69cfdf025ed0a0d44439861d3421c3dc6045b05e7",
+          "responseBytes": 36,
+          "responseSha256": "ce040e4d18800ff849489906192e0921133b8b6ee4cdcee776586da2345ee4d7",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        },
+        {
+          "step": "reader-get-hash-non-hex",
+          "role": "reader",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "non-hex",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 32,
+          "responseSha256": "d330ee85a1f008829360e5d56ffb631f6398cb265f49146f19693a4aa52cf8da",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        },
+        {
+          "step": "writer-head-hash-non-hex",
+          "role": "writer",
+          "method": "HEAD",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "artifactExists",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "non-hex",
+          "outcome": "success",
+          "status": 200,
+          "contentType": null,
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 0,
+          "responseSha256": null,
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        },
+        {
+          "step": "writer-put-hash-traversal",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "traversal",
+          "outcome": "client-error",
+          "status": 400,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 32,
+          "requestSha256": "d330ee85a1f008829360e5d56ffb631f6398cb265f49146f19693a4aa52cf8da",
+          "requestTagSha256": "395c14fd9a8d9f332bb8eafd197100e43427e628adbd21e6e2b8b907040754a6",
+          "responseBytes": 24,
+          "responseSha256": "8b8a93da171a9645be1002ec043c3594b9c6e8223a9227673140de05e3e81d89",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        },
+        {
+          "step": "reader-get-hash-traversal",
+          "role": "reader",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "traversal",
+          "outcome": "client-error",
+          "status": 400,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 24,
+          "responseSha256": "8b8a93da171a9645be1002ec043c3594b9c6e8223a9227673140de05e3e81d89",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        },
+        {
+          "step": "writer-head-hash-traversal",
+          "role": "writer",
+          "method": "HEAD",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "artifactExists",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "miss",
+          "status": 404,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 0,
+          "responseSha256": null,
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        },
+        {
+          "step": "writer-put-hash-encoded",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "encoded",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 32,
+          "requestSha256": "d330ee85a1f008829360e5d56ffb631f6398cb265f49146f19693a4aa52cf8da",
+          "requestTagSha256": "583d8a85e565ccb7712be23a974464106722a522c26ed1c88edf2f6c3784461a",
+          "responseBytes": 54,
+          "responseSha256": "36b4ee151db7163e18aefc03b2c750419ef204255799df75f26480cbcf6632ed",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        },
+        {
+          "step": "reader-get-hash-encoded",
+          "role": "reader",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "encoded",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 32,
+          "responseSha256": "d330ee85a1f008829360e5d56ffb631f6398cb265f49146f19693a4aa52cf8da",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        },
+        {
+          "step": "writer-head-hash-encoded",
+          "role": "writer",
+          "method": "HEAD",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "artifactExists",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": null,
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 0,
+          "responseSha256": null,
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        },
+        {
+          "step": "writer-put-hash-empty",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": null,
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "empty",
+          "outcome": "client-error",
+          "status": 400,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 32,
+          "requestSha256": "d330ee85a1f008829360e5d56ffb631f6398cb265f49146f19693a4aa52cf8da",
+          "requestTagSha256": "0ec34309bc9870d732d6ffac43c1dd5aaf276ef94b709ce11ff0c26f1958aac1",
+          "responseBytes": 24,
+          "responseSha256": "8b8a93da171a9645be1002ec043c3594b9c6e8223a9227673140de05e3e81d89",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        },
+        {
+          "step": "reader-get-hash-empty",
+          "role": "reader",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": null,
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "empty",
+          "outcome": "client-error",
+          "status": 400,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 24,
+          "responseSha256": "8b8a93da171a9645be1002ec043c3594b9c6e8223a9227673140de05e3e81d89",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        },
+        {
+          "step": "writer-head-hash-empty",
+          "role": "writer",
+          "method": "HEAD",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": null,
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "empty",
+          "outcome": "client-error",
+          "status": 400,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 0,
+          "responseSha256": null,
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        },
+        {
+          "step": "writer-put-hash-oversized",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "oversized",
+          "outcome": "client-error",
+          "status": 414,
+          "contentType": "application/json",
+          "requestBytes": 32,
+          "requestSha256": "d330ee85a1f008829360e5d56ffb631f6398cb265f49146f19693a4aa52cf8da",
+          "requestTagSha256": "581b4749f27ce09faccae4955e0ee4e6b42954b69c862fcf1a2c0046a7484d7e",
+          "responseBytes": 4233,
+          "responseSha256": "28816b35f666b9dcc0c9eba69c5ff0e83bb801e6ecbad23e7d865e0e5f14b40c",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        },
+        {
+          "step": "reader-get-hash-oversized",
+          "role": "reader",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "oversized",
+          "outcome": "client-error",
+          "status": 414,
+          "contentType": "application/json",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 4233,
+          "responseSha256": "28816b35f666b9dcc0c9eba69c5ff0e83bb801e6ecbad23e7d865e0e5f14b40c",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        },
+        {
+          "step": "writer-head-hash-oversized",
+          "role": "writer",
+          "method": "HEAD",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "artifactExists",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "oversized",
+          "outcome": "client-error",
+          "status": 414,
+          "contentType": "application/json",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 0,
+          "responseSha256": null,
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        }
+      ],
+      "notes": [
+        "Oversized means more than 128 hex characters; the probe sends 4096."
+      ],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "fail",
+          "expectation": "documented-status:uploadArtifact",
+          "detail": "documented-status:uploadArtifact: writer-put-hash-oversized answered 414; documented 200, 202, 400, 401, 403 | documented-status:downloadArtifact: reader-get-hash-oversized answered 414; documented 200, 400, 401, 403, 404 | documented-status:artifactExists: writer-head-hash-oversized answered 414; documented 200, 400, 401, 403, 404"
+        },
+        "published-stable-client": {
+          "verdict": "not-applicable"
+        },
+        "published-canary-client": {
+          "verdict": "not-applicable"
+        },
+        "beep-security-policy": {
+          "verdict": "fail",
+          "expectation": "hash-non-hex-write-fails-closed",
+          "detail": "hash-non-hex-write-fails-closed: writer-put-hash-non-hex answered 200 (success) | hash-non-hex-read-fails-closed: reader-get-hash-non-hex answered 200 (success) | hash-non-hex-created-nothing: writer-head-hash-non-hex answered 200 (success) | hash-encoded-write-fails-closed: writer-put-hash-encoded answered 200 (success) | hash-encoded-read-fails-closed: reader-get-hash-encoded answered 200 (success) | hash-encoded-created-nothing: writer-head-hash-encoded answered 200 (success)"
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-017",
+      "executor": "native",
+      "exchanges": [],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-applicable"
+        },
+        "published-stable-client": {
+          "verdict": "not-executed",
+          "reason": "Requires the pinned native Turbo executables; executed by cache conformance-native. Requires the exact pinned Turbo executables and signing epochs; executed by cache conformance-native through the fault proxy."
+        },
+        "published-canary-client": {
+          "verdict": "not-executed",
+          "reason": "Requires the pinned native Turbo executables; executed by cache conformance-native. Requires the exact pinned Turbo executables and signing epochs; executed by cache conformance-native through the fault proxy."
+        },
+        "beep-security-policy": {
+          "verdict": "not-applicable"
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-018",
+      "executor": "native",
+      "exchanges": [],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-applicable"
+        },
+        "published-stable-client": {
+          "verdict": "not-executed",
+          "reason": "Requires the pinned native Turbo executables; executed by cache conformance-native. Requires the exact pinned Turbo executables and signing epochs; executed by cache conformance-native through the fault proxy."
+        },
+        "published-canary-client": {
+          "verdict": "not-executed",
+          "reason": "Requires the pinned native Turbo executables; executed by cache conformance-native. Requires the exact pinned Turbo executables and signing epochs; executed by cache conformance-native through the fault proxy."
+        },
+        "beep-security-policy": {
+          "verdict": "not-applicable"
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-019",
+      "executor": "native",
+      "exchanges": [],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-applicable"
+        },
+        "published-stable-client": {
+          "verdict": "not-executed",
+          "reason": "Requires the pinned native Turbo executables; executed by cache conformance-native. Requires the exact pinned Turbo executables and signing epochs; executed by cache conformance-native through the fault proxy."
+        },
+        "published-canary-client": {
+          "verdict": "not-executed",
+          "reason": "Requires the pinned native Turbo executables; executed by cache conformance-native. Requires the exact pinned Turbo executables and signing epochs; executed by cache conformance-native through the fault proxy."
+        },
+        "beep-security-policy": {
+          "verdict": "not-applicable"
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-020",
+      "executor": "native",
+      "exchanges": [],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-applicable"
+        },
+        "published-stable-client": {
+          "verdict": "not-executed",
+          "reason": "Requires the pinned native Turbo executables; executed by cache conformance-native. Requires the exact pinned Turbo executables and signing epochs; executed by cache conformance-native through the fault proxy."
+        },
+        "published-canary-client": {
+          "verdict": "not-executed",
+          "reason": "Requires the pinned native Turbo executables; executed by cache conformance-native. Requires the exact pinned Turbo executables and signing epochs; executed by cache conformance-native through the fault proxy."
+        },
+        "beep-security-policy": {
+          "verdict": "not-applicable"
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-021",
+      "executor": "native",
+      "exchanges": [],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-applicable"
+        },
+        "published-stable-client": {
+          "verdict": "not-executed",
+          "reason": "Requires the pinned native Turbo executables; executed by cache conformance-native. Requires the exact pinned Turbo executables and signing epochs; executed by cache conformance-native through the fault proxy. The wrong-team response is replayed by the fault proxy, so it scores clients only; backend tenant isolation is RC-014."
+        },
+        "published-canary-client": {
+          "verdict": "not-executed",
+          "reason": "Requires the pinned native Turbo executables; executed by cache conformance-native. Requires the exact pinned Turbo executables and signing epochs; executed by cache conformance-native through the fault proxy. The wrong-team response is replayed by the fault proxy, so it scores clients only; backend tenant isolation is RC-014."
+        },
+        "beep-security-policy": {
+          "verdict": "not-applicable"
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-022",
+      "executor": "native",
+      "exchanges": [],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-applicable"
+        },
+        "published-stable-client": {
+          "verdict": "not-executed",
+          "reason": "Requires the pinned native Turbo executables; executed by cache conformance-native. Requires the exact pinned Turbo executables and signing epochs; executed by cache conformance-native through the fault proxy."
+        },
+        "published-canary-client": {
+          "verdict": "not-executed",
+          "reason": "Requires the pinned native Turbo executables; executed by cache conformance-native. Requires the exact pinned Turbo executables and signing epochs; executed by cache conformance-native through the fault proxy."
+        },
+        "beep-security-policy": {
+          "verdict": "not-executed",
+          "reason": "Requires the pinned native Turbo executables; executed by cache conformance-native. Requires the exact pinned Turbo executables and signing epochs; executed by cache conformance-native through the fault proxy."
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-023",
+      "executor": "wire",
+      "exchanges": [
+        {
+          "step": "writer-put-seed",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": false,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 32,
+          "requestSha256": "0d492471d4bc809da2f2dc9fe922db8de27720b2baad8c94d92d3315f5b33949",
+          "requestTagSha256": "beab8e0695afc029ddc65fd085fd2bedba20a40fac346a693ce1a832e8298dc4",
+          "responseBytes": 54,
+          "responseSha256": "9e5cea66252b23add7ba46adbf764fdce9a6d5692c658cc216a71bd6267ca301",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        },
+        {
+          "step": "unknown-get-written",
+          "role": "unknown",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "unauthorized",
+          "status": 401,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 41,
+          "responseSha256": "2b68130abd703f1e2c7c6102d8558f9dc43bea302c3061cf7786d8f006fcd52d",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        },
+        {
+          "step": "missing-get-written",
+          "role": "missing",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "client-error",
+          "status": 400,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 42,
+          "responseSha256": "6822ec1eb9ff38d2d71d6dc7095a65c72a3e35c7b00be161ef926fd00949efa3",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        },
+        {
+          "step": "reader-get-unwritten",
+          "role": "reader",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "miss",
+          "status": 404,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 69,
+          "responseSha256": "7616fc8319e605f2f47854b072a164471a28a408b7139eb3ad3cb55081048d86",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        },
+        {
+          "step": "reader-get-written",
+          "role": "reader",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 32,
+          "responseSha256": "0d492471d4bc809da2f2dc9fe922db8de27720b2baad8c94d92d3315f5b33949",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        }
+      ],
+      "notes": [
+        "429, 5xx, timeout, reset and truncated-body classes need lab fault injection; the classifier records each distinctly."
+      ],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "fail",
+          "expectation": "missing-auth-distinct-from-miss",
+          "detail": "missing-auth-distinct-from-miss: missing-get-written answered 400 (client-error)"
+        },
+        "published-stable-client": {
+          "verdict": "not-applicable"
+        },
+        "published-canary-client": {
+          "verdict": "not-applicable"
+        },
+        "beep-security-policy": {
+          "verdict": "not-applicable"
+        },
+        "observability": {
+          "verdict": "not-executed",
+          "reason": "Needs backend log capture; the wire runner records only direct receipts."
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-024",
+      "executor": "wire",
+      "exchanges": [
+        {
+          "step": "writer-put-seed",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 4096,
+          "requestSha256": "5971f372aa720227833dda63000ac3ad103e8db1cd323f3d5736513630062cdd",
+          "requestTagSha256": "d3850c3ba7fd5c8b5f26a3569ffb01959511876438ef4a984496492ac882f5de",
+          "responseBytes": 54,
+          "responseSha256": "340b4ab785a538199091ba53dd5710c0b0ae6034f267afe91818f663ec030bf5",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        },
+        {
+          "step": "reader-put-existing",
+          "role": "reader",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 4096,
+          "requestSha256": "28bbe31b88f22c4e93a1f600a0541978f81ef01bfa7ec7b4906662011e7e1fbd",
+          "requestTagSha256": "9ac2c2e38ebcbb112d0a1619583f98a00e19b8f55a4b6ba6c026fa63b0577bc3",
+          "responseBytes": 54,
+          "responseSha256": "340b4ab785a538199091ba53dd5710c0b0ae6034f267afe91818f663ec030bf5",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        },
+        {
+          "step": "unknown-put-existing",
+          "role": "unknown",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "unauthorized",
+          "status": 401,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 4096,
+          "requestSha256": "28bbe31b88f22c4e93a1f600a0541978f81ef01bfa7ec7b4906662011e7e1fbd",
+          "requestTagSha256": "46ea7a57ab41736ad3fc6c2452cda51580bbabfb109121ff5566475b28fff632",
+          "responseBytes": 41,
+          "responseSha256": "2b68130abd703f1e2c7c6102d8558f9dc43bea302c3061cf7786d8f006fcd52d",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        },
+        {
+          "step": "writer-put-aborted",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": false,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "transport-error",
+          "status": null,
+          "contentType": null,
+          "requestBytes": 1024,
+          "requestSha256": "28bbe31b88f22c4e93a1f600a0541978f81ef01bfa7ec7b4906662011e7e1fbd",
+          "requestTagSha256": "1326ac279a1f590db91387ea16ebbdcc5f05abcfcf59e774f8db81d17c4ca14c",
+          "responseBytes": 0,
+          "responseSha256": null,
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        },
+        {
+          "step": "reader-get-existing",
+          "role": "reader",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 4096,
+          "responseSha256": "28bbe31b88f22c4e93a1f600a0541978f81ef01bfa7ec7b4906662011e7e1fbd",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        },
+        {
+          "step": "writer-put-untagged",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 512,
+          "requestSha256": "c444457beeb9f81c4087baac6d41edf86e9e7be3ba5889bb97404ffe6eca70fc",
+          "requestTagSha256": null,
+          "responseBytes": 54,
+          "responseSha256": "e6686d6eff8c3d182181771a65b922ed0666ce3b19fad34285971911ba366d22",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        },
+        {
+          "step": "reader-get-untagged",
+          "role": "reader",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 512,
+          "responseSha256": "c444457beeb9f81c4087baac6d41edf86e9e7be3ba5889bb97404ffe6eca70fc",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        }
+      ],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "pass"
+        },
+        "published-stable-client": {
+          "verdict": "not-applicable"
+        },
+        "published-canary-client": {
+          "verdict": "not-applicable"
+        },
+        "beep-security-policy": {
+          "verdict": "fail",
+          "expectation": "reader-write-not-acknowledged",
+          "detail": "reader-write-not-acknowledged: reader-put-existing answered 200 (success) | prior-object-intact: reader-get-existing answered 200 (success)"
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-025",
+      "executor": "wire",
+      "exchanges": [
+        {
+          "step": "writer-put-identical-1",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 32768,
+          "requestSha256": "d23260bf711d5bf2c01135c8bbc513150c2b45efb0346adf4522726ef61bcda9",
+          "requestTagSha256": "8cf408a6707570ffd211df276c33078db62a893f84d9d7a13fa64230b4abc9b8",
+          "responseBytes": 54,
+          "responseSha256": "5cea7a15d3276c721d319be48d197bc7a49104cbda99191c2d3d585dbfa4039c",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        },
+        {
+          "step": "writer-put-identical-2",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 32768,
+          "requestSha256": "d23260bf711d5bf2c01135c8bbc513150c2b45efb0346adf4522726ef61bcda9",
+          "requestTagSha256": "17c1e8dd498d62abcad7a6e91e6c3503251471c972e045f2dfb0c603c2ca1687",
+          "responseBytes": 54,
+          "responseSha256": "5cea7a15d3276c721d319be48d197bc7a49104cbda99191c2d3d585dbfa4039c",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 2
+        },
+        {
+          "step": "writer-put-identical-3",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 32768,
+          "requestSha256": "d23260bf711d5bf2c01135c8bbc513150c2b45efb0346adf4522726ef61bcda9",
+          "requestTagSha256": "3b564384ee71e0fa8efc4916990521070b1e6b9f8ab9b137924519e681dbb1a9",
+          "responseBytes": 54,
+          "responseSha256": "5cea7a15d3276c721d319be48d197bc7a49104cbda99191c2d3d585dbfa4039c",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 2
+        },
+        {
+          "step": "writer-put-identical-4",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 32768,
+          "requestSha256": "d23260bf711d5bf2c01135c8bbc513150c2b45efb0346adf4522726ef61bcda9",
+          "requestTagSha256": "7881c26d8f890fa8c10a5d41961ff877c9aabbf44cd9ad0a0bcf3ebb7a4df36b",
+          "responseBytes": 54,
+          "responseSha256": "5cea7a15d3276c721d319be48d197bc7a49104cbda99191c2d3d585dbfa4039c",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 3
+        },
+        {
+          "step": "reader-get-identical",
+          "role": "reader",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 32768,
+          "responseSha256": "d23260bf711d5bf2c01135c8bbc513150c2b45efb0346adf4522726ef61bcda9",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        },
+        {
+          "step": "writer-put-conflicting-1",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 16384,
+          "requestSha256": "4d22ff66be5ea9633acf30ad654ec5bb20a22b86112c68ca793568e3d42cd273",
+          "requestTagSha256": "6ae686017043d2d2d6823cbde0a771e61c2698275b6ec85425a2c7e4f321d53f",
+          "responseBytes": 54,
+          "responseSha256": "52c3bf2f83123714f42d25be0252e920900f144a253ef36d615bf9fba630cd21",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        },
+        {
+          "step": "writer-put-conflicting-2",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 17408,
+          "requestSha256": "fd8b5b2fa25274a339d4dc2cc594f55dea3ecd65ce3bb1e100da744d6060c5c1",
+          "requestTagSha256": "3717dc4bb4415218a27b1851951716018694f75452f125598a3ae91ef26db4f6",
+          "responseBytes": 54,
+          "responseSha256": "52c3bf2f83123714f42d25be0252e920900f144a253ef36d615bf9fba630cd21",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        },
+        {
+          "step": "writer-put-conflicting-3",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 18432,
+          "requestSha256": "fa72c54e4e1a41da153083e4c76fa3e3356df68039fbd5b58ed3ec33afe21daa",
+          "requestTagSha256": "6483d463b86ce05503c4e0264601a1352862423db751de1b60fd0a9747d452e4",
+          "responseBytes": 54,
+          "responseSha256": "52c3bf2f83123714f42d25be0252e920900f144a253ef36d615bf9fba630cd21",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        },
+        {
+          "step": "writer-put-conflicting-4",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 19456,
+          "requestSha256": "9583d8098d0b5adbf499b465318455e01fd37c191f29ef516267a4da1dfe36f6",
+          "requestTagSha256": "74ee0e97b7a33e34cb51cd8d447305455aae19162785f167f01f5424ffb6af11",
+          "responseBytes": 54,
+          "responseSha256": "52c3bf2f83123714f42d25be0252e920900f144a253ef36d615bf9fba630cd21",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 2
+        },
+        {
+          "step": "reader-get-conflicting",
+          "role": "reader",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 19456,
+          "responseSha256": "9583d8098d0b5adbf499b465318455e01fd37c191f29ef516267a4da1dfe36f6",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 0
+        }
+      ],
+      "notes": [
+        "conflicting writes: write 4 of 4 won; writer-put-conflicting-1 answered 200 (success); writer-put-conflicting-2 answered 200 (success); writer-put-conflicting-3 answered 200 (success); writer-put-conflicting-4 answered 200 (success)"
+      ],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "pass"
+        },
+        "published-stable-client": {
+          "verdict": "not-applicable"
+        },
+        "published-canary-client": {
+          "verdict": "not-applicable"
+        },
+        "beep-security-policy": {
+          "verdict": "pass"
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-026",
+      "executor": "wire",
+      "exchanges": [
+        {
+          "step": "writer-put-prior",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 65536,
+          "requestSha256": "e19253acccf3552626cb545ebfa91a5e59906c22b1530a8714e534a93388096c",
+          "requestTagSha256": "93ec81a24b3a39eb9ae9b2cda51c46b4a4224157a40f5e0e174e8ceb2ad411d1",
+          "responseBytes": 54,
+          "responseSha256": "8ea2db0f5b2b5b94e15a295655ec9c5248982192f178c5e1cac07d045ae49b02",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        },
+        {
+          "step": "writer-put-overwrite",
+          "role": "writer",
+          "method": "PUT",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "uploadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "requestBytes": 524288,
+          "requestSha256": "25435beaaaff8e6307b761760f2549ffa468685177e3f7c2086152e159c6cd62",
+          "requestTagSha256": "4a2c56c38c8888887d04db0f67a12cd80c04c148f4ff8c006e09a5bcdcfaa282",
+          "responseBytes": 54,
+          "responseSha256": "8ea2db0f5b2b5b94e15a295655ec9c5248982192f178c5e1cac07d045ae49b02",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 11
+        },
+        {
+          "step": "reader-get-during-1",
+          "role": "reader",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 65536,
+          "responseSha256": "e19253acccf3552626cb545ebfa91a5e59906c22b1530a8714e534a93388096c",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 9
+        },
+        {
+          "step": "reader-get-during-2",
+          "role": "reader",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 65536,
+          "responseSha256": "e19253acccf3552626cb545ebfa91a5e59906c22b1530a8714e534a93388096c",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 9
+        },
+        {
+          "step": "reader-get-during-3",
+          "role": "reader",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 65536,
+          "responseSha256": "e19253acccf3552626cb545ebfa91a5e59906c22b1530a8714e534a93388096c",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 9
+        },
+        {
+          "step": "reader-get-during-4",
+          "role": "reader",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 65536,
+          "responseSha256": "e19253acccf3552626cb545ebfa91a5e59906c22b1530a8714e534a93388096c",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 9
+        },
+        {
+          "step": "reader-get-during-5",
+          "role": "reader",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 65536,
+          "responseSha256": "e19253acccf3552626cb545ebfa91a5e59906c22b1530a8714e534a93388096c",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 9
+        },
+        {
+          "step": "reader-get-during-6",
+          "role": "reader",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 65536,
+          "responseSha256": "e19253acccf3552626cb545ebfa91a5e59906c22b1530a8714e534a93388096c",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 9
+        },
+        {
+          "step": "reader-get-after",
+          "role": "reader",
+          "method": "GET",
+          "route": "/v8/artifacts/{hash}",
+          "operationId": "downloadArtifact",
+          "strictScored": true,
+          "selector": "team-id",
+          "hash": "valid",
+          "outcome": "success",
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "requestBytes": 0,
+          "requestSha256": null,
+          "requestTagSha256": null,
+          "responseBytes": 524288,
+          "responseSha256": "25435beaaaff8e6307b761760f2549ffa468685177e3f7c2086152e159c6cd62",
+          "tagPresent": false,
+          "tagSha256": null,
+          "durationPresent": false,
+          "elapsedMs": 1
+        }
+      ],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "pass"
+        },
+        "published-stable-client": {
+          "verdict": "not-applicable"
+        },
+        "published-canary-client": {
+          "verdict": "not-applicable"
+        },
+        "beep-security-policy": {
+          "verdict": "pass"
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-027",
+      "executor": "lab",
+      "exchanges": [],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-applicable"
+        },
+        "published-stable-client": {
+          "verdict": "not-applicable"
+        },
+        "published-canary-client": {
+          "verdict": "not-applicable"
+        },
+        "beep-security-policy": {
+          "verdict": "not-applicable"
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-executed",
+          "reason": "Measured by cache conformance-lab. cache conformance-lab measures the p50/p95/p99, 2x p99 and observed-max sizes; only a disposable-deployment run is representative."
+        }
+      }
+    },
+    {
+      "id": "RC-028",
+      "executor": "lab",
+      "exchanges": [],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-applicable"
+        },
+        "published-stable-client": {
+          "verdict": "not-applicable"
+        },
+        "published-canary-client": {
+          "verdict": "not-applicable"
+        },
+        "beep-security-policy": {
+          "verdict": "not-applicable"
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-executed",
+          "reason": "Measured by cache conformance-lab. cache conformance-lab measures observed peak and 1.5x peak read/write concurrency; only a disposable-deployment run is representative."
+        }
+      }
+    },
+    {
+      "id": "RC-029",
+      "executor": "lab",
+      "exchanges": [],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-applicable"
+        },
+        "published-stable-client": {
+          "verdict": "not-applicable"
+        },
+        "published-canary-client": {
+          "verdict": "not-applicable"
+        },
+        "beep-security-policy": {
+          "verdict": "not-executed",
+          "reason": "Requires a deployed boundary or measured load the local lab cannot supply. Retention and namespace cleanup need storage lifecycle timers."
+        },
+        "observability": {
+          "verdict": "not-executed",
+          "reason": "Requires a deployed boundary or measured load the local lab cannot supply. Retention and namespace cleanup need storage lifecycle timers."
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-030",
+      "executor": "lab",
+      "exchanges": [],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-applicable"
+        },
+        "published-stable-client": {
+          "verdict": "not-applicable"
+        },
+        "published-canary-client": {
+          "verdict": "not-applicable"
+        },
+        "beep-security-policy": {
+          "verdict": "not-executed",
+          "reason": "Requires a deployed boundary or measured load the local lab cannot supply. Log and trace privacy needs backend log capture."
+        },
+        "observability": {
+          "verdict": "not-executed",
+          "reason": "Requires a deployed boundary or measured load the local lab cannot supply. Log and trace privacy needs backend log capture."
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-031",
+      "executor": "lab",
+      "exchanges": [],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-applicable"
+        },
+        "published-stable-client": {
+          "verdict": "not-applicable"
+        },
+        "published-canary-client": {
+          "verdict": "not-applicable"
+        },
+        "beep-security-policy": {
+          "verdict": "not-applicable"
+        },
+        "observability": {
+          "verdict": "not-executed",
+          "reason": "Requires a deployed boundary or measured load the local lab cannot supply. Correlation needs client, backend and storage telemetry capture."
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    },
+    {
+      "id": "RC-032",
+      "executor": "lab",
+      "exchanges": [],
+      "notes": [],
+      "measurements": [],
+      "verdicts": {
+        "strict-openapi": {
+          "verdict": "not-applicable"
+        },
+        "published-stable-client": {
+          "verdict": "not-applicable"
+        },
+        "published-canary-client": {
+          "verdict": "not-applicable"
+        },
+        "beep-security-policy": {
+          "verdict": "not-executed",
+          "reason": "Requires a deployed boundary or measured load the local lab cannot supply. Cutback needs a rehearsed endpoint and epoch restoration receipt."
+        },
+        "observability": {
+          "verdict": "not-applicable"
+        },
+        "performance-envelope": {
+          "verdict": "not-applicable"
+        }
+      }
+    }
+  ],
+  "summary": [
+    {
+      "dimension": "strict-openapi",
+      "pass": 11,
+      "fail": 7,
+      "unsupportedOptional": 1,
+      "notApplicable": 13,
+      "notExecuted": 0
+    },
+    {
+      "dimension": "published-stable-client",
+      "pass": 0,
+      "fail": 0,
+      "unsupportedOptional": 0,
+      "notApplicable": 20,
+      "notExecuted": 12
+    },
+    {
+      "dimension": "published-canary-client",
+      "pass": 0,
+      "fail": 0,
+      "unsupportedOptional": 0,
+      "notApplicable": 20,
+      "notExecuted": 12
+    },
+    {
+      "dimension": "beep-security-policy",
+      "pass": 2,
+      "fail": 6,
+      "unsupportedOptional": 0,
+      "notApplicable": 19,
+      "notExecuted": 5
+    },
+    {
+      "dimension": "observability",
+      "pass": 0,
+      "fail": 0,
+      "unsupportedOptional": 0,
+      "notApplicable": 27,
+      "notExecuted": 5
+    },
+    {
+      "dimension": "performance-envelope",
+      "pass": 0,
+      "fail": 0,
+      "unsupportedOptional": 0,
+      "notApplicable": 30,
+      "notExecuted": 2
+    }
+  ]
+}

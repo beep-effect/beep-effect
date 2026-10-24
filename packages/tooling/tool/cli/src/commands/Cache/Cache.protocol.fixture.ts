@@ -62,30 +62,54 @@ const validFixtureSelectors = (parts: ReadonlyArray<string>, namespace: string) 
   );
 };
 
-// Truncate artifact bytes while retaining complete HTTP framing so the native
-// client must reject the signed payload itself.
-const readFaultBody = (stored: StoredArtifact, fault: CacheFixtureScenario["fault"]) => {
-  const body = new Uint8Array(
-    fault === "truncated-body" ? stored.body.subarray(0, Math.max(0, stored.body.byteLength - 1)) : stored.body
-  );
-  if (fault === "corrupt-body" && body.byteLength > 0) {
+/**
+ * Copy artifact bytes with the first bit flipped; an empty body stays empty.
+ *
+ * **Example** (Corrupt one byte)
+ * ```ts
+ * import { corruptCacheArtifactBody } from "@beep/repo-cli/commands/Cache"
+ * console.assert(corruptCacheArtifactBody(Uint8Array.of(0))[0] === 1)
+ * ```
+ *
+ * @category fixtures
+ * @since 0.0.0
+ */
+export const corruptCacheArtifactBody = (bytes: Uint8Array) => {
+  const body = new Uint8Array(bytes);
+  if (body.byteLength > 0) {
     const view = new DataView(body.buffer, body.byteOffset, body.byteLength);
     view.setUint8(0, view.getUint8(0) ^ 1);
   }
   return body;
 };
 
-const readFaultTag = (stored: StoredArtifact, fault: CacheFixtureScenario["fault"]) => {
-  const tag =
-    fault === "missing-tag"
-      ? O.none()
-      : O.some(
-          fault === "invalid-tag"
-            ? `${Str.startsWith("A")(stored.tag) ? "B" : "A"}${Str.slice(1)(stored.tag)}`
-            : stored.tag
-        );
-  return tag;
-};
+/**
+ * Change the first character of an opaque artifact tag.
+ *
+ * **Example** (Tamper with a tag)
+ * ```ts
+ * import { tamperCacheArtifactTag } from "@beep/repo-cli/commands/Cache"
+ * console.assert(tamperCacheArtifactTag("Abc") === "Bbc")
+ * ```
+ *
+ * @category fixtures
+ * @since 0.0.0
+ */
+export const tamperCacheArtifactTag = (tag: string) => `${Str.startsWith("A")(tag) ? "B" : "A"}${Str.slice(1)(tag)}`;
+
+// Truncate artifact bytes while retaining complete HTTP framing so the native
+// client must reject the signed payload itself.
+const readFaultBody = (stored: StoredArtifact, fault: CacheFixtureScenario["fault"]) =>
+  fault === "corrupt-body"
+    ? corruptCacheArtifactBody(stored.body)
+    : new Uint8Array(
+        fault === "truncated-body" ? stored.body.subarray(0, Math.max(0, stored.body.byteLength - 1)) : stored.body
+      );
+
+const readFaultTag = (stored: StoredArtifact, fault: CacheFixtureScenario["fault"]) =>
+  fault === "missing-tag"
+    ? O.none()
+    : O.some(fault === "invalid-tag" ? tamperCacheArtifactTag(stored.tag) : stored.tag);
 
 const fixtureHost = "127.0.0.1";
 const AddressInUse = S.Struct({ code: S.tag("EADDRINUSE") }).pipe(
@@ -100,9 +124,10 @@ const awaitBindEvents = Effect.callback<void>((resume) => {
 });
 
 const startFixtureServer = Effect.fn("CacheFixture.startServer")(function* <E, R>(
-  app: Effect.Effect<HttpServerResponse.HttpServerResponse, E, R>
+  app: Effect.Effect<HttpServerResponse.HttpServerResponse, E, R>,
+  maxRequestBodySize: number
 ) {
-  const server = yield* BunHttpServer.make({ port: 0, hostname: fixtureHost, maxRequestBodySize: bodyLimit });
+  const server = yield* BunHttpServer.make({ port: 0, hostname: fixtureHost, maxRequestBodySize });
   // Node's Bun.serve test shim reports asynchronous listen errors at reload.
   yield* awaitBindEvents;
   yield* server.serve(app);
@@ -110,12 +135,37 @@ const startFixtureServer = Effect.fn("CacheFixture.startServer")(function* <E, R
 });
 
 const makeFixtureServer = Effect.fn("CacheFixture.makeServer")(
-  <E, R>(app: Effect.Effect<HttpServerResponse.HttpServerResponse, E, R>) =>
-    startFixtureServer(app).pipe(
+  <E, R>(app: Effect.Effect<HttpServerResponse.HttpServerResponse, E, R>, maxRequestBodySize: number) =>
+    startFixtureServer(app, maxRequestBodySize).pipe(
       Effect.catchDefect(bindFailure),
       Effect.retry({ times: 8, while: (error) => S.is(AddressInUse)(error.cause) })
     )
 );
+
+/**
+ * Serve an HTTP app on an ephemeral 127.0.0.1 port for the caller's scope and return its URL.
+ *
+ * **Details**
+ * A bind that loses an ephemeral-port race (`EADDRINUSE`) retries on a fresh
+ * port, so concurrent fixtures and fault proxies never share a listener.
+ *
+ * **Example** (Reference the loopback server)
+ * ```ts
+ * import { serveCacheLoopback } from "@beep/repo-cli/commands/Cache"
+ * console.assert(typeof serveCacheLoopback === "function")
+ * ```
+ *
+ * @internal
+ * @category fixtures
+ * @since 0.0.0
+ */
+export const serveCacheLoopback = Effect.fn("Cache.serveLoopback")(function* <E, R>(
+  app: Effect.Effect<HttpServerResponse.HttpServerResponse, E, R>,
+  maxRequestBodySize: number
+) {
+  const server = yield* makeFixtureServer(app, maxRequestBodySize);
+  return HttpServer.formatAddress(server.address);
+});
 
 const readFixtureBody = Effect.fn("CacheFixture.readBody")(function* (request: HttpServerRequest.HttpServerRequest) {
   const contentLength = Headers.get(request.headers, "content-length").pipe(O.flatMap(Num.parse));
@@ -261,9 +311,8 @@ export const makeCacheProtocolFixture = Effect.fn("Cache.makeProtocolFixture")(f
     if (role === "unknown") return yield* reply(401, "rejected");
     return yield* routeRequest(request, role, current, reply);
   });
-  const server = yield* makeFixtureServer(app);
   return {
-    url: HttpServer.formatAddress(server.address),
+    url: yield* serveCacheLoopback(app, bodyLimit),
     events: Ref.get(events),
     // Supervisor-only observation; HTTP readers cannot access this capability.
     artifactBytes: (key: CacheFixtureArtifactKey) =>

@@ -1,0 +1,83 @@
+{
+  "schemaVersion": "cache-conformance-pins/v1",
+  "observedAt": "2026-10-23",
+  "authority": "pin-refresh-only",
+  "limits": [
+    "Registry and release metadata were read; no downloaded executable was run by this refresh.",
+    "Pins name what later runs must verify before execution; they are not runtime verdicts."
+  ],
+  "openapi": {
+    "source": "https://github.com/vercel/turborepo/blob/v2.11.10/apps/docs/lib/remote-cache-openapi.json",
+    "tagCommit": "e521641a142a24abe4554a77fdd6551e47e96fb3",
+    "gitBlob": "4938812fcc199b66bbbe15c2e9c29fc9c84f5dbe",
+    "sha256": "1080314512226dc48535fe24648fc0abb10c1cd405c1fd74eacfdc95e22d70b8",
+    "bytes": 24098,
+    "license": "MIT",
+    "operations": [
+      "getArtifactStatus GET /artifacts/status",
+      "artifactExists HEAD /artifacts/{hash}",
+      "downloadArtifact GET /artifacts/{hash}",
+      "uploadArtifact PUT /artifacts/{hash}",
+      "queryArtifacts POST /artifacts",
+      "recordCacheEvents POST /artifacts/events"
+    ],
+    "note": "Blob is unchanged since the v2.10.12 exploration pin, so generated wire-shape cases keep their identity."
+  },
+  "clients": [
+    {
+      "id": "stable-linux-x64",
+      "channel": "stable",
+      "version": "2.11.10",
+      "publishedAt": "2026-10-20T20:35:57.341Z",
+      "wrapperIntegrity": "sha512-3GJYwig8ygEI89oaOZdduJX8/aw6O9eRPYHoIt6T3FZl9hkKjiyIspufJoVgqXihPoJu8M5CSV0DlZvzfohBCw==",
+      "platformPackage": "@turbo/linux-64@2.11.10",
+      "platformIntegrity": "sha512-1tYeR/IDZ5HEdsb0jNq2L2xam5nMQ+g80tlV2BZmv4OFw+pMcUM0mMmUcfc5wXPPNHVNPuDMjh9Y8G8HgXPLZA==",
+      "executableSha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6",
+      "matchesRepoLock": true
+    },
+    {
+      "id": "canary-linux-x64",
+      "channel": "canary",
+      "version": "2.11.9-canary.1",
+      "publishedAt": "2026-10-16T14:06:30.044Z",
+      "wrapperIntegrity": "sha512-SzpfiYzUudfnyOe1kbdQDLJeLNRs9hXVeZJYpXDhp+eGaB6vTUWHVmPJ858FVxz7PVOY/CEb4HCu+jU16EHSHQ==",
+      "platformPackage": "@turbo/linux-64@2.11.9-canary.1",
+      "platformIntegrity": "sha512-/oz28k9JCTqzztuzD4oiyOPN692rLEoKePm5+n2zjyivej3ytEvQWL5M6qgSsw0f1Jx2pLJ7ucu+s4uC2C1OvQ==",
+      "executableSha256": "f0686d3818ff00361d89919ec5e09d151aa6d9641cb5ddfda8fa734bf906cbbb",
+      "note": "The npm canary dist-tag trails stable: 2.11.9 and 2.11.10 shipped without a newer canary. It stays the exact published canary lane and keeps its own namespace epoch."
+    }
+  ],
+  "backends": [
+    {
+      "id": "beep-incumbent",
+      "package": "turborepo-remote-cache@2.12.0",
+      "integrity": "sha512-X34C/eyL+cIDQRDBAln0zEa5QsqpCbbbxS7qtiIhgmNGKlQQPFPo6snbOyq7xhRfVKFeyVEIAypTrR7XDZV6pw==",
+      "gitHead": "1767fb37291a082e0beed3b21966ae86a4bbaa12",
+      "license": "MIT",
+      "topology": "API Gateway v2 authorizer + read-only and HMAC-gated writer Lambdas (infra/lambda/turbo-cache) over S3"
+    },
+    {
+      "id": "ducktors",
+      "package": "turborepo-remote-cache@2.14.3",
+      "integrity": "sha512-FlW1gm1kjJseDc8Dcj92WUfsnMYLG2k5IYTIL3A3jQi8E5eUY2RGYC6RHqPJSxZJK5pbyOVTSJpoe9qqH7JcSA==",
+      "gitHead": "ddbd1befad6a95696798b45e384910241c8aacc2",
+      "publishedAt": "2026-10-07T11:15:33Z",
+      "license": "MIT",
+      "observedNewer": "2.14.4 (published 2026-10-23T17:27:27Z, gitHead 8803a8ee262c7acd08d28cd7631aa5a1ba2a524c) is not scored until it has aged two weeks."
+    },
+    {
+      "id": "bruno",
+      "release": "brunojppb/turbo-cache-server@4.0.20",
+      "tagCommit": "be9c3e26a65f299a7e068c21412b50d48cace087",
+      "asset": "decay-x86_64-unknown-linux-musl",
+      "assetSha256": "52334c002a55276b29e059caaf19c83326d50ede4280a13dbe48aebde0b816fd",
+      "publishedAt": "2026-10-13T16:36:07Z",
+      "license": "MIT",
+      "note": "Same release and checksum as the R2 loopback adapter in infra/r2-cache/adapter.sh, which replaces the exploration's 4.0.17 pin."
+    }
+  ],
+  "topologyDelta": {
+    "observed": "PR #2000 (merged 2026-10-23) added an opt-in R2 transport: Bruno 4.0.20 on each consumer host's loopback over a private Cloudflare R2 bucket. Activation remains off; AWS remains active.",
+    "consequence": "The loopback Bruno-over-object-store topology joins the comparison as a named topology. The live R2 bucket is production state and is never a conformance write target; the lab substitutes an isolated S3-compatible store."
+  }
+}

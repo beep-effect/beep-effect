@@ -1,0 +1,601 @@
+{
+  "schemaVersion": "cache-conformance-corpus/v1",
+  "openapi": {
+    "gitBlob": "4938812fcc199b66bbbe15c2e9c29fc9c84f5dbe",
+    "sha256": "1080314512226dc48535fe24648fc0abb10c1cd405c1fd74eacfdc95e22d70b8",
+    "mountPrefix": "/v8"
+  },
+  "sourcePlan": {
+    "path": "explorations/turborepo-quality-cache/research/conformance-corpus-plan.json",
+    "sha256": "20ab0c9fdf030c3941be72dc780ee2cc48fb7432e7edbfbc86366846abc35b8b"
+  },
+  "dimensions": [
+    "strict-openapi",
+    "published-stable-client",
+    "published-canary-client",
+    "beep-security-policy",
+    "observability",
+    "performance-envelope"
+  ],
+  "operations": [
+    {
+      "operationId": "getArtifactStatus",
+      "method": "GET",
+      "route": "/v8/artifacts/status",
+      "optional": false,
+      "responses": [
+        {
+          "status": 200,
+          "contentType": "application/json"
+        },
+        {
+          "status": 400,
+          "contentType": null
+        },
+        {
+          "status": 401,
+          "contentType": null
+        },
+        {
+          "status": 403,
+          "contentType": null
+        }
+      ]
+    },
+    {
+      "operationId": "artifactExists",
+      "method": "HEAD",
+      "route": "/v8/artifacts/{hash}",
+      "optional": false,
+      "responses": [
+        {
+          "status": 200,
+          "contentType": null
+        },
+        {
+          "status": 400,
+          "contentType": null
+        },
+        {
+          "status": 401,
+          "contentType": null
+        },
+        {
+          "status": 403,
+          "contentType": null
+        },
+        {
+          "status": 404,
+          "contentType": null
+        }
+      ]
+    },
+    {
+      "operationId": "downloadArtifact",
+      "method": "GET",
+      "route": "/v8/artifacts/{hash}",
+      "optional": false,
+      "responses": [
+        {
+          "status": 200,
+          "contentType": "application/octet-stream"
+        },
+        {
+          "status": 400,
+          "contentType": null
+        },
+        {
+          "status": 401,
+          "contentType": null
+        },
+        {
+          "status": 403,
+          "contentType": null
+        },
+        {
+          "status": 404,
+          "contentType": null
+        }
+      ]
+    },
+    {
+      "operationId": "uploadArtifact",
+      "method": "PUT",
+      "route": "/v8/artifacts/{hash}",
+      "optional": false,
+      "responses": [
+        {
+          "status": 200,
+          "contentType": "application/json"
+        },
+        {
+          "status": 202,
+          "contentType": "application/json"
+        },
+        {
+          "status": 400,
+          "contentType": null
+        },
+        {
+          "status": 401,
+          "contentType": null
+        },
+        {
+          "status": 403,
+          "contentType": null
+        }
+      ]
+    },
+    {
+      "operationId": "queryArtifacts",
+      "method": "POST",
+      "route": "/v8/artifacts",
+      "optional": true,
+      "responses": [
+        {
+          "status": 200,
+          "contentType": "application/json"
+        },
+        {
+          "status": 400,
+          "contentType": null
+        },
+        {
+          "status": 401,
+          "contentType": null
+        },
+        {
+          "status": 403,
+          "contentType": null
+        }
+      ]
+    },
+    {
+      "operationId": "recordCacheEvents",
+      "method": "POST",
+      "route": "/v8/artifacts/events",
+      "optional": true,
+      "responses": [
+        {
+          "status": 200,
+          "contentType": null
+        },
+        {
+          "status": 400,
+          "contentType": null
+        },
+        {
+          "status": 401,
+          "contentType": null
+        },
+        {
+          "status": 403,
+          "contentType": null
+        }
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "id": "RC-001",
+      "class": "generated",
+      "operation": "status",
+      "assertion": "authenticated status response matches schema and content type",
+      "origin": {
+        "origin": "generated",
+        "operationIds": ["getArtifactStatus"]
+      },
+      "executor": "wire",
+      "dimensions": ["strict-openapi"],
+      "reason": "Reproducible against any target with the direct HTTP runner and per-run random hashes."
+    },
+    {
+      "id": "RC-002",
+      "class": "generated",
+      "operation": "put-head-get",
+      "assertion": "zero-byte artifact round-trips exactly",
+      "origin": {
+        "origin": "generated",
+        "operationIds": ["uploadArtifact", "artifactExists", "downloadArtifact"]
+      },
+      "executor": "wire",
+      "dimensions": [
+        "strict-openapi",
+        "published-stable-client",
+        "published-canary-client"
+      ],
+      "reason": "Reproducible against any target with the direct HTTP runner and per-run random hashes."
+    },
+    {
+      "id": "RC-003",
+      "class": "generated",
+      "operation": "put-head-get",
+      "assertion": "small binary artifact round-trips exactly",
+      "origin": {
+        "origin": "generated",
+        "operationIds": ["uploadArtifact", "artifactExists", "downloadArtifact"]
+      },
+      "executor": "wire",
+      "dimensions": [
+        "strict-openapi",
+        "published-stable-client",
+        "published-canary-client"
+      ],
+      "reason": "Reproducible against any target with the direct HTTP runner and per-run random hashes."
+    },
+    {
+      "id": "RC-004",
+      "class": "generated",
+      "operation": "put",
+      "assertion": "Content-Length and octet-stream requirements are enforced or correctly accepted",
+      "origin": {
+        "origin": "generated",
+        "operationIds": ["uploadArtifact"]
+      },
+      "executor": "wire",
+      "dimensions": ["strict-openapi"],
+      "reason": "Reproducible against any target with the direct HTTP runner and per-run random hashes."
+    },
+    {
+      "id": "RC-005",
+      "class": "generated",
+      "operation": "metadata",
+      "assertion": "duration round-trips; absent duration becomes zero; malformed duration is attributable",
+      "origin": {
+        "origin": "generated",
+        "operationIds": ["uploadArtifact", "artifactExists", "downloadArtifact"]
+      },
+      "executor": "wire",
+      "dimensions": [
+        "strict-openapi",
+        "published-stable-client",
+        "published-canary-client"
+      ],
+      "reason": "Reproducible against any target with the direct HTTP runner and per-run random hashes."
+    },
+    {
+      "id": "RC-006",
+      "class": "generated",
+      "operation": "metadata",
+      "assertion": "tag, SHA, and dirty-hash preservation are scored separately",
+      "origin": {
+        "origin": "generated",
+        "operationIds": ["uploadArtifact", "artifactExists", "downloadArtifact"]
+      },
+      "executor": "wire",
+      "dimensions": [
+        "strict-openapi",
+        "published-stable-client",
+        "published-canary-client"
+      ],
+      "reason": "Reproducible against any target with the direct HTTP runner and per-run random hashes."
+    },
+    {
+      "id": "RC-007",
+      "class": "generated-optional",
+      "operation": "batch-query",
+      "assertion": "absence is optional; an implemented route matches the documented map",
+      "origin": {
+        "origin": "generated",
+        "operationIds": ["queryArtifacts"]
+      },
+      "executor": "wire",
+      "dimensions": ["strict-openapi"],
+      "reason": "Reproducible against any target with the direct HTTP runner and per-run random hashes."
+    },
+    {
+      "id": "RC-008",
+      "class": "generated-optional",
+      "operation": "events",
+      "assertion": "absence is optional; an implemented route accepts the documented event shape",
+      "origin": {
+        "origin": "generated",
+        "operationIds": ["recordCacheEvents"]
+      },
+      "executor": "wire",
+      "dimensions": ["strict-openapi"],
+      "reason": "Reproducible against any target with the direct HTTP runner and per-run random hashes."
+    },
+    {
+      "id": "RC-009",
+      "class": "semantic",
+      "operation": "client-status",
+      "assertion": "documented response status and actual client acceptance are separate verdicts",
+      "origin": {
+        "origin": "hand-authored"
+      },
+      "executor": "wire",
+      "dimensions": [
+        "strict-openapi",
+        "published-stable-client",
+        "published-canary-client"
+      ],
+      "reason": "The wire runner records the documented upload status; client acceptance is scored only by native runs."
+    },
+    {
+      "id": "RC-010",
+      "class": "semantic",
+      "operation": "miss",
+      "assertion": "genuine 404 is distinguishable from every fail-soft error class",
+      "origin": {
+        "origin": "hand-authored"
+      },
+      "executor": "wire",
+      "dimensions": [
+        "strict-openapi",
+        "published-stable-client",
+        "published-canary-client",
+        "observability"
+      ],
+      "reason": "The wire runner separates a genuine 404 from fault classes; client fail-soft and log evidence stay native/lab."
+    },
+    {
+      "id": "RC-011",
+      "class": "security",
+      "operation": "auth",
+      "assertion": "missing, malformed, unknown, read, and write bearer cases follow the policy matrix",
+      "origin": {
+        "origin": "hand-authored"
+      },
+      "executor": "wire",
+      "dimensions": ["strict-openapi", "beep-security-policy"],
+      "reason": "Reproducible against any target with the direct HTTP runner and per-run random hashes."
+    },
+    {
+      "id": "RC-012",
+      "class": "security",
+      "operation": "write-boundary",
+      "assertion": "read bearer cannot PUT and reader execution role cannot write storage",
+      "origin": {
+        "origin": "hand-authored"
+      },
+      "executor": "wire",
+      "dimensions": ["strict-openapi", "beep-security-policy"],
+      "reason": "The wire runner covers the bearer half; the reader execution role's storage denial needs deployed IAM (lab)."
+    },
+    {
+      "id": "RC-013",
+      "class": "security",
+      "operation": "direct-invoke",
+      "assertion": "writer cannot be invoked outside the authorized gateway path",
+      "origin": {
+        "origin": "hand-authored"
+      },
+      "executor": "lab",
+      "dimensions": ["beep-security-policy"],
+      "reason": "Direct writer invocation outside the gateway needs the deployed Lambda/IAM boundary."
+    },
+    {
+      "id": "RC-014",
+      "class": "security",
+      "operation": "tenant-binding",
+      "assertion": "a valid bearer cannot select or retrieve another namespace",
+      "origin": {
+        "origin": "hand-authored"
+      },
+      "executor": "wire",
+      "dimensions": ["strict-openapi", "beep-security-policy"],
+      "reason": "Reproducible against any target with the direct HTTP runner and per-run random hashes."
+    },
+    {
+      "id": "RC-015",
+      "class": "security",
+      "operation": "tenant-normalization",
+      "assertion": "empty, conflicting, traversal-like, encoded, and oversized selectors fail closed",
+      "origin": {
+        "origin": "hand-authored"
+      },
+      "executor": "wire",
+      "dimensions": ["strict-openapi", "beep-security-policy"],
+      "reason": "Reproducible against any target with the direct HTTP runner and per-run random hashes."
+    },
+    {
+      "id": "RC-016",
+      "class": "security",
+      "operation": "artifact-hash",
+      "assertion": "invalid, traversal-like, encoded, empty, and oversized hashes fail closed",
+      "origin": {
+        "origin": "hand-authored"
+      },
+      "executor": "wire",
+      "dimensions": ["strict-openapi", "beep-security-policy"],
+      "reason": "Reproducible against any target with the direct HTTP runner and per-run random hashes."
+    },
+    {
+      "id": "RC-017",
+      "class": "integrity",
+      "operation": "signed-cycle",
+      "assertion": "valid Turbo HMAC tag is preserved and accepted by the producing client epoch",
+      "origin": {
+        "origin": "hand-authored"
+      },
+      "executor": "native",
+      "dimensions": ["published-stable-client", "published-canary-client"],
+      "reason": "Requires the exact pinned Turbo executables and signing epochs; executed by cache conformance-native through the fault proxy."
+    },
+    {
+      "id": "RC-018",
+      "class": "integrity",
+      "operation": "missing-tag",
+      "assertion": "signed client rejects a response with no tag and direct receipt identifies the cause",
+      "origin": {
+        "origin": "hand-authored"
+      },
+      "executor": "native",
+      "dimensions": ["published-stable-client", "published-canary-client"],
+      "reason": "Requires the exact pinned Turbo executables and signing epochs; executed by cache conformance-native through the fault proxy."
+    },
+    {
+      "id": "RC-019",
+      "class": "integrity",
+      "operation": "tampered-tag",
+      "assertion": "signed client rejects a modified tag without materializing outputs",
+      "origin": {
+        "origin": "hand-authored"
+      },
+      "executor": "native",
+      "dimensions": ["published-stable-client", "published-canary-client"],
+      "reason": "Requires the exact pinned Turbo executables and signing epochs; executed by cache conformance-native through the fault proxy."
+    },
+    {
+      "id": "RC-020",
+      "class": "integrity",
+      "operation": "tampered-body",
+      "assertion": "signed client rejects modified bytes without materializing outputs",
+      "origin": {
+        "origin": "hand-authored"
+      },
+      "executor": "native",
+      "dimensions": ["published-stable-client", "published-canary-client"],
+      "reason": "Requires the exact pinned Turbo executables and signing epochs; executed by cache conformance-native through the fault proxy."
+    },
+    {
+      "id": "RC-021",
+      "class": "integrity",
+      "operation": "wrong-team",
+      "assertion": "tag produced for another team identity is rejected",
+      "origin": {
+        "origin": "hand-authored"
+      },
+      "executor": "native",
+      "dimensions": ["published-stable-client", "published-canary-client"],
+      "reason": "Requires the exact pinned Turbo executables and signing epochs; executed by cache conformance-native through the fault proxy. The wrong-team response is replayed by the fault proxy, so it scores clients only; backend tenant isolation is RC-014."
+    },
+    {
+      "id": "RC-022",
+      "class": "integrity",
+      "operation": "epoch-rotation",
+      "assertion": "old and new namespace epochs do not silently cross-restore or downgrade to unsigned",
+      "origin": {
+        "origin": "hand-authored"
+      },
+      "executor": "native",
+      "dimensions": [
+        "published-stable-client",
+        "published-canary-client",
+        "beep-security-policy"
+      ],
+      "reason": "Requires the exact pinned Turbo executables and signing epochs; executed by cache conformance-native through the fault proxy."
+    },
+    {
+      "id": "RC-023",
+      "class": "fault",
+      "operation": "read",
+      "assertion": "401, 403, 429, 5xx, timeout, reset, and truncated body have distinct direct receipts",
+      "origin": {
+        "origin": "hand-authored"
+      },
+      "executor": "wire",
+      "dimensions": ["strict-openapi", "observability"],
+      "reason": "The wire run covers 401, 403 and a genuine 404; cache conformance-lab injects 429, 503, timeout, reset and truncation at the fault proxy and scores observability."
+    },
+    {
+      "id": "RC-024",
+      "class": "fault",
+      "operation": "write",
+      "assertion": "failed and ambiguous writes do not produce a success receipt or corrupt a prior object",
+      "origin": {
+        "origin": "hand-authored"
+      },
+      "executor": "wire",
+      "dimensions": ["strict-openapi", "beep-security-policy"],
+      "reason": "Reproducible against any target with the direct HTTP runner and per-run random hashes."
+    },
+    {
+      "id": "RC-025",
+      "class": "concurrency",
+      "operation": "same-hash-write",
+      "assertion": "concurrent identical and conflicting writes have a defined atomic result",
+      "origin": {
+        "origin": "hand-authored"
+      },
+      "executor": "wire",
+      "dimensions": ["strict-openapi", "beep-security-policy"],
+      "reason": "Reproducible against any target with the direct HTTP runner and per-run random hashes."
+    },
+    {
+      "id": "RC-026",
+      "class": "concurrency",
+      "operation": "read-during-write",
+      "assertion": "readers observe either the prior complete artifact or the new complete artifact",
+      "origin": {
+        "origin": "hand-authored"
+      },
+      "executor": "wire",
+      "dimensions": ["strict-openapi", "beep-security-policy"],
+      "reason": "Reproducible against any target with the direct HTTP runner and per-run random hashes."
+    },
+    {
+      "id": "RC-027",
+      "class": "capacity",
+      "operation": "payload-envelope",
+      "assertion": "p50, p95, p99, and twice observed p99 sizes complete within declared bounds",
+      "origin": {
+        "origin": "hand-authored"
+      },
+      "executor": "lab",
+      "dimensions": ["performance-envelope"],
+      "reason": "cache conformance-lab measures the p50/p95/p99, 2x p99 and observed-max sizes; only a disposable-deployment run is representative."
+    },
+    {
+      "id": "RC-028",
+      "class": "capacity",
+      "operation": "concurrency-envelope",
+      "assertion": "observed peak and 1.5 times peak preserve correctness and bounded latency",
+      "origin": {
+        "origin": "hand-authored"
+      },
+      "executor": "lab",
+      "dimensions": ["performance-envelope"],
+      "reason": "cache conformance-lab measures observed peak and 1.5x peak read/write concurrency; only a disposable-deployment run is representative."
+    },
+    {
+      "id": "RC-029",
+      "class": "lifecycle",
+      "operation": "retention",
+      "assertion": "expiry and namespace cleanup affect only the intended epoch and remain observable",
+      "origin": {
+        "origin": "hand-authored"
+      },
+      "executor": "lab",
+      "dimensions": ["beep-security-policy", "observability"],
+      "reason": "Retention and namespace cleanup need storage lifecycle timers."
+    },
+    {
+      "id": "RC-030",
+      "class": "privacy",
+      "operation": "logs",
+      "assertion": "synthetic bearer, signature key, artifact content, and sensitive paths are absent from logs and traces",
+      "origin": {
+        "origin": "hand-authored"
+      },
+      "executor": "lab",
+      "dimensions": ["beep-security-policy", "observability"],
+      "reason": "Log and trace privacy needs backend log capture."
+    },
+    {
+      "id": "RC-031",
+      "class": "telemetry",
+      "operation": "correlation",
+      "assertion": "client run, task hash, backend request, object operation, and result class correlate without secret or unbounded-cardinality fields",
+      "origin": {
+        "origin": "hand-authored"
+      },
+      "executor": "lab",
+      "dimensions": ["observability"],
+      "reason": "Correlation needs client, backend and storage telemetry capture."
+    },
+    {
+      "id": "RC-032",
+      "class": "rollback",
+      "operation": "cutback",
+      "assertion": "incumbent endpoint and epoch can be restored from a rehearsed receipt without mixed writes",
+      "origin": {
+        "origin": "hand-authored"
+      },
+      "executor": "lab",
+      "dimensions": ["beep-security-policy"],
+      "reason": "Cutback needs a rehearsed endpoint and epoch restoration receipt."
+    }
+  ]
+}

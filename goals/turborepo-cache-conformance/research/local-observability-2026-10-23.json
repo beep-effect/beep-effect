@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "cache-conformance-observability/v1",
+  "observedAt": "2026-10-24",
+  "profile": "local-container",
+  "authority": "lab-log-scan-only",
+  "method": "After the wire runs, each local topology's log file was searched for every lab bearer, the writer HMAC secret and the store secret. Field names were counted; values were never copied out of the logs.",
+  "topologies": [
+    {
+      "topology": "beep-incumbent",
+      "logs": "reader 66,761 B / writer 37,828 B (shim pino logs)",
+      "secretValuesFound": 0,
+      "authorizationHeaderLogged": false,
+      "correlation": "pino reqId per request (internal only; never returned to the client)"
+    },
+    {
+      "topology": "bruno-policy and bruno-loopback (one Bruno process)",
+      "logs": "2,950,558 B, 1,745 lines",
+      "secretValuesFound": 0,
+      "authorizationHeaderLogged": "masked as *redacted* in request header dumps",
+      "artifactTagLogged": "the x-artifact-tag value appears in full in request header dumps (16 lines); it is an HMAC, not a key",
+      "correlation": "request_id on every line; OTLP export disabled in the lab"
+    },
+    {
+      "topology": "ducktors-upstream",
+      "logs": "137,624 B",
+      "secretValuesFound": 0,
+      "authorizationHeaderLogged": false,
+      "correlation": "pino reqId per request (internal only)"
+    }
+  ],
+  "limits": [
+    "Artifact-content redaction was checked on the AWS lab with a marker body; local bodies were random bytes and are not searchable.",
+    "The policy gateway itself logs nothing."
+  ]
+}

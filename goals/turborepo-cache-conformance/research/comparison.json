@@ -1,0 +1,4190 @@
+{
+  "schemaVersion": "cache-conformance-comparison/v1",
+  "rubric": {
+    "path": "explorations/turborepo-quality-cache/research/backend-rubric.md",
+    "sha256": "01311d70d5392f5262f0d6de3cfb45fb9215cbd721e4fbdc7dc09a8e5f12e026"
+  },
+  "corpus": {
+    "specSha256": "1080314512226dc48535fe24648fc0abb10c1cd405c1fd74eacfdc95e22d70b8",
+    "planSha256": "20ab0c9fdf030c3941be72dc780ee2cc48fb7432e7edbfbc86366846abc35b8b"
+  },
+  "evidenceSources": [
+    "goals/turborepo-cache-conformance/research/aws-lab-c1023a.json",
+    "goals/turborepo-cache-conformance/research/local-observability-2026-10-23.json"
+  ],
+  "targets": [
+    {
+      "profile": "disposable-deployment",
+      "topology": "beep-incumbent-evolved",
+      "release": "2.12.0+tag-passthrough+concurrency-60-30",
+      "representative": true,
+      "executors": ["wire", "lab", "native"],
+      "role": "evolved-incumbent",
+      "candidate": false,
+      "gates": [
+        {
+          "gate": 1,
+          "title": "exact stable client completes status, signed PUT, HEAD, GET, miss and fault cycles with direct receipts",
+          "status": "pass",
+          "reason": "Every mapped verdict passed.",
+          "evidence": [
+            {
+              "case": "RC-009",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-010",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-017",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-018",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-019",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-020",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            }
+          ]
+        },
+        {
+          "gate": 2,
+          "title": "exact published canary completes the same matrix in an isolated namespace",
+          "status": "pass",
+          "reason": "Every mapped verdict passed.",
+          "evidence": [
+            {
+              "case": "RC-009",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-010",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-017",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-018",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-019",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-020",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            }
+          ]
+        },
+        {
+          "gate": 3,
+          "title": "strict OpenAPI deviations are enumerated, and no core deviation breaks the published clients or Beep policy",
+          "status": "pass",
+          "reason": "Every mapped verdict passed.",
+          "evidence": [
+            {
+              "case": "RC-001",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-002",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-003",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "head-content-length: HEAD Content-Length equals the stored byte count"
+            },
+            {
+              "case": "RC-004",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-005",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "duration-round-trip-head: reader-head-duration answered 200 (success) | duration-round-trip-get: reader-get-duration answered 200 (success)"
+            },
+            {
+              "case": "RC-006",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "sha-preserved: reader-get-metadata answered 200 (success) | dirty-hash-preserved: reader-get-metadata answered 200 (success) | head-sha-preserved: reader-head-metadata answered 200 (success)"
+            },
+            {
+              "case": "RC-007",
+              "dimension": "strict-openapi",
+              "verdict": "unsupported-optional",
+              "status": "pass",
+              "source": "run",
+              "detail": "/v8/artifacts is absent (reader-post-query answered 404 (not-found)); the route is optional."
+            },
+            {
+              "case": "RC-008",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-009",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-010",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-011",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-012",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-014",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-015",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "documented-status:downloadArtifact: writer-get-selector-oversized answered 500; documented 200, 400, 401, 403, 404 | documented-status:uploadArtifact: writer-put-selector-oversized answered 412; documented 200, 202, 400, 401, 403"
+            },
+            {
+              "case": "RC-016",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "documented-status:uploadArtifact: writer-put-hash-traversal answered 404; documented 200, 202, 400, 401, 403 | documented-status:uploadArtifact: writer-put-hash-oversized answered 404; documented 200, 202, 400, 401, 403"
+            },
+            {
+              "case": "RC-023",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-024",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-025",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-026",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-009",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-009",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            }
+          ]
+        },
+        {
+          "gate": 4,
+          "title": "readers cannot write; writers exist only in protected workflows; storage permissions preserve that split",
+          "status": "pass",
+          "reason": "Every mapped verdict passed.",
+          "evidence": [
+            {
+              "case": "RC-011",
+              "dimension": "beep-security-policy",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-012",
+              "dimension": "beep-security-policy",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-012",
+              "dimension": "beep-security-policy",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "goals/turborepo-cache-conformance/research/aws-lab-c1023a.json",
+              "detail": "reader-role-storage-write-denied: IAM simulate-principal-policy on the lab read role: s3:PutObject and s3:DeleteObject implicitDeny on the lab bucket."
+            },
+            {
+              "case": "RC-013",
+              "dimension": "beep-security-policy",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "goals/turborepo-cache-conformance/research/aws-lab-c1023a.json",
+              "detail": "writer-direct-invoke-requires-signature: Direct lambda:Invoke of the evolved writer with a tagged PUT event lacking the authorizer signature returned statusCode 403 and created no object. Run as the operator principal: proves the HMAC gate, not invoke permissions of other principa"
+            }
+          ]
+        },
+        {
+          "gate": 5,
+          "title": "a credential is bound to its tenant/namespace and caller-controlled selectors cannot escape it",
+          "status": "fail",
+          "reason": "RC-014 beep-security-policy: foreign-read-denied: foreign-get-own-namespace answered 200 (success). The topology does not claim tenant binding; the failure is attributed to that design. | cross-namespace-write-denied: writer-put-foreign-namespace answered 200 (success) | RC-015 beep-security-policy: selector-slug-conflict-read-fails-closed: writer-get-selector-slug-conflict answered 200 (success) | selector-slug-conflict-write-fails-closed: writer-put-selector-slug-conflict answered 200 (success) | selector-slug-conflict-created-nothin",
+          "evidence": [
+            {
+              "case": "RC-014",
+              "dimension": "beep-security-policy",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "foreign-read-denied: foreign-get-own-namespace answered 200 (success). The topology does not claim tenant binding; the failure is attributed to that design. | cross-namespace-write-denied: writer-put-foreign-namespace answered 200 (success)"
+            },
+            {
+              "case": "RC-015",
+              "dimension": "beep-security-policy",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "selector-slug-conflict-read-fails-closed: writer-get-selector-slug-conflict answered 200 (success) | selector-slug-conflict-write-fails-closed: writer-put-selector-slug-conflict answered 200 (success) | selector-slug-conflict-created-nothin"
+            }
+          ]
+        },
+        {
+          "gate": 6,
+          "title": "valid x-artifact-tag values round-trip opaquely; missing, invalid, wrong-team and corrupted artifacts are rejected before restore",
+          "status": "pass",
+          "reason": "Every mapped verdict passed.",
+          "evidence": [
+            {
+              "case": "RC-017",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-018",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-019",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-020",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-021",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-017",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-018",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-019",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-020",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-021",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            }
+          ]
+        },
+        {
+          "gate": 7,
+          "title": "every error class is attributable despite Turbo's task-level fail-soft behavior",
+          "status": "pass",
+          "reason": "Every mapped verdict passed.",
+          "evidence": [
+            {
+              "case": "RC-010",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-023",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-023",
+              "dimension": "observability",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            }
+          ]
+        },
+        {
+          "gate": 8,
+          "title": "logs, traces, summaries and failure output pass synthetic-secret and artifact-content redaction tests",
+          "status": "pass",
+          "reason": "Every mapped verdict passed.",
+          "evidence": [
+            {
+              "case": "RC-030",
+              "dimension": "observability",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "goals/turborepo-cache-conformance/research/aws-lab-c1023a.json",
+              "detail": "no-secret-or-content-in-logs: All three function log groups searched for a synthetic bearer, a synthetic tag value, an artifact-content marker and both lab bearers: no occurrence."
+            },
+            {
+              "case": "RC-030",
+              "dimension": "beep-security-policy",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "goals/turborepo-cache-conformance/research/aws-lab-c1023a.json",
+              "detail": "no-secret-or-content-in-logs: Same scan; bearer and content values are absent from reader, writer and authorizer logs."
+            }
+          ]
+        },
+        {
+          "gate": 9,
+          "title": "measured payload and concurrency envelopes cover current p99/peak with the ratified safety multipliers",
+          "status": "pass",
+          "reason": "Every mapped verdict passed. The envelope is a floor, not demand: observed peak concurrency (20 read / 10 write) equals the reserved caps, so demand is censored (goals/turborepo-cache-conformance/research/load-envelope-2026-10-23.json).",
+          "evidence": [
+            {
+              "case": "RC-027",
+              "dimension": "performance-envelope",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-028",
+              "dimension": "performance-envelope",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            }
+          ]
+        },
+        {
+          "gate": 10,
+          "title": "retention, encryption, public-access block, lifecycle cleanup, backup, budget alarms and teardown are explicit",
+          "status": "fail",
+          "reason": "RC-029 beep-security-policy: namespace-scoped-cleanup: Bucket policy DenyObjectAccessOutsideCacheRoles denies every object action outside the cache roles and neither role may delete, so no namespace or epoch can be cleaned up selectively; only whole-bucket expiry. Attributed to the deliberate n",
+          "evidence": [
+            {
+              "case": "RC-029",
+              "dimension": "beep-security-policy",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "goals/turborepo-cache-conformance/research/aws-lab-c1023a.json",
+              "detail": "namespace-scoped-cleanup: Bucket policy DenyObjectAccessOutsideCacheRoles denies every object action outside the cache roles and neither role may delete, so no namespace or epoch can be cleaned up selectively; only whole-bucket expiry. Attributed to the deliberate n"
+            },
+            {
+              "case": "RC-029",
+              "dimension": "observability",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "goals/turborepo-cache-conformance/research/aws-lab-c1023a.json",
+              "detail": "expiry-rule-explicit: Bucket lifecycle rule expire-stale-cache-artifacts: enabled, 30-day expiry, incomplete multipart abort after 1 day."
+            }
+          ]
+        },
+        {
+          "gate": 11,
+          "title": "deployment pins immutable source/image/package digests and has a rehearsed incumbent rollback",
+          "status": "pass",
+          "reason": "Every mapped verdict passed.",
+          "evidence": [
+            {
+              "case": "RC-032",
+              "dimension": "beep-security-policy",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "goals/turborepo-cache-conformance/research/aws-lab-c1023a.json",
+              "detail": "rehearsed-cutback-no-mixed-writes: AWS drill 2026-10-24: prior incumbent write Y (200); cutover write X to the evolved endpoint (200, readable there); cutback: incumbent GET X 404 (no mixed restore), incumbent GET Y 200 with identical bytes; incumbent write Z 200 and evolved"
+            }
+          ]
+        },
+        {
+          "gate": 12,
+          "title": "license and maintenance obligations are acceptable for the deployed and modified topology",
+          "status": "pass",
+          "reason": "Every mapped verdict passed.",
+          "evidence": [
+            {
+              "case": "license",
+              "dimension": null,
+              "verdict": "pass",
+              "status": "pass",
+              "source": "goals/turborepo-cache-conformance/research/pins-2026-10-23.json",
+              "detail": "beep-incumbent is MIT per the pinned registry metadata."
+            },
+            {
+              "case": "maintenance",
+              "dimension": null,
+              "verdict": "pass",
+              "status": "pass",
+              "source": "goals/turborepo-cache-conformance/research/aws-lab-c1023a.json",
+              "detail": "upstream-release-cadence: Registry and GitHub release queries on 2026-10-23: Bruno 4.0.18/4.0.19/4.0.20 on 09-08/10-05/10-13; Ducktors 2.14.2/2.14.3/2.14.4 on 10-02/10-07/10-23. The incumbent shim pins Ducktors 2.12.0, two minors behind an active upstream. All MIT."
+            }
+          ]
+        }
+      ],
+      "eligible": false,
+      "blockersRemoved": [1, 2, 3, 6, 9],
+      "regressions": [],
+      "notReproven": [],
+      "materialWin": "not-evaluated",
+      "materialWinReason": "A retain-and-evolve result for the incumbent, not a replacement candidate."
+    },
+    {
+      "profile": "disposable-deployment",
+      "topology": "beep-incumbent",
+      "release": "2.12.0",
+      "representative": true,
+      "executors": ["wire", "lab", "native"],
+      "role": "incumbent",
+      "candidate": false,
+      "gates": [
+        {
+          "gate": 1,
+          "title": "exact stable client completes status, signed PUT, HEAD, GET, miss and fault cycles with direct receipts",
+          "status": "fail",
+          "reason": "RC-009 published-stable-client: client-accepted-upload: upload answered 200; replay: exit 42, MISS, output absent | RC-017 published-stable-client: signed-remote-replay: replay: exit 42, MISS, output absent | RC-018 published-stable-client: control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault | RC-019 published-stable-client: control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault | RC-020 published-stable-client: control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault",
+          "evidence": [
+            {
+              "case": "RC-009",
+              "dimension": "published-stable-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "client-accepted-upload: upload answered 200; replay: exit 42, MISS, output absent"
+            },
+            {
+              "case": "RC-010",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-017",
+              "dimension": "published-stable-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "signed-remote-replay: replay: exit 42, MISS, output absent"
+            },
+            {
+              "case": "RC-018",
+              "dimension": "published-stable-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault"
+            },
+            {
+              "case": "RC-019",
+              "dimension": "published-stable-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault"
+            },
+            {
+              "case": "RC-020",
+              "dimension": "published-stable-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault"
+            }
+          ]
+        },
+        {
+          "gate": 2,
+          "title": "exact published canary completes the same matrix in an isolated namespace",
+          "status": "fail",
+          "reason": "RC-009 published-canary-client: client-accepted-upload: upload answered 200; replay: exit 42, MISS, output absent | RC-017 published-canary-client: signed-remote-replay: replay: exit 42, MISS, output absent | RC-018 published-canary-client: control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault | RC-019 published-canary-client: control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault | RC-020 published-canary-client: control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault",
+          "evidence": [
+            {
+              "case": "RC-009",
+              "dimension": "published-canary-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "client-accepted-upload: upload answered 200; replay: exit 42, MISS, output absent"
+            },
+            {
+              "case": "RC-010",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-017",
+              "dimension": "published-canary-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "signed-remote-replay: replay: exit 42, MISS, output absent"
+            },
+            {
+              "case": "RC-018",
+              "dimension": "published-canary-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault"
+            },
+            {
+              "case": "RC-019",
+              "dimension": "published-canary-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault"
+            },
+            {
+              "case": "RC-020",
+              "dimension": "published-canary-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault"
+            }
+          ]
+        },
+        {
+          "gate": 3,
+          "title": "strict OpenAPI deviations are enumerated, and no core deviation breaks the published clients or Beep policy",
+          "status": "fail",
+          "reason": "RC-009 published-stable-client: client-accepted-upload: upload answered 200; replay: exit 42, MISS, output absent | RC-009 published-canary-client: client-accepted-upload: upload answered 200; replay: exit 42, MISS, output absent",
+          "evidence": [
+            {
+              "case": "RC-001",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-002",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "tag-round-trip: GET returns the opaque x-artifact-tag the writer sent"
+            },
+            {
+              "case": "RC-003",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "head-content-length: HEAD Content-Length equals the stored byte count | tag-round-trip: GET returns the opaque x-artifact-tag the writer sent"
+            },
+            {
+              "case": "RC-004",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-005",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "duration-round-trip-head: reader-head-duration answered 200 (success) | duration-round-trip-get: reader-get-duration answered 200 (success)"
+            },
+            {
+              "case": "RC-006",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "tag-preserved: reader-get-metadata answered 200 (success) | sha-preserved: reader-get-metadata answered 200 (success) | dirty-hash-preserved: reader-get-metadata answered 200 (success) | head-sha-preserved: reader-head-metadata answered 200"
+            },
+            {
+              "case": "RC-007",
+              "dimension": "strict-openapi",
+              "verdict": "unsupported-optional",
+              "status": "pass",
+              "source": "run",
+              "detail": "/v8/artifacts is absent (reader-post-query answered 404 (not-found)); the route is optional."
+            },
+            {
+              "case": "RC-008",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-009",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-010",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-011",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-012",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-014",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-015",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "documented-status:downloadArtifact: writer-get-selector-oversized answered 500; documented 200, 400, 401, 403, 404 | documented-status:uploadArtifact: writer-put-selector-oversized answered 412; documented 200, 202, 400, 401, 403"
+            },
+            {
+              "case": "RC-016",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "documented-status:uploadArtifact: writer-put-hash-traversal answered 404; documented 200, 202, 400, 401, 403 | documented-status:uploadArtifact: writer-put-hash-oversized answered 404; documented 200, 202, 400, 401, 403"
+            },
+            {
+              "case": "RC-023",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-024",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-025",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-026",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-009",
+              "dimension": "published-stable-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "client-accepted-upload: upload answered 200; replay: exit 42, MISS, output absent"
+            },
+            {
+              "case": "RC-009",
+              "dimension": "published-canary-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "client-accepted-upload: upload answered 200; replay: exit 42, MISS, output absent"
+            }
+          ]
+        },
+        {
+          "gate": 4,
+          "title": "readers cannot write; writers exist only in protected workflows; storage permissions preserve that split",
+          "status": "pass",
+          "reason": "Every mapped verdict passed.",
+          "evidence": [
+            {
+              "case": "RC-011",
+              "dimension": "beep-security-policy",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-012",
+              "dimension": "beep-security-policy",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-012",
+              "dimension": "beep-security-policy",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "goals/turborepo-cache-conformance/research/aws-lab-c1023a.json",
+              "detail": "reader-role-storage-write-denied: IAM simulate-principal-policy on the lab read role: s3:PutObject and s3:DeleteObject implicitDeny on the lab bucket."
+            },
+            {
+              "case": "RC-013",
+              "dimension": "beep-security-policy",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "goals/turborepo-cache-conformance/research/aws-lab-c1023a.json",
+              "detail": "writer-direct-invoke-requires-signature: Direct lambda:Invoke of the writer with a PUT event lacking the authorizer signature returned statusCode 403 and created no object. Run as the operator principal: proves the HMAC gate, not invoke permissions of other principals."
+            }
+          ]
+        },
+        {
+          "gate": 5,
+          "title": "a credential is bound to its tenant/namespace and caller-controlled selectors cannot escape it",
+          "status": "fail",
+          "reason": "RC-014 beep-security-policy: foreign-read-denied: foreign-get-own-namespace answered 200 (success). The topology does not claim tenant binding; the failure is attributed to that design. | cross-namespace-write-denied: writer-put-foreign-namespace answered 200 (success) | RC-015 beep-security-policy: selector-slug-conflict-read-fails-closed: writer-get-selector-slug-conflict answered 200 (success) | selector-slug-conflict-write-fails-closed: writer-put-selector-slug-conflict answered 200 (success) | selector-slug-conflict-created-nothin",
+          "evidence": [
+            {
+              "case": "RC-014",
+              "dimension": "beep-security-policy",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "foreign-read-denied: foreign-get-own-namespace answered 200 (success). The topology does not claim tenant binding; the failure is attributed to that design. | cross-namespace-write-denied: writer-put-foreign-namespace answered 200 (success)"
+            },
+            {
+              "case": "RC-015",
+              "dimension": "beep-security-policy",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "selector-slug-conflict-read-fails-closed: writer-get-selector-slug-conflict answered 200 (success) | selector-slug-conflict-write-fails-closed: writer-put-selector-slug-conflict answered 200 (success) | selector-slug-conflict-created-nothin"
+            }
+          ]
+        },
+        {
+          "gate": 6,
+          "title": "valid x-artifact-tag values round-trip opaquely; missing, invalid, wrong-team and corrupted artifacts are rejected before restore",
+          "status": "fail",
+          "reason": "RC-017 published-stable-client: signed-remote-replay: replay: exit 42, MISS, output absent | RC-018 published-stable-client: control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault | RC-019 published-stable-client: control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault | RC-020 published-stable-client: control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault | RC-021 published-stable-client: control-replay-restored: replay: exit 42, MISS, output absent | RC-017 published-canary-client: signed-remote-replay: replay: exit 42, MISS, output absent | RC-018 published-canary-client: control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault | RC-019 published-canary-client: control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault | RC-020 published-canary-client: control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault | RC-021 published-canary-client: control-replay-restored: replay: exit 42, MISS, output absent",
+          "evidence": [
+            {
+              "case": "RC-017",
+              "dimension": "published-stable-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "signed-remote-replay: replay: exit 42, MISS, output absent"
+            },
+            {
+              "case": "RC-018",
+              "dimension": "published-stable-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault"
+            },
+            {
+              "case": "RC-019",
+              "dimension": "published-stable-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault"
+            },
+            {
+              "case": "RC-020",
+              "dimension": "published-stable-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault"
+            },
+            {
+              "case": "RC-021",
+              "dimension": "published-stable-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "control-replay-restored: replay: exit 42, MISS, output absent"
+            },
+            {
+              "case": "RC-017",
+              "dimension": "published-canary-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "signed-remote-replay: replay: exit 42, MISS, output absent"
+            },
+            {
+              "case": "RC-018",
+              "dimension": "published-canary-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault"
+            },
+            {
+              "case": "RC-019",
+              "dimension": "published-canary-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault"
+            },
+            {
+              "case": "RC-020",
+              "dimension": "published-canary-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault"
+            },
+            {
+              "case": "RC-021",
+              "dimension": "published-canary-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "control-replay-restored: replay: exit 42, MISS, output absent"
+            }
+          ]
+        },
+        {
+          "gate": 7,
+          "title": "every error class is attributable despite Turbo's task-level fail-soft behavior",
+          "status": "pass",
+          "reason": "Every mapped verdict passed.",
+          "evidence": [
+            {
+              "case": "RC-010",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-023",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-023",
+              "dimension": "observability",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            }
+          ]
+        },
+        {
+          "gate": 8,
+          "title": "logs, traces, summaries and failure output pass synthetic-secret and artifact-content redaction tests",
+          "status": "pass",
+          "reason": "Every mapped verdict passed.",
+          "evidence": [
+            {
+              "case": "RC-030",
+              "dimension": "observability",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "goals/turborepo-cache-conformance/research/aws-lab-c1023a.json",
+              "detail": "no-secret-or-content-in-logs: All three function log groups searched for a synthetic bearer, a synthetic tag value, an artifact-content marker and both lab bearers: no occurrence."
+            },
+            {
+              "case": "RC-030",
+              "dimension": "beep-security-policy",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "goals/turborepo-cache-conformance/research/aws-lab-c1023a.json",
+              "detail": "no-secret-or-content-in-logs: Same scan; bearer and content values are absent from reader, writer and authorizer logs."
+            }
+          ]
+        },
+        {
+          "gate": 9,
+          "title": "measured payload and concurrency envelopes cover current p99/peak with the ratified safety multipliers",
+          "status": "fail",
+          "reason": "RC-028 performance-envelope: concurrency-envelope-1.5x-peak-correct: 29 incorrect or failed of 90 requests plus write verification at 30 readers / 15 writers The envelope is a floor, not demand: observed peak concurrency (20 read / 10 write) equals the reserved caps, so demand is censored (goals/turborepo-cache-conformance/research/load-envelope-2026-10-23.json).",
+          "evidence": [
+            {
+              "case": "RC-027",
+              "dimension": "performance-envelope",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-028",
+              "dimension": "performance-envelope",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "concurrency-envelope-1.5x-peak-correct: 29 incorrect or failed of 90 requests plus write verification at 30 readers / 15 writers"
+            }
+          ]
+        },
+        {
+          "gate": 10,
+          "title": "retention, encryption, public-access block, lifecycle cleanup, backup, budget alarms and teardown are explicit",
+          "status": "fail",
+          "reason": "RC-029 beep-security-policy: namespace-scoped-cleanup: Bucket policy DenyObjectAccessOutsideCacheRoles denies every object action outside the cache roles and neither role may delete, so no namespace or epoch can be cleaned up selectively; only whole-bucket expiry. Attributed to the deliberate n",
+          "evidence": [
+            {
+              "case": "RC-029",
+              "dimension": "beep-security-policy",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "goals/turborepo-cache-conformance/research/aws-lab-c1023a.json",
+              "detail": "namespace-scoped-cleanup: Bucket policy DenyObjectAccessOutsideCacheRoles denies every object action outside the cache roles and neither role may delete, so no namespace or epoch can be cleaned up selectively; only whole-bucket expiry. Attributed to the deliberate n"
+            },
+            {
+              "case": "RC-029",
+              "dimension": "observability",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "goals/turborepo-cache-conformance/research/aws-lab-c1023a.json",
+              "detail": "expiry-rule-explicit: Bucket lifecycle rule expire-stale-cache-artifacts: enabled, 30-day expiry, incomplete multipart abort after 1 day."
+            }
+          ]
+        },
+        {
+          "gate": 11,
+          "title": "deployment pins immutable source/image/package digests and has a rehearsed incumbent rollback",
+          "status": "pass",
+          "reason": "Every mapped verdict passed.",
+          "evidence": [
+            {
+              "case": "RC-032",
+              "dimension": "beep-security-policy",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "goals/turborepo-cache-conformance/research/aws-lab-c1023a.json",
+              "detail": "rehearsed-cutback-no-mixed-writes: AWS drill 2026-10-24: prior incumbent write Y (200); cutover write X to the evolved endpoint (200, readable there); cutback: incumbent GET X 404 (no mixed restore), incumbent GET Y 200 with identical bytes; incumbent write Z 200 and evolved"
+            }
+          ]
+        },
+        {
+          "gate": 12,
+          "title": "license and maintenance obligations are acceptable for the deployed and modified topology",
+          "status": "pass",
+          "reason": "Every mapped verdict passed.",
+          "evidence": [
+            {
+              "case": "license",
+              "dimension": null,
+              "verdict": "pass",
+              "status": "pass",
+              "source": "goals/turborepo-cache-conformance/research/pins-2026-10-23.json",
+              "detail": "beep-incumbent is MIT per the pinned registry metadata."
+            },
+            {
+              "case": "maintenance",
+              "dimension": null,
+              "verdict": "pass",
+              "status": "pass",
+              "source": "goals/turborepo-cache-conformance/research/aws-lab-c1023a.json",
+              "detail": "upstream-release-cadence: Registry and GitHub release queries on 2026-10-23: Bruno 4.0.18/4.0.19/4.0.20 on 09-08/10-05/10-13; Ducktors 2.14.2/2.14.3/2.14.4 on 10-02/10-07/10-23. The incumbent shim pins Ducktors 2.12.0, two minors behind an active upstream. All MIT."
+            }
+          ]
+        }
+      ],
+      "eligible": false,
+      "blockersRemoved": [],
+      "regressions": [],
+      "notReproven": [],
+      "materialWin": "not-evaluated",
+      "materialWinReason": "The incumbent is the baseline, not a candidate."
+    },
+    {
+      "profile": "local-container",
+      "topology": "beep-incumbent-evolved",
+      "release": "2.12.0+tag-passthrough",
+      "representative": false,
+      "executors": ["wire", "lab", "native"],
+      "role": "evolved-incumbent",
+      "candidate": false,
+      "gates": [
+        {
+          "gate": 1,
+          "title": "exact stable client completes status, signed PUT, HEAD, GET, miss and fault cycles with direct receipts",
+          "status": "pass",
+          "reason": "Every mapped verdict passed.",
+          "evidence": [
+            {
+              "case": "RC-009",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-010",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-017",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-018",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-019",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-020",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            }
+          ]
+        },
+        {
+          "gate": 2,
+          "title": "exact published canary completes the same matrix in an isolated namespace",
+          "status": "pass",
+          "reason": "Every mapped verdict passed.",
+          "evidence": [
+            {
+              "case": "RC-009",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-010",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-017",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-018",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-019",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-020",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            }
+          ]
+        },
+        {
+          "gate": 3,
+          "title": "strict OpenAPI deviations are enumerated, and no core deviation breaks the published clients or Beep policy",
+          "status": "pass",
+          "reason": "Every mapped verdict passed.",
+          "evidence": [
+            {
+              "case": "RC-001",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-002",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-003",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "head-content-length: HEAD Content-Length equals the stored byte count"
+            },
+            {
+              "case": "RC-004",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-005",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "duration-round-trip-head: reader-head-duration answered 200 (success) | duration-round-trip-get: reader-get-duration answered 200 (success)"
+            },
+            {
+              "case": "RC-006",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "sha-preserved: reader-get-metadata answered 200 (success) | dirty-hash-preserved: reader-get-metadata answered 200 (success) | head-sha-preserved: reader-head-metadata answered 200 (success)"
+            },
+            {
+              "case": "RC-007",
+              "dimension": "strict-openapi",
+              "verdict": "unsupported-optional",
+              "status": "pass",
+              "source": "run",
+              "detail": "/v8/artifacts is absent (reader-post-query answered 404 (not-found)); the route is optional."
+            },
+            {
+              "case": "RC-008",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-009",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-010",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-011",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-012",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-014",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-015",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "documented-status:downloadArtifact: writer-get-selector-oversized answered 500; documented 200, 400, 401, 403, 404 | documented-status:uploadArtifact: writer-put-selector-oversized answered 412; documented 200, 202, 400, 401, 403"
+            },
+            {
+              "case": "RC-016",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "documented-status:uploadArtifact: writer-put-hash-oversized answered 404; documented 200, 202, 400, 401, 403"
+            },
+            {
+              "case": "RC-023",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-024",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-025",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-026",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-009",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-009",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            }
+          ]
+        },
+        {
+          "gate": 4,
+          "title": "readers cannot write; writers exist only in protected workflows; storage permissions preserve that split",
+          "status": "unproven",
+          "reason": "Unexecuted evidence: RC-013 beep-security-policy",
+          "evidence": [
+            {
+              "case": "RC-011",
+              "dimension": "beep-security-policy",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-012",
+              "dimension": "beep-security-policy",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-013",
+              "dimension": "beep-security-policy",
+              "verdict": "not-executed",
+              "status": "unproven",
+              "source": "run",
+              "detail": "Requires a deployed boundary or measured load the local lab cannot supply. Direct writer invocation outside the gateway needs the deployed Lambda/IAM boundary."
+            }
+          ]
+        },
+        {
+          "gate": 5,
+          "title": "a credential is bound to its tenant/namespace and caller-controlled selectors cannot escape it",
+          "status": "fail",
+          "reason": "RC-014 beep-security-policy: foreign-read-denied: foreign-get-own-namespace answered 200 (success). The topology does not claim tenant binding; the failure is attributed to that design. | cross-namespace-write-denied: writer-put-foreign-namespace answered 200 (success) | RC-015 beep-security-policy: selector-conflicting-write-fails-closed: writer-put-selector-conflicting answered 200 (success) | selector-slug-conflict-read-fails-closed: writer-get-selector-slug-conflict answered 200 (success) | selector-slug-conflict-write-fails-closed",
+          "evidence": [
+            {
+              "case": "RC-014",
+              "dimension": "beep-security-policy",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "foreign-read-denied: foreign-get-own-namespace answered 200 (success). The topology does not claim tenant binding; the failure is attributed to that design. | cross-namespace-write-denied: writer-put-foreign-namespace answered 200 (success)"
+            },
+            {
+              "case": "RC-015",
+              "dimension": "beep-security-policy",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "selector-conflicting-write-fails-closed: writer-put-selector-conflicting answered 200 (success) | selector-slug-conflict-read-fails-closed: writer-get-selector-slug-conflict answered 200 (success) | selector-slug-conflict-write-fails-closed"
+            }
+          ]
+        },
+        {
+          "gate": 6,
+          "title": "valid x-artifact-tag values round-trip opaquely; missing, invalid, wrong-team and corrupted artifacts are rejected before restore",
+          "status": "pass",
+          "reason": "Every mapped verdict passed.",
+          "evidence": [
+            {
+              "case": "RC-017",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-018",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-019",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-020",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-021",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-017",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-018",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-019",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-020",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-021",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            }
+          ]
+        },
+        {
+          "gate": 7,
+          "title": "every error class is attributable despite Turbo's task-level fail-soft behavior",
+          "status": "pass",
+          "reason": "Every mapped verdict passed.",
+          "evidence": [
+            {
+              "case": "RC-010",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-023",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-023",
+              "dimension": "observability",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            }
+          ]
+        },
+        {
+          "gate": 8,
+          "title": "logs, traces, summaries and failure output pass synthetic-secret and artifact-content redaction tests",
+          "status": "pass",
+          "reason": "Every mapped verdict passed.",
+          "evidence": [
+            {
+              "case": "RC-030",
+              "dimension": "observability",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "goals/turborepo-cache-conformance/research/local-observability-2026-10-23.json",
+              "detail": "no-secret-or-content-in-logs: Each topology received a marker-body PUT, a GET and a synthetic-bearer GET; every log file was then searched for the marker, the synthetic bearer and all lab bearers and secrets: no occurrence. Bruno logs the x-artifact-tag value in request"
+            },
+            {
+              "case": "RC-030",
+              "dimension": "beep-security-policy",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "goals/turborepo-cache-conformance/research/local-observability-2026-10-23.json",
+              "detail": "no-secret-or-content-in-logs: Same scan; Bruno masks Authorization as *redacted*; the shim and Ducktors do not log it."
+            }
+          ]
+        },
+        {
+          "gate": 9,
+          "title": "measured payload and concurrency envelopes cover current p99/peak with the ratified safety multipliers",
+          "status": "unproven",
+          "reason": "Measured only on a non-representative profile; gate 9 needs a disposable-deployment run. The envelope is a floor, not demand: observed peak concurrency (20 read / 10 write) equals the reserved caps, so demand is censored (goals/turborepo-cache-conformance/research/load-envelope-2026-10-23.json).",
+          "evidence": [
+            {
+              "case": "RC-027",
+              "dimension": "performance-envelope",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-028",
+              "dimension": "performance-envelope",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            }
+          ]
+        },
+        {
+          "gate": 10,
+          "title": "retention, encryption, public-access block, lifecycle cleanup, backup, budget alarms and teardown are explicit",
+          "status": "unproven",
+          "reason": "Unexecuted evidence: RC-029 beep-security-policy, RC-029 observability",
+          "evidence": [
+            {
+              "case": "RC-029",
+              "dimension": "beep-security-policy",
+              "verdict": "not-executed",
+              "status": "unproven",
+              "source": "run",
+              "detail": "Requires a deployed boundary or measured load the local lab cannot supply. Retention and namespace cleanup need storage lifecycle timers."
+            },
+            {
+              "case": "RC-029",
+              "dimension": "observability",
+              "verdict": "not-executed",
+              "status": "unproven",
+              "source": "run",
+              "detail": "Requires a deployed boundary or measured load the local lab cannot supply. Retention and namespace cleanup need storage lifecycle timers."
+            }
+          ]
+        },
+        {
+          "gate": 11,
+          "title": "deployment pins immutable source/image/package digests and has a rehearsed incumbent rollback",
+          "status": "unproven",
+          "reason": "Unexecuted evidence: RC-032 beep-security-policy",
+          "evidence": [
+            {
+              "case": "RC-032",
+              "dimension": "beep-security-policy",
+              "verdict": "not-executed",
+              "status": "unproven",
+              "source": "run",
+              "detail": "Requires a deployed boundary or measured load the local lab cannot supply. Cutback needs a rehearsed endpoint and epoch restoration receipt."
+            }
+          ]
+        },
+        {
+          "gate": 12,
+          "title": "license and maintenance obligations are acceptable for the deployed and modified topology",
+          "status": "pass",
+          "reason": "Every mapped verdict passed.",
+          "evidence": [
+            {
+              "case": "license",
+              "dimension": null,
+              "verdict": "pass",
+              "status": "pass",
+              "source": "goals/turborepo-cache-conformance/research/pins-2026-10-23.json",
+              "detail": "beep-incumbent is MIT per the pinned registry metadata."
+            },
+            {
+              "case": "maintenance",
+              "dimension": null,
+              "verdict": "pass",
+              "status": "pass",
+              "source": "goals/turborepo-cache-conformance/research/local-observability-2026-10-23.json",
+              "detail": "upstream-release-cadence: Registry and GitHub release queries on 2026-10-23: Bruno 4.0.18/4.0.19/4.0.20 on 09-08/10-05/10-13; Ducktors 2.14.2/2.14.3/2.14.4 on 10-02/10-07/10-23. The incumbent shim pins Ducktors 2.12.0, two minors behind an active upstream. All MIT."
+            }
+          ]
+        }
+      ],
+      "eligible": false,
+      "blockersRemoved": [1, 2, 3, 6],
+      "regressions": [],
+      "notReproven": [],
+      "materialWin": "not-evaluated",
+      "materialWinReason": "A retain-and-evolve result for the incumbent, not a replacement candidate."
+    },
+    {
+      "profile": "local-container",
+      "topology": "beep-incumbent",
+      "release": "2.12.0",
+      "representative": false,
+      "executors": ["wire", "lab", "native"],
+      "role": "incumbent",
+      "candidate": false,
+      "gates": [
+        {
+          "gate": 1,
+          "title": "exact stable client completes status, signed PUT, HEAD, GET, miss and fault cycles with direct receipts",
+          "status": "fail",
+          "reason": "RC-009 published-stable-client: client-accepted-upload: upload answered 200; replay: exit 42, MISS, output absent | RC-017 published-stable-client: signed-remote-replay: replay: exit 42, MISS, output absent | RC-018 published-stable-client: control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault | RC-019 published-stable-client: control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault | RC-020 published-stable-client: control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault",
+          "evidence": [
+            {
+              "case": "RC-009",
+              "dimension": "published-stable-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "client-accepted-upload: upload answered 200; replay: exit 42, MISS, output absent"
+            },
+            {
+              "case": "RC-010",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-017",
+              "dimension": "published-stable-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "signed-remote-replay: replay: exit 42, MISS, output absent"
+            },
+            {
+              "case": "RC-018",
+              "dimension": "published-stable-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault"
+            },
+            {
+              "case": "RC-019",
+              "dimension": "published-stable-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault"
+            },
+            {
+              "case": "RC-020",
+              "dimension": "published-stable-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault"
+            }
+          ]
+        },
+        {
+          "gate": 2,
+          "title": "exact published canary completes the same matrix in an isolated namespace",
+          "status": "fail",
+          "reason": "RC-009 published-canary-client: client-accepted-upload: upload answered 200; replay: exit 42, MISS, output absent | RC-017 published-canary-client: signed-remote-replay: replay: exit 42, MISS, output absent | RC-018 published-canary-client: control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault | RC-019 published-canary-client: control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault | RC-020 published-canary-client: control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault",
+          "evidence": [
+            {
+              "case": "RC-009",
+              "dimension": "published-canary-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "client-accepted-upload: upload answered 200; replay: exit 42, MISS, output absent"
+            },
+            {
+              "case": "RC-010",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-017",
+              "dimension": "published-canary-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "signed-remote-replay: replay: exit 42, MISS, output absent"
+            },
+            {
+              "case": "RC-018",
+              "dimension": "published-canary-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault"
+            },
+            {
+              "case": "RC-019",
+              "dimension": "published-canary-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault"
+            },
+            {
+              "case": "RC-020",
+              "dimension": "published-canary-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault"
+            }
+          ]
+        },
+        {
+          "gate": 3,
+          "title": "strict OpenAPI deviations are enumerated, and no core deviation breaks the published clients or Beep policy",
+          "status": "fail",
+          "reason": "RC-009 published-stable-client: client-accepted-upload: upload answered 200; replay: exit 42, MISS, output absent | RC-009 published-canary-client: client-accepted-upload: upload answered 200; replay: exit 42, MISS, output absent",
+          "evidence": [
+            {
+              "case": "RC-001",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-002",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "tag-round-trip: GET returns the opaque x-artifact-tag the writer sent"
+            },
+            {
+              "case": "RC-003",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "head-content-length: HEAD Content-Length equals the stored byte count | tag-round-trip: GET returns the opaque x-artifact-tag the writer sent"
+            },
+            {
+              "case": "RC-004",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-005",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "duration-round-trip-head: reader-head-duration answered 200 (success) | duration-round-trip-get: reader-get-duration answered 200 (success)"
+            },
+            {
+              "case": "RC-006",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "tag-preserved: reader-get-metadata answered 200 (success) | sha-preserved: reader-get-metadata answered 200 (success) | dirty-hash-preserved: reader-get-metadata answered 200 (success) | head-sha-preserved: reader-head-metadata answered 200"
+            },
+            {
+              "case": "RC-007",
+              "dimension": "strict-openapi",
+              "verdict": "unsupported-optional",
+              "status": "pass",
+              "source": "run",
+              "detail": "/v8/artifacts is absent (reader-post-query answered 404 (not-found)); the route is optional."
+            },
+            {
+              "case": "RC-008",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-009",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-010",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-011",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-012",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-014",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-015",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "documented-status:downloadArtifact: writer-get-selector-oversized answered 500; documented 200, 400, 401, 403, 404 | documented-status:uploadArtifact: writer-put-selector-oversized answered 412; documented 200, 202, 400, 401, 403"
+            },
+            {
+              "case": "RC-016",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "documented-status:uploadArtifact: writer-put-hash-oversized answered 404; documented 200, 202, 400, 401, 403"
+            },
+            {
+              "case": "RC-023",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-024",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-025",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-026",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-009",
+              "dimension": "published-stable-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "client-accepted-upload: upload answered 200; replay: exit 42, MISS, output absent"
+            },
+            {
+              "case": "RC-009",
+              "dimension": "published-canary-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "client-accepted-upload: upload answered 200; replay: exit 42, MISS, output absent"
+            }
+          ]
+        },
+        {
+          "gate": 4,
+          "title": "readers cannot write; writers exist only in protected workflows; storage permissions preserve that split",
+          "status": "unproven",
+          "reason": "Unexecuted evidence: RC-013 beep-security-policy",
+          "evidence": [
+            {
+              "case": "RC-011",
+              "dimension": "beep-security-policy",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-012",
+              "dimension": "beep-security-policy",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-013",
+              "dimension": "beep-security-policy",
+              "verdict": "not-executed",
+              "status": "unproven",
+              "source": "run",
+              "detail": "Requires a deployed boundary or measured load the local lab cannot supply. Direct writer invocation outside the gateway needs the deployed Lambda/IAM boundary."
+            }
+          ]
+        },
+        {
+          "gate": 5,
+          "title": "a credential is bound to its tenant/namespace and caller-controlled selectors cannot escape it",
+          "status": "fail",
+          "reason": "RC-014 beep-security-policy: foreign-read-denied: foreign-get-own-namespace answered 200 (success). The topology does not claim tenant binding; the failure is attributed to that design. | cross-namespace-write-denied: writer-put-foreign-namespace answered 200 (success) | RC-015 beep-security-policy: selector-conflicting-write-fails-closed: writer-put-selector-conflicting answered 200 (success) | selector-slug-conflict-read-fails-closed: writer-get-selector-slug-conflict answered 200 (success) | selector-slug-conflict-write-fails-closed",
+          "evidence": [
+            {
+              "case": "RC-014",
+              "dimension": "beep-security-policy",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "foreign-read-denied: foreign-get-own-namespace answered 200 (success). The topology does not claim tenant binding; the failure is attributed to that design. | cross-namespace-write-denied: writer-put-foreign-namespace answered 200 (success)"
+            },
+            {
+              "case": "RC-015",
+              "dimension": "beep-security-policy",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "selector-conflicting-write-fails-closed: writer-put-selector-conflicting answered 200 (success) | selector-slug-conflict-read-fails-closed: writer-get-selector-slug-conflict answered 200 (success) | selector-slug-conflict-write-fails-closed"
+            }
+          ]
+        },
+        {
+          "gate": 6,
+          "title": "valid x-artifact-tag values round-trip opaquely; missing, invalid, wrong-team and corrupted artifacts are rejected before restore",
+          "status": "fail",
+          "reason": "RC-017 published-stable-client: signed-remote-replay: replay: exit 42, MISS, output absent | RC-018 published-stable-client: control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault | RC-019 published-stable-client: control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault | RC-020 published-stable-client: control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault | RC-021 published-stable-client: control-replay-restored: replay: exit 42, MISS, output absent | RC-017 published-canary-client: signed-remote-replay: replay: exit 42, MISS, output absent | RC-018 published-canary-client: control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault | RC-019 published-canary-client: control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault | RC-020 published-canary-client: control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault | RC-021 published-canary-client: control-replay-restored: replay: exit 42, MISS, output absent",
+          "evidence": [
+            {
+              "case": "RC-017",
+              "dimension": "published-stable-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "signed-remote-replay: replay: exit 42, MISS, output absent"
+            },
+            {
+              "case": "RC-018",
+              "dimension": "published-stable-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault"
+            },
+            {
+              "case": "RC-019",
+              "dimension": "published-stable-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault"
+            },
+            {
+              "case": "RC-020",
+              "dimension": "published-stable-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault"
+            },
+            {
+              "case": "RC-021",
+              "dimension": "published-stable-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "control-replay-restored: replay: exit 42, MISS, output absent"
+            },
+            {
+              "case": "RC-017",
+              "dimension": "published-canary-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "signed-remote-replay: replay: exit 42, MISS, output absent"
+            },
+            {
+              "case": "RC-018",
+              "dimension": "published-canary-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault"
+            },
+            {
+              "case": "RC-019",
+              "dimension": "published-canary-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault"
+            },
+            {
+              "case": "RC-020",
+              "dimension": "published-canary-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault"
+            },
+            {
+              "case": "RC-021",
+              "dimension": "published-canary-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "control-replay-restored: replay: exit 42, MISS, output absent"
+            }
+          ]
+        },
+        {
+          "gate": 7,
+          "title": "every error class is attributable despite Turbo's task-level fail-soft behavior",
+          "status": "pass",
+          "reason": "Every mapped verdict passed.",
+          "evidence": [
+            {
+              "case": "RC-010",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-023",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-023",
+              "dimension": "observability",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            }
+          ]
+        },
+        {
+          "gate": 8,
+          "title": "logs, traces, summaries and failure output pass synthetic-secret and artifact-content redaction tests",
+          "status": "pass",
+          "reason": "Every mapped verdict passed.",
+          "evidence": [
+            {
+              "case": "RC-030",
+              "dimension": "observability",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "goals/turborepo-cache-conformance/research/local-observability-2026-10-23.json",
+              "detail": "no-secret-or-content-in-logs: Each topology received a marker-body PUT, a GET and a synthetic-bearer GET; every log file was then searched for the marker, the synthetic bearer and all lab bearers and secrets: no occurrence. Bruno logs the x-artifact-tag value in request"
+            },
+            {
+              "case": "RC-030",
+              "dimension": "beep-security-policy",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "goals/turborepo-cache-conformance/research/local-observability-2026-10-23.json",
+              "detail": "no-secret-or-content-in-logs: Same scan; Bruno masks Authorization as *redacted*; the shim and Ducktors do not log it."
+            }
+          ]
+        },
+        {
+          "gate": 9,
+          "title": "measured payload and concurrency envelopes cover current p99/peak with the ratified safety multipliers",
+          "status": "unproven",
+          "reason": "Measured only on a non-representative profile; gate 9 needs a disposable-deployment run. The envelope is a floor, not demand: observed peak concurrency (20 read / 10 write) equals the reserved caps, so demand is censored (goals/turborepo-cache-conformance/research/load-envelope-2026-10-23.json).",
+          "evidence": [
+            {
+              "case": "RC-027",
+              "dimension": "performance-envelope",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-028",
+              "dimension": "performance-envelope",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            }
+          ]
+        },
+        {
+          "gate": 10,
+          "title": "retention, encryption, public-access block, lifecycle cleanup, backup, budget alarms and teardown are explicit",
+          "status": "unproven",
+          "reason": "Unexecuted evidence: RC-029 beep-security-policy, RC-029 observability",
+          "evidence": [
+            {
+              "case": "RC-029",
+              "dimension": "beep-security-policy",
+              "verdict": "not-executed",
+              "status": "unproven",
+              "source": "run",
+              "detail": "Requires a deployed boundary or measured load the local lab cannot supply. Retention and namespace cleanup need storage lifecycle timers."
+            },
+            {
+              "case": "RC-029",
+              "dimension": "observability",
+              "verdict": "not-executed",
+              "status": "unproven",
+              "source": "run",
+              "detail": "Requires a deployed boundary or measured load the local lab cannot supply. Retention and namespace cleanup need storage lifecycle timers."
+            }
+          ]
+        },
+        {
+          "gate": 11,
+          "title": "deployment pins immutable source/image/package digests and has a rehearsed incumbent rollback",
+          "status": "unproven",
+          "reason": "Unexecuted evidence: RC-032 beep-security-policy",
+          "evidence": [
+            {
+              "case": "RC-032",
+              "dimension": "beep-security-policy",
+              "verdict": "not-executed",
+              "status": "unproven",
+              "source": "run",
+              "detail": "Requires a deployed boundary or measured load the local lab cannot supply. Cutback needs a rehearsed endpoint and epoch restoration receipt."
+            }
+          ]
+        },
+        {
+          "gate": 12,
+          "title": "license and maintenance obligations are acceptable for the deployed and modified topology",
+          "status": "pass",
+          "reason": "Every mapped verdict passed.",
+          "evidence": [
+            {
+              "case": "license",
+              "dimension": null,
+              "verdict": "pass",
+              "status": "pass",
+              "source": "goals/turborepo-cache-conformance/research/pins-2026-10-23.json",
+              "detail": "beep-incumbent is MIT per the pinned registry metadata."
+            },
+            {
+              "case": "maintenance",
+              "dimension": null,
+              "verdict": "pass",
+              "status": "pass",
+              "source": "goals/turborepo-cache-conformance/research/local-observability-2026-10-23.json",
+              "detail": "upstream-release-cadence: Registry and GitHub release queries on 2026-10-23: Bruno 4.0.18/4.0.19/4.0.20 on 09-08/10-05/10-13; Ducktors 2.14.2/2.14.3/2.14.4 on 10-02/10-07/10-23. The incumbent shim pins Ducktors 2.12.0, two minors behind an active upstream. All MIT."
+            }
+          ]
+        }
+      ],
+      "eligible": false,
+      "blockersRemoved": [],
+      "regressions": [],
+      "notReproven": [],
+      "materialWin": "not-evaluated",
+      "materialWinReason": "The incumbent is the baseline, not a candidate."
+    },
+    {
+      "profile": "local-container",
+      "topology": "bruno-loopback",
+      "release": "4.0.20",
+      "representative": false,
+      "executors": ["wire", "lab", "native"],
+      "role": "candidate",
+      "candidate": true,
+      "gates": [
+        {
+          "gate": 1,
+          "title": "exact stable client completes status, signed PUT, HEAD, GET, miss and fault cycles with direct receipts",
+          "status": "pass",
+          "reason": "Every mapped verdict passed.",
+          "evidence": [
+            {
+              "case": "RC-009",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-010",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-017",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-018",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-019",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-020",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            }
+          ]
+        },
+        {
+          "gate": 2,
+          "title": "exact published canary completes the same matrix in an isolated namespace",
+          "status": "pass",
+          "reason": "Every mapped verdict passed.",
+          "evidence": [
+            {
+              "case": "RC-009",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-010",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-017",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-018",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-019",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-020",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            }
+          ]
+        },
+        {
+          "gate": 3,
+          "title": "strict OpenAPI deviations are enumerated, and no core deviation breaks the published clients or Beep policy",
+          "status": "pass",
+          "reason": "Every mapped verdict passed.",
+          "evidence": [
+            {
+              "case": "RC-001",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-002",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "documented-status:uploadArtifact: writer-put answered 201; documented 200, 202, 400, 401, 403 | upload-response-schema: PUT 200/202 documents an ArtifactUploadResponse body with urls"
+            },
+            {
+              "case": "RC-003",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "documented-status:uploadArtifact: writer-put answered 201; documented 200, 202, 400, 401, 403 | upload-response-schema: PUT 200/202 documents an ArtifactUploadResponse body with urls | head-content-length: HEAD Content-Length equals the sto"
+            },
+            {
+              "case": "RC-004",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "documented-status:uploadArtifact: writer-put-octet-stream answered 201; documented 200, 202, 400, 401, 403"
+            },
+            {
+              "case": "RC-005",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "documented-status:uploadArtifact: writer-put-duration answered 201; documented 200, 202, 400, 401, 403 | documented-status:uploadArtifact: writer-put-no-duration answered 201; documented 200, 202, 400, 401, 403 | documented-status:uploadArt"
+            },
+            {
+              "case": "RC-006",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "documented-status:uploadArtifact: writer-put-metadata answered 201; documented 200, 202, 400, 401, 403 | sha-preserved: reader-get-metadata answered 200 (success) | dirty-hash-preserved: reader-get-metadata answered 200 (success) | head-sha"
+            },
+            {
+              "case": "RC-007",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "documented-status:uploadArtifact: writer-put-seed answered 201; documented 200, 202, 400, 401, 403 | query-map-shape: reader-post-query answered 200 (success)"
+            },
+            {
+              "case": "RC-008",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "documented-status:uploadArtifact: writer-put-seed answered 201; documented 200, 202, 400, 401, 403 | documented-status:recordCacheEvents: reader-post-events answered 201; documented 200, 400, 401, 403 | events-accepted: reader-post-events a"
+            },
+            {
+              "case": "RC-009",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "documented-status:uploadArtifact: writer-put answered 201; documented 200, 202, 400, 401, 403"
+            },
+            {
+              "case": "RC-010",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-011",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "documented-status:uploadArtifact: writer-put-seed answered 201; documented 200, 202, 400, 401, 403"
+            },
+            {
+              "case": "RC-012",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "documented-status:uploadArtifact: writer-put-seed answered 201; documented 200, 202, 400, 401, 403 | documented-status:uploadArtifact: reader-put-new answered 201; documented 200, 202, 400, 401, 403 | documented-status:uploadArtifact: reade"
+            },
+            {
+              "case": "RC-014",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "documented-status:uploadArtifact: writer-put-seed answered 201; documented 200, 202, 400, 401, 403 | documented-status:uploadArtifact: foreign-put-own-namespace answered 201; documented 200, 202, 400, 401, 403 | documented-status:uploadArti"
+            },
+            {
+              "case": "RC-015",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "documented-status:uploadArtifact: writer-put-seed answered 201; documented 200, 202, 400, 401, 403 | documented-status:uploadArtifact: writer-put-selector-empty answered 201; documented 200, 202, 400, 401, 403 | documented-status:uploadArti"
+            },
+            {
+              "case": "RC-016",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "documented-status:uploadArtifact: writer-put-hash-non-hex answered 201; documented 200, 202, 400, 401, 403 | documented-status:uploadArtifact: writer-put-hash-traversal answered 201; documented 200, 202, 400, 401, 403 | documented-status:up"
+            },
+            {
+              "case": "RC-023",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-024",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "documented-status:uploadArtifact: writer-put-seed answered 201; documented 200, 202, 400, 401, 403 | documented-status:uploadArtifact: reader-put-existing answered 201; documented 200, 202, 400, 401, 403 | documented-status:uploadArtifact: "
+            },
+            {
+              "case": "RC-025",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "documented-status:uploadArtifact: writer-put-identical-1 answered 201; documented 200, 202, 400, 401, 403 | documented-status:uploadArtifact: writer-put-identical-2 answered 201; documented 200, 202, 400, 401, 403 | documented-status:upload"
+            },
+            {
+              "case": "RC-026",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "documented-status:uploadArtifact: writer-put-prior answered 201; documented 200, 202, 400, 401, 403 | documented-status:uploadArtifact: writer-put-overwrite answered 201; documented 200, 202, 400, 401, 403"
+            },
+            {
+              "case": "RC-009",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-009",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            }
+          ]
+        },
+        {
+          "gate": 4,
+          "title": "readers cannot write; writers exist only in protected workflows; storage permissions preserve that split",
+          "status": "fail",
+          "reason": "RC-012 beep-security-policy: reader-put-denied: reader-put-new answered 201 (success). The topology does not claim a reader/writer split; the failure is attributed to that design. | reader-put-created-nothing: writer-head-new answered 200 (success). The topology does n",
+          "evidence": [
+            {
+              "case": "RC-011",
+              "dimension": "beep-security-policy",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-012",
+              "dimension": "beep-security-policy",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "reader-put-denied: reader-put-new answered 201 (success). The topology does not claim a reader/writer split; the failure is attributed to that design. | reader-put-created-nothing: writer-head-new answered 200 (success). The topology does n"
+            },
+            {
+              "case": "RC-013",
+              "dimension": "beep-security-policy",
+              "verdict": "not-executed",
+              "status": "unproven",
+              "source": "run",
+              "detail": "Requires a deployed boundary or measured load the local lab cannot supply. Direct writer invocation outside the gateway needs the deployed Lambda/IAM boundary."
+            }
+          ]
+        },
+        {
+          "gate": 5,
+          "title": "a credential is bound to its tenant/namespace and caller-controlled selectors cannot escape it",
+          "status": "fail",
+          "reason": "RC-014 beep-security-policy: foreign-read-denied: foreign-get-own-namespace answered 200 (success). The topology does not claim tenant binding; the failure is attributed to that design. | foreign-write-denied: foreign-put-own-namespace answered 201 (success). The topol | RC-015 beep-security-policy: selector-empty-write-fails-closed: writer-put-selector-empty answered 201 (success) | selector-conflicting-write-fails-closed: writer-put-selector-conflicting answered 201 (success) | selector-slug-conflict-write-fails-closed: writer-put-se",
+          "evidence": [
+            {
+              "case": "RC-014",
+              "dimension": "beep-security-policy",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "foreign-read-denied: foreign-get-own-namespace answered 200 (success). The topology does not claim tenant binding; the failure is attributed to that design. | foreign-write-denied: foreign-put-own-namespace answered 201 (success). The topol"
+            },
+            {
+              "case": "RC-015",
+              "dimension": "beep-security-policy",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "selector-empty-write-fails-closed: writer-put-selector-empty answered 201 (success) | selector-conflicting-write-fails-closed: writer-put-selector-conflicting answered 201 (success) | selector-slug-conflict-write-fails-closed: writer-put-se"
+            }
+          ]
+        },
+        {
+          "gate": 6,
+          "title": "valid x-artifact-tag values round-trip opaquely; missing, invalid, wrong-team and corrupted artifacts are rejected before restore",
+          "status": "pass",
+          "reason": "Every mapped verdict passed.",
+          "evidence": [
+            {
+              "case": "RC-017",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-018",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-019",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-020",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-021",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-017",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-018",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-019",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-020",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-021",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            }
+          ]
+        },
+        {
+          "gate": 7,
+          "title": "every error class is attributable despite Turbo's task-level fail-soft behavior",
+          "status": "pass",
+          "reason": "Every mapped verdict passed.",
+          "evidence": [
+            {
+              "case": "RC-010",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-023",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-023",
+              "dimension": "observability",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            }
+          ]
+        },
+        {
+          "gate": 8,
+          "title": "logs, traces, summaries and failure output pass synthetic-secret and artifact-content redaction tests",
+          "status": "pass",
+          "reason": "Every mapped verdict passed.",
+          "evidence": [
+            {
+              "case": "RC-030",
+              "dimension": "observability",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "goals/turborepo-cache-conformance/research/local-observability-2026-10-23.json",
+              "detail": "no-secret-or-content-in-logs: Each topology received a marker-body PUT, a GET and a synthetic-bearer GET; every log file was then searched for the marker, the synthetic bearer and all lab bearers and secrets: no occurrence. Bruno logs the x-artifact-tag value in request"
+            },
+            {
+              "case": "RC-030",
+              "dimension": "beep-security-policy",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "goals/turborepo-cache-conformance/research/local-observability-2026-10-23.json",
+              "detail": "no-secret-or-content-in-logs: Same scan; Bruno masks Authorization as *redacted*; the shim and Ducktors do not log it."
+            }
+          ]
+        },
+        {
+          "gate": 9,
+          "title": "measured payload and concurrency envelopes cover current p99/peak with the ratified safety multipliers",
+          "status": "unproven",
+          "reason": "Measured only on a non-representative profile; gate 9 needs a disposable-deployment run. The envelope is a floor, not demand: observed peak concurrency (20 read / 10 write) equals the reserved caps, so demand is censored (goals/turborepo-cache-conformance/research/load-envelope-2026-10-23.json).",
+          "evidence": [
+            {
+              "case": "RC-027",
+              "dimension": "performance-envelope",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-028",
+              "dimension": "performance-envelope",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            }
+          ]
+        },
+        {
+          "gate": 10,
+          "title": "retention, encryption, public-access block, lifecycle cleanup, backup, budget alarms and teardown are explicit",
+          "status": "unproven",
+          "reason": "Unexecuted evidence: RC-029 beep-security-policy, RC-029 observability",
+          "evidence": [
+            {
+              "case": "RC-029",
+              "dimension": "beep-security-policy",
+              "verdict": "not-executed",
+              "status": "unproven",
+              "source": "run",
+              "detail": "Requires a deployed boundary or measured load the local lab cannot supply. Retention and namespace cleanup need storage lifecycle timers."
+            },
+            {
+              "case": "RC-029",
+              "dimension": "observability",
+              "verdict": "not-executed",
+              "status": "unproven",
+              "source": "run",
+              "detail": "Requires a deployed boundary or measured load the local lab cannot supply. Retention and namespace cleanup need storage lifecycle timers."
+            }
+          ]
+        },
+        {
+          "gate": 11,
+          "title": "deployment pins immutable source/image/package digests and has a rehearsed incumbent rollback",
+          "status": "unproven",
+          "reason": "Unexecuted evidence: RC-032 beep-security-policy",
+          "evidence": [
+            {
+              "case": "RC-032",
+              "dimension": "beep-security-policy",
+              "verdict": "not-executed",
+              "status": "unproven",
+              "source": "run",
+              "detail": "Requires a deployed boundary or measured load the local lab cannot supply. Cutback needs a rehearsed endpoint and epoch restoration receipt."
+            }
+          ]
+        },
+        {
+          "gate": 12,
+          "title": "license and maintenance obligations are acceptable for the deployed and modified topology",
+          "status": "pass",
+          "reason": "Every mapped verdict passed.",
+          "evidence": [
+            {
+              "case": "license",
+              "dimension": null,
+              "verdict": "pass",
+              "status": "pass",
+              "source": "goals/turborepo-cache-conformance/research/pins-2026-10-23.json",
+              "detail": "bruno is MIT per the pinned registry metadata."
+            },
+            {
+              "case": "maintenance",
+              "dimension": null,
+              "verdict": "pass",
+              "status": "pass",
+              "source": "goals/turborepo-cache-conformance/research/local-observability-2026-10-23.json",
+              "detail": "upstream-release-cadence: Registry and GitHub release queries on 2026-10-23: Bruno 4.0.18/4.0.19/4.0.20 on 09-08/10-05/10-13; Ducktors 2.14.2/2.14.3/2.14.4 on 10-02/10-07/10-23. The incumbent shim pins Ducktors 2.12.0, two minors behind an active upstream. All MIT."
+            }
+          ]
+        }
+      ],
+      "eligible": false,
+      "blockersRemoved": [1, 2, 3, 6],
+      "regressions": [],
+      "notReproven": [],
+      "materialWin": "not-evaluated",
+      "materialWinReason": "Not eligible: gates 4 fail, 5 fail, 9 unproven, 10 unproven, 11 unproven."
+    },
+    {
+      "profile": "local-container",
+      "topology": "bruno-policy",
+      "release": "4.0.20",
+      "representative": false,
+      "executors": ["wire", "lab", "native"],
+      "role": "candidate",
+      "candidate": true,
+      "gates": [
+        {
+          "gate": 1,
+          "title": "exact stable client completes status, signed PUT, HEAD, GET, miss and fault cycles with direct receipts",
+          "status": "pass",
+          "reason": "Every mapped verdict passed.",
+          "evidence": [
+            {
+              "case": "RC-009",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-010",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-017",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-018",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-019",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-020",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            }
+          ]
+        },
+        {
+          "gate": 2,
+          "title": "exact published canary completes the same matrix in an isolated namespace",
+          "status": "pass",
+          "reason": "Every mapped verdict passed.",
+          "evidence": [
+            {
+              "case": "RC-009",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-010",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-017",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-018",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-019",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-020",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            }
+          ]
+        },
+        {
+          "gate": 3,
+          "title": "strict OpenAPI deviations are enumerated, and no core deviation breaks the published clients or Beep policy",
+          "status": "pass",
+          "reason": "Every mapped verdict passed.",
+          "evidence": [
+            {
+              "case": "RC-001",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-002",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "documented-status:uploadArtifact: writer-put answered 201; documented 200, 202, 400, 401, 403 | upload-response-schema: PUT 200/202 documents an ArtifactUploadResponse body with urls"
+            },
+            {
+              "case": "RC-003",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "documented-status:uploadArtifact: writer-put answered 201; documented 200, 202, 400, 401, 403 | upload-response-schema: PUT 200/202 documents an ArtifactUploadResponse body with urls | head-content-length: HEAD Content-Length equals the sto"
+            },
+            {
+              "case": "RC-004",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "documented-status:uploadArtifact: writer-put-octet-stream answered 201; documented 200, 202, 400, 401, 403"
+            },
+            {
+              "case": "RC-005",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "documented-status:uploadArtifact: writer-put-duration answered 201; documented 200, 202, 400, 401, 403 | documented-status:uploadArtifact: writer-put-no-duration answered 201; documented 200, 202, 400, 401, 403 | documented-status:uploadArt"
+            },
+            {
+              "case": "RC-006",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "documented-status:uploadArtifact: writer-put-metadata answered 201; documented 200, 202, 400, 401, 403 | sha-preserved: reader-get-metadata answered 200 (success) | dirty-hash-preserved: reader-get-metadata answered 200 (success) | head-sha"
+            },
+            {
+              "case": "RC-007",
+              "dimension": "strict-openapi",
+              "verdict": "unsupported-optional",
+              "status": "pass",
+              "source": "run",
+              "detail": "/v8/artifacts is absent (reader-post-query answered 404 (not-found)); the route is optional."
+            },
+            {
+              "case": "RC-008",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "documented-status:uploadArtifact: writer-put-seed answered 201; documented 200, 202, 400, 401, 403 | documented-status:recordCacheEvents: reader-post-events answered 201; documented 200, 400, 401, 403 | events-accepted: reader-post-events a"
+            },
+            {
+              "case": "RC-009",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "documented-status:uploadArtifact: writer-put answered 201; documented 200, 202, 400, 401, 403"
+            },
+            {
+              "case": "RC-010",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-011",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "documented-status:uploadArtifact: writer-put-seed answered 201; documented 200, 202, 400, 401, 403"
+            },
+            {
+              "case": "RC-012",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "documented-status:uploadArtifact: writer-put-seed answered 201; documented 200, 202, 400, 401, 403"
+            },
+            {
+              "case": "RC-014",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "documented-status:uploadArtifact: writer-put-seed answered 201; documented 200, 202, 400, 401, 403 | documented-status:uploadArtifact: writer-put-foreign-namespace answered 201; documented 200, 202, 400, 401, 403"
+            },
+            {
+              "case": "RC-015",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "documented-status:uploadArtifact: writer-put-seed answered 201; documented 200, 202, 400, 401, 403 | documented-status:uploadArtifact: writer-put-selector-empty answered 201; documented 200, 202, 400, 401, 403 | documented-status:uploadArti"
+            },
+            {
+              "case": "RC-016",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "documented-status:uploadArtifact: writer-put-hash-non-hex answered 201; documented 200, 202, 400, 401, 403 | documented-status:uploadArtifact: writer-put-hash-traversal answered 201; documented 200, 202, 400, 401, 403 | documented-status:up"
+            },
+            {
+              "case": "RC-023",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-024",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "documented-status:uploadArtifact: writer-put-seed answered 201; documented 200, 202, 400, 401, 403 | documented-status:uploadArtifact: writer-put-untagged answered 201; documented 200, 202, 400, 401, 403"
+            },
+            {
+              "case": "RC-025",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "documented-status:uploadArtifact: writer-put-identical-1 answered 201; documented 200, 202, 400, 401, 403 | documented-status:uploadArtifact: writer-put-identical-2 answered 201; documented 200, 202, 400, 401, 403 | documented-status:upload"
+            },
+            {
+              "case": "RC-026",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "documented-status:uploadArtifact: writer-put-prior answered 201; documented 200, 202, 400, 401, 403 | documented-status:uploadArtifact: writer-put-overwrite answered 201; documented 200, 202, 400, 401, 403"
+            },
+            {
+              "case": "RC-009",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-009",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            }
+          ]
+        },
+        {
+          "gate": 4,
+          "title": "readers cannot write; writers exist only in protected workflows; storage permissions preserve that split",
+          "status": "unproven",
+          "reason": "Unexecuted evidence: RC-013 beep-security-policy",
+          "evidence": [
+            {
+              "case": "RC-011",
+              "dimension": "beep-security-policy",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-012",
+              "dimension": "beep-security-policy",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-013",
+              "dimension": "beep-security-policy",
+              "verdict": "not-executed",
+              "status": "unproven",
+              "source": "run",
+              "detail": "Requires a deployed boundary or measured load the local lab cannot supply. Direct writer invocation outside the gateway needs the deployed Lambda/IAM boundary."
+            }
+          ]
+        },
+        {
+          "gate": 5,
+          "title": "a credential is bound to its tenant/namespace and caller-controlled selectors cannot escape it",
+          "status": "fail",
+          "reason": "RC-014 beep-security-policy: foreign-read-denied: foreign-get-own-namespace answered 200 (success). The topology does not claim tenant binding; the failure is attributed to that design. | cross-namespace-write-denied: writer-put-foreign-namespace answered 201 (success) | RC-015 beep-security-policy: selector-empty-write-fails-closed: writer-put-selector-empty answered 201 (success) | selector-conflicting-write-fails-closed: writer-put-selector-conflicting answered 201 (success) | selector-slug-conflict-write-fails-closed: writer-put-se",
+          "evidence": [
+            {
+              "case": "RC-014",
+              "dimension": "beep-security-policy",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "foreign-read-denied: foreign-get-own-namespace answered 200 (success). The topology does not claim tenant binding; the failure is attributed to that design. | cross-namespace-write-denied: writer-put-foreign-namespace answered 201 (success)"
+            },
+            {
+              "case": "RC-015",
+              "dimension": "beep-security-policy",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "selector-empty-write-fails-closed: writer-put-selector-empty answered 201 (success) | selector-conflicting-write-fails-closed: writer-put-selector-conflicting answered 201 (success) | selector-slug-conflict-write-fails-closed: writer-put-se"
+            }
+          ]
+        },
+        {
+          "gate": 6,
+          "title": "valid x-artifact-tag values round-trip opaquely; missing, invalid, wrong-team and corrupted artifacts are rejected before restore",
+          "status": "pass",
+          "reason": "Every mapped verdict passed.",
+          "evidence": [
+            {
+              "case": "RC-017",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-018",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-019",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-020",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-021",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-017",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-018",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-019",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-020",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-021",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            }
+          ]
+        },
+        {
+          "gate": 7,
+          "title": "every error class is attributable despite Turbo's task-level fail-soft behavior",
+          "status": "pass",
+          "reason": "Every mapped verdict passed.",
+          "evidence": [
+            {
+              "case": "RC-010",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-023",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-023",
+              "dimension": "observability",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            }
+          ]
+        },
+        {
+          "gate": 8,
+          "title": "logs, traces, summaries and failure output pass synthetic-secret and artifact-content redaction tests",
+          "status": "pass",
+          "reason": "Every mapped verdict passed.",
+          "evidence": [
+            {
+              "case": "RC-030",
+              "dimension": "observability",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "goals/turborepo-cache-conformance/research/local-observability-2026-10-23.json",
+              "detail": "no-secret-or-content-in-logs: Each topology received a marker-body PUT, a GET and a synthetic-bearer GET; every log file was then searched for the marker, the synthetic bearer and all lab bearers and secrets: no occurrence. Bruno logs the x-artifact-tag value in request"
+            },
+            {
+              "case": "RC-030",
+              "dimension": "beep-security-policy",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "goals/turborepo-cache-conformance/research/local-observability-2026-10-23.json",
+              "detail": "no-secret-or-content-in-logs: Same scan; Bruno masks Authorization as *redacted*; the shim and Ducktors do not log it."
+            }
+          ]
+        },
+        {
+          "gate": 9,
+          "title": "measured payload and concurrency envelopes cover current p99/peak with the ratified safety multipliers",
+          "status": "unproven",
+          "reason": "Measured only on a non-representative profile; gate 9 needs a disposable-deployment run. The envelope is a floor, not demand: observed peak concurrency (20 read / 10 write) equals the reserved caps, so demand is censored (goals/turborepo-cache-conformance/research/load-envelope-2026-10-23.json).",
+          "evidence": [
+            {
+              "case": "RC-027",
+              "dimension": "performance-envelope",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-028",
+              "dimension": "performance-envelope",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            }
+          ]
+        },
+        {
+          "gate": 10,
+          "title": "retention, encryption, public-access block, lifecycle cleanup, backup, budget alarms and teardown are explicit",
+          "status": "unproven",
+          "reason": "Unexecuted evidence: RC-029 beep-security-policy, RC-029 observability",
+          "evidence": [
+            {
+              "case": "RC-029",
+              "dimension": "beep-security-policy",
+              "verdict": "not-executed",
+              "status": "unproven",
+              "source": "run",
+              "detail": "Requires a deployed boundary or measured load the local lab cannot supply. Retention and namespace cleanup need storage lifecycle timers."
+            },
+            {
+              "case": "RC-029",
+              "dimension": "observability",
+              "verdict": "not-executed",
+              "status": "unproven",
+              "source": "run",
+              "detail": "Requires a deployed boundary or measured load the local lab cannot supply. Retention and namespace cleanup need storage lifecycle timers."
+            }
+          ]
+        },
+        {
+          "gate": 11,
+          "title": "deployment pins immutable source/image/package digests and has a rehearsed incumbent rollback",
+          "status": "unproven",
+          "reason": "Unexecuted evidence: RC-032 beep-security-policy",
+          "evidence": [
+            {
+              "case": "RC-032",
+              "dimension": "beep-security-policy",
+              "verdict": "not-executed",
+              "status": "unproven",
+              "source": "run",
+              "detail": "Requires a deployed boundary or measured load the local lab cannot supply. Cutback needs a rehearsed endpoint and epoch restoration receipt."
+            }
+          ]
+        },
+        {
+          "gate": 12,
+          "title": "license and maintenance obligations are acceptable for the deployed and modified topology",
+          "status": "pass",
+          "reason": "Every mapped verdict passed.",
+          "evidence": [
+            {
+              "case": "license",
+              "dimension": null,
+              "verdict": "pass",
+              "status": "pass",
+              "source": "goals/turborepo-cache-conformance/research/pins-2026-10-23.json",
+              "detail": "bruno is MIT per the pinned registry metadata."
+            },
+            {
+              "case": "maintenance",
+              "dimension": null,
+              "verdict": "pass",
+              "status": "pass",
+              "source": "goals/turborepo-cache-conformance/research/local-observability-2026-10-23.json",
+              "detail": "upstream-release-cadence: Registry and GitHub release queries on 2026-10-23: Bruno 4.0.18/4.0.19/4.0.20 on 09-08/10-05/10-13; Ducktors 2.14.2/2.14.3/2.14.4 on 10-02/10-07/10-23. The incumbent shim pins Ducktors 2.12.0, two minors behind an active upstream. All MIT."
+            }
+          ]
+        }
+      ],
+      "eligible": false,
+      "blockersRemoved": [1, 2, 3, 6],
+      "regressions": [],
+      "notReproven": [],
+      "materialWin": "not-evaluated",
+      "materialWinReason": "Not eligible: gates 4 unproven, 5 fail, 9 unproven, 10 unproven, 11 unproven."
+    },
+    {
+      "profile": "local-container",
+      "topology": "ducktors-upstream",
+      "release": "2.14.3",
+      "representative": false,
+      "executors": ["wire", "lab", "native"],
+      "role": "candidate",
+      "candidate": true,
+      "gates": [
+        {
+          "gate": 1,
+          "title": "exact stable client completes status, signed PUT, HEAD, GET, miss and fault cycles with direct receipts",
+          "status": "fail",
+          "reason": "RC-009 published-stable-client: client-accepted-upload: upload answered 200; replay: exit 42, MISS, output absent | RC-017 published-stable-client: signed-remote-replay: replay: exit 42, MISS, output absent | RC-018 published-stable-client: control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault | RC-019 published-stable-client: control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault | RC-020 published-stable-client: control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault",
+          "evidence": [
+            {
+              "case": "RC-009",
+              "dimension": "published-stable-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "client-accepted-upload: upload answered 200; replay: exit 42, MISS, output absent"
+            },
+            {
+              "case": "RC-010",
+              "dimension": "published-stable-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-017",
+              "dimension": "published-stable-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "signed-remote-replay: replay: exit 42, MISS, output absent"
+            },
+            {
+              "case": "RC-018",
+              "dimension": "published-stable-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault"
+            },
+            {
+              "case": "RC-019",
+              "dimension": "published-stable-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault"
+            },
+            {
+              "case": "RC-020",
+              "dimension": "published-stable-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault"
+            }
+          ]
+        },
+        {
+          "gate": 2,
+          "title": "exact published canary completes the same matrix in an isolated namespace",
+          "status": "fail",
+          "reason": "RC-009 published-canary-client: client-accepted-upload: upload answered 200; replay: exit 42, MISS, output absent | RC-017 published-canary-client: signed-remote-replay: replay: exit 42, MISS, output absent | RC-018 published-canary-client: control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault | RC-019 published-canary-client: control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault | RC-020 published-canary-client: control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault",
+          "evidence": [
+            {
+              "case": "RC-009",
+              "dimension": "published-canary-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "client-accepted-upload: upload answered 200; replay: exit 42, MISS, output absent"
+            },
+            {
+              "case": "RC-010",
+              "dimension": "published-canary-client",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-017",
+              "dimension": "published-canary-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "signed-remote-replay: replay: exit 42, MISS, output absent"
+            },
+            {
+              "case": "RC-018",
+              "dimension": "published-canary-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault"
+            },
+            {
+              "case": "RC-019",
+              "dimension": "published-canary-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault"
+            },
+            {
+              "case": "RC-020",
+              "dimension": "published-canary-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault"
+            }
+          ]
+        },
+        {
+          "gate": 3,
+          "title": "strict OpenAPI deviations are enumerated, and no core deviation breaks the published clients or Beep policy",
+          "status": "fail",
+          "reason": "RC-009 published-stable-client: client-accepted-upload: upload answered 200; replay: exit 42, MISS, output absent | RC-009 published-canary-client: client-accepted-upload: upload answered 200; replay: exit 42, MISS, output absent",
+          "evidence": [
+            {
+              "case": "RC-001",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-002",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "head-content-length: HEAD Content-Length equals the stored byte count | tag-round-trip: GET returns the opaque x-artifact-tag the writer sent"
+            },
+            {
+              "case": "RC-003",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "head-content-length: HEAD Content-Length equals the stored byte count | tag-round-trip: GET returns the opaque x-artifact-tag the writer sent"
+            },
+            {
+              "case": "RC-004",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-005",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "duration-round-trip-head: reader-head-duration answered 200 (success) | duration-round-trip-get: reader-get-duration answered 200 (success)"
+            },
+            {
+              "case": "RC-006",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "tag-preserved: reader-get-metadata answered 200 (success) | sha-preserved: reader-get-metadata answered 200 (success) | dirty-hash-preserved: reader-get-metadata answered 200 (success) | head-sha-preserved: reader-head-metadata answered 200"
+            },
+            {
+              "case": "RC-007",
+              "dimension": "strict-openapi",
+              "verdict": "unsupported-optional",
+              "status": "pass",
+              "source": "run",
+              "detail": "/v8/artifacts is absent (reader-post-query answered 404 (not-found)); the route is optional."
+            },
+            {
+              "case": "RC-008",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-009",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-010",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-011",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-012",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-014",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-015",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "documented-status:downloadArtifact: writer-get-selector-oversized answered 500; documented 200, 400, 401, 403, 404 | documented-status:uploadArtifact: writer-put-selector-oversized answered 412; documented 200, 202, 400, 401, 403"
+            },
+            {
+              "case": "RC-016",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "documented-status:uploadArtifact: writer-put-hash-oversized answered 414; documented 200, 202, 400, 401, 403 | documented-status:downloadArtifact: reader-get-hash-oversized answered 414; documented 200, 400, 401, 403, 404 | documented-statu"
+            },
+            {
+              "case": "RC-023",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "pass",
+              "source": "run",
+              "detail": "missing-auth-distinct-from-miss: missing-get-written answered 400 (client-error)"
+            },
+            {
+              "case": "RC-024",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-025",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-026",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-009",
+              "dimension": "published-stable-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "client-accepted-upload: upload answered 200; replay: exit 42, MISS, output absent"
+            },
+            {
+              "case": "RC-009",
+              "dimension": "published-canary-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "client-accepted-upload: upload answered 200; replay: exit 42, MISS, output absent"
+            }
+          ]
+        },
+        {
+          "gate": 4,
+          "title": "readers cannot write; writers exist only in protected workflows; storage permissions preserve that split",
+          "status": "fail",
+          "reason": "RC-011 beep-security-policy: deny-missing-bearer: missing-get answered 400 (client-error) | status-requires-bearer: missing-status answered 200 (success) | RC-012 beep-security-policy: reader-put-denied: reader-put-new answered 200 (success). The topology does not claim a reader/writer split; the failure is attributed to that design. | reader-put-created-nothing: writer-head-new answered 200 (success). The topology does n",
+          "evidence": [
+            {
+              "case": "RC-011",
+              "dimension": "beep-security-policy",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "deny-missing-bearer: missing-get answered 400 (client-error) | status-requires-bearer: missing-status answered 200 (success)"
+            },
+            {
+              "case": "RC-012",
+              "dimension": "beep-security-policy",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "reader-put-denied: reader-put-new answered 200 (success). The topology does not claim a reader/writer split; the failure is attributed to that design. | reader-put-created-nothing: writer-head-new answered 200 (success). The topology does n"
+            },
+            {
+              "case": "RC-013",
+              "dimension": "beep-security-policy",
+              "verdict": "not-executed",
+              "status": "unproven",
+              "source": "run",
+              "detail": "Requires a deployed boundary or measured load the local lab cannot supply. Direct writer invocation outside the gateway needs the deployed Lambda/IAM boundary."
+            }
+          ]
+        },
+        {
+          "gate": 5,
+          "title": "a credential is bound to its tenant/namespace and caller-controlled selectors cannot escape it",
+          "status": "fail",
+          "reason": "RC-014 beep-security-policy: foreign-read-denied: foreign-get-own-namespace answered 200 (success). The topology does not claim tenant binding; the failure is attributed to that design. | foreign-write-denied: foreign-put-own-namespace answered 200 (success). The topol | RC-015 beep-security-policy: selector-slug-conflict-read-fails-closed: writer-get-selector-slug-conflict answered 200 (success) | selector-slug-conflict-write-fails-closed: writer-put-selector-slug-conflict answered 200 (success) | selector-slug-conflict-created-nothin",
+          "evidence": [
+            {
+              "case": "RC-014",
+              "dimension": "beep-security-policy",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "foreign-read-denied: foreign-get-own-namespace answered 200 (success). The topology does not claim tenant binding; the failure is attributed to that design. | foreign-write-denied: foreign-put-own-namespace answered 200 (success). The topol"
+            },
+            {
+              "case": "RC-015",
+              "dimension": "beep-security-policy",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "selector-slug-conflict-read-fails-closed: writer-get-selector-slug-conflict answered 200 (success) | selector-slug-conflict-write-fails-closed: writer-put-selector-slug-conflict answered 200 (success) | selector-slug-conflict-created-nothin"
+            }
+          ]
+        },
+        {
+          "gate": 6,
+          "title": "valid x-artifact-tag values round-trip opaquely; missing, invalid, wrong-team and corrupted artifacts are rejected before restore",
+          "status": "fail",
+          "reason": "RC-017 published-stable-client: signed-remote-replay: replay: exit 42, MISS, output absent | RC-018 published-stable-client: control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault | RC-019 published-stable-client: control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault | RC-020 published-stable-client: control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault | RC-021 published-stable-client: control-replay-restored: replay: exit 42, MISS, output absent | RC-017 published-canary-client: signed-remote-replay: replay: exit 42, MISS, output absent | RC-018 published-canary-client: control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault | RC-019 published-canary-client: control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault | RC-020 published-canary-client: control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault | RC-021 published-canary-client: control-replay-restored: replay: exit 42, MISS, output absent",
+          "evidence": [
+            {
+              "case": "RC-017",
+              "dimension": "published-stable-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "signed-remote-replay: replay: exit 42, MISS, output absent"
+            },
+            {
+              "case": "RC-018",
+              "dimension": "published-stable-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault"
+            },
+            {
+              "case": "RC-019",
+              "dimension": "published-stable-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault"
+            },
+            {
+              "case": "RC-020",
+              "dimension": "published-stable-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault"
+            },
+            {
+              "case": "RC-021",
+              "dimension": "published-stable-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "control-replay-restored: replay: exit 42, MISS, output absent"
+            },
+            {
+              "case": "RC-017",
+              "dimension": "published-canary-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "signed-remote-replay: replay: exit 42, MISS, output absent"
+            },
+            {
+              "case": "RC-018",
+              "dimension": "published-canary-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault"
+            },
+            {
+              "case": "RC-019",
+              "dimension": "published-canary-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault"
+            },
+            {
+              "case": "RC-020",
+              "dimension": "published-canary-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "control-replay-restored: the unfaulted signed replay must restore before a fault rejection can be attributed to the fault"
+            },
+            {
+              "case": "RC-021",
+              "dimension": "published-canary-client",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "control-replay-restored: replay: exit 42, MISS, output absent"
+            }
+          ]
+        },
+        {
+          "gate": 7,
+          "title": "every error class is attributable despite Turbo's task-level fail-soft behavior",
+          "status": "fail",
+          "reason": "RC-023 strict-openapi: missing-auth-distinct-from-miss: missing-get-written answered 400 (client-error)",
+          "evidence": [
+            {
+              "case": "RC-010",
+              "dimension": "strict-openapi",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-023",
+              "dimension": "strict-openapi",
+              "verdict": "fail",
+              "status": "fail",
+              "source": "run",
+              "detail": "missing-auth-distinct-from-miss: missing-get-written answered 400 (client-error)"
+            },
+            {
+              "case": "RC-023",
+              "dimension": "observability",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            }
+          ]
+        },
+        {
+          "gate": 8,
+          "title": "logs, traces, summaries and failure output pass synthetic-secret and artifact-content redaction tests",
+          "status": "pass",
+          "reason": "Every mapped verdict passed.",
+          "evidence": [
+            {
+              "case": "RC-030",
+              "dimension": "observability",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "goals/turborepo-cache-conformance/research/local-observability-2026-10-23.json",
+              "detail": "no-secret-or-content-in-logs: Each topology received a marker-body PUT, a GET and a synthetic-bearer GET; every log file was then searched for the marker, the synthetic bearer and all lab bearers and secrets: no occurrence. Bruno logs the x-artifact-tag value in request"
+            },
+            {
+              "case": "RC-030",
+              "dimension": "beep-security-policy",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "goals/turborepo-cache-conformance/research/local-observability-2026-10-23.json",
+              "detail": "no-secret-or-content-in-logs: Same scan; Bruno masks Authorization as *redacted*; the shim and Ducktors do not log it."
+            }
+          ]
+        },
+        {
+          "gate": 9,
+          "title": "measured payload and concurrency envelopes cover current p99/peak with the ratified safety multipliers",
+          "status": "unproven",
+          "reason": "Measured only on a non-representative profile; gate 9 needs a disposable-deployment run. The envelope is a floor, not demand: observed peak concurrency (20 read / 10 write) equals the reserved caps, so demand is censored (goals/turborepo-cache-conformance/research/load-envelope-2026-10-23.json).",
+          "evidence": [
+            {
+              "case": "RC-027",
+              "dimension": "performance-envelope",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            },
+            {
+              "case": "RC-028",
+              "dimension": "performance-envelope",
+              "verdict": "pass",
+              "status": "pass",
+              "source": "run",
+              "detail": ""
+            }
+          ]
+        },
+        {
+          "gate": 10,
+          "title": "retention, encryption, public-access block, lifecycle cleanup, backup, budget alarms and teardown are explicit",
+          "status": "unproven",
+          "reason": "Unexecuted evidence: RC-029 beep-security-policy, RC-029 observability",
+          "evidence": [
+            {
+              "case": "RC-029",
+              "dimension": "beep-security-policy",
+              "verdict": "not-executed",
+              "status": "unproven",
+              "source": "run",
+              "detail": "Requires a deployed boundary or measured load the local lab cannot supply. Retention and namespace cleanup need storage lifecycle timers."
+            },
+            {
+              "case": "RC-029",
+              "dimension": "observability",
+              "verdict": "not-executed",
+              "status": "unproven",
+              "source": "run",
+              "detail": "Requires a deployed boundary or measured load the local lab cannot supply. Retention and namespace cleanup need storage lifecycle timers."
+            }
+          ]
+        },
+        {
+          "gate": 11,
+          "title": "deployment pins immutable source/image/package digests and has a rehearsed incumbent rollback",
+          "status": "unproven",
+          "reason": "Unexecuted evidence: RC-032 beep-security-policy",
+          "evidence": [
+            {
+              "case": "RC-032",
+              "dimension": "beep-security-policy",
+              "verdict": "not-executed",
+              "status": "unproven",
+              "source": "run",
+              "detail": "Requires a deployed boundary or measured load the local lab cannot supply. Cutback needs a rehearsed endpoint and epoch restoration receipt."
+            }
+          ]
+        },
+        {
+          "gate": 12,
+          "title": "license and maintenance obligations are acceptable for the deployed and modified topology",
+          "status": "pass",
+          "reason": "Every mapped verdict passed.",
+          "evidence": [
+            {
+              "case": "license",
+              "dimension": null,
+              "verdict": "pass",
+              "status": "pass",
+              "source": "goals/turborepo-cache-conformance/research/pins-2026-10-23.json",
+              "detail": "ducktors is MIT per the pinned registry metadata."
+            },
+            {
+              "case": "maintenance",
+              "dimension": null,
+              "verdict": "pass",
+              "status": "pass",
+              "source": "goals/turborepo-cache-conformance/research/local-observability-2026-10-23.json",
+              "detail": "upstream-release-cadence: Registry and GitHub release queries on 2026-10-23: Bruno 4.0.18/4.0.19/4.0.20 on 09-08/10-05/10-13; Ducktors 2.14.2/2.14.3/2.14.4 on 10-02/10-07/10-23. The incumbent shim pins Ducktors 2.12.0, two minors behind an active upstream. All MIT."
+            }
+          ]
+        }
+      ],
+      "eligible": false,
+      "blockersRemoved": [],
+      "regressions": [7],
+      "notReproven": [],
+      "materialWin": "not-evaluated",
+      "materialWinReason": "Not eligible: gates 1 fail, 2 fail, 3 fail, 4 fail, 5 fail, 6 fail, 7 fail, 9 unproven, 10 unproven, 11 unproven."
+    }
+  ],
+  "eligibleReplacements": [],
+  "evolution": [
+    "disposable-deployment/beep-incumbent-evolved improves on the incumbent: gates 1, 2, 3, 6, 9 pass where the incumbent fails, with no measured regression. Retain and evolve; it is not a replacement.",
+    "local-container/beep-incumbent-evolved improves on the incumbent: gates 1, 2, 3, 6 pass where the incumbent fails, with no measured regression. Retain and evolve; it is not a replacement."
+  ],
+  "verdict": "No eligible replacement: no candidate passes every hard gate with a material win over the incumbent. Retain and evolve the incumbent."
+}

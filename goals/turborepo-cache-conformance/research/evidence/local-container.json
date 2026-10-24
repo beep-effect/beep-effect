@@ -1,0 +1,38 @@
+{
+  "schemaVersion": "cache-conformance-evidence/v1",
+  "source": "goals/turborepo-cache-conformance/research/local-observability-2026-10-23.json",
+  "observedAt": "2026-10-24",
+  "profile": "local-container",
+  "topologies": [
+    "beep-incumbent",
+    "beep-incumbent-evolved",
+    "bruno-policy",
+    "bruno-loopback",
+    "ducktors-upstream"
+  ],
+  "checks": [
+    {
+      "case": "RC-030",
+      "dimension": "observability",
+      "verdict": "pass",
+      "expectation": "no-secret-or-content-in-logs",
+      "detail": "Each topology received a marker-body PUT, a GET and a synthetic-bearer GET; every log file was then searched for the marker, the synthetic bearer and all lab bearers and secrets: no occurrence. Bruno logs the x-artifact-tag value in request header dumps; the tag is an HMAC, not a key."
+    },
+    {
+      "case": "RC-030",
+      "dimension": "beep-security-policy",
+      "verdict": "pass",
+      "expectation": "no-secret-or-content-in-logs",
+      "detail": "Same scan; Bruno masks Authorization as *redacted*; the shim and Ducktors do not log it."
+    }
+  ],
+  "obligations": [
+    {
+      "gate": 12,
+      "obligation": "maintenance",
+      "verdict": "pass",
+      "expectation": "upstream-release-cadence",
+      "detail": "Registry and GitHub release queries on 2026-10-23: Bruno 4.0.18/4.0.19/4.0.20 on 09-08/10-05/10-13; Ducktors 2.14.2/2.14.3/2.14.4 on 10-02/10-07/10-23. The incumbent shim pins Ducktors 2.12.0, two minors behind an active upstream. All MIT."
+    }
+  ]
+}
