@@ -1,5 +1,6 @@
 /**
- * The absolute-path predicates and schemas the XDG reads share.
+ * The absolute-path predicates and schemas the XDG reads share, public so
+ * callers that keep a Windows rung beside `XdgBase` test roots the same way.
  *
  * **Details**
  *
@@ -8,6 +9,9 @@
  * one form the spec defines, which is {@link AbsolutePosixPath}. `$HOME` (in
  * `Xdg.layer`) and the `AppDirs` overrides can name a Windows directory, so
  * they take {@link AbsolutePath}: a POSIX root, a drive root or a UNC share.
+ * {@link isAbsoluteWin32} is the one Windows-root predicate: a drive letter
+ * followed by either separator, or any two leading separators (`\\`, `//`,
+ * or a mix of the two), as Windows itself reads a UNC prefix.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -15,7 +19,7 @@
 import { $XdgId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 
-const $I = $XdgId.create("internal/absolute");
+const $I = $XdgId.create("Absolute");
 
 const posixAbsolute = /^\//;
 
@@ -32,7 +36,7 @@ const win32Absolute = /^(?:[A-Za-z]:[\\/]|[\\/]{2})/;
  * **Example** (Check XDG values)
  *
  * ```ts
- * import { isAbsolutePosix } from "@beep/xdg/internal/absolute";
+ * import { isAbsolutePosix } from "@beep/xdg/Absolute";
  *
  * console.log(isAbsolutePosix("/home/ada"), isAbsolutePosix(" /home/ada")); // true false
  * ```
@@ -45,12 +49,19 @@ export const isAbsolutePosix = (value: string): boolean => posixAbsolute.test(va
 /**
  * Whether a value is an absolute Windows path: a drive root or a UNC share.
  *
+ * **Details**
+ *
+ * A drive root is a letter, a colon and either separator (`C:\`, `C:/`); a
+ * drive-relative `C:dir` does not count. A UNC share is any two leading
+ * separators, `\\`, `//` or a mix of the two; one leading separator does not count.
+ *
  * **Example** (Check Windows values)
  *
  * ```ts
- * import { isAbsoluteWin32 } from "@beep/xdg/internal/absolute";
+ * import { isAbsoluteWin32 } from "@beep/xdg/Absolute";
  *
  * console.log(isAbsoluteWin32("C:\\Users\\ada"), isAbsoluteWin32("Users\\ada")); // true false
+ * console.log(isAbsoluteWin32("//server/share"), isAbsoluteWin32("C:relative")); // true false
  * ```
  *
  * @category predicates
@@ -70,7 +81,7 @@ export const isAbsoluteWin32 = (value: string): boolean => win32Absolute.test(va
  * **Example** (Check values of either platform)
  *
  * ```ts
- * import { absolutePathPattern } from "@beep/xdg/internal/absolute";
+ * import { absolutePathPattern } from "@beep/xdg/Absolute";
  *
  * console.log(absolutePathPattern.test("/home/ada"), absolutePathPattern.test("D:/data")); // true true
  * console.log(absolutePathPattern.test("relative")); // false
@@ -87,7 +98,7 @@ export const absolutePathPattern: RegExp = new RegExp(`${posixAbsolute.source}|$
  * **Example** (Validate an XDG value)
  *
  * ```ts
- * import { AbsolutePosixPath } from "@beep/xdg/internal/absolute";
+ * import { AbsolutePosixPath } from "@beep/xdg/Absolute";
  * import * as S from "effect/Schema";
  *
  * console.log(S.is(AbsolutePosixPath)("/var/state"), S.is(AbsolutePosixPath)("C:\\state")); // true false
@@ -112,7 +123,7 @@ export const AbsolutePosixPath = S.String.check(
  * **Example** (Validate a HOME or an override)
  *
  * ```ts
- * import { AbsolutePath } from "@beep/xdg/internal/absolute";
+ * import { AbsolutePath } from "@beep/xdg/Absolute";
  * import * as S from "effect/Schema";
  *
  * console.log(S.is(AbsolutePath)("/home/ada"), S.is(AbsolutePath)("\\\\server\\share")); // true true

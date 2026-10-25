@@ -13,7 +13,7 @@ import * as Config from "effect/Config";
 import { constant, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
-import { AbsolutePosixPath, isAbsolutePosix } from "./internal/absolute.ts";
+import { AbsolutePosixPath, isAbsolutePosix } from "./Absolute.ts";
 
 const $I = $XdgId.create("XdgBase");
 

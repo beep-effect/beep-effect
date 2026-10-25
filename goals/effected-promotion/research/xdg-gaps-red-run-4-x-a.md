@@ -5,8 +5,8 @@ Recorded 2026-10-24 for SPEC W4-c (4-X-A part). The fix commit for the two
 red half of red-then-green.
 
 Method: in the lane checkout, `src/Xdg.ts`, `src/AppDirs.ts`, `src/XdgBase.ts`,
-`src/index.ts` and `src/internal/absolute.ts` of `packages/foundation/capability/xdg`
-were replaced by their versions at the lane base `bda2713db8` (origin/main before
+`src/index.ts` and `src/internal/absolute.ts` (since W4-w the public `src/Absolute.ts`) of
+`packages/foundation/capability/xdg` were replaced by their versions at the lane base `bda2713db8` (origin/main before
 4-X-A), and the 4-X-A `test/Xdg.test.ts` and `test/AppDirs.test.ts` were run
 against them with `bunx --bun vitest run test/Xdg.test.ts test/AppDirs.test.ts`.
 The source was then restored, and the full suite passes on the fixed source.

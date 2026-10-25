@@ -5,7 +5,7 @@ import {
   absolutePathPattern,
   isAbsolutePosix,
   isAbsoluteWin32,
-} from "@beep/xdg/internal/absolute";
+} from "@beep/xdg/Absolute";
 import { assert, describe, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -28,7 +28,7 @@ const samples = [
   "\\single",
 ];
 
-describe("internal/absolute", () => {
+describe("Absolute", () => {
   it.effect("the either-platform pattern is exactly the union of the two predicates", () =>
     Effect.sync(() => {
       for (const value of samples) {

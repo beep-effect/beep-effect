@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-24T22:54:04.450Z",
+  "generatedAt": "2026-10-25T02:49:10.368Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -65,8 +65,8 @@
     "cleanPackages": 101,
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 79,
-    "publicModules": 3559,
-    "publicExports": 25305,
+    "publicModules": 3560,
+    "publicExports": 25311,
     "openModules": 449,
     "openExports": 1382,
     "missingExportExamples": 7,
@@ -170101,9 +170101,9 @@
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 6,
-        "publicModuleCount": 6,
-        "publicExportCount": 25
+        "sourceFileCount": 7,
+        "publicModuleCount": 7,
+        "publicExportCount": 31
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -170142,6 +170142,28 @@
         }
       },
       "modules": [
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/Absolute.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/Absolute.ts",
+          "line": 1,
+          "anchor": "packages-foundation-capability-xdg-src-absolute-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 5,
+          "remediationStatus": "resolved"
+        },
         {
           "docKind": "packageDocumentation",
           "filePath": "src/AppDirs.ts",
@@ -170271,11 +170293,121 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 4,
+          "exportCount": 5,
           "remediationStatus": "resolved"
         }
       ],
       "exports": [
+        {
+          "symbolName": "isAbsolutePosix",
+          "exportKind": "const",
+          "filePath": "src/Absolute.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/Absolute.ts",
+          "line": 47,
+          "anchor": "packages-foundation-capability-xdg-src-absolute-ts-47-isabsoluteposix",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "isAbsoluteWin32",
+          "exportKind": "const",
+          "filePath": "src/Absolute.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/Absolute.ts",
+          "line": 70,
+          "anchor": "packages-foundation-capability-xdg-src-absolute-ts-70-isabsolutewin32",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "absolutePathPattern",
+          "exportKind": "const",
+          "filePath": "src/Absolute.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/Absolute.ts",
+          "line": 93,
+          "anchor": "packages-foundation-capability-xdg-src-absolute-ts-93-absolutepathpattern",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "AbsolutePosixPath",
+          "exportKind": "const",
+          "filePath": "src/Absolute.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/Absolute.ts",
+          "line": 110,
+          "anchor": "packages-foundation-capability-xdg-src-absolute-ts-110-absoluteposixpath",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "AbsolutePath",
+          "exportKind": "const",
+          "filePath": "src/Absolute.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/Absolute.ts",
+          "line": 136,
+          "anchor": "packages-foundation-capability-xdg-src-absolute-ts-136-absolutepath",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
         {
           "symbolName": "AppDirsNamespaceError",
           "exportKind": "class",
@@ -170756,12 +170888,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export {\n  AppDirKind,\n  AppDirOverrides,\n  AppDirs,\n  AppDirsError,\n  AppDirsNamespaceError,\n  AppDirsOptions,\n  AppDirsOverrideError,\n  type AppDirsShape,\n  ResolvedAppDirs,\n} from \"./AppDirs.ts\";",
+          "symbolName": "export { AbsolutePath, AbsolutePosixPath, absolutePathPattern, isAbsolutePosix, isAbsoluteWin32 } from \"./Absolute.ts\";",
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/capability/xdg/src/index.ts",
-          "line": 18,
-          "anchor": "packages-foundation-capability-xdg-src-index-ts-18-export-appdirkind-appdiroverrides-appdirs-appdirserror-appdirsnamespaceerror-appdirsoptions-appdirsoverrideerror-type-appdirsshape-resolvedappdirs-from-appdirs-ts",
+          "line": 19,
+          "anchor": "packages-foundation-capability-xdg-src-index-ts-19-export-absolutepath-absoluteposixpath-absolutepathpattern-isabsoluteposix-isabsolutewin32-from-absolute-ts",
           "currentTags": [
             "@packageDocumentation",
             "@since"
@@ -170778,12 +170910,31 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "export {\n  AppDirKind,\n  AppDirOverrides,\n  AppDirs,\n  AppDirsError,\n  AppDirsNamespaceError,\n  AppDirsOptions,\n  AppDirsOverrideError,\n  type AppDirsShape,\n  ResolvedAppDirs,\n} from \"./AppDirs.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/index.ts",
+          "line": 20,
+          "anchor": "packages-foundation-capability-xdg-src-index-ts-20-export-appdirkind-appdiroverrides-appdirs-appdirserror-appdirsnamespaceerror-appdirsoptions-appdirsoverrideerror-type-appdirsshape-resolvedappdirs-from-appdirs-ts",
+          "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "export { NativeDirs } from \"./NativeDirs.ts\";",
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/capability/xdg/src/index.ts",
-          "line": 29,
-          "anchor": "packages-foundation-capability-xdg-src-index-ts-29-export-nativedirs-from-nativedirs-ts",
+          "line": 31,
+          "anchor": "packages-foundation-capability-xdg-src-index-ts-31-export-nativedirs-from-nativedirs-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -170801,8 +170952,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/capability/xdg/src/index.ts",
-          "line": 30,
-          "anchor": "packages-foundation-capability-xdg-src-index-ts-30-export-currentplatform-xdg-xdgenverror-xdgpaths-xdgplatform-from-xdg-ts",
+          "line": 32,
+          "anchor": "packages-foundation-capability-xdg-src-index-ts-32-export-currentplatform-xdg-xdgenverror-xdgpaths-xdgplatform-from-xdg-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -170820,8 +170971,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/capability/xdg/src/index.ts",
-          "line": 31,
-          "anchor": "packages-foundation-capability-xdg-src-index-ts-31-export-xdgbase-xdgbasekind-from-xdgbase-ts",
+          "line": 33,
+          "anchor": "packages-foundation-capability-xdg-src-index-ts-33-export-xdgbase-xdgbasekind-from-xdgbase-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -253922,8 +254073,8 @@
           "exportKind": "const",
           "filePath": "src/data-root.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/data-root.ts",
-          "line": 81,
-          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-81-aimetricsabsolutedataroot",
+          "line": 74,
+          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-74-aimetricsabsolutedataroot",
           "currentTags": [
             "@category",
             "@since"
@@ -253944,8 +254095,8 @@
           "exportKind": "type",
           "filePath": "src/data-root.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/data-root.ts",
-          "line": 96,
-          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-96-aimetricsabsolutedataroot",
+          "line": 89,
+          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-89-aimetricsabsolutedataroot",
           "currentTags": [
             "@category",
             "@since"
@@ -253966,8 +254117,8 @@
           "exportKind": "const",
           "filePath": "src/data-root.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/data-root.ts",
-          "line": 126,
-          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-126-aimetricsdatarootsource",
+          "line": 119,
+          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-119-aimetricsdatarootsource",
           "currentTags": [
             "@see",
             "@category",
@@ -253989,8 +254140,8 @@
           "exportKind": "type",
           "filePath": "src/data-root.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/data-root.ts",
-          "line": 139,
-          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-139-aimetricsdatarootsource",
+          "line": 132,
+          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-132-aimetricsdatarootsource",
           "currentTags": [
             "@see",
             "@category",
@@ -254012,8 +254163,8 @@
           "exportKind": "class",
           "filePath": "src/data-root.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/data-root.ts",
-          "line": 188,
-          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-188-aimetricsdatarootinput",
+          "line": 181,
+          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-181-aimetricsdatarootinput",
           "currentTags": [
             "@category",
             "@since"
@@ -254034,8 +254185,8 @@
           "exportKind": "class",
           "filePath": "src/data-root.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/data-root.ts",
-          "line": 225,
-          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-225-aimetricsdataroot",
+          "line": 218,
+          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-218-aimetricsdataroot",
           "currentTags": [
             "@category",
             "@since"
@@ -254056,8 +254207,8 @@
           "exportKind": "class",
           "filePath": "src/data-root.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/data-root.ts",
-          "line": 256,
-          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-256-aimetricsdatarooterror",
+          "line": 249,
+          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-249-aimetricsdatarooterror",
           "currentTags": [
             "@category",
             "@since"
@@ -254078,8 +254229,8 @@
           "exportKind": "class",
           "filePath": "src/data-root.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/data-root.ts",
-          "line": 293,
-          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-293-aimetricsstatehomeinput",
+          "line": 286,
+          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-286-aimetricsstatehomeinput",
           "currentTags": [
             "@category",
             "@since"
@@ -254100,8 +254251,8 @@
           "exportKind": "const",
           "filePath": "src/data-root.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/data-root.ts",
-          "line": 367,
-          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-367-aimetricsstatehome",
+          "line": 362,
+          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-362-aimetricsstatehome",
           "currentTags": [
             "@param",
             "@returns",
@@ -254124,8 +254275,8 @@
           "exportKind": "const",
           "filePath": "src/data-root.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/data-root.ts",
-          "line": 411,
-          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-411-aimetricsstateroot",
+          "line": 406,
+          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-406-aimetricsstateroot",
           "currentTags": [
             "@param",
             "@returns",
@@ -254148,8 +254299,8 @@
           "exportKind": "const",
           "filePath": "src/data-root.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/data-root.ts",
-          "line": 475,
-          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-475-resolveaimetricsdataroot",
+          "line": 470,
+          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-470-resolveaimetricsdataroot",
           "currentTags": [
             "@param",
             "@returns",
@@ -254172,8 +254323,8 @@
           "exportKind": "const",
           "filePath": "src/data-root.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/data-root.ts",
-          "line": 525,
-          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-525-requireabsoluteaimetricsdataroot",
+          "line": 520,
+          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-520-requireabsoluteaimetricsdataroot",
           "currentTags": [
             "@param",
             "@returns",

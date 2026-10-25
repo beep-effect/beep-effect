@@ -18,7 +18,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import { AbsolutePath } from "./internal/absolute.ts";
+import { AbsolutePath } from "./Absolute.ts";
 import { NativeDirs } from "./NativeDirs.ts";
 import { currentPlatform, Xdg } from "./Xdg.ts";
 import type { XdgPaths, XdgPlatform } from "./Xdg.ts";

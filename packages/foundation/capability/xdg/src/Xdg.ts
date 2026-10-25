@@ -17,7 +17,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { AbsolutePath, isAbsolutePosix, isAbsoluteWin32 } from "./internal/absolute.ts";
+import { AbsolutePath, isAbsolutePosix, isAbsoluteWin32 } from "./Absolute.ts";
 
 const $I = $XdgId.create("Xdg");
 

@@ -270,6 +270,52 @@ matrix(
   ]
 );
 
+// Windows roots are what `@beep/xdg/Absolute` `isAbsoluteWin32` accepts: a drive root, or any two
+// leading separators (`\\`, `//` or a mix). The two backslash-slash (`\/`) rows changed at the 4-X-A
+// review fix, when the local predicate (drive root or `\\` only) gave way to xdg's; `//` and `/\` were
+// already absolute to `XdgBase`, and `path.join` collapses `//` either way.
+matrix(
+  "selectPersonMatchCacheRoot Windows roots",
+  (env) => selectPersonMatchCacheRoot(noFlag).pipe(inEnv(env)),
+  [
+    ["a backslash UNC XDG_CACHE_HOME", { XDG_CACHE_HOME: "\\\\server\\share" }, `\\\\server\\share/${photoFace}`],
+    ["a slash UNC XDG_CACHE_HOME", { XDG_CACHE_HOME: "//server/share" }, `/server/share/${photoFace}`],
+    ["a backslash-slash UNC XDG_CACHE_HOME", { XDG_CACHE_HOME: "\\/server" }, `\\/server/${photoFace}`],
+    ["a slash-backslash UNC XDG_CACHE_HOME", { XDG_CACHE_HOME: "/\\server" }, `/\\server/${photoFace}`],
+    [
+      "a backslash UNC HOME before USERPROFILE",
+      { HOME: "\\\\server\\share", USERPROFILE: "C:\\Users\\ada" },
+      `\\\\server\\share/.cache/${photoFace}`,
+    ],
+    [
+      "a backslash-slash UNC HOME before USERPROFILE",
+      { HOME: "\\/server", USERPROFILE: "C:\\Users\\ada" },
+      `\\/server/.cache/${photoFace}`,
+    ],
+    [
+      "a drive-relative XDG_CACHE_HOME is not a root",
+      { XDG_CACHE_HOME: "C:relative", HOME: "/h" },
+      `/h/.cache/${photoFace}`,
+    ],
+    [
+      "a single-backslash XDG_CACHE_HOME is not a root",
+      { XDG_CACHE_HOME: "\\single", HOME: "/h" },
+      `/h/.cache/${photoFace}`,
+    ],
+    [
+      "a drive-relative HOME falls through to USERPROFILE",
+      { HOME: "C:relative", USERPROFILE: "C:\\Users\\ada" },
+      `C:\\Users\\ada/.cache/${photoFace}`,
+    ],
+    [
+      "a single-backslash HOME falls through to USERPROFILE",
+      { HOME: "\\single", USERPROFILE: "C:\\Users\\ada" },
+      `C:\\Users\\ada/.cache/${photoFace}`,
+    ],
+  ],
+  []
+);
+
 const explicitCacheDir = O.some("/c");
 
 it.layer(Path.layer, { timeout: "10 seconds" })("selectPersonMatchCacheRoot --cache-dir", (it) => {

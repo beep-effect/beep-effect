@@ -2,7 +2,8 @@
  * XDG Base Directory resolution for Effect: the resolved XDG environment
  * (`Xdg`), the base directories with their spec defaults (`XdgBase`),
  * app-namespaced directories with on-demand creation (`AppDirs`) and OS-native
- * directory mapping (`NativeDirs`). The environment is read once, at layer
+ * directory mapping (`NativeDirs`), plus the shared absolute-path predicates
+ * and schemas (`Absolute`). The environment is read once, at layer
  * construction, so reading a path never fails.
  *
  * **Details**
@@ -15,6 +16,7 @@
  * @since 0.0.0
  */
 
+export { AbsolutePath, AbsolutePosixPath, absolutePathPattern, isAbsolutePosix, isAbsoluteWin32 } from "./Absolute.ts";
 export {
   AppDirKind,
   AppDirOverrides,

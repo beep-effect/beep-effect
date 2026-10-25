@@ -52823,6 +52823,18 @@
         "functions": 0
       },
       "files": {
+        "packages/foundation/capability/xdg/src/Absolute.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/foundation/capability/xdg/src/AppDirs.ts": {
           "lines": 100,
           "statements": 100,
@@ -52884,18 +52896,6 @@
           }
         },
         "packages/foundation/capability/xdg/src/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/capability/xdg/src/internal/absolute.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,

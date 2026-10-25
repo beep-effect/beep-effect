@@ -50,6 +50,28 @@ const stateHomeDivergent: ReadonlyArray<DivergentRow<StateHomeInput>> = [
   ["an unnormalized HOME", { homeDir: "/h/./a" }, "/h/./a/.local/state", "/h/a/.local/state"],
 ];
 
+/**
+ * Windows roots are what `@beep/xdg/Absolute` `isAbsoluteWin32` accepts: a drive root, or any two
+ * leading separators (`\\`, `//` or a mix). The three backslash-slash (`\/`) rows changed at the
+ * 4-X-A review fix, when the local predicate (drive root or `\\` only) gave way to xdg's; `//` and
+ * `/\` were already absolute to `XdgBase`, which answers first for HOME and normalizes `//h` to `/h`.
+ */
+const windowsRootRows: ReadonlyArray<Row<StateHomeInput>> = [
+  ["a backslash UNC XDG_STATE_HOME", { stateHome: "\\\\server\\share" }, "\\\\server\\share"],
+  ["a slash UNC XDG_STATE_HOME", { stateHome: "//server/share" }, "//server/share"],
+  ["a backslash-slash UNC XDG_STATE_HOME", { stateHome: "\\/server" }, "\\/server"],
+  ["a backslash-slash UNC XDG_STATE_HOME beside HOME", { homeDir: "/h", stateHome: "\\/server" }, "\\/server"],
+  ["a slash-backslash UNC XDG_STATE_HOME", { stateHome: "/\\server" }, "/\\server"],
+  ["a backslash UNC HOME", { homeDir: "\\\\server\\share" }, "\\\\server\\share/.local/state"],
+  ["a slash UNC HOME", { homeDir: "//server/share" }, "/server/share/.local/state"],
+  ["a backslash-slash UNC HOME", { homeDir: "\\/server" }, "\\/server/.local/state"],
+  ["a slash-backslash UNC HOME", { homeDir: "/\\server" }, "/\\server/.local/state"],
+  ["a drive-relative XDG_STATE_HOME is not a root", { homeDir: "/h", stateHome: "C:relative" }, "/h/.local/state"],
+  ["a single-backslash XDG_STATE_HOME is not a root", { homeDir: "/h", stateHome: "\\single" }, "/h/.local/state"],
+  ["a drive-relative HOME is not a root", { homeDir: "C:relative" }, null],
+  ["a single-backslash HOME is not a root", { homeDir: "\\single" }, null],
+];
+
 type EvidenceInput = { readonly homeDir: string; readonly env: Readonly<Record<string, string>> };
 
 const evidenceRootOf = ({ env, homeDir }: EvidenceInput) =>
@@ -114,6 +136,16 @@ describe("aiMetricsStateHome env matrix", () => {
     it.effect(`${name} (diverges on purpose: XDG absolute-only)`, () =>
       Effect.gen(function* () {
         assert.strictEqual(yield* stateHomeOf(input), after);
+      })
+    );
+  }
+});
+
+describe("aiMetricsStateHome Windows roots", () => {
+  for (const [name, input, expected] of windowsRootRows) {
+    it.effect(name, () =>
+      Effect.gen(function* () {
+        assert.strictEqual(yield* stateHomeOf(input), expected);
       })
     );
   }

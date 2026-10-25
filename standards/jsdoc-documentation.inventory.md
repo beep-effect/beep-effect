@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-10-24T22:54:04.450Z
+Generated: 2026-10-25T02:49:10.368Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 101 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 79 |
-| publicModules | 3559 |
-| publicExports | 25305 |
+| publicModules | 3560 |
+| publicExports | 25311 |
 | openModules | 449 |
 | openExports | 1382 |
 | missingExportExamples | 7 |
@@ -100,7 +100,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 42 | `@beep/duckdb` | `packages/drivers/duckdb` | clean | 7 | 43 | 0 | 0 |
 | 43 | `@beep/observability` | `packages/foundation/capability/observability` | needs-remediation | 42 | 337 | 8 | 98 |
 | 44 | `@beep/cli-kit` | `packages/foundation/capability/cli-kit` | clean | 29 | 196 | 0 | 0 |
-| 45 | `@beep/xdg` | `packages/foundation/capability/xdg` | clean | 6 | 25 | 0 | 0 |
+| 45 | `@beep/xdg` | `packages/foundation/capability/xdg` | clean | 7 | 31 | 0 | 0 |
 | 46 | `@beep/mcp-kit` | `packages/foundation/capability/mcp-kit` | needs-remediation | 12 | 113 | 8 | 50 |
 | 47 | `@beep/ontology-domain` | `packages/ontology/domain` | clean | 6 | 40 | 0 | 0 |
 | 48 | `@beep/shacl` | `packages/drivers/shacl` | clean | 3 | 6 | 0 | 0 |

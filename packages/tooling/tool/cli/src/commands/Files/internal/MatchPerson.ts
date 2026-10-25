@@ -8,6 +8,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { A, HostProcessArchitecture, HostProcessPlatform, Str } from "@beep/utils";
+import { isAbsoluteWin32 } from "@beep/xdg/Absolute";
 import { XdgBase } from "@beep/xdg/XdgBase";
 import * as Bool from "effect/Boolean";
 import * as Config from "effect/Config";
@@ -482,9 +483,6 @@ const canonicalizeExistingDirectory = Effect.fn("Files.matchPersonCanonicalizeDi
   return canonical;
 });
 
-// A Windows drive root (`C:\` or `C:/`) or UNC (`\\`) prefix, which `XdgBase` does not count as absolute.
-const hasWindowsRootPrefix = (value: string): boolean => /^(?:[A-Za-z]:[\\/]|\\\\)/u.test(value);
-
 /**
  * Select the person-match cache directory before it is canonicalized.
  *
@@ -499,7 +497,8 @@ const hasWindowsRootPrefix = (value: string): boolean => /^(?:[A-Za-z]:[\\/]|\\\
  *
  * `XdgBase` is POSIX-only, so Windows roots keep their old rungs beside it: a
  * drive or UNC `XDG_CACHE_HOME` is still used, and a drive or UNC `HOME` still
- * comes before `USERPROFILE`.
+ * comes before `USERPROFILE`. A Windows root is what `@beep/xdg/Absolute`
+ * `isAbsoluteWin32` accepts: a drive root, or any two leading separators.
  *
  * **Example** (Build the selection effect)
  *
@@ -524,10 +523,10 @@ export const selectPersonMatchCacheRoot = Effect.fn("Files.matchPersonSelectCach
     [readOptionalConfig("XDG_CACHE_HOME"), readOptionalConfig("HOME"), readOptionalConfig("USERPROFILE")],
     { concurrency: 3 }
   );
-  const xdgCache = O.orElse(O.filter(xdgCacheHome, hasWindowsRootPrefix), () =>
+  const xdgCache = O.orElse(O.filter(xdgCacheHome, isAbsoluteWin32), () =>
     XdgBase.resolve("cache", { value: O.getOrUndefined(xdgCacheHome), home: O.getOrUndefined(home) })
   );
-  const homeCache = O.orElse(O.filter(home, hasWindowsRootPrefix), () => userProfile);
+  const homeCache = O.orElse(O.filter(home, isAbsoluteWin32), () => userProfile);
   return pipe(
     configured,
     O.map(path.resolve),

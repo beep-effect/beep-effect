@@ -8,6 +8,7 @@
 import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { FilePath, Fn, LiteralKit, SchemaUtils, WindowsDrivePath, WindowsUncPath } from "@beep/schema";
 import { Str } from "@beep/utils";
+import { isAbsoluteWin32 } from "@beep/xdg/Absolute";
 import { XdgBase } from "@beep/xdg/XdgBase";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
@@ -44,14 +45,6 @@ const OptionalNonBlank = S.optionalKey(NonBlankStringInput).pipe(
 const startsWithWindowsRootSeparator = P.or(Str.startsWith("\\"), Str.startsWith("/"));
 const isWindowsAbsoluteDrivePath = (value: string): boolean =>
   S.is(WindowsDrivePath)(value) && pipe(value, Str.substring(2), startsWithWindowsRootSeparator);
-/**
- * A Windows drive root (`C:\\` or `C:/`) or UNC (`\\\\`) prefix: the shape test the
- * state-home rungs apply, looser than the data-root schemas (no leaf or segment rules).
- */
-const hasWindowsRootPrefix = P.or(
-  (value: string) => /^[A-Za-z]:/u.test(value) && pipe(value, Str.substring(2), startsWithWindowsRootSeparator),
-  Str.startsWith("\\\\")
-);
 
 const AiMetricsAbsoluteDataRootCheck = S.makeFilter(
   (value: FilePath) =>
@@ -327,6 +320,8 @@ const AiMetricsStateHome = Fn({
  * ({@link AiMetricsAbsoluteDataRoot}), so Windows roots keep their old answer
  * beside it: a Windows `stateHome` is used as given, and a Windows `homeDir`
  * gets `/.local/state` appended. Precedence is unchanged, `stateHome` first.
+ * A Windows root is what `@beep/xdg/Absolute` `isAbsoluteWin32` accepts: a
+ * drive root, or any two leading separators (`\\`, `//` or a mix).
  *
  * **Gotchas**
  *
@@ -367,14 +362,14 @@ const AiMetricsStateHome = Fn({
 export const aiMetricsStateHome: (input: AiMetricsStateHomeInput) => O.Option<string> =
   AiMetricsStateHome.implementSync((input) =>
     pipe(
-      O.filter(input.stateHome, hasWindowsRootPrefix),
+      O.filter(input.stateHome, isAbsoluteWin32),
       O.orElse(() =>
         XdgBase.resolve("state", { value: O.getOrUndefined(input.stateHome), home: O.getOrUndefined(input.homeDir) })
       ),
       O.orElse(() =>
         pipe(
           input.homeDir,
-          O.filter(hasWindowsRootPrefix),
+          O.filter(isAbsoluteWin32),
           O.map((home) => `${withoutTrailingSlash(home)}/.local/state`)
         )
       ),
