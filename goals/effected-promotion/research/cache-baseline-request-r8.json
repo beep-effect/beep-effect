@@ -1,0 +1,20 @@
+{
+  "previous": "077bf9c7ed840454d0b847ac2cb0c0f30105b0b7e462fad434690fceda91d7f2",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (effected-promotion roadmap R8, refactor/managed-section-templates)",
+    "reason": "Record the dependency-only drift of @beep/repo-cli, which gains a direct @beep/managed-section edge for the R8 generated-region readers; the package was already upstream through @beep/github-reporting, so no closure grows; no qualification is granted.",
+    "basis": {
+      "path": "goals/effected-promotion/research/cache-baseline-review-r8.md",
+      "sha256": "57d6344d0b21337e52b934898e5759ad26138be938fe6827e8c07c828adc9896"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2",
+  "subjects": ["@beep/repo-cli"]
+}

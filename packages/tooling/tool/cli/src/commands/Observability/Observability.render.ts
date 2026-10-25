@@ -6,10 +6,14 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { CommentStyle } from "@beep/managed-section/CommentStyle";
+import { SectionId } from "@beep/managed-section/Section";
+import { LiteralMarkerDialect, SectionDialect, SectionMarkers } from "@beep/managed-section/SectionDialect";
+import { SectionDocument } from "@beep/managed-section/SectionDocument";
 import * as Catalog from "@beep/observability/catalog";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import { constant, dual } from "effect/Function";
+import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
@@ -335,6 +339,22 @@ export const renderShardText = Effect.fn("Observability.renderShardText")(functi
   )}\n}\n`;
 });
 
+const STANDARD_SECTION_ID = SectionId.make({ key: "instrumentation-catalog", commentStyle: CommentStyle.html });
+
+// The standard's markers predate `@beep/managed-section`, so they keep their
+// literal spelling instead of the ruled `--- BEGIN <key> ... ---` form.
+const STANDARD_DIALECT = LiteralMarkerDialect.make({
+  phrase: SectionDialect.default.phrase,
+  styles: [CommentStyle.html],
+  markers: [
+    SectionMarkers.make({
+      key: STANDARD_SECTION_ID.key,
+      begin: "BEGIN GENERATED: INSTRUMENTATION CATALOG",
+      end: "END GENERATED: INSTRUMENTATION CATALOG",
+    }),
+  ],
+});
+
 /**
  * Opening marker of the generated section in the observability standard.
  *
@@ -349,7 +369,7 @@ export const renderShardText = Effect.fn("Observability.renderShardText")(functi
  * @category constants
  * @since 0.0.0
  */
-export const STANDARD_SECTION_BEGIN = "<!-- BEGIN GENERATED: INSTRUMENTATION CATALOG -->" as const;
+export const STANDARD_SECTION_BEGIN: string = STANDARD_DIALECT.beginMarker(STANDARD_SECTION_ID);
 
 /**
  * Closing marker of the generated section in the observability standard.
@@ -365,7 +385,7 @@ export const STANDARD_SECTION_BEGIN = "<!-- BEGIN GENERATED: INSTRUMENTATION CAT
  * @category constants
  * @since 0.0.0
  */
-export const STANDARD_SECTION_END = "<!-- END GENERATED: INSTRUMENTATION CATALOG -->" as const;
+export const STANDARD_SECTION_END: string = STANDARD_DIALECT.endMarker(STANDARD_SECTION_ID);
 
 /**
  * Generated section of the observability standard: the naming rules the
@@ -410,9 +430,22 @@ export const STANDARD_SECTION: string = A.join(
   "\n"
 );
 
+const readStandardSection = (text: string) =>
+  O.flatMap(Result.getSuccess(SectionDocument.parseResult(text, STANDARD_DIALECT)), (document) =>
+    document.read(STANDARD_SECTION_ID)
+  );
+
 /**
- * Replaces the generated section between the markers, or `None` when either
- * marker is missing.
+ * Replaces the generated section between the markers, or `None` when the
+ * standard does not hold exactly one well-formed generated section.
+ *
+ * **Details**
+ *
+ * The standard is read as a `@beep/managed-section` document with the
+ * standard's literal markers, so a duplicated, orphaned, overlapping or
+ * unterminated section, or a marker that does not own its line, is `None`
+ * rather than a guess. The replacement body is rendered in the document's
+ * line ending, and every byte outside the section is kept.
  *
  * **Example** (Replace a section)
  *
@@ -431,10 +464,15 @@ export const STANDARD_SECTION: string = A.join(
 export const spliceStandardSection: {
   (section: string): (current: string) => O.Option<string>;
   (current: string, section: string): O.Option<string>;
-} = dual(2, (current: string, section: string): O.Option<string> => {
-  const begin = O.getOrElse(Str.indexOf(STANDARD_SECTION_BEGIN)(current), constant(-1));
-  const end = O.getOrElse(Str.indexOf(STANDARD_SECTION_END)(current), constant(-1));
-  return begin < 0 || end < begin
-    ? O.none()
-    : O.some(`${Str.slice(0, begin)(current)}${section}${Str.slice(end + Str.length(STANDARD_SECTION_END))(current)}`);
-});
+} = dual(
+  2,
+  (current: string, section: string): O.Option<string> =>
+    pipe(
+      Result.getSuccess(SectionDocument.parseResult(current, STANDARD_DIALECT)),
+      O.filter((document) => document.has(STANDARD_SECTION_ID)),
+      O.flatMap((document) =>
+        O.flatMap(readStandardSection(section), (declared) => Result.getSuccess(document.reconcile([declared])))
+      ),
+      O.map((reconciled) => reconciled.text)
+    )
+);

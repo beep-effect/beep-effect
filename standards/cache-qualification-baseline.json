@@ -1122,11 +1122,11 @@
       }
     },
     "@beep/repo-cli": {
-      "reviewer": "Claude Opus 5.5 (effected-promotion wave 3-A8, refactor/repo-cli-github-markdown-table)",
-      "reason": "Record the @beep/repo-cli manifest edit that adds the @beep/github-reporting workspace dependency for the GitHubMarkdown.table adoption; the task graphs gain only github-reporting and managed-section build/transit, and the policy-tool fingerprint closure gains those two packages, as measured in the review; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (effected-promotion roadmap R8, refactor/managed-section-templates)",
+      "reason": "Record the dependency-only drift of @beep/repo-cli, which gains a direct @beep/managed-section edge for the R8 generated-region readers; the package was already upstream through @beep/github-reporting, so no closure grows; no qualification is granted.",
       "basis": {
-        "path": "goals/effected-promotion/research/cache-baseline-review-w3-a8.md",
-        "sha256": "b9efb05f1503978721b64c487095143ae1921b8a72de6ee26649b643b3af13d3"
+        "path": "goals/effected-promotion/research/cache-baseline-review-r8.md",
+        "sha256": "57d6344d0b21337e52b934898e5759ad26138be938fe6827e8c07c828adc9896"
       }
     },
     "@beep/repo-configs": {
@@ -97088,6 +97088,7 @@
           "@beep/libpff#audit",
           "@beep/lockfiles#audit",
           "@beep/m365#audit",
+          "@beep/managed-section#audit",
           "@beep/markdown#audit",
           "@beep/mcp-kit#audit",
           "@beep/md#audit",
@@ -97200,6 +97201,7 @@
           "@beep/libpff#build",
           "@beep/lockfiles#build",
           "@beep/m365#build",
+          "@beep/managed-section#build",
           "@beep/markdown#build",
           "@beep/mcp-kit#build",
           "@beep/md#build",
@@ -97301,6 +97303,7 @@
           "@beep/libpff#build",
           "@beep/lockfiles#build",
           "@beep/m365#build",
+          "@beep/managed-section#build",
           "@beep/markdown#build",
           "@beep/mcp-kit#build",
           "@beep/md#build",
@@ -97389,6 +97392,7 @@
           "@beep/libpff#build",
           "@beep/lockfiles#build",
           "@beep/m365#build",
+          "@beep/managed-section#build",
           "@beep/markdown#build",
           "@beep/mcp-kit#build",
           "@beep/md#build",
@@ -97526,6 +97530,7 @@
           "@beep/libpff#transit",
           "@beep/lockfiles#transit",
           "@beep/m365#transit",
+          "@beep/managed-section#transit",
           "@beep/markdown#transit",
           "@beep/mcp-kit#transit",
           "@beep/md#transit",
@@ -97659,6 +97664,7 @@
           "@beep/libpff#transit",
           "@beep/lockfiles#transit",
           "@beep/m365#transit",
+          "@beep/managed-section#transit",
           "@beep/markdown#transit",
           "@beep/mcp-kit#transit",
           "@beep/md#transit",
@@ -97910,6 +97916,7 @@
           "@beep/libpff#transit",
           "@beep/lockfiles#transit",
           "@beep/m365#transit",
+          "@beep/managed-section#transit",
           "@beep/markdown#transit",
           "@beep/mcp-kit#transit",
           "@beep/md#transit",
@@ -98001,6 +98008,7 @@
           "@beep/libpff#transit",
           "@beep/lockfiles#transit",
           "@beep/m365#transit",
+          "@beep/managed-section#transit",
           "@beep/markdown#transit",
           "@beep/mcp-kit#transit",
           "@beep/md#transit",
@@ -98117,6 +98125,7 @@
           "@beep/libpff#transit",
           "@beep/lockfiles#transit",
           "@beep/m365#transit",
+          "@beep/managed-section#transit",
           "@beep/markdown#transit",
           "@beep/mcp-kit#transit",
           "@beep/md#transit",
