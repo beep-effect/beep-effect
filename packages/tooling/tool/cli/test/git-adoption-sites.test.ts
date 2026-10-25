@@ -1,8 +1,8 @@
 import { isRegisteredWorktree, removeGitWorktree, runRepoCommandCapture } from "@beep/repo-cli/test/RepoRun";
 import { readAtMergeBase } from "@beep/repo-cli/test/Skills";
-import { detectPrRepository } from "@beep/repo-cli/test/Yeet";
+import { detectPrRepository, readProvenanceLabels } from "@beep/repo-cli/test/Yeet";
 import { expect, it } from "@effect/vitest";
-import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
@@ -93,6 +93,20 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("git adoption sites", (it) =>
     )
   );
 
+  it.effect("fails closed, not None, when the merge-base carries the file but git cannot read it", () =>
+    withRepository((_root, repoRoot) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const blob = Str.trim(yield* runGit(repoRoot, ["rev-parse", "main:OWNERS"]));
+        yield* fs.remove(path.join(repoRoot, ".git", "objects", Str.slice(0, 2)(blob), Str.slice(2)(blob)));
+        const error = yield* readAtMergeBase(repoRoot, "main", "OWNERS", "the test").pipe(Effect.flip);
+        expect(error._tag).toBe("SkillsCommandError");
+        assertTrue(Str.includes("Cannot read OWNERS at the merge-base")(error.message));
+      })
+    )
+  );
+
   it.effect("refuses an option-like base ref before spawning git", () =>
     withRepository((_root, repoRoot) =>
       Effect.gen(function* () {
@@ -142,6 +156,24 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("git adoption sites", (it) =>
         yield* runGit(repoRoot, ["remote", "add", "origin", "https://gitlab.invalid/owner/repo.git"]);
         const foreign = yield* detectPrRepository(repoRoot).pipe(Effect.flip);
         expect(foreign.message).toBe("Expected a github.com origin URL.");
+      })
+    )
+  );
+
+  it.effect("turns the provenance labels off only for an off value", () =>
+    withRepository((root, repoRoot) =>
+      Effect.gen(function* () {
+        const path = yield* Path.Path;
+        assertTrue(yield* readProvenanceLabels(repoRoot));
+        yield* runGit(repoRoot, ["config", "beep.provenance.labels", "off"]);
+        assertFalse(yield* readProvenanceLabels(repoRoot));
+        yield* runGit(repoRoot, ["config", "beep.provenance.labels", " off "]);
+        assertFalse(yield* readProvenanceLabels(repoRoot));
+        yield* runGit(repoRoot, ["config", "beep.provenance.labels", "OFF"]);
+        assertTrue(yield* readProvenanceLabels(repoRoot));
+        yield* runGit(repoRoot, ["config", "beep.provenance.labels", "on"]);
+        assertTrue(yield* readProvenanceLabels(repoRoot));
+        assertTrue(yield* readProvenanceLabels(path.join(root, "vanished")));
       })
     )
   );
