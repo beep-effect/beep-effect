@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-25T03:26:11.533Z",
+  "generatedAt": "2026-10-25T03:39:25.754Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -65,8 +65,8 @@
     "cleanPackages": 101,
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 79,
-    "publicModules": 3556,
-    "publicExports": 25290,
+    "publicModules": 3557,
+    "publicExports": 25326,
     "openModules": 441,
     "openExports": 1382,
     "missingExportExamples": 7,
@@ -45282,8 +45282,8 @@
           "exportKind": "class",
           "filePath": "src/NodeSyncFileSystem.ts",
           "repoPath": "packages/tooling/test-kit/memfs/src/NodeSyncFileSystem.ts",
-          "line": 322,
-          "anchor": "packages-tooling-test-kit-memfs-src-nodesyncfilesystem-ts-322-nodesyncfilesystem",
+          "line": 329,
+          "anchor": "packages-tooling-test-kit-memfs-src-nodesyncfilesystem-ts-329-nodesyncfilesystem",
           "currentTags": [
             "@public",
             "@category",
@@ -45847,8 +45847,8 @@
           "exportKind": "const",
           "filePath": "src/Walker.ts",
           "repoPath": "packages/foundation/capability/walker/src/Walker.ts",
-          "line": 56,
-          "anchor": "packages-foundation-capability-walker-src-walker-ts-56-depthcap",
+          "line": 57,
+          "anchor": "packages-foundation-capability-walker-src-walker-ts-57-depthcap",
           "currentTags": [
             "@category",
             "@since"
@@ -45869,8 +45869,8 @@
           "exportKind": "type",
           "filePath": "src/Walker.ts",
           "repoPath": "packages/foundation/capability/walker/src/Walker.ts",
-          "line": 72,
-          "anchor": "packages-foundation-capability-walker-src-walker-ts-72-depthcap",
+          "line": 73,
+          "anchor": "packages-foundation-capability-walker-src-walker-ts-73-depthcap",
           "currentTags": [
             "@category",
             "@since"
@@ -45891,8 +45891,8 @@
           "exportKind": "class",
           "filePath": "src/Walker.ts",
           "repoPath": "packages/foundation/capability/walker/src/Walker.ts",
-          "line": 91,
-          "anchor": "packages-foundation-capability-walker-src-walker-ts-91-ascendoptions",
+          "line": 92,
+          "anchor": "packages-foundation-capability-walker-src-walker-ts-92-ascendoptions",
           "currentTags": [
             "@public",
             "@category",
@@ -45914,8 +45914,8 @@
           "exportKind": "namespace",
           "filePath": "src/Walker.ts",
           "repoPath": "packages/foundation/capability/walker/src/Walker.ts",
-          "line": 160,
-          "anchor": "packages-foundation-capability-walker-src-walker-ts-160-ascendoptions",
+          "line": 161,
+          "anchor": "packages-foundation-capability-walker-src-walker-ts-161-ascendoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -45936,8 +45936,8 @@
           "exportKind": "class",
           "filePath": "src/Walker.ts",
           "repoPath": "packages/foundation/capability/walker/src/Walker.ts",
-          "line": 384,
-          "anchor": "packages-foundation-capability-walker-src-walker-ts-384-walker",
+          "line": 385,
+          "anchor": "packages-foundation-capability-walker-src-walker-ts-385-walker",
           "currentTags": [
             "@public",
             "@category",
@@ -85158,8 +85158,8 @@
           "exportKind": "const",
           "filePath": "src/Html.ts",
           "repoPath": "packages/foundation/modeling/html/src/Html.ts",
-          "line": 44,
-          "anchor": "packages-foundation-modeling-html-src-html-ts-44-html",
+          "line": 42,
+          "anchor": "packages-foundation-modeling-html-src-html-ts-42-html",
           "currentTags": [
             "@category",
             "@since"
@@ -155379,8 +155379,8 @@
           "exportKind": "class",
           "filePath": "src/DuckDb.service.ts",
           "repoPath": "packages/drivers/duckdb/src/DuckDb.service.ts",
-          "line": 550,
-          "anchor": "packages-drivers-duckdb-src-duckdb-service-ts-550-duckdb",
+          "line": 560,
+          "anchor": "packages-drivers-duckdb-src-duckdb-service-ts-560-duckdb",
           "currentTags": [
             "@category",
             "@since"
@@ -155577,8 +155577,8 @@
           "exportKind": "const",
           "filePath": "src/DuckDbClient.service.ts",
           "repoPath": "packages/drivers/duckdb/src/DuckDbClient.service.ts",
-          "line": 429,
-          "anchor": "packages-drivers-duckdb-src-duckdbclient-service-ts-429-make",
+          "line": 430,
+          "anchor": "packages-drivers-duckdb-src-duckdbclient-service-ts-430-make",
           "currentTags": [
             "@category",
             "@since"
@@ -155599,8 +155599,8 @@
           "exportKind": "const",
           "filePath": "src/DuckDbClient.service.ts",
           "repoPath": "packages/drivers/duckdb/src/DuckDbClient.service.ts",
-          "line": 465,
-          "anchor": "packages-drivers-duckdb-src-duckdbclient-service-ts-465-frominstance",
+          "line": 466,
+          "anchor": "packages-drivers-duckdb-src-duckdbclient-service-ts-466-frominstance",
           "currentTags": [
             "@category",
             "@since"
@@ -155621,8 +155621,8 @@
           "exportKind": "const",
           "filePath": "src/DuckDbClient.service.ts",
           "repoPath": "packages/drivers/duckdb/src/DuckDbClient.service.ts",
-          "line": 511,
-          "anchor": "packages-drivers-duckdb-src-duckdbclient-service-ts-511-fromconnection",
+          "line": 512,
+          "anchor": "packages-drivers-duckdb-src-duckdbclient-service-ts-512-fromconnection",
           "currentTags": [
             "@category",
             "@since"
@@ -155643,8 +155643,8 @@
           "exportKind": "const",
           "filePath": "src/DuckDbClient.service.ts",
           "repoPath": "packages/drivers/duckdb/src/DuckDbClient.service.ts",
-          "line": 544,
-          "anchor": "packages-drivers-duckdb-src-duckdbclient-service-ts-544-layer",
+          "line": 545,
+          "anchor": "packages-drivers-duckdb-src-duckdbclient-service-ts-545-layer",
           "currentTags": [
             "@category",
             "@since"
@@ -155665,8 +155665,8 @@
           "exportKind": "const",
           "filePath": "src/DuckDbClient.service.ts",
           "repoPath": "packages/drivers/duckdb/src/DuckDbClient.service.ts",
-          "line": 577,
-          "anchor": "packages-drivers-duckdb-src-duckdbclient-service-ts-577-layerclient",
+          "line": 578,
+          "anchor": "packages-drivers-duckdb-src-duckdbclient-service-ts-578-layerclient",
           "currentTags": [
             "@category",
             "@since"
@@ -155687,8 +155687,8 @@
           "exportKind": "const",
           "filePath": "src/DuckDbClient.service.ts",
           "repoPath": "packages/drivers/duckdb/src/DuckDbClient.service.ts",
-          "line": 612,
-          "anchor": "packages-drivers-duckdb-src-duckdbclient-service-ts-612-layerconfig",
+          "line": 613,
+          "anchor": "packages-drivers-duckdb-src-duckdbclient-service-ts-613-layerconfig",
           "currentTags": [
             "@category",
             "@since"
@@ -155709,8 +155709,8 @@
           "exportKind": "const",
           "filePath": "src/DuckDbClient.service.ts",
           "repoPath": "packages/drivers/duckdb/src/DuckDbClient.service.ts",
-          "line": 654,
-          "anchor": "packages-drivers-duckdb-src-duckdbclient-service-ts-654-layerclientconfig",
+          "line": 655,
+          "anchor": "packages-drivers-duckdb-src-duckdbclient-service-ts-655-layerclientconfig",
           "currentTags": [
             "@category",
             "@since"
@@ -155731,8 +155731,8 @@
           "exportKind": "const",
           "filePath": "src/DuckDbClient.service.ts",
           "repoPath": "packages/drivers/duckdb/src/DuckDbClient.service.ts",
-          "line": 675,
-          "anchor": "packages-drivers-duckdb-src-duckdbclient-service-ts-675-makecompiler",
+          "line": 676,
+          "anchor": "packages-drivers-duckdb-src-duckdbclient-service-ts-676-makecompiler",
           "currentTags": [
             "@category",
             "@since"
@@ -162675,8 +162675,8 @@
           "exportKind": "const",
           "filePath": "src/server/HttpApiTelemetry.ts",
           "repoPath": "packages/foundation/capability/observability/src/server/HttpApiTelemetry.ts",
-          "line": 57,
-          "anchor": "packages-foundation-capability-observability-src-server-httpapitelemetry-ts-57-httpstatuscode",
+          "line": 65,
+          "anchor": "packages-foundation-capability-observability-src-server-httpapitelemetry-ts-65-httpstatuscode",
           "currentTags": [
             "@category",
             "@since"
@@ -162697,8 +162697,8 @@
           "exportKind": "type",
           "filePath": "src/server/HttpApiTelemetry.ts",
           "repoPath": "packages/foundation/capability/observability/src/server/HttpApiTelemetry.ts",
-          "line": 69,
-          "anchor": "packages-foundation-capability-observability-src-server-httpapitelemetry-ts-69-httpstatuscode",
+          "line": 77,
+          "anchor": "packages-foundation-capability-observability-src-server-httpapitelemetry-ts-77-httpstatuscode",
           "currentTags": [
             "@category",
             "@since"
@@ -162719,8 +162719,8 @@
           "exportKind": "class",
           "filePath": "src/server/HttpApiTelemetry.ts",
           "repoPath": "packages/foundation/capability/observability/src/server/HttpApiTelemetry.ts",
-          "line": 116,
-          "anchor": "packages-foundation-capability-observability-src-server-httpapitelemetry-ts-116-httpapitelemetrydescriptor",
+          "line": 124,
+          "anchor": "packages-foundation-capability-observability-src-server-httpapitelemetry-ts-124-httpapitelemetrydescriptor",
           "currentTags": [
             "@category",
             "@since"
@@ -162741,8 +162741,8 @@
           "exportKind": "const",
           "filePath": "src/server/HttpApiTelemetry.ts",
           "repoPath": "packages/foundation/capability/observability/src/server/HttpApiTelemetry.ts",
-          "line": 206,
-          "anchor": "packages-foundation-capability-observability-src-server-httpapitelemetry-ts-206-httpapisuccessstatus",
+          "line": 214,
+          "anchor": "packages-foundation-capability-observability-src-server-httpapitelemetry-ts-214-httpapisuccessstatus",
           "currentTags": [
             "@category",
             "@since"
@@ -162763,8 +162763,8 @@
           "exportKind": "const",
           "filePath": "src/server/HttpApiTelemetry.ts",
           "repoPath": "packages/foundation/capability/observability/src/server/HttpApiTelemetry.ts",
-          "line": 259,
-          "anchor": "packages-foundation-capability-observability-src-server-httpapitelemetry-ts-259-makehttpapimetrics",
+          "line": 267,
+          "anchor": "packages-foundation-capability-observability-src-server-httpapitelemetry-ts-267-makehttpapimetrics",
           "currentTags": [
             "@category",
             "@since"
@@ -162785,8 +162785,8 @@
           "exportKind": "const",
           "filePath": "src/server/HttpApiTelemetry.ts",
           "repoPath": "packages/foundation/capability/observability/src/server/HttpApiTelemetry.ts",
-          "line": 349,
-          "anchor": "packages-foundation-capability-observability-src-server-httpapitelemetry-ts-349-makehttpapitelemetrydescriptor",
+          "line": 357,
+          "anchor": "packages-foundation-capability-observability-src-server-httpapitelemetry-ts-357-makehttpapitelemetrydescriptor",
           "currentTags": [
             "@category",
             "@since"
@@ -162807,8 +162807,8 @@
           "exportKind": "const",
           "filePath": "src/server/HttpApiTelemetry.ts",
           "repoPath": "packages/foundation/capability/observability/src/server/HttpApiTelemetry.ts",
-          "line": 384,
-          "anchor": "packages-foundation-capability-observability-src-server-httpapitelemetry-ts-384-httpapifailurestatus",
+          "line": 392,
+          "anchor": "packages-foundation-capability-observability-src-server-httpapitelemetry-ts-392-httpapifailurestatus",
           "currentTags": [
             "@category",
             "@since"
@@ -162829,8 +162829,8 @@
           "exportKind": "const",
           "filePath": "src/server/HttpApiTelemetry.ts",
           "repoPath": "packages/foundation/capability/observability/src/server/HttpApiTelemetry.ts",
-          "line": 544,
-          "anchor": "packages-foundation-capability-observability-src-server-httpapitelemetry-ts-544-observehttpapieffect",
+          "line": 552,
+          "anchor": "packages-foundation-capability-observability-src-server-httpapitelemetry-ts-552-observehttpapieffect",
           "currentTags": [
             "@effects",
             "@category",
@@ -162852,8 +162852,8 @@
           "exportKind": "class",
           "filePath": "src/server/HttpApiTelemetry.ts",
           "repoPath": "packages/foundation/capability/observability/src/server/HttpApiTelemetry.ts",
-          "line": 609,
-          "anchor": "packages-foundation-capability-observability-src-server-httpapitelemetry-ts-609-httpapitelemetrymiddleware",
+          "line": 617,
+          "anchor": "packages-foundation-capability-observability-src-server-httpapitelemetry-ts-617-httpapitelemetrymiddleware",
           "currentTags": [
             "@category",
             "@since"
@@ -162874,8 +162874,8 @@
           "exportKind": "const",
           "filePath": "src/server/HttpApiTelemetry.ts",
           "repoPath": "packages/foundation/capability/observability/src/server/HttpApiTelemetry.ts",
-          "line": 633,
-          "anchor": "packages-foundation-capability-observability-src-server-httpapitelemetry-ts-633-layerhttpapitelemetrymiddleware",
+          "line": 641,
+          "anchor": "packages-foundation-capability-observability-src-server-httpapitelemetry-ts-641-layerhttpapitelemetrymiddleware",
           "currentTags": [
             "@category",
             "@since"
@@ -162896,8 +162896,8 @@
           "exportKind": "const",
           "filePath": "src/server/HttpApiTelemetry.ts",
           "repoPath": "packages/foundation/capability/observability/src/server/HttpApiTelemetry.ts",
-          "line": 756,
-          "anchor": "packages-foundation-capability-observability-src-server-httpapitelemetry-ts-756-observehttpapihandler",
+          "line": 764,
+          "anchor": "packages-foundation-capability-observability-src-server-httpapitelemetry-ts-764-observehttpapihandler",
           "currentTags": [
             "@effects",
             "@category",
@@ -430049,7 +430049,7 @@
         "srcDir": "src",
         "sourceFileCount": 6,
         "publicModuleCount": 6,
-        "publicExportCount": 138
+        "publicExportCount": 172
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -430181,7 +430181,7 @@
               "rule": "multiple-description-paragraphs"
             }
           ],
-          "exportCount": 115,
+          "exportCount": 149,
           "remediationStatus": "open"
         },
         {
@@ -430605,12 +430605,1244 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "AgenciesResponse",
+          "symbolName": "CfrReference",
           "exportKind": "type",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
           "line": 26,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-26-agenciesresponse",
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-26-cfrreference",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CfrReference",
+          "exportKind": "const",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 44,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-44-cfrreference",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CorrectionHierarchy",
+          "exportKind": "type",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 62,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-62-correctionhierarchy",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CorrectionHierarchy",
+          "exportKind": "const",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 86,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-86-correctionhierarchy",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SearchResult",
+          "exportKind": "type",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 124,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-124-searchresult",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SearchResult",
+          "exportKind": "const",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 146,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-146-searchresult",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SearchMeta",
+          "exportKind": "type",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 189,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-189-searchmeta",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SearchMeta",
+          "exportKind": "const",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 212,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-212-searchmeta",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SearchCountResponse",
+          "exportKind": "type",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 257,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-257-searchcountresponse",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SearchCountResponse",
+          "exportKind": "const",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 275,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-275-searchcountresponse",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SearchSummaryResponse",
+          "exportKind": "type",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 301,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-301-searchsummaryresponse",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SearchSummaryResponse",
+          "exportKind": "const",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 319,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-319-searchsummaryresponse",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DailyCount",
+          "exportKind": "type",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 340,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-340-dailycount",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DailyCount",
+          "exportKind": "const",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 357,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-357-dailycount",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "TitleCount",
+          "exportKind": "type",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 380,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-380-titlecount",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "TitleCount",
+          "exportKind": "const",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 398,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-398-titlecount",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HierarchyCount",
+          "exportKind": "type",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 420,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-420-hierarchycount",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HierarchyCount",
+          "exportKind": "const",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 439,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-439-hierarchycount",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SearchSuggestionsResponse",
+          "exportKind": "type",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 464,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-464-searchsuggestionsresponse",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SearchSuggestionsResponse",
+          "exportKind": "const",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 481,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-481-searchsuggestionsresponse",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HierarchyNode",
+          "exportKind": "type",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 500,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-500-hierarchynode",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HierarchyNode",
+          "exportKind": "const",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 523,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-523-hierarchynode",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "StructureChild",
+          "exportKind": "type",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 564,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-564-structurechild",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "StructureChild",
+          "exportKind": "const",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 587,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-587-structurechild",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "Title",
+          "exportKind": "type",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 630,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-630-title",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "Title",
+          "exportKind": "const",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 653,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-653-title",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "TitlesMeta",
+          "exportKind": "type",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 697,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-697-titlesmeta",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "TitlesMeta",
+          "exportKind": "const",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 715,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-715-titlesmeta",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ContentVersion",
+          "exportKind": "type",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 740,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-740-contentversion",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ContentVersion",
+          "exportKind": "const",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 767,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-767-contentversion",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "VersionsMeta",
+          "exportKind": "type",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 827,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-827-versionsmeta",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "VersionsMeta",
+          "exportKind": "const",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 847,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-847-versionsmeta",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "AgencyChild",
+          "exportKind": "type",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 882,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-882-agencychild",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "AgencyChild",
+          "exportKind": "const",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 904,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-904-agencychild",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CorrectionReference",
+          "exportKind": "type",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 936,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-936-correctionreference",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CorrectionReference",
+          "exportKind": "const",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 954,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-954-correctionreference",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SearchResultsResponse",
+          "exportKind": "type",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 972,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-972-searchresultsresponse",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SearchResultsResponse",
+          "exportKind": "const",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 990,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-990-searchresultsresponse",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SearchDailyCountsResponse",
+          "exportKind": "type",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 1008,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1008-searchdailycountsresponse",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SearchDailyCountsResponse",
+          "exportKind": "const",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 1025,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1025-searchdailycountsresponse",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SearchTitleCountsResponse",
+          "exportKind": "type",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 1044,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1044-searchtitlecountsresponse",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SearchTitleCountsResponse",
+          "exportKind": "const",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 1061,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1061-searchtitlecountsresponse",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SearchHierarchyCountsResponse",
+          "exportKind": "type",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 1080,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1080-searchhierarchycountsresponse",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SearchHierarchyCountsResponse",
+          "exportKind": "const",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 1097,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1097-searchhierarchycountsresponse",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "AncestryResponse",
+          "exportKind": "type",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 1116,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1116-ancestryresponse",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "AncestryResponse",
+          "exportKind": "const",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 1131,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1131-ancestryresponse",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "StructureNode",
+          "exportKind": "type",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 1148,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1148-structurenode",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "StructureNode",
+          "exportKind": "const",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 1172,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1172-structurenode",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "TitlesResponse",
+          "exportKind": "type",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 1219,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1219-titlesresponse",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "TitlesResponse",
+          "exportKind": "const",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 1237,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1237-titlesresponse",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "VersionsResponse",
+          "exportKind": "type",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 1256,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1256-versionsresponse",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "VersionsResponse",
+          "exportKind": "const",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 1274,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1274-versionsresponse",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "Agency",
+          "exportKind": "type",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 1293,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1293-agency",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "Agency",
+          "exportKind": "const",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 1316,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1316-agency",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "Correction",
+          "exportKind": "type",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 1354,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1354-correction",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "Correction",
+          "exportKind": "const",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 1381,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1381-correction",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "AgenciesResponse",
+          "exportKind": "type",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 1447,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1447-agenciesresponse",
           "currentTags": [
             "@category",
             "@since"
@@ -430631,8 +431863,8 @@
           "exportKind": "const",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 70,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-70-agenciesresponse",
+          "line": 1464,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1464-agenciesresponse",
           "currentTags": [
             "@category",
             "@since"
@@ -430653,8 +431885,8 @@
           "exportKind": "type",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 202,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-202-correctionsresponse",
+          "line": 1481,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1481-correctionsresponse",
           "currentTags": [
             "@category",
             "@since"
@@ -430675,492 +431907,8 @@
           "exportKind": "const",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 247,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-247-correctionsresponse",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "SearchResultsResponse",
-          "exportKind": "type",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 397,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-397-searchresultsresponse",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "SearchResultsResponse",
-          "exportKind": "const",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 432,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-432-searchresultsresponse",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "SearchCountResponse",
-          "exportKind": "type",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 526,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-526-searchcountresponse",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "SearchCountResponse",
-          "exportKind": "const",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 544,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-544-searchcountresponse",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "SearchSummaryResponse",
-          "exportKind": "type",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 570,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-570-searchsummaryresponse",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "SearchSummaryResponse",
-          "exportKind": "const",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 588,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-588-searchsummaryresponse",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "SearchDailyCountsResponse",
-          "exportKind": "type",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 609,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-609-searchdailycountsresponse",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "SearchDailyCountsResponse",
-          "exportKind": "const",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 630,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-630-searchdailycountsresponse",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "SearchTitleCountsResponse",
-          "exportKind": "type",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 666,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-666-searchtitlecountsresponse",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "SearchTitleCountsResponse",
-          "exportKind": "const",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 687,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-687-searchtitlecountsresponse",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "SearchHierarchyCountsResponse",
-          "exportKind": "type",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 724,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-724-searchhierarchycountsresponse",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "SearchHierarchyCountsResponse",
-          "exportKind": "const",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 747,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-747-searchhierarchycountsresponse",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "SearchSuggestionsResponse",
-          "exportKind": "type",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 788,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-788-searchsuggestionsresponse",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "SearchSuggestionsResponse",
-          "exportKind": "const",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 805,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-805-searchsuggestionsresponse",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "AncestryResponse",
-          "exportKind": "type",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 824,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-824-ancestryresponse",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "AncestryResponse",
-          "exportKind": "const",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 849,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-849-ancestryresponse",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "StructureNode",
-          "exportKind": "type",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 902,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-902-structurenode",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "StructureNode",
-          "exportKind": "const",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 936,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-936-structurenode",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "TitlesResponse",
-          "exportKind": "type",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 1020,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1020-titlesresponse",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "TitlesResponse",
-          "exportKind": "const",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 1051,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1051-titlesresponse",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "VersionsResponse",
-          "exportKind": "type",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 1126,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1126-versionsresponse",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "VersionsResponse",
-          "exportKind": "const",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 1163,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1163-versionsresponse",
+          "line": 1498,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1498-correctionsresponse",
           "currentTags": [
             "@category",
             "@since"
@@ -431181,8 +431929,8 @@
           "exportKind": "type",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 1268,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1268-listagencies200",
+          "line": 1516,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1516-listagencies200",
           "currentTags": [
             "@category",
             "@since"
@@ -431203,8 +431951,8 @@
           "exportKind": "const",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 1283,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1283-listagencies200",
+          "line": 1531,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1531-listagencies200",
           "currentTags": [
             "@category",
             "@since"
@@ -431225,8 +431973,8 @@
           "exportKind": "type",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 1290,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1290-listcorrectionsparams",
+          "line": 1538,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1538-listcorrectionsparams",
           "currentTags": [
             "@category",
             "@since"
@@ -431247,8 +431995,8 @@
           "exportKind": "const",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 1309,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1309-listcorrectionsparams",
+          "line": 1557,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1557-listcorrectionsparams",
           "currentTags": [
             "@category",
             "@since"
@@ -431269,8 +432017,8 @@
           "exportKind": "type",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 1324,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1324-listcorrectionsquery",
+          "line": 1572,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1572-listcorrectionsquery",
           "currentTags": [
             "@category",
             "@since"
@@ -431291,8 +432039,8 @@
           "exportKind": "const",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 1343,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1343-listcorrectionsquery",
+          "line": 1591,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1591-listcorrectionsquery",
           "currentTags": [
             "@category",
             "@since"
@@ -431313,8 +432061,8 @@
           "exportKind": "type",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 1358,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1358-listcorrections200",
+          "line": 1606,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1606-listcorrections200",
           "currentTags": [
             "@category",
             "@since"
@@ -431335,8 +432083,8 @@
           "exportKind": "const",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 1373,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1373-listcorrections200",
+          "line": 1621,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1621-listcorrections200",
           "currentTags": [
             "@category",
             "@since"
@@ -431357,8 +432105,8 @@
           "exportKind": "type",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 1380,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1380-listtitlecorrectionspathparams",
+          "line": 1628,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1628-listtitlecorrectionspathparams",
           "currentTags": [
             "@category",
             "@since"
@@ -431379,8 +432127,8 @@
           "exportKind": "const",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 1395,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1395-listtitlecorrectionspathparams",
+          "line": 1643,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1643-listtitlecorrectionspathparams",
           "currentTags": [
             "@category",
             "@since"
@@ -431401,8 +432149,8 @@
           "exportKind": "type",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 1408,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1408-listtitlecorrections200",
+          "line": 1656,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1656-listtitlecorrections200",
           "currentTags": [
             "@category",
             "@since"
@@ -431423,8 +432171,8 @@
           "exportKind": "const",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 1423,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1423-listtitlecorrections200",
+          "line": 1671,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1671-listtitlecorrections200",
           "currentTags": [
             "@category",
             "@since"
@@ -431445,8 +432193,8 @@
           "exportKind": "type",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 1430,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1430-searchresultsparams",
+          "line": 1678,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1678-searchresultsparams",
           "currentTags": [
             "@category",
             "@since"
@@ -431467,8 +432215,8 @@
           "exportKind": "const",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 1463,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1463-searchresultsparams",
+          "line": 1711,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1711-searchresultsparams",
           "currentTags": [
             "@category",
             "@since"
@@ -431489,8 +432237,8 @@
           "exportKind": "type",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 1495,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1495-searchresultsquery",
+          "line": 1743,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1743-searchresultsquery",
           "currentTags": [
             "@category",
             "@since"
@@ -431511,8 +432259,8 @@
           "exportKind": "const",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 1528,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1528-searchresultsquery",
+          "line": 1776,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1776-searchresultsquery",
           "currentTags": [
             "@category",
             "@since"
@@ -431533,8 +432281,8 @@
           "exportKind": "type",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 1560,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1560-searchresults200",
+          "line": 1808,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1808-searchresults200",
           "currentTags": [
             "@category",
             "@since"
@@ -431555,8 +432303,8 @@
           "exportKind": "const",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 1575,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1575-searchresults200",
+          "line": 1823,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1823-searchresults200",
           "currentTags": [
             "@category",
             "@since"
@@ -431577,8 +432325,8 @@
           "exportKind": "type",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 1582,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1582-searchcountparams",
+          "line": 1830,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1830-searchcountparams",
           "currentTags": [
             "@category",
             "@since"
@@ -431599,8 +432347,8 @@
           "exportKind": "const",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 1615,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1615-searchcountparams",
+          "line": 1863,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1863-searchcountparams",
           "currentTags": [
             "@category",
             "@since"
@@ -431621,8 +432369,8 @@
           "exportKind": "type",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 1647,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1647-searchcountquery",
+          "line": 1895,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1895-searchcountquery",
           "currentTags": [
             "@category",
             "@since"
@@ -431643,8 +432391,8 @@
           "exportKind": "const",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 1680,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1680-searchcountquery",
+          "line": 1928,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1928-searchcountquery",
           "currentTags": [
             "@category",
             "@since"
@@ -431665,8 +432413,8 @@
           "exportKind": "type",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 1712,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1712-searchcount200",
+          "line": 1960,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1960-searchcount200",
           "currentTags": [
             "@category",
             "@since"
@@ -431687,8 +432435,8 @@
           "exportKind": "const",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 1727,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1727-searchcount200",
+          "line": 1975,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1975-searchcount200",
           "currentTags": [
             "@category",
             "@since"
@@ -431709,8 +432457,8 @@
           "exportKind": "type",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 1734,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1734-searchsummaryparams",
+          "line": 1982,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1982-searchsummaryparams",
           "currentTags": [
             "@category",
             "@since"
@@ -431731,8 +432479,8 @@
           "exportKind": "const",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 1767,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1767-searchsummaryparams",
+          "line": 2015,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2015-searchsummaryparams",
           "currentTags": [
             "@category",
             "@since"
@@ -431753,8 +432501,8 @@
           "exportKind": "type",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 1799,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1799-searchsummaryquery",
+          "line": 2047,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2047-searchsummaryquery",
           "currentTags": [
             "@category",
             "@since"
@@ -431775,8 +432523,8 @@
           "exportKind": "const",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 1832,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1832-searchsummaryquery",
+          "line": 2080,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2080-searchsummaryquery",
           "currentTags": [
             "@category",
             "@since"
@@ -431797,8 +432545,8 @@
           "exportKind": "type",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 1864,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1864-searchsummary200",
+          "line": 2112,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2112-searchsummary200",
           "currentTags": [
             "@category",
             "@since"
@@ -431819,8 +432567,8 @@
           "exportKind": "const",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 1879,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1879-searchsummary200",
+          "line": 2127,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2127-searchsummary200",
           "currentTags": [
             "@category",
             "@since"
@@ -431841,8 +432589,8 @@
           "exportKind": "type",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 1886,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1886-searchdailycountsparams",
+          "line": 2134,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2134-searchdailycountsparams",
           "currentTags": [
             "@category",
             "@since"
@@ -431863,8 +432611,8 @@
           "exportKind": "const",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 1919,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1919-searchdailycountsparams",
+          "line": 2167,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2167-searchdailycountsparams",
           "currentTags": [
             "@category",
             "@since"
@@ -431885,8 +432633,8 @@
           "exportKind": "type",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 1951,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1951-searchdailycountsquery",
+          "line": 2199,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2199-searchdailycountsquery",
           "currentTags": [
             "@category",
             "@since"
@@ -431907,8 +432655,8 @@
           "exportKind": "const",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 1984,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-1984-searchdailycountsquery",
+          "line": 2232,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2232-searchdailycountsquery",
           "currentTags": [
             "@category",
             "@since"
@@ -431929,8 +432677,8 @@
           "exportKind": "type",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2016,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2016-searchdailycounts200",
+          "line": 2264,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2264-searchdailycounts200",
           "currentTags": [
             "@category",
             "@since"
@@ -431951,8 +432699,8 @@
           "exportKind": "const",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2031,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2031-searchdailycounts200",
+          "line": 2279,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2279-searchdailycounts200",
           "currentTags": [
             "@category",
             "@since"
@@ -431973,8 +432721,8 @@
           "exportKind": "type",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2038,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2038-searchtitlecountsparams",
+          "line": 2286,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2286-searchtitlecountsparams",
           "currentTags": [
             "@category",
             "@since"
@@ -431995,8 +432743,8 @@
           "exportKind": "const",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2071,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2071-searchtitlecountsparams",
+          "line": 2319,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2319-searchtitlecountsparams",
           "currentTags": [
             "@category",
             "@since"
@@ -432017,8 +432765,8 @@
           "exportKind": "type",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2103,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2103-searchtitlecountsquery",
+          "line": 2351,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2351-searchtitlecountsquery",
           "currentTags": [
             "@category",
             "@since"
@@ -432039,8 +432787,8 @@
           "exportKind": "const",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2136,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2136-searchtitlecountsquery",
+          "line": 2384,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2384-searchtitlecountsquery",
           "currentTags": [
             "@category",
             "@since"
@@ -432061,8 +432809,8 @@
           "exportKind": "type",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2168,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2168-searchtitlecounts200",
+          "line": 2416,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2416-searchtitlecounts200",
           "currentTags": [
             "@category",
             "@since"
@@ -432083,8 +432831,8 @@
           "exportKind": "const",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2183,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2183-searchtitlecounts200",
+          "line": 2431,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2431-searchtitlecounts200",
           "currentTags": [
             "@category",
             "@since"
@@ -432105,8 +432853,8 @@
           "exportKind": "type",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2190,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2190-searchhierarchycountsparams",
+          "line": 2438,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2438-searchhierarchycountsparams",
           "currentTags": [
             "@category",
             "@since"
@@ -432127,8 +432875,8 @@
           "exportKind": "const",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2223,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2223-searchhierarchycountsparams",
+          "line": 2471,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2471-searchhierarchycountsparams",
           "currentTags": [
             "@category",
             "@since"
@@ -432149,8 +432897,8 @@
           "exportKind": "type",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2255,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2255-searchhierarchycountsquery",
+          "line": 2503,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2503-searchhierarchycountsquery",
           "currentTags": [
             "@category",
             "@since"
@@ -432169,252 +432917,10 @@
         {
           "symbolName": "SearchHierarchyCountsQuery",
           "exportKind": "const",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2288,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2288-searchhierarchycountsquery",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "SearchHierarchyCounts200",
-          "exportKind": "type",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2320,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2320-searchhierarchycounts200",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "SearchHierarchyCounts200",
-          "exportKind": "const",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2335,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2335-searchhierarchycounts200",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "SearchSuggestionsParams",
-          "exportKind": "type",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2342,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2342-searchsuggestionsparams",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "SearchSuggestionsParams",
-          "exportKind": "const",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2375,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2375-searchsuggestionsparams",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "SearchSuggestionsQuery",
-          "exportKind": "type",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2407,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2407-searchsuggestionsquery",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "SearchSuggestionsQuery",
-          "exportKind": "const",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2440,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2440-searchsuggestionsquery",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "SearchSuggestions200",
-          "exportKind": "type",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2472,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2472-searchsuggestions200",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "SearchSuggestions200",
-          "exportKind": "const",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2487,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2487-searchsuggestions200",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GetAncestryParams",
-          "exportKind": "type",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2494,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2494-getancestryparams",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GetAncestryParams",
-          "exportKind": "const",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2517,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2517-getancestryparams",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GetAncestryPathParams",
-          "exportKind": "type",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
           "line": 2536,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2536-getancestrypathparams",
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2536-searchhierarchycountsquery",
           "currentTags": [
             "@category",
             "@since"
@@ -432431,34 +432937,276 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "GetAncestryPathParams",
-          "exportKind": "const",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2554,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2554-getancestrypathparams",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GetAncestryQuery",
+          "symbolName": "SearchHierarchyCounts200",
           "exportKind": "type",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
           "line": 2568,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2568-getancestryquery",
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2568-searchhierarchycounts200",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SearchHierarchyCounts200",
+          "exportKind": "const",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 2583,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2583-searchhierarchycounts200",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SearchSuggestionsParams",
+          "exportKind": "type",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 2590,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2590-searchsuggestionsparams",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SearchSuggestionsParams",
+          "exportKind": "const",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 2623,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2623-searchsuggestionsparams",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SearchSuggestionsQuery",
+          "exportKind": "type",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 2655,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2655-searchsuggestionsquery",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SearchSuggestionsQuery",
+          "exportKind": "const",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 2688,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2688-searchsuggestionsquery",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SearchSuggestions200",
+          "exportKind": "type",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 2720,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2720-searchsuggestions200",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SearchSuggestions200",
+          "exportKind": "const",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 2735,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2735-searchsuggestions200",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GetAncestryParams",
+          "exportKind": "type",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 2742,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2742-getancestryparams",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GetAncestryParams",
+          "exportKind": "const",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 2765,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2765-getancestryparams",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GetAncestryPathParams",
+          "exportKind": "type",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 2784,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2784-getancestrypathparams",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GetAncestryPathParams",
+          "exportKind": "const",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 2802,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2802-getancestrypathparams",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GetAncestryQuery",
+          "exportKind": "type",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 2816,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2816-getancestryquery",
           "currentTags": [
             "@category",
             "@since"
@@ -432479,8 +433227,8 @@
           "exportKind": "const",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2591,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2591-getancestryquery",
+          "line": 2839,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2839-getancestryquery",
           "currentTags": [
             "@category",
             "@since"
@@ -432501,8 +433249,8 @@
           "exportKind": "type",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2610,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2610-getancestry200",
+          "line": 2858,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2858-getancestry200",
           "currentTags": [
             "@category",
             "@since"
@@ -432523,8 +433271,8 @@
           "exportKind": "const",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2625,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2625-getancestry200",
+          "line": 2873,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2873-getancestry200",
           "currentTags": [
             "@category",
             "@since"
@@ -432545,8 +433293,8 @@
           "exportKind": "type",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2632,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2632-getfulltitlexmlparams",
+          "line": 2880,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2880-getfulltitlexmlparams",
           "currentTags": [
             "@category",
             "@since"
@@ -432564,319 +433312,319 @@
         },
         {
           "symbolName": "GetFullTitleXmlParams",
-          "exportKind": "const",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2655,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2655-getfulltitlexmlparams",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GetFullTitleXmlPathParams",
-          "exportKind": "type",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2674,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2674-getfulltitlexmlpathparams",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GetFullTitleXmlPathParams",
-          "exportKind": "const",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2692,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2692-getfulltitlexmlpathparams",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GetFullTitleXmlQuery",
-          "exportKind": "type",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2706,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2706-getfulltitlexmlquery",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GetFullTitleXmlQuery",
-          "exportKind": "const",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2729,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2729-getfulltitlexmlquery",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GetFullTitleXml200TextXml",
-          "exportKind": "type",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2748,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2748-getfulltitlexml200textxml",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GetFullTitleXml200TextXml",
-          "exportKind": "const",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2763,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2763-getfulltitlexml200textxml",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GetStructureParams",
-          "exportKind": "type",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2772,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2772-getstructureparams",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GetStructureParams",
-          "exportKind": "const",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2795,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2795-getstructureparams",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GetStructurePathParams",
-          "exportKind": "type",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2814,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2814-getstructurepathparams",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GetStructurePathParams",
-          "exportKind": "const",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2832,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2832-getstructurepathparams",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GetStructureQuery",
-          "exportKind": "type",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2846,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2846-getstructurequery",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GetStructureQuery",
-          "exportKind": "const",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2869,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2869-getstructurequery",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GetStructure200",
-          "exportKind": "type",
-          "filePath": "src/_generated/Ecfr.gen.ts",
-          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2888,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2888-getstructure200",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GetStructure200",
           "exportKind": "const",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
           "line": 2903,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2903-getstructure200",
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2903-getfulltitlexmlparams",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GetFullTitleXmlPathParams",
+          "exportKind": "type",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 2922,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2922-getfulltitlexmlpathparams",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GetFullTitleXmlPathParams",
+          "exportKind": "const",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 2940,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2940-getfulltitlexmlpathparams",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GetFullTitleXmlQuery",
+          "exportKind": "type",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 2954,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2954-getfulltitlexmlquery",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GetFullTitleXmlQuery",
+          "exportKind": "const",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 2977,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2977-getfulltitlexmlquery",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GetFullTitleXml200TextXml",
+          "exportKind": "type",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 2996,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2996-getfulltitlexml200textxml",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GetFullTitleXml200TextXml",
+          "exportKind": "const",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 3011,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-3011-getfulltitlexml200textxml",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GetStructureParams",
+          "exportKind": "type",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 3020,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-3020-getstructureparams",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GetStructureParams",
+          "exportKind": "const",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 3043,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-3043-getstructureparams",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GetStructurePathParams",
+          "exportKind": "type",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 3062,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-3062-getstructurepathparams",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GetStructurePathParams",
+          "exportKind": "const",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 3080,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-3080-getstructurepathparams",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GetStructureQuery",
+          "exportKind": "type",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 3094,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-3094-getstructurequery",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GetStructureQuery",
+          "exportKind": "const",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 3117,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-3117-getstructurequery",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GetStructure200",
+          "exportKind": "type",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 3136,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-3136-getstructure200",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GetStructure200",
+          "exportKind": "const",
+          "filePath": "src/_generated/Ecfr.gen.ts",
+          "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
+          "line": 3151,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-3151-getstructure200",
           "currentTags": [
             "@category",
             "@since"
@@ -432897,8 +433645,8 @@
           "exportKind": "type",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2910,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2910-listtitles200",
+          "line": 3158,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-3158-listtitles200",
           "currentTags": [
             "@category",
             "@since"
@@ -432919,8 +433667,8 @@
           "exportKind": "const",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2925,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2925-listtitles200",
+          "line": 3173,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-3173-listtitles200",
           "currentTags": [
             "@category",
             "@since"
@@ -432941,8 +433689,8 @@
           "exportKind": "type",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2932,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2932-listversionsparams",
+          "line": 3180,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-3180-listversionsparams",
           "currentTags": [
             "@category",
             "@since"
@@ -432963,8 +433711,8 @@
           "exportKind": "const",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2959,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2959-listversionsparams",
+          "line": 3207,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-3207-listversionsparams",
           "currentTags": [
             "@category",
             "@since"
@@ -432985,8 +433733,8 @@
           "exportKind": "type",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2982,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2982-listversionspathparams",
+          "line": 3230,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-3230-listversionspathparams",
           "currentTags": [
             "@category",
             "@since"
@@ -433007,8 +433755,8 @@
           "exportKind": "const",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 2997,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-2997-listversionspathparams",
+          "line": 3245,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-3245-listversionspathparams",
           "currentTags": [
             "@category",
             "@since"
@@ -433029,8 +433777,8 @@
           "exportKind": "type",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 3008,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-3008-listversionsquery",
+          "line": 3256,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-3256-listversionsquery",
           "currentTags": [
             "@category",
             "@since"
@@ -433051,8 +433799,8 @@
           "exportKind": "const",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 3035,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-3035-listversionsquery",
+          "line": 3283,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-3283-listversionsquery",
           "currentTags": [
             "@category",
             "@since"
@@ -433073,8 +433821,8 @@
           "exportKind": "type",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 3058,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-3058-listversions200",
+          "line": 3306,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-3306-listversions200",
           "currentTags": [
             "@category",
             "@since"
@@ -433095,8 +433843,8 @@
           "exportKind": "const",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 3073,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-3073-listversions200",
+          "line": 3321,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-3321-listversions200",
           "currentTags": [
             "@category",
             "@since"
@@ -433117,8 +433865,8 @@
           "exportKind": "class",
           "filePath": "src/_generated/Ecfr.gen.ts",
           "repoPath": "packages/drivers/ecfr/src/_generated/Ecfr.gen.ts",
-          "line": 3228,
-          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-3228-ecfrapi",
+          "line": 3476,
+          "anchor": "packages-drivers-ecfr-src-generated-ecfr-gen-ts-3476-ecfrapi",
           "currentTags": [
             "@category",
             "@since"
@@ -433245,12 +433993,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export type { EcfrShape, SearchResult } from \"./Ecfr.service.ts\";",
+          "symbolName": "export type { EcfrShape } from \"./Ecfr.service.ts\";",
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/ecfr/src/index.ts",
           "line": 49,
-          "anchor": "packages-drivers-ecfr-src-index-ts-49-export-type-ecfrshape-searchresult-from-ecfr-service-ts",
+          "anchor": "packages-drivers-ecfr-src-index-ts-49-export-type-ecfrshape-from-ecfr-service-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -441653,8 +442401,8 @@
           "exportKind": "interface",
           "filePath": "src/WindowsSecrets.service.ts",
           "repoPath": "packages/drivers/windows-secrets/src/WindowsSecrets.service.ts",
-          "line": 55,
-          "anchor": "packages-drivers-windows-secrets-src-windowssecrets-service-ts-55-windowssecretstoreshape",
+          "line": 56,
+          "anchor": "packages-drivers-windows-secrets-src-windowssecrets-service-ts-56-windowssecretstoreshape",
           "currentTags": [
             "@category",
             "@since"
@@ -441675,8 +442423,8 @@
           "exportKind": "class",
           "filePath": "src/WindowsSecrets.service.ts",
           "repoPath": "packages/drivers/windows-secrets/src/WindowsSecrets.service.ts",
-          "line": 145,
-          "anchor": "packages-drivers-windows-secrets-src-windowssecrets-service-ts-145-windowssecretstore",
+          "line": 146,
+          "anchor": "packages-drivers-windows-secrets-src-windowssecrets-service-ts-146-windowssecretstore",
           "currentTags": [
             "@category",
             "@since"
@@ -506160,8 +506908,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/Knowledge.command-surface.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.command-surface.ts",
-          "line": 1231,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledge-command-surface-ts-1231-knowledgecommandsurface",
+          "line": 1240,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledge-command-surface-ts-1240-knowledgecommandsurface",
           "currentTags": [
             "@internal",
             "@category",
@@ -506183,8 +506931,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Knowledge/Knowledge.command-surface.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.command-surface.ts",
-          "line": 1249,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledge-command-surface-ts-1249-knowledgestaticcommandtree",
+          "line": 1258,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledge-command-surface-ts-1258-knowledgestaticcommandtree",
           "currentTags": [
             "@internal",
             "@category",
@@ -509507,8 +510255,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/Knowledge.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.service.ts",
-          "line": 1381,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledge-service-ts-1381-makeknowledgearchiveoracle",
+          "line": 1391,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledge-service-ts-1391-makeknowledgearchiveoracle",
           "currentTags": [
             "@internal",
             "@param",
@@ -509532,8 +510280,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/Knowledge.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.service.ts",
-          "line": 1613,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledge-service-ts-1613-resolveknowledgeprobepolicy",
+          "line": 1623,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledge-service-ts-1623-resolveknowledgeprobepolicy",
           "currentTags": [
             "@param",
             "@returns",
@@ -509557,8 +510305,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/Knowledge.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.service.ts",
-          "line": 1736,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledge-service-ts-1736-makeknowledgetreeoracle",
+          "line": 1746,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledge-service-ts-1746-makeknowledgetreeoracle",
           "currentTags": [
             "@param",
             "@returns",
@@ -509581,8 +510329,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Knowledge/Knowledge.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.service.ts",
-          "line": 1754,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledge-service-ts-1754-knowledgematerializedtree",
+          "line": 1764,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledge-service-ts-1764-knowledgematerializedtree",
           "currentTags": [
             "@see",
             "@category",
@@ -509604,8 +510352,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/Knowledge.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.service.ts",
-          "line": 1787,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledge-service-ts-1787-materializeknowledgetree",
+          "line": 1797,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledge-service-ts-1797-materializeknowledgetree",
           "currentTags": [
             "@param",
             "@returns",
@@ -509628,8 +510376,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/Knowledge.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.service.ts",
-          "line": 1898,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledge-service-ts-1898-rewriteknowledgereferences",
+          "line": 1908,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledge-service-ts-1908-rewriteknowledgereferences",
           "currentTags": [
             "@category",
             "@since"
@@ -509650,8 +510398,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/Knowledge.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.service.ts",
-          "line": 1969,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledge-service-ts-1969-knowledgeservicelive",
+          "line": 1979,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledge-service-ts-1979-knowledgeservicelive",
           "currentTags": [
             "@see",
             "@category",
@@ -532071,8 +532819,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Qa/JudgeSkill.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Qa/JudgeSkill.ts",
-          "line": 35,
-          "anchor": "packages-tooling-tool-cli-src-commands-qa-judgeskill-ts-35-qajudgeskilloptions",
+          "line": 37,
+          "anchor": "packages-tooling-tool-cli-src-commands-qa-judgeskill-ts-37-qajudgeskilloptions",
           "currentTags": [
             "@category",
             "@since"
@@ -532093,8 +532841,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Qa/JudgeSkill.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Qa/JudgeSkill.ts",
-          "line": 81,
-          "anchor": "packages-tooling-tool-cli-src-commands-qa-judgeskill-ts-81-runqajudgeskill",
+          "line": 83,
+          "anchor": "packages-tooling-tool-cli-src-commands-qa-judgeskill-ts-83-runqajudgeskill",
           "currentTags": [
             "@param",
             "@returns",
@@ -594235,8 +594983,8 @@
           "exportKind": "class",
           "filePath": "src/Vocabulary.ts",
           "repoPath": "packages/foundation/modeling/schema-org/src/Vocabulary.ts",
-          "line": 138,
-          "anchor": "packages-foundation-modeling-schema-org-src-vocabulary-ts-138-vocabulary",
+          "line": 140,
+          "anchor": "packages-foundation-modeling-schema-org-src-vocabulary-ts-140-vocabulary",
           "currentTags": [
             "@see",
             "@public",
@@ -601987,9 +602735,9 @@
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 13,
-        "publicModuleCount": 13,
-        "publicExportCount": 39
+        "sourceFileCount": 14,
+        "publicModuleCount": 14,
+        "publicExportCount": 41
       },
       "docgenCoverage": {
         "hasDocgenConfig": false,
@@ -602166,6 +602914,28 @@
         },
         {
           "docKind": "packageDocumentation",
+          "filePath": "src/rules/no-direct-process-io.ts",
+          "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/no-direct-process-io.ts",
+          "line": 1,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-no-direct-process-io-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 1,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
           "filePath": "src/rules/no-global-process-runtime.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/no-global-process-runtime.ts",
           "line": 1,
@@ -602315,7 +603085,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 14,
+          "exportCount": 15,
           "remediationStatus": "resolved"
         }
       ],
@@ -602676,8 +603446,8 @@
           "exportKind": "re-export",
           "filePath": "src/rules/index.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/index.ts",
-          "line": 34,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-index-ts-34-export-importbinding-from-utils-ts",
+          "line": 35,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-index-ts-35-export-importbinding-from-utils-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -602698,8 +603468,8 @@
           "exportKind": "CallExpression",
           "filePath": "src/rules/index.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/index.ts",
-          "line": 53,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-index-ts-53-default",
+          "line": 54,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-index-ts-54-default",
           "currentTags": [
             "@category",
             "@since"
@@ -602722,6 +603492,28 @@
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/namespace-node-imports.ts",
           "line": 71,
           "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-namespace-node-imports-ts-71-default",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "noDirectProcessIo",
+          "exportKind": "const",
+          "filePath": "src/rules/no-direct-process-io.ts",
+          "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/no-direct-process-io.ts",
+          "line": 55,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-no-direct-process-io-ts-55-nodirectprocessio",
           "currentTags": [
             "@category",
             "@since"
@@ -602870,12 +603662,36 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "makeIdentifierShadowTracker",
+          "exportKind": "const",
+          "filePath": "src/rules/utils.ts",
+          "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
+          "line": 43,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-43-makeidentifiershadowtracker",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "AstNode",
           "exportKind": "type",
           "filePath": "src/rules/utils.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-          "line": 41,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-41-astnode",
+          "line": 99,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-99-astnode",
           "currentTags": [
             "@category",
             "@since"
@@ -602896,8 +603712,8 @@
           "exportKind": "type",
           "filePath": "src/rules/utils.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-          "line": 66,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-66-maybenode",
+          "line": 124,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-124-maybenode",
           "currentTags": [
             "@category",
             "@since"
@@ -602918,8 +603734,8 @@
           "exportKind": "const",
           "filePath": "src/rules/utils.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-          "line": 107,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-107-unwrapexpression",
+          "line": 165,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-165-unwrapexpression",
           "currentTags": [
             "@param",
             "@returns",
@@ -602942,8 +603758,8 @@
           "exportKind": "type",
           "filePath": "src/rules/utils.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-          "line": 136,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-136-memberaccess",
+          "line": 194,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-194-memberaccess",
           "currentTags": [
             "@category",
             "@since"
@@ -602964,8 +603780,8 @@
           "exportKind": "const",
           "filePath": "src/rules/utils.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-          "line": 161,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-161-unwrapmemberexpression",
+          "line": 219,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-219-unwrapmemberexpression",
           "currentTags": [
             "@param",
             "@returns",
@@ -602988,8 +603804,8 @@
           "exportKind": "const",
           "filePath": "src/rules/utils.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-          "line": 197,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-197-getpropertyname",
+          "line": 255,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-255-getpropertyname",
           "currentTags": [
             "@param",
             "@returns",
@@ -603012,8 +603828,8 @@
           "exportKind": "const",
           "filePath": "src/rules/utils.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-          "line": 219,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-219-isidentifier",
+          "line": 277,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-277-isidentifier",
           "currentTags": [
             "@param",
             "@returns",
@@ -603036,8 +603852,8 @@
           "exportKind": "const",
           "filePath": "src/rules/utils.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-          "line": 252,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-252-literalstringvalue",
+          "line": 310,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-310-literalstringvalue",
           "currentTags": [
             "@param",
             "@returns",
@@ -603060,8 +603876,8 @@
           "exportKind": "const",
           "filePath": "src/rules/utils.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-          "line": 275,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-275-identifiername",
+          "line": 333,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-333-identifiername",
           "currentTags": [
             "@param",
             "@returns",
@@ -603084,8 +603900,8 @@
           "exportKind": "const",
           "filePath": "src/rules/utils.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-          "line": 325,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-325-importbinding",
+          "line": 383,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-383-importbinding",
           "currentTags": [
             "@category",
             "@since"
@@ -603106,8 +603922,8 @@
           "exportKind": "type",
           "filePath": "src/rules/utils.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-          "line": 349,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-349-importbinding",
+          "line": 407,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-407-importbinding",
           "currentTags": [
             "@category",
             "@since"
@@ -603128,8 +603944,8 @@
           "exportKind": "const",
           "filePath": "src/rules/utils.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-          "line": 388,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-388-classifyimportspecifier",
+          "line": 446,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-446-classifyimportspecifier",
           "currentTags": [
             "@param",
             "@returns",
@@ -603152,8 +603968,8 @@
           "exportKind": "const",
           "filePath": "src/rules/utils.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-          "line": 428,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-428-torepopath",
+          "line": 486,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-486-torepopath",
           "currentTags": [
             "@param",
             "@returns",
@@ -603176,8 +603992,8 @@
           "exportKind": "const",
           "filePath": "src/rules/utils.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-          "line": 458,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-458-pathmatchessuffix",
+          "line": 516,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-516-pathmatchessuffix",
           "currentTags": [
             "@param",
             "@returns",
@@ -604353,8 +605169,8 @@
           "exportKind": "class",
           "filePath": "src/GatewaySettings.ts",
           "repoPath": "apps/practice-gateway/src/GatewaySettings.ts",
-          "line": 51,
-          "anchor": "apps-practice-gateway-src-gatewaysettings-ts-51-gatewaysettingsvalues",
+          "line": 52,
+          "anchor": "apps-practice-gateway-src-gatewaysettings-ts-52-gatewaysettingsvalues",
           "currentTags": [
             "@category",
             "@since"
@@ -604375,8 +605191,8 @@
           "exportKind": "class",
           "filePath": "src/GatewaySettings.ts",
           "repoPath": "apps/practice-gateway/src/GatewaySettings.ts",
-          "line": 90,
-          "anchor": "apps-practice-gateway-src-gatewaysettings-ts-90-gatewaysettings",
+          "line": 91,
+          "anchor": "apps-practice-gateway-src-gatewaysettings-ts-91-gatewaysettings",
           "currentTags": [
             "@category",
             "@since"
@@ -646063,8 +646879,8 @@
           "exportKind": "const",
           "filePath": "src/bin.ts",
           "repoPath": "apps/practice-setup/src/bin.ts",
-          "line": 40,
-          "anchor": "apps-practice-setup-src-bin-ts-40-beside-bundle-file",
+          "line": 41,
+          "anchor": "apps-practice-setup-src-bin-ts-41-beside-bundle-file",
           "currentTags": [
             "@category",
             "@since"
@@ -646085,8 +646901,8 @@
           "exportKind": "const",
           "filePath": "src/bin.ts",
           "repoPath": "apps/practice-setup/src/bin.ts",
-          "line": 85,
-          "anchor": "apps-practice-setup-src-bin-ts-85-main",
+          "line": 86,
+          "anchor": "apps-practice-setup-src-bin-ts-86-main",
           "currentTags": [
             "@param",
             "@category",

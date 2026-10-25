@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-10-25T03:26:11.533Z
+Generated: 2026-10-25T03:39:25.754Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 101 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 79 |
-| publicModules | 3556 |
-| publicExports | 25290 |
+| publicModules | 3557 |
+| publicExports | 25326 |
 | openModules | 441 |
 | openExports | 1382 |
 | missingExportExamples | 7 |
@@ -174,7 +174,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 116 | `@beep/architecture-lab-tables` | `packages/architecture-lab/tables` | clean | 7 | 20 | 0 | 0 |
 | 117 | `@beep/architecture-lab-use-cases` | `packages/architecture-lab/use-cases` | clean | 18 | 63 | 0 | 0 |
 | 118 | `@beep/law-practice-server` | `packages/law-practice/server` | needs-remediation | 73 | 346 | 1 | 1 |
-| 119 | `@beep/ecfr` | `packages/drivers/ecfr` | needs-remediation | 6 | 138 | 2 | 0 |
+| 119 | `@beep/ecfr` | `packages/drivers/ecfr` | needs-remediation | 6 | 172 | 2 | 0 |
 | 120 | `@beep/govinfo` | `packages/drivers/govinfo` | needs-remediation | 32 | 85 | 2 | 2 |
 | 121 | `@beep/wink` | `packages/drivers/wink` | needs-remediation | 14 | 72 | 1 | 0 |
 | 122 | `@beep/mcpb-kit` | `packages/tooling/library/mcpb-kit` | clean | 5 | 25 | 0 | 0 |
@@ -214,7 +214,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 156 | `@beep/gov-legal-mcp` | `packages/drivers/gov-legal-mcp` | needs-remediation | 8 | 40 | 6 | 0 |
 | 157 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | clean | 3 | 6 | 0 | 0 |
 | 158 | `@beep/nlp-mcp` | `packages/drivers/nlp-mcp` | needs-remediation | 9 | 123 | 8 | 1 |
-| 159 | `@beep/lint-rules` | `packages/tooling/policy-pack/lint-rules` | needs-remediation | 13 | 39 | 1 | 0 |
+| 159 | `@beep/lint-rules` | `packages/tooling/policy-pack/lint-rules` | needs-remediation | 14 | 41 | 1 | 0 |
 | 160 | `@beep/practice-gateway` | `apps/practice-gateway` | clean | 20 | 143 | 0 | 0 |
 | 161 | `@beep/oip-web` | `apps/oip-web` | clean | 31 | 87 | 0 | 0 |
 | 162 | `@beep/storybook` | `apps/storybook` | no-public-src-surface | 0 | 0 | 0 | 0 |
