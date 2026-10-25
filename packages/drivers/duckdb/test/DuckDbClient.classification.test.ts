@@ -12,6 +12,7 @@ import type { SqlErrorReason } from "effect/sql/SqlError";
 // Fake native connection (SPEC §8.3): answers only the `duckdb_databases()`
 // setup query of `fromConnection` and rejects every probed statement.
 const setupResult = {
+  closeSync: () => undefined,
   returnType: 3,
   rowsChanged: 0,
   convertRowObjects: () => Promise.resolve([{ database_name: "memory", path: null }]),

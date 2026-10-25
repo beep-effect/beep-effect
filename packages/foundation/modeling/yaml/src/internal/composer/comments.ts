@@ -391,7 +391,7 @@ export const blankLineAboveStart: {
   const prevEnd = text[lineBreak] === "\n" && text[lineBreak - 1] === "\r" ? lineBreak - 1 : lineBreak;
   const prevBreak = prevEnd > 0 ? lineBreakBefore(text, prevEnd - 1) : -1;
   const prevLine = Str.slice(prevBreak + 1, prevEnd)(text);
-  return Str.trim(prevLine) === "" ? prevBreak + 1 : -1;
+  return Str.isEmpty(Str.trim(prevLine)) ? prevBreak + 1 : -1;
 });
 
 /**

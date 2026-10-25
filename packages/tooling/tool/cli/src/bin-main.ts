@@ -23,53 +23,7 @@ const ROOT_CLI_GLOBAL_FLAG_NAMES: ReadonlyArray<string> = [
   "-v",
 ];
 
-const rawArgv = Bun.argv.slice(2);
-
 const { A, Str } = await import("@beep/utils");
-const { flow } = await import("effect/Function");
-const CHANGED_PATH_DIFF_FILTER = A.join(["A", "C", "M", "R", "T", "U", "X", "B"], "");
-const nonEmptyLines = (text: string): ReadonlyArray<string> =>
-  A.filter(A.map(Str.split(/\r?\n/)(text), Str.trim), (line) => line.length > 0);
-
-const unique: (values: ReadonlyArray<string>) => ReadonlyArray<string> = flow(A.fromIterable, A.dedupe);
-
-const spawnTextOption = (args: ReadonlyArray<string>): string | undefined => {
-  const result = Bun.spawnSync({
-    cmd: ["git", ...args],
-    stderr: "ignore",
-    stdout: "pipe",
-  });
-
-  return result.success ? result.stdout.toString() : undefined;
-};
-
-const fastLintFixNoop = (): boolean => {
-  if (rawArgv.length !== 2 || rawArgv[0] !== "lint" || rawArgv[1] !== "--fix") {
-    return false;
-  }
-
-  const outputs = [
-    spawnTextOption(["diff", "--name-only", `--diff-filter=${CHANGED_PATH_DIFF_FILTER}`, "HEAD", "--"]),
-    spawnTextOption(["diff", "--cached", "--name-only", `--diff-filter=${CHANGED_PATH_DIFF_FILTER}`, "--"]),
-    spawnTextOption(["ls-files", "--others", "--exclude-standard"]),
-  ];
-
-  if (A.some(outputs, (output) => output === undefined)) {
-    return false;
-  }
-
-  const changedFiles = unique(A.flatMap(outputs, (output) => nonEmptyLines(output ?? "")));
-  if (changedFiles.length > 0) {
-    return false;
-  }
-
-  process.stdout.write("[beep-cli] lint:fix: no changed files\n");
-  return true;
-};
-
-if (fastLintFixNoop()) {
-  process.exit(0);
-}
 
 const isQualityTaskName = (value: string | undefined): boolean =>
   value !== undefined && QUALITY_TASK_NAMES.includes(value);

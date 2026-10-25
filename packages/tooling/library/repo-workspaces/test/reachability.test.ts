@@ -25,16 +25,19 @@ const DRIVER_FREE = [
 
 /**
  * Every module that loads a driver, directly or through its imports. Beyond the
- * five direct importers, the catalog assembly and the values typed over its
+ * six direct importers, the catalog assembly and the values typed over its
  * schemas load the hook layers: `PeerCheck` and `WorkspaceStateSnapshot` take
  * `CatalogSet` from `WorkspaceCatalogs`, and `PeerCheck` and
  * `internal/workspaceYaml` take `PeerDependencyRules` from
- * `ConfigDependencyHooks`. They load the drivers and never run them; a new
- * entry here is a new adapter edge and needs a reason.
+ * `ConfigDependencyHooks`. They load the drivers and never run them. The
+ * `./testing` entry loads `@beep/commands` through `PackedInstall`, which packs
+ * and installs with real package managers. A new entry here is a new adapter
+ * edge and needs a reason.
  */
 const DRIVER_LOADING = [
   "ChangeDetector.ts",
   "ConfigDependencyHooks.ts",
+  "PackedInstall.ts",
   "PeerCheck.ts",
   "WorkspaceCatalogs.ts",
   "WorkspaceSnapshots.ts",
@@ -44,6 +47,7 @@ const DRIVER_LOADING = [
   "internal/configDependencyFetch.ts",
   "internal/configDependencyResolution.ts",
   "internal/workspaceYaml.ts",
+  "testing.ts",
 ];
 
 const loadsADriver = (module: string): boolean => reaches(module, "@beep/git") || reaches(module, "@beep/commands");
@@ -77,9 +81,10 @@ describe("driver edges stay operational adapters", () => {
     ]);
   });
 
-  it("@beep/commands is imported only by the subprocess hook replay, the fetch rung and the composites", () => {
+  it("@beep/commands is imported only by the subprocess hook replay, the fetch rung, PackedInstall and the composites", () => {
     assert.deepStrictEqual(directImportersOf("@beep/commands"), [
       "ConfigDependencyHooks.ts",
+      "PackedInstall.ts",
       "Workspaces.ts",
       "internal/configDependencyFetch.ts",
     ]);

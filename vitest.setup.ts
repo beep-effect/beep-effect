@@ -24,7 +24,7 @@
 // @effect-diagnostics globalRandom:skip-file
 
 import * as NodeChildProcess from "node:child_process";
-import { createHash, createHmac, timingSafeEqual } from "node:crypto";
+import * as NodeCrypto from "node:crypto";
 import * as NodeFS from "node:fs";
 import * as NodeFSP from "node:fs/promises";
 import * as NodeHttp from "node:http";
@@ -510,10 +510,10 @@ const isMissingPathError = (cause: unknown): boolean =>
 
 // Bun.CryptoHasher over node:crypto: a plain hash, or an HMAC when a key is given.
 class CryptoHasherShim {
-  private readonly hasher: ReturnType<typeof createHash> | ReturnType<typeof createHmac>;
+  private readonly hasher: ReturnType<typeof NodeCrypto.createHash> | ReturnType<typeof NodeCrypto.createHmac>;
 
   constructor(algorithm: string, hmacKey?: string | Uint8Array) {
-    this.hasher = P.isUndefined(hmacKey) ? createHash(algorithm) : createHmac(algorithm, hmacKey);
+    this.hasher = P.isUndefined(hmacKey) ? NodeCrypto.createHash(algorithm) : NodeCrypto.createHmac(algorithm, hmacKey);
   }
 
   update(data: string | Uint8Array): this {
@@ -650,5 +650,5 @@ if (!isBunTestShim(Reflect.get(globalThis, "Bun"))) {
 // Bun exposes the native constant-time comparator on its global Crypto API.
 // Node coverage runs use the same native primitive through this platform shim.
 if (!hasFunctionProperty(globalThis.crypto, "timingSafeEqual")) {
-  Reflect.set(globalThis.crypto, "timingSafeEqual", timingSafeEqual);
+  Reflect.set(globalThis.crypto, "timingSafeEqual", NodeCrypto.timingSafeEqual);
 }

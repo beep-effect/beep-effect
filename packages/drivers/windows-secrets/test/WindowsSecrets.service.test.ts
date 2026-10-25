@@ -1,3 +1,4 @@
+import { HostProcessPlatform } from "@beep/utils/HostProcess";
 import {
   CredentialBlobMaxBytes,
   SecretStoreUnsupported,
@@ -126,11 +127,11 @@ describe("WindowsSecretStore layers", () => {
     })
   );
 
-  it.effect.skipIf(process.platform === "win32")("fails layerWindows with SecretStoreUnsupported off Windows", () =>
+  it.effect("fails layerWindows with SecretStoreUnsupported off Windows", () =>
     Effect.gen(function* () {
       const error = yield* WindowsSecretStore.layerWindows.pipe(buildStore, Effect.flip);
       expect(error).toBeInstanceOf(SecretStoreUnsupported);
-      expect(error.platform).toBe(process.platform);
-    })
+      expect(error.platform).toBe(yield* HostProcessPlatform);
+    }).pipe(Effect.provideService(HostProcessPlatform, "linux"))
   );
 });

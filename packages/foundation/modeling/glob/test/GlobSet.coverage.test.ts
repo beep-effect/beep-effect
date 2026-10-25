@@ -15,7 +15,7 @@ it.effect("GlobSet schema construction preserves unexpected engine defects", () 
     try {
       assertExitFailure(
         yield* Effect.exit(Effect.sync(() => GlobSet.make({ patterns: ["valid"] }))),
-        Cause.die(defect)
+        Cause.die(new Error("Constructor adapter can only throw schema issues", { cause: Cause.die(defect) }))
       );
     } finally {
       spy.mockRestore();

@@ -1,6 +1,8 @@
 // fallow-ignore-file unused-file -- package script run directly with Bun, outside the import graph. Owner: @beep/semantica. Exit: remove when the generator moves into a repo-cli command or the package declares it as a fallow entry.
 import * as NodeURL from "node:url";
+import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
 import * as Str from "effect/String";
 import { sha256TextSync } from "@/schema/Digest";
 import type { RdfsRuleId } from "@/schema/Reasoning";
@@ -101,7 +103,7 @@ const generatedCases = A.map(cases, (testCase) => {
   };
 });
 
-const generated = `${JSON.stringify(
+const generated = JSON.stringify(
   {
     cases: generatedCases,
     oracle: {
@@ -116,10 +118,10 @@ const generated = `${JSON.stringify(
   },
   undefined,
   2
-)}\n`;
+);
 
 if (A.contains(process.argv, "--write")) {
-  await Bun.write(new URL("../fixtures/gold/v1/g-entailment-rdfs.json", import.meta.url), generated);
+  await Bun.write(new URL("../fixtures/gold/v1/g-entailment-rdfs.json", import.meta.url), `${generated}\n`);
 } else {
-  process.stdout.write(generated);
+  BunRuntime.runMain(Console.log(generated));
 }

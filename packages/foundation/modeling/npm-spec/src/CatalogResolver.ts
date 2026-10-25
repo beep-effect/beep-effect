@@ -40,7 +40,7 @@ const $I = $NpmSpecId.create("CatalogResolver");
  *
  * This is a contract-only service: {@link CatalogResolver.noop} is the sole
  * implementation this package ships, and it resolves nothing. Real consumers
- * (e.g. `@beep/scratchpad/effected/workspaces`) provide a working implementation at the
+ * (e.g. `@beep/repo-workspaces/WorkspaceCatalogs`) provide a working implementation at the
  * application boundary.
  *
  * **Example** (Resolve a default catalog with the no-op resolver)

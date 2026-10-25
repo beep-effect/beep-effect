@@ -35,6 +35,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
+import { ts } from "ts-morph";
 import { parse } from "vite";
 import { hostNodeExecutable } from "./helpers/native-node.ts";
 
@@ -114,8 +115,11 @@ const fixture = Effect.fnUntraced(function* () {
     scopeDigest: yield* sha256Hex(yield* encode(["@beep/example"])),
   });
   const tests = [`${packagePath}/test/one.test.ts`, `${packagePath}/test/two.test.ts`];
-  const instrumenter = createInstrumenter({ esModules: true, parserPlugins: ["typescript"] });
-  instrumenter.instrumentSync(source, path.join(packageRoot, "src/choose.ts"));
+  const instrumenter = createInstrumenter({ esModules: true });
+  const { outputText } = ts.transpileModule(source, {
+    compilerOptions: { target: ts.ScriptTarget.ESNext, module: ts.ModuleKind.ESNext },
+  });
+  instrumenter.instrumentSync(outputText, path.join(packageRoot, "src/choose.ts"));
   const raw = instrumenter.lastFileCoverage();
   if (raw === null || raw === undefined) return yield* Effect.die("Fixture instrumentation produced no coverage map");
   // Load the real Node/Bun Vitest provider before changing only the producer
@@ -913,24 +917,29 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("coverage artifact integ
       })
     );
 
-    it.effect("retains an empty schema error class only when the real instrumenter proves zero units", () =>
-      Effect.gen(function* () {
-        const f = yield* fixture();
-        yield* f.fs.writeFileString(
-          f.path.join(f.packageRoot, "src/model.ts"),
-          'import { TaggedError, String as StringSchema } from "effect/Schema"; export class DomainError extends TaggedError<DomainError>()("DomainError", { message: StringSchema }) {}'
-        );
-        yield* f.write(1);
-        yield* f.write(2);
-        const snapshots = yield* collectCoverageProducerArtifacts(f.root, f.options);
-        expect(snapshots[0]?.baseline.files[`${f.packagePath}/src/model.ts`]?.uncovered).toEqual({
-          lines: 0,
-          statements: 0,
-          functions: 0,
-          branches: 0,
-        });
-      })
-    );
+    for (const [kind, source] of R.toEntries({
+      schemaError:
+        'import { TaggedError, String as StringSchema } from "effect/Schema"; export class DomainError extends TaggedError<DomainError>()("DomainError", { message: StringSchema }) {}',
+      typeDeclarations: 'export interface Model { value: string } export type Value = Model["value"];',
+      typeReexports:
+        'import type { Model } from "./types.js"; export type { Model }; export { choose } from "./choose.js";',
+    })) {
+      it.effect(`retains ${kind} only when the real instrumenter proves zero units`, () =>
+        Effect.gen(function* () {
+          const f = yield* fixture();
+          yield* f.fs.writeFileString(f.path.join(f.packageRoot, "src/model.ts"), source);
+          yield* f.write(1);
+          yield* f.write(2);
+          const snapshots = yield* collectCoverageProducerArtifacts(f.root, f.options);
+          expect(snapshots[0]?.baseline.files[`${f.packagePath}/src/model.ts`]?.uncovered).toEqual({
+            lines: 0,
+            statements: 0,
+            functions: 0,
+            branches: 0,
+          });
+        })
+      );
+    }
     it.effect("retains a default registry call only when Istanbul assigns no own units", () =>
       Effect.gen(function* () {
         const f = yield* fixture();

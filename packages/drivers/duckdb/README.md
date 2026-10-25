@@ -14,7 +14,7 @@ The package owns the technical boundary to DuckDB: connections, statement
 compilation, value conversion and error classification. Domain packages own
 their schemas, retention rules and projections.
 
-Versions: effect 4.0.5, `@duckdb/node-api` 1.5.6-r.1 (engine 1.5.6).
+Versions: effect 4.0.6, `@duckdb/node-api` 2.0.0-r.1 (engine 2.0.0).
 
 ## DuckDbClient quick start
 
@@ -227,7 +227,7 @@ move to `DuckDbClient`.
 
 ### Transactions
 
-- **No savepoints.** DuckDB 1.5.6 has none. A nested `withTransaction` runs on
+- **No savepoints.** DuckDB 2.0 has none. A nested `withTransaction` runs on
   the outer transaction. If the nested block fails and the outer block catches
   that failure, the outer `COMMIT` is refused with an `UnknownError`
   (operation `commitTransaction`) and the whole transaction rolls back. Let the
@@ -236,9 +236,10 @@ move to `DuckDbClient`.
   range, interrupt, a nested `BEGIN`, a catalog write-write conflict) DuckDB
   aborts the transaction, and a later `COMMIT` would report success while
   discarding every write. When a statement in the transaction failed or was
-  interrupted, the client probes before committing. If DuckDB aborted the transaction, the
-  commit fails instead. A swallowed parser or binder error does not abort
-  anything and still commits. The same guard covers raw `COMMIT`/`END` text
+  interrupted, the client probes before committing. If DuckDB aborted the
+  transaction, the commit fails instead. DuckDB 2.0 also aborts on parser errors,
+  so a swallowed parser error refuses the commit and rolls back earlier writes.
+  The same guard covers raw `COMMIT`/`END` text
   sent inside a transaction you opened with raw `BEGIN`: when it is refused,
   the client runs `ROLLBACK` itself and the `COMMIT` fails with the same
   `UnknownError`. Raw control text is tracked when it is the only statement in
@@ -465,7 +466,7 @@ DDL for it.
 | SqlModel update with a `GeneratedByDb` id | broken on every driver at 4.0.5 (a Model bug, not DuckDB) |
 | SqlEventJournal | unsupported (INT32 `timestamp` overflow); DuckDB-native layer designed in #2084 |
 | Persistence (both layers), PersistedQueue, cluster SqlMessageStorage/SqlRunnerStorage, SqlEventLogServerEncrypted | unsupported (`AUTOINCREMENT`, `datetime()`, partial index, INT32 columns); DuckDB-native layers designed in #2084, built when a consumer needs one |
-| Nested transaction rollback that the outer body catches | refuses the outer commit (no savepoints in DuckDB 1.5.6) |
+| Nested transaction rollback that the outer body catches | refuses the outer commit (no savepoints in DuckDB 2.0) |
 | `backup` | not provided (COPY FROM DATABASE fails on foreign-key order); use `exportDatabase` / `importDatabase` |
 | Streams with one writer statement per row outside a transaction | supported with `readerConnections > 0`; streams on `reserve` still deadlock |
 | Concurrent Migrator runs on one file (two clients) | not lock-coordinated (probed, not covered by a test): the loser fails with `SerializationError` or dies, never with `MigrationError` kind `Locked` |

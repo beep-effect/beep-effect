@@ -1,6 +1,6 @@
 // CatalogAssemblyError.message renders the cause's message after the summary,
 // because the cause is where the actionable detail lives (effected#842). Each
-// case below is a cause shape `@beep/scratchpad/effected/workspaces` really produces: the
+// case below is a cause shape `@beep/repo-workspaces` really produces: the
 // resolution ladder's not-installed and ambiguous messages, a pnpmfile's
 // ERR_MODULE_NOT_FOUND, a throwing hook, a hook throwing a bare string, and a
 // transport failure that is itself an assembly error (recognized by type, not

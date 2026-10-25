@@ -157,12 +157,12 @@ it.layer(NodeServices.layer, { timeout: "5 seconds" })("regenerate merge driver"
           expect(error.reason.method).toBe("remove");
           expect(error.reason.pathOrDescriptor).toBe(directory);
           const expected = Cause.annotate(
-            Cause.combine(Cause.fail(failure), Cause.die(error)),
+            Cause.combine(Cause.die(failure), Cause.die(error)),
             Cause.annotations(exit.cause)
           );
           assertExitFailure(exit, expected);
           const wrongDie = Cause.annotate(
-            Cause.combine(Cause.fail(failure), Cause.die(new Error("boom"))),
+            Cause.combine(Cause.die(failure), Cause.die(new Error("boom"))),
             Cause.annotations(exit.cause)
           );
           expect(() => assertExitFailure(Exit.failCause(wrongDie), expected)).toThrow();

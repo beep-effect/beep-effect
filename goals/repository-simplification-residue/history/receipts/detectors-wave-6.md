@@ -40,7 +40,9 @@ All 233 gone rows are EV014 exceptions:
 - 194 retire through the detector repair (repairs 1 and 2 below);
 - 39 retire through explicit `{ timeout: "30 seconds" }` migrations (the same-file ruling below).
 
-Check: 698 − 233 = 465 exceptions; 262 open unchanged; 960 − 233 + 0 = 727 rows. A second
+Check: 698 − 233 = 465 exceptions; 262 open unchanged; 960 − 233 + 0 = 727 rows.
+
+After merging `main` `35faa4a00d` (#2178, the effect 4.0.6 deps sweep, which adds one open row elsewhere), the PR base holds 961 rows (698 exceptions, 263 open). The lane holds 728 (465 exceptions, 263 open): the same 233 EV014 exceptions gone, 0 new, 0 status changes, and two `--write` runs byte-stable. A second
 `--write` is byte-identical (sha256 `455b67e2bdcd…`), and the plain scan reports
 `introduced=0 resolved=0`. All seven `#1855 wave 4 register` exceptions are present. No open row
 converts to an exception, and no exception reason is rewritten, because no EV014 row survives.

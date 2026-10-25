@@ -1,4 +1,4 @@
-import NodeModule from "node:module";
+import * as NodeModule from "node:module";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
@@ -77,7 +77,7 @@ describe("NativeAddon", () => {
     Effect.gen(function* () {
       const root = "/opt/native-addon-test";
       const executablePath = process.execPath;
-      const resolver = NodeModule as unknown as {
+      const resolver = NodeModule.Module as unknown as {
         _resolveFilename: (request: string, ...rest: ReadonlyArray<unknown>) => string;
       };
       const original = resolver._resolveFilename;
@@ -90,7 +90,7 @@ describe("NativeAddon", () => {
           throw new Error("Missing fixture addon");
         }
         if (!isNativeAddonRequest(request) && request !== "effect/Effect") {
-          return original.call(NodeModule, request, ...rest);
+          return original.call(NodeModule.Module, request, ...rest);
         }
         calls.push(request);
         return `fallback:${request}`;

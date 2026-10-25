@@ -122,7 +122,15 @@ const config: StorybookConfig = {
     merged.server.fs.allow = A.dedupe(merged.server.fs.allow);
 
     return mergeConfig(merged, {
-      build: { chunkSizeWarningLimit: 1_250 },
+      build: {
+        // Mermaid's lazy ELK layout engine is a single generated ~1.46 MB module.
+        chunkSizeWarningLimit: 1_500,
+        rolldownOptions: {
+          // The preview runs entirely in the browser; React server/client
+          // boundary directives have no semantics in this application bundle.
+          checks: { moduleLevelDirective: false },
+        },
+      },
       server: { hmr: merged.server.hmr === false ? false : O.getOrUndefined(proxyHmr) },
     });
   },

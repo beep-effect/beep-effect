@@ -1,4 +1,4 @@
-import { fileURLToPath } from "node:url";
+import * as NodeURL from "node:url";
 import { defineConfig, mergeConfig } from "vitest/config";
 import shared from "../../vitest.shared.ts";
 
@@ -7,7 +7,7 @@ export default mergeConfig(
   defineConfig({
     resolve: {
       alias: {
-        "@": fileURLToPath(new URL("./src", import.meta.url)),
+        "@": NodeURL.fileURLToPath(new URL("./src", import.meta.url)),
       },
     },
     test: {

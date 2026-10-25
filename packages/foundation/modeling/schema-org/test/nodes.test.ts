@@ -210,4 +210,14 @@ describe("NodeRef", () => {
       );
     }
   });
+
+  it.effect.prop(
+    "isValidId agrees with the NodeId schema on arbitrary strings",
+    [Arbitrary.schema(S.String)],
+    ([id]) =>
+      Effect.sync(() => {
+        assert.strictEqual(NodeRef.isValidId(id), Result.isSuccess(S.decodeResult(NodeId)(id)));
+      }),
+    { arbitrary: fcRuns(100) }
+  );
 });

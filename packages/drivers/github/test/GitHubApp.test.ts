@@ -408,7 +408,14 @@ describe("GitHubApp.clientLayer", () => {
         blocked = true;
         const signal = init.signal;
         Deferred.doneUnsafe(started, Effect.succeed(signal));
-        return Effect.runPromise(Effect.never, { signal });
+        return Effect.runPromise(
+          Effect.callback<Response>((resume) => {
+            const abort = () => resume(Effect.die(signal.reason));
+            if (signal.aborted) abort();
+            else signal.addEventListener("abort", abort, { once: true });
+            return Effect.sync(() => signal.removeEventListener("abort", abort));
+          })
+        );
       }
       return script.fetch(input, init);
     }
@@ -462,7 +469,14 @@ describe("GitHubApp.clientLayer", () => {
         blocked = true;
         const signal = init.signal;
         Deferred.doneUnsafe(started, Effect.succeed(signal));
-        return Effect.runPromise(Effect.never, { signal });
+        return Effect.runPromise(
+          Effect.callback<Response>((resume) => {
+            const abort = () => resume(Effect.die(signal.reason));
+            if (signal.aborted) abort();
+            else signal.addEventListener("abort", abort, { once: true });
+            return Effect.sync(() => signal.removeEventListener("abort", abort));
+          })
+        );
       }
       return script.fetch(input, init);
     }

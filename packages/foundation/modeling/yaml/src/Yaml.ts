@@ -719,7 +719,7 @@ const isBlockScalarToken = (text: string, token: CommentSpan & { readonly kind: 
  */
 const blockHeaderCommentSpans = (text: string, token: CommentSpan): ReadonlyArray<CommentSpan> => {
   const raw = Str.slice(token.offset + 1, token.offset + token.length)(text);
-  const header = A.headNonEmpty(Str.split(/\r|\n/)(raw));
+  const header = A.headNonEmpty(Str.split(/[\r\n]/)(raw));
   const spans: Array<CommentSpan> = [];
   for (const part of lexAll(header)) {
     if (part.kind === "comment") spans.push({ offset: token.offset + 1 + part.offset, length: part.length });
