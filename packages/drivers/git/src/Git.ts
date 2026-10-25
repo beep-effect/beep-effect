@@ -810,7 +810,7 @@ type ClassifiedFor<K extends ClassifyKind> = Extract<
   }
 >;
 
-/** A classified run with the spawner already provided: `make`'s `runFor` and `runForNetwork`. */
+/** A classified run with the spawner already provided: `makeShape`'s `runFor` and `runForNetwork`. */
 type RunFor = {
   <K extends ClassifyKind>(invocation: GitInvocation, cwd: string, kind: K): Effect.Effect<ClassifiedFor<K>>;
   <K extends ClassifyKind>(cwd: string, kind: K): (invocation: GitInvocation) => Effect.Effect<ClassifiedFor<K>>;
@@ -2349,7 +2349,7 @@ const refFailureArms = (cwd: string, ref: string) => ({
 });
 
 /** Builds the `Git.Service` shape over an already-resolved `ChildProcessSpawner`. */
-const make: {
+const makeShape: {
   (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: SshFromEnv): GitShape;
   (ssh: SshFromEnv): (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"]) => GitShape;
 } = dual(2, (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: SshFromEnv): GitShape => {
@@ -5771,7 +5771,7 @@ export class Git extends Context.Service<Git, GitShape>()($I`Git`) {
         [read("GIT_SSH_COMMAND"), read("GIT_SSH"), read("GIT_SSH_VARIANT")],
         { concurrency: "unbounded" }
       );
-      return make(spawner, { command, program, variant });
+      return makeShape(spawner, { command, program, variant });
     }
   );
 
