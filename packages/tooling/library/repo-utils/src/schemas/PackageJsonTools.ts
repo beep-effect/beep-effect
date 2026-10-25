@@ -91,9 +91,6 @@ const canonicalizeUnknownValue = (value: unknown): unknown => {
   return value;
 };
 
-const isKnownPublishConfigKey = (key: string): boolean =>
-  key === "access" || key === "tag" || key === "registry" || key === "provenance" || key === "bin" || key === "exports";
-
 const canonicalizePublishConfigValue = (key: string, value: unknown): unknown => {
   if (key === "bin" && isStringRecord(value)) {
     return sortStringRecord(value, identity);
@@ -104,52 +101,22 @@ const canonicalizePublishConfigValue = (key: string, value: unknown): unknown =>
   return value;
 };
 
-const canonicalizePublishConfig = (
-  value: NonNullable<PackageJson.Encoded["publishConfig"]>
-): NonNullable<PackageJson.Encoded["publishConfig"]> => {
-  if (!isStringRecord(value)) {
-    return value;
-  }
-
+// Lay out a JSON object with its documented keys first, in `keyOrder`, then every other key sorted, with
+// `canonicalizeKnown` applied to the documented values and the unknown values canonicalized recursively.
+const orderObjectKeys = (
+  value: Readonly<Record<string, unknown>>,
+  keyOrder: ReadonlyArray<string>,
+  canonicalizeKnown: (key: string, value: unknown) => unknown
+): Record<string, unknown> => {
   let out = R.empty<string, unknown>();
-  for (const key of publishConfigKeyOrder) {
+  for (const key of keyOrder) {
     if (R.has(key)(value)) {
-      out = R.set(out, key, canonicalizePublishConfigValue(key, O.getOrUndefined(R.get(value, key))));
-    }
-  }
-
-  const remaining = pipe(
-    R.toEntries(value),
-    A.filter(([key]) => !isKnownPublishConfigKey(key)),
-    A.sort(Order.mapInput(Order.String, ([key]: [string, unknown]) => key))
-  );
-
-  for (const [key, entryValue] of remaining) {
-    out = R.set(out, key, canonicalizeUnknownValue(entryValue));
-  }
-
-  return Result.getOrThrow(S.decodeUnknownResult(PublishConfig)(out));
-};
-
-const repositoryKeyOrder = A.make("type", "url", "directory");
-
-// The kit replays a repository object in its source key order; the canonical form orders the documented keys
-// (`type`, `url`, `directory`) first and sorts any others after them.
-const canonicalizeRepository = (
-  value: NonNullable<PackageJson.Encoded["repository"]>
-): NonNullable<PackageJson.Encoded["repository"]> => {
-  if (P.isString(value)) {
-    return value;
-  }
-  let out = R.empty<string, unknown>();
-  for (const key of repositoryKeyOrder) {
-    if (R.has(key)(value)) {
-      out = R.set(out, key, O.getOrUndefined(R.get(value, key)));
+      out = R.set(out, key, canonicalizeKnown(key, O.getOrUndefined(R.get(value, key))));
     }
   }
   const remaining = pipe(
     R.toEntries(value),
-    A.filter(([key]) => !A.contains(repositoryKeyOrder, key)),
+    A.filter(([key]) => !A.contains(keyOrder, key)),
     A.sort(Order.mapInput(Order.String, ([key]: [string, unknown]) => key))
   );
   for (const [key, entryValue] of remaining) {
@@ -157,6 +124,26 @@ const canonicalizeRepository = (
   }
   return out;
 };
+
+const canonicalizePublishConfig = (
+  value: NonNullable<PackageJson.Encoded["publishConfig"]>
+): NonNullable<PackageJson.Encoded["publishConfig"]> =>
+  isStringRecord(value)
+    ? Result.getOrThrow(
+        S.decodeUnknownResult(PublishConfig)(
+          orderObjectKeys(value, publishConfigKeyOrder, canonicalizePublishConfigValue)
+        )
+      )
+    : value;
+
+const repositoryKeyOrder = A.make("type", "url", "directory");
+
+// The kit replays a repository object in its source key order; the canonical form orders the documented keys
+// (`type`, `url`, `directory`) first and sorts any others after them.
+const canonicalizeRepository = (
+  value: NonNullable<PackageJson.Encoded["repository"]>
+): NonNullable<PackageJson.Encoded["repository"]> =>
+  P.isString(value) ? value : orderObjectKeys(value, repositoryKeyOrder, (_, entry) => entry);
 
 const canonicalizePackageJsonEncoded = (encoded: PackageJson.Encoded): PackageJson.Encoded =>
   ({
