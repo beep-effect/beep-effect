@@ -180,4 +180,44 @@ it.layer(NodeServices.layer)("check census", (it) => {
       expect(yield* fs.exists(path.join(root, "packages", "upstream", "dist"))).toBe(false);
     })
   );
+
+  it.effect(
+    "resolves a referenced project's outDir through its extends chain",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* findRepoRoot();
+      const tsgoPath = path.join(repoRoot, "node_modules", ".bin", "tsgo");
+      const tempRoot = path.join(repoRoot, "node_modules", ".tmp");
+      yield* fs.makeDirectory(tempRoot, { recursive: true });
+      const root = yield* fs.makeTempDirectoryScoped({ directory: tempRoot, prefix: "check-census-extends-" });
+      const consumerDir = path.join(root, "packages", "consumer");
+
+      // The upstream project sets no outDir of its own: it inherits
+      // `${configDir}/build` from a shared base, which resolves against the
+      // upstream directory. The own-file read before 3-A5 fell back to `dist`.
+      yield* writeFixtureRepo(root);
+      yield* writeFixtureJson(root, "tsconfig.base.json", {
+        compilerOptions: { ...baseCompilerOptions, outDir: "${configDir}/build" },
+      });
+      yield* writeFixtureJson(root, "packages/upstream/tsconfig.json", {
+        extends: "../../tsconfig.base.json",
+        compilerOptions: { composite: true, declaration: true, rootDir: "src" },
+        include: ["src"],
+      });
+
+      const error = yield* runCheckCensus(
+        CheckCensusOptions.make({
+          repoRoot: root,
+          tsgoPath,
+          packages: [{ name: "@fixture/consumer", dir: consumerDir }],
+          concurrency: 1,
+        })
+      ).pipe(Effect.flip);
+
+      expect(error.message).toContain(
+        "  - @fixture/consumer: ../upstream/tsconfig.json -> packages/upstream/build/index.d.ts"
+      );
+    })
+  );
 });

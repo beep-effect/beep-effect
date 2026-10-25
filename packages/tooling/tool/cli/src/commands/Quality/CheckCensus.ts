@@ -7,6 +7,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { TsconfigLoader } from "@beep/repo-tsconfig/TsconfigLoader";
 import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { resolveWorkspacePackages } from "@beep/repo-utils/Workspaces";
 import { A, Str, thunkFalse } from "@beep/utils";
@@ -23,8 +24,8 @@ import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { parse as parseJsonc } from "jsonc-parser";
 import { renderTruncatedLines } from "../../internal/artifacts/index.ts";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
@@ -360,18 +361,6 @@ export class CheckCensusMissingOutput extends S.Opaque<CheckCensusMissingOutput,
   )
 ) {}
 
-const TsconfigReference = S.Struct({ path: S.String }).pipe(
-  $I.annoteSchema("TsconfigReference", { description: "One project reference entry of a package tsconfig.json." })
-);
-const TsconfigReferences = S.Struct({
-  references: S.Array(TsconfigReference).pipe(S.optionalKey),
-}).pipe(
-  $I.annoteSchema("TsconfigReferences", {
-    description: "The `references` block read from a package tsconfig.json for the reference-keeping overlay.",
-  })
-);
-const decodeTsconfigReferences = S.decodeUnknownEffect(TsconfigReferences);
-
 type CensusEnvironment = FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner;
 
 const listProgramFiles = Effect.fn("CheckCensus.listProgramFiles")(function* (
@@ -482,27 +471,15 @@ const readTsconfigReferences = Effect.fn("CheckCensus.readTsconfigReferences")(f
   QualityScriptCommandError,
   FileSystem.FileSystem | Path.Path
 > {
-  const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const tsconfigPath = path.join(packageDir, "tsconfig.json");
-  const text = yield* fs
-    .readFileString(tsconfigPath)
-    .pipe(QualityScriptCommandError.mapError(`Failed to read ${tsconfigPath}.`));
-  const decoded = yield* decodeTsconfigReferences(parseJsonc(text)).pipe(
-    QualityScriptCommandError.mapError(`Failed to decode references from ${tsconfigPath}.`)
+  const tsconfig = yield* TsconfigLoader.load(tsconfigPath).pipe(
+    QualityScriptCommandError.mapError(`Failed to read references from ${tsconfigPath}.`)
   );
 
-  return decoded.references ?? A.empty();
+  // Only `path` reaches the overlay; tsc ignores every other reference key here.
+  return A.map(tsconfig.references ?? A.empty(), (reference) => ({ path: reference.path }));
 });
-
-const TsconfigOutDir = S.Struct({
-  compilerOptions: S.Struct({ outDir: S.optionalKey(S.String) }).pipe(S.optionalKey),
-}).pipe(
-  $I.annoteSchema("TsconfigOutDir", {
-    description: "The `compilerOptions.outDir` read from a referenced project's tsconfig.",
-  })
-);
-const decodeTsconfigOutDir = S.decodeUnknownEffect(TsconfigOutDir);
 
 // A reference names a tsconfig file or a directory holding tsconfig.json.
 const referencedTsconfigPath = Effect.fn("CheckCensus.referencedTsconfigPath")(function* (
@@ -518,19 +495,18 @@ const referencedTsconfigPath = Effect.fn("CheckCensus.referencedTsconfigPath")(f
 });
 
 // The declaration index a reference-keeping program resolves the referenced
-// project through: `<outDir>/index.d.ts` next to its tsconfig.
+// project through: `<outDir>/index.d.ts`, with `outDir` resolved through the
+// project's full `extends` chain (absolute, `${configDir}` substituted).
 const referencedDeclarationIndex = Effect.fn("CheckCensus.referencedDeclarationIndex")(function* (
   tsconfigPath: string
 ): Effect.fn.Return<string, QualityScriptCommandError, FileSystem.FileSystem | Path.Path> {
-  const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const text = yield* fs
-    .readFileString(tsconfigPath)
-    .pipe(QualityScriptCommandError.mapError(`Failed to read referenced project ${tsconfigPath}.`));
-  const decoded = yield* decodeTsconfigOutDir(parseJsonc(text)).pipe(
-    QualityScriptCommandError.mapError(`Failed to decode compilerOptions.outDir from ${tsconfigPath}.`)
+  const compilerOptions = yield* TsconfigLoader.compilerOptions(tsconfigPath).pipe(
+    QualityScriptCommandError.mapError(
+      `Failed to resolve compilerOptions.outDir of referenced project ${tsconfigPath}.`
+    )
   );
-  const outDir = decoded.compilerOptions?.outDir ?? DEFAULT_DECLARATION_OUT_DIR;
+  const outDir = compilerOptions.outDir ?? DEFAULT_DECLARATION_OUT_DIR;
 
   return path.resolve(path.dirname(tsconfigPath), outDir, DECLARATION_INDEX_FILE);
 });
@@ -632,25 +608,27 @@ export const assertCheckCensusTreeBuilt = Effect.fn("CheckCensus.assertTreeBuilt
 
 // The committed check overlay may narrow or widen the program (effect-drizzle
 // includes `scripts` its tsconfig.json does not), so the synthesized overlay
-// copies that selection and isolates the reference strategy it measures.
-const TsconfigSelection = S.Struct({
-  include: S.Array(S.String).pipe(S.optionalKey),
-  exclude: S.Array(S.String).pipe(S.optionalKey),
-});
-const decodeTsconfigSelection = S.decodeUnknownEffect(TsconfigSelection);
+// copies that selection, as written, and isolates the reference strategy it
+// measures.
+type TsconfigDocument = Effect.Success<ReturnType<typeof TsconfigLoader.load>>;
 
 const readCheckOverlaySelection = Effect.fn("CheckCensus.readCheckOverlaySelection")(function* (
   packageDir: string
-): Effect.fn.Return<typeof TsconfigSelection.Type, QualityScriptCommandError, FileSystem.FileSystem | Path.Path> {
-  const fs = yield* FileSystem.FileSystem;
+): Effect.fn.Return<
+  Pick<TsconfigDocument, "include" | "exclude">,
+  QualityScriptCommandError,
+  FileSystem.FileSystem | Path.Path
+> {
   const path = yield* Path.Path;
   const overlayPath = path.join(packageDir, "tsconfig.check.json");
-  const text = yield* fs
-    .readFileString(overlayPath)
-    .pipe(QualityScriptCommandError.mapError(`Failed to read ${overlayPath}.`));
-  return yield* decodeTsconfigSelection(parseJsonc(text)).pipe(
-    QualityScriptCommandError.mapError(`Failed to decode include/exclude from ${overlayPath}.`)
+  const overlay = yield* TsconfigLoader.load(overlayPath).pipe(
+    QualityScriptCommandError.mapError(`Failed to read include/exclude from ${overlayPath}.`)
   );
+
+  return {
+    ...(P.isUndefined(overlay.include) ? {} : { include: overlay.include }),
+    ...(P.isUndefined(overlay.exclude) ? {} : { exclude: overlay.exclude }),
+  };
 });
 
 // The reference-keeping overlay is the committed check overlay with two
