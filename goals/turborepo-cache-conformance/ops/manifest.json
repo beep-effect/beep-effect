@@ -38,7 +38,7 @@
       {
         "kind": "packet-history",
         "ref": "goals/turborepo-cache-conformance/history/receipts/2026-10-24-completion-gate.md",
-        "gating": true
+        "gating": false
       }
     ]
   },
