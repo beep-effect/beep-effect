@@ -13,6 +13,7 @@
  */
 import { $WalkerId } from "@beep/identity/packages";
 import * as A from "effect/Array";
+import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
@@ -381,9 +382,7 @@ const findRoot: {
  * @category utilities
  * @since 0.0.0
  */
-export class Walker {
-  private constructor() {}
-
+export class Walker extends Data.Class<{}> {
   /**
    * Ascend from `start` toward the filesystem root, yielding each directory,
    * nearest first.

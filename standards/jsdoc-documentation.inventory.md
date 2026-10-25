@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-10-25T02:49:10.368Z
+Generated: 2026-10-25T04:03:05.730Z
 
 ## Scope
 
@@ -14,9 +14,9 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 101 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 79 |
-| publicModules | 3560 |
-| publicExports | 25311 |
-| openModules | 449 |
+| publicModules | 3558 |
+| publicExports | 25330 |
+| openModules | 441 |
 | openExports | 1382 |
 | missingExportExamples | 7 |
 | missingExportCategories | 0 |
@@ -174,7 +174,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 116 | `@beep/architecture-lab-tables` | `packages/architecture-lab/tables` | clean | 7 | 20 | 0 | 0 |
 | 117 | `@beep/architecture-lab-use-cases` | `packages/architecture-lab/use-cases` | clean | 18 | 63 | 0 | 0 |
 | 118 | `@beep/law-practice-server` | `packages/law-practice/server` | needs-remediation | 73 | 346 | 1 | 1 |
-| 119 | `@beep/ecfr` | `packages/drivers/ecfr` | needs-remediation | 6 | 138 | 2 | 0 |
+| 119 | `@beep/ecfr` | `packages/drivers/ecfr` | needs-remediation | 6 | 172 | 2 | 0 |
 | 120 | `@beep/govinfo` | `packages/drivers/govinfo` | needs-remediation | 32 | 85 | 2 | 2 |
 | 121 | `@beep/wink` | `packages/drivers/wink` | needs-remediation | 14 | 72 | 1 | 0 |
 | 122 | `@beep/mcpb-kit` | `packages/tooling/library/mcpb-kit` | clean | 5 | 25 | 0 | 0 |
@@ -190,7 +190,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 132 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 472 | 4449 | 47 | 35 |
 | 133 | `@beep/dock-react` | `packages/foundation/ui-system/dock-react` | needs-remediation | 3 | 12 | 0 | 10 |
 | 134 | `@beep/drizzle` | `packages/drivers/drizzle` | clean | 3 | 11 | 0 | 0 |
-| 135 | `@beep/repo-workspaces` | `packages/tooling/library/repo-workspaces` | clean | 22 | 181 | 0 | 0 |
+| 135 | `@beep/repo-workspaces` | `packages/tooling/library/repo-workspaces` | clean | 27 | 244 | 0 | 0 |
 | 136 | `@beep/sbom` | `packages/foundation/modeling/sbom` | clean | 9 | 75 | 0 | 0 |
 | 137 | `@beep/github-references` | `packages/foundation/modeling/github-references` | clean | 4 | 28 | 0 | 0 |
 | 138 | `@beep/brand` | `packages/foundation/ui-system/brand` | needs-remediation | 7 | 50 | 0 | 43 |
@@ -214,12 +214,12 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 156 | `@beep/gov-legal-mcp` | `packages/drivers/gov-legal-mcp` | needs-remediation | 8 | 40 | 6 | 0 |
 | 157 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | clean | 3 | 6 | 0 | 0 |
 | 158 | `@beep/nlp-mcp` | `packages/drivers/nlp-mcp` | needs-remediation | 9 | 123 | 8 | 1 |
-| 159 | `@beep/lint-rules` | `packages/tooling/policy-pack/lint-rules` | needs-remediation | 13 | 39 | 1 | 0 |
+| 159 | `@beep/lint-rules` | `packages/tooling/policy-pack/lint-rules` | needs-remediation | 14 | 41 | 1 | 0 |
 | 160 | `@beep/practice-gateway` | `apps/practice-gateway` | clean | 20 | 143 | 0 | 0 |
 | 161 | `@beep/oip-web` | `apps/oip-web` | clean | 31 | 87 | 0 | 0 |
 | 162 | `@beep/storybook` | `apps/storybook` | no-public-src-surface | 0 | 0 | 0 | 0 |
 | 163 | `@beep/shared-tables` | `packages/shared/tables` | clean | 9 | 12 | 0 | 0 |
-| 164 | `@beep/scratchpad` | `scratchpad` | needs-remediation | 114 | 726 | 92 | 0 |
+| 164 | `@beep/scratchpad` | `scratchpad` | needs-remediation | 106 | 646 | 84 | 0 |
 | 165 | `@beep/practice-kg-mcp` | `apps/practice-kg-mcp` | clean | 16 | 73 | 0 | 0 |
 | 166 | `@beep/tailscale` | `packages/drivers/tailscale` | clean | 5 | 29 | 0 | 0 |
 | 167 | `@beep/todox` | `apps/todox` | clean | 16 | 57 | 0 | 0 |
@@ -2539,14 +2539,6 @@ Module findings:
 - `effected/npm/PackageTarball.ts:1` (none) - missing summary; missing @since
 - `effected/npm/PublishError.ts:1` (none) - missing summary; missing @since
 - `effected/sbom/SigstoreSigner.ts:1` (none) - missing summary; missing @since
-- `effected/workspaces/LayerPolicy.ts:1` (none) - missing summary; missing @since
-- `effected/workspaces/PackedInstall.ts:1` (none) - missing summary; missing @since
-- `effected/workspaces/SourceBoundary.ts:1` (none) - missing summary; missing @since
-- `effected/workspaces/WorkspaceLayering.ts:1` (none) - missing summary; missing @since
-- `effected/workspaces/internal/dependencyFields.ts:1` (none) - missing summary; missing @since
-- `effected/workspaces/internal/packedInstallPlan.ts:1` (none) - missing summary; missing @since
-- `effected/workspaces/internal/sourceText.ts:1` (none) - missing summary; missing @since
-- `effected/workspaces/testing.ts:1` (packageDocumentation) - missing @since
 
 ### @beep/professional-desktop
 

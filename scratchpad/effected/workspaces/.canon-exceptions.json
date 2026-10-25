@@ -1,70 +1,10 @@
 [
   {
-    "id": "EV014:scratchpad/test/workspaces/PackedInstall.test.ts:1013:it.layer@1#1",
-    "reason": "ScriptedSpawner.make constructs its layer with Layer.succeed; this hook acquires no scoped or effectful resource."
-  },
-  {
-    "id": "EV014:scratchpad/test/workspaces/PackedInstall.test.ts:1107:it.layer@1#1",
-    "reason": "ScriptedSpawner.make constructs its layer with Layer.succeed; this hook acquires no scoped or effectful resource."
-  },
-  {
-    "id": "EV014:scratchpad/test/workspaces/PackedInstallPreflight.test.ts:119:it.layer@1#1",
-    "reason": "ScriptedSpawner.layer is a pure Layer.succeed stub with no resource acquisition or release."
-  },
-  {
-    "id": "EV010:scratchpad/test/workspaces/SourceBoundary.test.ts:3:node:fs@0#1",
-    "reason": "The real-tree regression reads the actual ConfigDependencyHooks.ts source and its embedded REPLAY_SCRIPT; that checked-out source is the subject of the assertions."
-  },
-  {
-    "id": "EV014:scratchpad/test/workspaces/WorkspaceLayering.test.ts:183:it.layer@1#1",
-    "reason": "WorkspaceDiscovery.layerTest uses pure Layer.succeed; it acquires no scoped resource and needs no resource hook timeout."
-  },
-  {
-    "id": "EV014:scratchpad/test/workspaces/WorkspaceLayering.test.ts:215:it.layer@1#1",
-    "reason": "WorkspaceDiscovery.layerTest uses pure Layer.succeed; it acquires no scoped resource and needs no resource hook timeout."
-  },
-  {
-    "id": "EV004:scratchpad/test/workspaces/e2e/PackedInstall.e2e.test.ts:372:scoped@25#1",
-    "reason": "The shorter scope must close before asserting that the packed-install scratch directory was removed."
-  },
-  {
-    "id": "EV010:scratchpad/test/workspaces/e2e/PackedInstall.e2e.test.ts:23:node:fs@0#1",
-    "reason": "Real package managers, tarballs, installed bins, and physical directory cleanup are the E2E subject."
-  },
-  {
-    "id": "EV010:scratchpad/test/workspaces/e2e/PackedInstall.e2e.test.ts:24:node:os@0#1",
-    "reason": "Native temporary directories must be visible to the real package managers and spawned binaries."
-  },
-  {
-    "id": "EV010:scratchpad/test/workspaces/e2e/PackedInstall.e2e.test.ts:26:@effect/platform-node@0#1",
-    "reason": "NodeServices supplies the real filesystem and process execution exercised by this E2E suite."
-  },
-  {
-    "id": "EV010:scratchpad/test/workspaces/e2e/RunBinStdin.e2e.test.ts:5:node:fs@0#1",
-    "reason": "The test executes physical bin files and verifies real stdin transport and EOF behavior."
-  },
-  {
-    "id": "EV010:scratchpad/test/workspaces/e2e/RunBinStdin.e2e.test.ts:6:node:os@0#1",
-    "reason": "The spawned Node binaries require an OS-visible temporary consumer directory."
-  },
-  {
-    "id": "EV010:scratchpad/test/workspaces/e2e/RunBinStdin.e2e.test.ts:8:@effect/platform-node@0#1",
-    "reason": "Real process spawning and stdin piping are the subject."
-  },
-  {
-    "id": "EV010:scratchpad/test/workspaces/entrypoints.test.ts:2:node:fs@0#1",
-    "reason": "The boundary walker must inspect actual checkout source files; a seeded memory volume would not verify the current repository boundary."
-  },
-  {
-    "id": "EV010:scratchpad/test/workspaces/integration/SourceBoundarySelf.int.test.ts:8:@effect/platform-node@0#1",
-    "reason": "The test scans the package's actual on-disk source and verifies its exact source-boundary allowlist."
-  },
-  {
     "id": "EV010:scratchpad/test/workspaces/integration/layering.int.test.ts:4:node:fs@0#1",
     "reason": "Disk reads inspect the actual module imports, test dependency edges, and policy; replacing those inputs with a synthetic graph would remove the regression oracle."
   },
   {
-    "id": "EV010:scratchpad/test/workspaces/integration/layering.int.test.ts:7:@effect/platform-node@0#1",
+    "id": "EV010:scratchpad/test/workspaces/integration/layering.int.test.ts:8:@effect/platform-node@0#1",
     "reason": "BunLive checks acyclicity of the actual repository workspace. Generated graph manifests now use memfs; the repository control retains Node services."
   },
   {

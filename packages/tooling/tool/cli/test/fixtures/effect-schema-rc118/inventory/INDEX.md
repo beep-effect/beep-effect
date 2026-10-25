@@ -1,8 +1,8 @@
 # Schema inventory index
 
-Pin: `7f524e25cfb49a71ac39b0f44278d08d40dda5de` (inventoryPin: root package.json catalog `effect` or `config.effectSource`; sources read with `git -C .repos/effect show <pin>:<file>`). TypeScript parser: `6.0.2`. Counts include direct public members at one level; barrel namespace re-exports are one row each and are not expanded. Module list: `packages/tooling/tool/cli/src/commands/Lint/internal/EffectSchemaInventoryModules.ts`.
+Pin: `3b28bf686bf26e9700edd39c025aff2744dc5303` (inventoryPin: root package.json catalog `effect` or `config.effectSource`; sources read with `git -C .repos/effect show <pin>:<file>`). TypeScript parser: `6.0.2`. Counts include direct public members at one level; barrel namespace re-exports are one row each and are not expanded. Module list: `packages/tooling/tool/cli/src/commands/Lint/internal/EffectSchemaInventoryModules.ts`.
 
-Row digest: `408166b7cbc3195569698ee010de8d468c45ab201b8a533feb4a9424c807d785` (SHA-256 over the module JSONL files concatenated byte for byte in Module totals order).
+Row digest: `1062299f9cd7db6a63ea2e8cff80816f04f54273811083a1c288e7fb52518fb7` (SHA-256 over the module JSONL files concatenated byte for byte in Module totals order).
 
 Regenerate from repo root (offline):
 
@@ -18,13 +18,13 @@ Importable `no` marks provenance-only modules whose path effect's exports map nu
 
 | Module | Importable | Rows | Bytes |
 | --- | --- | ---: | ---: |
-| [effect/Schema](effect-Schema.jsonl) | yes | 1180 | 523099 |
+| [effect/Schema](effect-Schema.jsonl) | yes | 1213 | 537089 |
 | [effect/SchemaAST](effect-SchemaAST.jsonl) | yes | 315 | 127322 |
 | [effect/SchemaParser](effect-SchemaParser.jsonl) | yes | 37 | 20288 |
 | [effect/SchemaIssue](effect-SchemaIssue.jsonl) | yes | 65 | 28818 |
-| [effect/SchemaGetter](effect-SchemaGetter.jsonl) | yes | 72 | 34143 |
+| [effect/SchemaGetter](effect-SchemaGetter.jsonl) | yes | 72 | 34245 |
 | [effect/SchemaTransformation](effect-SchemaTransformation.jsonl) | yes | 62 | 32476 |
-| [effect/SchemaRepresentation](effect-SchemaRepresentation.jsonl) | yes | 223 | 99734 |
+| [effect/SchemaRepresentation](effect-SchemaRepresentation.jsonl) | yes | 226 | 101164 |
 | [effect/Arbitrary](effect-Arbitrary.jsonl) | yes | 77 | 31141 |
 | [effect/JsonSchema](effect-JsonSchema.jsonl) | yes | 27 | 11872 |
 | [effect/Equivalence](effect-Equivalence.jsonl) | yes | 20 | 9316 |
@@ -32,7 +32,7 @@ Importable `no` marks provenance-only modules whose path effect's exports map nu
 | [effect/ChannelSchema](effect-ChannelSchema.jsonl) | yes | 8 | 5135 |
 | [effect/schema](effect-schema.jsonl) | yes | 5 | 1878 |
 | [effect/schema/Model](effect-schema-Model.jsonl) | yes | 55 | 30822 |
-| [effect/schema/VariantSchema](effect-schema-VariantSchema.jsonl) | yes | 47 | 22524 |
+| [effect/schema/VariantSchema](effect-schema-VariantSchema.jsonl) | yes | 48 | 23430 |
 | [effect/schema/SchemaCompiler](effect-schema-SchemaCompiler.jsonl) | yes | 19 | 8686 |
 | [effect/schema/SchemaCompiler/runtime](effect-schema-SchemaCompiler-runtime.jsonl) | yes | 1 | 386 |
 | [effect/schema/SchemaJITCompiler](effect-schema-SchemaJITCompiler.jsonl) | yes | 2 | 847 |
@@ -42,7 +42,7 @@ Importable `no` marks provenance-only modules whose path effect's exports map nu
 | [effect/internal/schema/codegen](effect-internal-schema-codegen.jsonl) | no | 11 | 4352 |
 | [effect/internal/schema/compilerRegistry](effect-internal-schema-compilerRegistry.jsonl) | no | 25 | 10464 |
 | [effect/internal/schema/interpreter](effect-internal-schema-interpreter.jsonl) | no | 3 | 1487 |
-| **Total** | | **2303** | **1027068** |
+| **Total** | | **2340** | **1043496** |
 
 ## Per-module kinds and categories
 
@@ -50,13 +50,13 @@ Every cell verified with `rg --no-ignore --no-heading -F -c '"kind":"<kind>"' <m
 
 | Module | Kinds | Categories |
 | --- | --- | --- |
-| effect/Schema | accessor: 1; call: 8; class: 1; const: 215; constructor: 5; function: 152; interface: 243; method: 19; namespace: 10; property: 502; type: 24 | (untagged): 550; annotations: 3; branding: 3; combinators: 9; constructors: 43; converting: 13; decoding: 24; encoding: 15; error handling: 4; errors: 1; filtering: 3; formatting: 2; getters: 2; guards: 4; instances: 2; models: 225; options: 4; schemas: 173; transforming: 20; utility types: 16; validation: 64 |
+| effect/Schema | accessor: 1; call: 9; class: 1; const: 223; constructor: 5; function: 153; interface: 251; method: 19; namespace: 10; property: 517; type: 24 | (untagged): 567; annotations: 3; branding: 3; combinators: 9; constructors: 43; converting: 15; decoding: 24; encoding: 15; error handling: 4; errors: 1; filtering: 3; formatting: 2; getters: 2; guards: 4; instances: 2; models: 232; options: 4; schemas: 180; transforming: 20; utility types: 16; validation: 64 |
 | effect/SchemaAST | const: 86; function: 48; interface: 30; method: 74; property: 70; type: 7 | (untagged): 209; annotations: 5; constants: 2; constructors: 38; guards: 22; models: 32; options: 2; predicates: 1; transforming: 4 |
 | effect/SchemaParser | call: 2; const: 12; function: 21; interface: 2 | (untagged): 12; constructors: 3; decoding: 10; encoding: 10; guards: 2 |
 | effect/SchemaIssue | const: 14; function: 7; interface: 12; property: 28; type: 4 | (untagged): 32; constructors: 11; formatting: 7; guards: 2; models: 13 |
 | effect/SchemaGetter | call: 3; const: 4; function: 49; interface: 5; property: 9; type: 2 | (untagged): 12; combining: 2; constructors: 8; converting: 8; decoding: 10; encoding: 7; filtering: 1; mapping: 1; models: 6; splitting: 2; transforming: 12; utility types: 1; validation: 2 |
 | effect/SchemaTransformation | call: 1; const: 30; function: 20; interface: 2; method: 2; property: 7 | (untagged): 12; combining: 1; constructors: 6; converting: 4; decoding: 3; encoding: 5; guards: 1; models: 2; transforming: 28 |
-| effect/SchemaRepresentation | const: 84; function: 14; interface: 45; namespace: 2; property: 67; type: 11 | (untagged): 69; annotations: 2; configuration: 1; constructors: 8; decoding: 2; encoding: 2; models: 53; schemas: 30; transforming: 6; validation: 50 |
+| effect/SchemaRepresentation | const: 86; function: 14; interface: 45; namespace: 2; property: 68; type: 11 | (untagged): 70; annotations: 2; configuration: 1; constructors: 8; decoding: 2; encoding: 2; models: 53; schemas: 32; transforming: 6; validation: 50 |
 | effect/Arbitrary | call: 4; const: 8; function: 6; interface: 13; property: 42; type: 4 | (untagged): 46; configuration: 1; constructors: 4; converting: 1; errors: 1; filtering: 2; guards: 1; mapping: 1; models: 15; running: 2; sequencing: 1; type IDs: 2 |
 | effect/JsonSchema | const: 4; function: 10; interface: 4; property: 7; type: 2 | (untagged): 11; constants: 3; decoding: 4; encoding: 3; models: 6 |
 | effect/Equivalence | call: 2; const: 10; function: 5; interface: 1; property: 1; type: 1 | (untagged): 3; combinators: 4; combining: 2; constructors: 3; instances: 5; mapping: 1; models: 1; utility types: 1 |
@@ -64,7 +64,7 @@ Every cell verified with `rg --no-ignore --no-heading -F -c '"kind":"<kind>"' <m
 | effect/ChannelSchema | call: 2; const: 6 | (untagged): 2; combinators: 2; constructors: 4 |
 | effect/schema | namespace: 5 | (untagged): 5 |
 | effect/schema/Model | const: 35; interface: 17; type: 3 | constructors: 7; converting: 1; getters: 1; models: 3; schemas: 42; transforming: 1 |
-| effect/schema/VariantSchema | const: 7; constructor: 1; interface: 5; method: 1; namespace: 3; property: 20; type: 10 | (untagged): 25; accessors: 1; constructors: 2; guards: 2; models: 12; schemas: 2; type IDs: 1; utility types: 2 |
+| effect/schema/VariantSchema | const: 7; constructor: 1; interface: 5; method: 1; namespace: 3; property: 21; type: 10 | (untagged): 26; accessors: 1; constructors: 2; guards: 2; models: 12; schemas: 2; type IDs: 1; utility types: 2 |
 | effect/schema/SchemaCompiler | call: 5; const: 3; interface: 6; property: 5 | (untagged): 10; models: 6; registry: 1; symbols: 2 |
 | effect/schema/SchemaCompiler/runtime | const: 1 | (untagged): 1 |
 | effect/schema/SchemaJITCompiler | const: 1; function: 1 | (untagged): 1; compilation: 1 |
@@ -81,15 +81,15 @@ Verification: `rg --no-ignore --no-heading -F -c '"category":"<category>"' packa
 
 | Category | Rows |
 | --- | ---: |
-| models | 225 |
-| schemas | 173 |
+| models | 232 |
+| schemas | 180 |
 | validation | 64 |
 | constructors | 43 |
 | decoding | 24 |
 | transforming | 20 |
 | utility types | 16 |
+| converting | 15 |
 | encoding | 15 |
-| converting | 13 |
 | combinators | 9 |
 | error handling | 4 |
 | guards | 4 |

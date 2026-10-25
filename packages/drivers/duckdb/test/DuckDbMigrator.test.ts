@@ -110,12 +110,13 @@ describe("DuckDbMigrator", () => {
           table,
         }).pipe(Effect.exit);
 
-        // At effect 4.0.5 a failing migration is a defect, not a typed failure.
-        const defect = Exit.findDefect(exit);
-        if (Result.isFailure(defect)) {
-          return assert.fail("expected the failing migration run to die with a MigrationError defect");
+        // Since effect 4.0.6 a failing migration is a typed MigrationError failure
+        // (4.0.5 raised it as a defect).
+        const failure = Exit.findError(exit);
+        if (Result.isFailure(failure)) {
+          return assert.fail("expected the failing migration run to fail with a MigrationError");
         }
-        const error = defect.success;
+        const error = failure.success;
         assert(error instanceof DuckDbMigrator.MigrationError);
         assert.strictEqual(error.kind, "Failed");
         assert.strictEqual(error.cause, "boom");

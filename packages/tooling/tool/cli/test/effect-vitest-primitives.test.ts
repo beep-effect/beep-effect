@@ -37,7 +37,7 @@ type SourceAnchor = {
 
 const repositoryRoot = NodeURL.fileURLToPath(new URL("../../../../..", import.meta.url));
 const packageRoot = NodeURL.fileURLToPath(new URL("..", import.meta.url));
-const fixtureRoot = NodeURL.fileURLToPath(new URL("./fixtures/effect-vitest-405", import.meta.url));
+const fixtureRoot = NodeURL.fileURLToPath(new URL("./fixtures/effect-vitest-406", import.meta.url));
 const indexFile = "packages/vitest/src/index.ts";
 const utilsFile = "packages/vitest/src/utils.ts";
 const readmeFile = "packages/vitest/README.md";
@@ -108,7 +108,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("pinned primitive graph"
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const graph = yield* readEffectVitestPrimitiveGraph(repositoryRoot);
-      strictEqual(graph.entries.length, 102);
+      strictEqual(graph.entries.length, 106);
       const byName = indexEffectVitestPrimitives(
         A.map(graph.entries, (entry) => EffectVitestPrimitive.make({ ...entry, id: entry.name }))
       );
@@ -283,7 +283,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("pinned primitive graph"
       });
       yield* collectCharterAnchors();
 
-      strictEqual(anchors.length, 102);
+      strictEqual(anchors.length, 106);
       for (const expected of anchors) {
         const actual = HashMap.get(byName, expected.name);
         assertTrue(O.isSome(actual), `Missing pinned primitive for ${expected.name}`);
@@ -295,7 +295,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("pinned primitive graph"
   );
 
   it.effect(
-    "compiles every graph example against the installed 4.0.5 package surface",
+    "compiles every graph example against the installed 4.0.6 package surface",
     Effect.fnUntraced(function* () {
       const path = yield* Path.Path;
       const graph = yield* readEffectVitestPrimitiveGraph(repositoryRoot);
@@ -402,7 +402,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("pinned primitive graph"
       );
       const graph = yield* readEffectVitestPrimitiveGraph(repositoryRoot);
       const failure = yield* verifyEffectVitestPin(root, graph).pipe(Effect.flip);
-      assertTrue(Str.includes("does not match graph pin @effect/vitest@4.0.5 (")(failure.message));
+      assertTrue(Str.includes("does not match graph pin @effect/vitest@4.0.6 (")(failure.message));
       assertTrue(Str.includes("Regenerate source anchors")(failure.message));
       assertTrue(Str.includes("review the semantic diff")(failure.message));
       assertTrue(Str.includes("update the graph pin")(failure.message));

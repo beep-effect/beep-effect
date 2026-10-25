@@ -1142,10 +1142,14 @@ const PORTFOLIO_INDEX_MODULE = "packages/tooling/tool/cli/src/commands/Goals/Por
  * @returns Probe source ready to write into the scratch root.
  */
 const commandProbeSource = (rootCommandModule: string, inputPath: string): string => `
-import { BunRuntime, BunServices } from "@effect/platform-bun"
+import * as BunRuntime from "@effect/platform-bun/BunRuntime"
+import * as BunServices from "@effect/platform-bun/BunServices"
 import * as Console from "effect/Console"
 import * as Effect from "effect/Effect"
+import * as Layer from "effect/Layer"
 import * as Result from "effect/Result"
+import * as Stdio from "effect/Stdio"
+import * as Stream from "effect/Stream"
 import * as Command from "effect/cli/Command"
 import { rootCommand } from ${JSON.stringify(rootCommandModule)}
 
@@ -1185,9 +1189,9 @@ const program = Effect.gen(function*() {
     }
     results.push([result.status, ...result.canonicalPath].join("\\t"))
   }
-  process.stdout.write(results.join("\\n"))
+  yield* Stream.make(results.join("\\n")).pipe(Stream.run((yield* Stdio.Stdio).stdout()))
 })
-BunRuntime.runMain(program.pipe(Effect.provide(BunServices.layer)))
+BunRuntime.runMain(BunServices.layer.pipe(Layer.build, Effect.flatMap((context) => Effect.provide(program, context)), Effect.scoped))
 `;
 
 /**
@@ -1201,11 +1205,17 @@ BunRuntime.runMain(program.pipe(Effect.provide(BunServices.layer)))
  * @returns Probe source ready to write into the scratch root.
  */
 const indexProbeSource = (portfolioIndexModule: string): string => `
-import { BunRuntime, BunServices } from "@effect/platform-bun"
+import * as BunRuntime from "@effect/platform-bun/BunRuntime"
+import * as BunServices from "@effect/platform-bun/BunServices"
 import * as Effect from "effect/Effect"
+import * as Layer from "effect/Layer"
+import * as Stdio from "effect/Stdio"
+import * as Stream from "effect/Stream"
 import { buildPortfolioIndexContent } from ${JSON.stringify(portfolioIndexModule)}
-const program = Effect.flatMap(buildPortfolioIndexContent("."), (content) => Effect.sync(() => process.stdout.write(content)))
-BunRuntime.runMain(program.pipe(Effect.provide(BunServices.layer)))
+const program = Effect.flatMap(buildPortfolioIndexContent("."), (content) =>
+  Stdio.Stdio.pipe(Effect.flatMap((stdio) => Stream.make(content).pipe(Stream.run(stdio.stdout()))))
+)
+BunRuntime.runMain(BunServices.layer.pipe(Layer.build, Effect.flatMap((context) => Effect.provide(program, context)), Effect.scoped))
 `;
 
 const makeHermeticEnv = Effect.fn("Knowledge.makeHermeticEnv")(function* (scratchRoot: string) {

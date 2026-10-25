@@ -1,5 +1,5 @@
 {
-  "previous": "5576b0bf4090dcd8cc51914470272df987e33a94b1da8bf090c36336afde7235",
+  "previous": "0977edc9da3f1c31454e319ee232c1e3e993eaf85660b5ccb2ca34985fc93e99",
   "review": {
     "reviewer": "Claude Opus 5.5 (effected-promotion wave 4, PR 4-X-A, refactor/xdg-adoption)",
     "reason": "Record the dependency-only drift of @beep/repo-ai-metrics, @beep/docket-intake and @beep/practice-m365-contacts from their new @beep/xdg edge (the 4-X-A adoption, W4-c); no qualification is granted.",

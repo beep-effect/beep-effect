@@ -7,19 +7,29 @@ import * as AcpClient from "@beep/acp/client";
 import * as Compat from "@beep/acp/compat";
 import * as AcpError from "@beep/acp/errors";
 import * as AcpJson from "@beep/acp/json";
+import { collectStderrTail } from "@beep/acp/stderr";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { A } from "@beep/utils";
+import { A, currentHostPlatform } from "@beep/utils";
 import * as O from "@beep/utils/Option";
+import * as NodeChildProcessSpawner from "@effect/platform-node/NodeChildProcessSpawner";
+import * as NodePath from "@effect/platform-node/NodePath";
 import { assert } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Context from "effect/Context";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as Logger from "effect/Logger";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Queue from "effect/Queue";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { antigravityInitialize } from "./fixtures/antigravity-initialize.ts";
 import { makeInMemoryStdio } from "./helpers.ts";
@@ -868,6 +878,279 @@ it.effect(
     assert.equal(yield* Deferred.await(received), "seen:session-1");
   })
 );
+
+it.effect(
+  "routes generation-2 agent methods to their generation-2 wire methods and shapes",
+  Effect.fnUntraced(function* () {
+    const { stdio, input, output } = yield* makeInMemoryStdio();
+    const acp = yield* AcpClient.make(stdio, { protocolGeneration: "v2" });
+    const wire = Effect.fnUntraced(function* <A>(call: Effect.Effect<A, AcpError.AcpError>, value: unknown = {}) {
+      const { answer, outbound } = yield* exchange(input, output, call, value);
+      return { answer, call: [outbound.method, outbound.params] };
+    });
+    const session = { sessionId: "session-1", cwd: "/work" };
+    const mcpServers = [{ name: "fixture", command: "fixture-only", args: [], env: [] }];
+    const v2McpServers = [{ name: "fixture", command: "fixture-only", args: [], env: [], type: "stdio" }];
+
+    assert.deepEqual((yield* wire(acp.agent.authenticate({ methodId: "oauth" }))).call, [
+      "auth/login",
+      { methodId: "oauth" },
+    ]);
+    assert.deepEqual((yield* wire(acp.agent.logout({}))).call, ["auth/logout", {}]);
+
+    // `session/load` becomes a `session/resume` that replays from the start; `session/resume`
+    // keeps its own replay point.
+    const loaded = yield* wire(acp.agent.loadSession({ ...session, mcpServers }));
+    assert.deepEqual(loaded.call, [
+      "session/resume",
+      { ...session, mcpServers: v2McpServers, replayFrom: { type: "start" } },
+    ]);
+    assert.deepEqual(loaded.answer, {});
+    const resumed = yield* wire(acp.agent.resumeSession({ ...session, mcpServers }));
+    assert.deepEqual(resumed.call, ["session/resume", { ...session, mcpServers: v2McpServers }]);
+
+    const forked = yield* wire(acp.agent.forkSession({ ...session, mcpServers }), {
+      sessionId: "fork-1",
+      _meta: { trace: "fork" },
+    });
+    assert.deepEqual(forked.call, ["session/fork", { ...session, mcpServers: v2McpServers }]);
+    assert.deepEqual(forked.answer, { sessionId: "fork-1", _meta: { trace: "fork" } });
+
+    assert.deepEqual((yield* wire(acp.agent.closeSession({ sessionId: "session-1" }))).call, [
+      "session/close",
+      { sessionId: "session-1" },
+    ]);
+    assert.deepEqual((yield* wire(acp.agent.deleteSession({ sessionId: "session-1" }))).call, [
+      "session/delete",
+      { sessionId: "session-1" },
+    ]);
+
+    // Generation 2 requires the `type` discriminator on an id-valued config option.
+    const configured = yield* wire(
+      acp.agent.setSessionConfigOption({ sessionId: "session-1", configId: "mode", value: "fast" }),
+      { configOptions: [] }
+    );
+    assert.deepEqual(configured.call, [
+      "session/set_config_option",
+      { sessionId: "session-1", configId: "mode", value: "fast", type: "id" },
+    ]);
+    assert.deepEqual(configured.answer, { configOptions: [] });
+
+    const providers = yield* wire(acp.agent.listProviders({}), { providers: [] });
+    assert.deepEqual([providers.call, providers.answer], [["providers/list", {}], { providers: [] }]);
+    const provider: Compat.SetProviderRequest = {
+      providerId: "provider",
+      apiType: "openai",
+      baseUrl: "https://x.test",
+    };
+    assert.deepEqual((yield* wire(acp.agent.setProvider(provider))).call, ["providers/set", provider]);
+    assert.deepEqual((yield* wire(acp.agent.disableProvider({ providerId: "provider" }))).call, [
+      "providers/disable",
+      { providerId: "provider" },
+    ]);
+  })
+);
+
+it.effect(
+  "sends generation-1 fork, close and config-option requests when pinned to v1",
+  Effect.fnUntraced(function* () {
+    const { stdio, input, output } = yield* makeInMemoryStdio();
+    const acp = yield* AcpClient.make(stdio, { protocolGeneration: "v1" });
+    const fork = { sessionId: "session-1", cwd: "/work" };
+
+    const forked = yield* exchange(input, output, acp.agent.forkSession(fork), { sessionId: "fork-1" });
+    assert.deepEqual([forked.outbound.method, forked.outbound.params], ["session/fork", fork]);
+    assert.deepEqual(forked.answer, { sessionId: "fork-1" });
+
+    const closed = yield* exchange(input, output, acp.agent.closeSession({ sessionId: "session-1" }));
+    assert.deepEqual([closed.outbound.method, closed.outbound.params], ["session/close", { sessionId: "session-1" }]);
+
+    const option = { sessionId: "session-1", configId: "mode", value: "fast" };
+    const configured = yield* exchange(input, output, acp.agent.setSessionConfigOption(option), { configOptions: [] });
+    // The compat payload union tries the generation-2 member first, so an id-valued option keeps
+    // its fields and also carries the `type: "id"` discriminator on generation 1.
+    assert.equal(configured.outbound.method, "session/set_config_option");
+    assert.deepInclude(configured.outbound.params, option);
+    assert.deepEqual(configured.answer, { configOptions: [] });
+  })
+);
+
+it.effect(
+  "frees the session of a generation-2 prompt the agent rejects",
+  Effect.fnUntraced(function* () {
+    const { stdio, input, output } = yield* makeInMemoryStdio();
+    const acp = yield* AcpClient.make(stdio);
+    const updates = yield* Queue.unbounded<Compat.SessionNotification>();
+    yield* acp.handleSessionUpdate((update) => Queue.offer(updates, update).pipe(Effect.asVoid));
+    const prompt = { sessionId: "session-1", prompt: [{ type: "text" as const, text: "hello" }] };
+
+    const rejectedFiber = yield* Effect.forkScoped(acp.agent.prompt(prompt));
+    const rejectedRequest = yield* takeRequest(output);
+    yield* send(input, {
+      jsonrpc: "2.0",
+      id: rejectedRequest.id,
+      error: { code: -32000, message: "Session is busy" },
+    });
+    const rejected = yield* rejectedFiber.pipe(Fiber.join, expectFailure);
+    assert.equal(AcpError.AcpRequestError.is(rejected) ? rejected.code : 0, -32000);
+
+    // No prompt is pending, so a stray idle update only reaches the session-update handlers.
+    yield* send(input, idle("session-1"));
+    assert.deepEqual((yield* Queue.take(updates)).update, {
+      sessionUpdate: "state_update",
+      state: "idle",
+      stopReason: "end_turn",
+    });
+
+    // The rejected turn released the session, so the next prompt is admitted.
+    const next = yield* Effect.forkScoped(acp.agent.prompt(prompt));
+    const nextRequest = yield* takeRequest(output);
+    yield* sendAll(input, [result(nextRequest.id, {}), idle("session-1")]);
+    assert.deepEqual(yield* Fiber.join(next), { stopReason: "end_turn" });
+  })
+);
+
+it.effect(
+  "delivers extension notifications without a registered handler to the unknown handler",
+  Effect.fnUntraced(function* () {
+    const { stdio, input } = yield* makeInMemoryStdio();
+    const acp = yield* AcpClient.make(stdio);
+    const known = yield* Queue.unbounded<unknown>();
+    const unknown = yield* Queue.unbounded<readonly [string, unknown]>();
+    yield* acp.handleExtNotification("x/known", S.Struct({ count: S.Finite }), (payload) =>
+      Queue.offer(known, payload).pipe(Effect.asVoid)
+    );
+    yield* acp.handleUnknownExtNotification((method, params) =>
+      Queue.offer(unknown, [method, params]).pipe(Effect.asVoid)
+    );
+
+    yield* sendAll(input, [notification("x/unregistered", { hello: "world" }), notification("x/known", { count: 1 })]);
+    assert.deepEqual(yield* Queue.take(unknown), ["x/unregistered", { hello: "world" }]);
+    assert.deepEqual(yield* Queue.take(known), { count: 1 });
+    assert.equal(yield* Queue.size(unknown), 0);
+  })
+);
+
+it.effect(
+  "fails calls with the terminal error when the connection ends without an onTermination hook",
+  Effect.fnUntraced(function* () {
+    const { stdio, input, output } = yield* makeInMemoryStdio();
+    const acp = yield* AcpClient.make(stdio);
+    const pending = yield* Effect.forkScoped(acp.agent.listSessions({}));
+    yield* takeRequest(output);
+    yield* Queue.end(input);
+
+    const terminal = yield* pending.pipe(Fiber.join, expectFailure);
+    assert.equal(terminal._tag, "AcpInputStreamEndedError");
+    assert.strictEqual(yield* expectFailure(acp.agent.listSessions({})), terminal);
+  })
+);
+
+// A child agent that answers every request with an empty session list.
+const echoAgentScript = A.join(
+  [
+    'let buffer = "";',
+    'process.stdin.on("data", (chunk) => {',
+    "  buffer += chunk;",
+    '  for (let at = buffer.indexOf("\\n"); at >= 0; at = buffer.indexOf("\\n")) {',
+    "    const message = JSON.parse(buffer.slice(0, at));",
+    "    buffer = buffer.slice(at + 1);",
+    '    process.stdout.write(JSON.stringify({ jsonrpc: "2.0", id: message.id, result: { sessions: [] } }) + "\\n");',
+    "  }",
+    "});",
+  ],
+  "\n"
+);
+// A child agent that reports a fatal error on stderr and exits with `code`.
+const crashingAgentScript = (code: number) =>
+  `process.stderr.write("fatal: agent config is broken\\n", () => process.exit(${code}));`;
+
+const spawnChildAgent = Effect.fnUntraced(function* (script: string) {
+  const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+  return yield* spawner.spawn(
+    ChildProcess.make("bun", ["-e", script], {
+      shell: currentHostPlatform === "win32",
+      stderr: "pipe",
+      stdin: "pipe",
+      stdout: "pipe",
+    })
+  );
+});
+
+// The spawner reads the filesystem only to check that an explicit cwd is accessible; every child
+// agent here runs in the test's own working directory.
+const SpawnerLayer = NodeChildProcessSpawner.layer.pipe(
+  Layer.provide(Layer.mergeAll(FileSystem.layerNoop({ access: () => Effect.void }), NodePath.layer))
+);
+
+it.layer(SpawnerLayer, { timeout: "30 seconds" })("effect-acp client child-process layer", (it) => {
+  it.effect(
+    "talks to the child over its stdio, reading stdout through transformStdout",
+    Effect.fnUntraced(function* () {
+      const handle = yield* spawnChildAgent(echoAgentScript);
+      yield* handle.stderr.pipe(Stream.runDrain, Effect.forkScoped);
+      const chunks = yield* Ref.make(0);
+      const acp = Context.get(
+        yield* Layer.build(
+          AcpClient.layerChildProcess({
+            handle,
+            transformStdout: Stream.tap(() => Ref.update(chunks, (count) => count + 1)),
+          })
+        ),
+        AcpClient.AcpClient
+      );
+      const sessions = yield* acp.agent.listSessions({});
+      assert.deepEqual(sessions, { sessions: [] });
+      assert.isAtLeast(yield* Ref.get(chunks), 1);
+    })
+  );
+
+  it.effect(
+    "ends the connection with the child exit status and its stderr excerpt",
+    Effect.fnUntraced(function* () {
+      const handle = yield* spawnChildAgent(crashingAgentScript(3));
+      const stderrTail = yield* collectStderrTail(handle.stderr);
+      const terminated = yield* Deferred.make<AcpError.AcpError>();
+      yield* Layer.build(
+        AcpClient.layerChildProcess({
+          handle,
+          stderrTail,
+          onTermination: (terminal) => Deferred.succeed(terminated, terminal).pipe(Effect.asVoid),
+        })
+      );
+      const error = yield* Deferred.await(terminated);
+      if (error._tag !== "AcpProcessExitedError") {
+        return assert.fail("expected a process exit error");
+      }
+      assert.deepEqual(error.code, O.some(3));
+      assert.include(
+        O.getOrElse(error.stderr, () => ""),
+        "fatal: agent config is broken"
+      );
+    })
+  );
+
+  it.effect(
+    "ends the connection with the child exit status when no stderr collector is given",
+    Effect.fnUntraced(function* () {
+      const handle = yield* spawnChildAgent(crashingAgentScript(4));
+      yield* handle.stderr.pipe(Stream.runDrain, Effect.forkScoped);
+      const terminated = yield* Deferred.make<AcpError.AcpError>();
+      yield* Layer.build(
+        AcpClient.layerChildProcess({
+          handle,
+          onTermination: (terminal) => Deferred.succeed(terminated, terminal).pipe(Effect.asVoid),
+        })
+      );
+      const error = yield* Deferred.await(terminated);
+      if (error._tag !== "AcpProcessExitedError") {
+        return assert.fail("expected a process exit error");
+      }
+      assert.deepEqual(error.code, O.some(4));
+      assertNone(error.stderr);
+    })
+  );
+});
 
 // Each failing handler is answered on its own id (or dropped for a notification) and logged once;
 // reading continues.

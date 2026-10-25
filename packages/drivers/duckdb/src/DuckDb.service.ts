@@ -238,7 +238,9 @@ const runOnConnection = Effect.fn("DuckDb.runOnConnection")(
     parameters?: DuckDbQueryParameters | undefined
   ): Effect.Effect<void, DuckDbError> =>
     native.gate
-      .run(operation, () => native.connection.run(statement, parameters))
+      .run(operation, () =>
+        native.connection.run(statement, parameters).then((result) => ignoreNativeClose(() => result.closeSync()))
+      )
       .pipe(Effect.mapError(connectionFailure(operation, options, statement)), Effect.asVoid)
 );
 
@@ -250,7 +252,13 @@ const queryOnConnection = Effect.fn("DuckDb.queryOnConnection")(function* (
 ) {
   const rows = yield* native.gate
     .run("query", () =>
-      native.connection.runAndReadAll(statement, parameters).then((reader) => reader.getRowObjectsJson())
+      native.connection.runAndReadAll(statement, parameters).then((reader) => {
+        try {
+          return reader.getRowObjectsJson();
+        } finally {
+          ignoreNativeClose(() => reader.closeSync());
+        }
+      })
     )
     .pipe(Effect.mapError(connectionFailure("query", options, statement)));
   return yield* decodeDuckDbRows(rows).pipe(
@@ -267,7 +275,9 @@ const queryOnConnection = Effect.fn("DuckDb.queryOnConnection")(function* (
 const probeAborted = Effect.fn("DuckDb.probeAborted")(
   (options: DuckDbConnectionOptions, native: NativeConnection): Effect.Effect<boolean, DuckDbError> =>
     native.gate
-      .run("withTransaction", () => native.connection.run(ABORT_PROBE_SQL))
+      .run("withTransaction", () =>
+        native.connection.run(ABORT_PROBE_SQL).then((result) => ignoreNativeClose(() => result.closeSync()))
+      )
       .pipe(
         Effect.as(false),
         Effect.catchIf(isAbortedTransactionError, () => Effect.succeed(true)),

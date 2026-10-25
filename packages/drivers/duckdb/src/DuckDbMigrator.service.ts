@@ -6,8 +6,8 @@
  * Re-exports the `effect/sql/Migrator` loaders and error types and binds
  * `run`/`layer` to the current `SqlClient`. With the `"sqlite"` dialect the
  * Migrator creates `effect_sql_migrations` through its fallback DDL, which
- * DuckDB accepts. At effect 4.0.5 a failing migration is a defect
- * (`MigrationError` via `Effect.die`), and the whole batch of that run (earlier
+ * DuckDB accepts. Since effect 4.0.6 a failing migration is a typed
+ * `MigrationError` failure (4.0.5 raised it as a defect), and the whole batch of that run (earlier
  * migrations of the same run included) is rolled back. `run`/`layer` read the
  * generic `SqlClient`: under `DuckDbClient.layerClient` provide it explicitly
  * (`Effect.provideServiceEffect(SqlClient.SqlClient, Effect.service(DuckDbClient.DuckDbClient))`).

@@ -700,7 +700,7 @@ const rawToken = Effect.fnUntraced(function* (
         Effect.fail(
           RunpodError.raw(RunpodRawErrorOptions.make({ method: request.method, path: request.path, reason: "config" }))
         ),
-      onSome: (token) => Effect.succeedSome(token),
+      onSome: Effect.succeedSome,
     })
   );
 });

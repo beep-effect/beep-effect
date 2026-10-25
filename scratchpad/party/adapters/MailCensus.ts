@@ -22,7 +22,7 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
-import { isDelegated, voiceOf } from "../Communication.ts";
+import { isDelegated, Observation, voiceOf } from "../Communication.ts";
 import type { IdentifierId } from "../Ids.ts";
 import type { UtcInstant } from "../Time.ts";
 import type { PairingAccumulator } from "./IdentityEvidence.ts";
@@ -95,14 +95,17 @@ const bump = (map: MutableHashMap.MutableHashMap<string, number>, key: string) =
  * @category census
  * @since 0.0.0
  */
-export const observe = ({ census, ingest }: { readonly census: MailCensus; readonly ingest: MailIngest }): void => {
+export const observe = ({ census, ingest }: {
+  readonly census: MailCensus;
+  readonly ingest: MailIngest
+}): void => {
   census.rows += 1;
   A.forEach(ingest.issues, (i) => bump(census.issues, i._tag));
   A.forEach(ingest.identifiers, (i) => {
     MutableHashMap.set(census.identifierKinds, i.id, i._tag);
   });
   A.forEach(ingest.observations, (o) => {
-    if (o._tag !== "HeaderParticipant") return;
+    if (!Observation.guards.HeaderParticipant(o)) return;
     O.match(o.displayName, {
       onNone: thunkUndefined,
       onSome: (name) => {
@@ -114,7 +117,7 @@ export const observe = ({ census, ingest }: { readonly census: MailCensus; reado
   });
   const sentAt = O.flatMap(ingest.event, (e) => e.sentAt);
   O.match(sentAt, {
-    onNone: () => undefined,
+    onNone: thunkUndefined,
     onSome: (t) =>
       A.forEach(ingest.identifiers, (i) => {
         const [first, last] = O.getOrElse(MutableHashMap.get(census.identifierSpans, i.id), () => [t, t] as const);
@@ -124,7 +127,12 @@ export const observe = ({ census, ingest }: { readonly census: MailCensus; reado
   A.forEach(ingest.pairings, (p) => {
     addTo(census.smtpByDn, p.exchangeDn, p.smtp);
     addTo(census.dnBySmtp, p.smtp, p.exchangeDn);
-    accumulatePairing({ acc: census.pairingSupport, pairing: p, sentAt, sampleSize: 5 });
+    accumulatePairing({
+      acc: census.pairingSupport,
+      pairing: p,
+      sentAt,
+      sampleSize: 5,
+    });
   });
   O.match(ingest.event, {
     onNone: thunkUndefined,
@@ -160,7 +168,7 @@ export const identifiersByName = (census: MailCensus): ReadonlyArray<readonly [s
   pipe(
     census.identifiersByName,
     A.fromIterable,
-    A.map(([name, ids]) => [name, A.sort(A.fromIterable(ids), Order.String)] as const)
+    A.map(([name, ids]) => [name, A.sort(A.fromIterable(ids), Order.String)] as const),
   );
 
 /**
@@ -185,10 +193,10 @@ export const summarize = (census: MailCensus) => {
         ids,
         A.map((i) => HashMap.get(clusters, i)),
         A.dedupeWith((x, y) => O.getOrUndefined(x) === O.getOrUndefined(y)),
-        A.length
-      ) > 1
+        A.length,
+      ) > 1,
     ),
-    A.length
+    A.length,
   );
   const issueEntries: ReadonlyArray<readonly [string, number]> = A.fromIterable(census.issues);
 
