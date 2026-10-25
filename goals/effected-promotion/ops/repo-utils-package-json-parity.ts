@@ -10,7 +10,9 @@
  * compares a recorded baseline with the head.
  *
  * - `--record <path>` runs on the code before the switch and writes the
- *   baseline (`research/repo-utils-package-json-parity-3a3-before.json`).
+ *   baseline (`research/repo-utils-package-json-parity-3a3-before.json`). To
+ *   re-record after changing this op, check out the pre-switch repo-utils
+ *   `src` (f1a0fc8734) in place, run `--record`, and restore the head `src`.
  * - `--compare <path>` runs at the head, reads that baseline, writes the head
  *   report (`--out`, default stdout) and fails on any difference that is not
  *   listed in `INTENDED` with its reason.
@@ -27,10 +29,15 @@
  * dependency index, the topological order and the root workspace globs. A
  * mutation corpus injects one unknown key, one bad dependency key, one bad
  * `exports` key and one bad `imports` key into every manifest, plus the
- * malformed documents the schema tests pin, and compares verdict and
- * pointers. The JSON Schema document is compared by each definition's
- * property set and `additionalProperties` for the root definition; the other
- * definitions are listed, not gated, because the kit fields bring their own.
+ * malformed documents the schema tests pin (one unknown key nested in each
+ * object-valued field the kit owns among them), and compares verdict and
+ * pointers. A `rawKeyOrder` difference whose fields hold the same keys is
+ * reported as `rawKeyOrder:reorder`. `rawKeyOrder` records the key order of every object-valued field
+ * of the raw encoder output, which `plain` would otherwise sort away. The
+ * JSON Schema document is compared by the root definition's property set and
+ * `additionalProperties`, and by each root property's emitted shape (`$ref`s
+ * inlined, annotation-only keys dropped); the other definitions are listed,
+ * not gated, because the kit fields bring their own names.
  *
  * Usage (from the repo root):
  *
@@ -119,6 +126,20 @@ const plain = (value: unknown): unknown => {
 
 const render = (value: unknown): string => JSON.stringify(plain(value));
 
+// The source-order keys of each object-valued top-level field, the fields themselves sorted by name.
+const rawKeyOrderOf = (encoded: unknown): string =>
+  P.isObject(encoded)
+    ? JSON.stringify(
+        pipe(
+          R.toEntries(encoded as Readonly<Record<string, unknown>>),
+          A.filter(([, value]) => P.isObject(value) && !A.isArray(value)),
+          A.map(([field, value]) => [field, R.keys(value as Readonly<Record<string, unknown>>)] as const),
+          A.sort(Order.mapInput(Order.String, ([field]: readonly [string, unknown]) => field)),
+          R.fromEntries
+        )
+      )
+    : ABSENT;
+
 const REJECTED = "rejected";
 
 const issuesOf = (error: S.SchemaError): ReadonlyArray<string> =>
@@ -160,6 +181,9 @@ const probeManifest = Effect.fnUntraced(function* (input: unknown, workspaceName
   });
   const encoded = yield* Effect.result(encodePackageJsonEffect(input));
   rows.push({ field: "roundTrip", value: encoded._tag === "Success" ? render(encoded.success) : REJECTED });
+  // `plain` sorts every object, so `roundTrip` cannot see key order: record the raw key order of every
+  // object-valued top-level field of the encoded output (an emptied map shows up as a missing field).
+  rows.push({ field: "rawKeyOrder", value: encoded._tag === "Success" ? rawKeyOrderOf(encoded.success) : REJECTED });
   rows.push({ field: "beep", value: render(manifest.beep) });
   rows.push({ field: "workspaceDeps", value: render(extractWorkspaceDependencies(manifest, workspaceNames)) });
   return rows;
@@ -209,6 +233,23 @@ const MALFORMED: ReadonlyArray<{ readonly name: string; readonly input: unknown 
   { name: "null input", input: null },
   { name: "array input", input: [] },
   { name: "rest key", input: { name: "pkg", rest: { smuggled: true } } },
+  // An unknown key nested in each object-valued field the kit owns: the retired model closed these objects.
+  { name: "author object with an unknown key", input: { name: "pkg", author: { name: "a", twitter: "@a" } } },
+  { name: "bugs object with an unknown key", input: { name: "pkg", bugs: { url: "https://x.test", extra: 1 } } },
+  { name: "directories with an unknown key", input: { name: "pkg", directories: { assets: "./assets" } } },
+  {
+    name: "funding object with an unknown key",
+    input: { name: "pkg", funding: { url: "https://x.test", extra: 1 } },
+  },
+  {
+    name: "repository object with an unknown key",
+    input: { name: "pkg", repository: { type: "git", url: "https://x.test", extra: 1 } },
+  },
+  { name: "workspaces object with an unknown key", input: { name: "pkg", workspaces: { packages: ["a"], extra: 1 } } },
+  {
+    name: "peerDependenciesMeta entry with an unknown key",
+    input: { name: "pkg", peerDependenciesMeta: { effect: { optional: true, extra: 1 } } },
+  },
 ];
 
 const verdictOf = Effect.fnUntraced(function* (input: unknown) {
@@ -218,6 +259,10 @@ const verdictOf = Effect.fnUntraced(function* (input: unknown) {
 
 // --- JSON Schema ----------------------------------------------------------------
 
+// The root `$ref` is a JSON Pointer into `$defs`: unescape `~1` and `~0` to recover the definition name.
+const definitionNameOf = (ref: string): string =>
+  pipe(ref, Str.replace("#/$defs/", ""), Str.replaceAll("~1", "/"), Str.replaceAll("~0", "~"));
+
 const jsonSchemaRows = (): Record<string, string> => {
   const document = packageJsonJsonSchema as unknown as {
     readonly schema: Readonly<Record<string, unknown>>;
@@ -225,8 +270,7 @@ const jsonSchemaRows = (): Record<string, string> => {
   };
   const rows: Record<string, string> = {};
   const rootRef = P.isString(document.schema.$ref) ? document.schema.$ref : "";
-  // The root `$ref` is a JSON Pointer into `$defs`: unescape `~1` and `~0` to recover the definition name.
-  const rootName = pipe(rootRef, Str.replace("#/$defs/", ""), Str.replaceAll("~1", "/"), Str.replaceAll("~0", "~"));
+  const rootName = definitionNameOf(rootRef);
   for (const [name, definition] of R.toEntries(document.definitions)) {
     const properties = P.isObject(definition.properties) ? A.sort(R.keys(definition.properties), Order.String) : [];
     const key = name === rootName ? "<root>" : name;
@@ -234,6 +278,92 @@ const jsonSchemaRows = (): Record<string, string> => {
       properties,
       additionalProperties: definition.additionalProperties ?? ABSENT,
     });
+  }
+  return rows;
+};
+
+// Each root property's emitted schema with `$ref`s inlined and annotation-only keys dropped, so the
+// shape compares across the two models even though their definition names differ. A definition met
+// again on the same path renders as `<recursive>`.
+const ANNOTATION_KEYS = HashSet.make("title", "description", "examples", "default", "$comment");
+
+const shapeOf = (
+  node: unknown,
+  definitions: Readonly<Record<string, Readonly<Record<string, unknown>>>>,
+  seen: HashSet.HashSet<string>
+): unknown => {
+  if (A.isArray(node)) {
+    return A.map(node, (entry) => shapeOf(entry, definitions, seen));
+  }
+  if (!P.isObject(node)) {
+    return node;
+  }
+  const { $ref, ...record } = node as Readonly<Record<string, unknown>>;
+  if (P.isString($ref) && Str.startsWith("#/$defs/")($ref)) {
+    const name = definitionNameOf($ref);
+    const target = definitions[name];
+    if (target === undefined || HashSet.has(seen, name)) {
+      return { $ref: "<recursive>" };
+    }
+    return shapeOf({ ...target, ...record }, definitions, HashSet.add(seen, name));
+  }
+  const shaped: Record<string, unknown> = pipe(
+    R.toEntries(P.isString($ref) ? { ...record, $ref } : record),
+    A.filter(([key]) => !HashSet.has(ANNOTATION_KEYS, key)),
+    A.map(
+      ([key, value]) =>
+        [key, key === "allOf" ? shapeOfAllOf(value, definitions, seen) : shapeOf(value, definitions, seen)] as const
+    ),
+    // An annotation-only `allOf` member (identifier or description wrapper) carries no shape.
+    A.filter(([key, value]) => !(key === "allOf" && A.isArray(value) && A.isReadonlyArrayEmpty(value))),
+    // Member order of `anyOf`, `enum` and `required` carries no meaning for what a document accepts.
+    A.map(
+      ([key, value]) =>
+        [
+          key,
+          (key === "anyOf" || key === "enum" || key === "required") && A.isArray(value)
+            ? A.sort(
+                value,
+                Order.mapInput(Order.String, (member: unknown) => JSON.stringify(member))
+              )
+            : value,
+        ] as const
+    ),
+    A.sort(Order.mapInput(Order.String, ([key]: readonly [string, unknown]) => key)),
+    R.fromEntries
+  );
+  // A lone `allOf` member left by an annotation wrapper is the schema itself.
+  const { allOf, ...rest } = shaped;
+  return A.isArray(allOf) && A.length(allOf) === 1 && R.isEmptyRecord(rest) ? allOf[0] : shaped;
+};
+
+const shapeOfAllOf = (
+  members: unknown,
+  definitions: Readonly<Record<string, Readonly<Record<string, unknown>>>>,
+  seen: HashSet.HashSet<string>
+): unknown =>
+  A.isArray(members)
+    ? A.filter(
+        A.map(members, (member) => shapeOf(member, definitions, seen)),
+        (member) => !(P.isObject(member) && R.isEmptyRecord(member as Readonly<Record<string, unknown>>))
+      )
+    : shapeOf(members, definitions, seen);
+
+const jsonSchemaPropertyRows = (): Record<string, string> => {
+  const document = packageJsonJsonSchema as unknown as {
+    readonly schema: Readonly<Record<string, unknown>>;
+    readonly definitions: Readonly<Record<string, Readonly<Record<string, unknown>>>>;
+  };
+  const rootName = P.isString(document.schema.$ref) ? definitionNameOf(document.schema.$ref) : "";
+  const root = document.definitions[rootName] ?? {};
+  const properties = P.isObject(root.properties) ? (root.properties as Readonly<Record<string, unknown>>) : {};
+  const rows: Record<string, string> = {
+    "<required>": JSON.stringify(
+      A.sort(A.isArray(root.required) ? (root.required as Array<string>) : [], Order.String)
+    ),
+  };
+  for (const [name, schema] of R.toEntries(properties)) {
+    rows[name] = JSON.stringify(shapeOf(schema, document.definitions, HashSet.empty()));
   }
   return rows;
 };
@@ -249,6 +379,7 @@ const Report = S.Struct({
   mutations: S.Record(S.String, S.String),
   repo: S.Record(S.String, S.String),
   jsonSchema: S.Record(S.String, S.String),
+  jsonSchemaProperties: S.Record(S.String, S.String),
 });
 type Report = typeof Report.Type;
 
@@ -258,20 +389,6 @@ const encodeReport = S.encodeEffect(S.fromJsonString(Report, { space: 2 }));
 // Differences the PR intends, keyed `<section>|<row key>|<field>`; each is pinned by a test.
 // A `*` path matches every manifest.
 const INTENDED: ReadonlyArray<{ readonly key: string; readonly reason: string }> = [
-  ...A.map(["canonicalPretty", "normalized", "roundTrip", "workspaceDeps"], (field) => ({
-    key: `manifest|packages/tooling/library/repo-utils/package.json|${field}`,
-    reason:
-      "Corpus change, not a model change: 3-A3 adds the @beep/package-json dependency to this manifest after the baseline was recorded.",
-  })),
-  {
-    key: "repo|dependencyIndex",
-    reason: "Corpus change: the @beep/repo-utils entry gains its new @beep/package-json workspace edge.",
-  },
-  {
-    key: "repo|topologicalOrder",
-    reason:
-      "Corpus change: the new @beep/repo-utils -> @beep/package-json edge moves @beep/package-json and its closure ahead of repo-utils; the order is still a valid topological sort of the same members.",
-  },
   {
     key: "manifest|apps/practice-kg-mcp/package.json|canonicalPretty",
     reason:
@@ -282,14 +399,62 @@ const INTENDED: ReadonlyArray<{ readonly key: string; readonly reason: string }>
     reason: "Same as canonicalPretty: the normalized bin map is sorted by key.",
   },
   {
+    key: "manifest|*|rawKeyOrder:reorder",
+    reason:
+      "Raw encoder only, same keys in a new order: the dependency maps, scripts, engines and bin decode to HashMap and encode with sorted keys, and the kit replays person and repository objects in its own key order. The canonical encoder restores the repo order (canonicalPretty is unchanged on every other manifest); documented under Gotchas on encodePackageJsonEffect.",
+  },
+  {
     key: "mutation|<malformed>|repository object without type",
     reason:
       "Kit-strict field: @beep/package-json Repository treats `type` as optional (npm documents it as optional), so a repository object with only `url` is accepted (pinned in PackageJson.test.ts).",
   },
+  ...A.map(
+    [
+      "author object with an unknown key",
+      "bugs object with an unknown key",
+      "directories with an unknown key",
+      "funding object with an unknown key",
+      "repository object with an unknown key",
+      "workspaces object with an unknown key",
+    ],
+    (name) => ({
+      key: `mutation|<malformed>|${name}`,
+      reason:
+        "Kit field semantics (one owner per field, D-08): the kit's person, bugs, funding, repository, directories and workspaces codecs keep unknown nested keys for round-trip fidelity, so a nested unknown key is accepted; the top-level object stays closed (pinned in PackageJson.test.ts).",
+    })
+  ),
   {
-    key: "jsonSchema|<root>|definition",
+    key: "mutation|<malformed>|peerDependenciesMeta entry with an unknown key",
     reason:
-      "The root definition gains the closed `rest` property (an optional key whose schema admits nothing); every other property and additionalProperties: false are unchanged.",
+      "Kit-strict field: the kit's peerDependenciesMeta entry is a closed `{ optional }` object, so an unknown entry key is now rejected (pinned in PackageJson.test.ts).",
+  },
+  ...A.map(["author", "bugs", "contributors", "maintainers", "funding", "repository", "workspaces"], (name) => ({
+    key: `jsonSchemaProperty|${name}`,
+    reason:
+      "The kit codec decodes this field from an open JSON object and validates it in the transformation, so the emitted object branch carries no property shape (the nested unknown-key mutations above pin the accepted shape).",
+  })),
+  {
+    key: "jsonSchemaProperty|directories",
+    reason:
+      "The kit's directories field is a string-valued record, so it emits additionalProperties: string instead of six closed keys.",
+  },
+  {
+    key: "jsonSchemaProperty|config",
+    reason:
+      "The kit's config field decodes from an open JSON object, so the emitted schema is `type: object` without the recursive JSON value shape; every JSON value is still accepted.",
+  },
+  {
+    key: "jsonSchemaProperty|name",
+    reason:
+      "Tightened: the kit PackageName emits the npm lowercase scoped and unscoped patterns (W3-f (h): mixed-case names rejected).",
+  },
+  {
+    key: "jsonSchemaProperty|type",
+    reason: "Tightened: the kit emits the `module` / `commonjs` enum that both models enforce at decode time.",
+  },
+  {
+    key: "jsonSchemaProperty|peerDependenciesMeta",
+    reason: "Tightened: the kit's entry is a closed `{ optional }` object (see the peerDependenciesMeta mutation).",
   },
 ];
 
@@ -302,6 +467,18 @@ const isIntended = (key: string): boolean =>
     const [keySection, keyPath, keyField] = Str.split(key, "|");
     return section === keySection && field === keyField && path === "*" && keyPath !== undefined;
   });
+
+// Whether two `rawKeyOrder` rows hold the same fields with the same keys, in any order.
+const sameKeySets = (left: string | undefined, right: string | undefined): boolean => {
+  if (left === undefined || right === undefined || left === REJECTED || right === REJECTED) {
+    return false;
+  }
+  const sortedRows = (row: string): string =>
+    JSON.stringify(
+      R.map(JSON.parse(row) as Record<string, ReadonlyArray<string>>, (keys) => A.sort(keys, Order.String))
+    );
+  return sortedRows(left) === sortedRows(right);
+};
 
 const diffReports = (before: Report, after: Report): ReadonlyArray<string> => {
   const out: Array<string> = [];
@@ -319,7 +496,8 @@ const diffReports = (before: Report, after: Report): ReadonlyArray<string> => {
     const right = after.manifests[path] ?? {};
     for (const field of A.sort(A.dedupe([...R.keys(left), ...R.keys(right)]), Order.String)) {
       if (left[field] !== right[field]) {
-        out.push(`manifest|${path}|${field}`);
+        const reorderOnly = field === "rawKeyOrder" && sameKeySets(left[field], right[field]);
+        out.push(`manifest|${path}|${reorderOnly ? "rawKeyOrder:reorder" : field}`);
       }
     }
   }
@@ -329,6 +507,8 @@ const diffReports = (before: Report, after: Report): ReadonlyArray<string> => {
   if (before.jsonSchema["<root>"] !== after.jsonSchema["<root>"]) {
     out.push("jsonSchema|<root>|definition");
   }
+  // Each root property's emitted shape is gated too, so a loosened field schema cannot pass unnoticed.
+  compareRecord("jsonSchemaProperty", before.jsonSchemaProperties, after.jsonSchemaProperties);
   return out;
 };
 
@@ -395,6 +575,7 @@ const program = Effect.gen(function* () {
     mutations,
     repo,
     jsonSchema: jsonSchemaRows(),
+    jsonSchemaProperties: jsonSchemaPropertyRows(),
   };
   const json = yield* encodeReport(report);
 
