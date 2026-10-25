@@ -257,7 +257,41 @@ const encodeReport = S.encodeEffect(S.fromJsonString(Report, { space: 2 }));
 
 // Differences the PR intends, keyed `<section>|<row key>|<field>`; each is pinned by a test.
 // A `*` path matches every manifest.
-const INTENDED: ReadonlyArray<{ readonly key: string; readonly reason: string }> = [];
+const INTENDED: ReadonlyArray<{ readonly key: string; readonly reason: string }> = [
+  ...A.map(["canonicalPretty", "normalized", "roundTrip", "workspaceDeps"], (field) => ({
+    key: `manifest|packages/tooling/library/repo-utils/package.json|${field}`,
+    reason:
+      "Corpus change, not a model change: 3-A3 adds the @beep/package-json dependency to this manifest after the baseline was recorded.",
+  })),
+  {
+    key: "repo|dependencyIndex",
+    reason: "Corpus change: the @beep/repo-utils entry gains its new @beep/package-json workspace edge.",
+  },
+  {
+    key: "repo|topologicalOrder",
+    reason:
+      "Corpus change: the new @beep/repo-utils -> @beep/package-json edge moves @beep/package-json and its closure ahead of repo-utils; the order is still a valid topological sort of the same members.",
+  },
+  {
+    key: "manifest|apps/practice-kg-mcp/package.json|canonicalPretty",
+    reason:
+      "The kit decodes a bin map to a HashMap, which keeps no source order, so the canonical form now sorts bin keys (pinned in PackageJson.test.ts).",
+  },
+  {
+    key: "manifest|apps/practice-kg-mcp/package.json|normalized",
+    reason: "Same as canonicalPretty: the normalized bin map is sorted by key.",
+  },
+  {
+    key: "mutation|<malformed>|repository object without type",
+    reason:
+      "Kit-strict field: @beep/package-json Repository treats `type` as optional (npm documents it as optional), so a repository object with only `url` is accepted (pinned in PackageJson.test.ts).",
+  },
+  {
+    key: "jsonSchema|<root>|definition",
+    reason:
+      "The root definition gains the closed `rest` property (an optional key whose schema admits nothing); every other property and additionalProperties: false are unchanged.",
+  },
+];
 
 const isIntended = (key: string): boolean =>
   A.some(INTENDED, (entry) => {
