@@ -5,8 +5,9 @@
  * **Details**
  *
  * {@link Action.run} composes the default runtime ({@link ActionRuntime}), runs
- * your program, renders a failure as an `::error::` annotation and sets the exit
- * code. {@link ActionInput} reads workflow inputs as typed `Config` values, and
+ * your program, renders a failure as an `::error::` annotation and leaves the
+ * exit code to `NodeRuntime.runMain`; {@link Action.main} is the same run as an
+ * Effect. {@link ActionInput} reads workflow inputs as typed `Config` values, and
  * {@link ActionOutputs}, {@link ActionState}, {@link ActionLogger} and
  * {@link ActionEnvironment} cover outputs, cross-phase state, workflow-command
  * logging and the runner's variables. Heavier protocols are opt-in services:
@@ -29,6 +30,7 @@
 export { type AnnotationProperties, WorkflowCommand } from "@beep/github-commands";
 export {
   Action,
+  ActionFailedError,
   type ActionRunOptions,
   ActionRuntime,
   type ActionServices,

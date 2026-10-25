@@ -6,7 +6,7 @@
   "attributes": [],
   "instruments": [],
   "spans": [
-    {"name":"Action.run.onFailure","owner":"@beep/github-actions","family":"driver","conforms":false},
+    {"name":"Action.reportFailure","owner":"@beep/github-actions","family":"driver","conforms":true},
     {"name":"ActionCache.restore","owner":"@beep/github-actions","family":"driver","conforms":true},
     {"name":"ActionCache.save","owner":"@beep/github-actions","family":"driver","conforms":true},
     {"name":"ActionsProvenance.capture","owner":"@beep/github-actions","family":"driver","conforms":true},

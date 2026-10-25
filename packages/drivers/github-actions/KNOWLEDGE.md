@@ -387,8 +387,15 @@ verified:
 ## Contract
 
 `Action.run(program, options?)` (`packages/github-actions/src/Action.ts`) is
-the entry point every action calls: it provides the runtime layer, renders
-a failure, sets the exit code and never rejects. The runtime layer provides
+the entry point every action calls. It is the process boundary only: it
+hands `Action.main(program, options?)` to `NodeRuntime.runMain` with error
+reporting disabled. `Action.main` is the effectful part: it provides the
+runtime layer, renders a failure, and fails with `ActionFailedError`, which
+carries `Runtime.errorExitCode` `1` and `Runtime.errorReported` `false`.
+The runtime's teardown turns that `Exit` into the exit code (`1` on
+failure, `130` on a signal, `0` on success); no module writes
+`process.exitCode`. The failure rendering is uninterruptible and a broken
+renderer is caught, so the `Exit` stays a failure. The runtime layer provides
 the environment, the logger (plus the workflow-command `Logger`), outputs,
 state, the platform services and an HTTP client, and deliberately excludes
 the cache, artifact and blob services — see
@@ -403,9 +410,9 @@ needs outputs (it masks before it persists) and outputs needs the
 environment.
 
 Failure rendering is one error line carrying tag and message, plus the
-exit code, with the full pretty-printed cause behind the runner's own
+failed `Exit`, with the full pretty-printed cause behind the runner's own
 debug switch — never a JS stack spliced into the visible error, since in a
-bundled action it points at one line of the bundle. `Action.run` does not
+bundled action it points at one line of the bundle. `Action.main` does not
 wrap the program in a log buffer: an unhandled defect inside such a buffer
 would swallow the whole transcript.
 
@@ -510,7 +517,7 @@ vocabulary set through a combinator, never a spelled-out wire key.
 ### Outputs and state
 
 Reporting a failure emits the annotation but does not set the exit code —
-that belongs to `Action.run`, so a recovered failure is not doomed by a
+that belongs to `Action.run`'s `runMain` teardown, so a recovered failure is not doomed by a
 side effect it cannot undo. Runner-file delimiters are derived, never
 random, so a value containing the delimiter cannot terminate its block
 early. `ActionOutputError` and `DetachedProcessError` are per-reason

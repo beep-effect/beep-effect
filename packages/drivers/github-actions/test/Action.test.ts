@@ -2,6 +2,7 @@ import { env as runnerEnvironment } from "node:process";
 import {
   Action,
   ActionEnvironment,
+  ActionFailedError,
   ActionInput,
   ActionOutputs,
   ActionRuntime,
@@ -12,17 +13,21 @@ import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Config from "effect/Config";
 import * as ConfigProvider from "effect/ConfigProvider";
+import * as Console from "effect/Console";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as MutableHashMap from "effect/MutableHashMap";
+import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as References from "effect/References";
+import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import type { ActionEnvironmentError } from "@beep/github-actions";
+import type { ActionEnvironmentError, ActionRunOptions, ActionServices } from "@beep/github-actions";
 
 class Extra extends Context.Service<Extra, { readonly describe: Effect.Effect<string, ActionEnvironmentError> }>()(
   "@beep/github-actions/test/Action.test/Extra"
@@ -35,12 +40,7 @@ class Boom extends S.TaggedError<Boom, { readonly brand: unique symbol }>()("Boo
 }
 
 /**
- * Run something with `console.log` captured and `process.exitCode` restored.
- *
- * @remarks
- * The exit code is the point of `Action.run`, and a test that failed to restore
- * it would fail the **vitest process** rather than the test — a green suite
- * whose exit code says otherwise.
+ * The runner environment every capture installs, restored after each test.
  */
 const RUNNER_ENV: Readonly<Record<string, string>> = {
   GITHUB_REPOSITORY: "acme/example",
@@ -63,7 +63,7 @@ class Captured extends Context.Service<Captured, { readonly lines: ReadonlyArray
   "@beep/github-actions/test/Action.test/Captured"
 ) {}
 
-// Action.run owns its runtime, so its real console and runner environment are the subject.
+// Action.main owns its runtime, so its real console and runner environment are the subject.
 const captureLayer = (env: Readonly<Record<string, string | undefined>> = {}) =>
   Layer.effect(
     Captured,
@@ -73,7 +73,6 @@ const captureLayer = (env: Readonly<Record<string, string | undefined>> = {}) =>
         const spy = vi.spyOn(console, "log").mockImplementation((...parts: ReadonlyArray<unknown>) => {
           lines.push(pipe(parts, A.map(String), A.join(" ")));
         });
-        const previousExit = process.exitCode;
         const variables = { ...RUNNER_ENV, ...env };
         const previousEnv = MutableHashMap.fromIterable(
           A.map(R.keys(variables), (name) => [name, runnerEnvironment[name]] as const)
@@ -82,15 +81,11 @@ const captureLayer = (env: Readonly<Record<string, string | undefined>> = {}) =>
           if (value === undefined) delete runnerEnvironment[name];
           else runnerEnvironment[name] = value;
         }
-        return { lines, spy, previousExit, previousEnv };
+        return { lines, spy, previousEnv };
       }),
-      ({ spy, previousExit, previousEnv }) =>
+      ({ spy, previousEnv }) =>
         Effect.sync(() => {
           spy.mockRestore();
-          // Action.run sets process.exitCode by design; restore it on every path.
-          // Bun ignores `process.exitCode = undefined` and keeps the 1, so an
-          // unset code restores as 0, the same success verdict, on both runtimes.
-          process.exitCode = previousExit ?? 0;
           for (const [name, value] of previousEnv) {
             if (value === undefined) delete runnerEnvironment[name];
             else runnerEnvironment[name] = value;
@@ -98,6 +93,45 @@ const captureLayer = (env: Readonly<Record<string, string | undefined>> = {}) =>
         })
     )
   );
+
+/**
+ * The exit code `Runtime.defaultTeardown` — the teardown `Action.run` hands to
+ * `NodeRuntime.runMain` — maps an `Exit` to.
+ */
+const exitCodeOf = (exit: Exit.Exit<unknown, unknown>): number => {
+  const codes: Array<number> = [];
+  Runtime.defaultTeardown(exit, (code) => codes.push(code));
+  return codes[0] ?? -1;
+};
+
+/**
+ * Run `Action.main` and keep its `Exit`.
+ *
+ * **Details**
+ *
+ * On the real console, because `it.effect` installs a `TestConsole` and the
+ * subject here is what the runner reads.
+ */
+const mainExit = <E, R = never>(
+  program: Effect.Effect<void, E, ActionServices | R>,
+  options?: ActionRunOptions<R>
+): Effect.Effect<Exit.Exit<void, ActionFailedError>> =>
+  Action.main(program, options).pipe(Effect.provideService(Console.Console, console), Effect.exit);
+
+/** The exit code a `runMain` would give the process for `Action.main(program)`. */
+const verdict = <E, R = never>(
+  program: Effect.Effect<void, E, ActionServices | R>,
+  options?: ActionRunOptions<R>
+): Effect.Effect<number> => Effect.map(mainExit(program, options), exitCodeOf);
+
+/**
+ * Launch through `Action.run` itself, with a teardown that records the code
+ * instead of exiting the process.
+ */
+const runVerdict = (launch: (teardown: Runtime.Teardown) => void): Effect.Effect<number> =>
+  Effect.callback<number>((resume) => {
+    launch((exit, _onExit) => Runtime.defaultTeardown(exit, (code) => resume(Effect.succeed(code))));
+  });
 
 describe("describeCause", () => {
   it("renders a typed failure as [Tag]: message", () => {
@@ -127,13 +161,13 @@ describe("describeCause", () => {
   });
 });
 
-describe("Action.run", () => {
+describe("Action.main", () => {
   it.layer(captureLayer(), { timeout: "30 seconds" })((it) => {
     it.effect("resolves without touching the exit code when the program succeeds", () =>
       Effect.gen(function* () {
         yield* Captured;
-        yield* Effect.promise(() => Action.run(Effect.void));
-        assert.notStrictEqual(process.exitCode, 1);
+        const code = yield* verdict(Effect.void);
+        assert.strictEqual(code, 0);
       })
     );
   });
@@ -142,8 +176,8 @@ describe("Action.run", () => {
     it.effect("renders one ::error:: line and fails the step", () =>
       Effect.gen(function* () {
         const { lines } = yield* Captured;
-        yield* Effect.promise(() => Action.run(Effect.fail(Boom.make({ detail: "no token" }))));
-        assert.strictEqual(process.exitCode, 1);
+        const code = yield* Boom.make({ detail: "no token" }).pipe(Effect.fail, verdict);
+        assert.strictEqual(code, 1);
         const errors = A.filter(lines, (line) => Str.startsWith("::error::")(line));
         assert.lengthOf(errors, 1, "one line, not a wall of them");
         assert.include(errors[0] ?? "", "Action failed: [Boom]: it went wrong: no token");
@@ -155,7 +189,7 @@ describe("Action.run", () => {
     it.effect("puts the fiddly diagnostics behind ::debug::, where the runner hides them", () =>
       Effect.gen(function* () {
         const { lines } = yield* Captured;
-        yield* Effect.promise(() => Action.run(Effect.fail(Boom.make({ detail: "no token" }))));
+        yield* Boom.make({ detail: "no token" }).pipe(Effect.fail, verdict);
         assert.isTrue(A.some(lines, (line) => Str.startsWith("::debug::")(line)));
       })
     );
@@ -165,30 +199,32 @@ describe("Action.run", () => {
     it.effect("fails the step for a defect too, not only for a typed failure", () =>
       Effect.gen(function* () {
         const { lines } = yield* Captured;
-        yield* Effect.promise(() =>
-          Action.run(
-            Effect.sync((): void => {
-              throw new TypeError("undefined is not a function");
-            })
-          )
+        const code = yield* verdict(
+          Effect.sync((): void => {
+            throw new TypeError("undefined is not a function");
+          })
         );
-        assert.strictEqual(process.exitCode, 1);
+        assert.strictEqual(code, 1);
         assert.isTrue(A.some(lines, (line) => Str.startsWith("::error::")(line) && Str.includes("[defect]")(line)));
       })
     );
   });
 
   it.layer(captureLayer(), { timeout: "30 seconds" })((it) => {
-    it.effect("never rejects, so an action entry point cannot produce an unhandled rejection", () =>
+    it.effect("fails with an already-reported ActionFailedError, so runMain neither re-logs nor exits green", () =>
       Effect.gen(function* () {
-        yield* Captured;
-        const settled = yield* Effect.promise(() =>
-          Action.run(Effect.fail(Boom.make({ detail: "x" }))).then(
-            () => "resolved",
-            () => "rejected"
-          )
-        );
-        assert.strictEqual(settled, "resolved");
+        const { lines } = yield* Captured;
+        const exit = yield* Boom.make({ detail: "x" }).pipe(Effect.fail, mainExit);
+        assert.isTrue(Exit.isFailure(exit));
+        const error = Exit.findErrorOption(exit);
+        assert.isTrue(O.isSome(error) && S.is(ActionFailedError)(error.value));
+        const failure = O.getOrThrow(error);
+        assert.strictEqual(failure.summary, "[Boom]: it went wrong: x");
+        assert.strictEqual(failure.message, "Action failed: [Boom]: it went wrong: x");
+        assert.strictEqual(Runtime.getErrorExitCode(failure), 1);
+        assert.isFalse(Runtime.getErrorReported(failure));
+        // The rendered line and the error agree, so nothing needs a second say.
+        assert.include(lines, `::error::${failure.message}`);
       })
     );
   });
@@ -197,16 +233,14 @@ describe("Action.run", () => {
     it.effect("provides the runner services the program asks for", () =>
       Effect.gen(function* () {
         const { lines } = yield* Captured;
-        yield* Effect.promise(() =>
-          Action.run(
-            Effect.gen(function* () {
-              const env = yield* ActionEnvironment;
-              const repository = yield* env.get("GITHUB_REPOSITORY");
-              yield* Effect.logWarning(`saw ${repository}`);
-            })
-          )
+        const code = yield* verdict(
+          Effect.gen(function* () {
+            const env = yield* ActionEnvironment;
+            const repository = yield* env.get("GITHUB_REPOSITORY");
+            yield* Effect.logWarning(`saw ${repository}`);
+          })
         );
-        assert.notStrictEqual(process.exitCode, 1);
+        assert.strictEqual(code, 0);
         assert.include(lines, "::warning::saw acme/example");
       })
     );
@@ -216,16 +250,14 @@ describe("Action.run", () => {
     it.effect("installs the INPUT_ config provider, so an input resolves without anyone spelling the variable", () =>
       Effect.gen(function* () {
         const { lines } = yield* Captured;
-        yield* Effect.promise(() =>
-          Action.run(
-            Effect.gen(function* () {
-              const greeting = yield* ActionInput.string("my-greeting");
-              yield* Effect.log(`greeting=${greeting}`);
-            })
-          )
+        const code = yield* verdict(
+          Effect.gen(function* () {
+            const greeting = yield* ActionInput.string("my-greeting");
+            yield* Effect.log(`greeting=${greeting}`);
+          })
         );
         assert.isTrue(A.some(lines, (line) => Str.includes("greeting=hello")(line)));
-        assert.notStrictEqual(process.exitCode, 1);
+        assert.strictEqual(code, 0);
       })
     );
   });
@@ -234,13 +266,11 @@ describe("Action.run", () => {
     it.effect("reads an omitted input as absent, so a default is a default", () =>
       Effect.gen(function* () {
         const { lines } = yield* Captured;
-        yield* Effect.promise(() =>
-          Action.run(
-            Effect.gen(function* () {
-              const omitted = yield* ActionInput.string("omitted").pipe(Config.withDefault("fallback"));
-              yield* Effect.logWarning(`omitted=${omitted}`);
-            })
-          )
+        yield* verdict(
+          Effect.gen(function* () {
+            const omitted = yield* ActionInput.string("omitted").pipe(Config.withDefault("fallback"));
+            yield* Effect.logWarning(`omitted=${omitted}`);
+          })
         );
         assert.include(lines, "::warning::omitted=fallback");
       })
@@ -253,20 +283,18 @@ describe("Action.run", () => {
       () =>
         Effect.gen(function* () {
           const { lines } = yield* Captured;
-          yield* Effect.promise(() =>
-            Action.run(
-              Effect.gen(function* () {
-                // The exact shipped defect: a bare read with a default. Before the
-                // runtime installed the provider, the plain-named lookup found
-                // nothing, the default fired, and a rehearsal flag silently read as
-                // its fallback on every run.
-                const dryRun = yield* Config.String("dry-run").pipe(Config.withDefault("defaulted"));
-                yield* Effect.logWarning(`dry-run=${dryRun}`);
-              })
-            )
+          const code = yield* verdict(
+            Effect.gen(function* () {
+              // The exact shipped defect: a bare read with a default. Before the
+              // runtime installed the provider, the plain-named lookup found
+              // nothing, the default fired, and a rehearsal flag silently read as
+              // its fallback on every run.
+              const dryRun = yield* Config.String("dry-run").pipe(Config.withDefault("defaulted"));
+              yield* Effect.logWarning(`dry-run=${dryRun}`);
+            })
           );
           assert.include(lines, "::warning::dry-run=from-input", "the default must NOT fire");
-          assert.notStrictEqual(process.exitCode, 1);
+          assert.strictEqual(code, 0);
         })
     );
   });
@@ -275,15 +303,13 @@ describe("Action.run", () => {
     it.effect("still resolves a plain env var with no corresponding input", () =>
       Effect.gen(function* () {
         const { lines } = yield* Captured;
-        yield* Effect.promise(() =>
-          Action.run(
-            Effect.gen(function* () {
-              yield* Effect.logWarning(`plain=${yield* Config.String("PLAIN_VAR")}`);
-            })
-          )
+        const code = yield* verdict(
+          Effect.gen(function* () {
+            yield* Effect.logWarning(`plain=${yield* Config.String("PLAIN_VAR")}`);
+          })
         );
         assert.include(lines, "::warning::plain=from-env");
-        assert.notStrictEqual(process.exitCode, 1);
+        assert.strictEqual(code, 0);
       })
     );
   });
@@ -292,16 +318,14 @@ describe("Action.run", () => {
     it.effect("an input shadows an env var of the same bare name — pinned, not accidental", () =>
       Effect.gen(function* () {
         const { lines } = yield* Captured;
-        yield* Effect.promise(() =>
-          Action.run(
-            Effect.gen(function* () {
-              // Both INPUT_SHADOWED and SHADOWED are set. The input wins for a
-              // bare read in ANY casing, because the derivation uppercases; that
-              // is the documented trade for killing the false-green class.
-              yield* Effect.logWarning(`upper=${yield* Config.String("SHADOWED")}`);
-              yield* Effect.logWarning(`lower=${yield* Config.String("shadowed")}`);
-            })
-          )
+        yield* verdict(
+          Effect.gen(function* () {
+            // Both INPUT_SHADOWED and SHADOWED are set. The input wins for a
+            // bare read in ANY casing, because the derivation uppercases; that
+            // is the documented trade for killing the false-green class.
+            yield* Effect.logWarning(`upper=${yield* Config.String("SHADOWED")}`);
+            yield* Effect.logWarning(`lower=${yield* Config.String("shadowed")}`);
+          })
         );
         assert.include(lines, "::warning::upper=from-input");
         assert.include(lines, "::warning::lower=from-input");
@@ -313,18 +337,16 @@ describe("Action.run", () => {
     it.effect("a caller-supplied ConfigProvider in the extra layer wins", () =>
       Effect.gen(function* () {
         const { lines } = yield* Captured;
-        yield* Effect.promise(() =>
-          Action.run(
-            Effect.gen(function* () {
-              const dryRun = yield* Config.String("dry-run").pipe(Config.withDefault("defaulted"));
-              yield* Effect.logWarning(`dry-run=${dryRun}`);
-            }),
-            // Normal layer precedence: the extra layer's context merges LAST in
-            // `Action.run`'s composition, so this replaces the installed provider
-            // wholesale. INPUT_DRY-RUN is set in the environment — seeing
-            // "from-caller" rather than "from-input" is what proves the override.
-            { layer: ConfigProvider.layer(ConfigProvider.fromUnknown({ "dry-run": "from-caller" })) }
-          )
+        yield* verdict(
+          Effect.gen(function* () {
+            const dryRun = yield* Config.String("dry-run").pipe(Config.withDefault("defaulted"));
+            yield* Effect.logWarning(`dry-run=${dryRun}`);
+          }),
+          // Normal layer precedence: the extra layer's context merges LAST in
+          // `Action.run`'s composition, so this replaces the installed provider
+          // wholesale. INPUT_DRY-RUN is set in the environment — seeing
+          // "from-caller" rather than "from-input" is what proves the override.
+          { layer: ConfigProvider.layer(ConfigProvider.fromUnknown({ "dry-run": "from-caller" })) }
         );
         assert.include(lines, "::warning::dry-run=from-caller");
       })
@@ -339,17 +361,15 @@ describe("Action.run", () => {
           Extra,
           Effect.map(ActionEnvironment, (env) => ({ describe: env.get("GITHUB_JOB") }))
         );
-        yield* Effect.promise(() =>
-          Action.run(
-            Effect.gen(function* () {
-              const service = yield* Extra;
-              yield* Effect.log(`job=${yield* service.describe}`);
-            }),
-            { layer: extra }
-          )
+        const code = yield* verdict(
+          Effect.gen(function* () {
+            const service = yield* Extra;
+            yield* Effect.log(`job=${yield* service.describe}`);
+          }),
+          { layer: extra }
         );
         assert.isTrue(A.some(lines, (line) => Str.includes("job=test-job")(line)));
-        assert.notStrictEqual(process.exitCode, 1);
+        assert.strictEqual(code, 0);
       })
     );
   });
@@ -368,18 +388,16 @@ describe("Action.run", () => {
             };
           })
         );
-        yield* Effect.promise(() =>
-          Action.run(
-            Effect.gen(function* () {
-              const service = yield* Extra;
-              yield* Effect.logWarning(`publish=${yield* service.describe}`);
-            }),
-            { layer: publishLike }
-          )
+        const code = yield* verdict(
+          Effect.gen(function* () {
+            const service = yield* Extra;
+            yield* Effect.logWarning(`publish=${yield* service.describe}`);
+          }),
+          { layer: publishLike }
         );
         assert.include(lines, "::add-mask::s3cret", "the mask reached the runner with no sub-provide");
         assert.include(lines, "::warning::publish=masked", "and the platform reached the layer");
-        assert.notStrictEqual(process.exitCode, 1);
+        assert.strictEqual(code, 0);
       })
     );
   });
@@ -388,12 +406,12 @@ describe("Action.run", () => {
     it.effect("does not swallow the transcript of a run that then fails", () =>
       Effect.gen(function* () {
         const { lines } = yield* Captured;
-        yield* Effect.promise(() =>
-          Action.run(Effect.flatMap(Effect.log("halfway through"), () => Effect.fail(Boom.make({ detail: "later" }))))
+        const code = yield* verdict(
+          Effect.flatMap(Effect.log("halfway through"), () => Effect.fail(Boom.make({ detail: "later" })))
         );
         assert.isTrue(A.some(lines, (line) => Str.includes("halfway through")(line)));
         assert.isTrue(A.some(lines, (line) => Str.startsWith("::error::")(line)));
-        assert.strictEqual(process.exitCode, 1);
+        assert.strictEqual(code, 1);
       })
     );
   });
@@ -417,6 +435,31 @@ describe("Action.run", () => {
     );
   });
 
+  it.layer(captureLayer(), { timeout: "30 seconds" })((it) => {
+    it.effect("an interruption from inside the program still fails the step", () =>
+      Effect.gen(function* () {
+        const { lines } = yield* Captured;
+        assert.strictEqual(yield* verdict(Effect.interrupt), 1);
+        assert.isTrue(A.some(lines, (line) => Str.startsWith("::error::Action failed:")(line)));
+      })
+    );
+  });
+
+  it.layer(captureLayer(), { timeout: "30 seconds" })((it) => {
+    it.effect("takes its options data-last too", () =>
+      Effect.gen(function* () {
+        const { lines } = yield* Captured;
+        const exit = yield* Effect.logWarning("piped").pipe(
+          Action.main({ stepDebugLogLevel: false }),
+          Effect.provideService(Console.Console, console),
+          Effect.exit
+        );
+        assert.strictEqual(exitCodeOf(exit), 0);
+        assert.include(lines, "::warning::piped");
+      })
+    );
+  });
+
   it("exposes the runtime as a bound layer, not a factory", () => {
     // A layer-returning function mints a fresh layer per call and layers
     // memoize by reference, so a factory would re-read `process.env` at every
@@ -425,7 +468,53 @@ describe("Action.run", () => {
   });
 });
 
-describe("Action.run step debugging", () => {
+describe("Action.run", () => {
+  it.layer(captureLayer(), { timeout: "30 seconds" })((it) => {
+    it.effect("hands a successful program to runMain, whose teardown reads 0", () =>
+      Effect.gen(function* () {
+        const { lines } = yield* Captured;
+        assert.strictEqual(
+          yield* runVerdict((teardown) => Action.run(Effect.logWarning("ran under runMain"), { teardown })),
+          0
+        );
+        assert.include(lines, "::warning::ran under runMain");
+      })
+    );
+  });
+
+  it.layer(captureLayer(), { timeout: "30 seconds" })((it) => {
+    it.effect("leaves a failed program's exit code to runMain's teardown, with one ::error:: line", () =>
+      Effect.gen(function* () {
+        const { lines } = yield* Captured;
+        assert.strictEqual(
+          yield* runVerdict((teardown) =>
+            Action.run(Boom.make({ detail: "no token" }).pipe(Effect.fail), { teardown })
+          ),
+          1
+        );
+        // disableErrorReporting: runMain adds no second rendering of the cause.
+        assert.lengthOf(
+          A.filter(lines, (line) => Str.startsWith("::error::")(line)),
+          1
+        );
+      })
+    );
+  });
+
+  it.layer(captureLayer(), { timeout: "30 seconds" })((it) => {
+    it.effect("takes its options data-last too", () =>
+      Effect.gen(function* () {
+        yield* Captured;
+        const code = yield* runVerdict((teardown) =>
+          Boom.make({ detail: "piped" }).pipe(Effect.fail, Action.run({ teardown }))
+        );
+        assert.strictEqual(code, 1);
+      })
+    );
+  });
+});
+
+describe("Action.main step debugging", () => {
   // Info goes out in both cases, so an absent debug line is a filtered entry
   // and not a program that never ran — the positive control every "absent"
   // assertion below leans on.
@@ -438,7 +527,7 @@ describe("Action.run step debugging", () => {
     it.effect("lowers the minimum log level to Debug when RUNNER_DEBUG=1, so Effect.logDebug reaches the runner", () =>
       Effect.gen(function* () {
         const { lines } = yield* Captured;
-        yield* Effect.promise(() => Action.run(probe));
+        yield* verdict(probe);
         assert.include(lines, "probe-info");
         assert.include(lines, "::debug::probe-debug");
       })
@@ -449,7 +538,7 @@ describe("Action.run step debugging", () => {
     it.effect("leaves the Info default alone when step debugging is off", () =>
       Effect.gen(function* () {
         const { lines } = yield* Captured;
-        yield* Effect.promise(() => Action.run(probe));
+        yield* verdict(probe);
         assert.include(lines, "probe-info");
         assert.isFalse(A.some(lines, (line) => Str.includes("probe-debug")(line)));
       })
@@ -460,7 +549,7 @@ describe("Action.run step debugging", () => {
     it.effect("honours an explicit opt-out even with step debugging on", () =>
       Effect.gen(function* () {
         const { lines } = yield* Captured;
-        yield* Effect.promise(() => Action.run(probe, { stepDebugLogLevel: false }));
+        yield* verdict(probe, { stepDebugLogLevel: false });
         assert.include(lines, "probe-info");
         assert.isFalse(A.some(lines, (line) => Str.includes("probe-debug")(line)));
       })
@@ -471,11 +560,9 @@ describe("Action.run step debugging", () => {
     it.effect("only ever lowers the level: a caller that already asked for Trace keeps it", () =>
       Effect.gen(function* () {
         const { lines } = yield* Captured;
-        yield* Effect.promise(() =>
-          Action.run(Effect.logTrace("probe-trace"), {
-            layer: Layer.succeed(References.MinimumLogLevel, "Trace"),
-          })
-        );
+        yield* verdict(Effect.logTrace("probe-trace"), {
+          layer: Layer.succeed(References.MinimumLogLevel, "Trace"),
+        });
         assert.include(lines, "::debug::probe-trace");
       })
     );

@@ -1,6 +1,6 @@
 # @beep/github-actions
 
-The GitHub Actions runtime for [Effect](https://effect.website) v4: the services an action needs to talk to the runner it is executing inside. `Action.run` composes the runtime, runs your program, renders a failure as an `::error::` annotation and sets the exit code. `ActionInput` reads workflow inputs as typed `Config` values — string, boolean, integer, redacted secret, multiline list, `key=value` pairs, or a schema-decoded JSON blob — with one absence rule shared by every accessor: unset and `""` are both missing data. `ActionOutputs`, `ActionState`, `ActionLogger` and a fiber-local `ActionEnvironment` round out the runner surface, alongside `ActionCache`, `Artifact`, a metadata-carrying `BlobStore` (S3-compatible or the runner's own cache), `OidcTokenIssuer` and `ToolInstaller` for the heavier protocols. The reporting suite that renders what a run did onto a pull request comment, a check run or the job summary now ships as `@beep/github-reporting`. No `@actions/*` dependency anywhere — the cache, artifact and tool-cache protocols are implemented directly against their HTTP APIs.
+The GitHub Actions runtime for [Effect](https://effect.website) v4: the services an action needs to talk to the runner it is executing inside. `Action.run` composes the runtime, runs your program through `NodeRuntime.runMain`, renders a failure as an `::error::` annotation and leaves the exit code to the runtime's teardown; `Action.main` is the same run as an Effect, for tests and custom runners. `ActionInput` reads workflow inputs as typed `Config` values — string, boolean, integer, redacted secret, multiline list, `key=value` pairs, or a schema-decoded JSON blob — with one absence rule shared by every accessor: unset and `""` are both missing data. `ActionOutputs`, `ActionState`, `ActionLogger` and a fiber-local `ActionEnvironment` round out the runner surface, alongside `ActionCache`, `Artifact`, a metadata-carrying `BlobStore` (S3-compatible or the runner's own cache), `OidcTokenIssuer` and `ToolInstaller` for the heavier protocols. The reporting suite that renders what a run did onto a pull request comment, a check run or the job summary now ships as `@beep/github-reporting`. No `@actions/*` dependency anywhere — the cache, artifact and tool-cache protocols are implemented directly against their HTTP APIs.
 
 ## Why @beep/github-actions
 
@@ -27,12 +27,14 @@ const program = Effect.gen(function* () {
   yield* outputs.set("greeting", `Hello, ${name}!`);
 });
 
-await Action.run(program);
-// exit code reflects success/failure; failures render as an ::error:: annotation
-console.log("action completed") // action completed
+// The action's entry script: runMain sets the exit code, 0 on success and 1 after
+// a failure renders as an ::error:: annotation.
+Action.run(program);
 ```
 
 `Action.run` provides `ActionServices` (environment, logger, outputs, state, the Node platform and an `HttpClient`) by default. A capability with a heavier dependency — the cache, artifacts, the blob store — is one extra line: `Action.run(program, { layer: ActionCache.layer })`.
+
+Nothing in the package writes `process.exitCode`. `Action.main(program, options?)` returns an `Effect<void, ActionFailedError>`: it renders a failed program's cause as `::debug::` and `::error::` lines, then fails with an `ActionFailedError` marked with `Runtime.errorExitCode` `1` and `Runtime.errorReported` `false`. `Action.run` hands that effect to `NodeRuntime.runMain` with error reporting off, so the teardown exits `1` after a failure, `130` after a cancelled job's signal, and lets a success exit `0`. Pass `{ teardown }` to replace the teardown, for example to read the verdict in a test without exiting the process.
 
 Step debugging works without wiring: when the runner sets `RUNNER_DEBUG=1`, `Action.run` lowers Effect's minimum log level to `Debug`, so `Effect.logDebug` calls show up as `::debug::` lines. It only ever lowers the level; pass `{ stepDebugLogLevel: false }` to keep it as it is.
 
@@ -223,7 +225,7 @@ console.log(Layer.isLayer(TestOutputs)) // true
 
 ## Features
 
-- `Action.run` / `ActionRuntime.layer` — the entry point and default runtime: environment, logger, outputs, state, the Node platform and an `HttpClient`.
+- `Action.run` / `Action.main` / `ActionRuntime.layer` — the entry point (process boundary and Effect form) and default runtime: environment, logger, outputs, state, the Node platform and an `HttpClient`.
 - `ActionInput` — typed input accessors (`string`, `boolean`, `integer`, `redacted`, `lines`, `list`, `pairs`, `schema`) sharing one absence rule, plus the `INPUT_`-aware `ConfigProvider` `Action.run` installs by default. `pairs` always rejects an empty key (`=value`, whose damage lands far from the typo) and takes `requireValue` to reject an empty value too.
 - `ActionOutputs` — step outputs, JSON outputs, the job summary, exported variables, `PATH` additions, failure annotations and log masking.
 - `ActionState` / `ActionEnvironment` — persisted `pre`/`main`/`post` state, and the fiber-local `GITHUB_*`/`RUNNER_*` context read once from `process.env`.

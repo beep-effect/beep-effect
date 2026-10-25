@@ -6,13 +6,14 @@
  */
 
 import { WorkflowCommand } from "@beep/github-commands";
+import { $GithubActionsId } from "@beep/identity/packages";
 import { NodeServices } from "@effect/platform-node";
+import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as Bool from "effect/Boolean";
 import * as Cause from "effect/Cause";
 import * as Console from "effect/Console";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
-import * as Exit from "effect/Exit";
 import { dual } from "effect/Function";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Layer from "effect/Layer";
@@ -21,6 +22,8 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as References from "effect/References";
 import * as Result from "effect/Result";
+import * as Runtime from "effect/Runtime";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ActionEnvironment } from "./ActionEnvironment.ts";
 import { ActionInput } from "./ActionInput.ts";
@@ -28,6 +31,8 @@ import { ActionLogger } from "./ActionLogger.ts";
 import { ActionOutputs } from "./ActionOutputs.ts";
 import { ActionState } from "./ActionState.ts";
 import type * as HttpClient from "effect/http/HttpClient";
+
+const $I = $GithubActionsId.create("Action");
 
 /**
  * Everything {@link ActionRuntime.layer} provides.
@@ -169,6 +174,19 @@ export interface ActionRunOptions<R> {
    * @since 0.0.0
    */
   readonly stepDebugLogLevel?: boolean | undefined;
+  /**
+   * The teardown {@link Action.run} hands to `NodeRuntime.runMain`.
+   *
+   * **Details**
+   *
+   * Defaults to `Runtime.defaultTeardown`, which maps the `Exit` of
+   * {@link Action.main} to `0`, `1`, or `130` for an interruption. Supply one
+   * to map exit codes differently or to observe the verdict without exiting
+   * the process. `Action.main` ignores it: whoever runs that effect owns the
+   * teardown.
+   * @since 0.0.0
+   */
+  readonly teardown?: Runtime.Teardown | undefined;
 }
 
 /**
@@ -239,16 +257,144 @@ const describeError = (error: unknown): string => {
 };
 
 /**
+/**
+ * The verdict {@link Action.main} fails with once it has reported a failed
+ * program.
+ *
+ * **Details**
+ *
+ * It carries the two `effect/Runtime` markers a `runMain` reads off the
+ * squashed failure: `Runtime.errorExitCode` is `1`, so `Runtime.defaultTeardown`
+ * maps it to a failed step, and `Runtime.errorReported` is `false`, because the
+ * `::error::` annotation already went out and a second rendering of the same
+ * cause would only bury it. `summary` is the `[Tag]: message` text of that
+ * annotation.
+ *
+ * **Example** (Read the exit code a failed action maps to)
+ *
+ * ```ts
+ * import { ActionFailedError } from "@beep/github-actions/Action";
+ * import * as Runtime from "effect/Runtime";
+ *
+ * const error = ActionFailedError.make({ summary: "[BuildError]: build failed" });
+ * console.log(Runtime.getErrorExitCode(error)) // 1
+ * console.log(Runtime.getErrorReported(error)) // false
+ * ```
+ *
+ * @public
+ * @category errors
+ * @since 0.0.0
+ */
+export class ActionFailedError extends S.TaggedError<ActionFailedError, { readonly brand: unique symbol }>(
+  $I`ActionFailedError`
+)(
+  "ActionFailedError",
+  {
+    /** The `[Tag]: message` summary the `::error::` annotation carried. */
+    summary: S.String.pipe(
+      $I.annoteKey("ActionFailedError.summary", {
+        description: "The `[Tag]: message` summary the `::error::` annotation carried.",
+      })
+    ),
+  },
+  $I.annoteError<ActionFailedError>("ActionFailedError", {
+    description: "The verdict Action.main fails with once it has reported a failed program.",
+  })
+) {
+  /**
+   * The process exit code a `runMain` teardown maps this failure to.
+   *
+   * **Example** (Read the exit-code marker)
+   *
+   * ```ts
+   * import { ActionFailedError } from "@beep/github-actions/Action";
+   * import * as Runtime from "effect/Runtime";
+   *
+   * console.log(ActionFailedError.make({ summary: "x" })[Runtime.errorExitCode]) // 1
+   * ```
+   * @since 0.0.0
+   */
+  override get [Runtime.errorExitCode](): number {
+    return 1;
+  }
+
+  /**
+   * `false`: the failure was rendered before this error existed.
+   *
+   * **Example** (Read the already-reported marker)
+   *
+   * ```ts
+   * import { ActionFailedError } from "@beep/github-actions/Action";
+   * import * as Runtime from "effect/Runtime";
+   *
+   * console.log(ActionFailedError.make({ summary: "x" })[Runtime.errorReported]) // false
+   * ```
+   * @since 0.0.0
+   */
+  override get [Runtime.errorReported](): boolean {
+    return false;
+  }
+
+  /**
+   * The annotation line, without the workflow-command framing.
+   *
+   * **Example** (Read the failure message)
+   *
+   * ```ts
+   * import { ActionFailedError } from "@beep/github-actions/Action";
+   *
+   * console.log(ActionFailedError.make({ summary: "[BuildError]: build failed" }).message)
+   * // Action failed: [BuildError]: build failed
+   * ```
+   * @since 0.0.0
+   */
+  override get message(): string {
+    return `Action failed: ${this.summary}`;
+  }
+}
+
+/**
+ * The summary {@link Action.main} falls back to when rendering the failure
+ * itself broke. The verdict must not depend on the renderer.
+ */
+const UNRENDERED_FAILURE = "the failure could not be rendered";
+
+/**
+ * Write a failed program's cause as workflow commands and return the summary.
+ *
+ * **Details**
+ *
+ * Written with the workflow-command renderer rather than through the `Logger`,
+ * because this runs after the program — and after whatever went wrong with it.
+ */
+const reportFailure = Effect.fn("Action.reportFailure")(function* (cause: Cause.Cause<unknown>) {
+  const detail = Cause.pretty(cause);
+  if (Str.trim(detail) !== "") {
+    yield* Console.log(WorkflowCommand.render("debug", {}, detail));
+  }
+  const summary = describeCause(cause);
+  yield* Console.log(WorkflowCommand.render("error", {}, `Action failed: ${summary}`));
+  return summary;
+});
+
+/**
  * The entry point an action's `main`, `pre` and `post` scripts call.
  *
  * **Details**
  *
- * Everything an action entry point does that is not the action: compose the
- * runtime, run the program, render a failure as a `::error::` annotation, and
- * **set the exit code** — which is the piece
- * `ActionOutputs.setFailed` deliberately leaves alone, so an action that
- * reports a failure and then recovers is not doomed by a side effect it cannot
- * undo.
+ * Everything an action entry point does that is not the action, split along
+ * the process boundary:
+ *
+ * - {@link Action.main} is the effectful part: compose the runtime, run the
+ *   program, render a failure as a `::error::` annotation, and fail with an
+ *   {@link ActionFailedError} that carries exit code `1`.
+ * - {@link Action.run} is the process boundary: it hands `Action.main` to
+ *   `NodeRuntime.runMain`, whose teardown turns the `Exit` into the process
+ *   exit code. Nothing in this module writes `process.exitCode`.
+ *
+ * Setting the exit code is the piece `ActionOutputs.setFailed` deliberately
+ * leaves alone, so an action that reports a failure and then recovers is not
+ * doomed by a side effect it cannot undo.
  *
  * It also honours **step debugging**: when the runner sets `RUNNER_DEBUG=1`, it
  * lowers core's `References.MinimumLogLevel` from its `Info` default to
@@ -265,10 +411,10 @@ const describeError = (error: unknown): string => {
  *   printed nothing. `ActionLogger.withBuffer` is opt-in and flushes on every
  *   exit path including a defect, so the buffering is where the caller can
  *   see it.
- * - **It does not throw.** The returned promise always resolves; the failure is
- *   in `process.exitCode`, which is what the runner reads. An action entry
- *   point that rejected would produce an unhandled rejection *and* a failed
- *   step, and only the first would be legible.
+ * - **It does not let the renderer decide the verdict.** The failure rendering
+ *   runs uninterruptibly, and a renderer that breaks is caught, so the `Exit`
+ *   is still a failure: a green step for a crashed action is the worst outcome
+ *   available here.
  *
  * The rendering depth is deliberate too: one `::error::` line carrying
  * `[Tag]: message`, and the fiddly diagnostics — the full `Cause.pretty` render
@@ -316,37 +462,48 @@ export class Action {
   static readonly describeCause = describeCause;
 
   /**
-   * Run an action program to completion.
+   * Run an action program inside the composed runtime, as an Effect.
    *
    * **Details**
    *
-   * Never rejects: the promise resolves whether the program succeeded or not,
-   * so read `process.exitCode` for the verdict. Requirements beyond
-   * {@link ActionServices} come from `options.layer`.
+   * Succeeds when the program does. When it fails — a typed failure, a defect,
+   * a layer that would not build, an interruption from inside — the cause is
+   * rendered as `::debug::` and `::error::` workflow commands and the effect
+   * fails with an {@link ActionFailedError}, which `Runtime.defaultTeardown`
+   * maps to exit code `1`. Requirements beyond {@link ActionServices} come from
+   * `options.layer`; `options.teardown` is ignored here.
    *
-   * **Example** (Run a successful action program)
+   * Use it to run an action under a `runMain` of your own choosing, or to test
+   * an action's verdict without exiting the process: {@link Action.run} is this
+   * effect handed to `NodeRuntime.runMain`.
+   *
+   * **Example** (Read the exit code of a failed program)
    *
    * ```ts
    * import { Action } from "@beep/github-actions/Action";
    * import * as Effect from "effect/Effect";
+   * import * as Runtime from "effect/Runtime";
    *
-   * await Action.run(Effect.void);
-   * console.log("action completed") // action completed
+   * const exit = await Effect.runPromiseExit(Action.main(Effect.fail("boom")));
+   * Runtime.defaultTeardown(exit, (code) => console.log(code)) // 1
    * ```
    * @category workflows
    * @since 0.0.0
    */
-  static readonly run: {
-    <E, R = never>(program: Effect.Effect<void, E, ActionServices | R>, options?: ActionRunOptions<R>): Promise<void>;
+  static readonly main: {
+    <E, R = never>(
+      program: Effect.Effect<void, E, ActionServices | R>,
+      options?: ActionRunOptions<R>
+    ): Effect.Effect<void, ActionFailedError>;
     <R = never>(
       options?: ActionRunOptions<R>
-    ): <E>(program: Effect.Effect<void, E, ActionServices | R>) => Promise<void>;
+    ): <E>(program: Effect.Effect<void, E, ActionServices | R>) => Effect.Effect<void, ActionFailedError>;
   } = dual(
     (args) => Effect.isEffect(args[0]),
     <E, R = never>(
       program: Effect.Effect<void, E, ActionServices | R>,
       options: ActionRunOptions<R> = {}
-    ): Promise<void> => {
+    ): Effect.Effect<void, ActionFailedError> => {
       const extra = options.layer;
       const composed =
         extra === undefined
@@ -357,37 +514,61 @@ export class Action {
       // including a caller's `layer` — actually installed.
       const leveled = options.stepDebugLogLevel === false ? program : withStepDebugLogLevel(program);
 
-      const runnable = Effect.scopedWith((scope) =>
+      return Effect.scopedWith((scope) =>
         Effect.flatMap(Layer.buildWithScope(composed, scope), (context) =>
           // This entry point trusts the caller's layer for R; an omitted service still defects at use.
           Effect.provideContext(leveled, Context.makeUnsafe<ActionServices | R>(context.mapUnsafe))
         )
       ).pipe(
-        Effect.exit,
-        Effect.flatMap((exit) =>
-          Exit.match(exit, {
-            onSuccess: () => Effect.void,
-            onFailure: Effect.fn("Action.run.onFailure")(function* (cause) {
-              // Written with the workflow-command renderer rather than through
-              // the `Logger`, because this runs after the program — and after
-              // whatever went wrong with it.
-              const detail = Cause.pretty(cause);
-              if (Str.trim(detail) !== "") {
-                yield* Console.log(WorkflowCommand.render("debug", {}, detail));
-              }
-              yield* Console.log(WorkflowCommand.render("error", {}, `Action failed: ${describeCause(cause)}`));
-              process.exitCode = 1;
-            }),
-          })
+        Effect.catchCause((cause) =>
+          reportFailure(cause).pipe(
+            // A renderer that itself broke must not turn a failed run green.
+            Effect.catchCause(() => Effect.succeed(UNRENDERED_FAILURE)),
+            Effect.flatMap((summary) => Effect.fail(ActionFailedError.make({ summary }))),
+            Effect.uninterruptible
+          )
         )
       );
-
-      return Effect.runPromise(runnable).catch(() => {
-        // The last resort. If rendering the failure itself failed, the step must
-        // still fail: a green step for a crashed action is the worst outcome
-        // available here.
-        process.exitCode = 1;
-      });
     }
+  );
+
+  /**
+   * Run an action program as the process's main entry point.
+   *
+   * **Details**
+   *
+   * Hands {@link Action.main} to `NodeRuntime.runMain` with
+   * `disableErrorReporting` on, because `Action.main` has already rendered the
+   * failure. The runtime's teardown sets the verdict: a success lets the
+   * process exit `0` on its own, a failure calls `process.exit(1)`, and a
+   * `SIGINT`/`SIGTERM` from a cancelled job interrupts the program and exits
+   * `130`. Returns as soon as the program is forked; there is no promise to
+   * await or to reject. Requirements beyond {@link ActionServices} come from
+   * `options.layer`, and `options.teardown` replaces the runtime's teardown.
+   *
+   * **Example** (Run an action program as a script's entry point)
+   *
+   * ```ts
+   * import { Action } from "@beep/github-actions/Action";
+   * import * as Effect from "effect/Effect";
+   *
+   * Action.run(Effect.log("hello from the runner"), {
+   *   teardown: (_exit, onExit) => onExit(0),
+   * });
+   * console.log("action forked") // action forked
+   * ```
+   * @category workflows
+   * @since 0.0.0
+   */
+  static readonly run: {
+    <E, R = never>(program: Effect.Effect<void, E, ActionServices | R>, options?: ActionRunOptions<R>): void;
+    <R = never>(options?: ActionRunOptions<R>): <E>(program: Effect.Effect<void, E, ActionServices | R>) => void;
+  } = dual(
+    (args) => Effect.isEffect(args[0]),
+    <E, R = never>(program: Effect.Effect<void, E, ActionServices | R>, options: ActionRunOptions<R> = {}): void =>
+      NodeRuntime.runMain(Action.main(program, options), {
+        disableErrorReporting: true,
+        teardown: options.teardown,
+      })
   );
 }
