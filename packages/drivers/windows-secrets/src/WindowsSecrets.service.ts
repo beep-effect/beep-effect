@@ -6,6 +6,7 @@
  */
 
 import { $WindowsSecretsId } from "@beep/identity";
+import { HostProcessPlatform } from "@beep/utils/HostProcess";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -102,7 +103,7 @@ const makeMemoryStore = (): WindowsSecretStoreShape => {
 };
 
 const acquireWindowsStore = Effect.gen(function* () {
-  const platform = yield* Effect.sync(() => process.platform);
+  const platform = yield* HostProcessPlatform;
   if (platform !== "win32") {
     return yield* SecretStoreUnsupported.make({ platform });
   }

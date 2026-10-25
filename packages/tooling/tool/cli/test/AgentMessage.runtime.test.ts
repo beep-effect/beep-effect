@@ -1,4 +1,4 @@
-import { fileURLToPath } from "node:url";
+import * as NodeURL from "node:url";
 import { ManagedLaunchProfile, ManagedTerminalEvidence, ManagedTurnResult } from "@beep/ai-provider-cli";
 import {
   AgentMessageStore,
@@ -817,7 +817,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
                   submits++;
                   const lock = yield* ChildProcess.make(
                     process.execPath,
-                    [fileURLToPath(new URL("./fixtures/agent-message/process.ts", import.meta.url))],
+                    [NodeURL.fileURLToPath(new URL("./fixtures/agent-message/process.ts", import.meta.url))],
                     {
                       env: {
                         BEEP_MESSAGE_FIXTURE_DATABASE: filename,

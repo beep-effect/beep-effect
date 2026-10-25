@@ -348,15 +348,18 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
     );
 
     it.effect(
-      "commits a raw transaction after a swallowed parser error",
+      "refuses a raw commit after a swallowed parser error",
       Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;
         yield* sql`create table tx_raw_parser (id INTEGER)`;
         yield* sql.unsafe("BEGIN TRANSACTION");
         yield* sql`insert into tx_raw_parser values (1)`;
         yield* sql.unsafe("frobnicate nonsense from").pipe(Effect.ignore);
-        yield* sql.unsafe("COMMIT");
-        expect(yield* countRows(sql, "tx_raw_parser")).toBe(1);
+        // DuckDB 2.0 aborts even on parser errors; COMMIT would silently roll back.
+        const error = yield* sql.unsafe("COMMIT").pipe(Effect.flip);
+        expectRefusedCommit(error, ABORTED_MESSAGE);
+        expect(yield* countRows(sql, "tx_raw_parser")).toBe(0);
+        yield* expectUsable(sql);
       })
     );
 
@@ -380,18 +383,23 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
     );
 
     it.effect(
-      "commits after a swallowed parser error",
+      "refuses the commit after a swallowed parser error",
       Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;
         yield* sql`create table tx_parser (id INTEGER)`;
-        yield* sql.withTransaction(
-          Effect.gen(function* () {
-            yield* sql`insert into tx_parser values (1)`;
-            const parserError = yield* sql.unsafe("frobnicate nonsense from").pipe(Effect.flip);
-            expect(parserError.reason._tag).toBe("SqlSyntaxError");
-          })
-        );
-        expect(yield* countRows(sql, "tx_parser")).toBe(1);
+        // DuckDB 2.0 aborts even on parser errors; retain the safe-COMMIT guarantee.
+        const error = yield* sql
+          .withTransaction(
+            Effect.gen(function* () {
+              yield* sql`insert into tx_parser values (1)`;
+              const parserError = yield* sql.unsafe("frobnicate nonsense from").pipe(Effect.flip, Effect.orDie);
+              expect(parserError.reason._tag).toBe("SqlSyntaxError");
+            })
+          )
+          .pipe(Effect.flip);
+        expectRefusedCommit(error, ABORTED_MESSAGE);
+        expect(yield* countRows(sql, "tx_parser")).toBe(0);
+        yield* expectUsable(sql);
       })
     );
 

@@ -188,12 +188,12 @@ it.layer(testLayer, { timeout: "5 seconds" })("purge security", (it) => {
           expect(error.reason.method).toBe("remove");
           expect(error.reason.pathOrDescriptor).toBe(acquired[failedReleaseIndex]);
           const expected = Cause.annotate(
-            Cause.combine(Cause.fail(failure), Cause.die(error)),
+            Cause.combine(Cause.die(failure), Cause.die(error)),
             Cause.annotations(exit.cause)
           );
           assertExitFailure(exit, expected);
           const wrongDie = Cause.annotate(
-            Cause.combine(Cause.fail(failure), Cause.die(new Error("boom"))),
+            Cause.combine(Cause.die(failure), Cause.die(new Error("boom"))),
             Cause.annotations(exit.cause)
           );
           expect(() => assertExitFailure(Exit.failCause(wrongDie), expected)).toThrow();

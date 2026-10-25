@@ -7,7 +7,6 @@
  */
 
 import { defineRule } from "@oxlint/plugins";
-import * as A from "effect/Array";
 import * as HashSet from "effect/HashSet";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
@@ -17,6 +16,7 @@ import {
   identifierName,
   isIdentifier,
   literalStringValue,
+  makeIdentifierShadowTracker,
   pathMatchesSuffix,
   toRepoPath,
   unwrapExpression,
@@ -79,37 +79,13 @@ export default defineRule({
   createOnce(context) {
     const nodeOsNamespaces = MutableHashSet.empty<string>();
     const nodeOsRuntimeImports = MutableHashMap.empty<string, string>();
-    // Lexical-scope approximation for `process` shadowing: one frame per enclosing function
-    // (plus a module-level frame), flagged when that scope binds a local `process`. This catches
-    // function parameters and simple `var`/`let`/`const process` declarators; it does NOT model
-    // destructured (`const { process } = ...`) or block-scoped bindings precisely.
-    const scopeStack: Array<{ shadowed: boolean }> = [{ shadowed: false }];
+    const shadow = makeIdentifierShadowTracker(["process"]);
 
     const resetBindings = () => {
       MutableHashSet.clear(nodeOsNamespaces);
       MutableHashMap.clear(nodeOsRuntimeImports);
-      scopeStack.length = 0;
-      scopeStack.push({ shadowed: false });
+      shadow.reset();
     };
-
-    const currentScope = (): { shadowed: boolean } => scopeStack[scopeStack.length - 1] ?? { shadowed: false };
-
-    const paramShadowsProcess = (params: ReadonlyArray<ESTree.ParamPattern>): boolean =>
-      A.some(params, (param) => param.type === "Identifier" && param.name === "process");
-
-    const pushScope = (params: ReadonlyArray<ESTree.ParamPattern>) => {
-      scopeStack.push({ shadowed: paramShadowsProcess(params) });
-    };
-
-    const popScope = () => {
-      if (scopeStack.length > 1) scopeStack.pop();
-    };
-
-    const recordDeclarator = (node: ESTree.VariableDeclarator) => {
-      if (node.id.type === "Identifier" && node.id.name === "process") currentScope().shadowed = true;
-    };
-
-    const isProcessShadowed = (): boolean => A.some(scopeStack, (scope) => scope.shadowed);
 
     // `globalThis.process` — the namespaced spelling, unaffected by a local `process` binding.
     const isGlobalThisProcess = (node: MaybeNode): boolean =>
@@ -122,7 +98,7 @@ export default defineRule({
 
     // A bare global `process` (skipped when locally shadowed) or the explicit `globalThis.process`.
     const isGlobalProcessObject = (node: MaybeNode): boolean => {
-      if (isIdentifier("process")(unwrapExpression(node))) return !isProcessShadowed();
+      if (isIdentifier("process")(unwrapExpression(node))) return !shadow.isShadowed("process");
       return isGlobalThisProcess(node);
     };
 
@@ -173,13 +149,7 @@ export default defineRule({
     return {
       before: resetBindings,
       ImportDeclaration: trackImportDeclaration,
-      FunctionDeclaration: (node) => pushScope(node.params),
-      "FunctionDeclaration:exit": popScope,
-      FunctionExpression: (node) => pushScope(node.params),
-      "FunctionExpression:exit": popScope,
-      ArrowFunctionExpression: (node) => pushScope(node.params),
-      "ArrowFunctionExpression:exit": popScope,
-      VariableDeclarator: recordDeclarator,
+      ...shadow.visitors,
       MemberExpression(node) {
         if (isHostProcessReferenceFile(context.filename, context.cwd)) return;
 

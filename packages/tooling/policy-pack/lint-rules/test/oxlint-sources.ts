@@ -8,7 +8,8 @@
  *
  * A case may set `filename` when the rule's behavior depends on the path: the
  * `*.test.ts` gate of `no-manual-effect-runtime-in-tests`, and the host-process reference
- * file exemption of `no-global-process-runtime`.
+ * file exemption of `no-global-process-runtime`, and the production/host gates
+ * of `no-direct-process-io`.
  */
 
 import * as A from "effect/Array";
@@ -562,6 +563,67 @@ export const OXLINT_SOURCES: {
         count: 0,
         filename: HOST_PROCESS_FILE,
         source: `export const supports = process.platform;`,
+      },
+    ],
+  },
+
+  "no-direct-process-io": {
+    invalid: [
+      {
+        count: 7,
+        source: lines(
+          `process.stdout.write("out");`,
+          `globalThis.process["stderr"]["write"]("err");`,
+          `process.exit(1);`,
+          `process.exitCode = 1;`,
+          `process.exitCode++;`,
+          `Bun.exit(1);`,
+          `Bun.write(Bun.stdout, "out");`
+        ),
+      },
+      {
+        count: 1,
+        filename: "packages/tooling/tool/cli/src/bin-main.ts",
+        source: `process.stderr.write("still forbidden");`,
+      },
+      {
+        count: 1,
+        filename: "packages/tooling/tool/docgen/src/bin.ts",
+        source: `process.stdout.write("still forbidden");`,
+      },
+    ],
+    valid: [
+      {
+        count: 0,
+        source: lines(
+          `process.stdout.isTTY;`,
+          `process.kill(process.pid, "SIGKILL");`,
+          `Bun.write("output.txt", "data");`,
+          `const process = { exit: () => {} }; process.exit();`,
+          `const Bun = { exit: () => {} }; Bun.exit();`
+        ),
+      },
+      { count: 0, filename: "packages/demo/test/example.test.ts", source: `process.exit(1);` },
+      { count: 0, filename: "packages/demo/src/fixture.js", source: `process.exit(1);` },
+      {
+        count: 0,
+        filename: "apps/professional-desktop/server/IpcStdoutGuard.prelude.ts",
+        source: `process.stderr.write("protocol diagnostic");`,
+      },
+      {
+        count: 0,
+        filename: "packages/foundation/capability/observability/src/server/ErrorReporting.ts",
+        source: `globalThis.process.stderr.write("synchronous reporter");`,
+      },
+      {
+        count: 0,
+        filename: "packages/tooling/tool/cli/src/bin-main.ts",
+        source: `process.stdout.write("tty reset"); process.exit(0);`,
+      },
+      {
+        count: 0,
+        filename: "packages/tooling/tool/docgen/src/bin.ts",
+        source: `process.exit(0);`,
       },
     ],
   },

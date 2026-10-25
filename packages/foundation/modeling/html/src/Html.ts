@@ -4,17 +4,15 @@
  * @packageDocumentation \@beep/html/Html
  * @since 0.0.0
  */
+
 import { conform, inspectConformance } from "./Html.conformance.ts";
 import { enforceSafeHtml, inspectSafeHtml } from "./Html.policy.ts";
 import { readonlyStruct } from "./internal/Html.readonly.ts";
 import type * as Effect from "effect/Effect";
 import type { ConformantHtml, HtmlConformanceError } from "./Html.conformance.ts";
 import type { HtmlRoot } from "./Html.model.ts";
-import type { HtmlPolicyError, SafeHtmlAst } from "./Html.policy.ts";
 
 const decodeConformant: (root: HtmlRoot.Type) => Effect.Effect<ConformantHtml, HtmlConformanceError> = conform;
-const decodeSafe: (value: ConformantHtml) => Effect.Effect<SafeHtmlAst, HtmlPolicyError> = enforceSafeHtml;
-
 /**
  * Staged HTML validation facade.
  *
@@ -47,7 +45,7 @@ export const Html = readonlyStruct({
     issues: inspectConformance,
   }),
   Safe: readonlyStruct({
-    decode: decodeSafe,
+    decode: enforceSafeHtml,
     issues: inspectSafeHtml,
   }),
 });

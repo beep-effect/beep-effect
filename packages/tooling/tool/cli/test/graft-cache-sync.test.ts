@@ -189,6 +189,7 @@ layer(testLayer, { timeout: "30 seconds" })("Graft cache sync", (it) => {
           glob: fs.glob,
           exists: fs.exists,
           link: fs.link,
+          lstat: fs.lstat,
           makeDirectory: fs.makeDirectory,
           makeTempDirectory: fs.makeTempDirectory,
           makeTempDirectoryScoped: fs.makeTempDirectoryScoped,

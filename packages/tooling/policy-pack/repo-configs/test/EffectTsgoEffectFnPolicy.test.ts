@@ -1,4 +1,4 @@
-import { fileURLToPath } from "node:url";
+import * as NodeURL from "node:url";
 import { it } from "@beep/test-runner";
 import { A, Str } from "@beep/utils";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
@@ -18,12 +18,12 @@ import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as jsonc from "jsonc-parser";
 
-const repoRoot = fileURLToPath(new URL("../../../../..", import.meta.url));
-const tscBinPath = fileURLToPath(new URL("../../../../../node_modules/.bin/tsc", import.meta.url));
-const tsgoBinPath = fileURLToPath(new URL("../../../../../node_modules/.bin/tsgo", import.meta.url));
-const tscRsBinPath = fileURLToPath(new URL("../../../../../node_modules/.bin/tsc-rs", import.meta.url));
-const rootManifestPath = fileURLToPath(new URL("../../../../../package.json", import.meta.url));
-const effectTsgoCliPath = fileURLToPath(
+const repoRoot = NodeURL.fileURLToPath(new URL("../../../../..", import.meta.url));
+const tscBinPath = NodeURL.fileURLToPath(new URL("../../../../../node_modules/.bin/tsc", import.meta.url));
+const tsgoBinPath = NodeURL.fileURLToPath(new URL("../../../../../node_modules/.bin/tsgo", import.meta.url));
+const tscRsBinPath = NodeURL.fileURLToPath(new URL("../../../../../node_modules/.bin/tsc-rs", import.meta.url));
+const rootManifestPath = NodeURL.fileURLToPath(new URL("../../../../../package.json", import.meta.url));
+const effectTsgoCliPath = NodeURL.fileURLToPath(
   new URL("../../../../../node_modules/@effect/tsgo/dist/effect-tsgo.cjs", import.meta.url)
 );
 

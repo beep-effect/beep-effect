@@ -342,7 +342,10 @@ const collectAnchors: {
 });
 
 /** Descend into a collection's children after its own anchor is registered. */
-const collectChildAnchors = (node: YamlNode, anchors: MutableHashMap.MutableHashMap<string, YamlNode>): void => {
+const collectChildAnchors: {
+  (node: YamlNode, anchors: MutableHashMap.MutableHashMap<string, YamlNode>): void;
+  (anchors: MutableHashMap.MutableHashMap<string, YamlNode>): (node: YamlNode) => void;
+} = dual(2, (node: YamlNode, anchors: MutableHashMap.MutableHashMap<string, YamlNode>): void => {
   if (isMap(node)) {
     for (const pair of node.items) {
       collectAnchors(pair.key, anchors);
@@ -351,7 +354,7 @@ const collectChildAnchors = (node: YamlNode, anchors: MutableHashMap.MutableHash
   } else if (isSeq(node)) {
     for (const item of node.items) collectAnchors(item, anchors);
   }
-};
+});
 
 /**
  * Extract a plain JavaScript value from a YAML AST node.

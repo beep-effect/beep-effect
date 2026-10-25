@@ -1,0 +1,22 @@
+{
+  "previous": "d2b9a1b085bf0edb2f926b783beb7845203d1bef49c1d9ac3ad05384c78f56c2",
+  "review": {
+    "reviewer": "Codex GPT-6.1-Sol (PR 2178 CI repair)",
+    "reason": "Reconcile generated schema-org doctest scripts after main integration; dependency edges unchanged and no qualification granted.",
+    "basis": {
+      "path": "goals/turborepo-task-qualification/research/schema-org-406-baseline-review.md",
+      "sha256": "947eae0a3e4ce2eda6be0ff2b6ea9adff0915697e7157b032116564ffd6d9c7d"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2",
+  "subjects": [
+    "@beep/schema-org"
+  ]
+}

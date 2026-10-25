@@ -18,7 +18,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
-import { Node, Project } from "ts-morph";
+import { Node, Project, ts } from "ts-morph";
 import { createVitest } from "vitest/node";
 import { messageWithCause } from "../../../internal/cli/CommandErrorFields.ts";
 import { configStringOption } from "../../../internal/cli/EnvConfig.ts";
@@ -297,15 +297,24 @@ const structuralZero = Effect.fn("CoverageArtifacts.structuralZero")(function* (
         produceSourceMap: true,
         autoWrap: false,
         esModules: true,
-        compact: false,
         coverageVariable: "__VITEST_COVERAGE__",
         coverageGlobalScope: "globalThis",
         coverageGlobalScopeFunc: false,
         ignoreClassMethods: [],
         ignoreLines: true,
-        parserPlugins: ["typescript", "jsx"],
       });
-      instrumenter.instrumentSync(source, file);
+      // Istanbul 2 parses JavaScript/JSX. Erase types without downleveling runtime
+      // syntax or eliding value imports before asking it to prove zero units.
+      const { outputText } = ts.transpileModule(source, {
+        fileName: file,
+        compilerOptions: {
+          target: ts.ScriptTarget.ESNext,
+          module: ts.ModuleKind.ESNext,
+          jsx: ts.JsxEmit.Preserve,
+          verbatimModuleSyntax: true,
+        },
+      });
+      instrumenter.instrumentSync(outputText, file);
       return O.fromNullishOr(instrumenter.lastFileCoverage()).pipe(O.filter(hasNoCoverageUnits), O.getOrUndefined);
     },
     catch: boundaryError(`cannot prove zero coverage units for ${file}.`),

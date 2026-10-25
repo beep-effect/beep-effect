@@ -1,12 +1,19 @@
 // fallow-ignore-file unused-file -- the C2 canary spawns this runtime probe child by file path, so no import reaches it. Owner: @beep/semantica. Exit: remove when the probe runs in-process or fallow learns spawned entries.
+
+import { $SemanticaId } from "@beep/identity/packages";
 import { OxigraphSparqlQueryServiceLive } from "@beep/oxigraph";
 import { LiteralKit } from "@beep/schema";
+import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Result from "effect/Result";
+import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
+import * as Stdio from "effect/Stdio";
+import * as Stream from "effect/Stream";
 import { LedgerLive } from "@/layers/LedgerLive";
 import { RdfProjectionLive } from "@/layers/RdfProjectionLive";
 import { LabConfigLive, RuntimeMode } from "@/runtime/Config";
@@ -19,6 +26,16 @@ import { RdfProjection } from "@/services/RdfProjection";
 import { LedgerLiveOptions } from "../layers/LedgerLive.ts";
 
 const decodeCrashProjectionInput = S.decodeEffect(S.fromJsonString(CrashProjectionInput));
+const $I = $SemanticaId.create("canary/RuntimeProbeChild");
+
+class ProbeUsageError extends S.TaggedError<ProbeUsageError, { readonly brand: unique symbol }>($I`ProbeUsageError`)(
+  "ProbeUsageError",
+  { message: S.String },
+  $I.annoteError<ProbeUsageError>("ProbeUsageError", { description: "Invalid runtime probe arguments." })
+) {
+  override readonly [Runtime.errorExitCode] = 2;
+  override readonly [Runtime.errorReported] = false;
+}
 
 const ProbeMode = LiteralKit(["bundle", "crash", "recover"]);
 const ProbeModeArgv = S.Tuple([ProbeMode]);
@@ -29,16 +46,17 @@ const decodeUnknownProbeModeArgv = S.decodeUnknownEffect(ProbeModeArgv);
 const decodeUnknownCrashArgv = S.decodeUnknownEffect(CrashArgv);
 const decodeUnknownRecoverArgv = S.decodeUnknownEffect(RecoverArgv);
 
-const usageExit = (): never => {
-  process.stderr.write(
-    "Expected bundle, crash <ledger-root> <run-id> <runtime-mode> <input-path>, or recover <ledger-root> <run-id> <runtime-mode>.\n"
-  );
-  return process.exit(2);
-};
+const usageError = ProbeUsageError.make({
+  message:
+    "Expected bundle, crash <ledger-root> <run-id> <runtime-mode> <input-path>, or recover <ledger-root> <run-id> <runtime-mode>.",
+});
+
+const writeStdout = (text: string) =>
+  Stdio.Stdio.pipe(Effect.flatMap((stdio) => Stream.make(text).pipe(Stream.run(stdio.stdout()))));
 
 const bundleProbe = Effect.gen(function* () {
   yield* RuntimeLayer.pipe(Layer.build, Effect.scoped);
-  process.stdout.write("bundle-ready\n");
+  yield* Console.log("bundle-ready");
 });
 
 const makeProvideServices = (ledgerRoot: string, runtimeMode: typeof RuntimeMode.Type, runId: RunId) => {
@@ -69,7 +87,7 @@ const crashProbe = Effect.fn("crashProbe")(function* (provideServices: ProvideSe
       )
     )
   );
-  yield* Effect.promise(() => Bun.write(Bun.stdout, "projection-state-committed\n"));
+  yield* writeStdout("projection-state-committed\n");
   process.kill(process.pid, "SIGKILL");
 });
 
@@ -83,7 +101,7 @@ const recoverProbe = Effect.fn("recoverProbe")(function* (provideServices: Provi
       return Result.getOrThrow(contentDigestSync(S.Array(S.String))(projection.serializedQuads));
     })
   );
-  process.stdout.write(`${digest}\n`);
+  yield* Console.log(digest);
 });
 
 const runProbe = (mode: typeof ProbeMode.Type, rest: ReadonlyArray<string>) =>
@@ -104,9 +122,17 @@ const runProbe = (mode: typeof ProbeMode.Type, rest: ReadonlyArray<string>) =>
   });
 
 const probe = Effect.gen(function* () {
-  const argv = A.drop(process.argv, 2);
+  const argv = yield* (yield* Stdio.Stdio).args;
   const [mode] = yield* decodeUnknownProbeModeArgv(A.take(argv, 1));
   return yield* runProbe(mode, A.drop(argv, 1));
-}).pipe(Effect.catchTag("SchemaError", () => Effect.sync(usageExit)));
+}).pipe(
+  Effect.catchTag("SchemaError", () => Console.error(usageError.message).pipe(Effect.andThen(Effect.fail(usageError))))
+);
 
-await Effect.runPromise(probe);
+BunRuntime.runMain(
+  BunServices.layer.pipe(
+    Layer.build,
+    Effect.flatMap((context) => Effect.provide(probe, context)),
+    Effect.scoped
+  )
+);

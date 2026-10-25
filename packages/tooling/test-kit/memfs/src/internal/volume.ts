@@ -2866,6 +2866,17 @@ const stat = (volume: Volume) =>
     );
   });
 
+// `lstat` resolves every intermediate link but reports a final symbolic link
+// as itself (type `SymbolicLink`, the link's own size and times).
+const lstat = (volume: Volume) =>
+  Effect.fnUntraced(function* (path: string) {
+    return yield* volume.withState((state) =>
+      Effect.map(resolve(state, path, { followFinalSymbolicLink: false, method: "lstat" }), ({ entry }) =>
+        fileInfo(entry)
+      )
+    );
+  });
+
 const chmod = (volume: Volume) =>
   Effect.fnUntraced(function* (path: string, mode: number) {
     yield* validateMode("chmod", mode);
@@ -3913,6 +3924,7 @@ const toFileSystem = (volume: Volume): FileSystem.FileSystem =>
     chown: chown(volume),
     glob: glob(volume),
     link: link(volume),
+    lstat: lstat(volume),
     makeDirectory: makeDirectory(volume),
     makeTempDirectory: makeTempDirectory(volume),
     makeTempDirectoryScoped: makeTempDirectoryScoped(volume),

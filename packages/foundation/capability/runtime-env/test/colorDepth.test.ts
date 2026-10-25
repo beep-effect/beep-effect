@@ -1,11 +1,12 @@
-import * as tty from "node:tty";
+import * as NodeTty from "node:tty";
 import { colorDepth, colorKeys } from "@beep/runtime-env/internal/colorDepth";
+import { currentHostPlatform } from "@beep/utils/HostProcess";
 import { assert, describe, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import { envReadsOf, sourceOf } from "./support/sources.ts";
 
 const nodeDepth = (env: Record<string, string>): string => {
-  const bits = tty.WriteStream.prototype.getColorDepth.call(undefined, env);
+  const bits = NodeTty.WriteStream.prototype.getColorDepth.call(undefined, env);
   return bits === 1 ? "none" : bits === 4 ? "basic" : bits === 8 ? "256" : "truecolor";
 };
 
@@ -47,7 +48,7 @@ const CASES: ReadonlyArray<Record<string, string>> = [
   { FORCE_COLOR: "1", TERM: "dumb" },
 ];
 
-const win32 = process.platform === "win32";
+const win32 = currentHostPlatform === "win32";
 
 // Added beyond the brief's table, which stays unedited above: terminals Node maps through its TERM table and
 // regex list, and the rows the first table skips. The Node oracle takes a win32 branch on Windows, so it is
