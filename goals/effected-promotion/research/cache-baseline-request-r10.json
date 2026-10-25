@@ -1,0 +1,20 @@
+{
+  "previous": "077bf9c7ed840454d0b847ac2cb0c0f30105b0b7e462fad434690fceda91d7f2",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (effected-promotion roadmap R10, refactor/repo-cli-git-helpers)",
+    "reason": "Record the @beep/repo-cli manifest edit that adds the @beep/git workspace dependency for the R10 git adoptions; the task graphs gain only git build/transit, and the policy-tool fingerprint closure gains that one package, as measured in the review; no qualification is granted.",
+    "basis": {
+      "path": "goals/effected-promotion/research/cache-baseline-review-r10.md",
+      "sha256": "4643d6b3e3c0db41cc6f82bae825225cb378fcd760090059b9ea7e39522bf131"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2",
+  "subjects": ["@beep/repo-cli", "//"]
+}

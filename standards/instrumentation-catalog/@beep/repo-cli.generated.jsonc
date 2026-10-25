@@ -1647,8 +1647,6 @@
     {"name":"GeneratedFileDrift.checkGeneratedFile","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"GeneratedFileDrift.writeGeneratedFile","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"GhCommand.ghOutput","owner":"@beep/repo-cli","family":"tooling","conforms":true},
-    {"name":"GitExec.collectChangedPathsSinceBase","owner":"@beep/repo-cli","family":"tooling","conforms":true},
-    {"name":"GitExec.collectDirtyPaths","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"GitExec.collectStagedPaths","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"GitExec.collectUnstagedPaths","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"GitExec.collectUntrackedPaths","owner":"@beep/repo-cli","family":"tooling","conforms":true},

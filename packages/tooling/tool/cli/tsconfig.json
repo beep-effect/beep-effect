@@ -21,6 +21,9 @@
       "path": "../../../drivers/ffmpeg/tsconfig.json"
     },
     {
+      "path": "../../../drivers/git/tsconfig.json"
+    },
+    {
       "path": "../../../drivers/github/tsconfig.json"
     },
     {
