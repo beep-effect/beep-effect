@@ -1,13 +1,13 @@
 import { isRegisteredWorktree, removeGitWorktree, runRepoCommandCapture } from "@beep/repo-cli/test/RepoRun";
 import { readAtMergeBase } from "@beep/repo-cli/test/Skills";
 import { detectPrRepository } from "@beep/repo-cli/test/Yeet";
-import { NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import * as Str from "effect/String";
+import { PlatformLayer } from "./yeet-pr-fixtures.ts";
 
 // The R10 adoption sites (`@beep/git` behind `readAtMergeBase`, the worktree
 // probes and the provenance origin read), each pinned against a real git.
@@ -61,7 +61,7 @@ const withRepository = <A, E, R>(use: (root: string, repoRoot: string) => Effect
       })
   );
 
-it.layer(NodeServices.layer)("git adoption sites", (it) => {
+it.layer(PlatformLayer, { timeout: "30 seconds" })("git adoption sites", (it) => {
   it.effect("reads a file as the merge-base holds it, not as the branch rewrote it", () =>
     withRepository((_root, repoRoot) =>
       Effect.gen(function* () {

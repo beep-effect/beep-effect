@@ -53,7 +53,7 @@ import type { PrSessionRegistryShape } from "./PrSessionRegistry.ts";
 const $I = $RepoCliId.create("commands/Yeet/internal/ProvenanceFooter");
 const repositoryPattern = /github\.com[/:]([^/]+)\/([^/]+?)(?:\.git)?$/u;
 
-/** One `git config --get <key>` read through `@beep/git`: `None` when the key is unset, trimmed otherwise. */
+// One `git config --get <key>` read through `@beep/git`: `None` when the key is unset, trimmed otherwise.
 const readGitConfig = (cwd: string, key: string) =>
   Git.use((git) => git.configGet(cwd, key)).pipe(Effect.provideServiceEffect(Git, Git.make));
 
