@@ -93,7 +93,7 @@ None of these files was edited. `goals/**/history/outputs/**` was not touched.
 
 ## Result at base
 
-| Surface | Files | L | E | N |
+| Surface | Surface-file classifications | L | E | N |
 | --- | ---: | ---: | ---: | ---: |
 | `skillopt` | 115 | 0 | 98 | 17 |
 | `impeccable` | 58 (+1 binary) | 0 | 55 | 3 (+1) |
@@ -357,9 +357,11 @@ Binary, outside the `-I` census:
 I ran the same census command again after this lane's packet edits. Its output
 is byte-identical to the census at base (`diff` empty). This receipt sits under
 `history/`, and the SPEC, PLAN, README and manifest sentences avoid the six
-patterns, so no count moved. All 194 files classify the same way.
+patterns, so no count moved. All 194 surface-file classifications have the same disposition.
+Surfaces overlap, so the base census contains 167 unique matching text files (168 with the one
+binary PNG) and 1,056 summed matching lines (1,057 with the PNG).
 
-| Surface | Files | L | E | N |
+| Surface | Surface-file classifications | L | E | N |
 | --- | ---: | ---: | ---: | ---: |
 | `skillopt` | 115 | 0 | 98 | 17 |
 | `impeccable` | 58 (+1 binary) | 0 | 55 | 3 (+1) |
