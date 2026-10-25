@@ -6,6 +6,8 @@
  */
 
 import { $RepoUtilsId } from "@beep/identity/packages";
+import { BrowserField, TypesVersionsField } from "@beep/package-json/ManifestFields";
+import { PeerDependenciesMetaField } from "@beep/package-json/Package";
 import { A } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as Effect from "effect/Effect";
@@ -21,16 +23,12 @@ import * as Tuple from "effect/Tuple";
 import { DomainError } from "../errors/index.ts";
 import { jsonStringifyPretty } from "../JsonUtils.ts";
 import {
-  Browser,
   decodePackageJsonEffect,
   encodePackageJsonEffect,
-  NpmPackageJson,
   PackageExports,
   PackageImports,
   PackageJson,
-  PeerDependenciesMeta,
   PublishConfig,
-  TypesVersions,
 } from "./PackageJson.ts";
 import type { StandardSchemaV1 } from "@standard-schema/spec";
 import type * as JsonPatch from "effect/JsonPatch";
@@ -133,6 +131,33 @@ const canonicalizePublishConfig = (
   return Result.getOrThrow(S.decodeUnknownResult(PublishConfig)(out));
 };
 
+const repositoryKeyOrder = A.make("type", "url", "directory");
+
+// The kit replays a repository object in its source key order; the canonical form orders the documented keys
+// (`type`, `url`, `directory`) first and sorts any others after them.
+const canonicalizeRepository = (
+  value: NonNullable<PackageJson.Encoded["repository"]>
+): NonNullable<PackageJson.Encoded["repository"]> => {
+  if (P.isString(value)) {
+    return value;
+  }
+  let out = R.empty<string, unknown>();
+  for (const key of repositoryKeyOrder) {
+    if (R.has(key)(value)) {
+      out = R.set(out, key, O.getOrUndefined(R.get(value, key)));
+    }
+  }
+  const remaining = pipe(
+    R.toEntries(value),
+    A.filter(([key]) => !A.contains(repositoryKeyOrder, key)),
+    A.sort(Order.mapInput(Order.String, ([key]: [string, unknown]) => key))
+  );
+  for (const [key, entryValue] of remaining) {
+    out = R.set(out, key, canonicalizeUnknownValue(entryValue));
+  }
+  return out;
+};
+
 const canonicalizePackageJsonEncoded = (encoded: PackageJson.Encoded): PackageJson.Encoded =>
   ({
     name: encoded.name,
@@ -145,7 +170,7 @@ const canonicalizePackageJsonEncoded = (encoded: PackageJson.Encoded): PackageJs
     ...O.getSomesStruct({ packageManager: O.fromUndefinedOr(encoded.packageManager) }),
     ...O.getSomesStruct({ workspaces: O.fromUndefinedOr(encoded.workspaces) }),
     ...O.getSomesStruct({ homepage: O.fromUndefinedOr(encoded.homepage) }),
-    ...O.getSomesStruct({ repository: O.fromUndefinedOr(encoded.repository) }),
+    ...O.getSomesStruct({ repository: O.map(O.fromUndefinedOr(encoded.repository), canonicalizeRepository) }),
     ...O.getSomesStruct({ beep: O.fromUndefinedOr(encoded.beep) }),
     ...O.getSomesStruct({ bugs: O.fromUndefinedOr(encoded.bugs) }),
     ...O.getSomesStruct({ author: O.fromUndefinedOr(encoded.author) }),
@@ -173,10 +198,13 @@ const canonicalizePackageJsonEncoded = (encoded: PackageJson.Encoded): PackageJs
       browser: O.map(O.fromUndefinedOr(encoded.browser), (browser) =>
         P.isString(browser)
           ? browser
-          : Result.getOrThrow(S.decodeUnknownResult(Browser)(canonicalizeUnknownValue(browser)))
+          : Result.getOrThrow(S.decodeUnknownResult(BrowserField)(canonicalizeUnknownValue(browser)))
       ),
     }),
-    ...O.getSomesStruct({ bin: O.fromUndefinedOr(encoded.bin) }),
+    // The kit decodes a `bin` map to a HashMap, which keeps no source order, so the canonical form sorts it.
+    ...O.getSomesStruct({
+      bin: O.map(O.fromUndefinedOr(encoded.bin), (bin) => (P.isString(bin) ? bin : sortStringRecord(bin, identity))),
+    }),
     ...O.getSomesStruct({ man: O.fromUndefinedOr(encoded.man) }),
     ...O.getSomesStruct({ directories: O.fromUndefinedOr(encoded.directories) }),
     ...O.getSomesStruct({ files: O.fromUndefinedOr(encoded.files) }),
@@ -204,7 +232,9 @@ const canonicalizePackageJsonEncoded = (encoded: PackageJson.Encoded): PackageJs
     }),
     ...O.getSomesStruct({
       peerDependenciesMeta: O.map(O.fromUndefinedOr(encoded.peerDependenciesMeta), (peerDependenciesMeta) =>
-        Result.getOrThrow(S.decodeUnknownResult(PeerDependenciesMeta)(canonicalizeUnknownValue(peerDependenciesMeta)))
+        Result.getOrThrow(
+          S.decodeUnknownResult(PeerDependenciesMetaField)(canonicalizeUnknownValue(peerDependenciesMeta))
+        )
       ),
     }),
     ...O.getSomesStruct({
@@ -238,7 +268,7 @@ const canonicalizePackageJsonEncoded = (encoded: PackageJson.Encoded): PackageJs
     ...O.getSomesStruct({ readme: O.fromUndefinedOr(encoded.readme) }),
     ...O.getSomesStruct({
       typesVersions: O.map(O.fromUndefinedOr(encoded.typesVersions), (typesVersions) =>
-        Result.getOrThrow(S.decodeUnknownResult(TypesVersions)(canonicalizeUnknownValue(typesVersions)))
+        Result.getOrThrow(S.decodeUnknownResult(TypesVersionsField)(canonicalizeUnknownValue(typesVersions)))
       ),
     }),
   }) satisfies PackageJson.Encoded;
@@ -303,22 +333,6 @@ export class PackageJsonValidationIssue extends S.Opaque<
  * @since 0.0.0
  */
 export const packageJsonJsonSchema = S.toJsonSchemaDocument(PackageJson, { onExcessProperty: "error" });
-
-/**
- * Draft 2020-12 JSON Schema document for the npm-only package.json schema.
- *
- * **Example** (Access npm JSON schema)
- *
- * ```ts
- * import { npmPackageJsonJsonSchema } from "@beep/repo-utils/schemas/PackageJsonTools"
- * const schema = npmPackageJsonJsonSchema
- * console.log(schema)
- * ```
- *
- * @category utilities
- * @since 0.0.0
- */
-export const npmPackageJsonJsonSchema = S.toJsonSchemaDocument(NpmPackageJson, { onExcessProperty: "error" });
 
 /**
  * Normalize an unknown package.json value into a canonical encoded object.

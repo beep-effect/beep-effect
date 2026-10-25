@@ -1,11 +1,12 @@
+import { PackageManifest } from "@beep/package-json/PackageManifest";
 import {
   applyPackageJsonPatchEffect,
   decodePackageJson,
   decodePackageJsonExit,
   diffPackageJsonEffect,
   encodePackageJsonCanonicalPrettyEffect,
+  encodePackageJsonEffect,
   getPackageJsonSchemaIssues,
-  NpmPackageJson,
   normalizePackageJsonEffect,
   PackageJson,
   packageJsonJsonSchema,
@@ -15,12 +16,12 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
-import { assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertFalse, assertSome, assertTrue, assertUndefined } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import { pipe } from "effect/Function";
-import * as O from "effect/Option";
+import * as HashMap from "effect/HashMap";
 import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -28,14 +29,12 @@ import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
 
 const decodePackageJson2 = S.decodeEffect(PackageJson);
-const decodeNpmPackageJsonFieldsPeerDependenciesMeta = S.decodeEffect(NpmPackageJson.fields.peerDependenciesMeta);
-const decodePackageJsonFieldsDependencies = S.decodeEffect(PackageJson.fields.dependencies);
-const decodePackageJsonFieldsPublishConfig = S.decodeEffect(PackageJson.fields.publishConfig);
+const DependenciesHolder = S.Struct({ dependencies: PackageJson.fields.dependencies });
+const decodePackageJsonFieldsDependencies = S.decodeEffect(DependenciesHolder);
+const decodePackageJsonFieldsPublishConfig = S.decodeEffect(PublishConfig);
 const decodeUnknownPackageJson = S.decodeUnknownEffect(PackageJson);
-const decodeUnknownNpmPackageJsonExit = S.decodeUnknownExit(NpmPackageJson);
-const encodeNpmPackageJsonFieldsPeerDependenciesMeta = S.encodeEffect(NpmPackageJson.fields.peerDependenciesMeta);
-const encodePackageJsonFieldsDependencies = S.encodeEffect(PackageJson.fields.dependencies);
-const encodePackageJsonFieldsPublishConfig = S.encodeEffect(PackageJson.fields.publishConfig);
+const encodePackageJsonFieldsDependencies = S.encodeEffect(DependenciesHolder);
+const encodePackageJsonFieldsPublishConfig = S.encodeEffect(PublishConfig);
 const isPackageJson = S.is(PackageJson);
 
 const objectKeys = (value: unknown): ReadonlyArray<string> => (P.isObject(value) ? Struct.keys(value) : A.empty());
@@ -43,7 +42,11 @@ const decodeJsonPointerSegment = (segment: string): string =>
   pipe(segment, Str.replaceAll("~1", "/"), Str.replaceAll("~0", "~"));
 const PackageJsonNameArbitrary = Arbitrary.schema(PackageJson.fields.name);
 const PackageJsonDependenciesArbitrary = Arbitrary.schema(PackageJson.fields.dependencies);
-const NpmPackageJsonPeerDependenciesMetaArbitrary = Arbitrary.schema(NpmPackageJson.fields.peerDependenciesMeta);
+const entriesOf = (map: HashMap.HashMap<string, string>): ReadonlyArray<readonly [string, string]> =>
+  A.sort(
+    A.fromIterable(map),
+    Order.mapInput(Order.String, ([key]: readonly [string, string]) => key)
+  );
 // Retain the original non-recursive core law alongside the full production
 // schema law, which also generates bin, recursive exports and JSON-valued extras.
 const PublishConfigCoreArbitrary = Arbitrary.schema(
@@ -75,28 +78,13 @@ describe("PackageJson schema", () => {
 
     it.effect.prop(
       "round-trips schema-derived package.json dependency maps through the encoded wire shape",
-      [Arbitrary.filter(PackageJsonDependenciesArbitrary, O.isSome)],
+      [PackageJsonDependenciesArbitrary],
       ([value]) =>
         Effect.gen(function* () {
-          const encoded = yield* encodePackageJsonFieldsDependencies(value);
+          const encoded = yield* encodePackageJsonFieldsDependencies({ dependencies: value });
           const decoded = yield* decodePackageJsonFieldsDependencies(encoded);
 
-          expect(decoded).toEqual(value);
-
-          return true;
-        }),
-      { arbitrary: fcRuns(20) }
-    );
-
-    it.effect.prop(
-      "round-trips schema-derived npm peer dependency metadata through the encoded wire shape",
-      [Arbitrary.filter(NpmPackageJsonPeerDependenciesMetaArbitrary, O.isSome)],
-      ([value]) =>
-        Effect.gen(function* () {
-          const encoded = yield* encodeNpmPackageJsonFieldsPeerDependenciesMeta(value);
-          const decoded = yield* decodeNpmPackageJsonFieldsPeerDependenciesMeta(encoded);
-
-          expect(decoded).toEqual(value);
+          expect(entriesOf(decoded.dependencies)).toEqual(entriesOf(value));
 
           return true;
         }),
@@ -108,7 +96,7 @@ describe("PackageJson schema", () => {
       [PublishConfigCoreArbitrary],
       ([core]) =>
         Effect.gen(function* () {
-          const value = O.some(core);
+          const value = core;
           const encoded = yield* encodePackageJsonFieldsPublishConfig(value);
           const decoded = yield* decodePackageJsonFieldsPublishConfig(encoded);
 
@@ -124,7 +112,7 @@ describe("PackageJson schema", () => {
       [PublishConfigArbitrary],
       ([config]) =>
         Effect.gen(function* () {
-          const value = O.some(config);
+          const value = config;
           const encoded = yield* encodePackageJsonFieldsPublishConfig(value);
           const decoded = yield* decodePackageJsonFieldsPublishConfig(encoded);
 
@@ -197,20 +185,27 @@ describe("PackageJson schema", () => {
 
       const result = decodePackageJson(input);
       expect(result.name).toBe("@beep/repo-utils");
-      expect(result.author).toEqual(O.some({ name: "Beep Maintainer", email: "maintainer@example.com" }));
-      expect(result.bugs).toEqual(O.some({ email: "bugs@example.com" }));
-      assertSome(result.browser, {
+      expect(`${result.version}`).toBe("1.0.0");
+      expect(result.license).toBe("MIT");
+      // The kit Person keeps the email as written; the retired repo model lowercased it.
+      expect(result.author?.name).toBe("Beep Maintainer");
+      expect(result.author?.email).toBe("MAINTAINER@EXAMPLE.COM");
+      expect(result.bugs?.email).toBe("bugs@example.com");
+      expect(result.browser).toEqual({
         "./src/server.ts": "./src/browser.ts",
         fs: false,
       });
-      assertSome(result.peerDependenciesMeta, {
-        typescript: {
-          optional: true,
-        },
-      });
-      expect(result.funding).toEqual(
-        O.some(["https://github.com/sponsors/beep", { type: "github", url: "https://github.com/sponsors/beep-effect" }])
-      );
+      expect(result.peerDependenciesMeta?.typescript?.optional).toBe(true);
+      expect(entriesOf(result.scripts)).toEqual([
+        ["build", "tsc -b"],
+        ["test", "vitest"],
+      ]);
+      expect(entriesOf(result.dependencies)).toEqual([["effect", "^4.0.0"]]);
+      expect(entriesOf(result.engines ?? HashMap.empty())).toEqual([["node", ">=20"]]);
+      expect(A.map(result.funding ?? [], (entry) => entry.url)).toEqual([
+        "https://github.com/sponsors/beep",
+        "https://github.com/sponsors/beep-effect",
+      ]);
     });
 
     it("decodes package exports and publishConfig exports as structured data", () => {
@@ -241,7 +236,7 @@ describe("PackageJson schema", () => {
       };
 
       const result = decodePackageJson(input);
-      assertSome(result.exports, {
+      expect(result.exports).toEqual({
         "./package.json": "./package.json",
         ".": {
           types: "./dist/index.d.ts",
@@ -251,7 +246,7 @@ describe("PackageJson schema", () => {
         "./internal/*": null,
         "./*": ["./dist/*.js", "./dist/*.cjs"],
       });
-      assertSome(result.publishConfig, {
+      expect(result.publishConfig).toEqual({
         access: "public",
         provenance: true,
         bin: {
@@ -277,7 +272,7 @@ describe("PackageJson schema", () => {
         },
       });
 
-      assertSome(result.imports, {
+      expect(result.imports).toEqual({
         "#internal": "./src/internal.ts",
         "#runtime/*": {
           types: "./src/runtime/*.d.ts",
@@ -292,7 +287,7 @@ describe("PackageJson schema", () => {
         workspaces: ["packages/*", "packages/tooling/*/*"],
       });
 
-      assertSome(result.workspaces, ["packages/*", "packages/tooling/*/*"]);
+      expect(result.workspaces).toEqual(["packages/*", "packages/tooling/*/*"]);
     });
 
     it("decodes workspaces as an object", () => {
@@ -304,12 +299,10 @@ describe("PackageJson schema", () => {
         },
       });
 
-      expect(result.workspaces).toEqual(
-        O.some({
-          packages: ["packages/*"],
-          nohoist: ["react"],
-        })
-      );
+      expect(result.workspaces).toEqual({
+        packages: ["packages/*"],
+        nohoist: ["react"],
+      });
     });
 
     it("decodes sideEffects as a boolean or array", () => {
@@ -322,8 +315,8 @@ describe("PackageJson schema", () => {
         sideEffects: ["**/*.css"],
       });
 
-      assertSome(booleanResult.sideEffects, false);
-      assertSome(arrayResult.sideEffects, ["**/*.css"]);
+      expect(booleanResult.sideEffects).toBe(false);
+      expect(arrayResult.sideEffects).toEqual(["**/*.css"]);
     });
 
     it("decodes repo-local top-level fields", () => {
@@ -346,28 +339,29 @@ describe("PackageJson schema", () => {
         },
       });
 
-      assertSome(result.packageManager, "bun@1.3.10");
-      assertSome(result.catalog, {
+      expect(result.packageManager?.name).toBe("bun");
+      expect(result.packageManager?.range).toBe("1.3.10");
+      expect(result.catalog).toEqual({
         effect: "^4.0.0-beta.27",
         typescript: "^5.9.3",
       });
-      assertSome(result["resolutions#"], {
+      expect(result["resolutions#"]).toEqual({
         "@beep/*": "Needed to force PNPM to install local packages",
       });
     });
 
-    it("decodes repo-local mixed-case workspace package names", () => {
+    it("keeps mixed-case dependency keys while the package name follows the kit's npm rules", () => {
       const result = decodePackageJson({
-        name: "@beep/MixedCase",
+        name: "@beep/mixed-case",
         dependencies: {
-          "@beep/mixed-case-helper": "workspace:^",
+          "@beep/MixedCaseHelper": "workspace:^",
         },
       });
 
-      expect(result.name).toBe("@beep/MixedCase");
-      assertSome(result.dependencies, {
-        "@beep/mixed-case-helper": "workspace:^",
-      });
+      expect(result.name).toBe("@beep/mixed-case");
+      assertSome(HashMap.get(result.dependencies, "@beep/MixedCaseHelper"), "workspace:^");
+      // The kit PackageName rejects new mixed-case names; no tracked manifest has one (3-A3 parity).
+      decodePackageJsonExit({ name: "@beep/MixedCase" }).pipe(Exit.isFailure, assertTrue);
     });
 
     it("decodes Bun trusted dependencies", () => {
@@ -376,7 +370,7 @@ describe("PackageJson schema", () => {
         trustedDependencies: ["@pulumi/ghaRunners"],
       });
 
-      assertSome(result.trustedDependencies, ["@pulumi/ghaRunners"]);
+      expect(result.trustedDependencies).toEqual(["@pulumi/ghaRunners"]);
     });
 
     it("decodes repo-local beep package metadata", () => {
@@ -410,37 +404,107 @@ describe("PackageJson schema", () => {
         },
       });
 
-      expect(driverResult.beep).toEqual(O.some({ family: "drivers" }));
-      expect(foundationResult.beep).toEqual(O.some({ family: "foundation", kind: "modeling" }));
-      expect(toolingResult.beep).toEqual(O.some({ family: "tooling", kind: "library" }));
-      expect(ecosystemResult.beep).toEqual(O.some({ family: "ecosystem" }));
+      expect(driverResult.beep).toEqual({ family: "drivers" });
+      expect(foundationResult.beep).toEqual({ family: "foundation", kind: "modeling" });
+      expect(toolingResult.beep).toEqual({ family: "tooling", kind: "library" });
+      expect(ecosystemResult.beep).toEqual({ family: "ecosystem" });
     });
 
-    it("keeps npm-only schema separate from repo-only extensions", () => {
-      const exit = decodeUnknownNpmPackageJsonExit(
-        {
-          name: "pkg",
-          catalog: {
-            effect: "^4.0.0",
-          },
-        },
-        { onExcessProperty: "error" }
-      );
+    it("defaults absent dependency maps and scripts to empty HashMaps and leaves other fields absent", () => {
+      const result = decodePackageJson({ name: "pkg" });
 
-      exit.pipe(Exit.isFailure, assertTrue);
-
-      const beepExit = decodeUnknownNpmPackageJsonExit(
-        {
-          name: "pkg",
-          beep: {
-            family: "drivers",
-          },
-        },
-        { onExcessProperty: "error" }
-      );
-
-      beepExit.pipe(Exit.isFailure, assertTrue);
+      result.dependencies.pipe(HashMap.isEmpty, assertTrue);
+      result.devDependencies.pipe(HashMap.isEmpty, assertTrue);
+      result.peerDependencies.pipe(HashMap.isEmpty, assertTrue);
+      result.optionalDependencies.pipe(HashMap.isEmpty, assertTrue);
+      result.scripts.pipe(HashMap.isEmpty, assertTrue);
+      assertUndefined(result.engines);
+      assertUndefined(result.beep);
+      assertUndefined(result.version);
+      assertUndefined(result.workspaces);
     });
+
+    it.effect(
+      "encodes an empty dependency map back to an absent key",
+      Effect.fn(function* () {
+        const encoded = yield* encodePackageJsonEffect({ name: "pkg", dependencies: {}, scripts: {} });
+
+        expect(encoded).toEqual({ name: "pkg" });
+      })
+    );
+
+    it("rejects an explicit undefined for the repo-only optional keys (EF-40)", () => {
+      decodePackageJsonExit({ name: "pkg", beep: undefined }).pipe(Exit.isFailure, assertTrue);
+      decodePackageJsonExit({ name: "pkg", "resolutions#": undefined }).pipe(Exit.isFailure, assertTrue);
+    });
+
+    it("rejects a literal rest key, because the repo model has a closed rest", () => {
+      decodePackageJsonExit({ name: "pkg", rest: { smuggled: true } }).pipe(Exit.isFailure, assertTrue);
+      decodePackageJsonExit({ name: "pkg", rest: {} }).pipe(Exit.isFailure, assertTrue);
+    });
+
+    it("accepts a repository object without a type (kit Repository)", () => {
+      const result = decodePackageJson({ name: "pkg", repository: { url: "git@github.com:user/repo.git" } });
+
+      expect(result.repository?.url).toBe("git@github.com:user/repo.git");
+      assertUndefined(result.repository?.type);
+    });
+
+    it("applies the kit's strict generic fields", () => {
+      decodePackageJsonExit({ name: "pkg", version: "1.0" }).pipe(Exit.isFailure, assertTrue);
+      decodePackageJsonExit({ name: "pkg", license: "Not A License" }).pipe(Exit.isFailure, assertTrue);
+      decodePackageJsonExit({ name: "pkg", packageManager: "bun" }).pipe(Exit.isFailure, assertTrue);
+      decodePackageJsonExit({ name: "pkg", packageManager: "bun@^1.3.0" }).pipe(Exit.isSuccess, assertTrue);
+    });
+
+    it("accepts unknown keys inside the object form of workspaces (kit WorkspacesField)", () => {
+      const result = decodePackageJson({ name: "pkg", workspaces: { packages: ["packages/*"], catalog: {} } });
+
+      expect(result.workspaces).toEqual({ packages: ["packages/*"], catalog: {} });
+    });
+  });
+
+  describe("inherited PackageManifest members", () => {
+    it.effect(
+      "PackageJson.decode runs the strict repo model, not the inherited open wire",
+      Effect.fn(function* () {
+        const manifest = yield* PackageJson.decode({ name: "pkg", beep: { family: "ecosystem" } });
+
+        assertTrue(S.is(PackageJson)(manifest));
+        expect(manifest.beep).toEqual({ family: "ecosystem" });
+
+        const failure = yield* PackageJson.decode({ name: "pkg", unexpected: true }).pipe(Effect.flip);
+        expect(failure._tag).toBe("PackageDecodeError");
+      })
+    );
+
+    it("toJsonString keeps beep and resolutions#", () => {
+      const manifest = decodePackageJson({
+        name: "pkg",
+        beep: { family: "ecosystem" },
+        "resolutions#": { effect: "pinned for the kit" },
+      });
+      const text = manifest.toJsonString();
+
+      expect(text).toContain('"beep"');
+      expect(text).toContain('"resolutions#"');
+      expect(decodePackageJson(JSON.parse(text)).beep).toEqual({ family: "ecosystem" });
+    });
+
+    it.effect(
+      "the inherited schema static is the kit's open wire and decodes to a plain PackageManifest",
+      Effect.fn(function* () {
+        expect(Reflect.get(PackageJson, "schema")).toBe(PackageManifest.schema);
+        const decoded = yield* S.decodeEffect(PackageManifest.schema)({
+          name: "pkg",
+          beep: { family: "ecosystem" },
+        });
+
+        assertTrue(S.is(PackageManifest)(decoded));
+        assertFalse(S.is(PackageJson)(decoded));
+        expect(decoded.rest).toEqual({ beep: { family: "ecosystem" } });
+      })
+    );
   });
 
   describe("malformed structures", () => {
@@ -463,11 +527,11 @@ describe("PackageJson schema", () => {
       }).pipe(Exit.isFailure, assertTrue);
     });
 
-    it("rejects repository objects without required type", () => {
+    it("rejects repository objects without a url", () => {
       decodePackageJsonExit({
         name: "pkg",
         repository: {
-          url: "git@github.com:user/repo.git",
+          type: "git",
         },
       }).pipe(Exit.isFailure, assertTrue);
     });
@@ -586,28 +650,14 @@ describe("PackageJson schema", () => {
         workspaces: [],
       });
 
-      assertSome(result.keywords, []);
-      assertSome(result.files, []);
-      assertSome(result.workspaces, []);
+      expect(result.keywords).toEqual([]);
+      expect(result.files).toEqual([]);
+      expect(result.workspaces).toEqual([]);
     });
 
     it("handles scoped package names", () => {
       const result = decodePackageJson({ name: "@scope/package-name" });
       expect(result.name).toBe("@scope/package-name");
-    });
-
-    it("keeps npm package names strict even when repo package names allow mixed case", () => {
-      const exit = decodeUnknownNpmPackageJsonExit(
-        {
-          name: "@beep/MixedCase",
-          dependencies: {
-            "@beep/mixed-case-helper": "workspace:^",
-          },
-        },
-        { onExcessProperty: "error" }
-      );
-
-      exit.pipe(Exit.isFailure, assertTrue);
     });
 
     it("decodes a real-world workspace package shape from this repo", () => {
@@ -657,13 +707,9 @@ describe("PackageJson schema", () => {
         },
       });
 
-      expect(result.repository).toEqual(
-        O.some({
-          type: "git",
-          url: "git@github.com:beep-effect/beep-effect.git",
-          directory: "packages/tooling/library/repo-utils",
-        })
-      );
+      expect(result.repository?.type).toBe("git");
+      expect(result.repository?.url).toBe("git@github.com:beep-effect/beep-effect.git");
+      expect(result.repository?.directory).toBe("packages/tooling/library/repo-utils");
     });
 
     it("decodePackageJson throws on invalid input", () => {
@@ -799,6 +845,37 @@ describe("PackageJson schema", () => {
     );
 
     it.effect(
+      "sorts a bin map and orders repository keys in canonical output",
+      Effect.fn(function* () {
+        const json = yield* encodePackageJsonCanonicalPrettyEffect({
+          name: "pkg",
+          repository: {
+            directory: ".",
+            url: "git@github.com:beep-effect/beep-effect.git",
+            type: "git",
+          },
+          bin: {
+            "pkg-verify": "./src/verify.ts",
+            "pkg-build": "./src/build.ts",
+          },
+        });
+
+        expect(json).toBe(`{
+  "name": "pkg",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:beep-effect/beep-effect.git",
+    "directory": "."
+  },
+  "bin": {
+    "pkg-build": "./src/build.ts",
+    "pkg-verify": "./src/verify.ts"
+  }
+}`);
+      })
+    );
+
+    it.effect(
       "diffs and applies typed JSON Patch with escaped scoped dependency keys",
       Effect.fn(function* () {
         const patch = yield* diffPackageJsonEffect(
@@ -832,10 +909,8 @@ describe("PackageJson schema", () => {
           patch
         );
 
-        assertSome(patched.dependencies, {
-          "@beep/schema": "catalog:",
-        });
-        assertSome(patched.private, true);
+        expect(entriesOf(patched.dependencies)).toEqual([["@beep/schema", "catalog:"]]);
+        expect(patched.private).toBe(true);
       })
     );
   });
@@ -851,8 +926,23 @@ describe("PackageJson schema", () => {
       const packageJsonDefinitionName = decodeJsonPointerSegment(Str.slice("#/$defs/".length)(packageJsonSchema.$ref));
       const packageJsonDefinition = packageJsonJsonSchema.definitions[packageJsonDefinitionName];
 
-      expect(packageJsonSchema.$ref).toMatch(/^#\/\$defs\/.+PackageJsonEncoded$/);
+      // `Class.extend` annotates the encoding with the class identifier, so the root definition is
+      // `.../schemas/PackageJson/PackageJson` rather than the retired model's `.../PackageJsonEncoded`.
+      expect(packageJsonDefinitionName).toBe("@beep/repo-utils/schemas/PackageJson/PackageJson");
       expect(packageJsonDefinition?.additionalProperties).toBe(false);
+      expect(packageJsonDefinition?.required).toEqual(["name"]);
+
+      // The kit's transformation codecs emit their encoded side.
+      expect(packageJsonDefinition?.properties).toMatchObject({
+        version: { $ref: "#/$defs/@beep~1semver~1SemVer~1SemVerEncoded" },
+        packageManager: { type: "string" },
+        author: { anyOf: [{ type: "object" }, { type: "string" }] },
+        repository: { anyOf: [{ type: "object" }, { type: "string" }] },
+        dependencies: { $ref: "#/$defs/@beep~1repo-utils~1schemas~1PackageJson~1RepoDependencyRecord" },
+        scripts: { $ref: "#/$defs/@beep~1repo-utils~1schemas~1PackageJson~1NonEmptyStringRecord" },
+      });
+      expect(packageJsonDefinition?.properties).toHaveProperty("rest");
+      expect(packageJsonDefinition?.properties).toHaveProperty("beep");
     });
 
     it.effect(
