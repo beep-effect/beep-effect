@@ -46,9 +46,14 @@ const handleWith = (stdout: Stream.Stream<Uint8Array, PlatformError.PlatformErro
 
 const readFailingHandle = readFailure.pipe(Stream.fail, handleWith);
 
-// One byte past the kit's default per-stream capture budget.
-const oversizedStdout = Stream.succeed(new Uint8Array(DEFAULT_MAX_OUTPUT_BYTES + 1).fill(0x61));
+// The driver raises the kit's per-stream capture budget; one byte past it.
+// The buffer is left unfilled: the kit counts bytes before decoding, so the
+// zeroed pages are never touched.
+const PDF_TOOLS_MAX_OUTPUT_BYTES = 256 * 1024 * 1024;
+const oversizedStdout = Stream.succeed(new Uint8Array(PDF_TOOLS_MAX_OUTPUT_BYTES + 1));
 const oversizedHandle = handleWith(oversizedStdout);
+// One byte past the kit's default budget, still inside the driver's.
+const pastDefaultHandle = handleWith(Stream.succeed(new Uint8Array(DEFAULT_MAX_OUTPUT_BYTES + 1).fill(0x61)));
 
 const spawnerOf = (spawn: () => Effect.Effect<ChildProcessSpawner.ChildProcessHandle, PlatformError.PlatformError>) =>
   Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, ChildProcessSpawner.make(spawn));
@@ -127,6 +132,19 @@ describe("@beep/pdf-tools process reason map", () => {
           expect(error.reason).toBe("tool-failed");
           expect(error.message).toBe(`pdftotext timed out after 50 ms while ${PAGE_TEXT}.`);
           assertNone(error.cause);
+        })
+      );
+    }
+  );
+
+  it.layer(toolsOver(spawnerOf(() => Effect.succeed(pastDefaultHandle))), { timeout: "30 seconds" })(
+    "when the output is past the kit's default capture bound",
+    (it) => {
+      it.effect(
+        "still returns the text, because the driver raises the bound",
+        Effect.fnUntraced(function* () {
+          const text = yield* pageText;
+          expect(text.length).toBe(DEFAULT_MAX_OUTPUT_BYTES + 1);
         })
       );
     }

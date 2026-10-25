@@ -45,8 +45,11 @@ const handleWith = (stdout: Stream.Stream<Uint8Array, PlatformError.PlatformErro
 
 const readFailingHandle = readFailure.pipe(Stream.fail, handleWith);
 
-// One byte past the kit's default per-stream capture budget.
-const oversizedStdout = Stream.succeed(new Uint8Array(DEFAULT_MAX_OUTPUT_BYTES + 1).fill(0x61));
+// The driver raises the kit's per-stream capture budget; one byte past it.
+// The buffer is left unfilled: the kit counts bytes before decoding, so the
+// zeroed pages are never touched.
+const EXIFTOOL_MAX_OUTPUT_BYTES = 128 * 1024 * 1024;
+const oversizedStdout = Stream.succeed(new Uint8Array(EXIFTOOL_MAX_OUTPUT_BYTES + 1));
 const oversizedHandle = handleWith(oversizedStdout);
 
 const spawnerOf = (spawn: () => Effect.Effect<ChildProcessSpawner.ChildProcessHandle, PlatformError.PlatformError>) =>
@@ -124,6 +127,8 @@ describe("@beep/exiftool process reason map", () => {
           const cause = O.getOrUndefined(error.cause);
           assertInstanceOf(cause, CommandOutputError);
           expect(cause.kind).toBe("tooLarge");
+          expect(cause.cause).toMatchObject({ limit: EXIFTOOL_MAX_OUTPUT_BYTES });
+          expect(EXIFTOOL_MAX_OUTPUT_BYTES).toBeGreaterThan(DEFAULT_MAX_OUTPUT_BYTES);
         })
       );
     }

@@ -35,6 +35,16 @@ const exitFailure = PlatformError.systemError({
   description: "exit status unavailable",
 });
 
+// The Node spawner checks a working directory with `fs.access` before it
+// spawns; that failure happens before the handle exists, so it is a spawn
+// error even though its method is not "spawn".
+const accessFailure = PlatformError.systemError({
+  _tag: "NotFound",
+  module: "FileSystem",
+  method: "access",
+  description: "working directory missing",
+});
+
 const handleWith = (options: {
   readonly stdout?: Stream.Stream<Uint8Array, PlatformError.PlatformError>;
   readonly stderr?: Stream.Stream<Uint8Array, PlatformError.PlatformError>;
@@ -79,6 +89,24 @@ describe("@beep/tailscale process reason map", () => {
         expect(error.subcommand).toBe("serve");
         expect(error.argumentCount).toBe(4);
         expect(error.cause).toBe(spawnFailure);
+      })
+    );
+  });
+
+  it.layer(
+    Layer.succeed(
+      ChildProcessSpawner.ChildProcessSpawner,
+      ChildProcessSpawner.make(() => Effect.fail(accessFailure))
+    ),
+    { timeout: "30 seconds" }
+  )("when a pre-spawn check fails", (it) => {
+    it.effect(
+      "maps status to a spawn error carrying the access failure",
+      Effect.fnUntraced(function* () {
+        const error = yield* Effect.flip(readTailscaleStatus);
+        assertInstanceOf(error, TailscaleCommandSpawnError);
+        expect(error.subcommand).toBe("status");
+        expect(error.cause).toBe(accessFailure);
       })
     );
   });

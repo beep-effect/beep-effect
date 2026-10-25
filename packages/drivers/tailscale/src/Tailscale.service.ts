@@ -43,11 +43,20 @@ const forceKillGrace = Duration.seconds(2);
 
 // The kit folds every platform failure of a run into `CommandFailedError` of
 // kind "spawn". The platform tags where it failed (`method`), which keeps this
-// driver's split: a failure to start the process is a spawn error, a failure
-// while reading its output or awaiting its exit is an output error. An
-// over-budget stream (the kit's capture bound) is an output error too.
+// driver's split. The methods below fail only once the process handle exists
+// (a stream read or write, the exit wait, a kill), so they are output errors;
+// every other method failed before the handle existed (`spawn` itself, or the
+// spawner's `access` check of a working directory) and is a spawn error, as
+// under the old fold. An over-budget stream (the kit's capture bound) is an
+// output error too.
+const isHandleFailureMethod = (method: string): boolean =>
+  Str.startsWith("fromReadable(")(method) ||
+  Str.startsWith("fromWritable(")(method) ||
+  method === "exitCode" ||
+  method === "kill";
+
 const isSpawnFailure = (cause: unknown): boolean =>
-  PlatformError.isPlatformError(cause) && cause.reason.method === "spawn";
+  PlatformError.isPlatformError(cause) && !isHandleFailureMethod(cause.reason.method);
 
 const collectTailscale = <const Subcommand extends "status" | "serve">(
   command: ChildProcess.Command,

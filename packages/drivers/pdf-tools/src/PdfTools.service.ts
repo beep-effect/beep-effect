@@ -244,6 +244,12 @@ const toolFailure = (
     )
   );
 
+// Per-stream capture ceiling. `pdftotext -bbox-layout` writes a word-level
+// XHTML document to stdout that outgrows the kit's 16 MiB default on long
+// PDFs, and the hand-rolled fold had no ceiling, so this driver raises it
+// instead of inheriting the default.
+const pdfToolsMaxOutputBytes = 256 * 1024 * 1024;
+
 const makeService = Effect.fn("PdfTools.makeService")(function* (config: PdfToolsConfig) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -265,7 +271,10 @@ const makeService = Effect.fn("PdfTools.makeService")(function* (config: PdfTool
       { ...env }
     );
     // Leaving the run's scope on timeout interrupts the handle, which stops the tool.
-    return Run.collect(command, { timeout: `${config.timeoutMillis} millis` }).pipe(
+    return Run.collect(command, {
+      timeout: `${config.timeoutMillis} millis`,
+      maxOutputBytes: pdfToolsMaxOutputBytes,
+    }).pipe(
       Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
       Effect.mapError((error) => toolFailure(error, executable, what, config.timeoutMillis)),
       Effect.flatMap((output) =>

@@ -348,13 +348,18 @@ export const exiftoolVersionArgs: ReadonlyArray<string> = ["-ver"];
 const commandFailureCause = (error: CommandFailedError | CommandOutputError): unknown =>
   error._tag === "CommandFailedError" ? error.cause : error;
 
+// Per-stream capture ceiling. A `-j` readTags batch over many files can run
+// well past the kit's 16 MiB default, and the hand-rolled fold had no ceiling,
+// so this driver raises it instead of inheriting the default.
+const exiftoolMaxOutputBytes = 128 * 1024 * 1024;
+
 const runProcess = (
   spawner: ChildProcessSpawner.ChildProcessSpawner["Service"],
   command: ChildProcess.Command,
   operation: string,
   message: string
 ): Effect.Effect<CommandOutput, ExiftoolError> =>
-  Run.collect(command).pipe(
+  Run.collect(command, { maxOutputBytes: exiftoolMaxOutputBytes }).pipe(
     Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
     Effect.mapError((error) => ExiftoolError.fromUnknown(operation, message, { cause: commandFailureCause(error) }))
   );
