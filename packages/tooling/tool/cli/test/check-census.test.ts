@@ -220,4 +220,113 @@ it.layer(NodeServices.layer)("check census", (it) => {
       );
     })
   );
+
+  it.effect(
+    "falls back to dist when a referenced project's extends chain sets no outDir",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* findRepoRoot();
+      const tsgoPath = path.join(repoRoot, "node_modules", ".bin", "tsgo");
+      const tempRoot = path.join(repoRoot, "node_modules", ".tmp");
+      yield* fs.makeDirectory(tempRoot, { recursive: true });
+      const root = yield* fs.makeTempDirectoryScoped({ directory: tempRoot, prefix: "check-census-no-outdir-" });
+      const consumerDir = path.join(root, "packages", "consumer");
+
+      yield* writeFixtureRepo(root);
+      yield* writeFixtureJson(root, "packages/upstream/tsconfig.json", {
+        compilerOptions: { ...baseCompilerOptions, composite: true, declaration: true, rootDir: "src" },
+        include: ["src"],
+      });
+
+      const error = yield* runCheckCensus(
+        CheckCensusOptions.make({
+          repoRoot: root,
+          tsgoPath,
+          packages: [{ name: "@fixture/consumer", dir: consumerDir }],
+          concurrency: 1,
+        })
+      ).pipe(Effect.flip);
+
+      expect(error.message).toContain(
+        "  - @fixture/consumer: ../upstream/tsconfig.json -> packages/upstream/dist/index.d.ts"
+      );
+    })
+  );
+
+  it.effect(
+    "fails naming the referenced project when its extends chain holds a value the kit rejects",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* findRepoRoot();
+      const tsgoPath = path.join(repoRoot, "node_modules", ".bin", "tsgo");
+      const tempRoot = path.join(repoRoot, "node_modules", ".tmp");
+      yield* fs.makeDirectory(tempRoot, { recursive: true });
+      const root = yield* fs.makeTempDirectoryScoped({ directory: tempRoot, prefix: "check-census-rejected-" });
+      const consumerDir = path.join(root, "packages", "consumer");
+      const upstreamTsconfig = path.join(root, "packages", "upstream", "tsconfig.json");
+
+      // `target: "es3"` is a removed value the typed CompilerOptions schema
+      // rejects. It sits in a base the upstream project extends, so only the
+      // full extends-chain read (3-A5) sees it; the census fails up front.
+      yield* writeFixtureRepo(root);
+      yield* writeFixtureJson(root, "tsconfig.base.json", { compilerOptions: { target: "es3" } });
+      yield* writeFixtureJson(root, "packages/upstream/tsconfig.json", {
+        extends: "../../tsconfig.base.json",
+        compilerOptions: { composite: true, declaration: true, outDir: "dist", rootDir: "src" },
+        include: ["src"],
+      });
+
+      const error = yield* runCheckCensus(
+        CheckCensusOptions.make({
+          repoRoot: root,
+          tsgoPath,
+          packages: [{ name: "@fixture/consumer", dir: consumerDir }],
+          concurrency: 1,
+        })
+      ).pipe(Effect.flip);
+
+      expect(error._tag).toBe("QualityScriptCommandError");
+      expect(error.message).toContain(
+        `Failed to resolve compilerOptions.outDir of referenced project ${upstreamTsconfig}.`
+      );
+      expect(yield* fs.exists(path.join(consumerDir, CHECK_CENSUS_OVERLAY_FILE_NAME))).toBe(false);
+    })
+  );
+
+  it.effect(
+    "fails naming the package tsconfig when a reference path is empty",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* findRepoRoot();
+      const tsgoPath = path.join(repoRoot, "node_modules", ".bin", "tsgo");
+      const tempRoot = path.join(repoRoot, "node_modules", ".tmp");
+      yield* fs.makeDirectory(tempRoot, { recursive: true });
+      const root = yield* fs.makeTempDirectoryScoped({ directory: tempRoot, prefix: "check-census-empty-ref-" });
+      const consumerDir = path.join(root, "packages", "consumer");
+      const consumerTsconfig = path.join(consumerDir, "tsconfig.json");
+
+      yield* writeFixtureRepo(root);
+      yield* writeFixtureJson(root, "packages/consumer/tsconfig.json", {
+        compilerOptions: { ...baseCompilerOptions, composite: true, declaration: true, outDir: "dist" },
+        include: ["src"],
+        references: [{ path: "" }],
+      });
+
+      const error = yield* runCheckCensus(
+        CheckCensusOptions.make({
+          repoRoot: root,
+          tsgoPath,
+          packages: [{ name: "@fixture/consumer", dir: consumerDir }],
+          concurrency: 1,
+        })
+      ).pipe(Effect.flip);
+
+      expect(error._tag).toBe("QualityScriptCommandError");
+      expect(error.message).toContain(`Failed to read references from ${consumerTsconfig}.`);
+      expect(yield* fs.exists(path.join(consumerDir, CHECK_CENSUS_OVERLAY_FILE_NAME))).toBe(false);
+    })
+  );
 });

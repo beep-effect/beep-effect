@@ -11,6 +11,7 @@ import { TsconfigLoader } from "@beep/repo-tsconfig/TsconfigLoader";
 import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { resolveWorkspacePackages } from "@beep/repo-utils/Workspaces";
 import { A, Str, thunkFalse } from "@beep/utils";
+import * as Cache from "effect/Cache";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
@@ -24,8 +25,8 @@ import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as Struct from "effect/Struct";
 import { renderTruncatedLines } from "../../internal/artifacts/index.ts";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
@@ -477,7 +478,8 @@ const readTsconfigReferences = Effect.fn("CheckCensus.readTsconfigReferences")(f
     QualityScriptCommandError.mapError(`Failed to read references from ${tsconfigPath}.`)
   );
 
-  // Only `path` reaches the overlay; tsc ignores every other reference key here.
+  // The synthesized overlay keeps only each reference's `path`, as the pre-3-A5
+  // reader did (it stripped every other key, `prepend` and `circular` included).
   return A.map(tsconfig.references ?? A.empty(), (reference) => ({ path: reference.path }));
 });
 
@@ -497,6 +499,8 @@ const referencedTsconfigPath = Effect.fn("CheckCensus.referencedTsconfigPath")(f
 // The declaration index a reference-keeping program resolves the referenced
 // project through: `<outDir>/index.d.ts`, with `outDir` resolved through the
 // project's full `extends` chain (absolute, `${configDir}` substituted).
+// Each call re-reads and re-decodes that chain, so a census run memoizes it
+// per referenced tsconfig through `referencedDeclarationIndexCache`.
 const referencedDeclarationIndex = Effect.fn("CheckCensus.referencedDeclarationIndex")(function* (
   tsconfigPath: string
 ): Effect.fn.Return<string, QualityScriptCommandError, FileSystem.FileSystem | Path.Path> {
@@ -511,9 +515,19 @@ const referencedDeclarationIndex = Effect.fn("CheckCensus.referencedDeclarationI
   return path.resolve(path.dirname(tsconfigPath), outDir, DECLARATION_INDEX_FILE);
 });
 
+type DeclarationIndexCache = Cache.Cache<string, string, QualityScriptCommandError>;
+
+// One entry per distinct referenced tsconfig: the repo has about 185 projects
+// behind 1,273 references, so the extends chain of each is resolved once per
+// run. The cache lives for one `assertCheckCensusTreeBuilt` call, so it is
+// unbounded.
+const referencedDeclarationIndexCache: Effect.Effect<DeclarationIndexCache, never, FileSystem.FileSystem | Path.Path> =
+  Cache.make({ lookup: referencedDeclarationIndex, capacity: Number.MAX_SAFE_INTEGER });
+
 const missingReferenceOutputs = Effect.fn("CheckCensus.missingReferenceOutputs")(function* (
   repoRoot: string,
-  pkg: CheckCensusPackage
+  pkg: CheckCensusPackage,
+  declarationIndexes: DeclarationIndexCache
 ): Effect.fn.Return<
   ReadonlyArray<CheckCensusMissingOutput>,
   QualityScriptCommandError,
@@ -527,7 +541,7 @@ const missingReferenceOutputs = Effect.fn("CheckCensus.missingReferenceOutputs")
     references,
     Effect.fnUntraced(function* (reference) {
       const tsconfigPath = yield* referencedTsconfigPath(pkg.dir, reference.path);
-      const declarationFile = yield* referencedDeclarationIndex(tsconfigPath);
+      const declarationFile = yield* Cache.get(declarationIndexes, tsconfigPath);
       const exists = yield* fs.exists(declarationFile).pipe(Effect.orElseSucceed(thunkFalse));
 
       return exists
@@ -583,9 +597,12 @@ const renderMissingOutput = (missing: CheckCensusMissingOutput): string =>
 export const assertCheckCensusTreeBuilt = Effect.fn("CheckCensus.assertTreeBuilt")(function* (
   options: CheckCensusOptions
 ): Effect.fn.Return<void, QualityScriptCommandError, FileSystem.FileSystem | Path.Path> {
-  const missing = yield* Effect.forEach(options.packages, (pkg) => missingReferenceOutputs(options.repoRoot, pkg), {
-    concurrency: options.concurrency,
-  }).pipe(Effect.map(A.flatten));
+  const declarationIndexes = yield* referencedDeclarationIndexCache;
+  const missing = yield* Effect.forEach(
+    options.packages,
+    (pkg) => missingReferenceOutputs(options.repoRoot, pkg, declarationIndexes),
+    { concurrency: options.concurrency }
+  ).pipe(Effect.map(A.flatten));
 
   if (A.isReadonlyArrayNonEmpty(missing)) {
     const packages = pipe(
@@ -610,6 +627,8 @@ export const assertCheckCensusTreeBuilt = Effect.fn("CheckCensus.assertTreeBuilt
 // includes `scripts` its tsconfig.json does not), so the synthesized overlay
 // copies that selection, as written, and isolates the reference strategy it
 // measures.
+// `TsconfigDocument` is `TsconfigJson.Type` from `@beep/tsconfig`, named through
+// the loader so repo-cli does not take a direct dependency on that package.
 type TsconfigDocument = Effect.Success<ReturnType<typeof TsconfigLoader.load>>;
 
 const readCheckOverlaySelection = Effect.fn("CheckCensus.readCheckOverlaySelection")(function* (
@@ -625,10 +644,8 @@ const readCheckOverlaySelection = Effect.fn("CheckCensus.readCheckOverlaySelecti
     QualityScriptCommandError.mapError(`Failed to read include/exclude from ${overlayPath}.`)
   );
 
-  return {
-    ...(P.isUndefined(overlay.include) ? {} : { include: overlay.include }),
-    ...(P.isUndefined(overlay.exclude) ? {} : { exclude: overlay.exclude }),
-  };
+  // Exact optional keys: an absent selection key stays absent in the copy.
+  return Struct.pick(overlay, ["include", "exclude"]);
 });
 
 // The reference-keeping overlay is the committed check overlay with two
