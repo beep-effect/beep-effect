@@ -236,7 +236,9 @@ const LAYER_SOURCE_EXTENSIONS = [".ts", ".tsx", ".mts", ".cts"];
 const LAYER_ANALYSIS_DEPTH = 24;
 
 type LayerFunction = EffectVitestFunctionNode | MethodDeclaration;
-type LayerBinding = { readonly parameter: MorphNode; readonly argument: Expression; readonly env: LayerEnv };
+// `argument` is `None` when the call cannot say which value the parameter receives (at or after a
+// spread argument), so neither a positional argument nor the parameter's default may stand in for it.
+type LayerBinding = { readonly parameter: MorphNode; readonly argument: O.Option<Expression>; readonly env: LayerEnv };
 type LayerEnv = ReadonlyArray<LayerBinding>;
 type LayerEntity =
   | { readonly _tag: "Value"; readonly expression: Expression; readonly env: LayerEnv }
@@ -337,7 +339,7 @@ const parameterEntity = (parameter: MorphNode, env: LayerEnv): O.Option<LayerEnt
         Node.isParameterDeclaration(parameter)
           ? O.map(O.fromUndefinedOr(parameter.getInitializer()), (initializer) => valueEntity(initializer, env))
           : O.none(),
-      onSome: ({ argument, env: argumentEnv }) => O.some(valueEntity(argument, argumentEnv)),
+      onSome: ({ argument, env: argumentEnv }) => O.map(argument, (value) => valueEntity(value, argumentEnv)),
     }
   );
 
@@ -551,23 +553,30 @@ const layerFunctionReturns = (definition: LayerFunction): ReadonlyArray<Expressi
 
 type LayerJudge = (expression: Expression, env: LayerEnv, analysis: LayerAnalysis, depth: number) => boolean;
 
-// Parameters bound to a call's positional arguments, ahead of the definition's own bindings.
+// Parameters bound to a call's positional arguments, ahead of the definition's own bindings. Positions
+// hold only before the first spread argument: every parameter at or after it binds to an unknown value.
 const bindArguments = (
   definition: LayerFunction,
   argumentsOf: ReadonlyArray<MorphNode>,
   callerEnv: LayerEnv,
   definitionEnv: LayerEnv
-): LayerEnv => [
-  ...A.getSomes(
-    A.map(definition.getParameters(), (parameter, index): O.Option<LayerBinding> => {
-      const argument = argumentsOf[index];
-      return parameter.isRestParameter() || !Node.isExpression(argument) || Node.isSpreadElement(argument)
-        ? O.none()
-        : O.some({ parameter, argument, env: callerEnv });
-    })
-  ),
-  ...definitionEnv,
-];
+): LayerEnv => {
+  // Without a spread every position is known; a missing argument then falls back to the parameter's default.
+  const firstSpread = O.getOrElse(A.findFirstIndex(argumentsOf, Node.isSpreadElement), () => Number.POSITIVE_INFINITY);
+  return [
+    ...A.getSomes(
+      A.map(definition.getParameters(), (parameter, index): O.Option<LayerBinding> => {
+        if (parameter.isRestParameter()) return O.none();
+        if (index >= firstSpread) return O.some({ parameter, argument: O.none(), env: callerEnv });
+        const argument = argumentsOf[index];
+        return Node.isExpression(argument)
+          ? O.some({ parameter, argument: O.some(argument), env: callerEnv })
+          : O.none();
+      })
+    ),
+    ...definitionEnv,
+  ];
+};
 
 // The generator of `Effect.fn(name)(function* () {})`, `Effect.fn(function* () {})` or
 // `Effect.fnUntraced(function* () {})`. Extra pipeable arguments are not followed.

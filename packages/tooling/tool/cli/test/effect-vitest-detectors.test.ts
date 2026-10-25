@@ -830,6 +830,7 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         `${helper} it.layer(testLayer(stub(() => Fx.succeed(1))))${block}`,
         `${helper} it.layer(withDb(L.succeed(Db, {})))${block}`,
         `const withDefault = (db = L.succeed(Db, {})) => db; it.layer(withDefault())${block}`,
+        `const first = (db, ...rest) => db; it.layer(first(L.succeed(Db, {}), ...extra))${block}`,
       ])
         assertFalse(yield* hasRule(body, "EV014"), body);
       for (const body of [
@@ -837,6 +838,9 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         `${helper} it.layer(withDb(ImportedLive))${block}`,
         `const withDb = (...layers) => L.mergeAll(...layers); it.layer(withDb(L.succeed(Db, {})))${block}`,
         `const withDefault = (db = L.effect(Db, Fx.promise(() => open()))) => db; it.layer(withDefault())${block}`,
+        // A spread argument shifts every later parameter: `pick(...pair, pure)` binds `db` to `pair[1]`.
+        `const pair = [L.succeed(A, {}), L.effect(Db, Fx.promise(() => open()))]; const pick = (a, db) => db; it.layer(pick(...pair, L.succeed(Db, {})))${block}`,
+        `const pair = [L.succeed(A, {}), L.effect(Db, Fx.promise(() => open()))]; const pick = (a, db = L.succeed(Db, {})) => db; it.layer(pick(...pair))${block}`,
       ])
         assertTrue(yield* hasRule(body, "EV014"), body);
     })
