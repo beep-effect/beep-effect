@@ -1,0 +1,5289 @@
+{
+  "concurrency": 4,
+  "rows": [
+    {
+      "package": "@beep/acp",
+      "overlay": {
+        "files": 739,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 1831629,
+        "types": 344746
+      },
+      "referenceKeeping": {
+        "files": 739,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 1831629,
+        "types": 344746
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 739
+    },
+    {
+      "package": "@beep/agents-client",
+      "overlay": {
+        "files": 1153,
+        "upstreamSrc": 0,
+        "upstreamDist": 260,
+        "diagnostics": 0,
+        "instantiations": 201105,
+        "types": 54542
+      },
+      "referenceKeeping": {
+        "files": 1153,
+        "upstreamSrc": 0,
+        "upstreamDist": 260,
+        "diagnostics": 0,
+        "instantiations": 201105,
+        "types": 54542
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1153
+    },
+    {
+      "package": "@beep/agents-domain",
+      "overlay": {
+        "files": 1050,
+        "upstreamSrc": 0,
+        "upstreamDist": 180,
+        "diagnostics": 0,
+        "instantiations": 177863,
+        "types": 45317
+      },
+      "referenceKeeping": {
+        "files": 1050,
+        "upstreamSrc": 0,
+        "upstreamDist": 180,
+        "diagnostics": 0,
+        "instantiations": 177863,
+        "types": 45317
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1050
+    },
+    {
+      "package": "@beep/agents-server",
+      "overlay": {
+        "files": 1270,
+        "upstreamSrc": 0,
+        "upstreamDist": 298,
+        "diagnostics": 0,
+        "instantiations": 309221,
+        "types": 82113
+      },
+      "referenceKeeping": {
+        "files": 1270,
+        "upstreamSrc": 0,
+        "upstreamDist": 298,
+        "diagnostics": 0,
+        "instantiations": 309221,
+        "types": 82113
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1270
+    },
+    {
+      "package": "@beep/agents-tables",
+      "overlay": {
+        "files": 1024,
+        "upstreamSrc": 0,
+        "upstreamDist": 164,
+        "diagnostics": 0,
+        "instantiations": 91199,
+        "types": 20790
+      },
+      "referenceKeeping": {
+        "files": 1024,
+        "upstreamSrc": 0,
+        "upstreamDist": 164,
+        "diagnostics": 0,
+        "instantiations": 91199,
+        "types": 20790
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1024
+    },
+    {
+      "package": "@beep/agents-use-cases",
+      "overlay": {
+        "files": 1141,
+        "upstreamSrc": 0,
+        "upstreamDist": 249,
+        "diagnostics": 0,
+        "instantiations": 287303,
+        "types": 74652
+      },
+      "referenceKeeping": {
+        "files": 1141,
+        "upstreamSrc": 0,
+        "upstreamDist": 249,
+        "diagnostics": 0,
+        "instantiations": 287303,
+        "types": 74652
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1141
+    },
+    {
+      "package": "@beep/ai-provider-cli",
+      "overlay": {
+        "files": 751,
+        "upstreamSrc": 0,
+        "upstreamDist": 143,
+        "diagnostics": 0,
+        "instantiations": 420200,
+        "types": 103974
+      },
+      "referenceKeeping": {
+        "files": 751,
+        "upstreamSrc": 0,
+        "upstreamDist": 143,
+        "diagnostics": 0,
+        "instantiations": 420200,
+        "types": 103974
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 751
+    },
+    {
+      "package": "@beep/ai-sync",
+      "overlay": {
+        "files": 711,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 110669,
+        "types": 41108
+      },
+      "referenceKeeping": {
+        "files": 711,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 110669,
+        "types": 41108
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 711
+    },
+    {
+      "package": "@beep/anthropic",
+      "overlay": {
+        "files": 599,
+        "upstreamSrc": 0,
+        "upstreamDist": 13,
+        "diagnostics": 0,
+        "instantiations": 56242,
+        "types": 24110
+      },
+      "referenceKeeping": {
+        "files": 599,
+        "upstreamSrc": 0,
+        "upstreamDist": 13,
+        "diagnostics": 0,
+        "instantiations": 56242,
+        "types": 24110
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 599
+    },
+    {
+      "package": "@beep/api-docs",
+      "overlay": {
+        "files": 1384,
+        "upstreamSrc": 0,
+        "upstreamDist": 163,
+        "diagnostics": 0,
+        "instantiations": 145583,
+        "types": 61105
+      },
+      "referenceKeeping": {
+        "files": 1384,
+        "upstreamSrc": 0,
+        "upstreamDist": 163,
+        "diagnostics": 0,
+        "instantiations": 145583,
+        "types": 61105
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1384
+    },
+    {
+      "package": "@beep/api-transport",
+      "overlay": {
+        "files": 696,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 21098,
+        "types": 9854
+      },
+      "referenceKeeping": {
+        "files": 696,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 21098,
+        "types": 9854
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 696
+    },
+    {
+      "package": "@beep/architecture-lab-client",
+      "overlay": {
+        "files": 1033,
+        "upstreamSrc": 0,
+        "upstreamDist": 177,
+        "diagnostics": 0,
+        "instantiations": 4561,
+        "types": 2076
+      },
+      "referenceKeeping": {
+        "files": 1033,
+        "upstreamSrc": 0,
+        "upstreamDist": 177,
+        "diagnostics": 0,
+        "instantiations": 4561,
+        "types": 2076
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1033
+    },
+    {
+      "package": "@beep/architecture-lab-config",
+      "overlay": {
+        "files": 699,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 25170,
+        "types": 12783
+      },
+      "referenceKeeping": {
+        "files": 699,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 25170,
+        "types": 12783
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 699
+    },
+    {
+      "package": "@beep/architecture-lab-domain",
+      "overlay": {
+        "files": 1041,
+        "upstreamSrc": 0,
+        "upstreamDist": 173,
+        "diagnostics": 0,
+        "instantiations": 83781,
+        "types": 26176
+      },
+      "referenceKeeping": {
+        "files": 1041,
+        "upstreamSrc": 0,
+        "upstreamDist": 173,
+        "diagnostics": 0,
+        "instantiations": 83781,
+        "types": 26176
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1041
+    },
+    {
+      "package": "@beep/architecture-lab-proof",
+      "overlay": {
+        "files": 1142,
+        "upstreamSrc": 0,
+        "upstreamDist": 209,
+        "diagnostics": 0,
+        "instantiations": 10084,
+        "types": 4424
+      },
+      "referenceKeeping": {
+        "files": 1142,
+        "upstreamSrc": 0,
+        "upstreamDist": 209,
+        "diagnostics": 0,
+        "instantiations": 10084,
+        "types": 4424
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1142
+    },
+    {
+      "package": "@beep/architecture-lab-server",
+      "overlay": {
+        "files": 1150,
+        "upstreamSrc": 0,
+        "upstreamDist": 205,
+        "diagnostics": 0,
+        "instantiations": 173846,
+        "types": 54710
+      },
+      "referenceKeeping": {
+        "files": 1150,
+        "upstreamSrc": 0,
+        "upstreamDist": 205,
+        "diagnostics": 0,
+        "instantiations": 173846,
+        "types": 54710
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1150
+    },
+    {
+      "package": "@beep/architecture-lab-tables",
+      "overlay": {
+        "files": 1033,
+        "upstreamSrc": 0,
+        "upstreamDist": 173,
+        "diagnostics": 0,
+        "instantiations": 74973,
+        "types": 19979
+      },
+      "referenceKeeping": {
+        "files": 1033,
+        "upstreamSrc": 0,
+        "upstreamDist": 173,
+        "diagnostics": 0,
+        "instantiations": 74973,
+        "types": 19979
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1033
+    },
+    {
+      "package": "@beep/architecture-lab-ui",
+      "overlay": {
+        "files": 702,
+        "upstreamSrc": 0,
+        "upstreamDist": 136,
+        "diagnostics": 0,
+        "instantiations": 7092,
+        "types": 3720
+      },
+      "referenceKeeping": {
+        "files": 702,
+        "upstreamSrc": 0,
+        "upstreamDist": 136,
+        "diagnostics": 0,
+        "instantiations": 7092,
+        "types": 3720
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 702
+    },
+    {
+      "package": "@beep/architecture-lab-use-cases",
+      "overlay": {
+        "files": 1045,
+        "upstreamSrc": 0,
+        "upstreamDist": 173,
+        "diagnostics": 0,
+        "instantiations": 128755,
+        "types": 42343
+      },
+      "referenceKeeping": {
+        "files": 1045,
+        "upstreamSrc": 0,
+        "upstreamDist": 173,
+        "diagnostics": 0,
+        "instantiations": 128755,
+        "types": 42343
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1045
+    },
+    {
+      "package": "@beep/box",
+      "overlay": {
+        "files": 1234,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 951809,
+        "types": 238216
+      },
+      "referenceKeeping": {
+        "files": 1234,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 951809,
+        "types": 238216
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1234
+    },
+    {
+      "package": "@beep/box-provisioning",
+      "overlay": {
+        "files": 727,
+        "upstreamSrc": 0,
+        "upstreamDist": 135,
+        "diagnostics": 0,
+        "instantiations": 657819,
+        "types": 155633
+      },
+      "referenceKeeping": {
+        "files": 727,
+        "upstreamSrc": 0,
+        "upstreamDist": 135,
+        "diagnostics": 0,
+        "instantiations": 657819,
+        "types": 155633
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 727
+    },
+    {
+      "package": "@beep/brand",
+      "overlay": {
+        "files": 700,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 91708,
+        "types": 27406
+      },
+      "referenceKeeping": {
+        "files": 700,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 91708,
+        "types": 27406
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 700
+    },
+    {
+      "package": "@beep/chalk",
+      "overlay": {
+        "files": 701,
+        "upstreamSrc": 0,
+        "upstreamDist": 129,
+        "diagnostics": 0,
+        "instantiations": 62034,
+        "types": 22503
+      },
+      "referenceKeeping": {
+        "files": 701,
+        "upstreamSrc": 0,
+        "upstreamDist": 129,
+        "diagnostics": 0,
+        "instantiations": 62034,
+        "types": 22503
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 701
+    },
+    {
+      "package": "@beep/ciops",
+      "overlay": {
+        "files": 1519,
+        "upstreamSrc": 0,
+        "upstreamDist": 140,
+        "diagnostics": 0,
+        "instantiations": 545580,
+        "types": 165808
+      },
+      "referenceKeeping": {
+        "files": 1519,
+        "upstreamSrc": 0,
+        "upstreamDist": 140,
+        "diagnostics": 0,
+        "instantiations": 545580,
+        "types": 165808
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1519
+    },
+    {
+      "package": "@beep/cli-kit",
+      "overlay": {
+        "files": 693,
+        "upstreamSrc": 0,
+        "upstreamDist": 54,
+        "diagnostics": 0,
+        "instantiations": 586629,
+        "types": 160939
+      },
+      "referenceKeeping": {
+        "files": 693,
+        "upstreamSrc": 0,
+        "upstreamDist": 54,
+        "diagnostics": 0,
+        "instantiations": 586629,
+        "types": 160939
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 693
+    },
+    {
+      "package": "@beep/codegen-kit",
+      "overlay": {
+        "files": 744,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 116882,
+        "types": 47738
+      },
+      "referenceKeeping": {
+        "files": 744,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 116882,
+        "types": 47738
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 744
+    },
+    {
+      "package": "@beep/colors",
+      "overlay": {
+        "files": 694,
+        "upstreamSrc": 0,
+        "upstreamDist": 129,
+        "diagnostics": 0,
+        "instantiations": 21124,
+        "types": 8967
+      },
+      "referenceKeeping": {
+        "files": 694,
+        "upstreamSrc": 0,
+        "upstreamDist": 129,
+        "diagnostics": 0,
+        "instantiations": 21124,
+        "types": 8967
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 694
+    },
+    {
+      "package": "@beep/commands",
+      "overlay": {
+        "files": 614,
+        "upstreamSrc": 0,
+        "upstreamDist": 42,
+        "diagnostics": 0,
+        "instantiations": 123435,
+        "types": 47015
+      },
+      "referenceKeeping": {
+        "files": 614,
+        "upstreamSrc": 0,
+        "upstreamDist": 42,
+        "diagnostics": 0,
+        "instantiations": 123435,
+        "types": 47015
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 614
+    },
+    {
+      "package": "@beep/config-file",
+      "overlay": {
+        "files": 736,
+        "upstreamSrc": 0,
+        "upstreamDist": 159,
+        "diagnostics": 0,
+        "instantiations": 91957,
+        "types": 41617
+      },
+      "referenceKeeping": {
+        "files": 736,
+        "upstreamSrc": 0,
+        "upstreamDist": 159,
+        "diagnostics": 0,
+        "instantiations": 91957,
+        "types": 41617
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 736
+    },
+    {
+      "package": "@beep/cosmos",
+      "overlay": {
+        "files": 881,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 50666,
+        "types": 22388
+      },
+      "referenceKeeping": {
+        "files": 881,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 50666,
+        "types": 22388
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 881
+    },
+    {
+      "package": "@beep/data",
+      "overlay": {
+        "files": 624,
+        "upstreamSrc": 0,
+        "upstreamDist": 39,
+        "diagnostics": 0,
+        "instantiations": 514093,
+        "types": 185451
+      },
+      "referenceKeeping": {
+        "files": 624,
+        "upstreamSrc": 0,
+        "upstreamDist": 39,
+        "diagnostics": 0,
+        "instantiations": 514093,
+        "types": 185451
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 624
+    },
+    {
+      "package": "@beep/db-admin",
+      "overlay": {
+        "files": 1381,
+        "upstreamSrc": 0,
+        "upstreamDist": 436,
+        "diagnostics": 0,
+        "instantiations": 891701,
+        "types": 121937
+      },
+      "referenceKeeping": {
+        "files": 1381,
+        "upstreamSrc": 0,
+        "upstreamDist": 436,
+        "diagnostics": 0,
+        "instantiations": 891701,
+        "types": 121937
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1381
+    },
+    {
+      "package": "@beep/discord",
+      "overlay": {
+        "files": 698,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 24800,
+        "types": 12809
+      },
+      "referenceKeeping": {
+        "files": 698,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 24800,
+        "types": 12809
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 698
+    },
+    {
+      "package": "@beep/doc-text",
+      "overlay": {
+        "files": 764,
+        "upstreamSrc": 0,
+        "upstreamDist": 140,
+        "diagnostics": 0,
+        "instantiations": 42857,
+        "types": 24141
+      },
+      "referenceKeeping": {
+        "files": 764,
+        "upstreamSrc": 0,
+        "upstreamDist": 140,
+        "diagnostics": 0,
+        "instantiations": 42857,
+        "types": 24141
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 764
+    },
+    {
+      "package": "@beep/dock",
+      "overlay": {
+        "files": 725,
+        "upstreamSrc": 0,
+        "upstreamDist": 132,
+        "diagnostics": 0,
+        "instantiations": 627268,
+        "types": 145201
+      },
+      "referenceKeeping": {
+        "files": 725,
+        "upstreamSrc": 0,
+        "upstreamDist": 132,
+        "diagnostics": 0,
+        "instantiations": 627268,
+        "types": 145201
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 725
+    },
+    {
+      "package": "@beep/dock-react",
+      "overlay": {
+        "files": 749,
+        "upstreamSrc": 0,
+        "upstreamDist": 157,
+        "diagnostics": 0,
+        "instantiations": 211138,
+        "types": 58689
+      },
+      "referenceKeeping": {
+        "files": 749,
+        "upstreamSrc": 0,
+        "upstreamDist": 157,
+        "diagnostics": 0,
+        "instantiations": 211138,
+        "types": 58689
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 749
+    },
+    {
+      "package": "@beep/docket-intake",
+      "overlay": {
+        "files": 2532,
+        "upstreamSrc": 0,
+        "upstreamDist": 681,
+        "diagnostics": 0,
+        "instantiations": 388298,
+        "types": 118125
+      },
+      "referenceKeeping": {
+        "files": 2532,
+        "upstreamSrc": 0,
+        "upstreamDist": 681,
+        "diagnostics": 0,
+        "instantiations": 388298,
+        "types": 118125
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 2532
+    },
+    {
+      "package": "@beep/documents-domain",
+      "overlay": {
+        "files": 1094,
+        "upstreamSrc": 0,
+        "upstreamDist": 215,
+        "diagnostics": 0,
+        "instantiations": 162032,
+        "types": 37947
+      },
+      "referenceKeeping": {
+        "files": 1094,
+        "upstreamSrc": 0,
+        "upstreamDist": 215,
+        "diagnostics": 0,
+        "instantiations": 162032,
+        "types": 37947
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1094
+    },
+    {
+      "package": "@beep/documents-server",
+      "overlay": {
+        "files": 1260,
+        "upstreamSrc": 0,
+        "upstreamDist": 283,
+        "diagnostics": 0,
+        "instantiations": 988605,
+        "types": 219596
+      },
+      "referenceKeeping": {
+        "files": 1260,
+        "upstreamSrc": 0,
+        "upstreamDist": 283,
+        "diagnostics": 0,
+        "instantiations": 988605,
+        "types": 219596
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1260
+    },
+    {
+      "package": "@beep/documents-tables",
+      "overlay": {
+        "files": 1044,
+        "upstreamSrc": 0,
+        "upstreamDist": 172,
+        "diagnostics": 0,
+        "instantiations": 336265,
+        "types": 47573
+      },
+      "referenceKeeping": {
+        "files": 1044,
+        "upstreamSrc": 0,
+        "upstreamDist": 172,
+        "diagnostics": 0,
+        "instantiations": 336265,
+        "types": 47573
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1044
+    },
+    {
+      "package": "@beep/documents-use-cases",
+      "overlay": {
+        "files": 1085,
+        "upstreamSrc": 0,
+        "upstreamDist": 198,
+        "diagnostics": 0,
+        "instantiations": 226803,
+        "types": 48479
+      },
+      "referenceKeeping": {
+        "files": 1085,
+        "upstreamSrc": 0,
+        "upstreamDist": 198,
+        "diagnostics": 0,
+        "instantiations": 226803,
+        "types": 48479
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1085
+    },
+    {
+      "package": "@beep/drizzle",
+      "overlay": {
+        "files": 691,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 12892,
+        "types": 7542
+      },
+      "referenceKeeping": {
+        "files": 691,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 12892,
+        "types": 7542
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 691
+    },
+    {
+      "package": "@beep/duckdb",
+      "overlay": {
+        "files": 905,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 121499,
+        "types": 52188
+      },
+      "referenceKeeping": {
+        "files": 905,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 121499,
+        "types": 52188
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 905
+    },
+    {
+      "package": "@beep/ecfr",
+      "overlay": {
+        "files": 639,
+        "upstreamSrc": 0,
+        "upstreamDist": 53,
+        "diagnostics": 0,
+        "instantiations": 200283,
+        "types": 51928
+      },
+      "referenceKeeping": {
+        "files": 639,
+        "upstreamSrc": 0,
+        "upstreamDist": 53,
+        "diagnostics": 0,
+        "instantiations": 200283,
+        "types": 51928
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 639
+    },
+    {
+      "package": "@beep/editor",
+      "overlay": {
+        "files": 1186,
+        "upstreamSrc": 0,
+        "upstreamDist": 156,
+        "diagnostics": 0,
+        "instantiations": 304264,
+        "types": 135024
+      },
+      "referenceKeeping": {
+        "files": 1186,
+        "upstreamSrc": 0,
+        "upstreamDist": 156,
+        "diagnostics": 0,
+        "instantiations": 304264,
+        "types": 135024
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1186
+    },
+    {
+      "package": "@beep/effect-drizzle",
+      "overlay": {
+        "files": 787,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 392386,
+        "types": 100412
+      },
+      "referenceKeeping": {
+        "files": 787,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 392386,
+        "types": 100412
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 650
+    },
+    {
+      "package": "@beep/epistemic-client",
+      "overlay": {
+        "files": 1140,
+        "upstreamSrc": 0,
+        "upstreamDist": 257,
+        "diagnostics": 0,
+        "instantiations": 101215,
+        "types": 24287
+      },
+      "referenceKeeping": {
+        "files": 1140,
+        "upstreamSrc": 0,
+        "upstreamDist": 257,
+        "diagnostics": 0,
+        "instantiations": 101215,
+        "types": 24287
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1140
+    },
+    {
+      "package": "@beep/epistemic-config",
+      "overlay": {
+        "files": 708,
+        "upstreamSrc": 0,
+        "upstreamDist": 136,
+        "diagnostics": 0,
+        "instantiations": 24769,
+        "types": 14158
+      },
+      "referenceKeeping": {
+        "files": 708,
+        "upstreamSrc": 0,
+        "upstreamDist": 136,
+        "diagnostics": 0,
+        "instantiations": 24769,
+        "types": 14158
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 708
+    },
+    {
+      "package": "@beep/epistemic-domain",
+      "overlay": {
+        "files": 1123,
+        "upstreamSrc": 0,
+        "upstreamDist": 211,
+        "diagnostics": 0,
+        "instantiations": 583459,
+        "types": 110403
+      },
+      "referenceKeeping": {
+        "files": 1123,
+        "upstreamSrc": 0,
+        "upstreamDist": 211,
+        "diagnostics": 0,
+        "instantiations": 583459,
+        "types": 110403
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1123
+    },
+    {
+      "package": "@beep/epistemic-server",
+      "overlay": {
+        "files": 1339,
+        "upstreamSrc": 0,
+        "upstreamDist": 360,
+        "diagnostics": 0,
+        "instantiations": 1060287,
+        "types": 170788
+      },
+      "referenceKeeping": {
+        "files": 1339,
+        "upstreamSrc": 0,
+        "upstreamDist": 360,
+        "diagnostics": 0,
+        "instantiations": 1060287,
+        "types": 170788
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1339
+    },
+    {
+      "package": "@beep/epistemic-tables",
+      "overlay": {
+        "files": 1121,
+        "upstreamSrc": 0,
+        "upstreamDist": 231,
+        "diagnostics": 0,
+        "instantiations": 551355,
+        "types": 67867
+      },
+      "referenceKeeping": {
+        "files": 1121,
+        "upstreamSrc": 0,
+        "upstreamDist": 231,
+        "diagnostics": 0,
+        "instantiations": 551355,
+        "types": 67867
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1121
+    },
+    {
+      "package": "@beep/epistemic-ui",
+      "overlay": {
+        "files": 2626,
+        "upstreamSrc": 0,
+        "upstreamDist": 274,
+        "diagnostics": 0,
+        "instantiations": 250687,
+        "types": 47938
+      },
+      "referenceKeeping": {
+        "files": 2626,
+        "upstreamSrc": 0,
+        "upstreamDist": 274,
+        "diagnostics": 0,
+        "instantiations": 250687,
+        "types": 47938
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 2626
+    },
+    {
+      "package": "@beep/epistemic-use-cases",
+      "overlay": {
+        "files": 1153,
+        "upstreamSrc": 0,
+        "upstreamDist": 252,
+        "diagnostics": 0,
+        "instantiations": 591707,
+        "types": 99277
+      },
+      "referenceKeeping": {
+        "files": 1153,
+        "upstreamSrc": 0,
+        "upstreamDist": 252,
+        "diagnostics": 0,
+        "instantiations": 591707,
+        "types": 99277
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1153
+    },
+    {
+      "package": "@beep/epistemics",
+      "overlay": {
+        "files": 734,
+        "upstreamSrc": 0,
+        "upstreamDist": 131,
+        "diagnostics": 0,
+        "instantiations": 145951,
+        "types": 53339
+      },
+      "referenceKeeping": {
+        "files": 734,
+        "upstreamSrc": 0,
+        "upstreamDist": 131,
+        "diagnostics": 0,
+        "instantiations": 145951,
+        "types": 53339
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 734
+    },
+    {
+      "package": "@beep/exiftool",
+      "overlay": {
+        "files": 695,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 52899,
+        "types": 20946
+      },
+      "referenceKeeping": {
+        "files": 695,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 52899,
+        "types": 20946
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 695
+    },
+    {
+      "package": "@beep/fc-runs",
+      "overlay": {
+        "files": 326,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 1452,
+        "types": 1911
+      },
+      "referenceKeeping": {
+        "files": 326,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 1452,
+        "types": 1911
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 326
+    },
+    {
+      "package": "@beep/ffmpeg",
+      "overlay": {
+        "files": 700,
+        "upstreamSrc": 0,
+        "upstreamDist": 131,
+        "diagnostics": 0,
+        "instantiations": 147194,
+        "types": 42900
+      },
+      "referenceKeeping": {
+        "files": 700,
+        "upstreamSrc": 0,
+        "upstreamDist": 131,
+        "diagnostics": 0,
+        "instantiations": 147194,
+        "types": 42900
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 700
+    },
+    {
+      "package": "@beep/file-processing",
+      "overlay": {
+        "files": 725,
+        "upstreamSrc": 0,
+        "upstreamDist": 128,
+        "diagnostics": 0,
+        "instantiations": 290698,
+        "types": 113267
+      },
+      "referenceKeeping": {
+        "files": 725,
+        "upstreamSrc": 0,
+        "upstreamDist": 128,
+        "diagnostics": 0,
+        "instantiations": 290698,
+        "types": 113267
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 725
+    },
+    {
+      "package": "@beep/freshbooks",
+      "overlay": {
+        "files": 700,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 54347,
+        "types": 24019
+      },
+      "referenceKeeping": {
+        "files": 700,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 54347,
+        "types": 24019
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 700
+    },
+    {
+      "package": "@beep/git",
+      "overlay": {
+        "files": 614,
+        "upstreamSrc": 0,
+        "upstreamDist": 42,
+        "diagnostics": 0,
+        "instantiations": 162076,
+        "types": 57588
+      },
+      "referenceKeeping": {
+        "files": 614,
+        "upstreamSrc": 0,
+        "upstreamDist": 42,
+        "diagnostics": 0,
+        "instantiations": 162085,
+        "types": 57592
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 9,
+        "types": 4
+      },
+      "buildOverlapFiles": 614
+    },
+    {
+      "package": "@beep/github",
+      "overlay": {
+        "files": 690,
+        "upstreamSrc": 0,
+        "upstreamDist": 48,
+        "diagnostics": 0,
+        "instantiations": 1160995,
+        "types": 332043
+      },
+      "referenceKeeping": {
+        "files": 690,
+        "upstreamSrc": 0,
+        "upstreamDist": 48,
+        "diagnostics": 0,
+        "instantiations": 1160995,
+        "types": 332043
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 690
+    },
+    {
+      "package": "@beep/github-commands",
+      "overlay": {
+        "files": 568,
+        "upstreamSrc": 0,
+        "upstreamDist": 8,
+        "diagnostics": 0,
+        "instantiations": 5846,
+        "types": 4458
+      },
+      "referenceKeeping": {
+        "files": 568,
+        "upstreamSrc": 0,
+        "upstreamDist": 8,
+        "diagnostics": 0,
+        "instantiations": 5846,
+        "types": 4458
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 568
+    },
+    {
+      "package": "@beep/github-references",
+      "overlay": {
+        "files": 605,
+        "upstreamSrc": 0,
+        "upstreamDist": 42,
+        "diagnostics": 0,
+        "instantiations": 24414,
+        "types": 11727
+      },
+      "referenceKeeping": {
+        "files": 605,
+        "upstreamSrc": 0,
+        "upstreamDist": 42,
+        "diagnostics": 0,
+        "instantiations": 24414,
+        "types": 11727
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 605
+    },
+    {
+      "package": "@beep/github-reporting",
+      "overlay": {
+        "files": 710,
+        "upstreamSrc": 0,
+        "upstreamDist": 139,
+        "diagnostics": 0,
+        "instantiations": 70867,
+        "types": 27242
+      },
+      "referenceKeeping": {
+        "files": 710,
+        "upstreamSrc": 0,
+        "upstreamDist": 139,
+        "diagnostics": 0,
+        "instantiations": 70867,
+        "types": 27242
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 710
+    },
+    {
+      "package": "@beep/glob",
+      "overlay": {
+        "files": 619,
+        "upstreamSrc": 0,
+        "upstreamDist": 42,
+        "diagnostics": 0,
+        "instantiations": 86281,
+        "types": 38859
+      },
+      "referenceKeeping": {
+        "files": 619,
+        "upstreamSrc": 0,
+        "upstreamDist": 42,
+        "diagnostics": 0,
+        "instantiations": 86281,
+        "types": 38859
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 619
+    },
+    {
+      "package": "@beep/gov-legal-mcp",
+      "overlay": {
+        "files": 793,
+        "upstreamSrc": 0,
+        "upstreamDist": 176,
+        "diagnostics": 0,
+        "instantiations": 87985,
+        "types": 32508
+      },
+      "referenceKeeping": {
+        "files": 793,
+        "upstreamSrc": 0,
+        "upstreamDist": 176,
+        "diagnostics": 0,
+        "instantiations": 87985,
+        "types": 32508
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 793
+    },
+    {
+      "package": "@beep/govinfo",
+      "overlay": {
+        "files": 745,
+        "upstreamSrc": 0,
+        "upstreamDist": 130,
+        "diagnostics": 0,
+        "instantiations": 172925,
+        "types": 54636
+      },
+      "referenceKeeping": {
+        "files": 745,
+        "upstreamSrc": 0,
+        "upstreamDist": 130,
+        "diagnostics": 0,
+        "instantiations": 172925,
+        "types": 54636
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 745
+    },
+    {
+      "package": "@beep/graph-3d",
+      "overlay": {
+        "files": 1116,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 40710,
+        "types": 20985
+      },
+      "referenceKeeping": {
+        "files": 1116,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 40710,
+        "types": 20985
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1116
+    },
+    {
+      "package": "@beep/html",
+      "overlay": {
+        "files": 727,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 12595150,
+        "types": 934196
+      },
+      "referenceKeeping": {
+        "files": 727,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 12595150,
+        "types": 934196
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 727
+    },
+    {
+      "package": "@beep/hubspot",
+      "overlay": {
+        "files": 698,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 29477,
+        "types": 14360
+      },
+      "referenceKeeping": {
+        "files": 698,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 29477,
+        "types": 14360
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 698
+    },
+    {
+      "package": "@beep/identity",
+      "overlay": {
+        "files": 572,
+        "upstreamSrc": 0,
+        "upstreamDist": 5,
+        "diagnostics": 0,
+        "instantiations": 222014,
+        "types": 46739
+      },
+      "referenceKeeping": {
+        "files": 572,
+        "upstreamSrc": 0,
+        "upstreamDist": 5,
+        "diagnostics": 0,
+        "instantiations": 222014,
+        "types": 46739
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 572
+    },
+    {
+      "package": "@beep/jsonc",
+      "overlay": {
+        "files": 621,
+        "upstreamSrc": 0,
+        "upstreamDist": 43,
+        "diagnostics": 0,
+        "instantiations": 127472,
+        "types": 43382
+      },
+      "referenceKeeping": {
+        "files": 621,
+        "upstreamSrc": 0,
+        "upstreamDist": 43,
+        "diagnostics": 0,
+        "instantiations": 127472,
+        "types": 43382
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 621
+    },
+    {
+      "package": "@beep/jsonl",
+      "overlay": {
+        "files": 614,
+        "upstreamSrc": 0,
+        "upstreamDist": 42,
+        "diagnostics": 0,
+        "instantiations": 135656,
+        "types": 50512
+      },
+      "referenceKeeping": {
+        "files": 614,
+        "upstreamSrc": 0,
+        "upstreamDist": 42,
+        "diagnostics": 0,
+        "instantiations": 135656,
+        "types": 50512
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 614
+    },
+    {
+      "package": "@beep/langextract",
+      "overlay": {
+        "files": 745,
+        "upstreamSrc": 0,
+        "upstreamDist": 145,
+        "diagnostics": 0,
+        "instantiations": 238591,
+        "types": 74110
+      },
+      "referenceKeeping": {
+        "files": 745,
+        "upstreamSrc": 0,
+        "upstreamDist": 145,
+        "diagnostics": 0,
+        "instantiations": 238591,
+        "types": 74110
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 745
+    },
+    {
+      "package": "@beep/law-practice-domain",
+      "overlay": {
+        "files": 1334,
+        "upstreamSrc": 0,
+        "upstreamDist": 224,
+        "diagnostics": 0,
+        "instantiations": 1288252,
+        "types": 351740
+      },
+      "referenceKeeping": {
+        "files": 1334,
+        "upstreamSrc": 0,
+        "upstreamDist": 224,
+        "diagnostics": 0,
+        "instantiations": 1288252,
+        "types": 351740
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1334
+    },
+    {
+      "package": "@beep/law-practice-server",
+      "overlay": {
+        "files": 2021,
+        "upstreamSrc": 0,
+        "upstreamDist": 805,
+        "diagnostics": 0,
+        "instantiations": 1364383,
+        "types": 276987
+      },
+      "referenceKeeping": {
+        "files": 2021,
+        "upstreamSrc": 0,
+        "upstreamDist": 805,
+        "diagnostics": 0,
+        "instantiations": 1364383,
+        "types": 276987
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 2021
+    },
+    {
+      "package": "@beep/law-practice-tables",
+      "overlay": {
+        "files": 1293,
+        "upstreamSrc": 0,
+        "upstreamDist": 406,
+        "diagnostics": 0,
+        "instantiations": 540450,
+        "types": 74006
+      },
+      "referenceKeeping": {
+        "files": 1293,
+        "upstreamSrc": 0,
+        "upstreamDist": 406,
+        "diagnostics": 0,
+        "instantiations": 540450,
+        "types": 74006
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1293
+    },
+    {
+      "package": "@beep/law-practice-use-cases",
+      "overlay": {
+        "files": 1603,
+        "upstreamSrc": 0,
+        "upstreamDist": 606,
+        "diagnostics": 0,
+        "instantiations": 1582973,
+        "types": 315399
+      },
+      "referenceKeeping": {
+        "files": 1603,
+        "upstreamSrc": 0,
+        "upstreamDist": 606,
+        "diagnostics": 0,
+        "instantiations": 1582973,
+        "types": 315399
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1603
+    },
+    {
+      "package": "@beep/lejeune-bolt-workbench",
+      "overlay": {
+        "files": 1932,
+        "upstreamSrc": 0,
+        "upstreamDist": 222,
+        "diagnostics": 0,
+        "instantiations": 581394,
+        "types": 170785
+      },
+      "referenceKeeping": {
+        "files": 1932,
+        "upstreamSrc": 0,
+        "upstreamDist": 222,
+        "diagnostics": 0,
+        "instantiations": 581394,
+        "types": 170785
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1932
+    },
+    {
+      "package": "@beep/lexical-schema",
+      "overlay": {
+        "files": 715,
+        "upstreamSrc": 0,
+        "upstreamDist": 144,
+        "diagnostics": 0,
+        "instantiations": 545276,
+        "types": 128717
+      },
+      "referenceKeeping": {
+        "files": 715,
+        "upstreamSrc": 0,
+        "upstreamDist": 144,
+        "diagnostics": 0,
+        "instantiations": 545276,
+        "types": 128717
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 715
+    },
+    {
+      "package": "@beep/libpff",
+      "overlay": {
+        "files": 715,
+        "upstreamSrc": 0,
+        "upstreamDist": 142,
+        "diagnostics": 0,
+        "instantiations": 91887,
+        "types": 59715
+      },
+      "referenceKeeping": {
+        "files": 715,
+        "upstreamSrc": 0,
+        "upstreamDist": 142,
+        "diagnostics": 0,
+        "instantiations": 91887,
+        "types": 59715
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 715
+    },
+    {
+      "package": "@beep/lint-rules",
+      "overlay": {
+        "files": 774,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 431482,
+        "types": 62988
+      },
+      "referenceKeeping": {
+        "files": 774,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 431482,
+        "types": 62988
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 774
+    },
+    {
+      "package": "@beep/lockfiles",
+      "overlay": {
+        "files": 656,
+        "upstreamSrc": 0,
+        "upstreamDist": 73,
+        "diagnostics": 0,
+        "instantiations": 201343,
+        "types": 67427
+      },
+      "referenceKeeping": {
+        "files": 656,
+        "upstreamSrc": 0,
+        "upstreamDist": 73,
+        "diagnostics": 0,
+        "instantiations": 201343,
+        "types": 67427
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 656
+    },
+    {
+      "package": "@beep/m365",
+      "overlay": {
+        "files": 860,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 266430,
+        "types": 81058
+      },
+      "referenceKeeping": {
+        "files": 860,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 266430,
+        "types": 81058
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 860
+    },
+    {
+      "package": "@beep/m365-mcp",
+      "overlay": {
+        "files": 769,
+        "upstreamSrc": 0,
+        "upstreamDist": 146,
+        "diagnostics": 0,
+        "instantiations": 304861,
+        "types": 81570
+      },
+      "referenceKeeping": {
+        "files": 769,
+        "upstreamSrc": 0,
+        "upstreamDist": 146,
+        "diagnostics": 0,
+        "instantiations": 304861,
+        "types": 81570
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 769
+    },
+    {
+      "package": "@beep/managed-section",
+      "overlay": {
+        "files": 613,
+        "upstreamSrc": 0,
+        "upstreamDist": 42,
+        "diagnostics": 0,
+        "instantiations": 98614,
+        "types": 37098
+      },
+      "referenceKeeping": {
+        "files": 613,
+        "upstreamSrc": 0,
+        "upstreamDist": 42,
+        "diagnostics": 0,
+        "instantiations": 98614,
+        "types": 37098
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 613
+    },
+    {
+      "package": "@beep/markdown",
+      "overlay": {
+        "files": 783,
+        "upstreamSrc": 0,
+        "upstreamDist": 139,
+        "diagnostics": 0,
+        "instantiations": 487156,
+        "types": 127768
+      },
+      "referenceKeeping": {
+        "files": 783,
+        "upstreamSrc": 0,
+        "upstreamDist": 139,
+        "diagnostics": 0,
+        "instantiations": 487156,
+        "types": 127768
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 768
+    },
+    {
+      "package": "@beep/mcp-kit",
+      "overlay": {
+        "files": 769,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 274902,
+        "types": 77560
+      },
+      "referenceKeeping": {
+        "files": 769,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 274902,
+        "types": 77560
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 769
+    },
+    {
+      "package": "@beep/mcpb-kit",
+      "overlay": {
+        "files": 825,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 46253,
+        "types": 23627
+      },
+      "referenceKeeping": {
+        "files": 825,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 46253,
+        "types": 23627
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 825
+    },
+    {
+      "package": "@beep/md",
+      "overlay": {
+        "files": 737,
+        "upstreamSrc": 0,
+        "upstreamDist": 156,
+        "diagnostics": 0,
+        "instantiations": 994690,
+        "types": 165437
+      },
+      "referenceKeeping": {
+        "files": 737,
+        "upstreamSrc": 0,
+        "upstreamDist": 156,
+        "diagnostics": 0,
+        "instantiations": 994690,
+        "types": 165437
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 737
+    },
+    {
+      "package": "@beep/memfs",
+      "overlay": {
+        "files": 612,
+        "upstreamSrc": 0,
+        "upstreamDist": 42,
+        "diagnostics": 0,
+        "instantiations": 144342,
+        "types": 55982
+      },
+      "referenceKeeping": {
+        "files": 612,
+        "upstreamSrc": 0,
+        "upstreamDist": 42,
+        "diagnostics": 0,
+        "instantiations": 144342,
+        "types": 55982
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 612
+    },
+    {
+      "package": "@beep/n3",
+      "overlay": {
+        "files": 701,
+        "upstreamSrc": 0,
+        "upstreamDist": 128,
+        "diagnostics": 0,
+        "instantiations": 31477,
+        "types": 12794
+      },
+      "referenceKeeping": {
+        "files": 701,
+        "upstreamSrc": 0,
+        "upstreamDist": 128,
+        "diagnostics": 0,
+        "instantiations": 31477,
+        "types": 12794
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 701
+    },
+    {
+      "package": "@beep/nlp",
+      "overlay": {
+        "files": 749,
+        "upstreamSrc": 0,
+        "upstreamDist": 128,
+        "diagnostics": 0,
+        "instantiations": 278550,
+        "types": 86576
+      },
+      "referenceKeeping": {
+        "files": 749,
+        "upstreamSrc": 0,
+        "upstreamDist": 128,
+        "diagnostics": 0,
+        "instantiations": 278550,
+        "types": 86576
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 749
+    },
+    {
+      "package": "@beep/nlp-mcp",
+      "overlay": {
+        "files": 840,
+        "upstreamSrc": 0,
+        "upstreamDist": 226,
+        "diagnostics": 0,
+        "instantiations": 362524,
+        "types": 91067
+      },
+      "referenceKeeping": {
+        "files": 840,
+        "upstreamSrc": 0,
+        "upstreamDist": 226,
+        "diagnostics": 0,
+        "instantiations": 362524,
+        "types": 91067
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 840
+    },
+    {
+      "package": "@beep/nlp-processing",
+      "overlay": {
+        "files": 797,
+        "upstreamSrc": 0,
+        "upstreamDist": 145,
+        "diagnostics": 0,
+        "instantiations": 577445,
+        "types": 153000
+      },
+      "referenceKeeping": {
+        "files": 797,
+        "upstreamSrc": 0,
+        "upstreamDist": 145,
+        "diagnostics": 0,
+        "instantiations": 577445,
+        "types": 153000
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 797
+    },
+    {
+      "package": "@beep/npm-spec",
+      "overlay": {
+        "files": 621,
+        "upstreamSrc": 0,
+        "upstreamDist": 45,
+        "diagnostics": 0,
+        "instantiations": 114571,
+        "types": 46853
+      },
+      "referenceKeeping": {
+        "files": 621,
+        "upstreamSrc": 0,
+        "upstreamDist": 45,
+        "diagnostics": 0,
+        "instantiations": 114571,
+        "types": 46853
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 621
+    },
+    {
+      "package": "@beep/obs",
+      "overlay": {
+        "files": 701,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 143151,
+        "types": 47983
+      },
+      "referenceKeeping": {
+        "files": 701,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 143151,
+        "types": 47983
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 701
+    },
+    {
+      "package": "@beep/observability",
+      "overlay": {
+        "files": 1107,
+        "upstreamSrc": 0,
+        "upstreamDist": 131,
+        "diagnostics": 0,
+        "instantiations": 345507,
+        "types": 110491
+      },
+      "referenceKeeping": {
+        "files": 1107,
+        "upstreamSrc": 0,
+        "upstreamDist": 131,
+        "diagnostics": 0,
+        "instantiations": 345507,
+        "types": 110491
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1107
+    },
+    {
+      "package": "@beep/occt",
+      "overlay": {
+        "files": 722,
+        "upstreamSrc": 0,
+        "upstreamDist": 147,
+        "diagnostics": 0,
+        "instantiations": 120050,
+        "types": 48254
+      },
+      "referenceKeeping": {
+        "files": 722,
+        "upstreamSrc": 0,
+        "upstreamDist": 147,
+        "diagnostics": 0,
+        "instantiations": 120050,
+        "types": 48254
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 722
+    },
+    {
+      "package": "@beep/oip-web",
+      "overlay": {
+        "files": 4972,
+        "upstreamSrc": 0,
+        "upstreamDist": 171,
+        "diagnostics": 0,
+        "instantiations": 351888,
+        "types": 101873
+      },
+      "referenceKeeping": {
+        "files": 4972,
+        "upstreamSrc": 0,
+        "upstreamDist": 171,
+        "diagnostics": 0,
+        "instantiations": 351888,
+        "types": 101873
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 4972
+    },
+    {
+      "package": "@beep/onepassword-cli",
+      "overlay": {
+        "files": 696,
+        "upstreamSrc": 0,
+        "upstreamDist": 129,
+        "diagnostics": 0,
+        "instantiations": 19069,
+        "types": 10165
+      },
+      "referenceKeeping": {
+        "files": 696,
+        "upstreamSrc": 0,
+        "upstreamDist": 129,
+        "diagnostics": 0,
+        "instantiations": 19069,
+        "types": 10165
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 696
+    },
+    {
+      "package": "@beep/ontology",
+      "overlay": {
+        "files": 745,
+        "upstreamSrc": 0,
+        "upstreamDist": 165,
+        "diagnostics": 0,
+        "instantiations": 212125,
+        "types": 69988
+      },
+      "referenceKeeping": {
+        "files": 745,
+        "upstreamSrc": 0,
+        "upstreamDist": 165,
+        "diagnostics": 0,
+        "instantiations": 212125,
+        "types": 69988
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 745
+    },
+    {
+      "package": "@beep/ontology-client",
+      "overlay": {
+        "files": 1595,
+        "upstreamSrc": 5,
+        "upstreamDist": 294,
+        "diagnostics": 0,
+        "instantiations": 141972,
+        "types": 43446
+      },
+      "referenceKeeping": {
+        "files": 1595,
+        "upstreamSrc": 5,
+        "upstreamDist": 294,
+        "diagnostics": 0,
+        "instantiations": 141972,
+        "types": 43446
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1595
+    },
+    {
+      "package": "@beep/ontology-config",
+      "overlay": {
+        "files": 575,
+        "upstreamSrc": 0,
+        "upstreamDist": 8,
+        "diagnostics": 0,
+        "instantiations": 14453,
+        "types": 9992
+      },
+      "referenceKeeping": {
+        "files": 575,
+        "upstreamSrc": 0,
+        "upstreamDist": 8,
+        "diagnostics": 0,
+        "instantiations": 14453,
+        "types": 9992
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 575
+    },
+    {
+      "package": "@beep/ontology-domain",
+      "overlay": {
+        "files": 610,
+        "upstreamSrc": 0,
+        "upstreamDist": 45,
+        "diagnostics": 0,
+        "instantiations": 27398,
+        "types": 9424
+      },
+      "referenceKeeping": {
+        "files": 610,
+        "upstreamSrc": 0,
+        "upstreamDist": 45,
+        "diagnostics": 0,
+        "instantiations": 27398,
+        "types": 9424
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 610
+    },
+    {
+      "package": "@beep/ontology-server",
+      "overlay": {
+        "files": 777,
+        "upstreamSrc": 0,
+        "upstreamDist": 183,
+        "diagnostics": 0,
+        "instantiations": 160408,
+        "types": 48802
+      },
+      "referenceKeeping": {
+        "files": 777,
+        "upstreamSrc": 0,
+        "upstreamDist": 183,
+        "diagnostics": 0,
+        "instantiations": 160408,
+        "types": 48802
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 777
+    },
+    {
+      "package": "@beep/ontology-ui",
+      "overlay": {
+        "files": 2486,
+        "upstreamSrc": 5,
+        "upstreamDist": 162,
+        "diagnostics": 0,
+        "instantiations": 101772,
+        "types": 40292
+      },
+      "referenceKeeping": {
+        "files": 2486,
+        "upstreamSrc": 5,
+        "upstreamDist": 162,
+        "diagnostics": 0,
+        "instantiations": 101772,
+        "types": 40292
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 2486
+    },
+    {
+      "package": "@beep/ontology-use-cases",
+      "overlay": {
+        "files": 766,
+        "upstreamSrc": 0,
+        "upstreamDist": 155,
+        "diagnostics": 0,
+        "instantiations": 332785,
+        "types": 90463
+      },
+      "referenceKeeping": {
+        "files": 766,
+        "upstreamSrc": 0,
+        "upstreamDist": 155,
+        "diagnostics": 0,
+        "instantiations": 332785,
+        "types": 90463
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 766
+    },
+    {
+      "package": "@beep/openai",
+      "overlay": {
+        "files": 600,
+        "upstreamSrc": 0,
+        "upstreamDist": 8,
+        "diagnostics": 0,
+        "instantiations": 24172,
+        "types": 11058
+      },
+      "referenceKeeping": {
+        "files": 600,
+        "upstreamSrc": 0,
+        "upstreamDist": 8,
+        "diagnostics": 0,
+        "instantiations": 24172,
+        "types": 11058
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 600
+    },
+    {
+      "package": "@beep/openai-compat",
+      "overlay": {
+        "files": 711,
+        "upstreamSrc": 0,
+        "upstreamDist": 128,
+        "diagnostics": 0,
+        "instantiations": 179836,
+        "types": 55906
+      },
+      "referenceKeeping": {
+        "files": 711,
+        "upstreamSrc": 0,
+        "upstreamDist": 128,
+        "diagnostics": 0,
+        "instantiations": 179836,
+        "types": 55906
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 711
+    },
+    {
+      "package": "@beep/openclaw",
+      "overlay": {
+        "files": 708,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 184037,
+        "types": 63395
+      },
+      "referenceKeeping": {
+        "files": 708,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 184037,
+        "types": 63395
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 708
+    },
+    {
+      "package": "@beep/oxigraph",
+      "overlay": {
+        "files": 696,
+        "upstreamSrc": 0,
+        "upstreamDist": 129,
+        "diagnostics": 0,
+        "instantiations": 29840,
+        "types": 12119
+      },
+      "referenceKeeping": {
+        "files": 696,
+        "upstreamSrc": 0,
+        "upstreamDist": 129,
+        "diagnostics": 0,
+        "instantiations": 29840,
+        "types": 12119
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 696
+    },
+    {
+      "package": "@beep/pacer",
+      "overlay": {
+        "files": 724,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 150534,
+        "types": 52752
+      },
+      "referenceKeeping": {
+        "files": 724,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 150534,
+        "types": 52752
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 724
+    },
+    {
+      "package": "@beep/package-json",
+      "overlay": {
+        "files": 648,
+        "upstreamSrc": 0,
+        "upstreamDist": 67,
+        "diagnostics": 0,
+        "instantiations": 259448,
+        "types": 82077
+      },
+      "referenceKeeping": {
+        "files": 648,
+        "upstreamSrc": 0,
+        "upstreamDist": 67,
+        "diagnostics": 0,
+        "instantiations": 259448,
+        "types": 82077
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 648
+    },
+    {
+      "package": "@beep/palantiri",
+      "overlay": {
+        "files": 740,
+        "upstreamSrc": 0,
+        "upstreamDist": 136,
+        "diagnostics": 0,
+        "instantiations": 235834,
+        "types": 69725
+      },
+      "referenceKeeping": {
+        "files": 740,
+        "upstreamSrc": 0,
+        "upstreamDist": 136,
+        "diagnostics": 0,
+        "instantiations": 235834,
+        "types": 69725
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 740
+    },
+    {
+      "package": "@beep/pandoc-ast",
+      "overlay": {
+        "files": 715,
+        "upstreamSrc": 0,
+        "upstreamDist": 142,
+        "diagnostics": 0,
+        "instantiations": 526066,
+        "types": 99350
+      },
+      "referenceKeeping": {
+        "files": 715,
+        "upstreamSrc": 0,
+        "upstreamDist": 142,
+        "diagnostics": 0,
+        "instantiations": 526066,
+        "types": 99350
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 715
+    },
+    {
+      "package": "@beep/pdf-tools",
+      "overlay": {
+        "files": 825,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 77767,
+        "types": 31631
+      },
+      "referenceKeeping": {
+        "files": 825,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 77767,
+        "types": 31631
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 825
+    },
+    {
+      "package": "@beep/pglite",
+      "overlay": {
+        "files": 701,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 14524,
+        "types": 7779
+      },
+      "referenceKeeping": {
+        "files": 701,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 14524,
+        "types": 7779
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 701
+    },
+    {
+      "package": "@beep/phoenix",
+      "overlay": {
+        "files": 1360,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 58174,
+        "types": 22651
+      },
+      "referenceKeeping": {
+        "files": 1360,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 58174,
+        "types": 22651
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1360
+    },
+    {
+      "package": "@beep/poppler",
+      "overlay": {
+        "files": 705,
+        "upstreamSrc": 0,
+        "upstreamDist": 134,
+        "diagnostics": 0,
+        "instantiations": 18279,
+        "types": 11535
+      },
+      "referenceKeeping": {
+        "files": 705,
+        "upstreamSrc": 0,
+        "upstreamDist": 134,
+        "diagnostics": 0,
+        "instantiations": 18279,
+        "types": 11535
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 705
+    },
+    {
+      "package": "@beep/postgres",
+      "overlay": {
+        "files": 1076,
+        "upstreamSrc": 0,
+        "upstreamDist": 130,
+        "diagnostics": 0,
+        "instantiations": 187580,
+        "types": 57116
+      },
+      "referenceKeeping": {
+        "files": 1076,
+        "upstreamSrc": 0,
+        "upstreamDist": 130,
+        "diagnostics": 0,
+        "instantiations": 187580,
+        "types": 57116
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1076
+    },
+    {
+      "package": "@beep/practice-claude-mod",
+      "overlay": {
+        "files": 1639,
+        "upstreamSrc": 0,
+        "upstreamDist": 353,
+        "diagnostics": 0,
+        "instantiations": 140067,
+        "types": 68748
+      },
+      "referenceKeeping": {
+        "files": 1639,
+        "upstreamSrc": 0,
+        "upstreamDist": 353,
+        "diagnostics": 0,
+        "instantiations": 140067,
+        "types": 68748
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1639
+    },
+    {
+      "package": "@beep/practice-gateway",
+      "overlay": {
+        "files": 1832,
+        "upstreamSrc": 0,
+        "upstreamDist": 693,
+        "diagnostics": 0,
+        "instantiations": 415783,
+        "types": 130136
+      },
+      "referenceKeeping": {
+        "files": 1832,
+        "upstreamSrc": 0,
+        "upstreamDist": 693,
+        "diagnostics": 0,
+        "instantiations": 415783,
+        "types": 130136
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1832
+    },
+    {
+      "package": "@beep/practice-identify",
+      "overlay": {
+        "files": 1433,
+        "upstreamSrc": 0,
+        "upstreamDist": 145,
+        "diagnostics": 0,
+        "instantiations": 174920,
+        "types": 62525
+      },
+      "referenceKeeping": {
+        "files": 1433,
+        "upstreamSrc": 0,
+        "upstreamDist": 145,
+        "diagnostics": 0,
+        "instantiations": 174920,
+        "types": 62525
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1433
+    },
+    {
+      "package": "@beep/practice-kg-mcp",
+      "overlay": {
+        "files": 1901,
+        "upstreamSrc": 0,
+        "upstreamDist": 690,
+        "diagnostics": 0,
+        "instantiations": 209623,
+        "types": 73637
+      },
+      "referenceKeeping": {
+        "files": 1901,
+        "upstreamSrc": 0,
+        "upstreamDist": 690,
+        "diagnostics": 0,
+        "instantiations": 209623,
+        "types": 73637
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1901
+    },
+    {
+      "package": "@beep/practice-m365-contacts",
+      "overlay": {
+        "files": 1352,
+        "upstreamSrc": 0,
+        "upstreamDist": 162,
+        "diagnostics": 0,
+        "instantiations": 184028,
+        "types": 73873
+      },
+      "referenceKeeping": {
+        "files": 1352,
+        "upstreamSrc": 0,
+        "upstreamDist": 162,
+        "diagnostics": 0,
+        "instantiations": 184028,
+        "types": 73873
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1352
+    },
+    {
+      "package": "@beep/practice-mail-tagging",
+      "overlay": {
+        "files": 1621,
+        "upstreamSrc": 0,
+        "upstreamDist": 194,
+        "diagnostics": 0,
+        "instantiations": 252015,
+        "types": 89310
+      },
+      "referenceKeeping": {
+        "files": 1621,
+        "upstreamSrc": 0,
+        "upstreamDist": 194,
+        "diagnostics": 0,
+        "instantiations": 252015,
+        "types": 89310
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1621
+    },
+    {
+      "package": "@beep/practice-review-hub",
+      "overlay": {
+        "files": 2375,
+        "upstreamSrc": 0,
+        "upstreamDist": 666,
+        "diagnostics": 0,
+        "instantiations": 242378,
+        "types": 78680
+      },
+      "referenceKeeping": {
+        "files": 2375,
+        "upstreamSrc": 0,
+        "upstreamDist": 666,
+        "diagnostics": 0,
+        "instantiations": 242378,
+        "types": 78680
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 2375
+    },
+    {
+      "package": "@beep/practice-setup",
+      "overlay": {
+        "files": 1360,
+        "upstreamSrc": 0,
+        "upstreamDist": 139,
+        "diagnostics": 0,
+        "instantiations": 107156,
+        "types": 56038
+      },
+      "referenceKeeping": {
+        "files": 1360,
+        "upstreamSrc": 0,
+        "upstreamDist": 139,
+        "diagnostics": 0,
+        "instantiations": 107156,
+        "types": 56038
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1360
+    },
+    {
+      "package": "@beep/pretext",
+      "overlay": {
+        "files": 700,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 47195,
+        "types": 22681
+      },
+      "referenceKeeping": {
+        "files": 700,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 47195,
+        "types": 22681
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 700
+    },
+    {
+      "package": "@beep/professional-desktop",
+      "overlay": {
+        "files": 4268,
+        "upstreamSrc": 0,
+        "upstreamDist": 766,
+        "diagnostics": 0,
+        "instantiations": 5149905,
+        "types": 861490
+      },
+      "referenceKeeping": {
+        "files": 4268,
+        "upstreamSrc": 0,
+        "upstreamDist": 766,
+        "diagnostics": 0,
+        "instantiations": 5149905,
+        "types": 861490
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 4268
+    },
+    {
+      "package": "@beep/provenance",
+      "overlay": {
+        "files": 692,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 34525,
+        "types": 15328
+      },
+      "referenceKeeping": {
+        "files": 692,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 34525,
+        "types": 15328
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 692
+    },
+    {
+      "package": "@beep/public-site",
+      "overlay": {
+        "files": 605,
+        "upstreamSrc": 0,
+        "upstreamDist": 42,
+        "diagnostics": 0,
+        "instantiations": 6772,
+        "types": 4900
+      },
+      "referenceKeeping": {
+        "files": 605,
+        "upstreamSrc": 0,
+        "upstreamDist": 42,
+        "diagnostics": 0,
+        "instantiations": 6772,
+        "types": 4900
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 605
+    },
+    {
+      "package": "@beep/qa-capture",
+      "overlay": {
+        "files": 760,
+        "upstreamSrc": 0,
+        "upstreamDist": 132,
+        "diagnostics": 0,
+        "instantiations": 228394,
+        "types": 69499
+      },
+      "referenceKeeping": {
+        "files": 760,
+        "upstreamSrc": 0,
+        "upstreamDist": 132,
+        "diagnostics": 0,
+        "instantiations": 228394,
+        "types": 69499
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 760
+    },
+    {
+      "package": "@beep/rdf",
+      "overlay": {
+        "files": 744,
+        "upstreamSrc": 0,
+        "upstreamDist": 142,
+        "diagnostics": 0,
+        "instantiations": 341446,
+        "types": 79097
+      },
+      "referenceKeeping": {
+        "files": 744,
+        "upstreamSrc": 0,
+        "upstreamDist": 142,
+        "diagnostics": 0,
+        "instantiations": 341446,
+        "types": 79097
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 744
+    },
+    {
+      "package": "@beep/rdf-canonize",
+      "overlay": {
+        "files": 694,
+        "upstreamSrc": 0,
+        "upstreamDist": 129,
+        "diagnostics": 0,
+        "instantiations": 22891,
+        "types": 9333
+      },
+      "referenceKeeping": {
+        "files": 694,
+        "upstreamSrc": 0,
+        "upstreamDist": 129,
+        "diagnostics": 0,
+        "instantiations": 22891,
+        "types": 9333
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 694
+    },
+    {
+      "package": "@beep/repo-ai-metrics",
+      "overlay": {
+        "files": 1231,
+        "upstreamSrc": 0,
+        "upstreamDist": 182,
+        "diagnostics": 0,
+        "instantiations": 782648,
+        "types": 205058
+      },
+      "referenceKeeping": {
+        "files": 1231,
+        "upstreamSrc": 0,
+        "upstreamDist": 182,
+        "diagnostics": 0,
+        "instantiations": 782648,
+        "types": 205058
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1231
+    },
+    {
+      "package": "@beep/repo-cli",
+      "overlay": {
+        "files": 3552,
+        "upstreamSrc": 0,
+        "upstreamDist": 525,
+        "diagnostics": 0,
+        "instantiations": 14339365,
+        "types": 3220990
+      },
+      "referenceKeeping": {
+        "files": 3552,
+        "upstreamSrc": 0,
+        "upstreamDist": 525,
+        "diagnostics": 0,
+        "instantiations": 14339365,
+        "types": 3220990
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 3552
+    },
+    {
+      "package": "@beep/repo-configs",
+      "overlay": {
+        "files": 1300,
+        "upstreamSrc": 0,
+        "upstreamDist": 128,
+        "diagnostics": 0,
+        "instantiations": 387804,
+        "types": 94951
+      },
+      "referenceKeeping": {
+        "files": 1300,
+        "upstreamSrc": 0,
+        "upstreamDist": 128,
+        "diagnostics": 0,
+        "instantiations": 387804,
+        "types": 94951
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1300
+    },
+    {
+      "package": "@beep/repo-docgen",
+      "overlay": {
+        "files": 952,
+        "upstreamSrc": 0,
+        "upstreamDist": 190,
+        "diagnostics": 0,
+        "instantiations": 319591,
+        "types": 97738
+      },
+      "referenceKeeping": {
+        "files": 952,
+        "upstreamSrc": 0,
+        "upstreamDist": 190,
+        "diagnostics": 0,
+        "instantiations": 319591,
+        "types": 97738
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 952
+    },
+    {
+      "package": "@beep/repo-tsconfig",
+      "overlay": {
+        "files": 620,
+        "upstreamSrc": 0,
+        "upstreamDist": 55,
+        "diagnostics": 0,
+        "instantiations": 62852,
+        "types": 24580
+      },
+      "referenceKeeping": {
+        "files": 620,
+        "upstreamSrc": 0,
+        "upstreamDist": 55,
+        "diagnostics": 0,
+        "instantiations": 62852,
+        "types": 24580
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 620
+    },
+    {
+      "package": "@beep/repo-utils",
+      "overlay": {
+        "files": 855,
+        "upstreamSrc": 0,
+        "upstreamDist": 132,
+        "diagnostics": 0,
+        "instantiations": 2928048,
+        "types": 326330
+      },
+      "referenceKeeping": {
+        "files": 855,
+        "upstreamSrc": 0,
+        "upstreamDist": 132,
+        "diagnostics": 0,
+        "instantiations": 2928048,
+        "types": 326330
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 855
+    },
+    {
+      "package": "@beep/repo-workspaces",
+      "overlay": {
+        "files": 755,
+        "upstreamSrc": 0,
+        "upstreamDist": 133,
+        "diagnostics": 0,
+        "instantiations": 538227,
+        "types": 161090
+      },
+      "referenceKeeping": {
+        "files": 755,
+        "upstreamSrc": 0,
+        "upstreamDist": 133,
+        "diagnostics": 0,
+        "instantiations": 538227,
+        "types": 161090
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 755
+    },
+    {
+      "package": "@beep/runpod",
+      "overlay": {
+        "files": 702,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 212717,
+        "types": 63806
+      },
+      "referenceKeeping": {
+        "files": 702,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 212717,
+        "types": 63806
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 702
+    },
+    {
+      "package": "@beep/runtime-env",
+      "overlay": {
+        "files": 622,
+        "upstreamSrc": 0,
+        "upstreamDist": 42,
+        "diagnostics": 0,
+        "instantiations": 82396,
+        "types": 32549
+      },
+      "referenceKeeping": {
+        "files": 622,
+        "upstreamSrc": 0,
+        "upstreamDist": 42,
+        "diagnostics": 0,
+        "instantiations": 82396,
+        "types": 32549
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 622
+    },
+    {
+      "package": "@beep/sanity",
+      "overlay": {
+        "files": 698,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 31830,
+        "types": 16236
+      },
+      "referenceKeeping": {
+        "files": 698,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 31830,
+        "types": 16236
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 698
+    },
+    {
+      "package": "@beep/sbom",
+      "overlay": {
+        "files": 636,
+        "upstreamSrc": 0,
+        "upstreamDist": 67,
+        "diagnostics": 0,
+        "instantiations": 105150,
+        "types": 37861
+      },
+      "referenceKeeping": {
+        "files": 636,
+        "upstreamSrc": 0,
+        "upstreamDist": 67,
+        "diagnostics": 0,
+        "instantiations": 105150,
+        "types": 37861
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 636
+    },
+    {
+      "package": "@beep/schema",
+      "overlay": {
+        "files": 852,
+        "upstreamSrc": 0,
+        "upstreamDist": 57,
+        "diagnostics": 0,
+        "instantiations": 715722,
+        "types": 252985
+      },
+      "referenceKeeping": {
+        "files": 852,
+        "upstreamSrc": 0,
+        "upstreamDist": 57,
+        "diagnostics": 0,
+        "instantiations": 715722,
+        "types": 252985
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 852
+    },
+    {
+      "package": "@beep/schema-org",
+      "overlay": {
+        "files": 618,
+        "upstreamSrc": 0,
+        "upstreamDist": 42,
+        "diagnostics": 0,
+        "instantiations": 100302,
+        "types": 40442
+      },
+      "referenceKeeping": {
+        "files": 618,
+        "upstreamSrc": 0,
+        "upstreamDist": 42,
+        "diagnostics": 0,
+        "instantiations": 100302,
+        "types": 40442
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 618
+    },
+    {
+      "package": "@beep/semantic-web",
+      "overlay": {
+        "files": 702,
+        "upstreamSrc": 0,
+        "upstreamDist": 132,
+        "diagnostics": 0,
+        "instantiations": 103991,
+        "types": 36406
+      },
+      "referenceKeeping": {
+        "files": 702,
+        "upstreamSrc": 0,
+        "upstreamDist": 132,
+        "diagnostics": 0,
+        "instantiations": 103991,
+        "types": 36406
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 702
+    },
+    {
+      "package": "@beep/semantica",
+      "overlay": {
+        "files": 2186,
+        "upstreamSrc": 0,
+        "upstreamDist": 270,
+        "diagnostics": 0,
+        "instantiations": 1551904,
+        "types": 404126
+      },
+      "referenceKeeping": {
+        "files": 2186,
+        "upstreamSrc": 0,
+        "upstreamDist": 270,
+        "diagnostics": 0,
+        "instantiations": 1551904,
+        "types": 404126
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 2186
+    },
+    {
+      "package": "@beep/semver",
+      "overlay": {
+        "files": 614,
+        "upstreamSrc": 0,
+        "upstreamDist": 42,
+        "diagnostics": 0,
+        "instantiations": 79133,
+        "types": 35079
+      },
+      "referenceKeeping": {
+        "files": 614,
+        "upstreamSrc": 0,
+        "upstreamDist": 42,
+        "diagnostics": 0,
+        "instantiations": 79133,
+        "types": 35079
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 614
+    },
+    {
+      "package": "@beep/shacl",
+      "overlay": {
+        "files": 698,
+        "upstreamSrc": 0,
+        "upstreamDist": 132,
+        "diagnostics": 0,
+        "instantiations": 31085,
+        "types": 11647
+      },
+      "referenceKeeping": {
+        "files": 698,
+        "upstreamSrc": 0,
+        "upstreamDist": 132,
+        "diagnostics": 0,
+        "instantiations": 31085,
+        "types": 11647
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 698
+    },
+    {
+      "package": "@beep/shared-domain",
+      "overlay": {
+        "files": 1116,
+        "upstreamSrc": 0,
+        "upstreamDist": 155,
+        "diagnostics": 0,
+        "instantiations": 650194,
+        "types": 114115
+      },
+      "referenceKeeping": {
+        "files": 1116,
+        "upstreamSrc": 0,
+        "upstreamDist": 155,
+        "diagnostics": 0,
+        "instantiations": 650194,
+        "types": 114115
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1116
+    },
+    {
+      "package": "@beep/shared-tables",
+      "overlay": {
+        "files": 1033,
+        "upstreamSrc": 0,
+        "upstreamDist": 171,
+        "diagnostics": 0,
+        "instantiations": 134826,
+        "types": 24527
+      },
+      "referenceKeeping": {
+        "files": 1033,
+        "upstreamSrc": 0,
+        "upstreamDist": 171,
+        "diagnostics": 0,
+        "instantiations": 134826,
+        "types": 24527
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1033
+    },
+    {
+      "package": "@beep/shared-use-cases",
+      "overlay": {
+        "files": 694,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 7316,
+        "types": 3409
+      },
+      "referenceKeeping": {
+        "files": 694,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 7316,
+        "types": 3409
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 694
+    },
+    {
+      "package": "@beep/skill-contract",
+      "overlay": {
+        "files": 723,
+        "upstreamSrc": 0,
+        "upstreamDist": 152,
+        "diagnostics": 0,
+        "instantiations": 177676,
+        "types": 54288
+      },
+      "referenceKeeping": {
+        "files": 723,
+        "upstreamSrc": 0,
+        "upstreamDist": 152,
+        "diagnostics": 0,
+        "instantiations": 177676,
+        "types": 54288
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 723
+    },
+    {
+      "package": "@beep/spdx",
+      "overlay": {
+        "files": 575,
+        "upstreamSrc": 0,
+        "upstreamDist": 8,
+        "diagnostics": 0,
+        "instantiations": 52241,
+        "types": 30685
+      },
+      "referenceKeeping": {
+        "files": 575,
+        "upstreamSrc": 0,
+        "upstreamDist": 8,
+        "diagnostics": 0,
+        "instantiations": 52241,
+        "types": 30685
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 575
+    },
+    {
+      "package": "@beep/storybook",
+      "overlay": {
+        "files": 2168,
+        "upstreamSrc": 0,
+        "upstreamDist": 132,
+        "diagnostics": 0,
+        "instantiations": 6648,
+        "types": 5986
+      },
+      "referenceKeeping": {
+        "files": 2168,
+        "upstreamSrc": 0,
+        "upstreamDist": 132,
+        "diagnostics": 0,
+        "instantiations": 6648,
+        "types": 5986
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 2168
+    },
+    {
+      "package": "@beep/t3-code",
+      "overlay": {
+        "files": 712,
+        "upstreamSrc": 0,
+        "upstreamDist": 128,
+        "diagnostics": 0,
+        "instantiations": 43463,
+        "types": 18215
+      },
+      "referenceKeeping": {
+        "files": 712,
+        "upstreamSrc": 0,
+        "upstreamDist": 128,
+        "diagnostics": 0,
+        "instantiations": 43463,
+        "types": 18215
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 712
+    },
+    {
+      "package": "@beep/tailscale",
+      "overlay": {
+        "files": 700,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 33331,
+        "types": 15269
+      },
+      "referenceKeeping": {
+        "files": 700,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 33331,
+        "types": 15269
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 700
+    },
+    {
+      "package": "@beep/technical-drawing",
+      "overlay": {
+        "files": 714,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 402710,
+        "types": 119234
+      },
+      "referenceKeeping": {
+        "files": 714,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 402710,
+        "types": 119234
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 714
+    },
+    {
+      "package": "@beep/tesseract",
+      "overlay": {
+        "files": 698,
+        "upstreamSrc": 0,
+        "upstreamDist": 131,
+        "diagnostics": 0,
+        "instantiations": 35058,
+        "types": 14174
+      },
+      "referenceKeeping": {
+        "files": 698,
+        "upstreamSrc": 0,
+        "upstreamDist": 131,
+        "diagnostics": 0,
+        "instantiations": 35058,
+        "types": 14174
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 698
+    },
+    {
+      "package": "@beep/test-runner",
+      "overlay": {
+        "files": 359,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 122439,
+        "types": 34600
+      },
+      "referenceKeeping": {
+        "files": 359,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 122439,
+        "types": 34600
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 359
+    },
+    {
+      "package": "@beep/test-utils",
+      "overlay": {
+        "files": 854,
+        "upstreamSrc": 0,
+        "upstreamDist": 133,
+        "diagnostics": 0,
+        "instantiations": 134551,
+        "types": 49597
+      },
+      "referenceKeeping": {
+        "files": 854,
+        "upstreamSrc": 0,
+        "upstreamDist": 133,
+        "diagnostics": 0,
+        "instantiations": 134551,
+        "types": 49597
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 854
+    },
+    {
+      "package": "@beep/tika",
+      "overlay": {
+        "files": 718,
+        "upstreamSrc": 0,
+        "upstreamDist": 140,
+        "diagnostics": 0,
+        "instantiations": 71285,
+        "types": 42450
+      },
+      "referenceKeeping": {
+        "files": 718,
+        "upstreamSrc": 0,
+        "upstreamDist": 140,
+        "diagnostics": 0,
+        "instantiations": 71285,
+        "types": 42450
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 718
+    },
+    {
+      "package": "@beep/todox",
+      "overlay": {
+        "files": 1711,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 135080,
+        "types": 69263
+      },
+      "referenceKeeping": {
+        "files": 1711,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 135080,
+        "types": 69263
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1711
+    },
+    {
+      "package": "@beep/toml",
+      "overlay": {
+        "files": 704,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 185113,
+        "types": 60459
+      },
+      "referenceKeeping": {
+        "files": 704,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 185113,
+        "types": 60459
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 704
+    },
+    {
+      "package": "@beep/trustgraph-workbench",
+      "overlay": {
+        "files": 1446,
+        "upstreamSrc": 1,
+        "upstreamDist": 137,
+        "diagnostics": 0,
+        "instantiations": 31672,
+        "types": 22071
+      },
+      "referenceKeeping": {
+        "files": 1446,
+        "upstreamSrc": 1,
+        "upstreamDist": 137,
+        "diagnostics": 0,
+        "instantiations": 31672,
+        "types": 22071
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1446
+    },
+    {
+      "package": "@beep/tsconfig",
+      "overlay": {
+        "files": 614,
+        "upstreamSrc": 0,
+        "upstreamDist": 45,
+        "diagnostics": 0,
+        "instantiations": 292180,
+        "types": 76929
+      },
+      "referenceKeeping": {
+        "files": 614,
+        "upstreamSrc": 0,
+        "upstreamDist": 45,
+        "diagnostics": 0,
+        "instantiations": 292180,
+        "types": 76929
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 614
+    },
+    {
+      "package": "@beep/types",
+      "overlay": {
+        "files": 220,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 845,
+        "types": 776
+      },
+      "referenceKeeping": {
+        "files": 220,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 845,
+        "types": 776
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 220
+    },
+    {
+      "package": "@beep/ui",
+      "overlay": {
+        "files": 7925,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 3108662,
+        "types": 387370
+      },
+      "referenceKeeping": {
+        "files": 7925,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 3108662,
+        "types": 387370
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 7925
+    },
+    {
+      "package": "@beep/uspto",
+      "overlay": {
+        "files": 700,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 39920,
+        "types": 18605
+      },
+      "referenceKeeping": {
+        "files": 700,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 39920,
+        "types": 18605
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 700
+    },
+    {
+      "package": "@beep/uspto-mcp",
+      "overlay": {
+        "files": 751,
+        "upstreamSrc": 0,
+        "upstreamDist": 142,
+        "diagnostics": 0,
+        "instantiations": 88766,
+        "types": 31650
+      },
+      "referenceKeeping": {
+        "files": 751,
+        "upstreamSrc": 0,
+        "upstreamDist": 142,
+        "diagnostics": 0,
+        "instantiations": 88766,
+        "types": 31650
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 751
+    },
+    {
+      "package": "@beep/utils",
+      "overlay": {
+        "files": 635,
+        "upstreamSrc": 0,
+        "upstreamDist": 13,
+        "diagnostics": 0,
+        "instantiations": 134442,
+        "types": 47187
+      },
+      "referenceKeeping": {
+        "files": 635,
+        "upstreamSrc": 0,
+        "upstreamDist": 13,
+        "diagnostics": 0,
+        "instantiations": 134442,
+        "types": 47187
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 635
+    },
+    {
+      "package": "@beep/walker",
+      "overlay": {
+        "files": 609,
+        "upstreamSrc": 0,
+        "upstreamDist": 43,
+        "diagnostics": 0,
+        "instantiations": 60308,
+        "types": 26490
+      },
+      "referenceKeeping": {
+        "files": 609,
+        "upstreamSrc": 0,
+        "upstreamDist": 43,
+        "diagnostics": 0,
+        "instantiations": 60308,
+        "types": 26490
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 609
+    },
+    {
+      "package": "@beep/windows-secrets",
+      "overlay": {
+        "files": 723,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 33028,
+        "types": 19822
+      },
+      "referenceKeeping": {
+        "files": 723,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 33028,
+        "types": 19822
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 723
+    },
+    {
+      "package": "@beep/wink",
+      "overlay": {
+        "files": 768,
+        "upstreamSrc": 0,
+        "upstreamDist": 181,
+        "diagnostics": 0,
+        "instantiations": 268283,
+        "types": 89063
+      },
+      "referenceKeeping": {
+        "files": 768,
+        "upstreamSrc": 0,
+        "upstreamDist": 181,
+        "diagnostics": 0,
+        "instantiations": 268283,
+        "types": 89063
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 768
+    },
+    {
+      "package": "@beep/workspace-domain",
+      "overlay": {
+        "files": 1082,
+        "upstreamSrc": 0,
+        "upstreamDist": 198,
+        "diagnostics": 0,
+        "instantiations": 190520,
+        "types": 38580
+      },
+      "referenceKeeping": {
+        "files": 1082,
+        "upstreamSrc": 0,
+        "upstreamDist": 198,
+        "diagnostics": 0,
+        "instantiations": 190520,
+        "types": 38580
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1082
+    },
+    {
+      "package": "@beep/workspace-server",
+      "overlay": {
+        "files": 1222,
+        "upstreamSrc": 0,
+        "upstreamDist": 277,
+        "diagnostics": 0,
+        "instantiations": 565973,
+        "types": 116035
+      },
+      "referenceKeeping": {
+        "files": 1222,
+        "upstreamSrc": 0,
+        "upstreamDist": 277,
+        "diagnostics": 0,
+        "instantiations": 565973,
+        "types": 116035
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1222
+    },
+    {
+      "package": "@beep/workspace-tables",
+      "overlay": {
+        "files": 1066,
+        "upstreamSrc": 0,
+        "upstreamDist": 190,
+        "diagnostics": 0,
+        "instantiations": 315614,
+        "types": 46854
+      },
+      "referenceKeeping": {
+        "files": 1066,
+        "upstreamSrc": 0,
+        "upstreamDist": 190,
+        "diagnostics": 0,
+        "instantiations": 315614,
+        "types": 46854
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1066
+    },
+    {
+      "package": "@beep/workspace-use-cases",
+      "overlay": {
+        "files": 1069,
+        "upstreamSrc": 0,
+        "upstreamDist": 197,
+        "diagnostics": 0,
+        "instantiations": 91194,
+        "types": 24693
+      },
+      "referenceKeeping": {
+        "files": 1069,
+        "upstreamSrc": 0,
+        "upstreamDist": 197,
+        "diagnostics": 0,
+        "instantiations": 91194,
+        "types": 24693
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 1069
+    },
+    {
+      "package": "@beep/xdg",
+      "overlay": {
+        "files": 711,
+        "upstreamSrc": 0,
+        "upstreamDist": 141,
+        "diagnostics": 0,
+        "instantiations": 38717,
+        "types": 20333
+      },
+      "referenceKeeping": {
+        "files": 711,
+        "upstreamSrc": 0,
+        "upstreamDist": 141,
+        "diagnostics": 0,
+        "instantiations": 38717,
+        "types": 20333
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 711
+    },
+    {
+      "package": "@beep/xstate",
+      "overlay": {
+        "files": 855,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 105019,
+        "types": 33501
+      },
+      "referenceKeeping": {
+        "files": 855,
+        "upstreamSrc": 0,
+        "upstreamDist": 127,
+        "diagnostics": 0,
+        "instantiations": 105019,
+        "types": 33501
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 855
+    },
+    {
+      "package": "@beep/yaml",
+      "overlay": {
+        "files": 653,
+        "upstreamSrc": 0,
+        "upstreamDist": 43,
+        "diagnostics": 0,
+        "instantiations": 434701,
+        "types": 121620
+      },
+      "referenceKeeping": {
+        "files": 653,
+        "upstreamSrc": 0,
+        "upstreamDist": 43,
+        "diagnostics": 0,
+        "instantiations": 434701,
+        "types": 121620
+      },
+      "delta": {
+        "files": 0,
+        "upstreamSrc": 0,
+        "upstreamDist": 0,
+        "diagnostics": 0,
+        "instantiations": 0,
+        "types": 0
+      },
+      "buildOverlapFiles": 653
+    }
+  ],
+  "gate": {
+    "baselinePath": "standards/check-census.regression-baseline.jsonc",
+    "baselineCommit": "011190d9ecd33519aeb5203921e4b6d5ca26ea26",
+    "baselineCompiler": "7.0.2+effect-tsgo.0.55.0",
+    "compiler": "7.0.2+effect-tsgo.0.55.0",
+    "comparisons": [
+      {
+        "name": "@beep/schema",
+        "baseline": {
+          "instantiations": 399919,
+          "types": 120301
+        },
+        "current": {
+          "instantiations": 388525,
+          "types": 117641
+        },
+        "instantiations": "decrease"
+      },
+      {
+        "name": "@beep/repo-cli",
+        "baseline": {
+          "instantiations": 6166041,
+          "types": 1387021
+        },
+        "current": {
+          "instantiations": 6363657,
+          "types": 1430138
+        },
+        "instantiations": "increase"
+      },
+      {
+        "name": "@beep/law-practice-domain",
+        "baseline": {
+          "instantiations": 816697,
+          "types": 236772
+        },
+        "current": {
+          "instantiations": 810699,
+          "types": 235472
+        },
+        "instantiations": "decrease"
+      },
+      {
+        "name": "@beep/schema#typeperf/baseline",
+        "baseline": {
+          "instantiations": 19874,
+          "types": 8817
+        },
+        "current": {
+          "instantiations": 19636,
+          "types": 8713
+        },
+        "instantiations": "decrease"
+      },
+      {
+        "name": "@beep/schema#typeperf/literal-kit-tagged-union",
+        "baseline": {
+          "instantiations": 23119,
+          "types": 9552
+        },
+        "current": {
+          "instantiations": 22881,
+          "types": 9448
+        },
+        "instantiations": "decrease"
+      },
+      {
+        "name": "@beep/schema#typeperf/literal-kit-keyed-api",
+        "baseline": {
+          "instantiations": 20509,
+          "types": 8989
+        },
+        "current": {
+          "instantiations": 20271,
+          "types": 8885
+        },
+        "instantiations": "decrease"
+      },
+      {
+        "name": "@beep/schema#typeperf/literal-kit-large-untagged",
+        "baseline": {
+          "instantiations": 52141,
+          "types": 100031
+        },
+        "current": {
+          "instantiations": 51903,
+          "types": 99927
+        },
+        "instantiations": "decrease"
+      },
+      {
+        "name": "@beep/schema#typeperf/literal-kit-large-untagged-touched",
+        "baseline": {
+          "instantiations": 55268,
+          "types": 100268
+        },
+        "current": {
+          "instantiations": 55030,
+          "types": 100164
+        },
+        "instantiations": "decrease"
+      }
+    ]
+  }
+}
