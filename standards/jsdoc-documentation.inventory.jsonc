@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-25T10:59:58.979Z",
+  "generatedAt": "2026-10-25T11:39:48.631Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -74014,8 +74014,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 67,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-67-repopackagename",
+          "line": 75,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-75-repopackagename",
           "currentTags": [
             "@category",
             "@since"
@@ -74036,8 +74036,8 @@
           "exportKind": "type",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 963,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-963-repopackagename",
+          "line": 1020,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1020-repopackagename",
           "currentTags": [
             "@category",
             "@since"
@@ -74058,8 +74058,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 93,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-93-relativedotpath",
+          "line": 101,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-101-relativedotpath",
           "currentTags": [
             "@category",
             "@since"
@@ -74080,8 +74080,8 @@
           "exportKind": "type",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 978,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-978-relativedotpath",
+          "line": 1035,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1035-relativedotpath",
           "currentTags": [
             "@category",
             "@since"
@@ -74102,8 +74102,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 136,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-136-nonemptystringvalue",
+          "line": 144,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-144-nonemptystringvalue",
           "currentTags": [
             "@category",
             "@since"
@@ -74124,8 +74124,8 @@
           "exportKind": "type",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 993,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-993-nonemptystringvalue",
+          "line": 1050,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1050-nonemptystringvalue",
           "currentTags": [
             "@category",
             "@since"
@@ -74146,8 +74146,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 212,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-212-tosortedrecord",
+          "line": 220,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-220-tosortedrecord",
           "currentTags": [
             "@param",
             "@returns",
@@ -74170,8 +74170,8 @@
           "exportKind": "class",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 319,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-319-beepfoundationmetadata",
+          "line": 327,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-327-beepfoundationmetadata",
           "currentTags": [
             "@category",
             "@since"
@@ -74192,8 +74192,8 @@
           "exportKind": "class",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 348,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-348-beepdrivermetadata",
+          "line": 356,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-356-beepdrivermetadata",
           "currentTags": [
             "@category",
             "@since"
@@ -74214,8 +74214,8 @@
           "exportKind": "class",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 378,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-378-beeptoolingmetadata",
+          "line": 386,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-386-beeptoolingmetadata",
           "currentTags": [
             "@category",
             "@since"
@@ -74236,8 +74236,8 @@
           "exportKind": "class",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 406,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-406-beepecosystemmetadata",
+          "line": 414,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-414-beepecosystemmetadata",
           "currentTags": [
             "@category",
             "@since"
@@ -74258,8 +74258,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 521,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-521-packageexports",
+          "line": 529,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-529-packageexports",
           "currentTags": [
             "@category",
             "@since"
@@ -74280,8 +74280,8 @@
           "exportKind": "type",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1008,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1008-packageexports",
+          "line": 1065,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1065-packageexports",
           "currentTags": [
             "@category",
             "@since"
@@ -74302,8 +74302,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 601,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-601-packageimports",
+          "line": 609,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-609-packageimports",
           "currentTags": [
             "@category",
             "@since"
@@ -74324,8 +74324,8 @@
           "exportKind": "type",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1023,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1023-packageimports",
+          "line": 1080,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1080-packageimports",
           "currentTags": [
             "@category",
             "@since"
@@ -74346,8 +74346,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 649,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-649-publishconfig",
+          "line": 657,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-657-publishconfig",
           "currentTags": [
             "@category",
             "@since"
@@ -74368,8 +74368,8 @@
           "exportKind": "type",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1038,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1038-publishconfig",
+          "line": 1095,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1095-publishconfig",
           "currentTags": [
             "@category",
             "@since"
@@ -74390,8 +74390,8 @@
           "exportKind": "class",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 701,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-701-packagejson",
+          "line": 732,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-732-packagejson",
           "currentTags": [
             "@category",
             "@since"
@@ -74412,8 +74412,8 @@
           "exportKind": "namespace",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 932,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-932-packagejson",
+          "line": 989,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-989-packagejson",
           "currentTags": [
             "@category",
             "@since"
@@ -74434,8 +74434,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1057,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1057-decodepackagejson",
+          "line": 1114,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1114-decodepackagejson",
           "currentTags": [
             "@param",
             "@returns",
@@ -74458,8 +74458,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1077,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1077-decodepackagejsonexit",
+          "line": 1134,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1134-decodepackagejsonexit",
           "currentTags": [
             "@param",
             "@returns",
@@ -74482,8 +74482,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1111,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1111-decodepackagejsoneffect",
+          "line": 1168,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1168-decodepackagejsoneffect",
           "currentTags": [
             "@param",
             "@returns",
@@ -74507,8 +74507,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1144,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1144-encodepackagejsoneffect",
+          "line": 1208,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1208-encodepackagejsoneffect",
           "currentTags": [
             "@effects",
             "@category",
@@ -74530,8 +74530,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1174,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1174-encodepackagejsontojsoneffect",
+          "line": 1238,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1238-encodepackagejsontojsoneffect",
           "currentTags": [
             "@effects",
             "@category",
@@ -74553,8 +74553,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1209,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1209-encodepackagejsonprettyeffect",
+          "line": 1273,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1273-encodepackagejsonprettyeffect",
           "currentTags": [
             "@effects",
             "@category",
@@ -74576,8 +74576,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-          "line": 1243,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1243-readpackagejsonfile",
+          "line": 1307,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejson-ts-1307-readpackagejsonfile",
           "currentTags": [
             "@category",
             "@since"
@@ -74598,8 +74598,8 @@
           "exportKind": "class",
           "filePath": "src/schemas/PackageJsonTools.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJsonTools.ts",
-          "line": 300,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejsontools-ts-300-packagejsonvalidationissue",
+          "line": 289,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejsontools-ts-289-packagejsonvalidationissue",
           "currentTags": [
             "@category",
             "@since"
@@ -74620,8 +74620,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJsonTools.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJsonTools.ts",
-          "line": 335,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejsontools-ts-335-packagejsonjsonschema",
+          "line": 355,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejsontools-ts-355-packagejsonjsonschema",
           "currentTags": [
             "@category",
             "@since"
@@ -74642,8 +74642,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJsonTools.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJsonTools.ts",
-          "line": 365,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejsontools-ts-365-normalizepackagejsoneffect",
+          "line": 387,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejsontools-ts-387-normalizepackagejsoneffect",
           "currentTags": [
             "@effects",
             "@category",
@@ -74665,8 +74665,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJsonTools.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJsonTools.ts",
-          "line": 388,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejsontools-ts-388-encodepackagejsoncanonicalprettyeffect",
+          "line": 410,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejsontools-ts-410-encodepackagejsoncanonicalprettyeffect",
           "currentTags": [
             "@category",
             "@since"
@@ -74687,8 +74687,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJsonTools.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJsonTools.ts",
-          "line": 414,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejsontools-ts-414-diffpackagejsoneffect",
+          "line": 436,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejsontools-ts-436-diffpackagejsoneffect",
           "currentTags": [
             "@category",
             "@since"
@@ -74709,8 +74709,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJsonTools.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJsonTools.ts",
-          "line": 443,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejsontools-ts-443-applypackagejsonpatcheffect",
+          "line": 465,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejsontools-ts-465-applypackagejsonpatcheffect",
           "currentTags": [
             "@category",
             "@since"
@@ -74731,8 +74731,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/PackageJsonTools.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/PackageJsonTools.ts",
-          "line": 477,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejsontools-ts-477-getpackagejsonschemaissues",
+          "line": 499,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-packagejsontools-ts-499-getpackagejsonschemaissues",
           "currentTags": [
             "@param",
             "@returns",

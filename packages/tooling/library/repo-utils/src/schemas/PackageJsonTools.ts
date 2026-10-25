@@ -19,6 +19,7 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
+import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import { DomainError } from "../errors/index.ts";
 import { jsonStringifyPretty } from "../JsonUtils.ts";
@@ -32,6 +33,7 @@ import {
 } from "./PackageJson.ts";
 import type { StandardSchemaV1 } from "@standard-schema/spec";
 import type * as JsonPatch from "effect/JsonPatch";
+import type * as JsonSchema from "effect/JsonSchema";
 
 const $I = $RepoUtilsId.create("schemas/PackageJsonTools");
 
@@ -305,8 +307,39 @@ export class PackageJsonValidationIssue extends S.Opaque<
   )
 ) {}
 
+// `rest` is the closed model's guard (an optional key whose schema admits nothing), not a manifest field: drop it from
+// the emitted root definition so editors do not offer it in completion.
+const withoutClosedRest = (document: JsonSchema.Document<"draft-2020-12">): JsonSchema.Document<"draft-2020-12"> => {
+  const rootName = pipe(
+    O.liftPredicate(document.schema.$ref, P.isString),
+    O.flatMap(O.liftPredicate(Str.startsWith("#/$defs/"))),
+    O.map(flow(Str.slice("#/$defs/".length), JsonPointer.unescapeToken))
+  );
+  return O.match(rootName, {
+    onNone: () => document,
+    onSome: (name) =>
+      O.match(
+        R.modify(document.definitions, name, (definition) =>
+          P.isObject(definition.properties)
+            ? {
+                ...definition,
+                properties: R.remove(definition.properties as Readonly<Record<string, unknown>>, "rest"),
+              }
+            : definition
+        ),
+        { onNone: () => document, onSome: (definitions) => ({ ...document, definitions }) }
+      ),
+  });
+};
+
 /**
  * Draft 2020-12 JSON Schema document for the repo-aware package.json schema.
+ *
+ * **Details**
+ *
+ * The closed `rest` key of the model is left out of the root definition: it
+ * guards against a literal `rest` key and is not a field a manifest carries.
+ * `additionalProperties: false` still rejects it.
  *
  * **Example** (Access package JSON schema)
  *
@@ -319,7 +352,9 @@ export class PackageJsonValidationIssue extends S.Opaque<
  * @category utilities
  * @since 0.0.0
  */
-export const packageJsonJsonSchema = S.toJsonSchemaDocument(PackageJson, { onExcessProperty: "error" });
+export const packageJsonJsonSchema: JsonSchema.Document<"draft-2020-12"> = withoutClosedRest(
+  S.toJsonSchemaDocument(PackageJson, { onExcessProperty: "error" })
+);
 
 /**
  * Normalize an unknown package.json value into a canonical encoded object.

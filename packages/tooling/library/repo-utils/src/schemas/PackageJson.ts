@@ -25,12 +25,14 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { identity, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as SchemaGetter from "effect/SchemaGetter";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Tuple from "effect/Tuple";
 import { NoSuchFileError } from "../errors/index.ts";
 import { jsonStringifyPretty } from "../JsonUtils.ts";
@@ -50,7 +52,13 @@ const importSpecifierPattern = /^#.+$/;
 const exportConditionPattern = /^(?:[^.0-9]+|types@.+)$/;
 
 /**
- * Schema for repository workspace package names.
+ * Schema for package names used as dependency and catalog keys and in the
+ * `WorkspaceDeps` and `DocgenConfig` package references.
+ *
+ * **Details**
+ *
+ * It admits mixed case so existing names keep decoding. A manifest's own
+ * `name` is the kit's npm `PackageName` instead, which is lowercase only.
  *
  * **Example** (Validate workspace package name)
  *
@@ -71,7 +79,7 @@ export const RepoPackageName = S.String.check(S.isMinLength(1))
     $I.annoteSchema("RepoPackageName", {
       title: "Repo Package Name",
       description:
-        "A repo-local package name, including the legacy mixed-case workspace names currently present in this monorepo.",
+        "A package name used as a dependency or catalog key and in WorkspaceDeps and DocgenConfig references; it admits mixed case, while a manifest's own name follows the npm PackageName rules.",
     })
   );
 
@@ -664,6 +672,30 @@ const ClosedRest = S.Never.pipe(
   })
 );
 
+const RawPackageJson = S.Record(S.String, S.Unknown);
+
+// The repo model's wire codec: keys outside the declared fields are gathered into `rest`, which `ClosedRest` rejects
+// with the unexpected-key message, so the codec is strict without parse options and decodes to the class itself.
+const makeClosedWire = <Self>(
+  Class: S.Codec<Self, unknown> & { readonly fields: Readonly<Record<string, unknown>> }
+): S.Codec<Self, { readonly [k: string]: unknown }> => {
+  const knownKeys = HashSet.fromIterable(A.filter(R.keys(Class.fields), (key) => key !== "rest"));
+  return RawPackageJson.pipe(
+    S.decode(
+      SchemaTransformation.transform({
+        decode: (raw: { readonly [k: string]: unknown }): Record<string, unknown> => {
+          const entries = R.toEntries(raw);
+          const known = R.fromEntries(A.filter(entries, ([key]) => HashSet.has(knownKeys, key)));
+          const unknownEntries = A.filter(entries, ([key]) => !HashSet.has(knownKeys, key));
+          return A.isReadonlyArrayNonEmpty(unknownEntries) ? { ...known, rest: R.fromEntries(unknownEntries) } : known;
+        },
+        encode: identity,
+      })
+    ),
+    S.decodeTo(Class)
+  );
+};
+
 /**
  * Type-safe schema for this repo's package.json files.
  *
@@ -677,10 +709,9 @@ const ClosedRest = S.Never.pipe(
  *
  * Decode it with the strict helpers (`decodePackageJsonEffect`,
  * `PackageJson.decodeStrictEffect`, ...): they reject unexpected top-level
- * keys. The inherited `PackageManifest.schema` wire codec is the kit's open
- * one and decodes to a plain `PackageManifest`, never to this class, so repo
- * code does not use it; `PackageJson.decode` and `toJsonString` are
- * overridden to run the repo model.
+ * keys. `PackageJson.schema`, `PackageJson.decode` and `toJsonString` are
+ * redefined to run the repo model, so none of the kit's open
+ * `PackageManifest` entry points is reachable through this class.
  *
  * **Example** (Decode a repo manifest and read a dependency)
  *
@@ -780,6 +811,32 @@ export class PackageJson extends PackageManifest.extend<PackageJson>($I`PackageJ
     messageUnexpectedKey: "Unexpected package.json key",
   })
 ) {
+  /**
+   * The wire codec: an open JSON object ↔ a {@link PackageJson} instance.
+   *
+   * **Details**
+   *
+   * Redefines the inherited `PackageManifest.schema`, the kit's open wire
+   * that keeps unknown keys in `rest` and decodes to a plain
+   * `PackageManifest`. Here an unknown top-level key is gathered into the
+   * closed `rest`, which rejects it, so the codec needs no
+   * `onExcessProperty` option to stay strict.
+   *
+   * **Example** (Decode through the repo wire codec)
+   *
+   * ```ts
+   * import * as S from "effect/Schema"
+   * import { PackageJson } from "@beep/repo-utils/schemas/PackageJson"
+   *
+   * const manifest = S.decodeSync(PackageJson.schema)({ name: "@beep/example" })
+   * console.log(S.is(PackageJson)(manifest)) // true
+   * ```
+   *
+   * @category codecs
+   * @since 0.0.0
+   */
+  static readonly schema: S.Codec<PackageJson, { readonly [k: string]: unknown }> = makeClosedWire(PackageJson);
+
   /**
    * Decode an unknown strict package.json value into a Result.
    *
@@ -1118,6 +1175,13 @@ export const decodePackageJsonEffect: (input: unknown) => Effect.Effect<PackageJ
  *
  * The input is first decoded with strict excess-property rejection so callers
  * do not accidentally encode malformed package.json objects.
+ *
+ * **Gotchas**
+ *
+ * The output does not keep the input's key order. The dependency maps,
+ * `scripts`, `engines` and `bin` decode to `HashMap`, so their keys come out
+ * sorted, and an empty map (`"dependencies": {}`) is omitted. Writers that
+ * need the repo's on-disk order use `encodePackageJsonCanonicalPrettyEffect`.
  *
  * **Example** (Encode package.json Effect)
  *

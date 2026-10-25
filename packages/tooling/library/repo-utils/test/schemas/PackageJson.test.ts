@@ -16,7 +16,7 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
-import { assertFalse, assertSome, assertTrue, assertUndefined } from "@effect/vitest/utils";
+import { assertSome, assertTrue, assertUndefined } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -462,6 +462,32 @@ describe("PackageJson schema", () => {
 
       expect(result.workspaces).toEqual({ packages: ["packages/*"], catalog: {} });
     });
+
+    it("accepts unknown keys nested in the kit's person, bugs, funding, repository and directories objects", () => {
+      const nested = [
+        { author: { name: "a", twitter: "@a" } },
+        { bugs: { url: "https://bugs.example.test", extra: 1 } },
+        { funding: { url: "https://fund.example.test", extra: 1 } },
+        { repository: { type: "git", url: "https://git.example.test", extra: 1 } },
+        { directories: { assets: "./assets" } },
+      ];
+      for (const fields of nested) {
+        decodePackageJsonExit({ name: "pkg", ...fields }).pipe(Exit.isSuccess, assertTrue);
+      }
+      // The top level stays closed.
+      decodePackageJsonExit({ name: "pkg", twitter: "@a" }).pipe(Exit.isFailure, assertTrue);
+    });
+
+    it("rejects an unknown key in a peerDependenciesMeta entry (kit closed entry)", () => {
+      decodePackageJsonExit({ name: "pkg", peerDependenciesMeta: { effect: { optional: true } } }).pipe(
+        Exit.isSuccess,
+        assertTrue
+      );
+      decodePackageJsonExit({ name: "pkg", peerDependenciesMeta: { effect: { optional: true, extra: 1 } } }).pipe(
+        Exit.isFailure,
+        assertTrue
+      );
+    });
   });
 
   describe("inherited PackageManifest members", () => {
@@ -492,17 +518,36 @@ describe("PackageJson schema", () => {
     });
 
     it.effect(
-      "the inherited schema static is the kit's open wire and decodes to a plain PackageManifest",
+      "the schema static is the strict repo wire and decodes to a PackageJson instance",
       Effect.fn(function* () {
-        expect(Reflect.get(PackageJson, "schema")).toBe(PackageManifest.schema);
-        const decoded = yield* S.decodeEffect(PackageManifest.schema)({
+        expect(PackageJson.schema).not.toBe(PackageManifest.schema);
+        const decoded = yield* S.decodeEffect(PackageJson.schema)({
           name: "pkg",
           beep: { family: "ecosystem" },
+          dependencies: { effect: "catalog:" },
         });
 
-        assertTrue(S.is(PackageManifest)(decoded));
-        assertFalse(S.is(PackageJson)(decoded));
-        expect(decoded.rest).toEqual({ beep: { family: "ecosystem" } });
+        assertTrue(S.is(PackageJson)(decoded));
+        expect(decoded.beep).toEqual({ family: "ecosystem" });
+        assertSome(HashMap.get(decoded.dependencies, "effect"), "catalog:");
+        expect(yield* S.encodeEffect(PackageJson.schema)(decoded)).toEqual({
+          name: "pkg",
+          beep: { family: "ecosystem" },
+          dependencies: { effect: "catalog:" },
+        });
+      })
+    );
+
+    it.effect(
+      "the schema static rejects an unknown top-level key without parse options",
+      Effect.fn(function* () {
+        const issues = yield* S.decodeEffect(PackageJson.schema)({ name: "pkg", unexpected: true }).pipe(
+          Effect.flip,
+          Effect.map(getPackageJsonSchemaIssues)
+        );
+
+        expect(A.map(issues, (issue) => issue.pointer)).toEqual(["/rest"]);
+        expect(A.map(issues, (issue) => issue.message)).toEqual(["Unexpected package.json key"]);
       })
     );
   });
@@ -932,7 +977,9 @@ describe("PackageJson schema", () => {
       expect(packageJsonDefinition?.additionalProperties).toBe(false);
       expect(packageJsonDefinition?.required).toEqual(["name"]);
 
-      // The kit's transformation codecs emit their encoded side.
+      // The kit's transformation codecs emit their encoded side. `author`, `repository` and `funding` decode from
+      // an open object (the kit keeps unknown person and repository keys), so their object branch carries no
+      // property shape; the decode still validates it (INTENDED in the 3-A3 parity op).
       expect(packageJsonDefinition?.properties).toMatchObject({
         version: { $ref: "#/$defs/@beep~1semver~1SemVer~1SemVerEncoded" },
         packageManager: { type: "string" },
@@ -941,7 +988,8 @@ describe("PackageJson schema", () => {
         dependencies: { $ref: "#/$defs/@beep~1repo-utils~1schemas~1PackageJson~1RepoDependencyRecord" },
         scripts: { $ref: "#/$defs/@beep~1repo-utils~1schemas~1PackageJson~1NonEmptyStringRecord" },
       });
-      expect(packageJsonDefinition?.properties).toHaveProperty("rest");
+      // The closed `rest` guard is not advertised; `additionalProperties: false` still rejects a literal key.
+      expect(packageJsonDefinition?.properties).not.toHaveProperty("rest");
       expect(packageJsonDefinition?.properties).toHaveProperty("beep");
     });
 
