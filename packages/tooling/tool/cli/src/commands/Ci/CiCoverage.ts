@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { resolveWorkspacePackages } from "@beep/repo-utils";
+import { resolveWorkspacePackages, toSortedRecord } from "@beep/repo-utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -336,7 +336,11 @@ const discoverCoveragePackages = Effect.fn("CiCoverage.discoverCoveragePackages"
         onNone: () => CiCommandError.make({ message: `Coverage owner ${owner.packageName} is not a workspace.` }),
         onSome: Effect.succeed,
       });
-      const invocations = yield* configuredInvocations(workspace.scripts, owner.packageName, workspace.dir);
+      const invocations = yield* configuredInvocations(
+        toSortedRecord(workspace.manifest.scripts),
+        owner.packageName,
+        workspace.dir
+      );
       return yield* Effect.forEach(
         invocations,
         Effect.fnUntraced(function* ({ command, files, testOnly }, index) {
@@ -620,7 +624,7 @@ export const runCiCoverageComparison = Effect.fn("CiCoverage.compare")(function*
   const testOwners = A.filter(
     workspaces.pipe(HashMap.entries, A.fromIterable),
     ([, entry]) =>
-      !isLabsWorkspaceDir(normalize(path.relative(repoRoot, entry.dir))) && entry.scripts.test !== undefined
+      !isLabsWorkspaceDir(normalize(path.relative(repoRoot, entry.dir))) && HashMap.has(entry.manifest.scripts, "test")
   );
   const partitions = withCiLaneDefaultPlacements(
     A.filter(CI_LANE_PARTITIONS, (entry) => entry.lane === "test-unit"),

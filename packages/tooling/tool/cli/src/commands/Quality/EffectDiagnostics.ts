@@ -6,7 +6,7 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { TsconfigLoader } from "@beep/repo-tsconfig/TsconfigLoader";
-import { findRepoRoot, readPackageJsonFile } from "@beep/repo-utils";
+import { findRepoRoot, readPackageJsonFile, toSortedRecord } from "@beep/repo-utils";
 import { resolveWorkspacePackages } from "@beep/repo-utils/Workspaces";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
@@ -377,8 +377,11 @@ const collectDiagnosticsInventory = Effect.fn("EffectDiagnostics.inventory")(fun
   const workspaces = yield* resolveWorkspacePackages(repoRoot);
   const root = yield* readPackageJsonFile(path.join(repoRoot, "package.json"));
   const owners = A.append(
-    A.map(HashMap.toEntries(workspaces), ([name, workspace]) => [name, workspace.dir, workspace.scripts] as const),
-    [root.name, repoRoot, O.getOrElse(root.scripts, () => ({}))] as const
+    A.map(
+      HashMap.toEntries(workspaces),
+      ([name, workspace]) => [name, workspace.dir, toSortedRecord(workspace.manifest.scripts)] as const
+    ),
+    [root.name, repoRoot, toSortedRecord(root.scripts)] as const
   );
   let inventory = HashMap.fromIterable(
     yield* Effect.forEach(
