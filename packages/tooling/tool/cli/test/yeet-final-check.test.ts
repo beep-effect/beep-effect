@@ -401,6 +401,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, Path.layer), { timeout: "30 seconds" })
           }),
           ExpectationRewrite.make({
             testFile: "new/test/moved.test.ts",
+            baseFile: "old/test/moved.test.ts",
             line: 7,
             removed: 'expect(out).toBe("c")',
             added: 'expect(out).toBe("d")',
@@ -450,22 +451,19 @@ it.layer(Layer.mergeAll(BunCrypto.layer, Path.layer), { timeout: "30 seconds" })
       })
     );
 
-    it.effect("maps a snapshot overflow to its test file and keeps a non-test path as is", () =>
+    it.effect("maps a snapshot overflow to its test file and drops a non-test .snap", () =>
       Effect.gen(function* () {
         const rewrites = yield* collectWith((line) =>
           Effect.succeed(
             Str.includes("--name-only")(line)
-              ? handle(0, "pkg/test/__snapshots__/render.test.ts.snap\0pkg/notes.snap.txt\0")
+              ? handle(0, "pkg/fixtures/data.snap\0pkg/test/__snapshots__/render.test.ts.snap\0")
               : Str.includes("--unified=0")(line)
                 ? handle(0, WIDE_DIFF)
                 : handle(0)
           )
         );
-        expect(A.map(rewrites, (rewrite) => rewrite.testFile)).toEqual([
-          // Listed paths come back sorted.
-          "pkg/notes.snap.txt",
-          "pkg/test/render.test.ts",
-        ]);
+        // A `.snap` outside __snapshots__ names no test, so its overflow yields nothing.
+        expect(A.map(rewrites, (rewrite) => rewrite.testFile)).toEqual(["pkg/test/render.test.ts"]);
         expect(A.every(rewrites, (rewrite) => rewrite.removed === EXPECTATION_DIFF_OVERFLOW)).toBe(true);
       })
     );
@@ -529,18 +527,28 @@ it.layer(platformWith(), { timeout: "30 seconds" })("expectation rewrites replay
         "pkg/package.json",
         "pkg/test/masked.test.ts",
         "pkg/test/honest.test.ts",
+        "pkg/test/old-name.test.ts",
         "loose/orphan.test.ts",
       ]);
       const verdicts = yield* verifyExpectationRewrites("/repo", BASE, [
         rewriteIn("pkg/test/masked.test.ts"),
         rewriteIn("pkg/test/masked.test.ts"),
         rewriteIn("pkg/test/honest.test.ts"),
+        ExpectationRewrite.make({
+          testFile: "pkg/test/new-name.test.ts",
+          baseFile: "pkg/test/old-name.test.ts",
+          line: 3,
+          removed: "a",
+          added: "b",
+        }),
         rewriteIn("pkg/test/missing.test.ts"),
         rewriteIn("loose/orphan.test.ts"),
       ]);
       expect(A.map(verdicts, (verdict) => [verdict.testFile, verdict.classification, verdict.rewrites])).toEqual([
         ["pkg/test/masked.test.ts", "masks-base-red", 2],
         ["pkg/test/honest.test.ts", "follows-diff", 1],
+        // A renamed file is replayed where the merge base holds it.
+        ["pkg/test/new-name.test.ts", "follows-diff", 1],
         ["pkg/test/missing.test.ts", "unverified", 1],
         ["loose/orphan.test.ts", "unverified", 1],
       ]);

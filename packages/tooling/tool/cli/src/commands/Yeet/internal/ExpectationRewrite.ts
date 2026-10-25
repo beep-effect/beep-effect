@@ -217,6 +217,15 @@ export const rewrittenTestFiles = (
     A.map((testFile) => [testFile, A.length(A.filter(rewrites, (rewrite) => rewrite.testFile === testFile))] as const)
   );
 
+// The first rewrite of a file carries its merge-base path; files diffed in
+// place have none and live at the same path.
+const baseFileFor = (rewrites: ReadonlyArray<ExpectationRewrite>, testFile: string): string =>
+  pipe(
+    A.findFirst(rewrites, (rewrite) => rewrite.testFile === testFile),
+    O.flatMap((rewrite) => O.fromUndefinedOr(rewrite.baseFile)),
+    O.getOrElse(() => testFile)
+  );
+
 const commandFailure = (command: string) => (cause: { readonly message: string }) =>
   YeetCommandError.make({ message: `${command} failed: ${cause.message}`, command, exitCode: 1 });
 
@@ -250,26 +259,29 @@ const packageDirFor = Effect.fn("Yeet.ExpectationRewrite.packageDirFor")(functio
   return O.none<string>();
 });
 
+// `testFile` names the file on the head (what the verdict reports); `baseFile`
+// is where the merge base holds it, which differs after a rename.
 const classifyOnBase = Effect.fn("Yeet.ExpectationRewrite.classifyOnBase")(function* (
   baseRoot: string,
   testFile: string,
+  baseFile: string,
   rewrites: number
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const verdict = (classification: ExpectationRewriteVerdict["classification"], detail: string) =>
     ExpectationRewriteVerdict.make({ testFile, classification, rewrites, detail });
-  if (!(yield* fs.exists(path.join(baseRoot, testFile)).pipe(Effect.orElseSucceed(() => false)))) {
-    return verdict("unverified", "the test file does not exist on the merge base");
+  if (!(yield* fs.exists(path.join(baseRoot, baseFile)).pipe(Effect.orElseSucceed(() => false)))) {
+    return verdict("unverified", `the test file does not exist on the merge base (${baseFile})`);
   }
-  const packageDir = yield* packageDirFor(baseRoot, testFile);
+  const packageDir = yield* packageDirFor(baseRoot, baseFile);
   if (O.isNone(packageDir)) {
     return verdict("unverified", "no owning package.json was found for the test file on the merge base");
   }
-  yield* Console.log(`[yeet] final-check: replaying the merge-base version of ${testFile} on the merge base`);
+  yield* Console.log(`[yeet] final-check: replaying the merge-base version of ${baseFile} on the merge base`);
   const exitCode = yield* runInherited(
     "bunx",
-    ["vitest", "run", path.relative(packageDir.value, path.join(baseRoot, testFile))],
+    ["vitest", "run", path.relative(packageDir.value, path.join(baseRoot, baseFile))],
     packageDir.value,
     { CI: "true" }
   ).pipe(Effect.catch((cause) => Console.error(`[yeet] final-check: ${cause.message}`).pipe(Effect.as(-1))));
@@ -339,27 +351,52 @@ const fileDiffAdapter: GitCommandErrorAdapter<YeetCommandError | ExpectationDiff
   onTruncated: O.some((commandLine) => ExpectationDiffOverflow.make({ commandLine })),
 };
 
-const overflowRewrite = (path: string): ExpectationRewrite =>
-  ExpectationRewrite.make({
-    testFile: O.getOrElse(testFileForPath(path), () => path),
-    line: 0,
-    removed: EXPECTATION_DIFF_OVERFLOW,
-    added: EXPECTATION_DIFF_OVERFLOW,
-  });
+// The merge-base path of a renamed file, mapped through the snapshot rule;
+// a file diffed in place has none.
+const renamedFrom = (basePath: string, headPath: string): O.Option<string> =>
+  basePath === headPath ? O.none() : O.some(O.getOrElse(testFileForPath(basePath), () => basePath));
+
+const withBaseFile =
+  (baseFile: O.Option<string>) =>
+  (rewrite: ExpectationRewrite): ExpectationRewrite =>
+    O.match(baseFile, {
+      onNone: () => rewrite,
+      onSome: (file) => ExpectationRewrite.make({ ...rewrite, baseFile: file }),
+    });
+
+// A `.snap` outside `__snapshots__/` matches the pathspec but names no test, so
+// its overflow yields nothing, as its small diff would.
+const overflowRewrite = (headPath: string, baseFile: O.Option<string>): ReadonlyArray<ExpectationRewrite> =>
+  pipe(
+    testFileForPath(headPath),
+    O.map((testFile) =>
+      withBaseFile(baseFile)(
+        ExpectationRewrite.make({
+          testFile,
+          line: 0,
+          removed: EXPECTATION_DIFF_OVERFLOW,
+          added: EXPECTATION_DIFF_OVERFLOW,
+        })
+      )
+    ),
+    O.toArray
+  );
 
 const diffTestFile = Effect.fn("Yeet.ExpectationRewrite.diffTestFile")(function* (
   repoRoot: string,
   mergeBase: string,
-  headPath: string,
-  paths: ReadonlyArray<string>
+  basePath: string,
+  headPath: string
 ) {
+  const baseFile = renamedFrom(basePath, headPath);
+  const paths = O.isNone(baseFile) ? [headPath] : [basePath, headPath];
   return yield* runSharedGitOutput(
     repoRoot,
     ["diff", "--unified=0", "--no-color", "--find-renames=50%", mergeBase, "HEAD", "--", ...paths],
     fileDiffAdapter
   ).pipe(
-    Effect.map(findExpectationRewrites),
-    Effect.catchTag("ExpectationDiffOverflow", () => Effect.succeed([overflowRewrite(headPath)]))
+    Effect.map((diff) => A.map(findExpectationRewrites(diff), withBaseFile(baseFile))),
+    Effect.catchTag("ExpectationDiffOverflow", () => Effect.succeed(overflowRewrite(headPath, baseFile)))
   );
 });
 
@@ -412,9 +449,9 @@ export const collectExpectationRewrites = Effect.fn("Yeet.collectExpectationRewr
   const renamed = yield* readGitRenames(repoRoot, mergeBase, "HEAD", EXPECTATION_TEST_PATHSPEC, listingAdapter, () =>
     YeetCommandError.make({ message: "git diff --name-status returned a malformed rename table.", exitCode: 1 })
   );
-  const fromModified = yield* Effect.forEach(modified, (path) => diffTestFile(repoRoot, mergeBase, path, [path]));
+  const fromModified = yield* Effect.forEach(modified, (path) => diffTestFile(repoRoot, mergeBase, path, path));
   const fromRenamed = yield* Effect.forEach(renamed, (rename) =>
-    diffTestFile(repoRoot, mergeBase, rename.targetPath, [rename.sourcePath, rename.targetPath])
+    diffTestFile(repoRoot, mergeBase, rename.sourcePath, rename.targetPath)
   );
   return A.flatten([...fromModified, ...fromRenamed]);
 });
@@ -479,7 +516,9 @@ export const verifyExpectationRewrites = Effect.fn("Yeet.verifyExpectationRewrit
       if (installExit !== 0) {
         return unverifiedAll(`bun install in the merge-base worktree exited ${installExit}`);
       }
-      return yield* Effect.forEach(files, ([testFile, count]) => classifyOnBase(baseRoot, testFile, count));
+      return yield* Effect.forEach(files, ([testFile, count]) =>
+        classifyOnBase(baseRoot, testFile, baseFileFor(rewrites, testFile), count)
+      );
     }),
     () => runInherited("git", ["worktree", "remove", "--force", baseRoot], repoRoot).pipe(Effect.ignore)
   );
