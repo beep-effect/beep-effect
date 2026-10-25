@@ -254,13 +254,16 @@ type LayerAnalysis = {
 };
 
 const makeLayerAnalysis = (sourceFile: SourceFile, imports: EffectVitestImports): LayerAnalysis => {
-  const contexts = new WeakMap<SourceFile, EffectVitestImports>([[sourceFile, imports]]);
+  // Keyed by file path: both caches live only for this call, so weak identity buys nothing.
+  const contexts = MutableHashMap.empty<string, EffectVitestImports>();
+  MutableHashMap.set(contexts, sourceFile.getFilePath(), imports);
   const modules = MutableHashMap.empty<string, O.Option<SourceFile>>();
   const importsOf = (source: SourceFile): EffectVitestImports => {
-    const cached = contexts.get(source);
-    if (cached !== undefined) return cached;
+    const key = source.getFilePath();
+    const cached = MutableHashMap.get(contexts, key);
+    if (O.isSome(cached)) return cached.value;
     const collected = collectEffectVitestImports(source);
-    contexts.set(source, collected);
+    MutableHashMap.set(contexts, key, collected);
     return collected;
   };
   // A wrapped node outside any Project has no module resolution host, so nothing resolves.
