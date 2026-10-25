@@ -990,6 +990,117 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
     })
   );
 
+  it.effect("judges thunks and non-yielded generator calls by what their bodies run", () =>
+    Effect.gen(function* () {
+      const block = '("x", (it) => { it.effect("y", () => Fx.void); });';
+      const services = A.join(
+        [
+          'import * as Ref from "effect/Ref";',
+          'import * as Arr from "effect/Array";',
+          'class Recorder extends Context.Service<Recorder, Array<string>>()("Recorder") {}',
+          'class Engine extends Context.Service<Engine, { readonly calls: number }>()("Engine") {}',
+          "const makeCounter = (count) => ({ count, label: String(count) });",
+          "const loadFromDisk = () => readModelFile();",
+          'const makeOp = Fx.fn("makeOp")(function* (n) { return yield* Ref.make(n); });',
+        ],
+        "\n"
+      );
+      const layer = (effect: string) => `${services}\nit.layer(L.effect(Engine, ${effect}))${block}`;
+      for (const effect of [
+        "Fx.sync(() => ({ count: 0 }))",
+        "Fx.sync(() => makeCounter(1))",
+        "Fx.sync(() => JSON.parse(JSON.stringify({ calls: 0 })))",
+        "Fx.suspend(() => Fx.succeed({ calls: 0 }))",
+        "Fx.promise(() => Promise.resolve({ calls: 0 }))",
+        'Fx.try({ try: () => JSON.parse("{}"), catch: (cause) => cause })',
+        "Fx.gen(function* () { const calls = yield* Recorder; const counter = makeCounter(calls.length); const op = makeOp(1); return Engine.of({ calls: counter.count, op }); })",
+        "Fx.gen(function* () { const calls = yield* Recorder; const sizes = Arr.map(calls, (call) => call.length); return { calls: sizes.length }; })",
+        "Fx.map(Recorder, (calls) => ({ calls: calls.length }))",
+        "Fx.gen(function* () { return { calls: 0, run: () => readModelFile() }; })",
+      ])
+        assertFalse(yield* hasRule(layer(effect), "EV014"), effect);
+      for (const effect of [
+        "Fx.sync(loadModel)",
+        "Fx.sync(loadFromDisk)",
+        "Fx.sync(() => loadModel())",
+        "Fx.suspend(() => { loadModel(); return Fx.void; })",
+        "Fx.promise(() => fetch(url))",
+        "Fx.try({ try: loadModel, catch: (cause) => cause })",
+        "Fx.gen(function* () { const model = loadModel(); return { model }; })",
+        "Fx.gen(function* () { loadFromDisk(); return { calls: 0 }; })",
+        "Fx.gen(function* () { return yield* Ref.make(loadModel()); })",
+        "Fx.gen(function* () { const calls = yield* Recorder; const models = Arr.map(calls, (call) => loadModel(call)); return { models }; })",
+        "Fx.gen(function* () { const value = Fx.runSync(open); return { value }; })",
+        "Fx.gen(function* () { const client = new Client(); return { client }; })",
+        "Fx.map(Recorder, (calls) => loadModel(calls))",
+        "Fx.map(Recorder, loadModel)",
+        "Ref.make(0).pipe(Fx.map((ref) => loadModel(ref)))",
+        "Fx.flatMap(Ref.make(0), (ref) => { loadModel(ref); return Fx.void; })",
+      ])
+        assertTrue(yield* hasRule(layer(effect), "EV014"), effect);
+
+      assertFalse(yield* hasRule(`${services}\nit.layer(L.sync(Recorder, () => []))${block}`, "EV014"));
+      assertTrue(yield* hasRule(`${services}\nit.layer(L.sync(Recorder, loadModel))${block}`, "EV014"));
+      assertTrue(
+        yield* hasRule(`${services}\nit.layer(L.suspend(() => { loadModel(); return L.empty; }))${block}`, "EV014")
+      );
+      assertTrue(
+        yield* hasRule(
+          `${services}\nit.layer(L.unwrap(Fx.sync(() => { loadModel(); return L.empty; })))${block}`,
+          "EV014"
+        )
+      );
+    })
+  );
+
+  it.effect("follows constructors, callables and curried calls inside acquisition bodies", () =>
+    Effect.gen(function* () {
+      const block = '("x", (it) => { it.effect("y", () => Fx.void); });';
+      const services = A.join(
+        [
+          'import * as Ref from "effect/Ref";',
+          'import * as Arr from "effect/Array";',
+          'import * as Sch from "effect/Schema";',
+          'import * as Toolkit from "effect/ai/Toolkit";',
+          'class Recorder extends Context.Service<Recorder, Array<string>>()("Recorder") {}',
+          'class Engine extends Context.Service<Engine, { readonly calls: number }>()("Engine") {}',
+          'class Settings extends Sch.Class<Settings>("Settings")({ calls: Sch.Number }) {}',
+          "class Plain { static make() { return loadModel(); } }",
+          "const Kit = Toolkit.make();",
+          'const makeOp = Fx.fn("makeOp")(function* (n) { return yield* Ref.make(n); });',
+          "const curry = () => () => loadModel();",
+          'const parse = () => JSON.parse("{}");',
+        ],
+        "\n"
+      );
+      const layer = (effect: string) => `${services}\nit.layer(L.effect(Engine, ${effect}))${block}`;
+      for (const effect of [
+        "Fx.gen(function* () { const settings = Settings.make({ calls: 1 }); return Engine.of({ calls: settings.calls }); })",
+        "Fx.gen(function* () { const handlers = Kit.of({}); const index = new Map(); return { handlers, index }; })",
+        'Fx.try({ try() { return JSON.parse("{}"); }, catch: (cause) => cause })',
+        "Fx.try({ try: parse, catch: (cause) => cause })",
+        "Fx.tryPromise({ try: () => Promise.resolve(1), catch: (cause) => cause })",
+        "Fx.sync(Arr.empty)",
+        "Fx.sync(makeOp)",
+        "Fx.map(Recorder, Engine.of)",
+        "Fx.map(Recorder, Arr.length)",
+      ])
+        assertFalse(yield* hasRule(layer(effect), "EV014"), effect);
+      for (const effect of [
+        "Fx.gen(function* () { const model = Plain.make(); return { model }; })",
+        "Fx.gen(function* () { const model = curry()(); return { model }; })",
+        "Fx.gen(function* () { const pending = new Promise((resolve) => resolve(loadModel())); return { pending }; })",
+        "Fx.gen(function* () { const index = new Map(Arr.map(names, (name) => [name, loadModel(name)])); return { index }; })",
+        "Fx.try({ catch: (cause) => cause })",
+        "Fx.tryPromise({ try: () => fetch(url), catch: (cause) => cause })",
+        "Fx.sync(Fx.runSync)",
+        "Fx.sync(() => fetch(url))",
+        "Fx.map(Recorder, Plain.make)",
+      ])
+        assertTrue(yield* hasRule(layer(effect), "EV014"), effect);
+    })
+  );
+
   it.effect("names the Effect library layers that build in memory", () =>
     Effect.gen(function* () {
       const block = '("x", (it) => { it.effect("y", () => Fx.void); });';

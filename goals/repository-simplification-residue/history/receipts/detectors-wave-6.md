@@ -122,7 +122,7 @@ base detector (copied over the repaired file, run, and restored):
   `testLayer(stub(…))` returning `Layer.succeed`, `withDb(L.succeed(…))`, and a stub default
   parameter. Still EV014: `withDb` over an acquiring layer or an unresolved import, a rest
   parameter, and an acquiring default.
-- "follows aliases, dual implementations, this-bound statics and local re-exports" (`:878`).
+- "follows aliases, dual implementations, this-bound statics and local re-exports" (`:882`).
   Silent: a local `export { LocalLive as ExportedLive }`, an aliased `Effect.fn` factory through a
   barrel that also has `export type *`, a `dual` implementation, an exported `function`, a
   `this.make` static, and a `Layer.provide` array operand. Still EV014: a `declare function`, a
@@ -148,7 +148,8 @@ and (b) an explicit `{ timeout }`:
 
 - **(a) A hermetic in-memory acquisition is not a finding.** A layer is acquisition-free when
   every leaf it composes is one of these:
-  - a stub (`Layer.succeed`/`sync`/`mock`/`succeedContext`/`syncContext`/`empty`);
+  - a stub (`Layer.succeed`/`mock`/`succeedContext`/`empty`), or `Layer.sync`/`syncContext` whose
+    thunk body is hermetic;
   - a platform service bundle (wave 2 FP-1);
   - a named Effect library layer that builds in memory;
   - a `Layer.effect`/`effectContext`/`effectDiscard`, `Layer.unwrap`, `Layer.suspend` or
@@ -162,14 +163,16 @@ and (b) an explicit `{ timeout }`:
     module key such as `FileSystem.FileSystem`;
   - uses `Effect.context`/`service`/`serviceOption`/`scope`, or reads the clock
     (`Clock.currentTimeMillis`/`currentTimeNanos`, `DateTime.now`/`nowAsDate`);
-  - lifts a value (`Effect.succeed`/`sync`/`fail`/`die`/`void`);
+  - lifts a value (`Effect.succeed`/`fail`/`die`/`void`), or runs a thunk (`Effect.sync`/`suspend`/
+    `promise`/`try`/`tryPromise`) whose body is hermetic;
   - allocates in-memory state: `Ref.make`/`get`/`set`/`update`/`updateAndGet`/`getAndSet`/`modify`,
     `SynchronizedRef`/`SubscriptionRef`/`TxRef.make`, `Deferred.make`/`succeed`/`done`,
     `Queue`/`PubSub` constructors, `Latch.make`, `Semaphore.make` and `Cache.make`;
   - registers hermetic finalizers (`Effect.addFinalizer`, `Scope.addFinalizer`) or a hermetic
     `Effect.acquireRelease`;
   - composes hermetic effects with `map`/`as`/`asVoid`/`orDie`/`flatMap`/`andThen`/`tap`/`withSpan`;
-  - runs an `Effect.gen` or `Effect.fn` generator whose own `yield*` operands are all hermetic.
+  - runs an `Effect.gen` or `Effect.fn` generator whose own `yield*` operands are all hermetic and
+    whose every other own call is hermetic by the body rule below.
 
   `Layer.unwrap` also needs the effect to yield an acquisition-free layer (`Effect.succeed`,
   `Effect.sync`, `Effect.map` or `Effect.gen` returns).
@@ -185,25 +188,45 @@ and (b) an explicit `{ timeout }`:
   - `LanguageModel.make` reads optional services;
   - `Toolkit.toLayer` is `Layer.effectContext(toHandlers(build))`.
 - **(b) Everything else keeps flagging, and the test takes the canon budget**
-  `{ timeout: "30 seconds" }`, as #1875 wave 2 did. That covers real acquisitions:
-  `Effect.try`/`tryPromise`/`promise` (a model load, a socket), service method calls, clock
+  `{ timeout: "30 seconds" }`, as #1875 wave 2 did. That covers real acquisitions: a thunk or
+  generator body that calls external work (a model load, a socket), service method calls, clock
   waits, `Deferred.await`, unlisted library layers, and anything unresolved.
 
 **Why the line sits there.** A hook budget bounds acquisition whose latency depends on the
 environment: I/O, processes, sockets, model files. Constructing services from context and
 allocating refs costs the same everywhere, so a budget on it guards nothing. Wave 2 FP-1 made the
-same call for platform bundles. The excluded constructors are named because their thunks are the
-external work.
+same call for platform bundles.
 
-**Gotcha.** Synchronous code in an acquisition, including `Layer.sync` and `Effect.sync`
-thunks and non-yield statements in a generator, counts as in-memory construction, as the
-`Layer.sync` stub rule always did. `Effect.try` is excluded because a fallible thunk is, by
-convention here, external work (`loadWinkRuntime`, `loadBM25Vectorizer`).
+**The body rule (review round on #2247).** Every thunk a constructor runs, every callback the
+acquisition applies (`map`, `flatMap`, `suspend`, pipe stages) and every statement of a generator
+is judged by the calls it makes itself; nested functions only define values. A call is hermetic
+when it is:
+- an `effect` module function other than the `run*` entry points, curried calls included. A data
+  module (`Array`, `Option`, `Record`, `Struct`, `String`, `Match`, `Function`, ...) applies its
+  function arguments at once, so those are judged too. Other modules (`Effect`, `Layer`,
+  `HttpClient.make`, `ChildProcessSpawner.make`, ...) take callbacks they run later.
+- a repository function whose own body is hermetic, with its parameters bound to the arguments;
+- an `Effect.fn`/`Effect.fnUntraced` factory call, which only builds an effect;
+- `of`/`make` on a value `effect` defines: a class with an `effect` base (`Context.Service`,
+  `Schema.Class`), an `effect` export, or an `effect` constructor's result (`Toolkit.make(...)`);
+- a `pipe` method or a built-in (`JSON`, `Object`, `Array`, `Math`, `Number`, `String`,
+  `Boolean`, `Symbol`, `BigInt`, `Promise`, `Date`), with function arguments judged; `new` only
+  of the built-in value constructors (`Map`, `Set`, `Error`, `URL`, ...).
+
+Anything else, unresolved calls included, is acquisition. `Effect.try` follows the same rule as
+`Effect.sync`: whether a thunk may throw says nothing about what it does, and the body rule
+already flags the external work, because `loadWinkRuntime` and `loadBM25Vectorizer` call the
+imported `wink-nlp` loaders. `@beep/utils` resolves without trusting the package: its modules
+declare their own helpers and `export * from "effect/<Module>"`, and an Effect star export
+resolves to that `effect` module.
+
+**Gotcha.** A function passed by an unresolved name to an `effect` data helper
+(`Arr.map(xs, f)`) is not followed.
 
 **Fixtures**, written first; each case failed against the base detector:
 
 - "permits hermetic in-memory acquisitions under it.layer and keeps real acquisitions judged"
-  (`:845`). Silent: a `Layer.effect` generator over `FileSystem.FileSystem` and `Ref.make`,
+  (`:849`). Silent: a `Layer.effect` generator over `FileSystem.FileSystem` and `Ref.make`,
   `Deferred.make`, a curried `Layer.effect(Store)(Fx.map(Recorder, …))`, `Layer.unwrap` over
   `Fx.map` and over `Fx.gen` with `provideMerge(Layer.sync(…))`, an `Effect.fn` factory, a
   same-file `Effect.gen` binding, a hermetic `acquireRelease`, and `Layer.suspend`. Still EV014:
@@ -211,14 +234,14 @@ convention here, external work (`loadWinkRuntime`, `loadBM25Vectorizer`).
   bare `yield`, `Deferred.await` in a pipe, an unwrap yielding an acquiring layer or a dynamic
   import, a nested generator's `Fx.promise` (the `isFunctionBoundary` guard), and an acquiring
   `acquireRelease`.
-- "judges hermetic effect combinators by every effect they run during acquisition" (`:938`).
+- "judges hermetic effect combinators by every effect they run during acquisition" (`:942`).
   Silent: finalizers, scope, clock and `DateTime` reads, an Effect module key, a
   `Context.Reference`, `Fx.flatMap` over `Ref`, a pipe through `flatMap`/`map`/`asVoid`, `Fx.as`,
   `serviceOption` with `withSpan`, and unwraps of `Fx.sync`/`Fx.succeed`/a bound effect. Still
   EV014: an acquiring continuation or stage, under-applied combinators, unknown stages
   (`timeout`, `retry`), an acquiring finalizer, look-alike keys (an imported namespace, a non-key
   class, a non-key value), a generator-less `Fx.gen`, and acquiring or empty unwraps.
-- "names the Effect library layers that build in memory" (`:989`). Silent: each named library
+- "names the Effect library layers that build in memory" (`:1104`). Silent: each named library
   layer. Still EV014: a look-alike `Path` module, `ConfigProvider.layer` over a non-literal
   provider, a non-`make` logger, `toLayer` on a non-Toolkit receiver or with an acquiring build,
   and `McpServer.McpServer.layer`.
@@ -238,6 +261,53 @@ convention here, external work (`loadWinkRuntime`, `loadBM25Vectorizer`).
 The reached source makers were audited by hand: every `yield*` they run reads a service key or
 allocates a ref. Real work happens only in returned closures, such as spawns or bundles at use
 time.
+
+### Review round on #2247: thunk and generator bodies
+
+The beep-reviewer P2 (thread `PRRT_kwDOPbO_N86v9kT1`) found that `Effect.sync` admitted any thunk
+and that a generator was judged only by its `yield*` operands. So
+`Layer.effect(Tag, Effect.sync(loadWinkRuntime))`, or a generator calling `loadWinkRuntime()`
+without yielding it, passed as acquisition-free. The body rule above fixes both.
+
+**Fixtures**, written first:
+- "judges thunks and non-yielded generator calls by what their bodies run" (`:993`). 10 silent
+  cases, including `Effect.sync(() => ({ count: 0 }))` and a generator that yields services and
+  builds values. 16 flagged cases, including `Effect.sync(loadModel)` and a generator calling
+  `loadModel()` without yielding it. Plus `Layer.sync`, `Layer.suspend` and `Layer.unwrap(Fx.sync(...))`
+  pairs.
+- "follows constructors, callables and curried calls inside acquisition bodies" (`:1056`). 9
+  silent and 9 flagged cases.
+
+A per-case script against the pushed head `3fc55fbf51` showed 19 of the 30 first-case
+expectations wrong. Both reviewer shapes passed silently there. At head the suite fails both new
+cases (2 of 249), and the repaired detector passes all 249.
+
+**Returned rows.** The first strict pass returned 115 EV014 rows in 23 files. Each one was traced
+to the failing call, and every one was a precision gap in the new rule, not real acquisition:
+- curried `Effect.fn("name")(function* ...)` calls whose callee is a call;
+- callbacks treated as run when an `effect` constructor only registers them (`HttpClient.make`,
+  `ChildProcessSpawner.make`);
+- `of` on an `effect` service key or a `Toolkit.make(...)` value;
+- members of a named `effect` barrel export.
+
+After those four fixes, 0 rows return: no new migration and no exception. Against `origin/main`
+(now `9dadba59f3`, same inventory relationship), `--write` twice is byte-identical
+(`455b67e2…`, unchanged from the pushed head). Pairing gives 233 gone, 0 new and 0 changed, so
+the census below is unchanged: 233 = 194 by detector + 39 by migration.
+
+**Mutation probes** (Bun, each reverted, `cmp` clean). Each one fails at least one case:
+- R1, `Effect.sync` admitted unconditionally: 2 cases fail;
+- R2, generator statements not judged: 2;
+- R3, callback bodies not judged: 1;
+- R4, `Effect.try` thunk not judged: 3;
+- R5, `Layer.sync` a stub again: 1;
+- R6, no data-module callbacks judged: 2;
+- R7, curried repository results followed: 1;
+- R8, `run*` admitted: 1;
+- R9, `map` callables not judged: 2.
+
+With the timeout removed from `WinkTokenization.test.ts`, the block still flags through the
+`Effect.try` body rule: `1 new finding(s)`.
 
 ## Migrations: 39 rows in 16 files take `{ timeout: "30 seconds" }`
 
@@ -275,6 +345,7 @@ Each probe was applied, run on Bun, and reverted from a byte copy (`cmp` clean a
 | library layers off | the library case fails |
 | migration: drop the timeout from `WinkTokenization.test.ts:11` | `lint effect-vitest`: `1 new finding(s)`, exit 1 |
 | migration: `timeout: "1 millis"` on the same block | `Hook timed out in 1ms` on Bun, so the budget is live |
+| review round R1-R9 (body rules) | see "Review round on #2247" |
 
 ## Remaining frontier
 
@@ -303,13 +374,13 @@ this receipt records the commands.
   - repo-cli `bunx tsc-rs -p test/tsconfig.json --noEmit` exits 0;
   - the other six check their tests through `beep:check:tests` (`tsconfig.test.json`).
 - Suites:
-  - effect-vitest-detectors (247 tests, 7 of them new or changed), -contract, -primitives and
-    -store, lint-command and step-capture-lifecycle: 386 of 386 on Bun and on Node;
+  - effect-vitest-detectors (249 tests, 9 of them new or changed), -contract, -primitives and
+    -store, lint-command and step-capture-lifecycle: 388 of 388 on Bun and on Node;
   - the 15 migrated files in the other six packages: 89 of 89 on Bun and 87 of 89 on Node. The
     Node failures are the two `Witness.service.test.ts` tests, which call `Bun.build`. They fail
     identically on Node with the base file, so they are environment-only and inherited.
 - Coverage ratchet: a scoped lcov of `EffectVitestDetectors.ts` over its 11 referencing suites
-  on Node gives 99.56 % lines, 98.21 % statements, 96.2 % branches and 98.94 % functions.
+  on Node gives 99.59 % lines, 97.93 % statements, 95.94 % branches and 98.59 % functions.
   Every metric is at or above its floor (99.24 / 97.89 / 95.6 / 98.2), and no floor changed. The
   other packages changed only test files.
 - `lint effect-vitest` `introduced=0`; `lint:schema-first` `introduced=0` on every ratchet.
@@ -319,6 +390,9 @@ this receipt records the commands.
 - Biome on the 18 changed TypeScript files, root `lint:oxlint`, and
   `oxlint . --config .oxlintrc.docs.json --max-warnings=0`: clean.
 - `jsdoc:inventory:check` passes; `jsdoc:ratchet:check` reports `increased=0`.
+- `laws native-runtime --check`: errors=0, warnings=0; `effect-imports`, `effect-fn` and
+  `allowlist-check` pass. `terse-effect --check` exits 1 on 42 inherited blocking files, none of
+  them in this lane.
 - `lint:retired-effect-paths` findings=0. `goals:doctor`, docgen and `package-verify`: see the
   lane report.
 
@@ -339,6 +413,9 @@ and their 28 reasons; no surviving row changed. Per part:
   entries, and drop the effect, unwrap, suspend and toolkit entries. The 129 same-file rows
   return.
 - **Migrations:** remove the 39 `timeout: "30 seconds"` options.
+- **Body rules (review round):** restore `sync` to `EFFECT_CONSTANTS` and `STUB_LAYER_MEMBERS`,
+  drop `isHermeticSyncBody` from `isHermeticGenerator` and `callbackReturns`, and drop the `sync`,
+  `promise`, `try`/`tryPromise` and `suspend` rules. No row moves, because no row came back.
 
 Each part needs `lint effect-vitest --write` and the reasons restored from
 `git show 17f67293a2:standards/effect-vitest.inventory.jsonc`. The `isFunctionBoundary` fix
