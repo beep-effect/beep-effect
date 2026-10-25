@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { Run } from "@beep/commands/Run";
 import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -13,10 +14,9 @@ import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
+import * as PlatformError from "effect/PlatformError";
 import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
-import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import {
   DEFAULT_TAILSCALE_SERVE_PORT,
@@ -32,18 +32,43 @@ import {
   TailscaleStatusParseError,
 } from "./Tailscale.errors.ts";
 import { TailnetIpv4Address, TailscaleStatus, TailscaleStatusJson } from "./Tailscale.models.ts";
+import type { CommandOutput } from "@beep/commands/Run";
 import type * as HttpClientResponse from "effect/http/HttpClientResponse";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { TailscaleCommandError } from "./Tailscale.errors.ts";
 import type { TailnetIpv4Address as TailnetIpv4AddressType } from "./Tailscale.models.ts";
 
 const tailscaleExecutable = "tailscale";
 const forceKillGrace = Duration.seconds(2);
-const emptyString = () => Str.empty;
 
-const collectStdout = <E>(stream: Stream.Stream<Uint8Array, E>): Effect.Effect<string, E> =>
-  stream.pipe(Stream.decodeText(), Stream.runFold(emptyString, Str.concat));
+// The kit folds every platform failure of a run into `CommandFailedError` of
+// kind "spawn". The platform tags where it failed (`method`), which keeps this
+// driver's split: a failure to start the process is a spawn error, a failure
+// while reading its output or awaiting its exit is an output error. An
+// over-budget stream (the kit's capture bound) is an output error too.
+const isSpawnFailure = (cause: unknown): boolean =>
+  PlatformError.isPlatformError(cause) && cause.reason.method === "spawn";
 
-const collectStderr = collectStdout;
+const collectTailscale = <const Subcommand extends "status" | "serve">(
+  command: ChildProcess.Command,
+  commandContext: {
+    readonly executable: typeof tailscaleExecutable;
+    readonly subcommand: Subcommand;
+    readonly argumentCount: number;
+  }
+): Effect.Effect<
+  CommandOutput,
+  TailscaleCommandSpawnError | TailscaleCommandOutputError,
+  ChildProcessSpawner.ChildProcessSpawner
+> =>
+  Run.collect(command).pipe(
+    Effect.mapError((error) => {
+      const cause = error._tag === "CommandFailedError" ? error.cause : error;
+      return isSpawnFailure(cause)
+        ? TailscaleCommandSpawnError.make({ ...commandContext, cause })
+        : TailscaleCommandOutputError.make({ ...commandContext, cause });
+    })
+  );
 
 const decodeTailscaleStatusJson = S.decodeEffect(S.fromJsonString(TailscaleStatusJson));
 
@@ -153,7 +178,6 @@ export const parseTailscaleStatus = Effect.fn("Tailscale.parseStatus")((rawStatu
  */
 export const readTailscaleStatus = Effect.gen(function* () {
   const args = ["status", "--json"];
-  const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
   const commandContext: {
     readonly executable: typeof tailscaleExecutable;
     readonly subcommand: "status";
@@ -164,33 +188,14 @@ export const readTailscaleStatus = Effect.gen(function* () {
     argumentCount: A.length(args),
   };
   return yield* Effect.gen(function* () {
-    const child = yield* spawner
-      .spawn(
-        ChildProcess.make(tailscaleExecutable, args, {
-          forceKillAfter: forceKillGrace,
-          stdin: "ignore",
-          stderr: "pipe",
-          stdout: "pipe",
-        })
-      )
-      .pipe(
-        Effect.mapError((cause) =>
-          TailscaleCommandSpawnError.make({
-            ...commandContext,
-            cause,
-          })
-        )
-      );
-    const [stdout, stderr, exitCode] = yield* Effect.all(
-      [collectStdout(child.stdout), collectStderr(child.stderr), child.exitCode.pipe(Effect.map(Number))],
-      { concurrency: "unbounded" }
-    ).pipe(
-      Effect.mapError((cause) =>
-        TailscaleCommandOutputError.make({
-          ...commandContext,
-          cause,
-        })
-      )
+    const { stdout, stderr, exitCode } = yield* collectTailscale(
+      ChildProcess.make(tailscaleExecutable, args, {
+        forceKillAfter: forceKillGrace,
+        stdin: "ignore",
+        stderr: "pipe",
+        stdout: "pipe",
+      }),
+      commandContext
     );
     if (exitCode !== 0) {
       return yield* TailscaleCommandExitError.make({
@@ -202,7 +207,6 @@ export const readTailscaleStatus = Effect.gen(function* () {
     }
     return yield* parseTailscaleStatus(stdout);
   }).pipe(
-    Effect.scoped,
     Effect.timeout(TAILSCALE_STATUS_TIMEOUT),
     Effect.catchTags({
       TimeoutError: (cause) =>
@@ -231,7 +235,6 @@ const runTailscaleCommand: {
     args: readonly string[],
     timeoutInput: Duration.Input
   ): Effect.fn.Return<void, TailscaleCommandError, ChildProcessSpawner.ChildProcessSpawner> {
-    const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
     const commandContext: {
       readonly executable: typeof tailscaleExecutable;
       readonly subcommand: "serve";
@@ -243,33 +246,14 @@ const runTailscaleCommand: {
     };
     const timeout = Duration.fromInputUnsafe(timeoutInput);
     return yield* Effect.gen(function* () {
-      const child = yield* spawner
-        .spawn(
-          ChildProcess.make(tailscaleExecutable, args, {
-            forceKillAfter: forceKillGrace,
-            stdin: "ignore",
-            stderr: "pipe",
-            stdout: "ignore",
-          })
-        )
-        .pipe(
-          Effect.mapError((cause) =>
-            TailscaleCommandSpawnError.make({
-              ...commandContext,
-              cause,
-            })
-          )
-        );
-      const [stderr, exitCode] = yield* Effect.all(
-        [collectStderr(child.stderr), child.exitCode.pipe(Effect.map(Number))],
-        { concurrency: "unbounded" }
-      ).pipe(
-        Effect.mapError((cause) =>
-          TailscaleCommandOutputError.make({
-            ...commandContext,
-            cause,
-          })
-        )
+      const { stderr, exitCode } = yield* collectTailscale(
+        ChildProcess.make(tailscaleExecutable, args, {
+          forceKillAfter: forceKillGrace,
+          stdin: "ignore",
+          stderr: "pipe",
+          stdout: "ignore",
+        }),
+        commandContext
       );
       if (exitCode !== 0) {
         return yield* TailscaleCommandExitError.make({
@@ -279,7 +263,6 @@ const runTailscaleCommand: {
         });
       }
     }).pipe(
-      Effect.scoped,
       Effect.timeout(timeout),
       Effect.catchTags({
         TimeoutError: (cause) =>

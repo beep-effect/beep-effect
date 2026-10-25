@@ -5,9 +5,10 @@
  * @since 0.0.0
  */
 
+import { Run } from "@beep/commands/Run";
 import { $ExiftoolId } from "@beep/identity/packages";
 import { Fn } from "@beep/schema";
-import { A, O, Str, thunkEmptyStr } from "@beep/utils";
+import { A, O, Str } from "@beep/utils";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -20,8 +21,7 @@ import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import * as Stream from "effect/Stream";
-import { ExiftoolError, ProcessExitCode } from "./Exiftool.errors.ts";
+import { ExiftoolError } from "./Exiftool.errors.ts";
 import {
   BeepQaProvenance,
   ExifMetadata,
@@ -36,6 +36,7 @@ import {
   WriteXmpPacketRequest,
 } from "./Exiftool.models.ts";
 import { provenanceTagAssignments, RenderBeepQaConfigOptions, renderBeepQaExiftoolConfig } from "./ExiftoolConfig.ts";
+import type { CommandFailedError, CommandOutput, CommandOutputError } from "@beep/commands/Run";
 
 const $I = $ExiftoolId.create("Exiftool.service");
 const decodeRawRecords = S.decodeUnknownEffect(S.fromJsonString(S.Array(S.Record(S.String, S.Unknown))));
@@ -76,28 +77,8 @@ export interface ExiftoolShape {
   readonly writeXmpPacket: (request: WriteXmpPacketRequest) => Effect.Effect<WriteTagsResult, ExiftoolError>;
 }
 
-class ProcessResult extends S.Opaque<ProcessResult, { readonly brand: unique symbol }>()(
-  S.Struct({
-    exitCode: ProcessExitCode,
-    stderr: S.String,
-    stdout: S.String,
-  }).pipe(
-    $I.annoteSchema("ProcessResult", {
-      description: "Result of a process execution.",
-    })
-  )
-) {}
-
 const defaultConfig = (input?: ExiftoolConfigInputOptions | undefined): ExiftoolConfig =>
   ExiftoolConfig.make(ExiftoolConfigInput.make(input ?? {}));
-
-// shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication -- driver-boundary idiom repeated across sibling drivers that must not depend on each other; no foundation capability owns it yet. Owner: @beep/exiftool. Exit: import it and delete this copy once a foundation capability package exports the idiom.
-const collectText = <E>(stream: Stream.Stream<Uint8Array, E>): Effect.Effect<string, E> =>
-  stream.pipe(
-    Stream.decodeText(),
-    Stream.runFold(thunkEmptyStr, (acc: string, chunk) => `${acc}${chunk}`)
-  );
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
 // fallow-ignore-next-line code-duplication -- driver-boundary idiom repeated across sibling drivers that must not depend on each other; no foundation capability owns it yet. Owner: @beep/exiftool. Exit: import it and delete this copy once a foundation capability package exports the idiom.
@@ -360,22 +341,23 @@ export const buildWriteTagsArgs: (options: BuildWriteTagsArgsOptions) => Readonl
  */
 export const exiftoolVersionArgs: ReadonlyArray<string> = ["-ver"];
 
+// The kit reports a spawn or stream failure as `CommandFailedError` carrying
+// the platform failure; unwrap it so the driver error keeps the same cause it
+// had under the hand-rolled fold. An over-budget stream has no platform cause,
+// so the kit error itself becomes the cause.
+const commandFailureCause = (error: CommandFailedError | CommandOutputError): unknown =>
+  error._tag === "CommandFailedError" ? error.cause : error;
+
 const runProcess = (
   spawner: ChildProcessSpawner.ChildProcessSpawner["Service"],
   command: ChildProcess.Command,
   operation: string,
   message: string
-): Effect.Effect<ProcessResult, ExiftoolError> =>
-  Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* spawner.spawn(command);
-      const [stdout, stderr, exitCode] = yield* Effect.all(
-        [collectText(handle.stdout), collectText(handle.stderr), handle.exitCode],
-        { concurrency: "unbounded" }
-      );
-      return ProcessResult.make({ exitCode, stderr, stdout });
-    })
-  ).pipe(Effect.mapError((cause) => ExiftoolError.fromUnknown(operation, message, { cause })));
+): Effect.Effect<CommandOutput, ExiftoolError> =>
+  Run.collect(command).pipe(
+    Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
+    Effect.mapError((error) => ExiftoolError.fromUnknown(operation, message, { cause: commandFailureCause(error) }))
+  );
 
 const ensureFile = Effect.fn("Exiftool.ensureFile")(function* (
   fs: FileSystem.FileSystem,
@@ -413,7 +395,7 @@ const makeService = Effect.fn("Exiftool.make")(function* (configInput?: Exiftool
     Effect.orDie
   );
 
-  const runExiftool = (operation: string, args: ReadonlyArray<string>): Effect.Effect<ProcessResult, ExiftoolError> =>
+  const runExiftool = (operation: string, args: ReadonlyArray<string>): Effect.Effect<CommandOutput, ExiftoolError> =>
     runProcess(
       spawner,
       ChildProcess.make(config.exiftoolPath, args, {

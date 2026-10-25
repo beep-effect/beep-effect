@@ -8,17 +8,18 @@
  * @since 0.0.0
  */
 
+import { Run } from "@beep/commands/Run";
 import { $PdfToolsId } from "@beep/identity/packages";
-import { A, Html, O, Str, thunkEmptyStr } from "@beep/utils";
+import { A, Html, O, Str } from "@beep/utils";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
-import * as Stream from "effect/Stream";
 import { PDFDocument } from "pdf-lib";
 import { inkCoverageOf } from "./internal/coverage.ts";
 import { measureP6 } from "./internal/ppm.ts";
@@ -34,6 +35,7 @@ import {
   SvgToPdfRequest,
   SvgToPdfResult,
 } from "./PdfTools.models.ts";
+import type { CommandFailedError, CommandOutputError } from "@beep/commands/Run";
 import type {
   InkCoverage,
   PdfAnnotation,
@@ -213,12 +215,33 @@ export interface PdfToolsShape {
   readonly svgToPdf: (request: SvgToPdfRequest) => Effect.Effect<SvgToPdfResult, PdfToolsError>;
 }
 
-// shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication -- driver-boundary idiom repeated across sibling drivers that must not depend on each other; no foundation capability owns it yet. Owner: @beep/pdf-tools. Exit: import it and delete this copy once a foundation capability package exports the idiom.
-const collectText = <E>(stream: Stream.Stream<Uint8Array, E>): Effect.Effect<string, E> =>
-  stream.pipe(
-    Stream.decodeText(),
-    Stream.runFold(thunkEmptyStr, (acc: string, chunk) => `${acc}${chunk}`)
+// Maps the kit's run failures onto this driver's reasons. A spawn or stream
+// failure keeps its platform failure as the cause, exactly as the hand-rolled
+// fold reported it; a timeout keeps the `tool-failed` reason and message; an
+// over-budget stream (the kit's capture bound) is a failing tool run.
+const toolFailure = (
+  error: CommandFailedError | CommandOutputError,
+  executable: string,
+  what: string,
+  timeoutMillis: number
+): PdfToolsError =>
+  Match.value(error).pipe(
+    Match.tag("CommandOutputError", (tooLarge) =>
+      PdfToolsError.fromUnknown(
+        "tool-failed",
+        `${executable} produced more output than the capture limit while ${what}.`,
+        tooLarge
+      )
+    ),
+    Match.when({ kind: "timeout" }, () =>
+      PdfToolsError.make({
+        reason: "tool-failed",
+        message: `${executable} timed out after ${timeoutMillis} ms while ${what}.`,
+      })
+    ),
+    Match.orElse((failed) =>
+      PdfToolsError.fromUnknown("tool-unavailable", `Failed to run ${executable}; is it installed?`, failed.cause)
+    )
   );
 
 const makeService = Effect.fn("PdfTools.makeService")(function* (config: PdfToolsConfig) {
@@ -231,50 +254,33 @@ const makeService = Effect.fn("PdfTools.makeService")(function* (config: PdfTool
     args: ReadonlyArray<string>,
     env: Readonly<Record<string, string>>,
     what: string
-  ): Effect.Effect<string, PdfToolsError> =>
-    Effect.scoped(
-      Effect.gen(function* () {
-        const unavailable = (cause: unknown) =>
-          PdfToolsError.fromUnknown("tool-unavailable", `Failed to run ${executable}; is it installed?`, cause);
-        const handle = yield* spawner
-          .spawn(
-            ChildProcess.make(executable, args, {
-              env,
-              extendEnv: true,
-              forceKillAfter: `${config.forceKillAfterMillis} millis`,
-              stdin: "ignore",
-              stderr: "pipe",
-              stdout: "pipe",
-            })
-          )
-          .pipe(Effect.mapError(unavailable));
-        const [stdout, stderr, exitCode] = yield* Effect.all(
-          [collectText(handle.stdout), collectText(handle.stderr), handle.exitCode],
-          { concurrency: "unbounded" }
-        ).pipe(
-          Effect.mapError(unavailable),
-          // Leaving the scope on timeout interrupts the handle, which stops the tool.
-          Effect.timeoutOrElse({
-            duration: `${config.timeoutMillis} millis`,
-            orElse: () =>
-              Effect.fail(
-                PdfToolsError.make({
-                  reason: "tool-failed",
-                  message: `${executable} timed out after ${config.timeoutMillis} ms while ${what}.`,
-                })
-              ),
-          })
-        );
-        if (exitCode !== 0) {
-          return yield* PdfToolsError.make({
-            reason: "tool-failed",
-            message: `${executable} exited ${exitCode} while ${what}.`,
-            cause: O.some(Str.trim(stderr)),
-          });
-        }
-        return stdout;
-      })
+  ): Effect.Effect<string, PdfToolsError> => {
+    const command = Run.extendEnv(
+      ChildProcess.make(executable, args, {
+        forceKillAfter: `${config.forceKillAfterMillis} millis`,
+        stdin: "ignore",
+        stderr: "pipe",
+        stdout: "pipe",
+      }),
+      { ...env }
     );
+    // Leaving the run's scope on timeout interrupts the handle, which stops the tool.
+    return Run.collect(command, { timeout: `${config.timeoutMillis} millis` }).pipe(
+      Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
+      Effect.mapError((error) => toolFailure(error, executable, what, config.timeoutMillis)),
+      Effect.flatMap((output) =>
+        output.exitCode === 0
+          ? Effect.succeed(output.stdout)
+          : Effect.fail(
+              PdfToolsError.make({
+                reason: "tool-failed",
+                message: `${executable} exited ${output.exitCode} while ${what}.`,
+                cause: O.some(Str.trim(output.stderr)),
+              })
+            )
+      )
+    );
+  };
 
   const svgToPdf = Effect.fn("PdfTools.svgToPdf")(function* (rawRequest: SvgToPdfRequest) {
     const request = yield* validateSvgToPdfRequest(rawRequest).pipe(
