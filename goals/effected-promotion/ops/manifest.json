@@ -63,6 +63,10 @@
       "purpose": "Wave 3-1 oracle: GitHubMarkdown writer output rendered through micromark GFM and checked for the promised table and inline structure."
     },
     {
+      "path": "ops/git-adoption-differential.ts",
+      "purpose": "R10 differential: the pre-R10 repo-cli merge-base read, worktree probes and origin/labels config reads compared with their @beep/git adoptions over scratch repositories."
+    },
+    {
       "path": "ops/lockfiles-adoption-parity.ts",
       "purpose": "3-A1 parity: frozen copies of the legacy repo-cli bun.lock readers compared with the adopted @beep/lockfiles Lockfile.parse expression over the live lockfile."
     },
