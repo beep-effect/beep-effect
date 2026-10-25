@@ -343,12 +343,12 @@ export class CacheKey extends S.Class<CacheKey, { readonly brand: unique symbol 
     restoreDepths: S.optionalKey(RestoreDepths),
   }).check(
     S.makeFilter(
-      (key) =>
-        key.restoreDepths === undefined || key.restoreDepths.every((depth) => depth <= key.segments.length - 1)
-          ? undefined
-          : "every restore depth must be between 1 and segments.length - 1 — a rung keeping every segment would just repeat the primary key",
+      // effect 4.0.6 renders a check's `message` annotation as the issue message,
+      // ahead of any string the predicate returns, so the described text lives there.
+      (key) => key.restoreDepths === undefined || key.restoreDepths.every((depth) => depth <= key.segments.length - 1),
       $I.annote("RestoreDepthWithinSegments", {
-        message: "Restore depths retain a proper key prefix",
+        message:
+          "every restore depth must be between 1 and segments.length - 1 — a rung keeping every segment would just repeat the primary key",
         description: "Each explicit restore depth keeps fewer segments than the primary cache key.",
       })
     )

@@ -431,9 +431,11 @@ export type DetachedProcessError =
 export const ProcessId = S.Number.pipe(
   S.check(
     S.makeFilter(
-      (value) => (Number.isInteger(value) && value > 0 ? undefined : "Expected a positive integer process id"),
+      // effect 4.0.6 renders a check's `message` annotation as the issue message,
+      // ahead of any string the predicate returns, so the described text lives there.
+      (value) => Number.isInteger(value) && value > 0,
       $I.annote("PositiveIntegerProcessId", {
-        message: "Positive integer process id",
+        message: "Expected a positive integer process id",
         description: "A positive integer identifying a process rather than a process group.",
       }),
       true

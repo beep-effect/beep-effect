@@ -4,6 +4,7 @@
   "generatedBy": "bun run beep lint schema-catalog --write",
   "owner": "@beep/github-actions",
   "entries": [
+    {"file":"packages/drivers/github-actions/src/Action.ts","symbol":"ActionFailedError","kind":"tagged-error","owner":"@beep/github-actions","identity":"ActionFailedError"},
     {"file":"packages/drivers/github-actions/src/ActionCache.ts","symbol":"ActionCacheError","kind":"tagged-error","owner":"@beep/github-actions","identity":"ActionCacheError"},
     {"file":"packages/drivers/github-actions/src/ActionEnvironment.ts","symbol":"ActionEnvironmentError","kind":"tagged-error","owner":"@beep/github-actions","identity":"ActionEnvironmentError"},
     {"file":"packages/drivers/github-actions/src/ActionEnvironment.ts","symbol":"GitHubContext","kind":"schema-class","owner":"@beep/github-actions","identity":"GitHubContext","description":"The workflow's GitHub context, projected from the `GITHUB_*` variables."},

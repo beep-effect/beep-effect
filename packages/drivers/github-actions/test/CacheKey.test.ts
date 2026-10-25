@@ -643,7 +643,8 @@ describe("CacheKey", () => {
           schema: CacheKey,
           path: "ast.typeParameters.0.checks.0.annotations",
           name: "RestoreDepthWithinSegments",
-          message: "Restore depths retain a proper key prefix",
+          message:
+            "every restore depth must be between 1 and segments.length - 1 — a rung keeping every segment would just repeat the primary key",
           description: "Each explicit restore depth keeps fewer segments than the primary cache key.",
         },
       ]) {
