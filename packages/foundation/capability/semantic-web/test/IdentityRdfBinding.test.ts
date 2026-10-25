@@ -107,7 +107,7 @@ describe("identity RDF binding", () => {
   it("rejects predicate collisions during construction and decoding", () => {
     expectSchemaMakeToFail(
       () => IdentityRdfBinding.make(collidingBindingInput),
-      "identifierPath and curiePath collide at RDF predicate"
+      "Identity RDF predicate paths must be pairwise distinct."
     );
 
     const decoded = decodeIdentityRdfBindingResult(collidingBindingInput);
@@ -115,7 +115,7 @@ describe("identity RDF binding", () => {
     if (Result.isFailure(decoded)) {
       assert.include(
         SchemaIssue.makeFormatterDefault()(decoded.failure.issue),
-        "identifierPath and curiePath collide at RDF predicate"
+        "Identity RDF predicate paths must be pairwise distinct."
       );
     }
   });
@@ -123,7 +123,7 @@ describe("identity RDF binding", () => {
   it("rejects duplicate required fibers during construction and decoding", () => {
     expectSchemaMakeToFail(
       () => IdentityShapePolicy.make(duplicatePolicyInput),
-      "Required identity fiber 'label' appears more than once."
+      "Required identity fibers must be unique."
     );
 
     const decoded = decodeIdentityShapePolicyResult(duplicatePolicyInput);
@@ -131,7 +131,7 @@ describe("identity RDF binding", () => {
     if (Result.isFailure(decoded)) {
       assert.include(
         SchemaIssue.makeFormatterDefault()(decoded.failure.issue),
-        "Required identity fiber 'label' appears more than once."
+        "Required identity fibers must be unique."
       );
     }
   });

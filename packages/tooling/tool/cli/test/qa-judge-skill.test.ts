@@ -3,6 +3,7 @@ import { QaJudgeContract, QaJudgeSkillOptions, runQaJudgeSkill } from "@beep/rep
 import { renderSkillMarkdown } from "@beep/skill-contract";
 import { it } from "@beep/test-runner";
 import * as NodePath from "@effect/platform-node/NodePath";
+import * as NodeStdio from "@effect/platform-node/NodeStdio";
 import { expect, vi } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -13,7 +14,7 @@ import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as Str from "effect/String";
 
-const PlatformLayer = Layer.mergeAll(MemoryFileSystem.layer, NodePath.layer);
+const PlatformLayer = Layer.mergeAll(MemoryFileSystem.layer, NodePath.layer, NodeStdio.layer);
 const expectedMarkdown = Result.getOrThrow(renderSkillMarkdown(QaJudgeContract));
 
 it.layer(PlatformLayer, { timeout: "30 seconds" })("commands/Qa judge-skill", (it) => {

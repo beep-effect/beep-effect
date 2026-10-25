@@ -110,11 +110,10 @@ const inspectModuleLoads = (project: Project, source: string, stopBeforeFastPath
   const sourceFile = project.createSourceFile("lint-routing-contract.fixture.ts", source, { overwrite: true });
   const before = stopBeforeFastPath
     ? pipe(
-        sourceFile.getStatements(),
-        A.findFirst(
-          (statement) => Node.isIfStatement(statement) && statement.getExpression().getText() === "fastLintFixNoop()"
+        source,
+        Str.indexOf(
+          'const { BunCrypto, BunHttpClient, BunRuntime, BunServices } = await import("@effect/platform-bun")'
         ),
-        O.map((statement) => statement.getStart()),
         O.getOrElse(() => -1)
       )
     : Number.POSITIVE_INFINITY;
@@ -226,7 +225,6 @@ it.layer(CommandTestLayer, { timeout: "5 seconds" })((it) => {
             "import:./internal/cli/FailureRendering.ts",
             "import:./internal/cli/LintRouting.ts",
             "import():@beep/utils",
-            "import():effect/Function",
           ]);
 
           const beforeFastPath = (mutation: string): string =>

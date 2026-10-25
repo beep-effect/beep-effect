@@ -1307,6 +1307,7 @@ it.layer(CodegenKitTestLayer, { timeout: "10 seconds" })("@beep/codegen-kit ACP 
       const annotated = hook({ description: "An id", allOf: [{ $ref: "#/$defs/Id" }] });
       expect(annotated).toEqual({ $ref: "#/$defs/Id", description: "An id" });
       expect(hook(annotated)).toEqual(annotated);
+      expect(hook({ $ref: "#/$defs/Id", allOf: [{ description: "An id" }] })).toEqual(annotated);
 
       const keyword = hook({
         type: "object",
@@ -1525,6 +1526,62 @@ it.layer(CodegenKitTestLayer, { timeout: "10 seconds" })("@beep/codegen-kit ACP 
         })
       );
       expect(reference.message).toContain("expected an inline object schema");
+
+      const narrowName = (base: unknown, branch: unknown) =>
+        transformFailure(() =>
+          hook({
+            type: "object",
+            properties: { name: base },
+            anyOf: [{ type: "object", properties: { name: branch } }],
+          })
+        );
+
+      const nonObject = yield* narrowName(true, { type: "string" });
+      expect(nonObject.transform).toBe("intersectSiblingProperties");
+      expect(nonObject.message).toContain("Unsupported overlapping property name: expected an object schema");
+
+      const constrainedUnion = yield* narrowName(
+        { anyOf: [{ type: "string" }, { type: "null" }], maxLength: 3 },
+        { type: "string" }
+      );
+      expect(constrainedUnion.message).toContain(
+        "Unsupported overlapping property name: anyOf with sibling constraints"
+      );
+
+      const nonObjectAlternative = yield* narrowName({ anyOf: [true, { type: "null" }] }, { type: "string" });
+      expect(nonObjectAlternative.message).toContain(
+        "Unsupported overlapping property name: expected object alternatives"
+      );
+
+      const baseReference = yield* narrowName({ $ref: "#/$defs/Name" }, { type: "string" });
+      expect(baseReference.message).toContain("Unsupported overlapping property name: $ref alternatives");
+
+      const branchReference = yield* narrowName({ type: "string" }, { $ref: "#/$defs/Name" });
+      expect(branchReference.message).toContain("Unsupported overlapping property name: $ref alternatives");
+    })
+  );
+
+  it.effect("drops disjoint const alternatives and keeps branches that repeat the base property", () =>
+    Effect.sync(() => {
+      const hook = composeTransforms(["intersectSiblingProperties"], {});
+
+      expect(
+        hook({
+          type: "object",
+          properties: { kind: { anyOf: [{ const: "a" }, { const: "b" }], description: "Kind." } },
+          anyOf: [
+            { type: "object", properties: { kind: { const: "a" } } },
+            { type: "object", properties: { kind: { anyOf: [{ const: "a" }, { const: "b" }], description: "Kind." } } },
+          ],
+        })
+      ).toEqual({
+        type: "object",
+        properties: {},
+        anyOf: [
+          { type: "object", properties: { kind: { description: "Kind.", const: "a" } } },
+          { type: "object", properties: { kind: { anyOf: [{ const: "a" }, { const: "b" }], description: "Kind." } } },
+        ],
+      });
     })
   );
 

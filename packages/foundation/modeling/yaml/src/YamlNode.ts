@@ -989,7 +989,7 @@ const deepestInPair = (pair: YamlPair, offset: number): O.Option<YamlNode> => {
 const deepestInChildren = (node: YamlNode, offset: number): O.Option<YamlNode> => {
   if (isMap(node)) return firstDeepest(node.items, (pair) => deepestInPair(pair, offset));
   if (isSeq(node)) return firstDeepest(node.items, (item) => findDeepestAtOffset(item, offset));
-  return O.none();
+  return O.none<YamlNode>();
 };
 
 /** The first `Some` produced by `search` over `children`, in order. */
@@ -998,7 +998,7 @@ const firstDeepest = <C>(children: ReadonlyArray<C>, search: (child: C) => O.Opt
     const result = search(child);
     if (O.isSome(result)) return result;
   }
-  return O.none();
+  return O.none<YamlNode>();
 };
 
 const pathToNode: {

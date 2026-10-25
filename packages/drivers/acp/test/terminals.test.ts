@@ -1,10 +1,13 @@
 import * as AcpClient from "@beep/acp/client";
 import * as AcpJson from "@beep/acp/json";
 import { AcpClientTerminalLimits, AcpClientTerminals, layer, make, register } from "@beep/acp/terminals";
+import { fcRuns } from "@beep/test-utils";
+import { currentHostPlatform, HostProcessPlatform } from "@beep/utils/HostProcess";
 import * as NodeChildProcessSpawner from "@effect/platform-node/NodeChildProcessSpawner";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { assert, it } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
@@ -22,11 +25,25 @@ const node = process.execPath;
 const script = (source: string) => ({ command: node, args: ["-e", source] });
 const cwd = process.cwd();
 
+const encoder = new TextEncoder();
+const encodeJsonText = S.encodeUnknownEffect(AcpJson.fromJsonText(S.Unknown));
+const decodeResponse = S.decodeEffect(AcpJson.fromJsonText(S.Struct({ id: S.Finite, result: S.Unknown })));
+const decodeTerminalId = S.decodeUnknownEffect(S.Struct({ terminalId: S.String }));
+const decodeErrorResponse = S.decodeEffect(
+  AcpJson.fromJsonText(
+    S.Struct({
+      id: S.Finite,
+      error: S.Struct({ code: S.Finite, message: S.String }),
+    })
+  )
+);
+
 // The spawner reads the filesystem only to check that an explicit cwd is accessible; every
 // command here runs in the test's own working directory.
-const SpawnerLayer = NodeChildProcessSpawner.layer.pipe(
-  Layer.provide(Layer.mergeAll(FileSystem.layerNoop({ access: () => Effect.void }), NodePath.layer))
-);
+const SpawnerLayer = Layer.merge(
+  NodeChildProcessSpawner.layer,
+  Layer.succeed(HostProcessPlatform, currentHostPlatform)
+).pipe(Layer.provide(Layer.mergeAll(FileSystem.layerNoop({ access: () => Effect.void }), NodePath.layer)));
 
 it.layer(SpawnerLayer, { timeout: "30 seconds" })("AcpClientTerminals", (it) => {
   it.effect(
@@ -39,28 +56,41 @@ it.layer(SpawnerLayer, { timeout: "30 seconds" })("AcpClientTerminals", (it) => 
         Effect.provideService(AcpClient.AcpClient, client),
         Effect.provideService(AcpClientTerminals, terminals)
       );
-      const encode = S.encodeEffect(AcpJson.fromJsonText(S.Unknown));
-      const decode = S.decodeEffect(
-        AcpJson.fromJsonText(
-          S.Struct({
-            id: S.Finite,
-            error: S.Struct({ code: S.Finite, message: S.String }),
-          })
-        )
-      );
       for (const [id, method] of A.make("create", "output", "wait_for_exit", "kill", "release").entries()) {
         const params =
           method === "create"
             ? { sessionId: "session", command: "/nonexistent/acp-terminal-command" }
             : { sessionId: "session", terminalId: "missing" };
-        const message = yield* encode({ jsonrpc: "2.0", id, method: `terminal/${method}`, params });
-        yield* Queue.offer(input, new TextEncoder().encode(`${message}\n`));
-        const response = yield* Queue.take(output).pipe(Effect.flatMap(decode));
+        const message = yield* encodeJsonText({ jsonrpc: "2.0", id, method: `terminal/${method}`, params });
+        yield* Queue.offer(input, encoder.encode(`${message}\n`));
+        const response = yield* Queue.take(output).pipe(Effect.flatMap(decodeErrorResponse));
         assert.strictEqual(response.id, id);
         assert.strictEqual(response.error.code, -32603);
         assert.include(response.error.message, method === "create" ? "Could not start" : "unknown terminal ID");
       }
     })
+  );
+
+  it.effect.prop(
+    "answers terminal/output for any unknown terminal ID with an error",
+    [Arbitrary.schema(S.String)],
+    Effect.fnUntraced(function* ([terminalId]) {
+      const { stdio, input, output } = yield* makeInMemoryStdio();
+      const client = yield* AcpClient.make(stdio);
+      const terminals = yield* make({ defaultCwd: cwd });
+      yield* register.pipe(
+        Effect.provideService(AcpClient.AcpClient, client),
+        Effect.provideService(AcpClientTerminals, terminals)
+      );
+      const params = { sessionId: "session", terminalId };
+      const message = yield* encodeJsonText({ jsonrpc: "2.0", id: 1, method: "terminal/output", params });
+      yield* Queue.offer(input, encoder.encode(`${message}\n`));
+      const response = yield* Queue.take(output).pipe(Effect.flatMap(decodeErrorResponse));
+      assert.strictEqual(response.id, 1);
+      assert.strictEqual(response.error.code, -32603);
+      assert.include(response.error.message, "unknown terminal ID");
+    }),
+    { arbitrary: fcRuns(12) }
   );
 
   it.effect(
@@ -178,7 +208,7 @@ it.layer(SpawnerLayer, { timeout: "30 seconds" })("AcpClientTerminals", (it) => 
 
       yield* terminals.kill({ sessionId: "session", terminalId });
       const exit = yield* terminals.waitForExit({ sessionId: "session", terminalId });
-      if (process.platform === "win32") assert.isNull(exit.signal);
+      if ((yield* HostProcessPlatform) === "win32") assert.isNull(exit.signal);
       else assert.strictEqual(exit.signal, "SIGTERM");
 
       yield* terminals.release({ sessionId: "session", terminalId });
@@ -314,6 +344,43 @@ it.layer(SpawnerLayer, { excludeTestServices: true, timeout: "30 seconds" })(
   "AcpClientTerminals on the real clock",
   (it) => {
     it.effect(
+      "serves an agent's terminal requests through the client once registered",
+      Effect.fnUntraced(function* () {
+        const { stdio, input, output } = yield* makeInMemoryStdio();
+        const acp = yield* AcpClient.make(stdio);
+        const call = Effect.fnUntraced(function* (id: number, method: string, params: unknown) {
+          const line = yield* encodeJsonText({ jsonrpc: "2.0", id, method, params });
+          yield* Queue.offer(input, encoder.encode(`${line}\n`));
+          const response = yield* Effect.flatMap(Queue.take(output), decodeResponse);
+          assert.strictEqual(response.id, id);
+          return response.result;
+        });
+
+        const terminals = Context.get(yield* Layer.build(layer({ defaultCwd: cwd })), AcpClientTerminals);
+        yield* register.pipe(
+          Effect.provideService(AcpClient.AcpClient, acp),
+          Effect.provideService(AcpClientTerminals, terminals)
+        );
+
+        const { terminalId } = yield* decodeTerminalId(
+          yield* call(1, "terminal/create", {
+            sessionId: "session",
+            ...script("process.stdout.write('served over acp'); process.exit(5);"),
+          })
+        );
+        const terminal = { sessionId: "session", terminalId };
+        assert.deepEqual(yield* call(2, "terminal/wait_for_exit", terminal), { exitCode: 5, signal: null });
+        assert.deepEqual(yield* call(3, "terminal/output", terminal), {
+          output: "served over acp",
+          truncated: false,
+          exitStatus: { exitCode: 5, signal: null },
+        });
+        assert.deepEqual(yield* call(4, "terminal/kill", terminal), {});
+        assert.deepEqual(yield* call(5, "terminal/release", terminal), {});
+      })
+    );
+
+    it.effect(
       "escalates terminal/kill to SIGKILL when the command ignores SIGTERM",
       Effect.fnUntraced(function* () {
         const terminals = yield* make({ defaultCwd: cwd, forceKillAfter: Duration.millis(200) });
@@ -330,7 +397,7 @@ it.layer(SpawnerLayer, { excludeTestServices: true, timeout: "30 seconds" })(
 
         yield* terminals.kill({ sessionId: "session", terminalId }).pipe(Effect.timeout("5 seconds"));
         const exit = yield* terminals.waitForExit({ sessionId: "session", terminalId });
-        if (process.platform !== "win32") assert.strictEqual(exit.signal, "SIGKILL");
+        if ((yield* HostProcessPlatform) !== "win32") assert.strictEqual(exit.signal, "SIGKILL");
       })
     );
 

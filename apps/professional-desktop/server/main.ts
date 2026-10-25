@@ -35,6 +35,7 @@ import { OntologyMcpConfigLive } from "@beep/ontology-config/layer";
 import { OntologyMcpMutationsEnabledConfig } from "@beep/ontology-config/server";
 import { BunHttpServer, BunRuntime } from "@effect/platform-bun";
 import * as Config from "effect/Config";
+import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as HttpMiddleware from "effect/http/HttpMiddleware";
 import * as HttpRouter from "effect/http/HttpRouter";
@@ -159,9 +160,7 @@ const Main = (ipcTransport ? ipcMain() : httpMain()).pipe(
           Effect.annotateLogs({ transport: ipcTransport ? "ipc" : "http" })
         )
       );
-      yield* Effect.sync(() => {
-        process.stderr.write(`${SidecarReadyMarker}\n`);
-      });
+      yield* Console.error(SidecarReadyMarker);
     })
   ),
   Layer.withSpan("professional_desktop.sidecar.runtime")

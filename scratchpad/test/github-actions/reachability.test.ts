@@ -66,7 +66,7 @@ const runtimeSpecifiers = (source: string): ReadonlyArray<string> => {
  * halves of `npm` and `tsconfig-json` became `@beep/npm-spec` and `@beep/tsconfig`, and the
  * `tsconfig-json` loader half `@beep/repo-tsconfig`; `env` became `@beep/runtime-env`; this
  * package's reporting suite became `@beep/github-reporting`; wave 3-3 promoted `config-file`
- * whole; wave 4-X promoted `xdg` whole; wave 4-W-a promoted the `workspaces` core as
+ * whole; wave 4-X promoted `xdg` whole; waves 4-W-a and 4-W-b promoted `workspaces` whole as
  * `@beep/repo-workspaces`; and the pure half of `sbom`, which this package reaches for
  * `IdentityToken` and `SlsaProvenance`, became `@beep/sbom`). Upstream
  * reached each as a bare `@effected/*` edge and the lab as a relative sibling

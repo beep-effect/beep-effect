@@ -1094,13 +1094,22 @@ const buildStaticCommandTree = Effect.fn("Knowledge.buildStaticCommandTree")(fun
 });
 
 const commandTreeProbeSource = (rootCommandModule: string): string => `
+import * as BunRuntime from "@effect/platform-bun/BunRuntime"
+import * as BunServices from "@effect/platform-bun/BunServices"
+import * as Effect from "effect/Effect"
+import * as Layer from "effect/Layer"
+import * as Stdio from "effect/Stdio"
+import * as Stream from "effect/Stream"
 import { rootCommand } from ${JSON.stringify(rootCommandModule)}
 const project = (command) => ({
   name: command.name,
   alias: command.alias ?? null,
   children: command.subcommands.flatMap((group) => group.commands).map(project),
 })
-process.stdout.write(JSON.stringify(project(rootCommand)))
+const program = Stdio.Stdio.pipe(Effect.flatMap((stdio) =>
+  Stream.make(JSON.stringify(project(rootCommand))).pipe(Stream.run(stdio.stdout()))
+))
+BunRuntime.runMain(BunServices.layer.pipe(Layer.build, Effect.flatMap((context) => Effect.provide(program, context)), Effect.scoped))
 `;
 
 const decodeCurrentCommandTree = (output: string): Effect.Effect<StaticCommandNode, KnowledgeOperationalError> =>

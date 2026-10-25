@@ -2,8 +2,8 @@ import { DependencyResolutionError, WorkspaceResolver } from "@beep/npm-spec/Wor
 import { assert, describe, it, layer } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { deliberatelyInvalid } from "./support/deliberatelyInvalid.ts";
@@ -22,13 +22,10 @@ describe("WorkspaceResolver", () => {
   describe("stub implementation", () => {
     // A test double resolving a fixed workspace map proves the contract is
     // implementable and that versionOf threads packageName through correctly.
-    const versions = new Map<string, string>([
-      ["@effected/semver", "0.1.0"],
-      ["@effected/jsonc", "0.2.0"],
-    ]);
+    const versions = HashMap.make(["@effected/semver", "0.1.0"], ["@effected/jsonc", "0.2.0"]);
     const StubWorkspaceResolver = Layer.succeed(WorkspaceResolver, {
       versionOf: Effect.fn("WorkspaceResolver.versionOf")((packageName: string) =>
-        Effect.succeed(O.fromUndefinedOr(versions.get(packageName)))
+        Effect.succeed(HashMap.get(versions, packageName))
       ),
     });
 

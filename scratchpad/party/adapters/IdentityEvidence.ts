@@ -22,7 +22,7 @@
  * @since 0.0.0
  */
 import { LiteralKit } from "@beep/schema";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import { pipe } from "effect/Function";
 import * as Graph from "effect/Graph";
 import * as HashMap from "effect/HashMap";
@@ -31,11 +31,11 @@ import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
-import type { ClaimVersion } from "../Claim.ts";
+import { ClaimVersion, ReviewState } from "../Claim.ts";
 import { AssertionId, ClaimVersionId } from "../Ids.ts";
 import type { AccountId, EventId, IdentifierId, PartyId } from "../Ids.ts";
-import { logicalKey } from "../Proposition.ts";
-import type { TemporalExtent, UtcInstant } from "../Time.ts";
+import { logicalKey, Proposition } from "../Proposition.ts";
+import { TemporalExtent, UtcInstant } from "../Time.ts";
 import type { AliasPairing } from "./MailIndex.ts";
 
 // ---------------------------------------------------------------------------
@@ -67,9 +67,21 @@ export interface PairingSupport {
 export type PairingAccumulator = MutableHashMap.MutableHashMap<string, PairingSupport>;
 
 const minInstant = (a: O.Option<UtcInstant>, b: O.Option<UtcInstant>) =>
-  O.match(a, { onNone: () => b, onSome: (x) => O.some(O.match(b, { onNone: () => x, onSome: (y) => (y < x ? y : x) })) });
+  O.match(a, {
+    onNone: () => b,
+    onSome: (x) => O.some(O.match(b, {
+      onNone: () => x,
+      onSome: (y) => (y < x ? y : x),
+    })),
+  });
 const maxInstant = (a: O.Option<UtcInstant>, b: O.Option<UtcInstant>) =>
-  O.match(a, { onNone: () => b, onSome: (x) => O.some(O.match(b, { onNone: () => x, onSome: (y) => (y > x ? y : x) })) });
+  O.match(a, {
+    onNone: () => b,
+    onSome: (x) => O.some(O.match(b, {
+      onNone: () => x,
+      onSome: (y) => (y > x ? y : x),
+    })),
+  });
 
 /**
  * Fold one pairing (with its message time) into the accumulator.
@@ -78,11 +90,11 @@ const maxInstant = (a: O.Option<UtcInstant>, b: O.Option<UtcInstant>) =>
  * @since 0.0.0
  */
 export const accumulatePairing = ({
-  acc,
-  pairing,
-  sentAt,
-  sampleSize,
-}: {
+                                    acc,
+                                    pairing,
+                                    sentAt,
+                                    sampleSize,
+                                  }: {
   readonly acc: PairingAccumulator;
   readonly pairing: AliasPairing;
   readonly sentAt: O.Option<UtcInstant>;
@@ -118,8 +130,11 @@ export const accumulatePairing = ({
  */
 export const observedSpan = (s: PairingSupport): TemporalExtent =>
   O.match(O.all([s.firstSeen, s.lastSeen]), {
-    onNone: (): TemporalExtent => ({ _tag: "Unknown" }),
-    onSome: ([from, to]): TemporalExtent => (from < to ? { _tag: "Interval", from, to } : { _tag: "Instant", at: from }),
+    onNone: (): TemporalExtent => TemporalExtent.cases.Unknown.make({}),
+    onSome: ([from, to]): TemporalExtent => (from < to ? TemporalExtent.cases.Interval.make({
+      from,
+      to,
+    }) : TemporalExtent.cases.Instant.make({ at: from })),
   });
 
 /**
@@ -131,19 +146,25 @@ export const observedSpan = (s: PairingSupport): TemporalExtent =>
  * @since 0.0.0
  */
 export const pairingClaims = ({
-  supports,
-  recordedAt,
-}: {
+                                supports,
+                                recordedAt,
+                              }: {
   readonly supports: ReadonlyArray<PairingSupport>;
   readonly recordedAt: UtcInstant;
 }): ReadonlyArray<ClaimVersion> =>
   A.flatMap(supports, (s) =>
     A.matchLeft(s.sample, {
-      onEmpty: () => [],
+      onEmpty: A.emptyReadonly,
       onNonEmpty: (first, rest) => {
-        const proposition = { _tag: "AccountIdentifier" as const, account: s.mailbox, identifier: s.smtp };
+        const proposition = Proposition.cases.AccountIdentifier.make({
+          account: s.mailbox,
+          identifier: s.smtp,
+        });
         const key = logicalKey(proposition);
-        const absent = { _tag: "Absent" as const, reason: "not-assessed" as const };
+        const absent = {
+          _tag: "Absent" as const,
+          reason: "not-assessed" as const,
+        };
         return [
           {
             id: ClaimVersionId.make(`cv:${encodeURIComponent(key)}`),
@@ -154,7 +175,7 @@ export const pairingClaims = ({
             validTime: observedSpan(s),
             knowledge: { recordedAt, expiredAt: O.none() },
             supersedes: O.none(),
-            review: { _tag: "Proposed" as const },
+            review: ReviewState.cases.Proposed.make({}),
             signals: {
               sourceTrust: absent,
               sourceAssertedConfidence: absent,
@@ -165,7 +186,7 @@ export const pairingClaims = ({
           },
         ];
       },
-    })
+    }),
   );
 
 // ---------------------------------------------------------------------------
@@ -202,9 +223,9 @@ export const classifyDrift = (supports: ReadonlyArray<PairingSupport>): Readonly
       A.length(bounds) < A.length(group)
         ? "undated"
         : pipe(
-              A.sort(bounds, Order.mapInput(Order.String, ([from]: readonly [UtcInstant, UtcInstant]) => from)),
-              (sorted) => A.every(A.zip(sorted, A.drop(sorted, 1)), ([[, endA], [startB]]) => endA < startB)
-            )
+          A.sort(bounds, Order.mapInput(Order.String, ([from]: readonly [UtcInstant, UtcInstant]) => from)),
+          (sorted) => A.every(A.zip(sorted, A.drop(sorted, 1)), ([[, endA], [startB]]) => endA < startB),
+        )
           ? "sequential-migration"
           : "concurrent-aliases";
     return [{ smtp: A.headNonEmpty(group).smtp, kind, dns: A.length(group) }];
@@ -223,9 +244,9 @@ export const classifyDrift = (supports: ReadonlyArray<PairingSupport>): Readonly
  * @since 0.0.0
  */
 export const mailboxClusters = ({
-  identifiers,
-  supports,
-}: {
+                                  identifiers,
+                                  supports,
+                                }: {
   readonly identifiers: Iterable<IdentifierId>;
   readonly supports: ReadonlyArray<PairingSupport>;
 }): HashMap.HashMap<IdentifierId, number> => {
@@ -247,9 +268,9 @@ export const mailboxClusters = ({
   return pipe(
     Graph.connectedComponents(graph),
     A.flatMap((component, cluster) =>
-      A.flatMap(component, (n) => O.toArray(O.map(Graph.getNode(graph, n), (i) => [i, cluster] as const)))
+      A.flatMap(component, (n) => O.toArray(O.map(Graph.getNode(graph, n), (i) => [i, cluster] as const))),
     ),
-    HashMap.fromIterable
+    HashMap.fromIterable,
   );
 };
 
@@ -275,16 +296,19 @@ export type CollisionOutcome = typeof CollisionOutcome.Type;
  * @since 0.0.0
  */
 export const mailboxesOf = ({
-  identifiers,
-  clusters,
-}: {
+                              identifiers,
+                              clusters,
+                            }: {
   readonly identifiers: ReadonlyArray<IdentifierId>;
   readonly clusters: HashMap.HashMap<IdentifierId, number>;
 }): ReadonlyArray<A.NonEmptyReadonlyArray<IdentifierId>> =>
   R.values(
     A.groupBy(identifiers, (i) =>
-      O.match(HashMap.get(clusters, i), { onNone: () => `identifier:${i}`, onSome: (c) => `cluster:${c}` })
-    )
+      O.match(HashMap.get(clusters, i), {
+        onNone: () => `identifier:${i}`,
+        onSome: (c) => `cluster:${c}`,
+      }),
+    ),
   );
 
 /**
@@ -295,10 +319,10 @@ export const mailboxesOf = ({
  * @since 0.0.0
  */
 export const resolveCollisions = ({
-  identifiersByName,
-  clusters,
-  contactsOf,
-}: {
+                                    identifiersByName,
+                                    clusters,
+                                    contactsOf,
+                                  }: {
   readonly identifiersByName: ReadonlyArray<readonly [string, ReadonlyArray<IdentifierId>]>;
   readonly clusters: HashMap.HashMap<IdentifierId, number>;
   readonly contactsOf: HashMap.HashMap<IdentifierId, HashSet.HashSet<PartyId>>;
@@ -313,14 +337,14 @@ export const resolveCollisions = ({
     const sizes = A.map(mailboxes, (ids) =>
       HashSet.size(
         A.reduce(ids, HashSet.empty<PartyId>(), (acc, i) =>
-          HashSet.union(acc, O.getOrElse(HashMap.get(contactsOf, i), () => HashSet.empty<PartyId>()))
-        )
-      )
+          HashSet.union(acc, O.getOrElse(HashMap.get(contactsOf, i), () => HashSet.empty<PartyId>())),
+        ),
+      ),
     );
     const parties = A.dedupe(
       A.flatMap(mailboxes, (ids) =>
-        A.flatMap(ids, (i) => A.fromIterable(O.getOrElse(HashMap.get(contactsOf, i), () => HashSet.empty<PartyId>())))
-      )
+        A.flatMap(ids, (i) => A.fromIterable(O.getOrElse(HashMap.get(contactsOf, i), () => HashSet.empty<PartyId>()))),
+      ),
     );
     const outcome: CollisionOutcome = A.some(sizes, (n) => n > 1)
       ? "conflicting-contacts"
@@ -363,8 +387,12 @@ export interface CardIdentifier {
  * @since 0.0.0
  */
 export const cardMergeProposals = (
-  rows: ReadonlyArray<CardIdentifier>
-): ReadonlyArray<{ readonly identifier: IdentifierId; readonly left: PartyId; readonly right: PartyId }> =>
+  rows: ReadonlyArray<CardIdentifier>,
+): ReadonlyArray<{
+  readonly identifier: IdentifierId;
+  readonly left: PartyId;
+  readonly right: PartyId
+}> =>
   A.flatMap(R.values(A.groupBy(rows, (r) => r.identifier)), (group) => {
     const cards = A.dedupeWith(group, (a, b) => a.card === b.card);
     const perSource = R.values(A.groupBy(cards, (c) => c.source));
@@ -373,6 +401,10 @@ export const cardMergeProposals = (
       A.length(perSource) >= 2 &&
       A.every(perSource, (cs) => A.length(cs) === 1);
     return eligible
-      ? A.map(A.zip(cards, A.drop(cards, 1)), ([a, b]) => ({ identifier: a.identifier, left: a.card, right: b.card }))
+      ? A.map(A.zip(cards, A.drop(cards, 1)), ([a, b]) => ({
+        identifier: a.identifier,
+        left: a.card,
+        right: b.card,
+      }))
       : [];
   });

@@ -299,7 +299,7 @@ describe("OpenAI model Layers", () => {
         );
 
         expect(error._tag).toBe("AiError");
-        expect(error.reason._tag).toBe("InvalidOutputError");
+        expect(error.reason._tag).toBe("InvalidResponseError");
       })
     );
   });

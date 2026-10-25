@@ -1,4 +1,4 @@
-import { Buffer } from "node:buffer";
+import * as NodeBuffer from "node:buffer";
 import {
   CorepackIntegrityHash,
   IntegrityHash,
@@ -237,7 +237,7 @@ describe("CorepackIntegrityHash.FromSri", () => {
       assert.strictEqual(converted, corepack);
       // The independent oracle: the same hex, derived from the base64 bytes
       // here in the test rather than copied from the fixture.
-      assert.strictEqual(converted, `sha512.${Buffer.from(sriBase64, "base64").toString("hex")}`);
+      assert.strictEqual(converted, `sha512.${NodeBuffer.Buffer.from(sriBase64, "base64").toString("hex")}`);
       // The result is corepack-form and decodes through the shared schema.
       assert.isTrue(IntegrityHash.isCorepack(converted));
       assert.strictEqual(yield* S.decodeEffect(CorepackIntegrityHash)(converted), converted);

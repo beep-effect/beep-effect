@@ -204,6 +204,25 @@ const readOnly = (member: string) =>
   ReadOnlyFileSystemError.make({ message: `NodeSyncFileSystem is read-only: ${member} is not supported` });
 const unsupported = (member: string) => () => Effect.die(readOnly(member));
 
+// `stat` and `lstat` share one shape: the syscall's own failure is a system
+// error, a stat field outside the safe integer range is BadArgument.
+const statInfo =
+  (method: "stat" | "lstat", read: (path: string) => NodeBigIntStats) =>
+  (path: string): Effect.Effect<FileSystem.File.Info, PlatformErrorType> =>
+    Effect.flatMap(
+      attempt(method, path, () => read(path)),
+      (stat) =>
+        Effect.try({
+          try: () => fileInfo(stat),
+          catch: (err) =>
+            PlatformError.badArgument({
+              module: "FileSystem",
+              method,
+              description: P.hasProperty(err, "message") && P.isString(err.message) ? err.message : undefined,
+            }),
+        })
+    );
+
 const make: FileSystem.FileSystem = FileSystem.make({
   access: (path, options) =>
     attempt("access", path, () => {
@@ -212,20 +231,8 @@ const make: FileSystem.FileSystem = FileSystem.make({
       if (options?.writable === true) mode |= NFS.constants.W_OK;
       NFS.accessSync(path, mode);
     }),
-  stat: (path) =>
-    Effect.flatMap(
-      attempt("stat", path, () => NFS.statSync(path, { bigint: true })),
-      (stat) =>
-        Effect.try({
-          try: () => fileInfo(stat),
-          catch: (err) =>
-            PlatformError.badArgument({
-              module: "FileSystem",
-              method: "stat",
-              description: P.hasProperty(err, "message") && P.isString(err.message) ? err.message : undefined,
-            }),
-        })
-    ),
+  stat: statInfo("stat", (path) => NFS.statSync(path, { bigint: true })),
+  lstat: statInfo("lstat", (path) => NFS.lstatSync(path, { bigint: true })),
   // The adapter's own value: node's Buffer (a Uint8Array), not a copy. A
   // non-string path never reaches `readFileSync`, which would read it as a
   // file DESCRIPTOR; the adapter's async `readFile` rejects it in its callback,

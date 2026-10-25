@@ -154,7 +154,7 @@ export class DependencyResolutionError extends S.TaggedError<
  *
  * This is a contract-only service: {@link WorkspaceResolver.noop} is the
  * sole implementation this package ships, and it resolves nothing. Real
- * consumers (e.g. `@beep/scratchpad/effected/workspaces`) provide a working implementation
+ * consumers (e.g. `@beep/repo-workspaces/WorkspaceDiscovery`) provide a working implementation
  * at the application boundary.
  *
  * **Example** (Resolve a workspace version with the no-op resolver)

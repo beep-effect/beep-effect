@@ -186,6 +186,7 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         'it.effect("shadow", (assertTrue) => Fx.gen(function* () { const outcome = yield* Fx.result(program); outcome.pipe(R.isFailure, assertTrue); }));',
         'it.effect("unrelated", () => Fx.gen(function* () { const outcome = yield* Fx.result(program); other.pipe(R.isFailure, assertTrue); }));',
         'it.effect("not assertion", () => Fx.gen(function* () { const outcome = yield* Fx.result(program); outcome.pipe(R.isFailure, consume); }));',
+        'it.effect("nested initializer", () => Fx.gen(function* () { const outcomes = [yield* Fx.result(program)]; assertTrue(outcomes.length === 1); }));',
       ]) {
         assertFalse(yield* hasRule(`${assertionImports}\n${body}`, "EV005"));
       }
@@ -1725,6 +1726,9 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         bound("const workspace = yield* stageWorkspace(); yield* Fx.log(workspace);"),
         bound("const { root } = yield* stageWorkspace(); yield* Fx.log(root);"),
         `${subjectLayer} const stageWorkspace = ${stage('yield* fs.readFileString("a");')}; const runIt = () => { const program = stageWorkspace(); return program; }; ${subjectSuite("runIt()")}`,
+        `${subjectLayer} import ConsoleTag from "./console-tag"; const stageWorkspace = ${stage('yield* fs.readFileString("a");')}; ${subjectSuite("Fx.provideService(stageWorkspace(), ConsoleTag, testConsole)")}`,
+        `${subjectLayer} import * as Logs from "./logs"; const stageWorkspace = ${stage('yield* fs.readFileString("a");')}; ${subjectSuite("stageWorkspace().pipe(Fx.provideService(Logs.Tag, testLogs))")}`,
+        `${subjectLayer} const stageWorkspace = ${stage('yield* fs.readFileString("a");')}; layer(L.mergeAll(platform, live))((it) => { it.effect("x", () => stageWorkspace()); });`,
       ])
         deepStrictEqual(yield* reviewClasses(body), []);
       for (const body of [
@@ -1777,6 +1781,8 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         bound("yield* withFakeFs(stageWorkspace());"),
         bound("yield* runElsewhere(stageWorkspace());"),
         bound("yield* runElsewhere(Fx.map(stageWorkspace(), (value) => value));"),
+        bound("yield* Fx.forEach([1], () => stageWorkspace());"),
+        bound("yield* Fx.forEach([1], () => { return stageWorkspace(); });"),
       ])
         deepStrictEqual(yield* reviewClasses(body), ["platform-resource-provenance-review"], body);
     })

@@ -182,12 +182,14 @@ export type ExpectationRewriteClassification = typeof ExpectationRewriteClassifi
 export class ExpectationRewrite extends S.Opaque<ExpectationRewrite, { readonly brand: unique symbol }>()(
   S.Struct({
     testFile: S.String,
+    baseFile: S.optionalKey(S.String),
     line: S.Finite,
     removed: S.String,
     added: S.String,
   }).pipe(
     $I.annoteSchema("ExpectationRewrite", {
-      description: "An existing test assertion or snapshot the diff rewrote, located by test file and new line.",
+      description:
+        "An existing test assertion or snapshot the diff rewrote, located by test file and new line; baseFile is the test file's path on the merge base when a rename moved it.",
     })
   )
 ) {}

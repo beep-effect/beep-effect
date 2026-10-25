@@ -114,7 +114,7 @@ describe("ProofFact schemas", () => {
   it.prop(
     "round-trips schema-derived arbitrary ledger rows",
     { value: Arbitrary.schema(ProofLedgerRow) },
-    ({ value }) =>
+    ({ value }) => {
       expect(
         S.toEquivalence(ProofLedgerRow)(
           encodeProofLedgerRowResult(value).pipe(
@@ -124,7 +124,8 @@ describe("ProofFact schemas", () => {
           ),
           value
         )
-      ).toBe(true),
+      ).toBe(true);
+    },
     { arbitrary: fcRuns(20) }
   );
 

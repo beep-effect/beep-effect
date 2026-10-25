@@ -32,6 +32,11 @@ export const specifiersOf = (text: string): ReadonlyArray<string> => {
   );
 };
 
+/** Every `src` module's source text, by its `src`-relative path. */
+export const sourceTexts: Readonly<Record<string, string>> = R.fromEntries(
+  A.map(R.toEntries(sources), ([key, text]) => [Str.slice(SRC.length)(key), text])
+);
+
 /** Every `src` module, by its `src`-relative path, with the specifiers it imports at runtime. */
 export const runtimeImports: Readonly<Record<string, ReadonlyArray<string>>> = R.fromEntries(
   A.map(R.toEntries(sources), ([key, text]) => [Str.slice(SRC.length)(key), specifiersOf(text)])

@@ -273,14 +273,14 @@ Riding in the slot, not holding it:
    [`schema-utils-selective-codec-statics`](../goals/schema-utils-selective-codec-statics/README.md)
    closed on 2026-10-05 (completed-retained): #927 shipped it on 2026-08-31
    and #1371 retired the registry on 2026-10-01.
-3. [`knowledge-surface-automation`](../goals/knowledge-surface-automation/README.md)
-   (3/7),
-   [`coding-agent-effectiveness-evidence-loop`](../goals/coding-agent-effectiveness-evidence-loop/README.md)
+3. [`coding-agent-effectiveness-evidence-loop`](../goals/coding-agent-effectiveness-evidence-loop/README.md)
    (2/9) and
    [`nightly-research-routine`](../goals/nightly-research-routine/README.md)
    (1/5; the routine itself runs — packets 09-22, 09-23, 09-25, 09-27, 09-30,
    10-02 and 10-03 — P1 to P4 are the fillers) — while the slot holder waits on
    review.
+   [`knowledge-surface-automation`](../goals/knowledge-surface-automation/README.md)
+   (7/7) closed with its reflection and lifecycle flip in #1849.
 4. [`ontology-sidecar-stateless-identity`](../goals/ontology-sidecar-stateless-identity/README.md)
    (1/5, graduated 2026-09-22) — its gate,
    [`mcp-stateless-kit-and-drivers`](../goals/mcp-stateless-kit-and-drivers/README.md),

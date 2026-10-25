@@ -27,6 +27,7 @@ import {
 } from "./ProvenanceIndex.contracts.ts";
 import * as P from "./ProvenanceIndex.schemas.ts";
 import { resolveWithinRoot } from "./Shared.ts";
+import type { PlatformError } from "effect/PlatformError";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { MailExportTreeIndexResult } from "./ProvenanceIndex.schemas.ts";
 
@@ -236,8 +237,7 @@ const readAttachment = Effect.fn("Provenance.readAttachment")(function* (
   const info = yield* fs.stat(attachmentPath).pipe(Effect.mapError(fail));
   if (info.type === "File")
     return O.some(
-      P.MailAttachmentEntry.make({
-        kind: "file",
+      P.MailAttachmentEntry.cases.file.make({
         ordinal: Number(/^(\d+)_/.exec(name)?.[1] ?? 0),
         fileName: name,
         relativePath: relative(path, root, attachmentPath),
@@ -255,8 +255,7 @@ const readAttachment = Effect.fn("Provenance.readAttachment")(function* (
       })
     );
     return O.some(
-      P.MailAttachmentEntry.make({
-        kind: "embedded-message",
+      P.MailAttachmentEntry.cases["embedded-message"].make({
         ordinal: Number(Str.replace("Attachment", "")(name)),
         fileName: name,
         relativePath: relative(path, root, attachmentPath),
@@ -907,7 +906,11 @@ const renameChecked = Effect.fn("Provenance.renameChecked")(function* (
   from: string,
   to: string,
   size: number
-) {
+): Effect.fn.Return<
+  "renamed" | "skipped-collision" | "skipped-missing" | "skipped-size-changed",
+  CorpusCommandError | PlatformError,
+  FileSystem.FileSystem | Path.Path
+> {
   const fs = yield* FileSystem.FileSystem;
   const source = yield* checked(root, from);
   const target = yield* checked(root, to);

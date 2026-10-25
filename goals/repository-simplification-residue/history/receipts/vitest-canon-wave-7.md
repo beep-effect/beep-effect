@@ -232,6 +232,8 @@ Against `d46bb55e6b`, paired by `(ruleId, file, occurrence)`:
 That reconciles exactly: 262 − 16 = 246 open, 960 − 16 = 944 rows, and exceptions stay at 698.
 EV010 open falls from 143 to 127.
 
+After merging `main` `35faa4a00d` (#2178, the effect 4.0.6 deps sweep, which adds one open row elsewhere), the PR base holds 961 rows (698 exceptions, 263 open). The lane holds 945 (698 exceptions, 247 open): the same 16 rows gone, 0 new, 0 status changes, and two `--write` runs byte-stable.
+
 The scan saw 2,802 files after the dependency build (2,798 before). The four extra files are
 built `dist/` copies in test-kit packages, and they produce no rows.
 

@@ -2198,5 +2198,8 @@
   "@beep/sbom/*": ["./packages/foundation/modeling/sbom/src/*"],
   "@beep/sbom/internal/*": [
     "./packages/foundation/modeling/sbom/src/internal/*"
+  ],
+  "@beep/repo-workspaces/testing": [
+    "./packages/tooling/library/repo-workspaces/src/testing.ts"
   ]
 }
