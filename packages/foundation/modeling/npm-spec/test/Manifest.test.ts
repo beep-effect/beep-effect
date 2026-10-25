@@ -5,6 +5,7 @@ import { Manifest, ManifestDecodeError, UnresolvedDependencyError } from "@beep/
 import { DependencyResolutionError, WorkspaceResolver } from "@beep/npm-spec/WorkspaceResolver";
 import { assert, describe, it, layer } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -137,26 +138,34 @@ describe("Manifest.needsResolution", () => {
 
 // Stub resolvers over fixed maps — the pattern real consumers follow. Provided
 // via Layer.succeed on the service classes; no platform layer is needed.
-const catalogs = new Map<string, Map<string, string>>([
-  ["default", new Map([["effect", "^4.0.0"]])],
-  ["build", new Map([["typescript", "^6.0.0"]])],
-]);
-const versions = new Map<string, string>([
+const catalogs = HashMap.make(
+  ["default", HashMap.make(["effect", "^4.0.0"])],
+  ["build", HashMap.make(["typescript", "^6.0.0"])]
+);
+const versions = HashMap.make(
   ["@x/a", "1.2.3"],
   ["@x/b", "2.0.0"],
   ["@x/c", "3.1.0"],
   ["@x/d", "4.5.6"],
-  ["charts", "5.0.0"],
-]);
+  ["charts", "5.0.0"]
+);
 const StubResolvers = Layer.mergeAll(
   Layer.succeed(CatalogResolver, {
     rangeOf: Effect.fn("CatalogResolver.rangeOf")((packageName: string, catalog: O.Option<string>) =>
-      Effect.succeed(O.fromUndefinedOr(catalogs.get(O.getOrElse(catalog, () => "default"))?.get(packageName)))
+      Effect.succeed(
+        O.flatMap(
+          HashMap.get(
+            catalogs,
+            O.getOrElse(catalog, () => "default")
+          ),
+          HashMap.get(packageName)
+        )
+      )
     ),
   }),
   Layer.succeed(WorkspaceResolver, {
     versionOf: Effect.fn("WorkspaceResolver.versionOf")((packageName: string) =>
-      Effect.succeed(O.fromUndefinedOr(versions.get(packageName)))
+      Effect.succeed(HashMap.get(versions, packageName))
     ),
   })
 );

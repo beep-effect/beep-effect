@@ -2,6 +2,7 @@ import { CatalogResolver } from "@beep/npm-spec/CatalogResolver";
 import { describe, layer } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 
@@ -27,14 +28,22 @@ describe("CatalogResolver", () => {
   describe("stub implementation", () => {
     // A test double resolving a fixed catalog map proves the contract is
     // implementable and that rangeOf threads packageName + catalog through
-    // correctly — the pattern real consumers (e.g. @beep/scratchpad/effected/workspaces) follow.
-    const catalogs = new Map<string, Map<string, string>>([
-      ["default", new Map([["effect", "^4.0.0"]])],
-      ["build", new Map([["typescript", "^5.9.0"]])],
-    ]);
+    // correctly — the pattern real consumers (e.g. @beep/repo-workspaces/WorkspaceCatalogs) follow.
+    const catalogs = HashMap.make(
+      ["default", HashMap.make(["effect", "^4.0.0"])],
+      ["build", HashMap.make(["typescript", "^5.9.0"])]
+    );
     const StubCatalogResolver = Layer.succeed(CatalogResolver, {
       rangeOf: Effect.fn("CatalogResolver.rangeOf")((packageName: string, catalog: O.Option<string>) =>
-        Effect.succeed(O.fromUndefinedOr(catalogs.get(O.getOrElse(catalog, () => "default"))?.get(packageName)))
+        Effect.succeed(
+          O.flatMap(
+            HashMap.get(
+              catalogs,
+              O.getOrElse(catalog, () => "default")
+            ),
+            HashMap.get(packageName)
+          )
+        )
       ),
     });
 
