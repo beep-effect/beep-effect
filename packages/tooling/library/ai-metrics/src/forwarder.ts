@@ -1470,6 +1470,9 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
   function* (input: AiMetricsForwarderInput) {
     const startedAtEpochMillis = yield* Clock.currentTimeMillis;
     yield* requireForwarderHashSalt(input);
+    // Resolve before any write: an unresolvable root must not leave registry,
+    // config-snapshot or raw-archive state behind.
+    const evidenceRoot = yield* resolveForwarderEvidenceRoot(input.homeDir);
     const installSpec = yield* makeAiMetricsInstallSpec(
       AiMetricsInstallInput.make({
         dataRoot: input.dataRoot,
@@ -1521,7 +1524,6 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
     // Session-time stamps stay separate from the ingest-time snapshot. Unknown
     // or mixed stamps remain absent; backfill never receives today's regime.
     const fs = yield* FileSystem.FileSystem;
-    const evidenceRoot = yield* resolveForwarderEvidenceRoot(input.homeDir);
     const stampGaps = yield* readStampGaps(evidenceRoot).pipe(Effect.option);
     const hookDir = hookPulseLedgerDir(evidenceRoot);
     const shardListing = yield* fs.readDirectory(hookDir).pipe(Effect.option);

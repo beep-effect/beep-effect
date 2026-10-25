@@ -6,6 +6,7 @@
  */
 
 import * as O from "@beep/utils/Option";
+import { isAbsoluteWin32 } from "@beep/xdg/Absolute";
 import { XdgBase } from "@beep/xdg/XdgBase";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
@@ -15,12 +16,18 @@ import * as Str from "effect/String";
 /**
  * Resolve the cache root used for persistent beep temporary installations.
  *
- * The XDG cache home (`@beep/xdg` `XdgBase.dir("cache")`): `XDG_CACHE_HOME`
+ * The XDG cache home (`@beep/xdg` `XdgBase.resolve("cache")`): `XDG_CACHE_HOME`
  * when it is absolute, otherwise `.cache` under an absolute `$HOME`; failing
  * both, `TMPDIR` (default `/tmp`). A relative `XDG_CACHE_HOME` or `HOME` is
  * ignored rather than resolved against the working directory. An explicit
  * override bypasses ambient configuration for tests and callers that already
  * resolved policy.
+ *
+ * `XdgBase` is POSIX-only, so Windows roots keep their old rungs beside it: a
+ * drive or UNC `XDG_CACHE_HOME` is still used as is, and a drive or UNC `HOME`
+ * still yields its `.cache` before the `TMPDIR` fallback. A Windows root is
+ * what `@beep/xdg/Absolute` `isAbsoluteWin32` accepts: a drive root, or any two
+ * leading separators.
  *
  * **Example** (Build the resolution effect)
  *
@@ -41,9 +48,18 @@ export const resolveBeepCacheRoot = Effect.fn("BeepCacheRoot.resolveBeepCacheRoo
   if (O.isSome(explicit)) {
     return pathService.resolve(explicit.value);
   }
-  const cacheRoot = yield* XdgBase.dir("cache");
+  const [xdgCacheHome, home] = yield* Effect.all([configuredPath("XDG_CACHE_HOME"), configuredPath("HOME")]);
+  const windowsCache = O.filter(xdgCacheHome, isAbsoluteWin32);
+  if (O.isSome(windowsCache)) {
+    return pathService.normalize(windowsCache.value);
+  }
+  const cacheRoot = XdgBase.resolve("cache", { value: O.getOrUndefined(xdgCacheHome), home: O.getOrUndefined(home) });
   if (O.isSome(cacheRoot)) {
     return pathService.resolve(cacheRoot.value);
+  }
+  const windowsHome = O.filter(home, isAbsoluteWin32);
+  if (O.isSome(windowsHome)) {
+    return pathService.join(windowsHome.value, ".cache");
   }
   const tmpFallback = yield* Config.String("TMPDIR").pipe(Config.withDefault("/tmp"));
   return pathService.resolve(tmpFallback);

@@ -94,6 +94,29 @@ matrix(
   ]
 );
 
+// `XdgBase` is POSIX-only, so a drive or UNC root (`@beep/xdg/Absolute` `isAbsoluteWin32`) keeps
+// its rung beside it instead of falling through to TMPDIR. Under the POSIX `Path` layer these rows
+// pin the selected rung; on Windows the same values were what the hand-written resolver used.
+matrix(
+  "resolveBeepCacheRoot Windows roots",
+  (env) => resolveBeepCacheRoot().pipe(inEnv(env)),
+  [
+    ["a Windows drive XDG_CACHE_HOME", { XDG_CACHE_HOME: "C:\\cache", HOME: "/h" }, "C:\\cache"],
+    ["a UNC XDG_CACHE_HOME", { XDG_CACHE_HOME: "\\\\srv\\cache", HOME: "/h" }, "\\\\srv\\cache"],
+    ["a Windows drive HOME", { HOME: "C:\\Users\\dev", TMPDIR: "/t" }, "C:\\Users\\dev/.cache"],
+    ["a UNC HOME", { HOME: "\\\\srv\\home", TMPDIR: "/t" }, "\\\\srv\\home/.cache"],
+    [
+      "a relative XDG_CACHE_HOME beside a Windows drive HOME",
+      { XDG_CACHE_HOME: "relative", HOME: "C:\\Users\\dev" },
+      "C:\\Users\\dev/.cache",
+    ],
+    ["a POSIX XDG_CACHE_HOME beats a Windows drive HOME", { XDG_CACHE_HOME: "/x", HOME: "C:\\Users\\dev" }, "/x"],
+    ["a drive-relative HOME is not a root", { HOME: "C:relative", TMPDIR: "/t" }, "/t"],
+    ["a single-backslash XDG_CACHE_HOME is not a root", { XDG_CACHE_HOME: "\\single", HOME: "/h" }, "/h/.cache"],
+  ],
+  []
+);
+
 const fleetOf = (env: Env) =>
   Effect.succeed(
     fleetScannerCacheRoot({
