@@ -1,0 +1,655 @@
+{
+  "tool": "goals/effected-promotion/ops/managed-section-adoption-parity.ts",
+  "surfaces": {
+    "observability": {
+      "path": "standards/architecture/12-observability.md",
+      "inputSha256": "a0a91bf7e71eae03c24e744eb20f7f20e7bb26db5b3e69f8d2be6c7406fae6bf",
+      "outputSha256": "a0a91bf7e71eae03c24e744eb20f7f20e7bb26db5b3e69f8d2be6c7406fae6bf",
+      "rewrites": false
+    },
+    "atlas": {
+      "atlasSha256": "513fb9a9156913a6fb98a22ce825f46b5e23239a598e85e4bf06ade76ce1c6a2",
+      "readmes": [
+        {
+          "path": "explorations/academia-corpus-mining/README.md",
+          "existingSha256": "a0021ab0c6afb44debdce99634dc983bbad9f80b116cf66e4431ade07cae50e6",
+          "projectedSha256": "a0021ab0c6afb44debdce99634dc983bbad9f80b116cf66e4431ade07cae50e6"
+        },
+        {
+          "path": "explorations/agent-chat-interface/README.md",
+          "existingSha256": "0355860863a123f8daafd21ada2afeebe8604effb22d34cedfb162f1685fdeb6",
+          "projectedSha256": "0355860863a123f8daafd21ada2afeebe8604effb22d34cedfb162f1685fdeb6"
+        },
+        {
+          "path": "explorations/agent-effectiveness-pulse/README.md",
+          "existingSha256": "dba6a4123d4a809c0c617c8885f19465349fe53c52a48d02167e7fd7f83c0afc",
+          "projectedSha256": "dba6a4123d4a809c0c617c8885f19465349fe53c52a48d02167e7fd7f83c0afc"
+        },
+        {
+          "path": "explorations/agent-execution-sandbox/README.md",
+          "existingSha256": "42342850fcbcc1fb3e411ef914e52e3a4ba8b1f1c1b23ffc0b90532e764f9874",
+          "projectedSha256": "42342850fcbcc1fb3e411ef914e52e3a4ba8b1f1c1b23ffc0b90532e764f9874"
+        },
+        {
+          "path": "explorations/agent-fleet-layout/README.md",
+          "existingSha256": "1bf7ffd99ad3f19cbd2cd3e7486fc42d0acb4f4936bbb3052088f2fcdf265eeb",
+          "projectedSha256": "1bf7ffd99ad3f19cbd2cd3e7486fc42d0acb4f4936bbb3052088f2fcdf265eeb"
+        },
+        {
+          "path": "explorations/agent-governance-control-plane/README.md",
+          "existingSha256": "d6464bd4edd7d05ad108882f832d384dcecd6c4b1cbb5627d1271d0bdff49fcc",
+          "projectedSha256": "d6464bd4edd7d05ad108882f832d384dcecd6c4b1cbb5627d1271d0bdff49fcc"
+        },
+        {
+          "path": "explorations/agent-memory-tiers-bitemporal-edges/README.md",
+          "existingSha256": "f73e2a27a478f591ecb55ce447cf9bf49faf5e98ee111155ec41044ad9f88b92",
+          "projectedSha256": "f73e2a27a478f591ecb55ce447cf9bf49faf5e98ee111155ec41044ad9f88b92"
+        },
+        {
+          "path": "explorations/agent-pipeline-velocity/README.md",
+          "existingSha256": "2e2ef393e7cfe6a2276bde1d05c900b9933c174bd33e62170e7801f960be9ac5",
+          "projectedSha256": "2e2ef393e7cfe6a2276bde1d05c900b9933c174bd33e62170e7801f960be9ac5"
+        },
+        {
+          "path": "explorations/atlas-synthesis/README.md",
+          "existingSha256": "357bbbae22ad1fc0cde907c0fec6a39e791fe7b938f1c3c43f5f4ddb74c92edd",
+          "projectedSha256": "357bbbae22ad1fc0cde907c0fec6a39e791fe7b938f1c3c43f5f4ddb74c92edd"
+        },
+        {
+          "path": "explorations/attorney-review-workspace/README.md",
+          "existingSha256": "7e56535aea5b213b5e927bcf84041e376150b2e44d9564efd784c9d0467689c4",
+          "projectedSha256": "7e56535aea5b213b5e927bcf84041e376150b2e44d9564efd784c9d0467689c4"
+        },
+        {
+          "path": "explorations/beep-ci-operational-ontology/README.md",
+          "existingSha256": "94b486d4e2e73c283f19da26f1d5adfe34b9f09b43351698346224cadca07442",
+          "projectedSha256": "94b486d4e2e73c283f19da26f1d5adfe34b9f09b43351698346224cadca07442"
+        },
+        {
+          "path": "explorations/beep-mode/README.md",
+          "existingSha256": "c3b01601c273bdbaf97488a7549f9001551f9e6c5c12fd450da69d74abf052c9",
+          "projectedSha256": "c3b01601c273bdbaf97488a7549f9001551f9e6c5c12fd450da69d74abf052c9"
+        },
+        {
+          "path": "explorations/bitemporal-goal-roadmap/README.md",
+          "existingSha256": "bdb53a5b6b5f5176d814851ad2f67076d1a00b26354db86135d5566acbb870c2",
+          "projectedSha256": "bdb53a5b6b5f5176d814851ad2f67076d1a00b26354db86135d5566acbb870c2"
+        },
+        {
+          "path": "explorations/build-pipeline-simplification/README.md",
+          "existingSha256": "ff32dc86f6f75a93c1e9291e510b05d42eee870e28fa1142863ad0ae8cf4c87a",
+          "projectedSha256": "ff32dc86f6f75a93c1e9291e510b05d42eee870e28fa1142863ad0ae8cf4c87a"
+        },
+        {
+          "path": "explorations/ci-hang-observability/README.md",
+          "existingSha256": "ff6b271e8a9336ab57803ba7afa17e1b49cae8ac7b6b5ebb6a8debf91dedef7a",
+          "projectedSha256": "ff6b271e8a9336ab57803ba7afa17e1b49cae8ac7b6b5ebb6a8debf91dedef7a"
+        },
+        {
+          "path": "explorations/citation-grounding-hallucination-guard/README.md",
+          "existingSha256": "fd2f729f2da8163e208457790b503f0994d541500fe33c9598a6604e08101622",
+          "projectedSha256": "fd2f729f2da8163e208457790b503f0994d541500fe33c9598a6604e08101622"
+        },
+        {
+          "path": "explorations/claim-element-graph/README.md",
+          "existingSha256": "c5cb9d24c3899b2f75cde84307f6fc5968e75aa4d25432386b130958fa9a02ac",
+          "projectedSha256": "c5cb9d24c3899b2f75cde84307f6fc5968e75aa4d25432386b130958fa9a02ac"
+        },
+        {
+          "path": "explorations/claude-mods-law-practice/README.md",
+          "existingSha256": "e453e18feeaf76a9d68505d95643318209c169f9724de0335f109762ff745e95",
+          "projectedSha256": "e453e18feeaf76a9d68505d95643318209c169f9724de0335f109762ff745e95"
+        },
+        {
+          "path": "explorations/cloud-environment-fanout/README.md",
+          "existingSha256": "f7d239d382805be5bb31c72f3c768d202910a6c1d499ffa765bb748c96ee6735",
+          "projectedSha256": "f7d239d382805be5bb31c72f3c768d202910a6c1d499ffa765bb748c96ee6735"
+        },
+        {
+          "path": "explorations/computable-workspace-geometry/README.md",
+          "existingSha256": "d2d77ae344f9f5a3ec9843a333a89301c85a42c38ff4ab026ff96fa2209db469",
+          "projectedSha256": "d2d77ae344f9f5a3ec9843a333a89301c85a42c38ff4ab026ff96fa2209db469"
+        },
+        {
+          "path": "explorations/context-rent-telemetry/README.md",
+          "existingSha256": "a7f86b1838ac11fbfdb6582fab8953a041c8765cd6739bac174cc0d341b67d48",
+          "projectedSha256": "a7f86b1838ac11fbfdb6582fab8953a041c8765cd6739bac174cc0d341b67d48"
+        },
+        {
+          "path": "explorations/court-vocabulary-resolver/README.md",
+          "existingSha256": "3f9a8a36708e84f467e4c439805113a69cc8d46679d653c1aade6c8976895f14",
+          "projectedSha256": "3f9a8a36708e84f467e4c439805113a69cc8d46679d653c1aade6c8976895f14"
+        },
+        {
+          "path": "explorations/cross-provider-agent-communication/README.md",
+          "existingSha256": "1a502ae0f73221849d3e927e82476842acb00da6496ed9f7aa3e2d6668d3841b",
+          "projectedSha256": "1a502ae0f73221849d3e927e82476842acb00da6496ed9f7aa3e2d6668d3841b"
+        },
+        {
+          "path": "explorations/cursor-agent-pool/README.md",
+          "existingSha256": "212834414a0752ea820fa4fd6aac42eba9ba858df96783f1c6db92ad8804ef2f",
+          "projectedSha256": "212834414a0752ea820fa4fd6aac42eba9ba858df96783f1c6db92ad8804ef2f"
+        },
+        {
+          "path": "explorations/deterministic-doc-structure-extraction/README.md",
+          "existingSha256": "1b37b6a0c3552fc0242ade00483f324f30299f636c2ebadb4a10767b55a6421d",
+          "projectedSha256": "1b37b6a0c3552fc0242ade00483f324f30299f636c2ebadb4a10767b55a6421d"
+        },
+        {
+          "path": "explorations/document-structure-ontologies/README.md",
+          "existingSha256": "801a01daecfbd84ef797c1720d2b663700c3bebd9a70b2eb3b517869c40d2a91",
+          "projectedSha256": "801a01daecfbd84ef797c1720d2b663700c3bebd9a70b2eb3b517869c40d2a91"
+        },
+        {
+          "path": "explorations/docx-roundtrip-interop/README.md",
+          "existingSha256": "0ce817ce69f8a51d004f73515ee0e9b1b344259546fabd9f65f97d2e5893e3df",
+          "projectedSha256": "0ce817ce69f8a51d004f73515ee0e9b1b344259546fabd9f65f97d2e5893e3df"
+        },
+        {
+          "path": "explorations/domain-layer-hardening/README.md",
+          "existingSha256": "4de240e9e121247a5e4c2c2f76f0c28036c54bd85413bcf8b3deb947e0944073",
+          "projectedSha256": "4de240e9e121247a5e4c2c2f76f0c28036c54bd85413bcf8b3deb947e0944073"
+        },
+        {
+          "path": "explorations/effect-jsdoc-quality/README.md",
+          "existingSha256": "93eb65dcf5db638b92fc92c9bd6a5a0abfe5319592a1cdbc09ee2e2e8df9de7d",
+          "projectedSha256": "93eb65dcf5db638b92fc92c9bd6a5a0abfe5319592a1cdbc09ee2e2e8df9de7d"
+        },
+        {
+          "path": "explorations/effect-mcp-2026-07-28/README.md",
+          "existingSha256": "eeee17673f6dbafaff7050189539685f6d412c2ed5cb72e498e34bfecb096ce1",
+          "projectedSha256": "eeee17673f6dbafaff7050189539685f6d412c2ed5cb72e498e34bfecb096ce1"
+        },
+        {
+          "path": "explorations/effect-ontology-harvest/README.md",
+          "existingSha256": "2f105a13086c788b021fd0b80bddd32ea8b2d84f25bd5ad84f7f6b6bc401a10d",
+          "projectedSha256": "2f105a13086c788b021fd0b80bddd32ea8b2d84f25bd5ad84f7f6b6bc401a10d"
+        },
+        {
+          "path": "explorations/effect-orchestration-patterns/README.md",
+          "existingSha256": "b156c71037cc5d8901ebed2c6157f02dba47f1700d6aa74d75b7135371014f6f",
+          "projectedSha256": "b156c71037cc5d8901ebed2c6157f02dba47f1700d6aa74d75b7135371014f6f"
+        },
+        {
+          "path": "explorations/effect-schema-parity/README.md",
+          "existingSha256": "96896165c1e9328a512ee4d65b7d507d48db8e3915cc53d093e7dbe2a2755c7f",
+          "projectedSha256": "96896165c1e9328a512ee4d65b7d507d48db8e3915cc53d093e7dbe2a2755c7f"
+        },
+        {
+          "path": "explorations/epistemic-belief-view-revision/README.md",
+          "existingSha256": "bd6b9da95d51b6f0149322292c5ea8b9323240313e0577993c47d66d5987ee0d",
+          "projectedSha256": "bd6b9da95d51b6f0149322292c5ea8b9323240313e0577993c47d66d5987ee0d"
+        },
+        {
+          "path": "explorations/evidence-source-policy-calibration/README.md",
+          "existingSha256": "a6afdbcc0684b0a72526ac533dcf913278dd4f648618384837c12102b4ca330b",
+          "projectedSha256": "a6afdbcc0684b0a72526ac533dcf913278dd4f648618384837c12102b4ca330b"
+        },
+        {
+          "path": "explorations/fleet-coordination/README.md",
+          "existingSha256": "4e2bfab05460ceb676582a7792062abbf3f217e958866144f7641ad187bce8d7",
+          "projectedSha256": "4e2bfab05460ceb676582a7792062abbf3f217e958866144f7641ad187bce8d7"
+        },
+        {
+          "path": "explorations/full-document-editor/README.md",
+          "existingSha256": "03b073dd458493269c80484e3287ed9ae1400370ca3342e00b6433fcf1173a18",
+          "projectedSha256": "03b073dd458493269c80484e3287ed9ae1400370ca3342e00b6433fcf1173a18"
+        },
+        {
+          "path": "explorations/github-merge-queue/README.md",
+          "existingSha256": "66a2e8bf60a2d446232c4775cad857b0baaa6d0cbe57254960639eec9a49d80b",
+          "projectedSha256": "66a2e8bf60a2d446232c4775cad857b0baaa6d0cbe57254960639eec9a49d80b"
+        },
+        {
+          "path": "explorations/gov-legal-data-driver-codegen/README.md",
+          "existingSha256": "1f3c46de014c266cdb1929ecc43653f83e54821d131f3857d1ee139d620fcd12",
+          "projectedSha256": "1f3c46de014c266cdb1929ecc43653f83e54821d131f3857d1ee139d620fcd12"
+        },
+        {
+          "path": "explorations/gpu-document-ocr/README.md",
+          "existingSha256": "285732a733c86501431794f23aed0465deb238654e75aaa620302f14ff31c3be",
+          "projectedSha256": "285732a733c86501431794f23aed0465deb238654e75aaa620302f14ff31c3be"
+        },
+        {
+          "path": "explorations/graph-3d-navigation/README.md",
+          "existingSha256": "d92697a0c77ed7149fcbb4ac6207550bb4cc9a83e9524a2c118b87150f58b25a",
+          "projectedSha256": "d92697a0c77ed7149fcbb4ac6207550bb4cc9a83e9524a2c118b87150f58b25a"
+        },
+        {
+          "path": "explorations/graphnosis-prior-art/README.md",
+          "existingSha256": "8ccc0b201e90060b91a32ccee33f27f3e6aa926e239e4d48aa6ea5399ccb04f0",
+          "projectedSha256": "8ccc0b201e90060b91a32ccee33f27f3e6aa926e239e4d48aa6ea5399ccb04f0"
+        },
+        {
+          "path": "explorations/grok-bot-automation/README.md",
+          "existingSha256": "7a8c2a286111fe9ce1264d51da3d0756705a8ba1b4c1607a20aeab87adcb1a36",
+          "projectedSha256": "7a8c2a286111fe9ce1264d51da3d0756705a8ba1b4c1607a20aeab87adcb1a36"
+        },
+        {
+          "path": "explorations/harness-the-harness/README.md",
+          "existingSha256": "e50370ca05d8f3719e3f11be98ad185873206c563e6d9c482b4f864610101713",
+          "projectedSha256": "e50370ca05d8f3719e3f11be98ad185873206c563e6d9c482b4f864610101713"
+        },
+        {
+          "path": "explorations/harvey-lab-firm-knowledge/README.md",
+          "existingSha256": "b8c7573a487a4afab4962507a8e9c083c911516d038a60844fc5e3781e82786e",
+          "projectedSha256": "b8c7573a487a4afab4962507a8e9c083c911516d038a60844fc5e3781e82786e"
+        },
+        {
+          "path": "explorations/identity-as-iri/README.md",
+          "existingSha256": "3e292f1559ccdee5fbc222070fac633995d7362ef2dcafb8d34fbb891910a9df",
+          "projectedSha256": "3e292f1559ccdee5fbc222070fac633995d7362ef2dcafb8d34fbb891910a9df"
+        },
+        {
+          "path": "explorations/ingestion-security-secret-governance/README.md",
+          "existingSha256": "f4ee5d480801e59b76df5a7153a922f3ff2a83c0244136e0182d0a541f8befe6",
+          "projectedSha256": "f4ee5d480801e59b76df5a7153a922f3ff2a83c0244136e0182d0a541f8befe6"
+        },
+        {
+          "path": "explorations/ip-attorney-time-tracking/README.md",
+          "existingSha256": "f6fe3dfb4e6dd59c32e11b9123f4eb3d7ba6678fb3b6d26c60d3b291be3686c4",
+          "projectedSha256": "f6fe3dfb4e6dd59c32e11b9123f4eb3d7ba6678fb3b6d26c60d3b291be3686c4"
+        },
+        {
+          "path": "explorations/knowledge-endgame/README.md",
+          "existingSha256": "aa048f7628fc05d7751e1aee116dd671bd16c67c9a40ae18e770d628f6d91bfc",
+          "projectedSha256": "aa048f7628fc05d7751e1aee116dd671bd16c67c9a40ae18e770d628f6d91bfc"
+        },
+        {
+          "path": "explorations/knowledge-workspace/README.md",
+          "existingSha256": "65d229be3742237d267403b5511014a9502d2fe14bf1aecb54e21922021673d6",
+          "projectedSha256": "65d229be3742237d267403b5511014a9502d2fe14bf1aecb54e21922021673d6"
+        },
+        {
+          "path": "explorations/legal-inference-policy/README.md",
+          "existingSha256": "f22b375385c5e5c90737ef6b1971c5bf32545f3611a9ceec10ecc1a7d397d695",
+          "projectedSha256": "f22b375385c5e5c90737ef6b1971c5bf32545f3611a9ceec10ecc1a7d397d695"
+        },
+        {
+          "path": "explorations/legal-ontology-landscape/README.md",
+          "existingSha256": "f84c659eca829f7d8a4d49bacc1cbbb8940289108a9666150e96f33e63406db4",
+          "projectedSha256": "f84c659eca829f7d8a4d49bacc1cbbb8940289108a9666150e96f33e63406db4"
+        },
+        {
+          "path": "explorations/legal-patent-kg-deepening/README.md",
+          "existingSha256": "1f21cdf1eec0530edb9184af53de93244b48910598c4394c493f9af41b10ff0f",
+          "projectedSha256": "1f21cdf1eec0530edb9184af53de93244b48910598c4394c493f9af41b10ff0f"
+        },
+        {
+          "path": "explorations/legal-position-relator-runtime/README.md",
+          "existingSha256": "65e0a4305718ea012f04ac7a76ce8f24cfc351e789bfd91b2cf916e35a26a10b",
+          "projectedSha256": "65e0a4305718ea012f04ac7a76ce8f24cfc351e789bfd91b2cf916e35a26a10b"
+        },
+        {
+          "path": "explorations/lejeune-bolt-agentic-demo/README.md",
+          "existingSha256": "696634ce6037eac247bee28419ff8a7785b66e13857b9c91e1bff805aaa23ea5",
+          "projectedSha256": "696634ce6037eac247bee28419ff8a7785b66e13857b9c91e1bff805aaa23ea5"
+        },
+        {
+          "path": "explorations/local-first-projection-sync/README.md",
+          "existingSha256": "c3ed96054c6efdf525317ff6b8e18b5cf58a807f414625277b9632ad10e8c6da",
+          "projectedSha256": "c3ed96054c6efdf525317ff6b8e18b5cf58a807f414625277b9632ad10e8c6da"
+        },
+        {
+          "path": "explorations/local-first-voice/README.md",
+          "existingSha256": "16c5ec8524e9f5189c215f181dd40256965c0e290103155c14f018fc90fbe515",
+          "projectedSha256": "16c5ec8524e9f5189c215f181dd40256965c0e290103155c14f018fc90fbe515"
+        },
+        {
+          "path": "explorations/lynx-lkg-ontology-grounding/README.md",
+          "existingSha256": "836bc71f218b75da24f1a08843beb155e35dd83f2bc4e369b0bf5d2057ccf7b7",
+          "projectedSha256": "836bc71f218b75da24f1a08843beb155e35dd83f2bc4e369b0bf5d2057ccf7b7"
+        },
+        {
+          "path": "explorations/mcp-auth-gated-registration/README.md",
+          "existingSha256": "7f9c75a62781c4556dc69b27864e6bf89d5e473be58ebc16360469f6b9e1287a",
+          "projectedSha256": "7f9c75a62781c4556dc69b27864e6bf89d5e473be58ebc16360469f6b9e1287a"
+        },
+        {
+          "path": "explorations/microsoft-365-integration/README.md",
+          "existingSha256": "35ea3ecd0be0ca416d4d4b274e66f0b860adbf001450c3e4691de2e8d97fd73e",
+          "projectedSha256": "35ea3ecd0be0ca416d4d4b274e66f0b860adbf001450c3e4691de2e8d97fd73e"
+        },
+        {
+          "path": "explorations/model-artifact-admission/README.md",
+          "existingSha256": "be9df59d344ad19c012d054cddb61fc32bbb7838c08710865de7f29ab175a129",
+          "projectedSha256": "be9df59d344ad19c012d054cddb61fc32bbb7838c08710865de7f29ab175a129"
+        },
+        {
+          "path": "explorations/multi-provider-llm-dispatch-fallback/README.md",
+          "existingSha256": "8e1b752c2245cdaf72aae1441ca08f17f83563f18274baf8a5fc612b7f16ebf4",
+          "projectedSha256": "8e1b752c2245cdaf72aae1441ca08f17f83563f18274baf8a5fc612b7f16ebf4"
+        },
+        {
+          "path": "explorations/observability-palantiri/README.md",
+          "existingSha256": "fcbe1f23a4d1e95fcb4e2292d9befd4f00c6ce3d88b7c524a816bd9546806276",
+          "projectedSha256": "fcbe1f23a4d1e95fcb4e2292d9befd4f00c6ce3d88b7c524a816bd9546806276"
+        },
+        {
+          "path": "explorations/ontology-agent-surface/README.md",
+          "existingSha256": "5f5e136985727701b179c2583ecda2077fcdc08bbed6f871bd0c6e14ce4dd176",
+          "projectedSha256": "5f5e136985727701b179c2583ecda2077fcdc08bbed6f871bd0c6e14ce4dd176"
+        },
+        {
+          "path": "explorations/ontology-curation-governance/README.md",
+          "existingSha256": "9ab1fd748942429519ce2242d9d8ce01d0823b1c83d1a302b589922cd76da87b",
+          "projectedSha256": "9ab1fd748942429519ce2242d9d8ce01d0823b1c83d1a302b589922cd76da87b"
+        },
+        {
+          "path": "explorations/ontology-lifecycle-qa/README.md",
+          "existingSha256": "66c3dff528e8cf44d79da91362fde9a900a7732236e997cf9d768cb776f001b7",
+          "projectedSha256": "66c3dff528e8cf44d79da91362fde9a900a7732236e997cf9d768cb776f001b7"
+        },
+        {
+          "path": "explorations/openclaw-deployment-platform/README.md",
+          "existingSha256": "554e45138355e7df02bd040e24548795e543804a8af4a500159c325fd37fcada",
+          "projectedSha256": "554e45138355e7df02bd040e24548795e543804a8af4a500159c325fd37fcada"
+        },
+        {
+          "path": "explorations/oppold-corpus-overhaul/README.md",
+          "existingSha256": "21a27e9122f3adbffff3e069a7884e5d947c18609a0a655d4ad64105c8ff6778",
+          "projectedSha256": "21a27e9122f3adbffff3e069a7884e5d947c18609a0a655d4ad64105c8ff6778"
+        },
+        {
+          "path": "explorations/packet-system-redesign/README.md",
+          "existingSha256": "d421b848b726d09ac15c16441d60652cd2711d4354351d8163bea4f1c3baa10a",
+          "projectedSha256": "d421b848b726d09ac15c16441d60652cd2711d4354351d8163bea4f1c3baa10a"
+        },
+        {
+          "path": "explorations/patent-citation-candor-gate/README.md",
+          "existingSha256": "429308bef696fd408f73541d86446026f587aa881bfacb51618b6a81d5cca6fe",
+          "projectedSha256": "429308bef696fd408f73541d86446026f587aa881bfacb51618b6a81d5cca6fe"
+        },
+        {
+          "path": "explorations/patent-drafting-episode-ledger/README.md",
+          "existingSha256": "cfb4a6a4d06961b27757c83e8ede059ea658d65b3b5369c9874d5c5fca401520",
+          "projectedSha256": "cfb4a6a4d06961b27757c83e8ede059ea658d65b3b5369c9874d5c5fca401520"
+        },
+        {
+          "path": "explorations/patent-drawing-pipeline/README.md",
+          "existingSha256": "3ee94da50812238825876bb237e3e437e141859ef4055139e12d45798532146f",
+          "projectedSha256": "3ee94da50812238825876bb237e3e437e141859ef4055139e12d45798532146f"
+        },
+        {
+          "path": "explorations/pr-event-awareness/README.md",
+          "existingSha256": "69aadcf3718f6a0e1fec01eebc41237282908a8a52a371ac45d4664d114efa80",
+          "projectedSha256": "69aadcf3718f6a0e1fec01eebc41237282908a8a52a371ac45d4664d114efa80"
+        },
+        {
+          "path": "explorations/practice-office-provisioning/README.md",
+          "existingSha256": "c3dfc9f81171071e7af8e51e38ec90878824c330d99e65dd6c6ec8f69e7f5279",
+          "projectedSha256": "c3dfc9f81171071e7af8e51e38ec90878824c330d99e65dd6c6ec8f69e7f5279"
+        },
+        {
+          "path": "explorations/project-intelligence/README.md",
+          "existingSha256": "185d84480ca0a67253edf5edecde95ab7640feed483d0559e40834e00f0628a9",
+          "projectedSha256": "185d84480ca0a67253edf5edecde95ab7640feed483d0559e40834e00f0628a9"
+        },
+        {
+          "path": "explorations/protocol-as-value/README.md",
+          "existingSha256": "c33f59f1183e5f6d4259e9d64851c393f24412ad9ee3190d741e80cf57ee5bf7",
+          "projectedSha256": "c33f59f1183e5f6d4259e9d64851c393f24412ad9ee3190d741e80cf57ee5bf7"
+        },
+        {
+          "path": "explorations/pulumi-to-alchemy/README.md",
+          "existingSha256": "715598c69aab2157991b6d1d64ba49f74c4a59b937e3af1b6c433ca632dfacb5",
+          "projectedSha256": "715598c69aab2157991b6d1d64ba49f74c4a59b937e3af1b6c433ca632dfacb5"
+        },
+        {
+          "path": "explorations/rag-retrieval-projection/README.md",
+          "existingSha256": "07727a7cb71010e1a1a4d10d78c88af9d9dc1e77104ec8939e1c9272f8511e42",
+          "projectedSha256": "07727a7cb71010e1a1a4d10d78c88af9d9dc1e77104ec8939e1c9272f8511e42"
+        },
+        {
+          "path": "explorations/remote-skill-activation-conformance/README.md",
+          "existingSha256": "13bd8440a4954cb22137db5d2bd0d7b9227fca09485e08f823622c94f102d828",
+          "projectedSha256": "13bd8440a4954cb22137db5d2bd0d7b9227fca09485e08f823622c94f102d828"
+        },
+        {
+          "path": "explorations/research-corpus-synthesis/README.md",
+          "existingSha256": "1bd37d8d22741151b173855a8b830105739e820e09feaf1f8133a186d05cdde3",
+          "projectedSha256": "1bd37d8d22741151b173855a8b830105739e820e09feaf1f8133a186d05cdde3"
+        },
+        {
+          "path": "explorations/secure-document-download-proxy/README.md",
+          "existingSha256": "7fd38d3443d053cdd6f84574f2fe25f406f1f07af461ff20255cd185d6511362",
+          "projectedSha256": "7fd38d3443d053cdd6f84574f2fe25f406f1f07af461ff20255cd185d6511362"
+        },
+        {
+          "path": "explorations/semantica-lab/README.md",
+          "existingSha256": "1d58f1ffd1ac4a2feaaca0b923306786c324571938e6bda5b290e5bee555f5ed",
+          "projectedSha256": "1d58f1ffd1ac4a2feaaca0b923306786c324571938e6bda5b290e5bee555f5ed"
+        },
+        {
+          "path": "explorations/skillopt-corpus-headroom/README.md",
+          "existingSha256": "29239091ca3bd1e1869087846cb7146159cc304079dadd8929b3946208818c59",
+          "projectedSha256": "29239091ca3bd1e1869087846cb7146159cc304079dadd8929b3946208818c59"
+        },
+        {
+          "path": "explorations/skillopt-training-pilot/README.md",
+          "existingSha256": "1a3085ce21881b03ad41ca56a6917094daba6fdad29ca67198f8ea87a5d44c6b",
+          "projectedSha256": "1a3085ce21881b03ad41ca56a6917094daba6fdad29ca67198f8ea87a5d44c6b"
+        },
+        {
+          "path": "explorations/solo-firm-docketing/README.md",
+          "existingSha256": "b52646a626f15ca357c61c68859444ab5d7393a0c241fa0a8f9524ade292af82",
+          "projectedSha256": "b52646a626f15ca357c61c68859444ab5d7393a0c241fa0a8f9524ade292af82"
+        },
+        {
+          "path": "explorations/stack-installer/README.md",
+          "existingSha256": "b4368c4697c6c2f63a552068a20e343b4b8109f945a28a39118d4d5bd0b4c9b4",
+          "projectedSha256": "b4368c4697c6c2f63a552068a20e343b4b8109f945a28a39118d4d5bd0b4c9b4"
+        },
+        {
+          "path": "explorations/stacked-pr-adoption/README.md",
+          "existingSha256": "d946de989d7c401dbe991adfaa52aee9072ee26e67b51c0f333d1efd250f70e7",
+          "projectedSha256": "d946de989d7c401dbe991adfaa52aee9072ee26e67b51c0f333d1efd250f70e7"
+        },
+        {
+          "path": "explorations/todox-wealth-management-site/README.md",
+          "existingSha256": "9f01b6eaf1f9729da20dce319722cec818535e2b2e01d42f8cfd7f79f215eae2",
+          "projectedSha256": "9f01b6eaf1f9729da20dce319722cec818535e2b2e01d42f8cfd7f79f215eae2"
+        },
+        {
+          "path": "explorations/turborepo-quality-cache/README.md",
+          "existingSha256": "18ab75e3a75ce3dbed43dbc89c03bb3eb96a4c206994d3907bac174dec9c4677",
+          "projectedSha256": "18ab75e3a75ce3dbed43dbc89c03bb3eb96a4c206994d3907bac174dec9c4677"
+        },
+        {
+          "path": "explorations/typed-agent-skill-contracts/README.md",
+          "existingSha256": "59a0a747da9884981e1a0b290970c707d5917063b2ffae3a787b7626e2955c41",
+          "projectedSha256": "59a0a747da9884981e1a0b290970c707d5917063b2ffae3a787b7626e2955c41"
+        },
+        {
+          "path": "explorations/uspto-patent-driver-depth/README.md",
+          "existingSha256": "4ed56216f726aa6e077a8f4484522baca4bcfe02a8eee0ce3cd4d8ae997b417d",
+          "projectedSha256": "4ed56216f726aa6e077a8f4484522baca4bcfe02a8eee0ce3cd4d8ae997b417d"
+        },
+        {
+          "path": "explorations/v3-consistency-audit/README.md",
+          "existingSha256": "503941e35bdadf03c2d468c5abf48601ab718dbdee1204639e29f4a35eb2795e",
+          "projectedSha256": "503941e35bdadf03c2d468c5abf48601ab718dbdee1204639e29f4a35eb2795e"
+        }
+      ],
+      "issues": []
+    },
+    "models": [
+      {
+        "path": ".claude/skills/browser-qa-loop/SKILL.md",
+        "blockId": "qa-judge",
+        "extractedSha256": "21bbe722c4fac0bedbe5c34377aaf18b136f4977f469531078687e3cd38c6981"
+      },
+      {
+        "path": ".claude/skills/browser-qa-loop/resources/judge-prompt.md",
+        "blockId": "qa-judge",
+        "extractedSha256": "21bbe722c4fac0bedbe5c34377aaf18b136f4977f469531078687e3cd38c6981"
+      },
+      {
+        "path": ".claude/skills/oracle/SKILL.md",
+        "blockId": "codex-heavy",
+        "extractedSha256": "6cc23f93578f373a1ad51201fc09ee39cb276af1001296b9b63d5e44d5862445"
+      },
+      {
+        "path": "AGENTS.md",
+        "blockId": "volume-pools",
+        "extractedSha256": "c3679d08b54d6b78004eacbe931308f46ee98cceced9bc14155a9683c04d50e3"
+      },
+      {
+        "path": "docs/runbooks/agent-pools.md",
+        "blockId": "cursor-seats",
+        "extractedSha256": "d38631d7a1ff662ceb4d29be01719aadedbc1b421bd0bf56cd89ee61813c9814"
+      },
+      {
+        "path": "docs/runbooks/graft-local-recovery.md",
+        "blockId": "graft-deep",
+        "extractedSha256": "58f8e104e6c6e64d42e523205893330c6550c5a250ee09d55cafdd5e0e7aed38"
+      },
+      {
+        "path": "packages/tooling/tool/cli/test/fixtures/models/locators.md",
+        "blockId": "routing-doctrine",
+        "extractedSha256": "7169dc567922ae8cb576f2e06a7442f3d86bdf6b01a00a9b31a737e141b12dca"
+      }
+    ]
+  },
+  "probes": {
+    "splice": [
+      {
+        "id": "lf",
+        "output": "# T\n\n<!-- BEGIN GENERATED: INSTRUMENTATION CATALOG -->\n\n_Generated by `bun run beep observability catalog --write`. Do not edit by hand._\n\nThe catalog is committed as one shard per owning package, `standards/instrumentation-catalog/<package>.generated.jsonc`, so pull requests that add spans in different packages do not conflict. Span counts per family are printed by `bun run beep observability catalog --check` rather than committed here.\n\nNaming rules the catalog check enforces:\n\n- Domain spans, in every family, are named `Concept(.Sub)*.action`: PascalCase concept segments and a camelCase action, for example `Parcels.read`.\n- Protocol spans follow OpenTelemetry semantic conventions (`GET /route`, `gen_ai.*`) and are declared with `protocol: true`. Their identity is the owning package plus the name, so two packages may share one.\n- Every other span name is unique across packages. Names are static literals; a template literal with substitutions fails the check, and its variable part belongs in an attribute.\n- Harvested names that predate the domain form stay in the catalog with `conforms: false`; there is no mass rename.\n- Metric names are lowercase dotted `beep.<area>.<noun>` with a declared UCUM unit and no hand-written unit or `_total` suffix. One counter per concept carries a bounded `beep.outcome` attribute instead of one counter per outcome.\n- Event names are `Concept.event_happened`. Attribute keys are lowercase dotted and declared once, with their signals, cardinality and strictest allowed tier; metrics use only static or bounded keys.\n\n<!-- END GENERATED: INSTRUMENTATION CATALOG -->\n\nrest\n"
+      },
+      {
+        "id": "crlf",
+        "output": "# T\r\n\r\n<!-- BEGIN GENERATED: INSTRUMENTATION CATALOG -->\r\n\r\n_Generated by `bun run beep observability catalog --write`. Do not edit by hand._\r\n\r\nThe catalog is committed as one shard per owning package, `standards/instrumentation-catalog/<package>.generated.jsonc`, so pull requests that add spans in different packages do not conflict. Span counts per family are printed by `bun run beep observability catalog --check` rather than committed here.\r\n\r\nNaming rules the catalog check enforces:\r\n\r\n- Domain spans, in every family, are named `Concept(.Sub)*.action`: PascalCase concept segments and a camelCase action, for example `Parcels.read`.\r\n- Protocol spans follow OpenTelemetry semantic conventions (`GET /route`, `gen_ai.*`) and are declared with `protocol: true`. Their identity is the owning package plus the name, so two packages may share one.\r\n- Every other span name is unique across packages. Names are static literals; a template literal with substitutions fails the check, and its variable part belongs in an attribute.\r\n- Harvested names that predate the domain form stay in the catalog with `conforms: false`; there is no mass rename.\r\n- Metric names are lowercase dotted `beep.<area>.<noun>` with a declared UCUM unit and no hand-written unit or `_total` suffix. One counter per concept carries a bounded `beep.outcome` attribute instead of one counter per outcome.\r\n- Event names are `Concept.event_happened`. Attribute keys are lowercase dotted and declared once, with their signals, cardinality and strictest allowed tier; metrics use only static or bounded keys.\r\n\r\n<!-- END GENERATED: INSTRUMENTATION CATALOG -->\r\n\r\nrest\r\n"
+      },
+      {
+        "id": "missing",
+        "output": null
+      },
+      {
+        "id": "end-before-begin",
+        "output": null
+      },
+      {
+        "id": "unterminated",
+        "output": null
+      },
+      {
+        "id": "duplicate",
+        "output": null
+      },
+      {
+        "id": "mid-line",
+        "output": null
+      },
+      {
+        "id": "trailing-space",
+        "output": "<!-- BEGIN GENERATED: INSTRUMENTATION CATALOG -->\n\n_Generated by `bun run beep observability catalog --write`. Do not edit by hand._\n\nThe catalog is committed as one shard per owning package, `standards/instrumentation-catalog/<package>.generated.jsonc`, so pull requests that add spans in different packages do not conflict. Span counts per family are printed by `bun run beep observability catalog --check` rather than committed here.\n\nNaming rules the catalog check enforces:\n\n- Domain spans, in every family, are named `Concept(.Sub)*.action`: PascalCase concept segments and a camelCase action, for example `Parcels.read`.\n- Protocol spans follow OpenTelemetry semantic conventions (`GET /route`, `gen_ai.*`) and are declared with `protocol: true`. Their identity is the owning package plus the name, so two packages may share one.\n- Every other span name is unique across packages. Names are static literals; a template literal with substitutions fails the check, and its variable part belongs in an attribute.\n- Harvested names that predate the domain form stay in the catalog with `conforms: false`; there is no mass rename.\n- Metric names are lowercase dotted `beep.<area>.<noun>` with a declared UCUM unit and no hand-written unit or `_total` suffix. One counter per concept carries a bounded `beep.outcome` attribute instead of one counter per outcome.\n- Event names are `Concept.event_happened`. Attribute keys are lowercase dotted and declared once, with their signals, cardinality and strictest allowed tier; metrics use only static or bounded keys.\n\n<!-- END GENERATED: INSTRUMENTATION CATALOG -->\nrest\n"
+      },
+      {
+        "id": "empty",
+        "output": "# 12\n\n<!-- BEGIN GENERATED: INSTRUMENTATION CATALOG -->\n\n_Generated by `bun run beep observability catalog --write`. Do not edit by hand._\n\nThe catalog is committed as one shard per owning package, `standards/instrumentation-catalog/<package>.generated.jsonc`, so pull requests that add spans in different packages do not conflict. Span counts per family are printed by `bun run beep observability catalog --check` rather than committed here.\n\nNaming rules the catalog check enforces:\n\n- Domain spans, in every family, are named `Concept(.Sub)*.action`: PascalCase concept segments and a camelCase action, for example `Parcels.read`.\n- Protocol spans follow OpenTelemetry semantic conventions (`GET /route`, `gen_ai.*`) and are declared with `protocol: true`. Their identity is the owning package plus the name, so two packages may share one.\n- Every other span name is unique across packages. Names are static literals; a template literal with substitutions fails the check, and its variable part belongs in an attribute.\n- Harvested names that predate the domain form stay in the catalog with `conforms: false`; there is no mass rename.\n- Metric names are lowercase dotted `beep.<area>.<noun>` with a declared UCUM unit and no hand-written unit or `_total` suffix. One counter per concept carries a bounded `beep.outcome` attribute instead of one counter per outcome.\n- Event names are `Concept.event_happened`. Attribute keys are lowercase dotted and declared once, with their signals, cardinality and strictest allowed tier; metrics use only static or bounded keys.\n\n<!-- END GENERATED: INSTRUMENTATION CATALOG -->\n"
+      },
+      {
+        "id": "bom",
+        "output": "﻿<!-- BEGIN GENERATED: INSTRUMENTATION CATALOG -->\n\n_Generated by `bun run beep observability catalog --write`. Do not edit by hand._\n\nThe catalog is committed as one shard per owning package, `standards/instrumentation-catalog/<package>.generated.jsonc`, so pull requests that add spans in different packages do not conflict. Span counts per family are printed by `bun run beep observability catalog --check` rather than committed here.\n\nNaming rules the catalog check enforces:\n\n- Domain spans, in every family, are named `Concept(.Sub)*.action`: PascalCase concept segments and a camelCase action, for example `Parcels.read`.\n- Protocol spans follow OpenTelemetry semantic conventions (`GET /route`, `gen_ai.*`) and are declared with `protocol: true`. Their identity is the owning package plus the name, so two packages may share one.\n- Every other span name is unique across packages. Names are static literals; a template literal with substitutions fails the check, and its variable part belongs in an attribute.\n- Harvested names that predate the domain form stay in the catalog with `conforms: false`; there is no mass rename.\n- Metric names are lowercase dotted `beep.<area>.<noun>` with a declared UCUM unit and no hand-written unit or `_total` suffix. One counter per concept carries a bounded `beep.outcome` attribute instead of one counter per outcome.\n- Event names are `Concept.event_happened`. Attribute keys are lowercase dotted and declared once, with their signals, cardinality and strictest allowed tier; metrics use only static or bounded keys.\n\n<!-- END GENERATED: INSTRUMENTATION CATALOG -->\n"
+      }
+    ],
+    "extract": [
+      {
+        "id": "lf",
+        "output": "body"
+      },
+      {
+        "id": "missing-id",
+        "output": null
+      },
+      {
+        "id": "crlf-multiline",
+        "output": "one\ntwo"
+      },
+      {
+        "id": "padded-body",
+        "output": "body"
+      },
+      {
+        "id": "end-before-begin",
+        "output": null
+      },
+      {
+        "id": "unterminated",
+        "output": null
+      },
+      {
+        "id": "duplicate",
+        "output": null
+      },
+      {
+        "id": "other-block-unterminated",
+        "output": "body"
+      },
+      {
+        "id": "mid-line",
+        "output": null
+      },
+      {
+        "id": "invalid-id",
+        "output": null
+      }
+    ]
+  },
+  "comparison": {
+    "baseline": "goals/effected-promotion/research/managed-section-adoption-parity-r8-before.json",
+    "surfacesIdentical": true,
+    "probeShifts": [
+      {
+        "id": "splice:crlf",
+        "before": "# T\r\n\r\n<!-- BEGIN GENERATED: INSTRUMENTATION CATALOG -->\n\n_Generated by `bun run beep observability catalog --write`. Do not edit by hand._\n\nThe catalog is committed as one shard per owning package, `standards/instrumentation-catalog/<package>.generated.jsonc`, so pull requests that add spans in different packages do not conflict. Span counts per family are printed by `bun run beep observability catalog --check` rather than committed here.\n\nNaming rules the catalog check enforces:\n\n- Domain spans, in every family, are named `Concept(.Sub)*.action`: PascalCase concept segments and a camelCase action, for example `Parcels.read`.\n- Protocol spans follow OpenTelemetry semantic conventions (`GET /route`, `gen_ai.*`) and are declared with `protocol: true`. Their identity is the owning package plus the name, so two packages may share one.\n- Every other span name is unique across packages. Names are static literals; a template literal with substitutions fails the check, and its variable part belongs in an attribute.\n- Harvested names that predate the domain form stay in the catalog with `conforms: false`; there is no mass rename.\n- Metric names are lowercase dotted `beep.<area>.<noun>` with a declared UCUM unit and no hand-written unit or `_total` suffix. One counter per concept carries a bounded `beep.outcome` attribute instead of one counter per outcome.\n- Event names are `Concept.event_happened`. Attribute keys are lowercase dotted and declared once, with their signals, cardinality and strictest allowed tier; metrics use only static or bounded keys.\n\n<!-- END GENERATED: INSTRUMENTATION CATALOG -->\r\n\r\nrest\r\n",
+        "after": "# T\r\n\r\n<!-- BEGIN GENERATED: INSTRUMENTATION CATALOG -->\r\n\r\n_Generated by `bun run beep observability catalog --write`. Do not edit by hand._\r\n\r\nThe catalog is committed as one shard per owning package, `standards/instrumentation-catalog/<package>.generated.jsonc`, so pull requests that add spans in different packages do not conflict. Span counts per family are printed by `bun run beep observability catalog --check` rather than committed here.\r\n\r\nNaming rules the catalog check enforces:\r\n\r\n- Domain spans, in every family, are named `Concept(.Sub)*.action`: PascalCase concept segments and a camelCase action, for example `Parcels.read`.\r\n- Protocol spans follow OpenTelemetry semantic conventions (`GET /route`, `gen_ai.*`) and are declared with `protocol: true`. Their identity is the owning package plus the name, so two packages may share one.\r\n- Every other span name is unique across packages. Names are static literals; a template literal with substitutions fails the check, and its variable part belongs in an attribute.\r\n- Harvested names that predate the domain form stay in the catalog with `conforms: false`; there is no mass rename.\r\n- Metric names are lowercase dotted `beep.<area>.<noun>` with a declared UCUM unit and no hand-written unit or `_total` suffix. One counter per concept carries a bounded `beep.outcome` attribute instead of one counter per outcome.\r\n- Event names are `Concept.event_happened`. Attribute keys are lowercase dotted and declared once, with their signals, cardinality and strictest allowed tier; metrics use only static or bounded keys.\r\n\r\n<!-- END GENERATED: INSTRUMENTATION CATALOG -->\r\n\r\nrest\r\n",
+        "reason": "The section is rendered in the document's dominant line ending, so a CRLF standard no longer gains LF-only lines."
+      },
+      {
+        "id": "splice:duplicate",
+        "before": "<!-- BEGIN GENERATED: INSTRUMENTATION CATALOG -->\n\n_Generated by `bun run beep observability catalog --write`. Do not edit by hand._\n\nThe catalog is committed as one shard per owning package, `standards/instrumentation-catalog/<package>.generated.jsonc`, so pull requests that add spans in different packages do not conflict. Span counts per family are printed by `bun run beep observability catalog --check` rather than committed here.\n\nNaming rules the catalog check enforces:\n\n- Domain spans, in every family, are named `Concept(.Sub)*.action`: PascalCase concept segments and a camelCase action, for example `Parcels.read`.\n- Protocol spans follow OpenTelemetry semantic conventions (`GET /route`, `gen_ai.*`) and are declared with `protocol: true`. Their identity is the owning package plus the name, so two packages may share one.\n- Every other span name is unique across packages. Names are static literals; a template literal with substitutions fails the check, and its variable part belongs in an attribute.\n- Harvested names that predate the domain form stay in the catalog with `conforms: false`; there is no mass rename.\n- Metric names are lowercase dotted `beep.<area>.<noun>` with a declared UCUM unit and no hand-written unit or `_total` suffix. One counter per concept carries a bounded `beep.outcome` attribute instead of one counter per outcome.\n- Event names are `Concept.event_happened`. Attribute keys are lowercase dotted and declared once, with their signals, cardinality and strictest allowed tier; metrics use only static or bounded keys.\n\n<!-- END GENERATED: INSTRUMENTATION CATALOG -->\n<!-- BEGIN GENERATED: INSTRUMENTATION CATALOG -->\nb\n<!-- END GENERATED: INSTRUMENTATION CATALOG -->\n",
+        "after": null,
+        "reason": "A second marker pair is a duplicate section and refuses (the splice used to rewrite the first pair and leave the second)."
+      },
+      {
+        "id": "splice:mid-line",
+        "before": "x <!-- BEGIN GENERATED: INSTRUMENTATION CATALOG -->\n\n_Generated by `bun run beep observability catalog --write`. Do not edit by hand._\n\nThe catalog is committed as one shard per owning package, `standards/instrumentation-catalog/<package>.generated.jsonc`, so pull requests that add spans in different packages do not conflict. Span counts per family are printed by `bun run beep observability catalog --check` rather than committed here.\n\nNaming rules the catalog check enforces:\n\n- Domain spans, in every family, are named `Concept(.Sub)*.action`: PascalCase concept segments and a camelCase action, for example `Parcels.read`.\n- Protocol spans follow OpenTelemetry semantic conventions (`GET /route`, `gen_ai.*`) and are declared with `protocol: true`. Their identity is the owning package plus the name, so two packages may share one.\n- Every other span name is unique across packages. Names are static literals; a template literal with substitutions fails the check, and its variable part belongs in an attribute.\n- Harvested names that predate the domain form stay in the catalog with `conforms: false`; there is no mass rename.\n- Metric names are lowercase dotted `beep.<area>.<noun>` with a declared UCUM unit and no hand-written unit or `_total` suffix. One counter per concept carries a bounded `beep.outcome` attribute instead of one counter per outcome.\n- Event names are `Concept.event_happened`. Attribute keys are lowercase dotted and declared once, with their signals, cardinality and strictest allowed tier; metrics use only static or bounded keys.\n\n<!-- END GENERATED: INSTRUMENTATION CATALOG -->\n",
+        "after": null,
+        "reason": "A marker must start its line; a marker after other text on the line is prose, not a marker."
+      },
+      {
+        "id": "splice:trailing-space",
+        "before": "<!-- BEGIN GENERATED: INSTRUMENTATION CATALOG -->\n\n_Generated by `bun run beep observability catalog --write`. Do not edit by hand._\n\nThe catalog is committed as one shard per owning package, `standards/instrumentation-catalog/<package>.generated.jsonc`, so pull requests that add spans in different packages do not conflict. Span counts per family are printed by `bun run beep observability catalog --check` rather than committed here.\n\nNaming rules the catalog check enforces:\n\n- Domain spans, in every family, are named `Concept(.Sub)*.action`: PascalCase concept segments and a camelCase action, for example `Parcels.read`.\n- Protocol spans follow OpenTelemetry semantic conventions (`GET /route`, `gen_ai.*`) and are declared with `protocol: true`. Their identity is the owning package plus the name, so two packages may share one.\n- Every other span name is unique across packages. Names are static literals; a template literal with substitutions fails the check, and its variable part belongs in an attribute.\n- Harvested names that predate the domain form stay in the catalog with `conforms: false`; there is no mass rename.\n- Metric names are lowercase dotted `beep.<area>.<noun>` with a declared UCUM unit and no hand-written unit or `_total` suffix. One counter per concept carries a bounded `beep.outcome` attribute instead of one counter per outcome.\n- Event names are `Concept.event_happened`. Attribute keys are lowercase dotted and declared once, with their signals, cardinality and strictest allowed tier; metrics use only static or bounded keys.\n\n<!-- END GENERATED: INSTRUMENTATION CATALOG -->  \nrest\n",
+        "after": "<!-- BEGIN GENERATED: INSTRUMENTATION CATALOG -->\n\n_Generated by `bun run beep observability catalog --write`. Do not edit by hand._\n\nThe catalog is committed as one shard per owning package, `standards/instrumentation-catalog/<package>.generated.jsonc`, so pull requests that add spans in different packages do not conflict. Span counts per family are printed by `bun run beep observability catalog --check` rather than committed here.\n\nNaming rules the catalog check enforces:\n\n- Domain spans, in every family, are named `Concept(.Sub)*.action`: PascalCase concept segments and a camelCase action, for example `Parcels.read`.\n- Protocol spans follow OpenTelemetry semantic conventions (`GET /route`, `gen_ai.*`) and are declared with `protocol: true`. Their identity is the owning package plus the name, so two packages may share one.\n- Every other span name is unique across packages. Names are static literals; a template literal with substitutions fails the check, and its variable part belongs in an attribute.\n- Harvested names that predate the domain form stay in the catalog with `conforms: false`; there is no mass rename.\n- Metric names are lowercase dotted `beep.<area>.<noun>` with a declared UCUM unit and no hand-written unit or `_total` suffix. One counter per concept carries a bounded `beep.outcome` attribute instead of one counter per outcome.\n- Event names are `Concept.event_happened`. Attribute keys are lowercase dotted and declared once, with their signals, cardinality and strictest allowed tier; metrics use only static or bounded keys.\n\n<!-- END GENERATED: INSTRUMENTATION CATALOG -->\nrest\n",
+        "reason": "Trailing blanks after a marker belong to the marker line, so the rewrite renders the canonical marker without them."
+      },
+      {
+        "id": "extract:crlf-multiline",
+        "before": "one\r\ntwo",
+        "after": "one\ntwo",
+        "reason": "The block body is read with its line endings normalized to LF, as the expected body is."
+      },
+      {
+        "id": "extract:duplicate",
+        "before": "a",
+        "after": null,
+        "reason": "A block that appears twice reads as no block, so a stale second copy surfaces as drift instead of hiding behind the first."
+      },
+      {
+        "id": "extract:mid-line",
+        "before": "body",
+        "after": null,
+        "reason": "A marker must start its line."
+      },
+      {
+        "id": "extract:invalid-id",
+        "before": "body",
+        "after": null,
+        "reason": "A block id outside the section-key grammar names no block."
+      }
+    ],
+    "unclassified": []
+  }
+}

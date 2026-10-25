@@ -135,9 +135,6 @@ const INTENDED_SHIFTS: Record<string, string> = {
   "splice:trailing-space":
     "Trailing blanks after a marker belong to the marker line, so the rewrite renders the canonical marker without them.",
   "extract:crlf-multiline": "The block body is read with its line endings normalized to LF, as the expected body is.",
-  "extract:end-before-begin":
-    "An end marker before its begin marker is an orphaned end and reads as no block (it used to read as missing too, through the index order).",
-  "extract:unterminated": "An unterminated block reads as no block.",
   "extract:duplicate":
     "A block that appears twice reads as no block, so a stale second copy surfaces as drift instead of hiding behind the first.",
   "extract:mid-line": "A marker must start its line.",
@@ -217,17 +214,16 @@ const modelsSurface = Effect.gen(function* () {
 const probeShifts = (before: Report, after: Report) => {
   const family = (name: "splice" | "extract") => {
     const previous = R.fromEntries(A.map(before.probes[name], (probe) => [probe.id, probe.output] as const));
-    return A.filterMap(after.probes[name], (probe) => {
-      const was = O.getOrNull(R.get(previous, probe.id));
-      return was === probe.output
-        ? O.none()
-        : O.some({
-            id: `${name}:${probe.id}`,
-            before: was,
-            after: probe.output,
-            reason: O.getOrElse(R.get(INTENDED_SHIFTS, `${name}:${probe.id}`), () => ""),
-          });
-    });
+    return pipe(
+      after.probes[name],
+      A.filter((probe) => O.getOrNull(R.get(previous, probe.id)) !== probe.output),
+      A.map((probe) => ({
+        id: `${name}:${probe.id}`,
+        before: O.getOrNull(R.get(previous, probe.id)),
+        after: probe.output,
+        reason: O.getOrElse(R.get(INTENDED_SHIFTS, `${name}:${probe.id}`), () => ""),
+      }))
+    );
   };
   return [...family("splice"), ...family("extract")];
 };
@@ -266,7 +262,10 @@ const program = Effect.gen(function* () {
               baseline: relative(path),
               surfacesIdentical: JSON.stringify(before.surfaces) === JSON.stringify(current.surfaces),
               probeShifts: shifts,
-              unclassified: A.filterMap(shifts, (shift) => (Str.isEmpty(shift.reason) ? O.some(shift.id) : O.none())),
+              unclassified: A.map(
+                A.filter(shifts, (shift) => Str.isEmpty(shift.reason)),
+                (shift) => shift.id
+              ),
             },
           };
         })

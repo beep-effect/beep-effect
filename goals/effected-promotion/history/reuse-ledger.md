@@ -196,6 +196,26 @@ pick what the kit picks.
 | repo-utils `schemas/PackageJson.ts` version fields | #243 | 3-A3 | Re-based on `@beep/package-json`, which already types versions through `@beep/semver`. |
 | repo-cli `EffectResolver` `VERSION_SPECIFIER_PATTERN`, `TurboResolver` `STABLE_VERSION_PATTERN` | - | excluded | Shape checks on a specifier or schema URL; neither parses nor orders versions. |
 
+## `@beep/managed-section` templates (roadmap R8, SPEC W4-h)
+
+R8 reads repo-cli's three marker-delimited generated regions through `@beep/managed-section`. Their markers predate
+the package (`<!-- BEGIN GENERATED: ... -->`, `<!-- beep-models:begin <id> -->`), so the kit gains
+`LiteralMarkerDialect` and `SectionMarkers` (fixed per-key spellings) instead of a one-time marker migration, and every
+generated surface renders byte for byte as before. Parity: `ops/managed-section-adoption-parity.ts` fingerprinted the
+surfaces on main (`research/managed-section-adoption-parity-r8-before.json`) and after the switch
+(`research/managed-section-adoption-parity-r8.json`): the Observability standard, the Atlas plus 92 README
+projections and 7 Models blocks are identical, and the 8 probe shifts are each classified.
+
+| Site | Map id | Status | Notes |
+| --- | --- | --- | --- |
+| repo-cli `Observability/Observability.render.ts` `spliceStandardSection` and the marker constants | #90, #260, #311 | adopted (R8) | The standard is a `LiteralMarkerDialect` document; the splice is `parseResult` + `reconcile`, the markers are `beginMarker`/`endMarker`. Shifts: a duplicated or mid-line marker is `None`, a CRLF standard stays CRLF, trailing blanks after a marker are dropped on rewrite. |
+| repo-cli `Explore/Atlas.ts` README status marker counting and splicing | #89, #311 | adopted (R8) | The Status section is scanned as a `LiteralMarkerDialect` document; `generatedMarkerCountsAreValid` and the in-loop marker tracking are deleted, and so is the function's `fallow-ignore` complexity suppression. Shift: a marker line with trailing blanks or a doubled inner space is read as a marker. |
+| repo-cli `Models/Models.render.ts` `extractGeneratedBlock`, `generatedBlockBegin`, `generatedBlockEnd` | #260 | adopted (R8) | One `LiteralMarkerDialect` per block id; the markers render through `CommentStyle.comment`. Shifts: a duplicated block, a mid-line marker and an id outside the section-key grammar read as no block; a CRLF body reads with LF line endings. |
+| stale second copies of three generated blocks: `.claude/skills/browser-qa-loop/SKILL.md` and `resources/judge-prompt.md` (`qa-judge`), `docs/runbooks/graft-local-recovery.md` (`graft-deep`) | - | fixed (R8) | Each file carried an identical second block that `models check` never read (the old `indexOf` read the first). The switch reads a duplicate as no block, so the copies are deleted; the judge prompt's copy sat after its own "nothing after that line" rule. `skills-lock.json` takes the new browser-qa-loop tree hash. |
+| `@beep/managed-section` `SectionDialect` | - | extended (R8) | `SectionMarkers`, `LiteralMarkerDialect`, `CommentStyle.comment` and the internal `spellings`/`literalMatchers` hooks. The ruled dialect's wire form and behaviour are unchanged (its existing tests pass untouched). |
+| repo-cli `CreatePackage/internal/LabIdentitySegment.ts` | #88 | excluded | Unchanged by R8; see the excluded row below. |
+| repo-cli `Yeet/internal/GhOps.ts` | #281 | follow-up goal (W4-l) | Unchanged by R8. |
+
 ## Backfill of the remaining map sites (R0, W4-k)
 
 Every confirmed and partial site of the map that had no row above (the earlier `2d-later` rows now carry their plan PR or exclusion too), so each one is migrated, queued under a
@@ -326,10 +346,10 @@ A row naming two PRs is split between them; #143 also appears above for its pack
 | repo-cli | #285 | partial | queued: R4 | `yaml` out of repo-cli (Runners onto `effect/encoding/Yaml`; Models.locator kept with a reason if the kit lacks a visitor). |
 | ai-metrics | #304 | partial | queued: R4; follow-up goal (W4-l) | The yaml half is R4's (#32); the git half goes with the gh/git follow-up goal. |
 | effect-drizzle scripts/assemble-readme.ts | #92 | confirmed | queued: R5b | effect-drizzle README script after the TOC helper, `@beep/markdown` as a devDependency only. |
-| repo-cli Explore/Atlas.ts | #89 | partial | queued: R8 | Explore Atlas onto `@beep/managed-section` with byte-identical round trips. |
-| repo-cli Observability/Observability.render.ts | #90 | partial | queued: R8 | Observability render onto `@beep/managed-section`. |
-| repo-cli Models/Models.render.ts, Observability/Observability.render.ts | #260 | partial | queued: R8 | Models.render and Observability splice sites. |
-| repo-cli commands | #311 | partial | queued: R8 | Observability half; LabIdentitySegment is excluded (#88). |
+| repo-cli Explore/Atlas.ts | #89 | partial | migrated (R8, W4-h) | Explore Atlas onto `@beep/managed-section` with byte-identical round trips. Migrated in R8; see the `@beep/managed-section` section above. |
+| repo-cli Observability/Observability.render.ts | #90 | partial | migrated (R8, W4-h) | Observability render onto `@beep/managed-section`. Migrated in R8; see the `@beep/managed-section` section above. |
+| repo-cli Models/Models.render.ts, Observability/Observability.render.ts | #260 | partial | migrated (R8, W4-h) | Models.render and Observability splice sites. Migrated in R8; see the `@beep/managed-section` section above. |
+| repo-cli commands | #311 | partial | migrated (R8, W4-h) | Observability and Atlas halves; LabIdentitySegment is excluded (#88). Migrated in R8; see the `@beep/managed-section` section above. |
 | exiftool Exiftool.service.ts | #114 | confirmed | queued: R9 | Driver onto `@beep/commands` `Run.collect`; retires the D-03 Driver-local output folds row. |
 | pdf-tools PdfTools.service.ts | #116 | confirmed | queued: R9 | Driver onto `@beep/commands` `Run.collect`; retires the D-03 Driver-local output folds row. |
 | drivers tesseract, poppler, exiftool, pdf-tools, onepassword-cli, tailscale, ffmpeg, openclaw | #253 | partial | queued: R9 | Umbrella: R9 moves exiftool, pdf-tools, obs and tailscale; the other drivers are excluded below. |

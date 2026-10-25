@@ -100,7 +100,7 @@ subpath", because the knowledge doctor reads a dot-slash span as a packet-relati
 | 4-X-A | XDG adoption: ai-metrics forwarder/data-root, `BeepCacheRoot`, `Fleet`, `HarnessLedger`, `AIMetrics/Programs`, `MatchPerson`, apps docket-intake and practice-m365-contacts (#183 excluded) | 4-X |
 | 4-C-A | `CliRuntime.main` in `bin-main.ts`/`FailureRendering.ts` (EPIPE latching kept); `CliPrompt.gateTerminal` in SkillsReview; one `TestTerminal` swap | 4-C |
 | R5a | DeletePackage key removal, typed frontmatter (`ReflectionArtifact`, `SkillFrontmatterCheck`), KnowledgeDoctor `beep-historical` | #2143, 4-CI |
-| R8 | managed-section templates: Observability render, Explore Atlas, Models.render (LabIdentitySegment excluded; GhOps to the follow-up goal) | main |
+| R8 (in review, this PR) | managed-section templates: Observability render, Explore Atlas, Models.render (LabIdentitySegment excluded; GhOps to the follow-up goal) | main |
 | 3-A6 | `TsconfigValidator` + docgen `readTSConfig`; delete repo-utils `schemas/TSConfig.ts`; `@beep/tsconfig` closed view | 3-2, 3-3, 3-A3, 3-A4 |
 | 4-A1 | repo-cli QAS discovery onto `WorkspaceDiscovery` (#143), discovery only, `resolvePathWithinRoot` post-filter | 3-A4, 4-W-a |
 | 4-A2 | public `WorkspacePatterns` leaf; CreatePackage, TsconfigSync.plan, ConfigUpdater, ChangesetGraph, Tasks pattern readers (3 fallow suppressions out) | 3-A4, 4-W-a, R2b |
