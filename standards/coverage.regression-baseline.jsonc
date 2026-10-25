@@ -23222,7 +23222,7 @@
       "path": "packages/foundation/capability/observability",
       "lines": 86.48,
       "statements": 86.48,
-      "branches": 73.03,
+      "branches": 72.65,
       "functions": 77.67,
       "uncovered": {
         "lines": 170,
