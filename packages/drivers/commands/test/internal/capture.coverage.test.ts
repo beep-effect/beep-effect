@@ -67,8 +67,8 @@ describe("bounded capture boundary behavior", () => {
     Effect.gen(function* () {
       assert.strictEqual(yield* collectBounded(Stream.empty, 0), "");
       assert.strictEqual(yield* collectBounded(Stream.make(new Uint8Array()), 0), "");
-      // Stream.decodeText uses streaming decode without a final decoder flush.
-      assert.strictEqual(yield* collectBounded(Stream.make(Uint8Array.of(65, 0xe2, 0x82)), 3), "A");
+      // Stream.decodeText flushes an incomplete sequence as a replacement character.
+      assert.strictEqual(yield* collectBounded(Stream.make(Uint8Array.of(65, 0xe2, 0x82)), 3), "A�");
     })
   );
 

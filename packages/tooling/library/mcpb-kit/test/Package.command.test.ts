@@ -72,7 +72,6 @@ it.layer(commandEnvironment, { concurrent: false, timeout: "5 seconds" })("MCPB 
     } = {}
   ) {
     const fs = yield* FileSystem.FileSystem;
-    const runSync = Effect.runSyncWith(yield* Effect.context<FileSystem.FileSystem>());
     yield* fs.remove("/repo", { recursive: true, force: true });
     yield* fs.makeDirectory(nativeDir, { recursive: true });
     yield* fs.writeFileString(
@@ -81,17 +80,22 @@ it.layer(commandEnvironment, { concurrent: false, timeout: "5 seconds" })("MCPB 
     );
     yield* fs.writeFileString(`${nativeDir}/duckdb.node`, "synthetic native sidecar");
     yield* fs.makeDirectory(output, { recursive: true });
+    const runPromise = Effect.runPromiseWith(yield* Effect.context<never>());
     const calls: Array<ReadonlyArray<string>> = [];
     Object.defineProperty(Bun, "spawn", {
       value: (args: ReadonlyArray<string>) => {
         calls.push(args);
         if (options.rejectLaunch === true) throw new Error("synthetic process start failure");
-        if (args[0] === "zip" && options.noArchive !== true) {
-          runSync(fs.writeFileString(args[3] ?? archive, "synthetic archive"));
-        }
+        const exitCode = options.exitCode ?? 0;
+        // `Bun.spawn` is a plain function, so the synthetic archive is written by
+        // running the in-memory filesystem's own effect outside the test fiber.
+        const exited =
+          args[0] === "zip" && options.noArchive !== true
+            ? runPromise(Effect.as(fs.writeFileString(args[3] ?? archive, "synthetic archive"), exitCode))
+            : Promise.resolve(exitCode);
         return {
           stdout: new Blob([options.listing ?? inventory]).stream(),
-          exited: Promise.resolve(options.exitCode ?? 0),
+          exited,
         };
       },
     });

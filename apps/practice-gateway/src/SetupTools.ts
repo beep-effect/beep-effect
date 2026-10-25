@@ -265,7 +265,7 @@ export const SetupProfileGetTool = setupTool(
  * the onboarding proof (2026-10-14) saw the profile's IT limits rejected that
  * way. Decoding tries the plain shape first.
  */
-const plainOrJson = <Schema extends S.Codec<any, any, never, never>>(schema: Schema) =>
+const plainOrJson = <Schema extends S.Codec<unknown, unknown, never, never>>(schema: Schema) =>
   S.Union([schema, S.fromJsonString(schema)]);
 
 /**

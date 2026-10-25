@@ -1170,20 +1170,27 @@ describe("DuckDbClient reader connections", { concurrent: false }, () => {
         yield* sql`CREATE TABLE probe_s.probe_t AS SELECT 42 AS v`;
         yield* sql`USE memory.probe_s`;
         const query = sql`SELECT v FROM probe_t`;
-        // The first lease must use the committed schema despite the writer's DROP.
+        const path = sql`SELECT current_setting('search_path') AS path`;
+        assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), [{ v: 42 }]);
+        // DuckDB 2.0 resets the writer's path as soon as its schema is dropped,
+        // even uncommitted, and ROLLBACK does not restore it: the lease mirrors that.
         yield* sql`BEGIN`;
         yield* sql`DROP SCHEMA probe_s CASCADE`;
-        assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), [{ v: 42 }]);
+        assert.deepStrictEqual(yield* path, [{ path: "memory.main" }]);
+        assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), [{ v: 1 }]);
         yield* sql`ROLLBACK`;
+        assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), [{ v: 1 }]);
+        // The rolled-back schema is still in the reader's committed catalog.
+        yield* sql`USE memory.probe_s`;
         assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), [{ v: 42 }]);
         // The reused lease must normalize again after COMMIT, then see recreation.
         yield* sql`BEGIN`;
         yield* sql`DROP SCHEMA probe_s CASCADE`;
-        assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), [{ v: 42 }]);
         yield* sql`COMMIT`;
         assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), [{ v: 1 }]);
         yield* sql`CREATE SCHEMA probe_s`;
         yield* sql`CREATE TABLE probe_s.probe_t AS SELECT 99 AS v`;
+        yield* sql`USE memory.probe_s`;
         assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), [{ v: 99 }]);
       })
     );
@@ -1201,19 +1208,22 @@ describe("DuckDbClient reader connections", { concurrent: false }, () => {
         yield* sql`DROP SCHEMA probe_s`;
         const query = sql`SELECT v, current_setting('TimeZone') AS zone FROM probe_t`;
         const writerPath = yield* sql`SELECT current_setting('search_path') AS path`;
-        assert.deepStrictEqual(writerPath, [{ path: "memory.probe_s" }]);
+        // DuckDB 2.0 resets the path when its schema is dropped instead of keeping it dangling.
+        assert.deepStrictEqual(writerPath, [{ path: "memory.main" }]);
         assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), yield* query);
         yield* sql`SET TimeZone='Asia/Tokyo'`;
         assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), yield* query);
         assert.deepStrictEqual(yield* sql`SELECT current_setting('search_path') AS path`, writerPath);
         yield* sql`CREATE SCHEMA probe_s`;
         yield* sql`CREATE TABLE probe_s.probe_t AS SELECT 42 AS v`;
+        yield* sql`USE memory.probe_s`;
         assert.deepStrictEqual(yield* query, [{ v: 42, zone: "Asia/Tokyo" }]);
         assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), yield* query);
         yield* sql`DROP SCHEMA probe_s CASCADE`;
         assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), yield* query);
         yield* sql`CREATE OR REPLACE SCHEMA probe_s`;
         yield* sql`CREATE TABLE probe_s.probe_t AS SELECT 99 AS v`;
+        yield* sql`USE memory.probe_s`;
         assert.deepStrictEqual(yield* query, [{ v: 99, zone: "Asia/Tokyo" }]);
         assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), yield* query);
       })
@@ -1232,6 +1242,9 @@ describe("DuckDbClient reader connections", { concurrent: false }, () => {
         yield* sql`CREATE TABLE "second""schema".probe_t AS SELECT 99 AS v`;
         yield* sql`SET search_path='memory.gone,memory."first,.schema",memory."second""schema"'`;
         yield* sql`DROP SCHEMA gone`;
+        // DuckDB 2.0 resets the whole path when one of its schemas is dropped.
+        assert.deepStrictEqual(yield* sql`SELECT current_setting('search_path') AS path`, [{ path: "memory.main" }]);
+        yield* sql`SET search_path='memory."first,.schema",memory."second""schema"'`;
         const query = sql`SELECT v FROM probe_t`;
         assert.deepStrictEqual(A.fromIterable(yield* query.stream.pipe(Stream.runCollect)), [{ v: 42 }]);
         assert.deepStrictEqual(yield* query, [{ v: 42 }]);

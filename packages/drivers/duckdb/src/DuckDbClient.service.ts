@@ -369,6 +369,7 @@ const makeFromNative = Effect.fnUntraced(function* (
   const databasePath = O.flatMap(database, (row) => stringField(row, "path"));
   const acquirers = yield* makeAcquirers(instance, connection, readerConnections);
   const client = yield* SqlClient.make({
+    driver: "duckdb",
     acquirer: acquirers.streamAcquirer,
     borrower: acquirers.borrower,
     transactionAcquirer: acquirers.transactionAcquirer,

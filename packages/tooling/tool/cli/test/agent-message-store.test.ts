@@ -1,4 +1,4 @@
-import { fileURLToPath } from "node:url";
+import * as NodeURL from "node:url";
 import { $RepoCliId } from "@beep/identity/packages";
 import {
   AgentMessageStore,
@@ -158,7 +158,7 @@ const processFixture = Effect.fn("AgentMessageTest.processFixture")(function* (
   });
   const child = yield* ChildProcess.make(
     process.execPath,
-    [fileURLToPath(new URL("./fixtures/agent-message/process.ts", import.meta.url))],
+    [NodeURL.fileURLToPath(new URL("./fixtures/agent-message/process.ts", import.meta.url))],
     {
       env: {
         BEEP_MESSAGE_FIXTURE_DATABASE: filename,

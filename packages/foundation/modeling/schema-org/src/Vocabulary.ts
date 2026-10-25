@@ -6,7 +6,8 @@
  * @since 0.0.0
  */
 
-import * as A from "effect/Array";
+import { thunkFalse } from "@beep/utils";
+import * as A from "@beep/utils/Array";
 import { dual } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as MutableHashMap from "effect/MutableHashMap";
@@ -88,6 +89,7 @@ function propertyIndices(index: number): ReadonlyArray<number> {
 
 // Membership queries keep constant-time hashed lookup independently of public order.
 const propertyMembershipCache: Array<HashSet.HashSet<number> | undefined> = [];
+
 function propertyMembershipIndices(index: number): HashSet.HashSet<number> {
   const cached = propertyMembershipCache[index];
   if (cached !== undefined) return cached;
@@ -246,7 +248,7 @@ export class Vocabulary {
    */
   static ancestorsInOrder(type: string): ReadonlyArray<string> {
     return O.match(MutableHashMap.get(TYPE_INDEX, type), {
-      onNone: () => [],
+      onNone: A.emptyReadonly,
       onSome: (index) => A.getSomes(A.map(ancestorIndices(index), (ancestor) => A.get(TYPE_NAMES, ancestor))),
     });
   }
@@ -300,7 +302,7 @@ export class Vocabulary {
    */
   static propertiesInOrder(type: string): ReadonlyArray<string> {
     return O.match(MutableHashMap.get(TYPE_INDEX, type), {
-      onNone: () => [],
+      onNone: A.emptyReadonly,
       onSome: (index) => A.getSomes(A.map(propertyIndices(index), (property) => A.get(PROPERTY_NAMES, property))),
     });
   }
@@ -340,7 +342,7 @@ export class Vocabulary {
     (type: string): (property: string) => boolean;
   } = dual(2, (property: string, type: string): boolean =>
     O.match(O.all([MutableHashMap.get(TYPE_INDEX, type), MutableHashMap.get(PROPERTY_INDEX, property)]), {
-      onNone: () => false,
+      onNone: thunkFalse,
       onSome: ([typeIdx, propertyIdx]) => HashSet.has(propertyMembershipIndices(typeIdx), propertyIdx),
     })
   );

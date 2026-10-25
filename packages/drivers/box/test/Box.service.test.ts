@@ -1,4 +1,5 @@
 import * as NodeBuffer from "node:buffer";
+import { EventEmitter } from "node:events";
 import * as NodeStreamConsumers from "node:stream/consumers";
 import * as B from "@beep/box";
 import {
@@ -32,7 +33,6 @@ import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import { constVoid, pipe } from "effect/Function";
 import * as EffectLayer from "effect/Layer";
-import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Redacted from "effect/Redacted";
@@ -94,9 +94,7 @@ type PromiseController<A> = {
   readonly resolve: (value: A | PromiseLike<A>) => void;
 };
 
-type FakeEventListener = (payload?: unknown) => void;
-
-class FakeEventStream {
+class FakeEventStream extends EventEmitter {
   readonly emissions: ReadonlyArray<unknown>;
   readonly keepOpen: boolean;
   readonly onRead: () => void;
@@ -104,14 +102,8 @@ class FakeEventStream {
   readableEnded = false;
   closed = false;
   private index = 0;
-  private readonly onceListeners = MutableHashMap.empty<FakeEventListener, FakeEventListener>();
-  private readonly listeners: {
-    readonly end: Array<FakeEventListener>;
-    readonly error: Array<FakeEventListener>;
-    readonly readable: Array<FakeEventListener>;
-  } = { end: [], error: [], readable: [] };
-
   constructor(emissions: ReadonlyArray<unknown>, keepOpen = false, onRead: () => void = constVoid) {
+    super();
     this.emissions = emissions;
     this.keepOpen = keepOpen;
     this.onRead = onRead;
@@ -131,35 +123,6 @@ class FakeEventStream {
     return null;
   }
 
-  on(event: "end" | "error" | "readable", listener: FakeEventListener): this {
-    this.listeners[event].push(listener);
-    return this;
-  }
-
-  once(event: "end" | "error" | "readable", listener: FakeEventListener): this {
-    const wrapped: FakeEventListener = (payload) => {
-      this.off(event, wrapped);
-      listener(payload);
-    };
-    MutableHashMap.set(this.onceListeners, listener, wrapped);
-    return this.on(event, wrapped);
-  }
-
-  off(event: "end" | "error" | "readable", listener: FakeEventListener): this {
-    const wrapped = MutableHashMap.get(this.onceListeners, listener);
-    const retained = A.filter(
-      this.listeners[event],
-      (candidate) => candidate !== listener && !O.contains(wrapped, candidate)
-    );
-    MutableHashMap.remove(this.onceListeners, listener);
-    this.listeners[event].splice(0, this.listeners[event].length, ...retained);
-    return this;
-  }
-
-  listenerCount(event: "end" | "error" | "readable"): number {
-    return A.length(this.listeners[event]);
-  }
-
   pipe(): this {
     return this;
   }
@@ -167,13 +130,8 @@ class FakeEventStream {
   destroy(): this {
     this.wasClosed = true;
     this.closed = true;
+    this.emit("close");
     return this;
-  }
-
-  private emit(event: "end" | "error" | "readable", payload?: unknown): void {
-    for (const listener of [...this.listeners[event]]) {
-      listener(payload);
-    }
   }
 }
 

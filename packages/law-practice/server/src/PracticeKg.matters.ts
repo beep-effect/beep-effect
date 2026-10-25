@@ -321,8 +321,8 @@ const insertMatter = "INSERT INTO matters VALUES ($1, $2, $3, $4, $5, $6, $7, $8
 const insertMatterDocket = `
 INSERT INTO matter_dockets VALUES (
   $1, $2, $3, $4, $5,
-  list_filter(string_split($6, '${listSeparator}'), x -> x <> ''),
-  list_filter(string_split($7, '${listSeparator}'), x -> x <> '')
+  list_filter(string_split($6, '${listSeparator}'), lambda x: x <> ''),
+  list_filter(string_split($7, '${listSeparator}'), lambda x: x <> '')
 )`;
 
 /**

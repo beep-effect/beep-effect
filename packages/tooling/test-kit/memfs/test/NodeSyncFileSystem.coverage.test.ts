@@ -180,3 +180,31 @@ it.effect("the utility class has no instance state even under reflective constru
     assert.strictEqual(Object.getPrototypeOf(Reflect.construct(NodeSyncFileSystem, [])), NodeSyncFileSystem.prototype);
   })
 );
+
+it.effect("lstat reports a symbolic link without following it", () =>
+  Effect.gen(function* () {
+    const stat = {
+      ...node.lstatSync(import.meta.filename, { bigint: true }),
+      isFile: () => false,
+      isDirectory: () => false,
+      isSymbolicLink: () => true,
+      isBlockDevice: () => false,
+      isCharacterDevice: () => false,
+      isFIFO: () => false,
+      isSocket: () => false,
+    };
+    const lstatSpy = vi
+      .spyOn(node, "lstatSync")
+      .mockReturnValue(deliberatelyInvalid<ReturnType<typeof node.lstatSync>>(stat));
+    const statSpy = vi.spyOn(node, "statSync");
+    try {
+      const info = yield* fs.lstat("/virtual");
+      assert.strictEqual(info.type, "SymbolicLink");
+      assert.deepStrictEqual(lstatSpy.mock.calls, [["/virtual", { bigint: true }]]);
+      assert.strictEqual(statSpy.mock.calls.length, 0);
+    } finally {
+      lstatSpy.mockRestore();
+      statSpy.mockRestore();
+    }
+  })
+);

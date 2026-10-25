@@ -331,7 +331,7 @@ const makeDocumentWalk = (
 ): {
   readonly cst: CstNode;
   readonly state: ComposerState;
-  readonly children: readonly CstNode[];
+  readonly children: ReadonlyArray<CstNode>;
   readonly hasDocStart: boolean;
   readonly directives: RawDirective[];
   readonly meta: NodeMeta;

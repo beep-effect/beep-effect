@@ -10,7 +10,7 @@ if (rulesPath === undefined || dataPath === undefined || mode === undefined) {
   process.exit(2);
 }
 
-const output: Array<string> = [];
+const output = A.empty<string>();
 const module = await SwiplEye({ arguments: ["-q"], print: (text: string) => output.push(text) });
 module.FS.writeFile("rules.n3", await Bun.file(rulesPath).text());
 const readInput = (input: string): string => Buffer.from(Str.slice(7)(input), "base64").toString("utf8");

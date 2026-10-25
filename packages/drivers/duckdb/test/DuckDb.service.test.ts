@@ -872,6 +872,7 @@ describe("@beep/duckdb", { concurrent: false }, () => {
 });
 
 const setupResult = {
+  closeSync: () => undefined,
   returnType: 3,
   rowsChanged: 0,
   convertRowObjects: () => Promise.resolve([{ database_name: "memory", path: null }]),
@@ -881,6 +882,7 @@ const setupResult = {
 const isSetupStatement = (sql: string): boolean => /^SET TimeZone|duckdb_databases/.test(sql);
 
 const fakeQueryResult = (rows: ReadonlyArray<Record<string, unknown>>) => ({
+  closeSync: () => undefined,
   returnType: 3,
   rowsChanged: 0,
   convertRowObjects: () => Promise.resolve(rows),

@@ -30,7 +30,15 @@ import type * as HttpApiEndpoint from "effect/http-api/HttpApiEndpoint";
 import type * as HttpApiGroup from "effect/http-api/HttpApiGroup";
 
 const $I = $ObservabilityId.create("server/HttpApiTelemetry");
-const resolveHttpApiStatus = SchemaAST.resolveAt<number>("httpApiStatus");
+const resolveHttpApiStatusAnnotation = SchemaAST.resolveAt<number>("httpApiStatus");
+const resolveHttpApiStatus = (ast: SchemaAST.AST): number | undefined => {
+  const annotations = SchemaAST.resolve(ast);
+  return annotations !== undefined && P.hasProperty(annotations, "httpApiStatus")
+    ? resolveHttpApiStatusAnnotation(ast)
+    : ast.checks === undefined
+      ? ast.context?.annotations?.httpApiStatus
+      : undefined;
+};
 
 /**
  * HTTP response status code in the standard three-digit range from 100 through 599.

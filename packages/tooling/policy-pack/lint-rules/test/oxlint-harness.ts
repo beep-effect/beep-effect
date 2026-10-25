@@ -46,6 +46,7 @@ export const OXLINT_RULES = [
   "no-js-extension-imports",
   "no-manual-effect-runtime-in-tests",
   "no-global-process-runtime",
+  "no-direct-process-io",
   "namespace-node-imports",
 ] as const;
 

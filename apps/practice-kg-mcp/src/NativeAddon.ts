@@ -24,7 +24,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import NodeModule from "node:module";
+import * as NodeModule from "node:module";
 import { dual } from "effect/Function";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
@@ -150,7 +150,7 @@ export const installNativeAddonResolver = (): void => {
     return;
   }
   installed = true;
-  const resolver = NodeModule as unknown as ModuleResolver;
+  const resolver = NodeModule.Module as unknown as ModuleResolver;
   const fallback = resolver._resolveFilename;
   const require = NodeModule.createRequire(import.meta.url);
   resolver._resolveFilename = function (this: unknown, request: string, ...rest: ReadonlyArray<unknown>) {

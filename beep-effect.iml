@@ -243,6 +243,11 @@
       <excludeFolder url="file://$MODULE_DIR$/goals/turborepo-task-qualification" />
       <excludeFolder url="file://$MODULE_DIR$/goals/yeet-pr-events" />
       <excludeFolder url="file://$MODULE_DIR$/goals/yeet-pr-resume-footer" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/codex-security-findings-2026-10-14" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/codex-security-findings-2026-10-14-agent-message" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/codex-security-findings-2026-10-14-c2" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/codex-security-findings-2026-10-14-drawing-critics" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/codex-security-findings-2026-10-14-l0-ledger" />
       <excludePattern pattern=".beep" />
       <excludePattern pattern=".next" />
       <excludePattern pattern=".turbo" />
