@@ -119,7 +119,7 @@ export class InvalidPackageManagerPinError extends S.TaggedError<
  *
  * **Details**
  *
- * Structurally identical to `@beep/scratchpad/effected/workspaces`' `PackageManagerName` and
+ * Structurally identical to `@beep/repo-workspaces`' `PackageManagerName` and
  * `@beep/commands`' `Launcher`, and assigns freely to both. It is
  * deliberately a mirror, not an import: either edge would point from this
  * package at a downstream consumer and invert the dependency direction.

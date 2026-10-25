@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-10-24T14:05:10.709Z
+Generated: 2026-10-24T20:09:54.668Z
 
 ## Scope
 
@@ -14,9 +14,9 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 101 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 79 |
-| publicModules | 3552 |
-| publicExports | 25191 |
-| openModules | 449 |
+| publicModules | 3556 |
+| publicExports | 25283 |
+| openModules | 441 |
 | openExports | 1382 |
 | missingExportExamples | 7 |
 | missingExportCategories | 0 |
@@ -187,10 +187,10 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 129 | `@beep/epistemic-ui` | `packages/epistemic/ui` | clean | 6 | 14 | 0 | 0 |
 | 130 | `@beep/graph-3d` | `packages/drivers/graph-3d` | needs-remediation | 7 | 17 | 2 | 0 |
 | 131 | `@beep/ontology` | `packages/foundation/modeling/ontology` | needs-remediation | 15 | 157 | 5 | 54 |
-| 132 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 465 | 4340 | 47 | 35 |
+| 132 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 472 | 4447 | 47 | 35 |
 | 133 | `@beep/dock-react` | `packages/foundation/ui-system/dock-react` | needs-remediation | 3 | 12 | 0 | 10 |
 | 134 | `@beep/drizzle` | `packages/drivers/drizzle` | clean | 3 | 11 | 0 | 0 |
-| 135 | `@beep/repo-workspaces` | `packages/tooling/library/repo-workspaces` | clean | 22 | 181 | 0 | 0 |
+| 135 | `@beep/repo-workspaces` | `packages/tooling/library/repo-workspaces` | clean | 27 | 244 | 0 | 0 |
 | 136 | `@beep/sbom` | `packages/foundation/modeling/sbom` | clean | 9 | 75 | 0 | 0 |
 | 137 | `@beep/github-references` | `packages/foundation/modeling/github-references` | clean | 4 | 28 | 0 | 0 |
 | 138 | `@beep/brand` | `packages/foundation/ui-system/brand` | needs-remediation | 7 | 50 | 0 | 43 |
@@ -219,7 +219,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 161 | `@beep/oip-web` | `apps/oip-web` | clean | 31 | 87 | 0 | 0 |
 | 162 | `@beep/storybook` | `apps/storybook` | no-public-src-surface | 0 | 0 | 0 | 0 |
 | 163 | `@beep/shared-tables` | `packages/shared/tables` | clean | 9 | 12 | 0 | 0 |
-| 164 | `@beep/scratchpad` | `scratchpad` | needs-remediation | 114 | 726 | 92 | 0 |
+| 164 | `@beep/scratchpad` | `scratchpad` | needs-remediation | 106 | 646 | 84 | 0 |
 | 165 | `@beep/practice-kg-mcp` | `apps/practice-kg-mcp` | clean | 16 | 73 | 0 | 0 |
 | 166 | `@beep/tailscale` | `packages/drivers/tailscale` | clean | 5 | 29 | 0 | 0 |
 | 167 | `@beep/todox` | `apps/todox` | clean | 16 | 57 | 0 | 0 |
@@ -228,7 +228,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 170 | `@beep/professional-desktop` | `apps/professional-desktop` | needs-remediation | 65 | 241 | 25 | 0 |
 | 171 | `@beep/jsonl` | `packages/foundation/modeling/jsonl` | clean | 8 | 60 | 0 | 0 |
 | 172 | `@beep/practice-identify` | `apps/practice-identify` | clean | 3 | 10 | 0 | 0 |
-| 173 | `@beep/infra` | `infra` | needs-remediation | 11 | 105 | 3 | 22 |
+| 173 | `@beep/infra` | `infra` | needs-remediation | 11 | 107 | 3 | 22 |
 | 174 | `@beep/practice-setup` | `apps/practice-setup` | clean | 6 | 38 | 0 | 0 |
 | 175 | `@beep/box-provisioning` | `packages/drivers/box-provisioning` | needs-remediation | 15 | 184 | 0 | 21 |
 | 176 | `@beep/freshbooks` | `packages/drivers/freshbooks` | needs-remediation | 6 | 49 | 5 | 3 |
@@ -2235,8 +2235,8 @@ Module findings:
 - `src/index.ts:1` (packageDocumentation) - 2 documentation section/link violation(s)
 
 Export findings:
-- `src/commands/Cache/Cache.command.ts:273` `runCacheWarm` (const) - 1 example import violation(s)
-- `src/commands/Cache/Cache.command.ts:470` `buildCacheDashboard` (const) - 1 example import violation(s)
+- `src/commands/Cache/Cache.command.ts:290` `runCacheWarm` (const) - 1 example import violation(s)
+- `src/commands/Cache/Cache.command.ts:487` `buildCacheDashboard` (const) - 1 example import violation(s)
 - `src/commands/Cache/Cache.service.ts:111` `encodeCachePolicyBaselineText` (const) - 1 example import violation(s)
 - `src/commands/Ci/CiLane.ts:407` `CI_LANE_DESCRIPTORS` (const) - 1 documentation section/link violation(s)
 - `src/commands/Ci/CiLane.ts:1566` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
@@ -2539,14 +2539,6 @@ Module findings:
 - `effected/npm/PackageTarball.ts:1` (none) - missing summary; missing @since
 - `effected/npm/PublishError.ts:1` (none) - missing summary; missing @since
 - `effected/sbom/SigstoreSigner.ts:1` (none) - missing summary; missing @since
-- `effected/workspaces/LayerPolicy.ts:1` (none) - missing summary; missing @since
-- `effected/workspaces/PackedInstall.ts:1` (none) - missing summary; missing @since
-- `effected/workspaces/SourceBoundary.ts:1` (none) - missing summary; missing @since
-- `effected/workspaces/WorkspaceLayering.ts:1` (none) - missing summary; missing @since
-- `effected/workspaces/internal/dependencyFields.ts:1` (none) - missing summary; missing @since
-- `effected/workspaces/internal/packedInstallPlan.ts:1` (none) - missing summary; missing @since
-- `effected/workspaces/internal/sourceText.ts:1` (none) - missing summary; missing @since
-- `effected/workspaces/testing.ts:1` (packageDocumentation) - missing @since
 
 ### @beep/professional-desktop
 

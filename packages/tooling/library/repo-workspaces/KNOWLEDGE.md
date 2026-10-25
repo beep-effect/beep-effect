@@ -11,11 +11,13 @@ Upstream paths map onto this package as follows: `packages/workspaces/` is
 `@effected/commands`, `@effected/glob`, `@effected/walker`, `@effected/yaml`,
 `@effected/semver`, `@effected/memfs` and `@effected/package-json` are the `@beep/*` package of
 the same name, and `@effected/npm` is `@beep/npm-spec`. The `@effected/workspaces/testing`
-subpath (`WorkspaceLayering`, `LayerPolicy`, `SourceBoundary`, `PackedInstall`) did not move:
-it stays in the lab module `scratchpad/effected/workspaces` and imports this package's leaves.
-Where the text names a record's shape or a layer's requirements, read README.md → Provenance:
-the plain records and option bags are branded `S.Opaque` structs, and the config-dependency
-layers read through `FileSystem` and `Path`. The upstream `pnpm` commands below do not apply;
+subpath (`WorkspaceLayering`, `LayerPolicy`, `SourceBoundary`, `PackedInstall`) is
+`@beep/repo-workspaces/testing` since wave 4-W-b; its upstream `__test__/e2e/` suites are
+`test/integration/e2e/` here, and the lab-wide `layering.int` and `peerClosure.int` suites stay
+under `scratchpad/test/workspaces/integration/`. Where the text names a record's shape or a
+layer's requirements, read README.md → Provenance: the plain records and option bags are
+branded `S.Opaque` structs taken as their `Encoded` forms, and the config-dependency layers
+read through `FileSystem` and `Path`. The upstream `pnpm` commands below do not apply;
 run `bun run test`, `bun run test:integration` and `bun run check` in this directory, or
 `bun run beep quality package-verify @beep/repo-workspaces` from the repo root.
 
@@ -3198,12 +3200,13 @@ recommended and shared bins a supported alternative
 ([the carrier-only bins decision](../decisions/carrier-only-declares-bins.md)).
 Under a flat npm, Yarn or bun layout, a hoisted bin of the same name from
 another package can take the carrier's `.bin` slot, and running it cannot tell
-which one ran. npm 11 and bun 1.4 were observed to link the package whose name
-sorts first; the e2e pins that with a `cli` front end beating a `plugin`
-carrier, and the same pair named the other way round let the carrier win.
-Yarn 1.22 and 4.18 (the `node-modules` linker) kept the carrier's bin, the
-consumer's direct dependency, and the e2e asserts that wherever yarn is on
-`PATH`.[^packed-install-e2e]
+which one ran. npm 11 to 12 and bun 1.4.0 to 1.4.3 were observed to link the
+package whose name sorts first; the e2e pins that with a `cli` front end
+beating a `plugin` carrier, and the same pair named the other way round let
+the carrier win. bun 1.4.4 links the consumer's direct dependency (the
+carrier), and the e2e keys bun's row by the probed version. Yarn 1.22 and
+4.18 (the `node-modules` linker) kept the carrier's bin, the consumer's direct
+dependency, and the e2e asserts that wherever yarn is on `PATH`.[^packed-install-e2e]
 The run therefore fails `BinConflict`, before any install, when
 a packed package other than the carrier (a closure member or an override)
 declares one of the carrier's bin names, read from the packed manifests it
@@ -3541,10 +3544,11 @@ shared bins). vitest-agent's packed-install e2e asserted which package each
 `.bin` entry belonged to, and found npm and bun linking the front end's bin
 over the carrier's shim, so `--version` lost its `via @vitest-agent/plugin`
 suffix; only pnpm's isolated layout kept the carrier's shim.[^vitest-agent-findings]
-The kit's own e2e narrowed the cause: npm 11 and bun 1.4 link the package
-whose name sorts first, so a `cli` front end beats a `plugin` carrier, and
-the same pair named the other way round let the carrier win; Yarn 1.22 and
-4.18 kept the carrier's bin, the consumer's direct dependency.[^packed-install-e2e]
+The kit's own e2e narrowed the cause: npm 11 to 12 and bun 1.4.0 to 1.4.3
+link the package whose name sorts first, so a `cli` front end beats a
+`plugin` carrier, and the same pair named the other way round let the carrier
+win; bun 1.4.4 links the consumer's direct dependency (the carrier), and Yarn
+1.22 and 4.18 kept the carrier's bin, the consumer's direct dependency.[^packed-install-e2e]
 The tool runs either way; what depends on the package manager is the carrier
 identity.
 

@@ -31,4 +31,4 @@ Port notes.
 | github-actions | 712 passed |
 | memfs | 569 passed, 21 skipped (upstream's own skips) |
 | sbom | 31 passed (the signer half; the pure half's suite moved to `@beep/sbom` in wave 4-S) |
-| workspaces | 1079 passed, 1 skipped (upstream's own skip) |
+| workspaces | 13 passed (the lab-wide `layering.int` and `peerClosure.int` suites; the module's own suites moved to `@beep/repo-workspaces` in waves 4-W-a and 4-W-b) |

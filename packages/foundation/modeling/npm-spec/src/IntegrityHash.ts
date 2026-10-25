@@ -25,7 +25,7 @@
  * into the corepack `sha512.<hex>` form a `packageManager` pin carries.
  *
  * `SriIntegrityHash` is the sibling narrowing for the SRI form, for fields that
- * only ever carry `<algo>-<base64>` — `@beep/scratchpad/effected/workspaces`'
+ * only ever carry `<algo>-<base64>` — `@beep/repo-workspaces/ConfigDependencySpec`'
  * `ConfigDependencySpec.integrity` (the legacy inline `configDependencies`
  * integrity) is its first consumer.
  *
