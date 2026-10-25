@@ -9,6 +9,7 @@ import {
   describeCause,
 } from "@beep/github-actions";
 import { assert, describe, it, vi } from "@effect/vitest";
+import { assertInstanceOf, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Config from "effect/Config";
@@ -215,10 +216,10 @@ describe("Action.main", () => {
       Effect.gen(function* () {
         const { lines } = yield* Captured;
         const exit = yield* Boom.make({ detail: "x" }).pipe(Effect.fail, mainExit);
-        assert.isTrue(Exit.isFailure(exit));
-        const error = Exit.findErrorOption(exit);
-        assert.isTrue(O.isSome(error) && S.is(ActionFailedError)(error.value));
-        const failure = O.getOrThrow(error);
+        const isFailure = Exit.isFailure(exit);
+        assertTrue(isFailure);
+        const failure = exit.pipe(Exit.findErrorOption, O.getOrThrow);
+        assertInstanceOf(failure, ActionFailedError);
         assert.strictEqual(failure.summary, "[Boom]: it went wrong: x");
         assert.strictEqual(failure.message, "Action failed: [Boom]: it went wrong: x");
         assert.strictEqual(Runtime.getErrorExitCode(failure), 1);
