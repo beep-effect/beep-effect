@@ -1154,11 +1154,11 @@
       }
     },
     "@beep/repo-utils": {
-      "reviewer": "Claude Opus 5.5 (effected-promotion wave 2c, feat/effected-promotion-w2c)",
-      "reason": "Record the dependency-only drift of @beep/repo-utils and @beep/repo-cli (both gain @beep/glob), the export and dependency removals of @beep/schema (./Glob) and @beep/utils (picomatch), and the root @types/picomatch devDependency as wave 2c retires the duplicate glob modules; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (effected-promotion 3-A3, effected-3a3)",
+      "reason": "Record the dependency-only drift of @beep/repo-utils from its new @beep/package-json edge (PackageJson re-based on PackageManifest, map sites #47, #127, #128, #243, #267); dependent closures are unchanged except two devDependency-only test closures, as measured in the review; no qualification is granted.",
       "basis": {
-        "path": "goals/effected-promotion/research/cache-baseline-review-w2c.md",
-        "sha256": "454b7ef4d12734d638e3e37c7ae19b7d5249105ca0e3df921da95dec553f8a4b"
+        "path": "goals/effected-promotion/research/cache-baseline-review-3-a3.md",
+        "sha256": "d6845a1b51f0a4537f85080601beb6099757a492b141e02823e74dc3b4f2cba1"
       }
     },
     "@beep/repo-workspaces": {
@@ -100216,6 +100216,7 @@
           "@beep/glob#audit",
           "@beep/identity#audit",
           "@beep/memfs#audit",
+          "@beep/package-json#audit",
           "@beep/schema#audit",
           "@beep/test-runner#audit",
           "@beep/test-utils#audit",
@@ -100285,6 +100286,7 @@
           "@beep/glob#build",
           "@beep/identity#build",
           "@beep/memfs#build",
+          "@beep/package-json#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
@@ -100343,6 +100345,7 @@
           "@beep/glob#build",
           "@beep/identity#build",
           "@beep/memfs#build",
+          "@beep/package-json#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
@@ -100388,6 +100391,7 @@
           "@beep/glob#build",
           "@beep/identity#build",
           "@beep/memfs#build",
+          "@beep/package-json#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
@@ -100518,6 +100522,7 @@
           "@beep/glob#transit",
           "@beep/identity#transit",
           "@beep/memfs#transit",
+          "@beep/package-json#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
@@ -100726,6 +100731,7 @@
           "@beep/glob#transit",
           "@beep/identity#transit",
           "@beep/memfs#transit",
+          "@beep/package-json#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
@@ -100774,6 +100780,7 @@
           "@beep/glob#transit",
           "@beep/identity#transit",
           "@beep/memfs#transit",
+          "@beep/package-json#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
@@ -100828,6 +100835,7 @@
           "@beep/glob#transit",
           "@beep/identity#transit",
           "@beep/memfs#transit",
+          "@beep/package-json#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
