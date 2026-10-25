@@ -923,7 +923,6 @@ export class SectionDialect extends S.Class<SectionDialect, { readonly brand: un
    * @category predicates
    * @since 0.0.0
    */
-
   private readsBack(begin: string, section: Section): boolean {
     return A.some(
       A.fromIterable(this.markerMatches(begin)),

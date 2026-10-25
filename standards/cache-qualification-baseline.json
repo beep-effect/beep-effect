@@ -1126,7 +1126,7 @@
       "reason": "Record the dependency-only drift of @beep/repo-cli, which gains a direct @beep/managed-section edge for the R8 generated-region readers; the package was already upstream through @beep/github-reporting, so no closure grows; no qualification is granted.",
       "basis": {
         "path": "goals/effected-promotion/research/cache-baseline-review-r8.md",
-        "sha256": "57d6344d0b21337e52b934898e5759ad26138be938fe6827e8c07c828adc9896"
+        "sha256": "42c2e3353dabc472fc5a265b6b17fba9a55f4cb5b2b86736cccf80383dabf04b"
       }
     },
     "@beep/repo-configs": {

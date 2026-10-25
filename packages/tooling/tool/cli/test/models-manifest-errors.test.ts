@@ -11,9 +11,11 @@ import {
   RoutingSurface,
   seedModelsManifest,
 } from "@beep/repo-cli/commands/Models";
+import { Locator } from "@beep/repo-cli/commands/Models/Models.manifest.schemas";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it, layer } from "@effect/vitest";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -94,6 +96,28 @@ describe("routing vocabulary", () => {
     expect(A.length(seedModelsManifest.bindings)).toBe(27);
     expect(A.length(seedModelsManifest.superseded)).toBe(10);
     expect(A.some(seedModelsManifest.superseded, (model) => model.id === "gpt-6-astra")).toBe(false);
+  });
+});
+
+describe("generated-block locator ids", () => {
+  const block = (blockId: string) => ({
+    _tag: "md-generated-block",
+    blockId,
+    filter: { roles: [], surfaces: [] },
+    includeSuperseded: false,
+  });
+
+  // The id is spelled into the block's markers, so an id the managed-section
+  // key grammar refuses is a manifest decode error, never a missing block.
+  it("accepts a section-key block id", () => {
+    assertTrue(S.is(Locator)(block("volume-pools")));
+    assertTrue(S.is(Locator)(block("codex.heavy")));
+  });
+
+  it("rejects a block id outside the section-key grammar", () => {
+    for (const blockId of ["a b", "-leading-hyphen", "", "slash/id"]) {
+      assertFalse(S.is(Locator)(block(blockId)));
+    }
   });
 });
 

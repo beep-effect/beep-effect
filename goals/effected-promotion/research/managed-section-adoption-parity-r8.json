@@ -595,6 +595,36 @@
         "id": "invalid-id",
         "output": null
       }
+    ],
+    "atlas": [
+      {
+        "id": "lf",
+        "output": "# Alpha\n\n## Status\n\n<!-- BEGIN GENERATED: EXPLORATION STATUS -->\nStage: `research`\nStatus: `active`\n<!-- END GENERATED: EXPLORATION STATUS -->\n\nBefore.\nAfter.\n\n## Trail\n\n- kept\n"
+      },
+      {
+        "id": "missing",
+        "output": "# Alpha\n\n## Status\n\n<!-- BEGIN GENERATED: EXPLORATION STATUS -->\nStage: `research`\nStatus: `active`\n<!-- END GENERATED: EXPLORATION STATUS -->\n\nAuthored only.\n\n## Trail\n\n- kept\n"
+      },
+      {
+        "id": "trailing-blanks",
+        "output": "# Alpha\n\n## Status\n\n<!-- BEGIN GENERATED: EXPLORATION STATUS -->\nStage: `research`\nStatus: `active`\n<!-- END GENERATED: EXPLORATION STATUS -->\n\n## Trail\n\n- kept\n"
+      },
+      {
+        "id": "doubled-inner-space",
+        "output": "# Alpha\n\n## Status\n\n<!-- BEGIN GENERATED: EXPLORATION STATUS -->\nStage: `research`\nStatus: `active`\n<!-- END GENERATED: EXPLORATION STATUS -->\n\n## Trail\n\n- kept\n"
+      },
+      {
+        "id": "duplicate",
+        "output": "issue: README Status section is missing or has malformed generated markers"
+      },
+      {
+        "id": "mid-line",
+        "output": "# Alpha\n\n## Status\n\n<!-- BEGIN GENERATED: EXPLORATION STATUS -->\nStage: `research`\nStatus: `active`\n<!-- END GENERATED: EXPLORATION STATUS -->\n\nx <!-- BEGIN GENERATED: EXPLORATION STATUS -->\ny <!-- END GENERATED: EXPLORATION STATUS -->\n\n## Trail\n\n- kept\n"
+      },
+      {
+        "id": "unterminated",
+        "output": "issue: README Status section is missing or has malformed generated markers"
+      }
     ]
   },
   "comparison": {
@@ -647,7 +677,19 @@
         "id": "extract:invalid-id",
         "before": "body",
         "after": null,
-        "reason": "A block id outside the section-key grammar names no block."
+        "reason": "A block id outside the section-key grammar names no block; the manifest's `blockId` is a `SectionKey`, so such an id now fails at manifest decode."
+      },
+      {
+        "id": "atlas:trailing-blanks",
+        "before": "# Alpha\n\n## Status\n\n<!-- BEGIN GENERATED: EXPLORATION STATUS -->\nStage: `research`\nStatus: `active`\n<!-- END GENERATED: EXPLORATION STATUS -->\n\n<!-- BEGIN GENERATED: EXPLORATION STATUS -->  \n<!-- END GENERATED: EXPLORATION STATUS -->\t\n\n## Trail\n\n- kept\n",
+        "after": "# Alpha\n\n## Status\n\n<!-- BEGIN GENERATED: EXPLORATION STATUS -->\nStage: `research`\nStatus: `active`\n<!-- END GENERATED: EXPLORATION STATUS -->\n\n## Trail\n\n- kept\n",
+        "reason": "Trailing blanks after a marker belong to the marker line, so the region is read as generated and rewritten with canonical markers (it used to be kept as authored prose beside a second region)."
+      },
+      {
+        "id": "atlas:doubled-inner-space",
+        "before": "# Alpha\n\n## Status\n\n<!-- BEGIN GENERATED: EXPLORATION STATUS -->\nStage: `research`\nStatus: `active`\n<!-- END GENERATED: EXPLORATION STATUS -->\n\n<!-- BEGIN  GENERATED: EXPLORATION STATUS -->\n<!--  END GENERATED: EXPLORATION STATUS -->\n\n## Trail\n\n- kept\n",
+        "after": "# Alpha\n\n## Status\n\n<!-- BEGIN GENERATED: EXPLORATION STATUS -->\nStage: `research`\nStatus: `active`\n<!-- END GENERATED: EXPLORATION STATUS -->\n\n## Trail\n\n- kept\n",
+        "reason": "The literal spelling matches any run of blanks between its words, so a marker with a doubled inner space is read as a marker and rewritten canonically (it used to be kept as authored prose)."
       }
     ],
     "unclassified": []

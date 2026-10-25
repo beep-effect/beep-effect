@@ -595,6 +595,36 @@
         "id": "invalid-id",
         "output": "body"
       }
+    ],
+    "atlas": [
+      {
+        "id": "lf",
+        "output": "# Alpha\n\n## Status\n\n<!-- BEGIN GENERATED: EXPLORATION STATUS -->\nStage: `research`\nStatus: `active`\n<!-- END GENERATED: EXPLORATION STATUS -->\n\nBefore.\nAfter.\n\n## Trail\n\n- kept\n"
+      },
+      {
+        "id": "missing",
+        "output": "# Alpha\n\n## Status\n\n<!-- BEGIN GENERATED: EXPLORATION STATUS -->\nStage: `research`\nStatus: `active`\n<!-- END GENERATED: EXPLORATION STATUS -->\n\nAuthored only.\n\n## Trail\n\n- kept\n"
+      },
+      {
+        "id": "trailing-blanks",
+        "output": "# Alpha\n\n## Status\n\n<!-- BEGIN GENERATED: EXPLORATION STATUS -->\nStage: `research`\nStatus: `active`\n<!-- END GENERATED: EXPLORATION STATUS -->\n\n<!-- BEGIN GENERATED: EXPLORATION STATUS -->  \n<!-- END GENERATED: EXPLORATION STATUS -->\t\n\n## Trail\n\n- kept\n"
+      },
+      {
+        "id": "doubled-inner-space",
+        "output": "# Alpha\n\n## Status\n\n<!-- BEGIN GENERATED: EXPLORATION STATUS -->\nStage: `research`\nStatus: `active`\n<!-- END GENERATED: EXPLORATION STATUS -->\n\n<!-- BEGIN  GENERATED: EXPLORATION STATUS -->\n<!--  END GENERATED: EXPLORATION STATUS -->\n\n## Trail\n\n- kept\n"
+      },
+      {
+        "id": "duplicate",
+        "output": "issue: README Status section is missing or has malformed generated markers"
+      },
+      {
+        "id": "mid-line",
+        "output": "# Alpha\n\n## Status\n\n<!-- BEGIN GENERATED: EXPLORATION STATUS -->\nStage: `research`\nStatus: `active`\n<!-- END GENERATED: EXPLORATION STATUS -->\n\nx <!-- BEGIN GENERATED: EXPLORATION STATUS -->\ny <!-- END GENERATED: EXPLORATION STATUS -->\n\n## Trail\n\n- kept\n"
+      },
+      {
+        "id": "unterminated",
+        "output": "issue: README Status section is missing or has malformed generated markers"
+      }
     ]
   }
 }

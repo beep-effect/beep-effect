@@ -14,8 +14,9 @@
  *   a git-tracked file (prose that mentions a marker mid-line is covered by the `mid-line` probe).
  *
  * It also runs hand-written probes through the same exported functions (CRLF documents, duplicate,
- * orphaned, unterminated and mid-line markers, a block id outside the section-key grammar), so every
- * behaviour shift the switch makes has a witness.
+ * orphaned, unterminated and mid-line markers, marker lines with trailing blanks or a doubled inner
+ * space, a block id outside the section-key grammar), so every behaviour shift the switch makes has a
+ * witness. The `atlas` probes project a one-packet scratch repository's README Status section.
  *
  * Run it once before the switch to record the baseline (`--out`), then after the switch with
  * `--before <baseline>`: every surface must match the baseline exactly, and every probe that changed
@@ -32,6 +33,7 @@ import * as NodeURL from "node:url";
 import { buildExplorationProjection } from "@beep/repo-cli/commands/Explore";
 import { extractGeneratedBlock } from "@beep/repo-cli/commands/Models";
 import { STANDARD_SECTION, spliceStandardSection } from "@beep/repo-cli/commands/Observability";
+import { PacketEventStoreLive } from "@beep/repo-cli/test/Goals";
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
@@ -42,10 +44,10 @@ import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { PacketEventStoreLive } from "../../../packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketEventStore.ts";
 
 const TOOL = "goals/effected-promotion/ops/managed-section-adoption-parity.ts";
 const repoRoot = NodeURL.fileURLToPath(new URL("../../..", import.meta.url));
@@ -75,7 +77,7 @@ const Surfaces = S.Struct({
 const Report = S.Struct({
   tool: S.String,
   surfaces: Surfaces,
-  probes: S.Struct({ splice: S.Array(Probe), extract: S.Array(Probe) }),
+  probes: S.Struct({ splice: S.Array(Probe), extract: S.Array(Probe), atlas: S.Array(Probe) }),
   comparison: S.optionalKey(
     S.Struct({
       baseline: S.String,
@@ -125,6 +127,27 @@ const EXTRACT_PROBES: ReadonlyArray<readonly [string, string, string]> = [
   ["invalid-id", `${modelsBegin("a b")}\nbody\n${modelsEnd("a b")}\n`, "a b"],
 ];
 
+const STATUS_BEGIN = "<!-- BEGIN GENERATED: EXPLORATION STATUS -->";
+const STATUS_END = "<!-- END GENERATED: EXPLORATION STATUS -->";
+const statusReadme = (status: string) => `# Alpha\n\n## Status\n\n${status}\n\n## Trail\n\n- kept\n`;
+const statusRegion = (begin: string, end: string) => `${begin}\nStage: \`capture\`\nStatus: \`parked\`\n${end}`;
+
+// Each probe is the README of a scratch packet whose manifest says `research` / `active`.
+const ATLAS_PROBES: ReadonlyArray<readonly [string, string]> = [
+  ["lf", statusReadme(`Before.\n${statusRegion(STATUS_BEGIN, STATUS_END)}\nAfter.`)],
+  ["missing", statusReadme("Authored only.")],
+  ["trailing-blanks", statusReadme(statusRegion(`${STATUS_BEGIN}  `, `${STATUS_END}\t`))],
+  [
+    "doubled-inner-space",
+    statusReadme(
+      statusRegion("<!-- BEGIN  GENERATED: EXPLORATION STATUS -->", "<!--  END GENERATED: EXPLORATION STATUS -->")
+    ),
+  ],
+  ["duplicate", statusReadme(`${statusRegion(STATUS_BEGIN, STATUS_END)}\n${statusRegion(STATUS_BEGIN, STATUS_END)}`)],
+  ["mid-line", statusReadme(statusRegion(`x ${STATUS_BEGIN}`, `y ${STATUS_END}`))],
+  ["unterminated", statusReadme(`${STATUS_BEGIN}\nStage: \`capture\``)],
+];
+
 // Probe outputs the switch changes on purpose. Every key is a `<family>:<probe id>`.
 const INTENDED_SHIFTS: Record<string, string> = {
   "splice:crlf":
@@ -138,7 +161,12 @@ const INTENDED_SHIFTS: Record<string, string> = {
   "extract:duplicate":
     "A block that appears twice reads as no block, so a stale second copy surfaces as drift instead of hiding behind the first.",
   "extract:mid-line": "A marker must start its line.",
-  "extract:invalid-id": "A block id outside the section-key grammar names no block.",
+  "extract:invalid-id":
+    "A block id outside the section-key grammar names no block; the manifest's `blockId` is a `SectionKey`, so such an id now fails at manifest decode.",
+  "atlas:trailing-blanks":
+    "Trailing blanks after a marker belong to the marker line, so the region is read as generated and rewritten with canonical markers (it used to be kept as authored prose beside a second region).",
+  "atlas:doubled-inner-space":
+    "The literal spelling matches any run of blanks between its words, so a marker with a doubled inner space is read as a marker and rewritten canonically (it used to be kept as authored prose).",
 };
 
 const gitGrepFiles = (needle: string) =>
@@ -212,7 +240,7 @@ const modelsSurface = Effect.gen(function* () {
 });
 
 const probeShifts = (before: Report, after: Report) => {
-  const family = (name: "splice" | "extract") => {
+  const family = (name: "splice" | "extract" | "atlas") => {
     const previous = R.fromEntries(A.map(before.probes[name], (probe) => [probe.id, probe.output] as const));
     return pipe(
       after.probes[name],
@@ -225,8 +253,35 @@ const probeShifts = (before: Report, after: Report) => {
       }))
     );
   };
-  return [...family("splice"), ...family("extract")];
+  return [...family("splice"), ...family("extract"), ...family("atlas")];
 };
+
+// Projects one README through a scratch repository: the projected README, or `issue: <detail>`.
+const projectAtlasProbe = (readme: string) =>
+  Effect.scoped(
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-r8-atlas-probe-" });
+      const packet = path.join(root, "explorations", "alpha");
+      yield* fs.makeDirectory(path.join(packet, "ops"), { recursive: true });
+      yield* fs.writeFileString(
+        path.join(packet, "ops", "manifest.json"),
+        JSON.stringify({
+          schemaVersion: "exploration-manifest/v1",
+          exploration: { slug: "alpha", title: "Alpha", status: "active", stage: "research", updated: "2026-10-25" },
+        })
+      );
+      yield* fs.writeFileString(path.join(packet, "README.md"), readme);
+      const projection = yield* buildExplorationProjection(root);
+      return pipe(
+        A.head(projection.issues),
+        O.map((issue) => `issue: ${issue.detail}`),
+        O.orElse(() => O.map(A.head(projection.readmes), (entry) => entry.projected)),
+        O.getOrNull
+      );
+    })
+  );
 
 const program = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
@@ -244,6 +299,9 @@ const program = Effect.gen(function* () {
       id,
       output: optionText(extractGeneratedBlock(text, blockId)),
     })),
+    atlas: yield* Effect.forEach(ATLAS_PROBES, ([id, readme]) =>
+      Effect.map(projectAtlasProbe(readme), (output) => ({ id, output }))
+    ),
   };
   const current: Report = { tool: TOOL, surfaces, probes };
 

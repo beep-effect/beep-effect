@@ -23,8 +23,9 @@ Turbo coupling: no closure grows. `@beep/managed-section` was already
 upstream of `@beep/repo-cli` through `@beep/github-reporting` (a repo-cli
 dependency that depends on it since wave 3-1); the edge becomes direct, so
 the recorded repo-cli task tuples now name `@beep/managed-section#build`,
-`#transit` and `#audit` among their direct dependencies (five lists in the
-baseline), and no package enters any closure that did not already reach it.
+`#transit` and `#audit` among their direct dependencies (nine lists in the
+baseline: one `#audit`, three `#build` and five `#transit`), and no package
+enters any closure that did not already reach it.
 `@beep/managed-section` itself gains source and tests but no manifest edit.
 No other workspace's dependencies change, and
 `bun run beep lint policy-fingerprint` reports the fingerprint current.

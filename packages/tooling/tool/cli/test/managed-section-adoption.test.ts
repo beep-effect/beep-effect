@@ -146,5 +146,17 @@ describe("Explore Atlas README status region", () => {
         strictEqual(projection.readmes[0]?.projected, readmeWith(projectedStatus));
       })
     );
+
+    it.effect("reads a marker with a doubled inner space and renders it canonically", () =>
+      Effect.gen(function* () {
+        const projection = yield* projectReadme(
+          readmeWith(
+            "<!-- BEGIN  GENERATED: EXPLORATION STATUS -->\nStage: `capture`\n<!--  END GENERATED: EXPLORATION STATUS -->"
+          )
+        );
+        deepStrictEqual(projection.issues, []);
+        strictEqual(projection.readmes[0]?.projected, readmeWith(projectedStatus));
+      })
+    );
   });
 });
