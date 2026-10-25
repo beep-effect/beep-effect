@@ -26,6 +26,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { thunkEmptyStr } from "@beep/utils";
 import * as O from "@beep/utils/Option";
+import * as BunStdio from "@effect/platform-bun/BunStdio";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
@@ -35,6 +36,7 @@ import { constant, dual, pipe } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as S from "effect/Schema";
+import * as Stdio from "effect/Stdio";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { JsonStringCodec } from "../schema/JsonCodec.ts";
@@ -938,30 +940,28 @@ const foldDecodedText = <E>(
   stream: Stream.Stream<string, E>,
   bound: OutputBound | undefined,
   tee: boolean
-): Effect.Effect<BoundedOutput, E> => {
+): Effect.Effect<BoundedOutput, E | PlatformError.PlatformError> => {
+  const source = tee
+    ? stream.pipe(
+        Stream.tap((chunk) =>
+          Stdio.Stdio.pipe(Effect.flatMap((stdio) => Stream.make(chunk).pipe(Stream.run(stdio.stdout()))))
+        ),
+        Stream.provide(BunStdio.layer)
+      )
+    : stream;
   if (bound !== undefined) {
     const append = boundedChunkReducer(bound);
-    return stream.pipe(
+    return source.pipe(
       Stream.runFold(
         () => emptyBoundedOutput,
-        (state: BoundedOutput, chunk: string) => {
-          if (tee) {
-            process.stdout.write(chunk);
-          }
-          return append(state, chunk);
-        }
+        (state: BoundedOutput, chunk: string) => append(state, chunk)
       )
     );
   }
 
   return pipe(
-    stream,
-    Stream.runFold(thunkEmptyStr, (acc: string, chunk: string) => {
-      if (tee) {
-        process.stdout.write(chunk);
-      }
-      return `${acc}${chunk}`;
-    }),
+    source,
+    Stream.runFold(thunkEmptyStr, (acc: string, chunk: string) => `${acc}${chunk}`),
     Effect.map((text) => BoundedOutput.make({ text, truncated: false }))
   );
 };

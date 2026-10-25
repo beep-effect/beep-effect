@@ -25,8 +25,8 @@ import * as Redacted from "effect/Redacted";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { asRecord } from "../../../internal/cli/UnknownProbe.ts";
 import { ResearchCommandError } from "../Research.errors.ts";
-import { asRecord } from "./UnknownRecord.ts";
 import { sha256HexOf } from "./Vault.ts";
 import type * as Crypto from "effect/Crypto";
 

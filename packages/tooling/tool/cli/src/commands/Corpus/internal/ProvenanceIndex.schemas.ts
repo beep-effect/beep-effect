@@ -18,6 +18,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Tuple from "effect/Tuple";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 
 const $I = $RepoCliId.create("commands/Corpus/internal/ProvenanceIndex.schemas");
@@ -146,7 +147,12 @@ export const MailRecipientKind = LiteralKit(["to", "cc", "bcc", "unknown"]).pipe
  * @category models
  * @since 0.0.0
  */
-export class MailRecipient extends S.Opaque<MailRecipient, { readonly brand: unique symbol }>()(
+export class MailRecipient extends S.Opaque<
+  MailRecipient,
+  {
+    readonly brand: unique symbol;
+  }
+>()(
   S.Struct({
     addressType: S.optionalKey(S.String),
     displayName: S.optionalKey(S.String),
@@ -181,7 +187,12 @@ export class MailRecipient extends S.Opaque<MailRecipient, { readonly brand: uni
  * @category models
  * @since 0.0.0
  */
-export class OutlookMessageHeaders extends S.Opaque<OutlookMessageHeaders, { readonly brand: unique symbol }>()(
+export class OutlookMessageHeaders extends S.Opaque<
+  OutlookMessageHeaders,
+  {
+    readonly brand: unique symbol;
+  }
+>()(
   S.Struct({
     clientSubmitTime: S.optionalKey(S.String),
     conversationTopic: S.optionalKey(S.String),
@@ -233,7 +244,12 @@ export class OutlookMessageHeaders extends S.Opaque<OutlookMessageHeaders, { rea
  * @category models
  * @since 0.0.0
  */
-export class InternetMessageHeaders extends S.Opaque<InternetMessageHeaders, { readonly brand: unique symbol }>()(
+export class InternetMessageHeaders extends S.Opaque<
+  InternetMessageHeaders,
+  {
+    readonly brand: unique symbol;
+  }
+>()(
   S.Struct({
     cc: S.Array(S.String),
     contentType: S.optionalKey(S.String),
@@ -276,6 +292,14 @@ export const MailAttachmentKind = LiteralKit(["file", "embedded-message"]).pipe(
 );
 
 /**
+ * Attachment kind decoded by {@link MailAttachmentKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type MailAttachmentKind = typeof MailAttachmentKind.Type;
+
+/**
  * One attachment of an exported message.
  *
  * **Details**
@@ -288,37 +312,61 @@ export const MailAttachmentKind = LiteralKit(["file", "embedded-message"]).pipe(
  *
  * **Example** (Describe a file attachment)
  *
- * ```ts
- * import { MailAttachmentEntry } from "@beep/repo-cli/commands/Corpus"
+ * ```ts import.meta.vitest name="Describe a file attachment"
+ * import { CorpusRelativePath, MailAttachmentEntry } from "@beep/repo-cli/commands/Corpus"
  *
- * const entry = MailAttachmentEntry.make({
+ * const entry = MailAttachmentEntry.cases.file.make({
  *   fileName: "1_report.p",
- *   kind: "file",
  *   ordinal: 1,
- *   relativePath: "staging/extract/children/artifact:abc.export/Top of Outlook data file/Inbox/Message00001/Attachments/1_report.p",
+ *   relativePath: CorpusRelativePath.make("staging/extract/Attachments/1_report.p"),
  *   sizeBytes: 2048
  * })
- * console.log(entry.ordinal) // 1
+ * entry.kind // => "file"
+ * entry.ordinal // => 1
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export class MailAttachmentEntry extends S.Opaque<MailAttachmentEntry, { readonly brand: unique symbol }>()(
-  S.Struct({
-    embeddedMessagePath: S.optionalKey(CorpusRelativePath),
-    fileName: S.String,
-    kind: MailAttachmentKind,
-    ordinal: S.Natural,
-    relativePath: CorpusRelativePath,
-    sizeBytes: S.Natural,
-  }).pipe(
-    $I.annoteSchema("MailAttachmentEntry", {
-      title: "Mail Attachment Entry",
-      description: "Ordinal, kind, on-disk name, path, size, and (for embedded items) the nested message path.",
-    })
-  )
-) {}
+export const MailAttachmentEntry = MailAttachmentKind.mapMembers(([file, embeddedMessage]) => {
+  const make = <T extends MailAttachmentKind>(literal: S.Literal<T>) =>
+    S.Struct({
+      kind: S.tag(literal.literal),
+      ordinal: S.Natural,
+      relativePath: CorpusRelativePath,
+      sizeBytes: S.Natural,
+      embeddedMessagePath: S.optionalKey(CorpusRelativePath),
+      fileName: S.String,
+    });
+  return Tuple.make(
+    make(file).pipe(
+      $I.annoteSchema("MailFileAttachmentEntry", {
+        title: "Mail File Attachment Entry",
+        description: "Ordinal, on-disk name, corpus-relative path, and size of one exported file attachment.",
+      })
+    ),
+    make(embeddedMessage).pipe(
+      $I.annoteSchema("MailEmbeddedMessageAttachmentEntry", {
+        title: "Mail Embedded Message Attachment Entry",
+        description: "Exported attachment directory and the nested message path when its headers are present.",
+      })
+    )
+  );
+}).pipe(
+  S.toTaggedUnion("kind"),
+  $I.annoteSchema("MailAttachmentEntry", {
+    title: "Mail Attachment Entry",
+    description: "File or embedded-message attachment, discriminated by kind, with its on-disk identity and size.",
+  })
+);
+
+/**
+ * File or embedded-message attachment decoded by {@link MailAttachmentEntry}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type MailAttachmentEntry = typeof MailAttachmentEntry.Type;
 
 /**
  * Normalized index row for one exported message item.
@@ -352,7 +400,12 @@ export class MailAttachmentEntry extends S.Opaque<MailAttachmentEntry, { readonl
  * @category models
  * @since 0.0.0
  */
-export class MailMessageIndexRecord extends S.Opaque<MailMessageIndexRecord, { readonly brand: unique symbol }>()(
+export class MailMessageIndexRecord extends S.Opaque<
+  MailMessageIndexRecord,
+  {
+    readonly brand: unique symbol;
+  }
+>()(
   S.Struct({
     attachments: S.Array(MailAttachmentEntry),
     bodyFileName: S.optionalKey(S.String),
@@ -417,7 +470,12 @@ export const MailMessageIndexRecordJson = JsonStringCodec(MailMessageIndexRecord
  * @category models
  * @since 0.0.0
  */
-export class MailMessageIndexSummary extends S.Opaque<MailMessageIndexSummary, { readonly brand: unique symbol }>()(
+export class MailMessageIndexSummary extends S.Opaque<
+  MailMessageIndexSummary,
+  {
+    readonly brand: unique symbol;
+  }
+>()(
   S.Struct({
     attachmentBytes: S.Natural,
     attachmentCount: S.Natural,
@@ -560,7 +618,12 @@ export const AttachmentRepairDecision = LiteralKit(["rename", "skip"]).pipe(
  * @category models
  * @since 0.0.0
  */
-export class AttachmentRepairProposal extends S.Opaque<AttachmentRepairProposal, { readonly brand: unique symbol }>()(
+export class AttachmentRepairProposal extends S.Opaque<
+  AttachmentRepairProposal,
+  {
+    readonly brand: unique symbol;
+  }
+>()(
   S.Struct({
     clipLength: S.Natural,
     decision: AttachmentRepairDecision,
@@ -719,7 +782,12 @@ export const AttachmentRepairJournalRowJson = JsonStringCodec(AttachmentRepairJo
  * @category models
  * @since 0.0.0
  */
-export class AttachmentRepairSummary extends S.Opaque<AttachmentRepairSummary, { readonly brand: unique symbol }>()(
+export class AttachmentRepairSummary extends S.Opaque<
+  AttachmentRepairSummary,
+  {
+    readonly brand: unique symbol;
+  }
+>()(
   S.Struct({
     byFlag: S.Record(S.String, S.Natural),
     byMime: S.Record(S.String, S.Natural),
@@ -820,7 +888,12 @@ export const MetadataCensusStatus = LiteralKit(["ok", "error"]).pipe(
  * @category models
  * @since 0.0.0
  */
-export class DocumentMetadataFields extends S.Opaque<DocumentMetadataFields, { readonly brand: unique symbol }>()(
+export class DocumentMetadataFields extends S.Opaque<
+  DocumentMetadataFields,
+  {
+    readonly brand: unique symbol;
+  }
+>()(
   S.Struct({
     author: S.optionalKey(S.String),
     company: S.optionalKey(S.String),
@@ -874,7 +947,12 @@ export class DocumentMetadataFields extends S.Opaque<DocumentMetadataFields, { r
  * @category models
  * @since 0.0.0
  */
-export class MetadataCensusRecord extends S.Opaque<MetadataCensusRecord, { readonly brand: unique symbol }>()(
+export class MetadataCensusRecord extends S.Opaque<
+  MetadataCensusRecord,
+  {
+    readonly brand: unique symbol;
+  }
+>()(
   S.Struct({
     engine: MetadataCensusEngine,
     engineVersion: S.String,
@@ -935,7 +1013,12 @@ export const MetadataCensusRecordJson = JsonStringCodec(MetadataCensusRecord);
  * @category models
  * @since 0.0.0
  */
-export class MetadataCensusSummary extends S.Opaque<MetadataCensusSummary, { readonly brand: unique symbol }>()(
+export class MetadataCensusSummary extends S.Opaque<
+  MetadataCensusSummary,
+  {
+    readonly brand: unique symbol;
+  }
+>()(
   S.Struct({
     byFileType: S.Record(S.String, S.Natural),
     engineVersion: S.String,
@@ -991,7 +1074,12 @@ export const MetadataCensusSummaryJson = JsonStringCodec(MetadataCensusSummary);
  * @category models
  * @since 0.0.0
  */
-export class ProvenanceMessagesOptions extends S.Opaque<ProvenanceMessagesOptions, { readonly brand: unique symbol }>()(
+export class ProvenanceMessagesOptions extends S.Opaque<
+  ProvenanceMessagesOptions,
+  {
+    readonly brand: unique symbol;
+  }
+>()(
   S.Struct({
     corpusRoot: S.NonEmptyString,
     outputDir: S.optionalKey(S.NonEmptyString),
@@ -1047,7 +1135,12 @@ export const AttachmentRepairMode = LiteralKit(["plan", "apply", "undo"]).pipe(
  * @category models
  * @since 0.0.0
  */
-export class AttachmentRepairOptions extends S.Opaque<AttachmentRepairOptions, { readonly brand: unique symbol }>()(
+export class AttachmentRepairOptions extends S.Opaque<
+  AttachmentRepairOptions,
+  {
+    readonly brand: unique symbol;
+  }
+>()(
   S.Struct({
     corpusRoot: S.NonEmptyString,
     fileCommand: S.NonEmptyString.pipe(S.withConstructorDefault(Effect.succeed("file"))),
@@ -1084,7 +1177,12 @@ export class AttachmentRepairOptions extends S.Opaque<AttachmentRepairOptions, {
  * @category models
  * @since 0.0.0
  */
-export class MetadataCensusOptions extends S.Opaque<MetadataCensusOptions, { readonly brand: unique symbol }>()(
+export class MetadataCensusOptions extends S.Opaque<
+  MetadataCensusOptions,
+  {
+    readonly brand: unique symbol;
+  }
+>()(
   S.Struct({
     batchSize: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(S.Natural.make(500)))),
     concurrency: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(S.Natural.make(4)))),
@@ -1115,7 +1213,12 @@ export class MetadataCensusOptions extends S.Opaque<MetadataCensusOptions, { rea
  * @category models
  * @since 0.0.0
  */
-export class MailExportTreeIndexResult extends S.Opaque<MailExportTreeIndexResult, { readonly brand: unique symbol }>()(
+export class MailExportTreeIndexResult extends S.Opaque<
+  MailExportTreeIndexResult,
+  {
+    readonly brand: unique symbol;
+  }
+>()(
   S.Struct({
     attachmentBytes: S.Natural,
     attachmentCount: S.Natural,
@@ -1148,7 +1251,12 @@ export class MailExportTreeIndexResult extends S.Opaque<MailExportTreeIndexResul
  * @category models
  * @since 0.0.0
  */
-export class MagicSniffResult extends S.Opaque<MagicSniffResult, { readonly brand: unique symbol }>()(
+export class MagicSniffResult extends S.Opaque<
+  MagicSniffResult,
+  {
+    readonly brand: unique symbol;
+  }
+>()(
   S.Struct({
     path: S.String,
     mimeType: S.String,

@@ -1,4 +1,4 @@
-import { inspect } from "node:util";
+import * as NodeUtil from "node:util";
 import { AST, ASTError, ExtglobType } from "@beep/glob/internal/ast";
 import { MAX_NESTING_DEPTH } from "@beep/glob/internal/limits";
 import { assert, describe, it } from "@effect/vitest";
@@ -109,8 +109,8 @@ describe("AST coverage", () => {
       assert.isFalse(part.isStart());
       assert.isTrue(part.isEnd());
       assert.isTrue(root.hasMagic);
-      assert.isTrue(Str.includes("@@type")(inspect(root)));
-      assert.isTrue(Str.includes("parent")(inspect(part)));
+      assert.isTrue(Str.includes("@@type")(NodeUtil.inspect(root)));
+      assert.isTrue(Str.includes("parent")(NodeUtil.inspect(part)));
       assert.isTrue(matches(part.toMMPattern(), "ab"));
       const copy = new AST(null);
       copy.copyIn(root);

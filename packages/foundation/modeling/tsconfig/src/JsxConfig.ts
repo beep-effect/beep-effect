@@ -71,7 +71,12 @@ const JsxBase: Omit<typeof JsxVariants, "Type"> & S.Schema<object> = JsxVariants
  * @category schemas
  * @since 0.0.0
  */
-export const JsxConfig = class extends S.Opaque<JsxConfig, { readonly brand: unique symbol }>()(JsxBase) {
+export const JsxConfig = class extends S.Opaque<
+  JsxConfig,
+  {
+    readonly brand: unique symbol;
+  }
+>()(JsxBase) {
   /**
    * Project decoded compiler options to their implied JSX transform
    * configuration. `"react-jsx"` and `"react-jsxdev"` yield the automatic
@@ -98,14 +103,12 @@ export const JsxConfig = class extends S.Opaque<JsxConfig, { readonly brand: uni
   static fromCompilerOptions(options: CompilerOptions.Type): O.Option<JsxConfig> {
     return Match.value(options.jsx).pipe(
       Match.whenOr("react-jsx", "react-jsxdev", () =>
-        O.some(
-          JsxConfig.make({
-            runtime: "automatic",
-            importSource: options.jsxImportSource ?? "react",
-          })
-        )
+        JsxConfig.makeOption({
+          runtime: "automatic",
+          importSource: options.jsxImportSource ?? "react",
+        })
       ),
-      Match.when("react", () => O.some(JsxConfig.make({ runtime: "classic" }))),
+      Match.when("react", () => JsxConfig.makeOption({ runtime: "classic" })),
       Match.orElse(O.none<JsxConfig>)
     );
   }

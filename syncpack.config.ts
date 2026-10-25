@@ -184,6 +184,9 @@ const config = {
       // vitest runtime on 2026-10-17 (Node passes). Pinned exactly at 30.0.1 (a
       // range resolves straight back to the broken release) until vitest or
       // jsdom ships the fix.
+      // statelyai 0.15.0 depends on @statelyai/model-testing@0.2.0, which was
+      // never published (npm 404), so `bun install` cannot resolve the lockfile.
+      // Stay on 0.14.3 until a release ships whose dependency tree resolves.
       label: "Held back — do not auto-update (see changeset portless-default-react-grab-storybook)",
       dependencies: [
         "fallow",
@@ -196,6 +199,7 @@ const config = {
         "detailed-xml-validator",
         "@biomejs/biome",
         "@effect/tsgo",
+        "statelyai",
       ],
       isIgnored: true,
     },

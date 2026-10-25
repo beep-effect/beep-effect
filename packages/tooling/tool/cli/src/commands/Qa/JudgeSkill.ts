@@ -12,6 +12,8 @@ import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
+import * as Stdio from "effect/Stdio";
+import * as Stream from "effect/Stream";
 import { QaJudgeContract } from "./JudgeContract.ts";
 
 const $I = $RepoCliId.create("commands/Qa/JudgeSkill");
@@ -81,10 +83,7 @@ const writeArtifact = Effect.fn("QaJudgeSkill.write")(function* (outputPath: str
 export const runQaJudgeSkill = Effect.fn("QaJudgeSkill.run")(function* (options: QaJudgeSkillOptions) {
   const markdown = yield* Effect.fromResult(renderSkillMarkdown(QaJudgeContract));
   yield* O.match(options.write, {
-    onNone: () =>
-      Effect.sync(() => {
-        process.stdout.write(markdown);
-      }),
+    onNone: () => Stdio.Stdio.pipe(Effect.flatMap((stdio) => Stream.make(markdown).pipe(Stream.run(stdio.stdout())))),
     onSome: (outputPath) => writeArtifact(outputPath, markdown),
   });
 });

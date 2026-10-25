@@ -12,6 +12,7 @@
  */
 
 const rawArgv = Bun.argv.slice(2);
+let handledLintFixNoop = false;
 
 if (rawArgv.length === 2 && rawArgv[0] === "lint" && rawArgv[1] === "--fix") {
   const [A, Str] = await Promise.all([import("effect/Array"), import("effect/String")]);
@@ -34,11 +35,17 @@ if (rawArgv.length === 2 && rawArgv[0] === "lint" && rawArgv[1] === "--fix") {
     );
 
     if (changedFiles.length === 0) {
-      process.stdout.write("[beep-cli] lint:fix: no changed files\n");
-      process.exit(0);
+      const [{ runMain }, Console] = await Promise.all([
+        import("@effect/platform-bun/BunRuntime"),
+        import("effect/Console"),
+      ]);
+      runMain(Console.log("[beep-cli] lint:fix: no changed files"));
+      handledLintFixNoop = true;
     }
   }
 }
 
-const fullCliModule = new URL("./bin-main.js", import.meta.url).href;
-await import(fullCliModule);
+if (!handledLintFixNoop) {
+  const fullCliModule = new URL("./bin-main.js", import.meta.url).href;
+  await import(fullCliModule);
+}

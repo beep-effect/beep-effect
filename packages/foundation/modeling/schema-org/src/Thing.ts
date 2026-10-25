@@ -26,9 +26,9 @@ import * as S from "effect/Schema";
  * is spelled by omitting the key, so a caller holding possibly-absent upstream
  * metadata builds the node with `O.getSomesStruct({...})`.
  *
- * **Example** (Decode shared node metadata)
+ * **Example** (Construct shared node metadata)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct shared node metadata"
  * import { ThingFields } from "@beep/schema-org/Thing";
  * import * as S from "effect/Schema";
  *

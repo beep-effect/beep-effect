@@ -98,6 +98,7 @@ and describes code that does not exist until that issue closes.
 | D65 | Cluster storages on DuckDB serve single-process deployments (`SingleRunner`) only (designed, #2084) | DuckDB holds a per-process file lock, so runners in other processes cannot share the file | none on DuckDB; use a server database |
 
 | D66 | `DuckDbMigrator.dumpSchema` emits user enums, sequences, scalar/table macros, tables and views in one global catalog OID stream, then indexes and migration rows; group macro overloads by OID/schema/name into one CREATE statement (catalog parameter types preserved; parenthesized TABLE bodies); restrict to the current database and non-internal, non-temporary objects (#2085, S44 amendment) | table macros bind eagerly and views bind against macros, so no category order restores both dependency directions; creation OIDs preserve the order originally accepted by DuckDB. ALTER can introduce dependencies on higher OIDs without renewing the table OID, so such dumps can fail to restore (pinned by a test); CREATE OR REPLACE renews view/macro OIDs on 1.5.6. Macro default argument expressions are not exposed by `duckdb_functions()` and are not preserved | replace the catalog stream with a dependency-aware schema-only API once DuckDB exposes one; revert the migrator callback and tests to disable dumping |
+| D67 | `@duckdb/node-api` 2.0 (2.0.0-r.1): every native result is closed (`closeSync`, through `ignoreNative`) inside its gated operation, stream results through a scope finalizer registered uninterruptibly; the parser-error transaction tests assert the safe-COMMIT refusal; the D62 reader tests assert that dropping a schema in the writer's path resets it to `memory.main` | 2.0 keeps a connection busy while any result is open ("connection has an open result"); a parser error now aborts the transaction, so COMMIT silently rolls back (D3 guard); dropping a schema in the session path resets the whole path, even uncommitted, and ROLLBACK does not restore it, so D62's dangling-path normalization now matters only for DETACH (all probed on 2.0.0-r.1) | pin `@duckdb/node-api` 1.5.6-r.2 and revert the tests |
 
 ## Known hazards
 
@@ -144,15 +145,16 @@ and describes code that does not exist until that issue closes.
 
 ## Upgrade notes (effect > 4.0.5)
 
-1. Add `driver: "duckdb"` to the `SqlClient.make` options in `makeFromNative`
-   (`src/DuckDbClient.service.ts`); HEAD requires it.
+1. Done at 4.0.6: `makeFromNative` (`src/DuckDbClient.service.ts`) passes
+   `driver: "duckdb"` to `SqlClient.make`, which 4.0.6 requires.
 2. Pass `isTransaction: (conn) => isDuckDbConnection(conn) && conn.isTransaction()`
    to `MakeOptions.isTransaction` (HEAD `packages/effect/src/sql/SqlClient.ts`),
    relying on the phase tracking (a commit-time conflict already sets `Idle`).
    `makeSqliteAcquirers` already accepts `isTransaction` at 4.0.5 and stays
    without it (D34) unless the HEAD contract requires both to agree.
-3. Update the Migrator tests: failed migrations become typed `MigrationError`
-   failures instead of defects (HEAD `88bc68001c`).
+3. Done at 4.0.6: failed migrations are typed `MigrationError` failures
+   instead of defects (HEAD `88bc68001c`); `test/DuckDbMigrator.test.ts` reads
+   `Exit.findError`.
 4. Savepoint emulation is unaffected by HEAD's `makeWithTransaction` signature
    change because the driver never calls it.
 5. Re-run the consumer support matrix in `README.md`: the eventlog,

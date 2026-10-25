@@ -1,4 +1,4 @@
-import { fileURLToPath } from "node:url";
+import * as NodeURL from "node:url";
 import { defineConfig, mergeConfig } from "vitest/config";
 import shared, { vitestCoverageReportOnly } from "../../../../vitest.shared.ts";
 
@@ -10,7 +10,7 @@ const reportOnly = vitestCoverageReportOnly;
 // longer alias. Vite puts a merged config's aliases ahead of the shared ones.
 const markdownConformanceAlias = {
   find: /^@beep\/markdown\/conformance\/(.*)$/,
-  replacement: `${fileURLToPath(new URL("../markdown/data/conformance/", import.meta.url))}$1.json`,
+  replacement: `${NodeURL.fileURLToPath(new URL("../markdown/data/conformance/", import.meta.url))}$1.json`,
 };
 
 export default mergeConfig(

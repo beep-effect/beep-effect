@@ -8,6 +8,7 @@
  */
 
 import { $PracticeGatewayId } from "@beep/identity/packages";
+import { HostProcessPlatform } from "@beep/utils/HostProcess";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -116,7 +117,7 @@ export class GatewaySettings extends Context.Service<GatewaySettings, GatewaySet
     Effect.gen(function* () {
       const path = yield* Path.Path;
       const platform = yield* Config.String("PRACTICE_GATEWAY_PLATFORM").pipe(
-        Config.withDefault(globalThis.process.platform)
+        Config.withDefault(yield* HostProcessPlatform)
       );
       const isWindows = platform === "win32";
       const dataDir = yield* resolveDataDir(path, isWindows);

@@ -23,9 +23,22 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import type { CommunicationEvent, Observation, Participant, ParticipantRole } from "../Communication.ts";
-import { AccountId, ActivityId, EventId, IdentifierId, ObservationId, OccurrenceId } from "../Ids.ts";
-import type { Identifier } from "../Party.ts";
+import * as Data from "effect/Data";
+import type {
+  CommunicationEvent,
+  Observation,
+  Participant,
+  ParticipantRole,
+} from "../Communication.ts";
+import {
+  AccountId,
+  ActivityId,
+  EventId,
+  IdentifierId,
+  ObservationId,
+  OccurrenceId,
+} from "../Ids.ts";
+import { Identifier } from "../Party.ts";
 import { normalizeEmail, normalizeExchangeDn } from "../Party.ts";
 import type { CollectionSide, ArtifactOccurrence } from "../Provenance.ts";
 import { ContentId } from "../Ids.ts";
@@ -59,8 +72,7 @@ export const identifierOfAddress = (raw: string): O.Option<Identifier> => {
   const value = Str.trim(raw);
   if (/^\/o=/i.test(value)) {
     const normalized = normalizeExchangeDn(value);
-    return O.some({
-      _tag: "ExchangeDn",
+    return Identifier.cases.ExchangeDn.makeOption({
       id: IdentifierId.make(`ident:x500:${encodeURIComponent(normalized)}`),
       normalized,
       raw: value,
@@ -69,7 +81,11 @@ export const identifierOfAddress = (raw: string): O.Option<Identifier> => {
   const smtp = Str.startsWith("mailto:")(Str.toLowerCase(value)) ? Str.slice(7)(value) : value;
   if (/^[^\s@<>]+@[^\s@<>]+$/.test(smtp)) {
     const normalized = normalizeEmail(smtp);
-    return O.some({ _tag: "EmailAddress", id: IdentifierId.make(`ident:email:${normalized}`), normalized, raw: value });
+    return Identifier.cases.EmailAddress.makeOption({
+      id: IdentifierId.make(`ident:email:${normalized}`),
+      normalized,
+      raw: value,
+    });
   }
   return O.none();
 };
@@ -85,10 +101,10 @@ export const parseMailbox = (raw: string): ParsedMailbox => {
   return m === null
     ? { displayName: O.none(), identifier: identifierOfAddress(raw), raw }
     : {
-        displayName: O.filter(O.some(unquote(m[1] ?? "")), Str.isNonEmpty),
-        identifier: identifierOfAddress(m[2] ?? ""),
-        raw,
-      };
+      displayName: O.filter(O.some(unquote(m[1] ?? "")), Str.isNonEmpty),
+      identifier: identifierOfAddress(m[2] ?? ""),
+      raw,
+    };
 };
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -110,7 +126,7 @@ export const parseExportTime = (raw: string): O.Option<UtcInstant> => {
   if (m === null) return O.none();
   const [, mon = "", day = "", year = "", hh = "", mm = "", ss = ""] = m;
   return O.flatMap(A.findFirstIndex(MONTHS, (x) => x === mon), (i) =>
-    S.decodeOption(UtcInstant)(`${year}-${pad2(String(i + 1))}-${pad2(day)}T${hh}:${mm}:${ss}Z`)
+    S.decodeOption(UtcInstant)(`${year}-${pad2(String(i + 1))}-${pad2(day)}T${hh}:${mm}:${ss}Z`),
   );
 };
 
@@ -120,10 +136,18 @@ export const parseExportTime = (raw: string): O.Option<UtcInstant> => {
  * @category adapter
  * @since 0.0.0
  */
-export type MailIssue =
-  | { readonly _tag: "NoFromParticipant" }
-  | { readonly _tag: "AddressTypeHoldsAddress" }
-  | { readonly _tag: "UnparsedAddress"; readonly role: ParticipantRole };
+export type MailIssue = Data.TaggedEnum<{
+  NoFromParticipant: {},
+  AddressTypeHoldsAddress: {},
+  UnparsedAddress: { readonly role: ParticipantRole }
+}>
+/**
+ * A data-quality issue found while adapting one row.
+ *
+ * @category adapter
+ * @since 0.0.0
+ */
+export const MailIssue = Data.taggedEnum<MailIssue>();
 
 /**
  * Two identifiers proposed as names of one Exchange mailbox, because they
@@ -171,17 +195,18 @@ const slug = (s: string) => encodeURIComponent(s);
  * @category adapter
  * @since 0.0.0
  */
-export const adaptMailRecord = ({
-  record,
-  side,
-  producedBy,
-  observedAt,
-}: {
-  readonly record: MailMessageIndexRecord;
-  readonly side: CollectionSide;
-  readonly producedBy: ActivityId;
-  readonly observedAt: UtcInstant;
-}): MailIngest => {
+export const adaptMailRecord = (
+  {
+    record,
+    side,
+    producedBy,
+    observedAt,
+  }: {
+    readonly record: MailMessageIndexRecord;
+    readonly side: CollectionSide;
+    readonly producedBy: ActivityId;
+    readonly observedAt: UtcInstant;
+  }): MailIngest => {
   const key = slug(`${record.tree}/${record.messagePath}`);
   const occurrenceId = OccurrenceId.make(`occ:mail:${key}`);
   const eventId = EventId.make(`evt:mail:${key}`);
@@ -193,7 +218,10 @@ export const adaptMailRecord = ({
       const parsed = parseMailbox(a);
       return O.isSome(parsed.displayName)
         ? parsed
-        : { ...parsed, displayName: O.filter(O.fromNullishOr(name), Str.isNonEmpty) };
+        : {
+          ...parsed,
+          displayName: O.filter(O.fromNullishOr(name), Str.isNonEmpty),
+        };
     });
 
   const internetFrom = O.flatMap(internet, (h) => O.map(O.filter(O.fromNullishOr(h.from), Str.isNonEmpty), parseMailbox));
@@ -201,15 +229,30 @@ export const adaptMailRecord = ({
   const representing = withName(outlook.sentRepresentingEmailAddress, outlook.sentRepresentingName);
 
   const fromSlot: O.Option<Slot> = O.orElse(
-    O.map(internetFrom, (parsed): Slot => ({ role: "from", field: "From", namespace: "rfc5322", parsed })),
+    O.map(internetFrom, (parsed): Slot => ({
+      role: "from",
+      field: "From",
+      namespace: "rfc5322",
+      parsed,
+    })),
     () =>
       O.orElse(
         O.map(
           representing,
-          (parsed): Slot => ({ role: "from", field: "PR_SENT_REPRESENTING_EMAIL_ADDRESS", namespace: "mapi", parsed })
+          (parsed): Slot => ({
+            role: "from",
+            field: "PR_SENT_REPRESENTING_EMAIL_ADDRESS",
+            namespace: "mapi",
+            parsed,
+          }),
         ),
-        () => O.map(sender, (parsed): Slot => ({ role: "from", field: "PR_SENDER_EMAIL_ADDRESS", namespace: "mapi", parsed }))
-      )
+        () => O.map(sender, (parsed): Slot => ({
+          role: "from",
+          field: "PR_SENDER_EMAIL_ADDRESS",
+          namespace: "mapi",
+          parsed,
+        })),
+      ),
   );
 
   const recipientSlots = A.flatMap(record.recipients, (r): ReadonlyArray<Slot> => {
@@ -226,7 +269,10 @@ export const adaptMailRecord = ({
         namespace: "mapi",
         parsed: O.isSome(parsed.displayName)
           ? parsed
-          : { ...parsed, displayName: O.filter(O.fromNullishOr(r.displayName), Str.isNonEmpty) },
+          : {
+            ...parsed,
+            displayName: O.filter(O.fromNullishOr(r.displayName), Str.isNonEmpty),
+          },
       },
     ];
   });
@@ -234,19 +280,39 @@ export const adaptMailRecord = ({
   const internetSlots = O.match(internet, {
     onNone: (): ReadonlyArray<Slot> => [],
     onSome: (h) => [
-      ...A.map(h.to, (raw): Slot => ({ role: "to", field: "To", namespace: "rfc5322", parsed: parseMailbox(raw) })),
-      ...A.map(h.cc, (raw): Slot => ({ role: "cc", field: "Cc", namespace: "rfc5322", parsed: parseMailbox(raw) })),
+      ...A.map(h.to, (raw): Slot => ({
+        role: "to",
+        field: "To",
+        namespace: "rfc5322",
+        parsed: parseMailbox(raw),
+      })),
+      ...A.map(h.cc, (raw): Slot => ({
+        role: "cc",
+        field: "Cc",
+        namespace: "rfc5322",
+        parsed: parseMailbox(raw),
+      })),
     ],
   });
 
   const slots: ReadonlyArray<Slot> = [
     ...O.toArray(fromSlot),
-    ...O.toArray(O.map(sender, (parsed): Slot => ({ role: "sender", field: "PR_SENDER_EMAIL_ADDRESS", namespace: "mapi", parsed }))),
+    ...O.toArray(O.map(sender, (parsed): Slot => ({
+      role: "sender",
+      field: "PR_SENDER_EMAIL_ADDRESS",
+      namespace: "mapi",
+      parsed,
+    }))),
     ...O.toArray(
       O.map(
         representing,
-        (parsed): Slot => ({ role: "sent-representing", field: "PR_SENT_REPRESENTING_EMAIL_ADDRESS", namespace: "mapi", parsed })
-      )
+        (parsed): Slot => ({
+          role: "sent-representing",
+          field: "PR_SENT_REPRESENTING_EMAIL_ADDRESS",
+          namespace: "mapi",
+          parsed,
+        }),
+      ),
     ),
     ...recipientSlots,
     ...internetSlots,
@@ -277,14 +343,18 @@ export const adaptMailRecord = ({
           },
         },
       ],
-    })
+    }),
   );
   const observations: ReadonlyArray<Observation> = A.map(headerObservations, (h) => h.observation);
 
   // MAPI recipients and RFC 5322 To/Cc describe the same people: one participant per (role, identifier)
   const participants: ReadonlyArray<Participant> = A.dedupeWith(
-    A.map(headerObservations, (h) => ({ role: h.slot.role, identifier: h.identifier.id, observation: h.observation.id })),
-    (x: Participant, y: Participant) => x.role === y.role && x.identifier === y.identifier
+    A.map(headerObservations, (h) => ({
+      role: h.slot.role,
+      identifier: h.identifier.id,
+      observation: h.observation.id,
+    })),
+    (x: Participant, y: Participant) => x.role === y.role && x.identifier === y.identifier,
   );
 
   const issues: ReadonlyArray<MailIssue> = [
@@ -293,13 +363,16 @@ export const adaptMailRecord = ({
       ? [{ _tag: "AddressTypeHoldsAddress" as const }]
       : []),
     ...A.flatMap(slots, (slot) =>
-      O.isNone(slot.parsed.identifier) ? [{ _tag: "UnparsedAddress" as const, role: slot.role }] : []
+      O.isNone(slot.parsed.identifier) ? [{
+        _tag: "UnparsedAddress" as const,
+        role: slot.role,
+      }] : [],
     ),
   ];
 
   const identifiers = A.dedupeWith(
     A.flatMap(slots, (s) => O.toArray(s.parsed.identifier)),
-    (a: Identifier, b: Identifier) => a.id === b.id
+    (a: Identifier, b: Identifier) => a.id === b.id,
   );
 
   // same message + same role + identical display name + one X.500 and one SMTP
@@ -307,7 +380,7 @@ export const adaptMailRecord = ({
     O.match(O.all({ name: s.parsed.displayName, id: s.parsed.identifier }), {
       onNone: thunkEmptyArray(),
       onSome: ({ name, id }) => [{ role: s.role, name, id }],
-    })
+    }),
   );
   const pairings = A.dedupeWith(
     A.flatMap(named, (x): ReadonlyArray<AliasPairing> => {
@@ -315,23 +388,23 @@ export const adaptMailRecord = ({
       return dn._tag !== "ExchangeDn"
         ? []
         : A.flatMap(named, (y): ReadonlyArray<AliasPairing> =>
-            y.id._tag === "EmailAddress" &&
-            y.name === x.name &&
-            (y.role === x.role || (y.role === "from" && (x.role === "sender" || x.role === "sent-representing")))
-              ? [
-                  {
-                    mailbox: AccountId.make(`acct:exchange:${slug(dn.normalized)}`),
-                    exchangeDn: dn.id,
-                    smtp: y.id.id,
-                    displayName: x.name,
-                    event: eventId,
-                    role: x.role,
-                  },
-                ]
-              : []
-          );
+          y.id._tag === "EmailAddress" &&
+          y.name === x.name &&
+          (y.role === x.role || (y.role === "from" && (x.role === "sender" || x.role === "sent-representing")))
+            ? [
+              {
+                mailbox: AccountId.make(`acct:exchange:${slug(dn.normalized)}`),
+                exchangeDn: dn.id,
+                smtp: y.id.id,
+                displayName: x.name,
+                event: eventId,
+                role: x.role,
+              },
+            ]
+            : [],
+        );
     }),
-    (a: AliasPairing, b: AliasPairing) => a.exchangeDn === b.exchangeDn && a.smtp === b.smtp
+    (a: AliasPairing, b: AliasPairing) => a.exchangeDn === b.exchangeDn && a.smtp === b.smtp,
   );
 
   const sentAt = O.flatMap(O.fromNullishOr(outlook.clientSubmitTime ?? outlook.deliveryTime), parseExportTime);
@@ -339,21 +412,25 @@ export const adaptMailRecord = ({
   const event: O.Option<CommunicationEvent> =
     A.length(A.filter(participants, (p) => p.role === "from")) === 1 && A.isReadonlyArrayNonEmpty(participants)
       ? O.some({
-          id: eventId,
-          occurrence: occurrenceId,
-          channel: "email",
-          sentAt,
-          messageId: O.flatMap(internet, (h) => O.fromNullishOr(h.messageId)),
-          conversationKey: O.fromNullishOr(record.conversationIndexHex),
-          participants,
-        })
+        id: eventId,
+        occurrence: occurrenceId,
+        channel: "email",
+        sentAt,
+        messageId: O.flatMap(internet, (h) => O.fromNullishOr(h.messageId)),
+        conversationKey: O.fromNullishOr(record.conversationIndexHex),
+        participants,
+      })
       : O.none();
 
   return {
     occurrence: {
       id: occurrenceId,
       content: ContentId.make(`sha256:${slug(record.sourceArtifactId)}`),
-      locator: { _tag: "ContainerChild", parent: OccurrenceId.make(`occ:${slug(record.sourceArtifactId)}`), path: record.messagePath },
+      locator: {
+        _tag: "ContainerChild",
+        parent: OccurrenceId.make(`occ:${slug(record.sourceArtifactId)}`),
+        path: record.messagePath,
+      },
       side,
       custodianLabel: O.none(),
       acquiredBy: producedBy,

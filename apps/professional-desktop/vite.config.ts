@@ -121,10 +121,10 @@ export default defineConfig({
     include: ["seedrandom", "three", "three/addons/controls/TrackballControls.js"],
   },
   build: {
-    // Three.js and Mermaid's generated parser each ship as one irreducible
-    // upstream module. Keep the cap just above those modules while splitting
-    // our generated IANA data out of the application entry chunk below.
-    chunkSizeWarningLimit: 750,
+    // Mermaid's lazy ELK layout engine ships as one generated ~1.46 MB module.
+    // Keep the cap above that upstream module; our startup dependencies retain
+    // their separate cacheable chunks below.
+    chunkSizeWarningLimit: 1_500,
     rolldownOptions: {
       output: {
         codeSplitting: {

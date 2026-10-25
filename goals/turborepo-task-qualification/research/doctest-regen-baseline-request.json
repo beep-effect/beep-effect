@@ -1,0 +1,23 @@
+{
+  "previous": "3074db4cc7bb25079f639c6549a3396792e946258d6787ee9e6f51e588c06112",
+  "review": {
+    "reviewer": "Claude Fable 5.1 (@slop/10-21-26 dependency sweep)",
+    "reason": "Record the regenerated scripts blocks of @beep/markdown and @beep/schema-org: the doctest-sources rule adds the doctest task and beep:doctest impl and normalizes key order; dependency edges are unchanged; no qualification is granted.",
+    "basis": {
+      "path": "goals/turborepo-task-qualification/research/doctest-regen-baseline-review.md",
+      "sha256": "04fb04c046429835c7df156cf7ac8869a899e649269c1b2650be4a6e49e341fa"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2",
+  "subjects": [
+    "@beep/markdown",
+    "@beep/schema-org"
+  ]
+}

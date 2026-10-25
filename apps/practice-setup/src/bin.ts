@@ -7,6 +7,7 @@
  * @since 0.0.0
  */
 
+import { HostProcessPlatform } from "@beep/utils/HostProcess";
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import * as Console from "effect/Console";
@@ -41,7 +42,7 @@ export const BESIDE_BUNDLE_FILE = "practice-gateway.mcpb";
 
 const program = Effect.fn("PracticeSetup.program")(
   function* (embedded: O.Option<EmbeddedGateway>) {
-    if (process.platform !== "win32") {
+    if ((yield* HostProcessPlatform) !== "win32") {
       return yield* SetupFailure.make({ message: "This setup program runs on Windows only." });
     }
     const path = yield* Path.Path;

@@ -1,6 +1,6 @@
 # @beep/repo-workspaces
 
-Monorepo workspace tooling for [Effect](https://effect.website) v4: find the workspace root, enumerate its packages, walk the dependency graph, detect the package manager, resolve pnpm catalogs, read the lockfile, check it for unsatisfied peer dependencies and work out which packages a git range touches. Every capability is a service you provide at the edge and swap in tests. Works with npm, pnpm, yarn Berry and bun.
+Monorepo workspace tooling for [Effect](https://effect.website) v4: find the workspace root, enumerate its packages, walk the dependency graph, detect the package manager, resolve pnpm catalogs, read the lockfile, check it for unsatisfied peer dependencies and work out which packages a git range touches. Every capability is a service you provide at the edge and swap in tests. Works with npm, pnpm, yarn Berry and bun. A separate `./testing` entry point holds repo-shape checks for a monorepo's own test suite: source boundaries, package layering and packed-install proofs.
 
 ## Why this package
 
@@ -293,6 +293,115 @@ const TestDiscovery = WorkspaceDiscovery.layerTest({
 
 A name miss in the derived `getPackage` fails with the service's own typed `PackageNotFoundError`, exactly as the live implementation does. Two deliberate edges: `info()` has no honest default (a fabricated root path would leak into consumer path logic), so it dies with an explanatory defect unless stubbed, and the derived file-ownership methods assume POSIX paths, so pass your own `resolveFile` for win32 fixtures. `WorkspaceDiscovery.makeTest(overrides)` returns the bare service shape when you want the double without a layer.
 
+## Repo-shape checks (`./testing`)
+
+A monorepo's shape drifts in ways no unit test sees: a package that should stay platform-free starts reading `process`, a low-level package grows an edge up into an application, or a bin resolves fine inside the workspace and is missing once installed from its tarball. `@beep/repo-workspaces/testing` holds three checks you run from your own test suite to catch each one. The main entry never re-exports it, so a consumer of `.` never loads a scanner or package-manager orchestration it does not use. Option bags are plain objects (each schema's `Encoded` form), and every check refuses to pass vacuously, so each example pairs "nothing wrong" with "something was checked".
+
+### Layering
+
+`WorkspaceLayering` holds the discovered package graph to a committed `layers.json`. `layers` is top-down: a package may depend only on a layer below its own, or on `tooling`. `unconstrained` globs name packages whose own edges are not checked, such as the private root, which must be classified like any other package. Every entry matches a package's `name`, never its `relativePath`. `fields` picks the dependency maps that count, and `requiredEdges` lists edges that must exist, so a discovery that silently drops edges fails. Decoding is strict: any other key fails `LayerPolicyError` naming the key, so a typo such as `requiredEdge` cannot silently drop that guard. `$schema` is always accepted, and keys a policy file carries for its own use go in `LayerPolicy.load(path, { allowKeys: [...] })`.
+
+```json
+{
+  "layers": [["my-tool"], ["my-tool-cli", "my-tool-mcp"], ["my-tool-engine"]],
+  "tooling": [],
+  "unconstrained": ["my-monorepo"],
+  "fields": ["dependencies", "peerDependencies", "optionalDependencies"],
+  "requiredEdges": ["my-tool-mcp -> my-tool-engine"]
+}
+```
+
+```ts
+import { LayerPolicy, WorkspaceLayering } from "@beep/repo-workspaces/testing";
+import * as Effect from "effect/Effect";
+
+const layering = Effect.gen(function* () {
+  const policy = yield* LayerPolicy.load("/repo/layers.json");
+  const report = yield* WorkspaceLayering.checkWorkspace(policy);
+  // Assert both: nothing wrong, and real edges were read.
+  return { violations: report.violations, edgeCount: report.edgeCount };
+});
+```
+
+An edge is drawn wherever a dependency's name is a workspace package, whatever its specifier, and once per declaring field. A cycle closed only by a devDependency is therefore invisible to a policy that checks runtime fields only: pin acyclicity across every field separately, with `DependencyGraph.make({ packages }).hasCycle`.
+
+### Source boundaries
+
+`SourceBoundary.scan` walks a source tree and reports every read of the global `process`, forbidden import, `stdout.write` or console write. It lexes each file first, so the word `process` in a comment, a string, template text or a regex is never a read, and a `/*` inside a string never hides the code after it. Assert `verifyFixtures()` beside your scan: it proves the scanner still flags and spares what its shipped fixtures say.
+
+```ts
+import { SourceBoundary } from "@beep/repo-workspaces/testing";
+import * as Effect from "effect/Effect";
+
+const boundary = Effect.gen(function* () {
+  const scan = yield* SourceBoundary.scan({
+    root: "/repo/packages/engine/src",
+    rules: ["process", "node:process", "console", { forbidImports: ["node:*", "@effect/platform*"] }],
+  });
+  // Assert scan.files is non-empty, scan.violations is [] and verifyFixtures() is [].
+  return { files: scan.files, violations: scan.violations, controls: SourceBoundary.verifyFixtures() };
+});
+```
+
+| Rule | Flags |
+| --- | --- |
+| `"process"` | a read of the global `process`; `process.env.__PACKAGE_VERSION__` is exempt |
+| `"node:process"` | an import of `node:process` or `process` |
+| `"stdout-write"` | a `stdout.write`, or a `stdout.end` passing a final chunk, on anything named `stdout`; a renamed receiver is left to `"process"` |
+| `"console"` | any reference to the global `console` |
+| `"console-stdout"` | a reference to the global `console`, except a member access to a method Node writes to stderr: `error`, `warn`, `trace`, `assert`. A bare or aliased reference (`const c = console`, `f(console)`, `console[m]`) is flagged, since it can reach `log` |
+| `{ forbidImports }` | an import equal to an entry, a subpath of one, or starting with an entry's text before a trailing `*` |
+| `{ forbidTokens }` | an entry's exact text in code (never in a comment, string, template text or regex), as whole text: not inside a longer identifier |
+
+Neither console rule flags core's `Console` service. `"console-stdout"` suits a stdio server that must keep stdout for its protocol but may log to stderr.
+
+`allow` globs exempt a file from every rule, and the file is listed in `scan.allowed`. To exempt a file from one rule only, use `allowRules`, keyed by the rule (`"forbidImports"` covers every `{ forbidImports }` rule). The file is still checked against every other rule, and each offence a per-rule glob waives lands in `scan.waived` rather than disappearing, so a stale or over-broad waiver fails an assertion. Both kinds of glob compile with `@beep/glob` and match the scan's relative, `/`-separated path; an uncompilable one fails the scan with `GlobPatternError`. To confine a token to named files, forbid it with `{ forbidTokens }` and waive that rule for those files (`allowRules: { forbidTokens: ["version.ts"] }`): `scan.waived` then proves the confinement still matches something.
+
+The scanner is a lexer, not a type checker. Its known limits:
+
+- There is no scope analysis, so any local binding named `process` or `console` is flagged like the global: a parameter, a variable, a label, or an unannotated class field. An annotated class field (`process: T`) reads as a type member and is spared. Prefer renaming the binding; failing that, waive that one rule for the file with `allowRules` and assert `scan.waived` names exactly it.
+- `globalThis["process"]` and `const { process: p } = globalThis` are not seen.
+- A regex literal directly after a block-closing `}` reads as a division.
+- A variable named `yield` or `await` in a sloppy-mode script reads as the keyword. Module and strict code reserve both words.
+- JSX text reads as code, which is why `.tsx` and `.jsx` are not scanned by default.
+- `forbidImports: ["node:*"]` matches only the `node:` spelling, not a bare `"fs"`. To forbid both, spread Node's `builtinModules` from `node:module` into the entries in your test file.
+
+### Packed install
+
+`PackedInstall.run` packs a carrier and every workspace package it needs, then installs the carrier into a fresh project outside the workspace under each package manager that answers `--version`, and checks every expected bin is linked and executable. It carries the traps each manager sets: the parent run's `npm_*` and `pnpm_config_*` context is scrubbed, pnpm's overrides go in `pnpm-workspace.yaml`, Yarn Berry gets the `node-modules` linker, `packageManager` is pinned to the probed version, and lifecycle scripts are skipped. By default it packs each package's built `dist/prod/npm/pkg`, the artifact a release publishes; build first.
+
+It does not run the bins; the test does, inside the same scope, because the scratch directory (`result.scratch`) is removed when the scope closes. `consumer.runBin(name, args, options?)` runs one to completion and returns `{ stdout, stderr, exitCode }`. `consumer.command(name, args?, options?)` returns the `ChildProcess` command `runBin` builds, with stdin left open for a probe. `consumer.binProvenance(name)` names the package a `.bin` symlink resolves into. `PackedInstall.closure(carrier, options?)` names every package the run will pack before it runs, and `PackedInstall.timeoutBudget` sizes the outer timeout from those names and the run's own ceilings.
+
+```ts
+import { PackedInstall } from "@beep/repo-workspaces/testing";
+import * as Effect from "effect/Effect";
+
+const proof = Effect.gen(function* () {
+  const result = yield* PackedInstall.run({
+    carrier: "my-tool",
+    closure: "auto",
+    managers: ["npm", "pnpm", "yarn", "bun"],
+    bins: ["my-tool"],
+    env: {},
+  });
+  const env = { XDG_DATA_HOME: `${result.scratch}/xdg` };
+  for (const consumer of result.consumers) {
+    const version = yield* consumer.runBin("my-tool", ["--version"], { env });
+    // Assert version.exitCode is 0; outside pnpm, assert the provenance names the carrier.
+    yield* consumer.binProvenance("my-tool");
+    yield* Effect.log(`${consumer.manager}: ${version.exitCode}`);
+  }
+}).pipe(Effect.scoped);
+```
+
+Pass the host environment in (`process.env` from the test file): nothing in the subpath reads `process` itself. `runBin` and `command` run under the environment the install ran under, with `options.env` layered over it after the parent manager's context is stripped, so an explicit entry such as `CI: "true"` wins and a key set to `undefined` removes a variable; a non-zero exit is a result, and a bin that cannot spawn or outlives its ceiling (one minute by default) fails `BinFailed`. A requested manager that is not installed lands in `result.unavailable`; pass `require: "all"` to make that a failure instead. Declare in `consumerDependencies` every package the consumer's own code imports besides the carrier: pnpm links only declared dependencies at a project's top level. An entry that names a packed package is written as its `file:` tarball whatever spec you pass; npm fails `EOVERRIDE` when a direct spec differs from its override.
+
+By default only the carrier may declare its bins. If any other packed package declares one of the carrier's bin names, the run fails `BinConflict` before installing: under npm, bun and Yarn's flat layouts either package can take the `.bin` slot. npm and bun 1.4.0-1.4.3 were observed to link the package whose name sorts first; bun 1.4.4 and Yarn 1 and 4 keep the carrier's, the consumer's direct dependency. Sharing bin names is a supported choice for a carrier whose front ends are also installed on their own: pass `allowSharedBins: true`, read who owns the slot with `binProvenance` (every flat layout writes a symlink, so it always answers there), and prove the carrier's own shim with `consumer.runCarrierBin(name)`, which runs the file the carrier's `bin` map names with `node`.
+
+When a closure member needs a dependency the registry does not have yet, pass it in `overrides`: package name to a publish-ready package directory, which is `npm pack`ed, or to a `.tgz`, which is used as it is. `workspaceOverrides: true` also takes every `"<name>": "file:<path>"` entry of the root `pnpm-workspace.yaml`'s `overrides:`; an explicit `overrides` entry wins. An override naming the carrier or a closure member, a path that is neither a package directory nor a `.tgz`, or a tarball whose manifest has another name fails `InvalidOverride`.
+
+The installs run one after another. `timeoutBudget` adds each manager's `--version` probe (30 seconds), install (`installTimeout`, four minutes by default) and `perConsumer` (one minute by default), each package's pack (`packTimeout`, two minutes by default) and manifest read (30 seconds), 30 seconds for the untimed steps and one minute for cleanup. `PackedInstall.timeoutBudgetFor(runOptions, { perConsumer? })` plans the closure from the run's own options and does both in one Effect. A vitest test's timeout is fixed when it is declared, so await it at module evaluation. `PackedInstall.preflight` and `PackedInstall.gate` turn a missing prod build into "skip locally, fail under CI". `PackedInstall` is POSIX-only and fails `UnsupportedPlatform` elsewhere.
+
 ## Features
 
 - `Workspaces.layer` / `Workspaces.layerWithGit` / `Workspaces.resolvers` — the composite layers, split on requirements rather than feature flags: a filesystem, a filesystem plus a subprocess, and the two `@beep/npm-spec` resolver contracts.
@@ -312,6 +421,7 @@ A name miss in the derived `getPackage` fails with the service's own typed `Pack
 - `ReleaseTag` / `TrackingTag` — release-tag formatting (`ReleaseTag.single` / `.scoped`, strict SemVer by default with no `v` prefix) and the floating major/minor alias derivation GitHub Actions-style consumers expect (`v1`, `v1.2`), plus `classifyTag` to tell a release tag from a tracking alias.
 - `VersioningStrategy` — classify a workspace as `single`, `fixed-group` or `independent` from package names and fixed groups, or detect it live against `PublishabilityDetector`, and produce the release tags for a batch with `tagsFor`.
 - `findWorkspaceRootSync` / `getWorkspacePackagesSync` — the synchronous escape hatch for config-time callers that cannot await, over file and path operations you supply.
+- `@beep/repo-workspaces/testing` — the repo-shape checks above: `SourceBoundary` (with the `GlobalRule`, `ForbidImportsRule` and `ForbidTokensRule` members of `BoundaryRule`), `WorkspaceLayering` with `LayerPolicy`, and `PackedInstall` with `InstalledConsumer`.
 - `@beep/repo-workspaces/node-sync` — a second entry point holding the Node bindings for those operations (`nodeFileSystem`, `nodePath` and the `nodeSyncOps` bag), kept off the main entry so `node:*` never reaches a consumer that supplies its own. `nodeFileSystem` implements the optional `readDirectoryWithTypes` fast path, so the bindings enumerate a workspace in one `readdirSync` per directory.
 
 ## Development
@@ -330,7 +440,7 @@ The unit suites run on `@beep/memfs` volumes and scripted processes, and read th
 
 ## Provenance
 
-Ported from upstream `@effected/workspaces` (MIT, C. Spencer Beggs) through the effected port, which landed it in the scratchpad module `scratchpad/effected/workspaces`. Wave 4-W-a of `goals/effected-promotion` then promoted the core and config-dependency half into this package; the `testing` cluster (`WorkspaceLayering`, `LayerPolicy`, `SourceBoundary`, `PackedInstall`) stays in the lab and imports this package's leaves. The promotion moved the sources to `src/`, the tests to `test/` and the fixtures to `test/fixtures/`, renamed the schema identities from `@beep/scratchpad/effected/workspaces/<Name>` to `@beep/repo-workspaces/<Name>`, and made the changes listed under Deviations. The lab review rounds and canon exceptions are archived under `goals/effected-promotion/history/`.
+Ported from upstream `@effected/workspaces` (MIT, C. Spencer Beggs) through the effected port, which landed it in the scratchpad module `scratchpad/effected/workspaces`. Wave 4-W-a of `goals/effected-promotion` then promoted the core and config-dependency half into this package, and wave 4-W-b the `testing` cluster (`WorkspaceLayering`, `LayerPolicy`, `SourceBoundary`, `PackedInstall`) behind the `./testing` subpath, so no lab source directory remains; the lab-wide layering and peer-closure integration tests stay under `scratchpad/test/workspaces/integration/` until the packet closes. Each promotion moved the sources to `src/`, the tests to `test/` and the fixtures to `test/fixtures/`, renamed the schema identities from `@beep/scratchpad/effected/workspaces/<Name>` to `@beep/repo-workspaces/<Name>`, and made the changes listed under Deviations. The lab review rounds and canon exceptions are archived under `goals/effected-promotion/history/`.
 
 ### Attribution
 
@@ -363,19 +473,29 @@ Promotion (wave 4-W-a):
 - **runtime-portability** — `ConfigDependencyHooks.layerSubprocess` passes a `beep-replay` placeholder before its three argv payloads, and the replay script reads the last three `process.argv` entries. Bun's `node` shim under `bunx --bun` consumes the first argument after `-e`, so the lab's child lost its seed there and every subprocess replay failed under Bun; node passes the placeholder through. `ConfigDependencyHooksSubprocess.test.ts` pins the seven-argument contract.
 - **test-environment** — the unit suites run on `@beep/memfs` (the fake pnpm in `test/support/fakeProcess.ts` writes into the same volume), load captures through `import.meta.glob`, and take node's `win32` and `posix` paths from `test/support/hostPath.ts`; the real-disk `readDirectoryWithTypes` case lives in `test/integration/node-sync.int.test.ts`. Layers reach tests through `it.layer` with a timeout, `Layer.build` or `Effect.provideService`, never `Effect.provide`, so no file carries an `@effect-diagnostics` skip directive. Five schema-heavy files gain a schema-derived round-trip property.
 
+Promotion (wave 4-W-b, the `./testing` cluster):
+
+- **schema-first** — the testing records and option bags follow the 4-W-a pattern: `SourceLiteral`, `LexedSource`, `ConsumerInput`, `PackedManifest`, `PackDirectory`, `BoundaryFixture`, `ReferenceOptions`, `ScanOptions`, `BinCommandOptions`, `BinProvenance`, `PackedInstallClosureOptions`, `PackedInstallPreflightOptions`, `PackedInstallPreflight`, `PackedInstallGate`, `PackedInstallResult` and `LayeringGraph` are branded `S.Opaque`, and the `PackedInstallOptions`, `RunBinOptions` and `PackedInstallBudget` interfaces are schemas whose ceilings accept any `Duration` input `Duration.fromInput` does. Every operation takes `X.Encoded` (`WorkspaceLayering.check` takes `LayeringGraph.Input`, which holds live `LayerEdge` values), so callers keep passing plain objects. `BoundaryRule` is the `GlobalRule` kit beside the `ForbidImportsRule` and `ForbidTokensRule` records.
+- **option-returns** — `internal/sourceText` `cookIdentifier` and `internal/packedInstallPlan` `versionOf` return `Option` instead of `undefined`; `identifierTokens` returns an array instead of a lazy iterator.
+- **complexity** — the lexer is a `Lexer` class of single-purpose steps, `SourceBoundary.check` dispatches each rule through `GlobalRule.match`, `scan` lists directories through named steps, and `PackedInstall.run`, `planClosure` and `binProvenance` delegate to module-level steps (probe, pack, inspect, replacement resolution, consumer install, bin checks, provenance walk). Spans name their owner (`PackedInstall.*`, `InstalledConsumer.*`).
+- **shared-bins** — the real-manager suite keys bun's `.bin` winner by the probed version (1.4.4 links the carrier, earlier releases the name that sorts first) and requires `binProvenance` for every flat layout; upstream expected the front end under every bun (`test/integration/e2e/PackedInstall.e2e.test.ts`).
+- **runtime-portability** — the P3 S1 control expects Bun's "Cannot find module" under Bun and Node's `ERR_MODULE_NOT_FOUND` under Node, keyed by `process.versions.bun`, since under `bunx --bun` the binary that imports from the consumer root is Bun's; the suite's own manager probe is bounded at 30 seconds, as the run's is.
+- **reachability** — `PackedInstall` is the one `./testing` module that loads `@beep/commands`, the operational adapter that packs and installs; `test/reachability.test.ts` admits it and the `./testing` entry.
+- **test-environment** — the testing suites read package sources through the raw-glob `test/support/sourceGraph.ts` (`sourceTexts`), the real-tree and real-manager suites take the `nodeHost` layer and write their fixtures through Effect `FileSystem`, and no file carries an `@effect-diagnostics` skip directive. `PackedInstallPlan` and `SourceBoundary` gain schema-derived round-trip properties.
+
 Carried from the port:
 
-- **native-runtime** — Effect hash collections and own-key-safe records replace native collections, frozen/null-prototype defaults and Object.* operations, with explicit snapshot version order (packages/tooling/library/repo-workspaces/test/DependencyGraph.test.ts:34; scratchpad/test/workspaces/PackedInstallPlan.test.ts:325; packages/tooling/library/repo-workspaces/test/WorkspaceSnapshots.test.ts:768; packages/tooling/library/repo-workspaces/test/WorkspacePackage.test.ts:331).
+- **native-runtime** — Effect hash collections and own-key-safe records replace native collections, frozen/null-prototype defaults and Object.* operations, with explicit snapshot version order (packages/tooling/library/repo-workspaces/test/DependencyGraph.test.ts:34; packages/tooling/library/repo-workspaces/test/PackedInstallPlan.test.ts; packages/tooling/library/repo-workspaces/test/WorkspaceSnapshots.test.ts:768; packages/tooling/library/repo-workspaces/test/WorkspacePackage.test.ts:331).
 - **identity-keys** — Service-owned latest-snapshot fields with === comparisons replace WorkspaceDiscovery’s three identity-keyed WeakMap caches (packages/tooling/library/repo-workspaces/test/WorkspaceDiscovery.test.ts:801; packages/tooling/library/repo-workspaces/test/WorkspaceDiscovery.test.ts:896; packages/tooling/library/repo-workspaces/test/WorkspaceDiscovery.test.ts:905).
-- **tagged-errors** — Tagged schema errors replace plain Error/RangeError failures and defects, and the three originating-cause error schemas preserve encoded stacks (packages/tooling/library/repo-workspaces/test/WorkspacesSync.test.ts:209; packages/tooling/library/repo-workspaces/test/LockfileReader.test.ts:278; scratchpad/test/workspaces/entrypoints.test.ts:35).
-- **schema-first** — Executable annotated schemas, LiteralKit domains, derived guards and JSON codecs replace type-only payloads, repeated literals, manual guards and parsing, changing forced JSON error causes to SchemaError (scratchpad/test/workspaces/SourceBoundary.test.ts:360; packages/tooling/library/repo-workspaces/test/WorkspaceCatalogsPmAware.test.ts; packages/tooling/library/repo-workspaces/test/WorkspaceSnapshots.test.ts:804; packages/tooling/library/repo-workspaces/test/ConfigDependencySpec.test.ts).
-- **numeric-domains** — S.Finite rejects non-finite offence coordinates and layering counts accepted by Schema.Number, while a schema-derived integer-depth guard preserves traversal acceptance (scratchpad/test/workspaces/SourceBoundary.test.ts; scratchpad/test/workspaces/WorkspaceLayering.test.ts:56; packages/tooling/library/repo-workspaces/test/WorkspaceDiscovery.test.ts:275; packages/tooling/library/repo-workspaces/test/WorkspacesSync.test.ts:209).
+- **tagged-errors** — Tagged schema errors replace plain Error/RangeError failures and defects, and the three originating-cause error schemas preserve encoded stacks (packages/tooling/library/repo-workspaces/test/WorkspacesSync.test.ts:209; packages/tooling/library/repo-workspaces/test/LockfileReader.test.ts:278; packages/tooling/library/repo-workspaces/test/entrypoints.test.ts).
+- **schema-first** — Executable annotated schemas, LiteralKit domains, derived guards and JSON codecs replace type-only payloads, repeated literals, manual guards and parsing, changing forced JSON error causes to SchemaError (packages/tooling/library/repo-workspaces/test/SourceBoundary.test.ts; packages/tooling/library/repo-workspaces/test/WorkspaceCatalogsPmAware.test.ts; packages/tooling/library/repo-workspaces/test/WorkspaceSnapshots.test.ts:804; packages/tooling/library/repo-workspaces/test/ConfigDependencySpec.test.ts).
+- **numeric-domains** — S.Finite rejects non-finite offence coordinates and layering counts accepted by Schema.Number, while a schema-derived integer-depth guard preserves traversal acceptance (packages/tooling/library/repo-workspaces/test/SourceBoundary.test.ts; packages/tooling/library/repo-workspaces/test/WorkspaceLayering.test.ts; packages/tooling/library/repo-workspaces/test/WorkspaceDiscovery.test.ts:275; packages/tooling/library/repo-workspaces/test/WorkspacesSync.test.ts:209).
 - **type-safety** — Schema and Predicate narrowing with typed Record/Option access replace unchecked runtime casts in hooks, manifest readers and planning helpers (module suite packages/tooling/library/repo-workspaces/test/**).
 - **tsgo-diagnostics** — Tsgo forces zero-argument service thunks to Effect values, adds dual helper overloads and pipeable expressions, and reroutes four synchronous fs/path bindings through getBuiltinModule (packages/tooling/library/repo-workspaces/test/LockfileReader.test.ts:58; packages/tooling/library/repo-workspaces/test/WorkspaceDiscovery.test.ts:842; packages/tooling/library/repo-workspaces/test/WorkspaceCatalogs.test.ts:568; packages/tooling/library/repo-workspaces/test/WorkspaceSnapshots.test.ts; packages/tooling/library/repo-workspaces/test/WorkspacesSync.test.ts).
 - **effect-first** — Effect.fn/fnUntraced operations, Effect helper sorts/orders and scoped layer/context composition replace arrow-wrapped generators and native helper patterns (module suite packages/tooling/library/repo-workspaces/test/**).
 - **effect-imports** — Per-module effect/* imports replace the root effect barrel in source, tests and examples (module suite packages/tooling/library/repo-workspaces/test/**).
-- **identity-annotations** — Beep $I annotations replace local schema identifiers and retarget JSON Schema definitions to namespaced keys (scratchpad/test/workspaces/LayerPolicy.test.ts:102; packages/tooling/library/repo-workspaces/test/ConfigDependencySpec.test.ts; packages/tooling/library/repo-workspaces/test/VersioningStrategy.test.ts).
-- **test-environment** — Bun workspace discovery, Beep package names, lab-derived layering fixtures and bunx context replace upstream pnpm-monorepo test assumptions (scratchpad/test/workspaces/e2e/PackedInstall.e2e.test.ts; scratchpad/test/workspaces/integration/layering.int.test.ts; packages/tooling/library/repo-workspaces/test/integration/node-sync.int.test.ts; scratchpad/test/workspaces/integration/peerClosure.int.test.ts; packages/tooling/library/repo-workspaces/test/integration/self.int.test.ts).
+- **identity-annotations** — Beep $I annotations replace local schema identifiers and retarget JSON Schema definitions to namespaced keys (packages/tooling/library/repo-workspaces/test/LayerPolicy.test.ts; packages/tooling/library/repo-workspaces/test/ConfigDependencySpec.test.ts; packages/tooling/library/repo-workspaces/test/VersioningStrategy.test.ts).
+- **test-environment** — Bun workspace discovery, Beep package names, lab-derived layering fixtures and bunx context replace upstream pnpm-monorepo test assumptions (packages/tooling/library/repo-workspaces/test/integration/e2e/PackedInstall.e2e.test.ts; scratchpad/test/workspaces/integration/layering.int.test.ts; packages/tooling/library/repo-workspaces/test/integration/node-sync.int.test.ts; scratchpad/test/workspaces/integration/peerClosure.int.test.ts; packages/tooling/library/repo-workspaces/test/integration/self.int.test.ts).
 - **upstream-bug** — Escaping root links retain unmatched .. segments and unresolvedEdge instead of borrowing an unrelated internal package’s peers (packages/tooling/library/repo-workspaces/test/PeerCheck.test.ts:747).
 - **upstream-bug** — Unrepresentable numeric version fields make TrackingTag.forVersion return [] instead of throwing during construction (packages/tooling/library/repo-workspaces/test/TrackingTag.test.ts:119).
 - **upstream-bug** — Unrepresentable tracking-tag fields make classifyTag return unrecognized instead of throwing (packages/tooling/library/repo-workspaces/test/TrackingTag.test.ts:231).
@@ -396,14 +516,14 @@ Carried from the port:
 - **upstream-bug** — The lab historically merges top-level and nested Bun catalogs with tolerant nested precedence instead of upstream nested-only assembly (packages/tooling/library/repo-workspaces/test/WorkspaceSnapshots.test.ts:911).
 - **native-runtime** — The lab passes an Effect HashMap at the importer-name boundary instead of the upstream native Map backing escape (packages/tooling/library/repo-workspaces/test/LockfileReader.test.ts).
 - **schema-first** — The lab adds executable schemas and derived types for previously erased upstream options, data payloads and variants while retaining plain operation representations (packages/tooling/library/repo-workspaces/test/ReleaseTag.property.test.ts; packages/tooling/library/repo-workspaces/test/Workspaces.test.ts; packages/tooling/library/repo-workspaces/test/internal/roots.coverage.test.ts).
-- **tagged-errors** — The lab encodes originating stacks in three additional error schemas instead of upstream name/message-only Defect causes (scratchpad/test/workspaces/PackedInstall.test.ts:1503; packages/tooling/library/repo-workspaces/test/WorkspaceDiscovery.test.ts:920; packages/tooling/library/repo-workspaces/test/WorkspacePackage.test.ts:345).
-- **numeric-domains** — The lab schemas restrict new literal-offset and version-core numeric fields to finite values instead of unrestricted upstream number models while leaving operation inputs unchanged (scratchpad/effected/workspaces/internal/sourceText.ts:47; packages/tooling/library/repo-workspaces/src/ReleaseTag.ts:99).
+- **tagged-errors** — The lab encodes originating stacks in three additional error schemas instead of upstream name/message-only Defect causes (packages/tooling/library/repo-workspaces/test/PackedInstall.test.ts; packages/tooling/library/repo-workspaces/test/WorkspaceDiscovery.test.ts:920; packages/tooling/library/repo-workspaces/test/WorkspacePackage.test.ts:345).
+- **numeric-domains** — The lab schemas restrict new literal-offset and version-core numeric fields to finite values instead of unrestricted upstream number models while leaving operation inputs unchanged (packages/tooling/library/repo-workspaces/src/internal/sourceText.ts; packages/tooling/library/repo-workspaces/src/ReleaseTag.ts:99).
 - **identity-annotations** — The lab gives replay envelope fields and two reusable checks canonical identity metadata instead of their anonymous upstream schema surfaces (packages/tooling/library/repo-workspaces/src/ConfigDependencyHooks.ts:760; packages/tooling/library/repo-workspaces/src/ReleaseTag.ts:114; packages/tooling/library/repo-workspaces/src/internal/traverse.ts:30).
 - **upstream-bug** — the lab keys duplicate-instance provenance with a JSON tuple codec, so relationships containing embedded NULs stay distinct; upstream's NUL-delimited keys merge them (packages/tooling/library/repo-workspaces/test/DuplicateCheck.test.ts:45; packages/tooling/library/repo-workspaces/test/DuplicateCheck.test.ts:77)
 - **upstream-bug** — the lab only treats a pnpm-workspace.yaml that is a regular file as the root marker; upstream also accepts a directory with that name (packages/tooling/library/repo-workspaces/test/WorkspaceRoot.test.ts:130; packages/tooling/library/repo-workspaces/test/WorkspaceRoot.test.ts:147)
 - **upstream-bug** — the lab rejects '..' traversal segments in config-dependency versions before building paths; upstream checks names only (packages/tooling/library/repo-workspaces/test/internal/configDependencyResolution.coverage.test.ts:15; packages/tooling/library/repo-workspaces/test/integration/ConfigDependencyHooks.int.test.ts:238)
 - **upstream-bug** — the lab keeps an own __proto__ registry scope; upstream's plain assignment drops it (packages/tooling/library/repo-workspaces/test/internal/configDependencyFetch.coverage.test.ts:42)
-- **schema-first** — the lab decodes and encodes the remaining synchronous JSON boundaries through Schema codecs, so malformed-JSON causes are SchemaError; upstream uses JSON.parse/JSON.stringify and surfaces SyntaxError (packages/tooling/library/repo-workspaces/test/WorkspacesSync.test.ts:676; scratchpad/test/workspaces/PackedInstallPlan.test.ts:281; scratchpad/test/workspaces/internal/packedInstallPlan.coverage.test.ts:37)
+- **schema-first** — the lab decodes and encodes the remaining synchronous JSON boundaries through Schema codecs, so malformed-JSON causes are SchemaError; upstream uses JSON.parse/JSON.stringify and surfaces SyntaxError (packages/tooling/library/repo-workspaces/test/WorkspacesSync.test.ts:676; packages/tooling/library/repo-workspaces/test/PackedInstallPlan.test.ts; packages/tooling/library/repo-workspaces/test/internal/packedInstallPlan.coverage.test.ts)
 
 ### Dependency backlog
 

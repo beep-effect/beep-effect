@@ -64,8 +64,6 @@ const PACKAGE_JSON_MARKER_PROSE = 'package.json with a "workspaces" field';
  * ```ts
  * import { FindWorkspaceRootOptions } from "@beep/repo-workspaces/WorkspaceRoot";
  * import * as S from "effect/Schema";
-import * as SchemaTransformation from "effect/SchemaTransformation";
-import { identity } from "effect/Function";
  *
  * console.log(S.is(FindWorkspaceRootOptions)({ stopAt: "/repo", maxDepth: 4 })) // true
  * ```

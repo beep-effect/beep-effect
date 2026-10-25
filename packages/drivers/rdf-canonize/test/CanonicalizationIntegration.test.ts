@@ -35,7 +35,7 @@ it.layer(CanonicalizationServiceLive, { timeout: "10 seconds" })("canonicalizati
   const boundedDataset = Arbitrary.schema(S.Struct({ quads: S.Array(Quad).check(S.isMaxLength(3)) })).pipe(
     Arbitrary.map(Dataset.make)
   );
-  it.prop(
+  it.effect.prop(
     "keeps fingerprints stable under quad order for schema-derived datasets",
     [boundedDataset],
     ([generated]) =>

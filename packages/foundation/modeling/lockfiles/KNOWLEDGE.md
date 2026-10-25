@@ -11,7 +11,7 @@ Upstream paths map onto this package as follows: `packages/lockfiles/` is
 through `import.meta.glob` in `test/support/fixtures.ts`, so no test touches the filesystem.
 `@effected/lockfiles` is `@beep/lockfiles`; `@effected/jsonc`, `@effected/yaml`, `@effected/npm`
 and `@effected/semver` are `@beep/jsonc`, `@beep/yaml`, `@beep/npm-spec` and `@beep/semver`; its
-consumer `workspaces` is still the lab module `scratchpad/effected/workspaces`. Where the text
+consumer `workspaces` is `@beep/repo-workspaces`. Where the text
 names a class's shape, read README.md → Port notes: `ResolvedPackage`, `WorkspaceDependency` and
 `LockfileImporter` stay schema classes with instance members, and the other records are branded
 `S.Opaque` structs. The upstream `pnpm` commands below do not apply; run `bun run test` and

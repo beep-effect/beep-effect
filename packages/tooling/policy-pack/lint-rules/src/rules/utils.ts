@@ -7,9 +7,11 @@
  */
 
 import { $LintRulesId } from "@beep/identity/packages";
+import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -17,6 +19,62 @@ import * as Str from "effect/String";
 import type { ESTree } from "@oxlint/plugins";
 
 const $I = $LintRulesId.create("rules/utils");
+
+/**
+ * Track function-local identifier bindings for rules that inspect globals.
+ *
+ * **Example** (Ignore a locally bound process)
+ *
+ * ```ts
+ * import { strictEqual } from "node:assert/strict"
+ * import { makeIdentifierShadowTracker } from "../../src/rules/utils"
+ *
+ * const tracker = makeIdentifierShadowTracker(["process"])
+ * tracker.pushScope([])
+ * strictEqual(tracker.isShadowed("process"), false)
+ * tracker.popScope()
+ * ```
+ *
+ * @param names - Global identifiers whose local bindings the rule must ignore.
+ * @returns A fresh scope tracker and its Oxlint visitors.
+ * @category utilities
+ * @since 0.1.0
+ */
+export const makeIdentifierShadowTracker = (names: ReadonlyArray<string>) => {
+  const tracked = HashSet.fromIterable(names);
+  const scopes = [MutableHashSet.empty<string>()];
+  const currentScope = () => scopes[scopes.length - 1] ?? MutableHashSet.empty<string>();
+  const reset = () => {
+    scopes.length = 0;
+    scopes.push(MutableHashSet.empty<string>());
+  };
+  const pushScope = (params: ReadonlyArray<ESTree.ParamPattern>) => {
+    const scope = MutableHashSet.empty<string>();
+    for (const param of params) {
+      if (param.type === "Identifier" && HashSet.has(tracked, param.name)) MutableHashSet.add(scope, param.name);
+    }
+    scopes.push(scope);
+  };
+  const popScope = () => {
+    if (scopes.length > 1) scopes.pop();
+  };
+  const recordDeclarator = (node: ESTree.VariableDeclarator) => {
+    if (node.id.type === "Identifier" && HashSet.has(tracked, node.id.name)) {
+      MutableHashSet.add(currentScope(), node.id.name);
+    }
+  };
+  const isShadowed = (name: string): boolean => A.some(scopes, (scope) => MutableHashSet.has(scope, name));
+  const visitors = {
+    FunctionDeclaration: (node: ESTree.Function) => pushScope(node.params),
+    "FunctionDeclaration:exit": popScope,
+    FunctionExpression: (node: ESTree.Function) => pushScope(node.params),
+    "FunctionExpression:exit": popScope,
+    ArrowFunctionExpression: (node: ESTree.ArrowFunctionExpression) => pushScope(node.params),
+    "ArrowFunctionExpression:exit": popScope,
+    VariableDeclarator: recordDeclarator,
+  };
+  return { reset, pushScope, popScope, isShadowed, visitors };
+};
 
 /**
  * Node families the rule visitors hand to these helpers: expressions, call

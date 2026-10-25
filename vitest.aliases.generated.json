@@ -2199,6 +2199,9 @@
   "@beep/sbom/internal/*": [
     "./packages/foundation/modeling/sbom/src/internal/*"
   ],
+  "@beep/repo-workspaces/testing": [
+    "./packages/tooling/library/repo-workspaces/src/testing.ts"
+  ],
   "@beep/github-actions": ["./packages/drivers/github-actions/src/index.ts"],
   "@beep/github-actions/*": ["./packages/drivers/github-actions/src/*"],
   "@beep/github-actions/internal/*": [
