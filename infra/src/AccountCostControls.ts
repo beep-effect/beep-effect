@@ -68,6 +68,40 @@ const decodeNotificationEmails = S.decodeUnknownResult(NotificationEmails);
 const decodeAccountCostControlsConfig = S.decodeResult(AccountCostControlsConfig);
 
 /**
+ * Decode the account notification recipients into deduplicated secret outputs.
+ *
+ * **Details**
+ *
+ * Read the config value synchronously so callers know the recipient count
+ * when they declare one resource per recipient; each address is re-wrapped
+ * as a Pulumi secret. Invalid input throws a `RunError` that names no value.
+ *
+ * **Example** (Decode recipients for per-recipient resources)
+ *
+ * ```ts
+ * import { decodeNotificationRecipients } from "@beep/infra"
+ *
+ * const recipients = decodeNotificationRecipients(["ops@example.com", "ops@example.com"])
+ * console.assert(recipients.length === 1)
+ * ```
+ *
+ * @param input - The `accountCostControls:notificationEmailAddresses` config value.
+ * @returns One secret output per distinct recipient address.
+ * @category configuration
+ * @since 0.0.0
+ */
+export const decodeNotificationRecipients = (input: unknown): ReadonlyArray<pulumi.Output<string>> =>
+  A.map(
+    A.dedupe(
+      Result.getOrThrowWith(
+        decodeNotificationEmails(input),
+        () => new pulumi.RunError("Invalid accountCostControls notification recipients; values are redacted")
+      )
+    ),
+    (email) => pulumi.secret(email)
+  );
+
+/**
  * Load nonsecret operational settings at the Pulumi configuration boundary.
  *
  * **Example** (Reference the configuration loader)
