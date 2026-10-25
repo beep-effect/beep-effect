@@ -25,23 +25,28 @@
  * @since 0.0.0
  */
 
+import { $RepoCliId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { flow, pipe } from "effect/Function";
+import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { configStringOption } from "../../../internal/cli/EnvConfig.ts";
 import { runToExit } from "../../../internal/process/index.ts";
+import { readGitRenames, runGitOutput as runSharedGitOutput } from "../../../internal/repo-run/index.ts";
 import { decodePackageJsonDocument } from "../../Quality/Quality.schemas.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { ExpectationRewrite, ExpectationRewriteVerdict } from "./FinalCheck.schemas.ts";
+import { runGitPathList } from "./GitExec.ts";
 import type * as Crypto from "effect/Crypto";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import type { GitCommandErrorAdapter } from "../../../internal/repo-run/index.ts";
 import type { PackageJsonDocument } from "../../Quality/Quality.schemas.ts";
 
 const TEST_FILE_PATTERN = /\.(?:test|spec)\.tsx?$/;
@@ -289,14 +294,29 @@ const scriptRunsTestOnBun = (script: string, testPath: string): boolean => {
  * @category utilities
  * @since 0.0.0
  */
-export const vitestReplayArgs = (manifest: PackageJsonDocument, testPath: string): ReadonlyArray<string> =>
+export const vitestReplayArgs: {
+  (testPath: string): (manifest: PackageJsonDocument) => ReadonlyArray<string>;
+  (manifest: PackageJsonDocument, testPath: string): ReadonlyArray<string>;
+} = dual(
+  2,
+  (manifest: PackageJsonDocument, testPath: string): ReadonlyArray<string> =>
+    pipe(
+      O.fromUndefinedOr(manifest.scripts),
+      O.flatMap((scripts) => O.orElse(R.get(scripts, "beep:test"), () => R.get(scripts, "test"))),
+      O.exists((script) => scriptRunsTestOnBun(script, testPath))
+    )
+      ? ["--bun", "vitest", "run", testPath]
+      : ["vitest", "run", testPath]
+);
+
+// The first rewrite of a file carries its merge-base path; files diffed in
+// place have none and live at the same path.
+const baseFileFor = (rewrites: ReadonlyArray<ExpectationRewrite>, testFile: string): string =>
   pipe(
-    O.fromUndefinedOr(manifest.scripts),
-    O.flatMap((scripts) => O.orElse(R.get(scripts, "beep:test"), () => R.get(scripts, "test"))),
-    O.exists((script) => scriptRunsTestOnBun(script, testPath))
-  )
-    ? ["--bun", "vitest", "run", testPath]
-    : ["vitest", "run", testPath];
+    A.findFirst(rewrites, (rewrite) => rewrite.testFile === testFile),
+    O.flatMap((rewrite) => O.fromUndefinedOr(rewrite.baseFile)),
+    O.getOrElse(() => testFile)
+  );
 
 const commandFailure = (command: string) => (cause: { readonly message: string }) =>
   YeetCommandError.make({ message: `${command} failed: ${cause.message}`, command, exitCode: 1 });
@@ -331,19 +351,22 @@ const packageDirFor = Effect.fn("Yeet.ExpectationRewrite.packageDirFor")(functio
   return O.none<string>();
 });
 
+// `testFile` names the file on the head (what the verdict reports); `baseFile`
+// is where the merge base holds it, which differs after a rename.
 const classifyOnBase = Effect.fn("Yeet.ExpectationRewrite.classifyOnBase")(function* (
   baseRoot: string,
   testFile: string,
+  baseFile: string,
   rewrites: number
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const verdict = (classification: ExpectationRewriteVerdict["classification"], detail: string) =>
     ExpectationRewriteVerdict.make({ testFile, classification, rewrites, detail });
-  if (!(yield* fs.exists(path.join(baseRoot, testFile)).pipe(Effect.orElseSucceed(() => false)))) {
-    return verdict("unverified", "the test file does not exist on the merge base");
+  if (!(yield* fs.exists(path.join(baseRoot, baseFile)).pipe(Effect.orElseSucceed(() => false)))) {
+    return verdict("unverified", `the test file does not exist on the merge base (${baseFile})`);
   }
-  const packageDir = yield* packageDirFor(baseRoot, testFile);
+  const packageDir = yield* packageDirFor(baseRoot, baseFile);
   if (O.isNone(packageDir)) {
     return verdict("unverified", "no owning package.json was found for the test file on the merge base");
   }
@@ -353,10 +376,10 @@ const classifyOnBase = Effect.fn("Yeet.ExpectationRewrite.classifyOnBase")(funct
   if (O.isNone(manifest)) {
     return verdict("unverified", "the owning package.json on the merge base could not be read or decoded");
   }
-  yield* Console.log(`[yeet] final-check: replaying the merge-base version of ${testFile} on the merge base`);
+  yield* Console.log(`[yeet] final-check: replaying the merge-base version of ${baseFile} on the merge base`);
   const exitCode = yield* runInherited(
     "bunx",
-    vitestReplayArgs(manifest.value, path.relative(packageDir.value, path.join(baseRoot, testFile))),
+    vitestReplayArgs(manifest.value, path.relative(packageDir.value, path.join(baseRoot, baseFile))),
     packageDir.value,
     { CI: "true" }
   ).pipe(Effect.catch((cause) => Console.error(`[yeet] final-check: ${cause.message}`).pipe(Effect.as(-1))));
@@ -368,6 +391,167 @@ const classifyOnBase = Effect.fn("Yeet.ExpectationRewrite.classifyOnBase")(funct
           "masks-base-red",
           `the old test already fails on the merge base (vitest exit ${exitCode}), so the rewritten expectation hides an inherited red instead of fixing its source`
         );
+});
+
+const $I = $RepoCliId.create("commands/Yeet/internal/ExpectationRewrite");
+
+/**
+ * Git pathspec selecting the test files and snapshots the gate scans.
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const EXPECTATION_TEST_PATHSPEC: ReadonlyArray<string> = [
+  "*.test.ts",
+  "*.test.tsx",
+  "*.spec.ts",
+  "*.spec.tsx",
+  "*.snap",
+];
+
+/**
+ * Placeholder recorded for a test file whose own diff exceeded the capture
+ * bound; the file is replayed whole on the merge base instead.
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const EXPECTATION_DIFF_OVERFLOW =
+  "(diff exceeded the capture limit; the whole file is replayed on the merge base)";
+
+class ExpectationDiffOverflow extends S.TaggedError<ExpectationDiffOverflow, { readonly brand: unique symbol }>(
+  $I`ExpectationDiffOverflow`
+)(
+  "ExpectationDiffOverflow",
+  { commandLine: S.String },
+  $I.annoteError<ExpectationDiffOverflow>("ExpectationDiffOverflow", {
+    description: "One test file's unified diff exceeded the repo-run capture bound.",
+  })
+) {}
+
+const gitFailure = {
+  onSpawnFailure: (commandLine: string) => YeetCommandError.new(`Failed to run ${commandLine}.`),
+  onNonZeroExit: ({ commandLine, exitCode }: { readonly commandLine: string; readonly exitCode: number }) =>
+    YeetCommandError.make({
+      message: `${commandLine} failed with exit code ${exitCode}.`,
+      command: commandLine,
+      exitCode,
+    }),
+};
+
+// The rename table is read raw and unbounded, so truncation cannot occur there.
+const listingAdapter: GitCommandErrorAdapter<YeetCommandError> = { ...gitFailure, onTruncated: O.none() };
+
+// A single file's diff that overflows is a typed outcome, not a failure: the
+// file is replayed whole on the merge base.
+const fileDiffAdapter: GitCommandErrorAdapter<YeetCommandError | ExpectationDiffOverflow> = {
+  ...gitFailure,
+  onTruncated: O.some((commandLine) => ExpectationDiffOverflow.make({ commandLine })),
+};
+
+// The merge-base path of a renamed file, mapped through the snapshot rule;
+// a file diffed in place has none.
+const renamedFrom = (basePath: string, headPath: string): O.Option<string> =>
+  basePath === headPath ? O.none() : O.some(O.getOrElse(testFileForPath(basePath), () => basePath));
+
+const withBaseFile =
+  (baseFile: O.Option<string>) =>
+  (rewrite: ExpectationRewrite): ExpectationRewrite =>
+    O.match(baseFile, {
+      onNone: () => rewrite,
+      onSome: (file) => ExpectationRewrite.make({ ...rewrite, baseFile: file }),
+    });
+
+// A `.snap` outside `__snapshots__/` matches the pathspec but names no test, so
+// its overflow yields nothing, as its small diff would.
+const overflowRewrite = (headPath: string, baseFile: O.Option<string>): ReadonlyArray<ExpectationRewrite> =>
+  pipe(
+    testFileForPath(headPath),
+    O.map((testFile) =>
+      withBaseFile(baseFile)(
+        ExpectationRewrite.make({
+          testFile,
+          line: 0,
+          removed: EXPECTATION_DIFF_OVERFLOW,
+          added: EXPECTATION_DIFF_OVERFLOW,
+        })
+      )
+    ),
+    O.toArray
+  );
+
+const diffTestFile = Effect.fn("Yeet.ExpectationRewrite.diffTestFile")(function* (
+  repoRoot: string,
+  mergeBase: string,
+  basePath: string,
+  headPath: string
+) {
+  const baseFile = renamedFrom(basePath, headPath);
+  const paths = O.isNone(baseFile) ? [headPath] : [basePath, headPath];
+  return yield* runSharedGitOutput(
+    repoRoot,
+    ["diff", "--unified=0", "--no-color", "--find-renames=50%", mergeBase, "HEAD", "--", ...paths],
+    fileDiffAdapter
+  ).pipe(
+    Effect.map((diff) => A.map(findExpectationRewrites(diff), withBaseFile(baseFile))),
+    Effect.catchTag("ExpectationDiffOverflow", () => Effect.succeed(overflowRewrite(headPath, baseFile)))
+  );
+});
+
+/**
+ * Collect the rewritten expectations between the merge base and `HEAD`.
+ *
+ * **Details**
+ *
+ * Only files Git reports as modified or renamed are diffed, each on its own:
+ * an added file removes nothing and a deleted file adds nothing, so neither
+ * can hold a rewrite, and together they are what makes one whole-tree diff
+ * of a moved test directory overflow the capture bound (#2241). A renamed
+ * file is diffed with both of its paths so Git pairs them and shows only the
+ * changed hunks. A single file whose diff still overflows becomes one
+ * {@link EXPECTATION_DIFF_OVERFLOW} rewrite, so it is replayed whole.
+ *
+ * **Example** (Build the collector)
+ *
+ * ```ts
+ * import { collectExpectationRewrites } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(collectExpectationRewrites("/repo", "abc123"))) // true
+ * ```
+ *
+ * @param repoRoot - Checkout whose diff is scanned.
+ * @param mergeBase - Merge base of the branch with its base ref.
+ * @returns Every rewritten expectation, modified files first, then renames.
+ * @category workflows
+ * @since 0.0.0
+ */
+export const collectExpectationRewrites = Effect.fn("Yeet.collectExpectationRewrites")(function* (
+  repoRoot: string,
+  mergeBase: string
+): Effect.fn.Return<
+  ReadonlyArray<ExpectationRewrite>,
+  YeetCommandError,
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const modified = yield* runGitPathList(repoRoot, [
+    "diff",
+    "--name-only",
+    "-z",
+    "--diff-filter=M",
+    mergeBase,
+    "HEAD",
+    "--",
+    ...EXPECTATION_TEST_PATHSPEC,
+  ]);
+  const renamed = yield* readGitRenames(repoRoot, mergeBase, "HEAD", EXPECTATION_TEST_PATHSPEC, listingAdapter, () =>
+    YeetCommandError.make({ message: "git diff --name-status returned a malformed rename table.", exitCode: 1 })
+  );
+  const fromModified = yield* Effect.forEach(modified, (path) => diffTestFile(repoRoot, mergeBase, path, path));
+  const fromRenamed = yield* Effect.forEach(renamed, (rename) =>
+    diffTestFile(repoRoot, mergeBase, rename.sourcePath, rename.targetPath)
+  );
+  return A.flatten([...fromModified, ...fromRenamed]);
 });
 
 /**
@@ -431,7 +615,9 @@ export const verifyExpectationRewrites = Effect.fn("Yeet.verifyExpectationRewrit
       if (installExit !== 0) {
         return unverifiedAll(`bun install in the merge-base worktree exited ${installExit}`);
       }
-      return yield* Effect.forEach(files, ([testFile, count]) => classifyOnBase(baseRoot, testFile, count));
+      return yield* Effect.forEach(files, ([testFile, count]) =>
+        classifyOnBase(baseRoot, testFile, baseFileFor(rewrites, testFile), count)
+      );
     }),
     () => runInherited("git", ["worktree", "remove", "--force", baseRoot], repoRoot).pipe(Effect.ignore)
   );

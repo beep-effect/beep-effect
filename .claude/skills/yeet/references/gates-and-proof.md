@@ -96,9 +96,13 @@ fits a 4-core worker. By default every gate runs and every red is collected;
 | `fallow` | Fallow Advisory Envelopes | `beep ci lane fallow --validate-envelopes` | #2215 |
 | `coverage` | Coverage Regression, Test Unit | `TURBO_SCM_BASE=<merge-base> beep-cli coverage --affected` | #2215, #2221 |
 
-`expectation-rewrite` flags a hunk in a `*.test.ts`/`*.spec.ts` file that
-removes an assertion line and adds one (or any edited `__snapshots__` entry),
-then runs the unmodified merge-base version of that test file in a detached
+`expectation-rewrite` lists the modified and renamed `*.test.ts`/`*.spec.ts`
+and `__snapshots__` files, diffs each one on its own (added and deleted files
+cannot hold a rewrite, and one whole-tree diff of a moved test directory
+overflows the capture bound, #2241), flags a hunk that removes an assertion
+line and adds one (or any edited snapshot entry), then runs the unmodified
+merge-base version of that test file (a renamed file under the path the merge
+base holds it at) in a detached
 merge-base worktree under `~/.cache/beep/final-check/`. If the old test passes
 there, the diff's own source change moved the output (`follows-diff`, pass).
 If it already fails there, the rewrite turns an inherited red green without a
