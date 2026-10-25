@@ -28,6 +28,17 @@
       {
         "number": 2238,
         "role": "final"
+      },
+      {
+        "number": 2244,
+        "role": "supporting"
+      }
+    ],
+    "acceptanceEvidence": [
+      {
+        "kind": "packet-history",
+        "ref": "goals/turborepo-cache-conformance/history/receipts/2026-10-24-completion-gate.md",
+        "gating": true
       }
     ]
   },
@@ -135,5 +146,5 @@
     "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
     "Do not overwrite another owner's artifacts or weaken hosted proof."
   ],
-  "statusNote": "Corpus, wire/lab/native runners and frozen-rubric comparison complete across seven targets; AWS lab (USD 10 ceiling, operator-approved) torn down with an empty inventory. No eligible replacement: retain and evolve the incumbent. Production unchanged."
+  "statusNote": "Corpus, wire/lab/native runners and frozen-rubric comparison complete across seven targets; AWS lab (USD 10 ceiling, operator-approved) torn down with an empty inventory. No eligible replacement: retain and evolve the incumbent. Production unchanged. Completion-gate receipt records the RELAXED orchestrator merge of #2238 (no merge-ready: yes line; Test Unit cancelled at merge, green on main) and the #2244 coverage-baseline follow-up; production read throttling handed to turborepo-cache-trust-observability."
 }
