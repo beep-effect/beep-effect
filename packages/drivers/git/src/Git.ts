@@ -5718,27 +5718,32 @@ const stubOf = <K extends keyof GitStubs>(
  */
 export class Git extends Context.Service<Git, GitShape>()($I`Git`) {
   /**
-   * Resolves `ChildProcessSpawner` once, at construction — every method's `R` is `never`.
+   * Builds the live service shape: resolves `ChildProcessSpawner` and reads the
+   * ambient ssh environment once — every method's `R` is `never`.
    *
-   * **Example** (Compose a live repository query)
+   * **Details**
+   *
+   * The same construction {@link Git.layer} runs, as a plain effect. A caller
+   * that adopts one or two `Git` reads inside a module whose own requirements
+   * already include `ChildProcessSpawner` provides it with
+   * `Effect.provideServiceEffect(Git, Git.make)` instead of providing a layer
+   * below the application edge.
+   *
+   * **Example** (Provide the service for one read)
    *
    * ```ts
    * import { Git } from "@beep/git/Git";
    * import * as Effect from "effect/Effect";
    *
-   * const program = Effect.gen(function* () {
-   *   const git = yield* Git;
-   *   return yield* git.repoRoot("/repo");
-   * }).pipe(Effect.provide(Git.layer));
-   * console.log(Effect.isEffect(program)); // true
+   * const root = Git.use((git) => git.repoRoot("/repo")).pipe(Effect.provideServiceEffect(Git, Git.make));
+   * console.log(Effect.isEffect(root)); // true
    * ```
    *
-   * @category layers
+   * @category constructors
    * @since 0.0.0
    */
-  static readonly layer: Layer.Layer<Git, never, ChildProcessSpawner.ChildProcessSpawner> = Layer.effect(
-    this,
-    Effect.gen(function* () {
+  static readonly make: Effect.Effect<GitShape, never, ChildProcessSpawner.ChildProcessSpawner> = Effect.gen(
+    function* () {
       const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
       // The AMBIENT ENVIRONMENT is read ONCE, here, and never again — it
       // cannot change under a running service. The read goes through
@@ -5767,7 +5772,31 @@ export class Git extends Context.Service<Git, GitShape>()($I`Git`) {
         { concurrency: "unbounded" }
       );
       return make(spawner, { command, program, variant });
-    })
+    }
+  );
+
+  /**
+   * Resolves `ChildProcessSpawner` once, at construction — every method's `R` is `never`.
+   *
+   * **Example** (Compose a live repository query)
+   *
+   * ```ts
+   * import { Git } from "@beep/git/Git";
+   * import * as Effect from "effect/Effect";
+   *
+   * const program = Effect.gen(function* () {
+   *   const git = yield* Git;
+   *   return yield* git.repoRoot("/repo");
+   * }).pipe(Effect.provide(Git.layer));
+   * console.log(Effect.isEffect(program)); // true
+   * ```
+   *
+   * @category layers
+   * @since 0.0.0
+   */
+  static readonly layer: Layer.Layer<Git, never, ChildProcessSpawner.ChildProcessSpawner> = Layer.effect(
+    this,
+    this.make
   );
 
   /**
