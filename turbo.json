@@ -199,6 +199,8 @@
         "packages/drivers/acp/src/**",
         "packages/drivers/ai-provider-cli/package.json",
         "packages/drivers/ai-provider-cli/src/**",
+        "packages/drivers/commands/package.json",
+        "packages/drivers/commands/src/**",
         "packages/drivers/duckdb/package.json",
         "packages/drivers/duckdb/src/**",
         "packages/drivers/exiftool/package.json",

@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Opus 5.5 (effected-promotion wave 4-S, feat/effected-promotion-w4-sbom)",
-      "reason": "Record the new wave-4-S workspace @beep/sbom scaffolded by create-package with the generated task set, and the root catalog exact pins ajv 8.20.0 and ajv-formats 3.0.1, both already locked; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (effected-promotion roadmap R9, refactor/drivers-run-collect)",
+      "reason": "Record the R9 manifest edits that add the @beep/commands workspace dependency to @beep/exiftool, @beep/obs, @beep/pdf-tools and @beep/tailscale (Run.collect and Run.detach) and the root policy-fingerprint input that follows from repo-cli reaching @beep/commands; the turbo coupling is measured in the review; no qualification is granted.",
       "basis": {
-        "path": "goals/effected-promotion/research/cache-baseline-review-w4-sbom.md",
-        "sha256": "92bc93ccb4b7f3c280c048978b53e98cc9af92538ac50310d31fca2c8ae14841"
+        "path": "goals/effected-promotion/research/cache-baseline-review-r9.md",
+        "sha256": "ffe6422230b602e4868f45ceb9a5ed0e384a9fe75b195f8d7d560d047eea20ec"
       }
     },
     "@beep/acp": {
@@ -450,11 +450,11 @@
       }
     },
     "@beep/exiftool": {
-      "reviewer": "GPT-6.1-Sol medium (coverage input union with subsequent main promotion)",
-      "reason": "Reconcile only coverage receipt environment keys, ignored nested-checkout root inputs and Turbo schema source digests with current main topology/new promotions; preserve every other task field, scope/profile/epoch, removed drivers and qualification ledger. No reuse qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (effected-promotion roadmap R9, refactor/drivers-run-collect)",
+      "reason": "Record the R9 manifest edits that add the @beep/commands workspace dependency to @beep/exiftool, @beep/obs, @beep/pdf-tools and @beep/tailscale (Run.collect and Run.detach) and the root policy-fingerprint input that follows from repo-cli reaching @beep/commands; the turbo coupling is measured in the review; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/coverage-tsgo-shim-cache-input-review-2026-10-21.md",
-        "sha256": "c85aec4b476f3867fde28749e2ea004eb3058ef0ced84ef195d99362070aff40"
+        "path": "goals/effected-promotion/research/cache-baseline-review-r9.md",
+        "sha256": "ffe6422230b602e4868f45ceb9a5ed0e384a9fe75b195f8d7d560d047eea20ec"
       }
     },
     "@beep/fc-runs": {
@@ -794,11 +794,11 @@
       }
     },
     "@beep/obs": {
-      "reviewer": "GPT-6.1-Sol medium (coverage input union with subsequent main promotion)",
-      "reason": "Reconcile only coverage receipt environment keys, ignored nested-checkout root inputs and Turbo schema source digests with current main topology/new promotions; preserve every other task field, scope/profile/epoch, removed drivers and qualification ledger. No reuse qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (effected-promotion roadmap R9, refactor/drivers-run-collect)",
+      "reason": "Record the R9 manifest edits that add the @beep/commands workspace dependency to @beep/exiftool, @beep/obs, @beep/pdf-tools and @beep/tailscale (Run.collect and Run.detach) and the root policy-fingerprint input that follows from repo-cli reaching @beep/commands; the turbo coupling is measured in the review; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/coverage-tsgo-shim-cache-input-review-2026-10-21.md",
-        "sha256": "c85aec4b476f3867fde28749e2ea004eb3058ef0ced84ef195d99362070aff40"
+        "path": "goals/effected-promotion/research/cache-baseline-review-r9.md",
+        "sha256": "ffe6422230b602e4868f45ceb9a5ed0e384a9fe75b195f8d7d560d047eea20ec"
       }
     },
     "@beep/observability": {
@@ -954,11 +954,11 @@
       }
     },
     "@beep/pdf-tools": {
-      "reviewer": "GPT-6.1-Sol medium (coverage input union with subsequent main promotion)",
-      "reason": "Reconcile only coverage receipt environment keys, ignored nested-checkout root inputs and Turbo schema source digests with current main topology/new promotions; preserve every other task field, scope/profile/epoch, removed drivers and qualification ledger. No reuse qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (effected-promotion roadmap R9, refactor/drivers-run-collect)",
+      "reason": "Record the R9 manifest edits that add the @beep/commands workspace dependency to @beep/exiftool, @beep/obs, @beep/pdf-tools and @beep/tailscale (Run.collect and Run.detach) and the root policy-fingerprint input that follows from repo-cli reaching @beep/commands; the turbo coupling is measured in the review; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/coverage-tsgo-shim-cache-input-review-2026-10-21.md",
-        "sha256": "c85aec4b476f3867fde28749e2ea004eb3058ef0ced84ef195d99362070aff40"
+        "path": "goals/effected-promotion/research/cache-baseline-review-r9.md",
+        "sha256": "ffe6422230b602e4868f45ceb9a5ed0e384a9fe75b195f8d7d560d047eea20ec"
       }
     },
     "@beep/pglite": {
@@ -1314,11 +1314,11 @@
       }
     },
     "@beep/tailscale": {
-      "reviewer": "GPT-6.1-Sol medium (coverage input union with subsequent main promotion)",
-      "reason": "Reconcile only coverage receipt environment keys, ignored nested-checkout root inputs and Turbo schema source digests with current main topology/new promotions; preserve every other task field, scope/profile/epoch, removed drivers and qualification ledger. No reuse qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (effected-promotion roadmap R9, refactor/drivers-run-collect)",
+      "reason": "Record the R9 manifest edits that add the @beep/commands workspace dependency to @beep/exiftool, @beep/obs, @beep/pdf-tools and @beep/tailscale (Run.collect and Run.detach) and the root policy-fingerprint input that follows from repo-cli reaching @beep/commands; the turbo coupling is measured in the review; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/coverage-tsgo-shim-cache-input-review-2026-10-21.md",
-        "sha256": "c85aec4b476f3867fde28749e2ea004eb3058ef0ced84ef195d99362070aff40"
+        "path": "goals/effected-promotion/research/cache-baseline-review-r9.md",
+        "sha256": "ffe6422230b602e4868f45ceb9a5ed0e384a9fe75b195f8d7d560d047eea20ec"
       }
     },
     "@beep/technical-drawing": {
@@ -2937,6 +2937,8 @@
             "packages/drivers/acp/src/**",
             "packages/drivers/ai-provider-cli/package.json",
             "packages/drivers/ai-provider-cli/src/**",
+            "packages/drivers/commands/package.json",
+            "packages/drivers/commands/src/**",
             "packages/drivers/duckdb/package.json",
             "packages/drivers/duckdb/src/**",
             "packages/drivers/exiftool/package.json",
@@ -40375,6 +40377,7 @@
         "command": "bun run --if-present beep:audit",
         "commandDigest": "2a2043c5bbffc5c4243a1889c8ef11a026e81a2d446128496ddce7639fa7d2a9",
         "dependencies": [
+          "@beep/commands#audit",
           "@beep/identity#audit",
           "@beep/memfs#audit",
           "@beep/schema#audit",
@@ -40442,6 +40445,7 @@
         "command": "bun run beep:build",
         "commandDigest": "2a2043c5bbffc5c4243a1889c8ef11a026e81a2d446128496ddce7639fa7d2a9",
         "dependencies": [
+          "@beep/commands#build",
           "@beep/identity#build",
           "@beep/memfs#build",
           "@beep/schema#build",
@@ -40498,6 +40502,7 @@
         "command": "bun run beep:check",
         "commandDigest": "2a2043c5bbffc5c4243a1889c8ef11a026e81a2d446128496ddce7639fa7d2a9",
         "dependencies": [
+          "@beep/commands#build",
           "@beep/identity#build",
           "@beep/memfs#build",
           "@beep/schema#build",
@@ -40541,6 +40546,7 @@
         "command": "bunx vitest run --coverage --exclude=test/integration/**",
         "commandDigest": "2a2043c5bbffc5c4243a1889c8ef11a026e81a2d446128496ddce7639fa7d2a9",
         "dependencies": [
+          "@beep/commands#build",
           "@beep/identity#build",
           "@beep/memfs#build",
           "@beep/schema#build",
@@ -40669,6 +40675,7 @@
         "commandDigest": "2a2043c5bbffc5c4243a1889c8ef11a026e81a2d446128496ddce7639fa7d2a9",
         "dependencies": [
           "//#lint:policy-fingerprint",
+          "@beep/commands#transit",
           "@beep/identity#transit",
           "@beep/memfs#transit",
           "@beep/schema#transit",
@@ -40875,6 +40882,7 @@
         "command": "beep-cli quality test-tsgo-package",
         "commandDigest": "2a2043c5bbffc5c4243a1889c8ef11a026e81a2d446128496ddce7639fa7d2a9",
         "dependencies": [
+          "@beep/commands#transit",
           "@beep/identity#transit",
           "@beep/memfs#transit",
           "@beep/schema#transit",
@@ -40921,6 +40929,7 @@
         "command": "bun run beep:test",
         "commandDigest": "2a2043c5bbffc5c4243a1889c8ef11a026e81a2d446128496ddce7639fa7d2a9",
         "dependencies": [
+          "@beep/commands#transit",
           "@beep/identity#transit",
           "@beep/memfs#transit",
           "@beep/schema#transit",
@@ -40973,6 +40982,7 @@
         "command": "bun run beep:test:integration",
         "commandDigest": "2a2043c5bbffc5c4243a1889c8ef11a026e81a2d446128496ddce7639fa7d2a9",
         "dependencies": [
+          "@beep/commands#build",
           "@beep/identity#build",
           "@beep/memfs#build",
           "@beep/schema#build",
@@ -41017,6 +41027,7 @@
         "command": "bun run beep:test:integration",
         "commandDigest": "2a2043c5bbffc5c4243a1889c8ef11a026e81a2d446128496ddce7639fa7d2a9",
         "dependencies": [
+          "@beep/commands#build",
           "@beep/identity#build",
           "@beep/memfs#build",
           "@beep/schema#build",
@@ -69350,6 +69361,7 @@
         "command": "bun run --if-present beep:audit",
         "commandDigest": "2a2043c5bbffc5c4243a1889c8ef11a026e81a2d446128496ddce7639fa7d2a9",
         "dependencies": [
+          "@beep/commands#audit",
           "@beep/identity#audit",
           "@beep/schema#audit",
           "@beep/test-runner#audit",
@@ -69415,6 +69427,7 @@
         "command": "bun run beep:build",
         "commandDigest": "2a2043c5bbffc5c4243a1889c8ef11a026e81a2d446128496ddce7639fa7d2a9",
         "dependencies": [
+          "@beep/commands#build",
           "@beep/identity#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -69469,6 +69482,7 @@
         "command": "bun run beep:check",
         "commandDigest": "2a2043c5bbffc5c4243a1889c8ef11a026e81a2d446128496ddce7639fa7d2a9",
         "dependencies": [
+          "@beep/commands#build",
           "@beep/identity#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -69510,6 +69524,7 @@
         "command": "bunx vitest run --coverage --exclude=test/integration/**",
         "commandDigest": "2a2043c5bbffc5c4243a1889c8ef11a026e81a2d446128496ddce7639fa7d2a9",
         "dependencies": [
+          "@beep/commands#build",
           "@beep/identity#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -69636,6 +69651,7 @@
         "commandDigest": "2a2043c5bbffc5c4243a1889c8ef11a026e81a2d446128496ddce7639fa7d2a9",
         "dependencies": [
           "//#lint:policy-fingerprint",
+          "@beep/commands#transit",
           "@beep/identity#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
@@ -69840,6 +69856,7 @@
         "command": "beep-cli quality test-tsgo-package",
         "commandDigest": "2a2043c5bbffc5c4243a1889c8ef11a026e81a2d446128496ddce7639fa7d2a9",
         "dependencies": [
+          "@beep/commands#transit",
           "@beep/identity#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
@@ -69884,6 +69901,7 @@
         "command": "bun run beep:test",
         "commandDigest": "2a2043c5bbffc5c4243a1889c8ef11a026e81a2d446128496ddce7639fa7d2a9",
         "dependencies": [
+          "@beep/commands#transit",
           "@beep/identity#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
@@ -69934,6 +69952,7 @@
         "command": "bun run beep:test:integration",
         "commandDigest": "2a2043c5bbffc5c4243a1889c8ef11a026e81a2d446128496ddce7639fa7d2a9",
         "dependencies": [
+          "@beep/commands#build",
           "@beep/identity#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -69976,6 +69995,7 @@
         "command": "bun run beep:test:integration",
         "commandDigest": "2a2043c5bbffc5c4243a1889c8ef11a026e81a2d446128496ddce7639fa7d2a9",
         "dependencies": [
+          "@beep/commands#build",
           "@beep/identity#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -82916,6 +82936,7 @@
         "command": "bun run --if-present beep:audit",
         "commandDigest": "98e237a55f67d9a354c2c4d6d2bb0f93ec4d4defeec4f0db9a04bc20efb05be1",
         "dependencies": [
+          "@beep/commands#audit",
           "@beep/identity#audit",
           "@beep/schema#audit",
           "@beep/test-runner#audit",
@@ -82981,6 +83002,7 @@
         "command": "bun run beep:build",
         "commandDigest": "98e237a55f67d9a354c2c4d6d2bb0f93ec4d4defeec4f0db9a04bc20efb05be1",
         "dependencies": [
+          "@beep/commands#build",
           "@beep/identity#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -83035,6 +83057,7 @@
         "command": "bun run beep:check",
         "commandDigest": "98e237a55f67d9a354c2c4d6d2bb0f93ec4d4defeec4f0db9a04bc20efb05be1",
         "dependencies": [
+          "@beep/commands#build",
           "@beep/identity#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -83076,6 +83099,7 @@
         "command": "bunx vitest run --coverage --exclude=test/integration/**",
         "commandDigest": "98e237a55f67d9a354c2c4d6d2bb0f93ec4d4defeec4f0db9a04bc20efb05be1",
         "dependencies": [
+          "@beep/commands#build",
           "@beep/identity#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -83202,6 +83226,7 @@
         "commandDigest": "98e237a55f67d9a354c2c4d6d2bb0f93ec4d4defeec4f0db9a04bc20efb05be1",
         "dependencies": [
           "//#lint:policy-fingerprint",
+          "@beep/commands#transit",
           "@beep/identity#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
@@ -83406,6 +83431,7 @@
         "command": "beep-cli quality test-tsgo-package",
         "commandDigest": "98e237a55f67d9a354c2c4d6d2bb0f93ec4d4defeec4f0db9a04bc20efb05be1",
         "dependencies": [
+          "@beep/commands#transit",
           "@beep/identity#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
@@ -83450,6 +83476,7 @@
         "command": "bun run beep:test",
         "commandDigest": "98e237a55f67d9a354c2c4d6d2bb0f93ec4d4defeec4f0db9a04bc20efb05be1",
         "dependencies": [
+          "@beep/commands#transit",
           "@beep/identity#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
@@ -83500,6 +83527,7 @@
         "command": "bun run beep:test:integration",
         "commandDigest": "98e237a55f67d9a354c2c4d6d2bb0f93ec4d4defeec4f0db9a04bc20efb05be1",
         "dependencies": [
+          "@beep/commands#build",
           "@beep/identity#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -83542,6 +83570,7 @@
         "command": "bun run beep:test:integration",
         "commandDigest": "98e237a55f67d9a354c2c4d6d2bb0f93ec4d4defeec4f0db9a04bc20efb05be1",
         "dependencies": [
+          "@beep/commands#build",
           "@beep/identity#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -112681,6 +112710,7 @@
         "command": "bun run --if-present beep:audit",
         "commandDigest": "7063fc189aecb6550100ed88f26613a4517ff71d0e161d053b9b765194c39e03",
         "dependencies": [
+          "@beep/commands#audit",
           "@beep/fc-runs#audit",
           "@beep/identity#audit",
           "@beep/schema#audit",
@@ -112746,6 +112776,7 @@
         "command": "bun run beep:build",
         "commandDigest": "7063fc189aecb6550100ed88f26613a4517ff71d0e161d053b9b765194c39e03",
         "dependencies": [
+          "@beep/commands#build",
           "@beep/fc-runs#build",
           "@beep/identity#build",
           "@beep/schema#build",
@@ -112800,6 +112831,7 @@
         "command": "bun run beep:check",
         "commandDigest": "7063fc189aecb6550100ed88f26613a4517ff71d0e161d053b9b765194c39e03",
         "dependencies": [
+          "@beep/commands#build",
           "@beep/fc-runs#build",
           "@beep/identity#build",
           "@beep/schema#build",
@@ -112841,6 +112873,7 @@
         "command": "bunx vitest run --coverage --exclude=test/integration/**",
         "commandDigest": "7063fc189aecb6550100ed88f26613a4517ff71d0e161d053b9b765194c39e03",
         "dependencies": [
+          "@beep/commands#build",
           "@beep/fc-runs#build",
           "@beep/identity#build",
           "@beep/schema#build",
@@ -112967,6 +113000,7 @@
         "commandDigest": "7063fc189aecb6550100ed88f26613a4517ff71d0e161d053b9b765194c39e03",
         "dependencies": [
           "//#lint:policy-fingerprint",
+          "@beep/commands#transit",
           "@beep/fc-runs#transit",
           "@beep/identity#transit",
           "@beep/schema#transit",
@@ -113171,6 +113205,7 @@
         "command": "beep-cli quality test-tsgo-package",
         "commandDigest": "7063fc189aecb6550100ed88f26613a4517ff71d0e161d053b9b765194c39e03",
         "dependencies": [
+          "@beep/commands#transit",
           "@beep/fc-runs#transit",
           "@beep/identity#transit",
           "@beep/schema#transit",
@@ -113215,6 +113250,7 @@
         "command": "bun run beep:test",
         "commandDigest": "7063fc189aecb6550100ed88f26613a4517ff71d0e161d053b9b765194c39e03",
         "dependencies": [
+          "@beep/commands#transit",
           "@beep/fc-runs#transit",
           "@beep/identity#transit",
           "@beep/schema#transit",
@@ -113265,6 +113301,7 @@
         "command": "bun run beep:test:integration",
         "commandDigest": "7063fc189aecb6550100ed88f26613a4517ff71d0e161d053b9b765194c39e03",
         "dependencies": [
+          "@beep/commands#build",
           "@beep/fc-runs#build",
           "@beep/identity#build",
           "@beep/schema#build",
@@ -129077,7 +129114,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "f8771b32f44d4a66fb82e427f2448ef01d1bd3cdf43ac5c590f70024e872045f"
+        "sha256": "29468497f8835c9f7dc378e2a866b493d0a789e716622e50858d74fd8a759430"
       }
     ]
   }
