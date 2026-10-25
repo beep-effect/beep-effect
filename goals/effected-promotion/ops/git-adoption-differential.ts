@@ -20,7 +20,6 @@
  * Exit code 1 when any gate fails.
  */
 import * as NodeURL from "node:url";
-import { Git } from "@beep/git/Git";
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
@@ -31,7 +30,10 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Str from "effect/String";
 import { readAtMergeBase } from "../../../packages/tooling/tool/cli/src/commands/Skills/internal/MergeBase.ts";
-import { detectPrRepository } from "../../../packages/tooling/tool/cli/src/commands/Yeet/internal/ProvenanceFooter.ts";
+import {
+  detectPrRepository,
+  readProvenanceLabels,
+} from "../../../packages/tooling/tool/cli/src/commands/Yeet/internal/ProvenanceFooter.ts";
 import { runCapturedStreams } from "../../../packages/tooling/tool/cli/src/internal/process/StepExec.ts";
 import {
   isRegisteredWorktree,
@@ -128,13 +130,7 @@ const newDetectRepository = (cwd: string) =>
     )
   );
 
-// The shipped label read is module-private; this is its exact expression over `Git.configGet`.
-const newLabels = (cwd: string) =>
-  Git.use((git) => git.configGet(cwd, "beep.provenance.labels")).pipe(
-    Effect.provideServiceEffect(Git, Git.make),
-    Effect.map(O.match({ onNone: () => true, onSome: (value) => value !== "off" })),
-    Effect.orElseSucceed(() => true)
-  );
+const newLabels = readProvenanceLabels;
 
 // --- scratch repositories ---------------------------------------------------------------------------------------
 
@@ -189,6 +185,11 @@ const CLASSIFIED: ReadonlyArray<readonly [site: string, scenario: string, reason
     "no origin",
     "message-only: an unset remote.origin.url is the github-origin refusal, not a git exit-1 failure",
   ],
+  [
+    "readAtMergeBase",
+    "unreadable object at the merge-base",
+    "fail-closed: a show failure other than absent-at-ref is a typed SkillsCommandError (old answered None)",
+  ],
 ];
 
 const program = Effect.gen(function* () {
@@ -229,6 +230,18 @@ const program = Effect.gen(function* () {
     "disjoint histories",
     yield* oldReadAtMergeBase(island, "main", "OWNERS"),
     yield* newReadAtMergeBase(island, "main", "OWNERS")
+  );
+
+  // A file the merge-base carries whose blob is gone from the object store: `git show` exits 128 with
+  // "bad object", which is not the absent-at-ref answer.
+  const corrupt = yield* makeRepository(root, "corrupt");
+  const blob = Str.trim(yield* git(corrupt, ["rev-parse", "main:OWNERS"]));
+  yield* fs.remove(path.join(corrupt, ".git", "objects", Str.slice(0, 2)(blob), Str.slice(2)(blob)));
+  yield* record(
+    "readAtMergeBase",
+    "unreadable object at the merge-base",
+    yield* oldReadAtMergeBase(corrupt, "main", "OWNERS"),
+    yield* newReadAtMergeBase(corrupt, "main", "OWNERS")
   );
 
   // isRegisteredWorktree

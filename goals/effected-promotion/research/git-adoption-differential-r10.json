@@ -1,10 +1,10 @@
 {
   "tool": "goals/effected-promotion/ops/git-adoption-differential.ts",
-  "commit": "2e87aa58fec9c8c77a8d186b6b02a7e661ba1fa5",
+  "commit": "b5d26d88aa4be4319a27784b187708d9dca63874",
   "git": "git version 2.56.0",
-  "scenarios": 36,
+  "scenarios": 37,
   "same": 34,
-  "classified": 2,
+  "classified": 3,
   "unclassified": 0,
   "gates": {
     "unclassified": true
@@ -14,43 +14,43 @@
       "site": "readAtMergeBase",
       "scenario": "present file",
       "verdict": "same",
-      "old": "{\"_tag\":\"ok\",\"base\":\"c6fc4b7c9b480a3736dc831d5099a1e3860813ab\",\"text\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"* @base\\n\"}}",
-      "new": "{\"_tag\":\"ok\",\"base\":\"c6fc4b7c9b480a3736dc831d5099a1e3860813ab\",\"text\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"* @base\\n\"}}"
+      "old": "{\"_tag\":\"ok\",\"base\":\"0f3b3d4135331e22176d2e3389990b23e3ad2dec\",\"text\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"* @base\\n\"}}",
+      "new": "{\"_tag\":\"ok\",\"base\":\"0f3b3d4135331e22176d2e3389990b23e3ad2dec\",\"text\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"* @base\\n\"}}"
     },
     {
       "site": "readAtMergeBase",
       "scenario": "absent file",
       "verdict": "same",
-      "old": "{\"_tag\":\"ok\",\"base\":\"c6fc4b7c9b480a3736dc831d5099a1e3860813ab\",\"text\":{\"_id\":\"Option\",\"_tag\":\"None\"}}",
-      "new": "{\"_tag\":\"ok\",\"base\":\"c6fc4b7c9b480a3736dc831d5099a1e3860813ab\",\"text\":{\"_id\":\"Option\",\"_tag\":\"None\"}}"
+      "old": "{\"_tag\":\"ok\",\"base\":\"0f3b3d4135331e22176d2e3389990b23e3ad2dec\",\"text\":{\"_id\":\"Option\",\"_tag\":\"None\"}}",
+      "new": "{\"_tag\":\"ok\",\"base\":\"0f3b3d4135331e22176d2e3389990b23e3ad2dec\",\"text\":{\"_id\":\"Option\",\"_tag\":\"None\"}}"
     },
     {
       "site": "readAtMergeBase",
       "scenario": "directory path",
       "verdict": "same",
-      "old": "{\"_tag\":\"ok\",\"base\":\"c6fc4b7c9b480a3736dc831d5099a1e3860813ab\",\"text\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"tree c6fc4b7c9b480a3736dc831d5099a1e3860813ab:dir with space\\n\\nfile name.md\\n\"}}",
-      "new": "{\"_tag\":\"ok\",\"base\":\"c6fc4b7c9b480a3736dc831d5099a1e3860813ab\",\"text\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"tree c6fc4b7c9b480a3736dc831d5099a1e3860813ab:dir with space\\n\\nfile name.md\\n\"}}"
+      "old": "{\"_tag\":\"ok\",\"base\":\"0f3b3d4135331e22176d2e3389990b23e3ad2dec\",\"text\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"tree 0f3b3d4135331e22176d2e3389990b23e3ad2dec:dir with space\\n\\nfile name.md\\n\"}}",
+      "new": "{\"_tag\":\"ok\",\"base\":\"0f3b3d4135331e22176d2e3389990b23e3ad2dec\",\"text\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"tree 0f3b3d4135331e22176d2e3389990b23e3ad2dec:dir with space\\n\\nfile name.md\\n\"}}"
     },
     {
       "site": "readAtMergeBase",
       "scenario": "path with spaces and unicode",
       "verdict": "same",
-      "old": "{\"_tag\":\"ok\",\"base\":\"c6fc4b7c9b480a3736dc831d5099a1e3860813ab\",\"text\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"unicode: ünïcödé ✓\\n\"}}",
-      "new": "{\"_tag\":\"ok\",\"base\":\"c6fc4b7c9b480a3736dc831d5099a1e3860813ab\",\"text\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"unicode: ünïcödé ✓\\n\"}}"
+      "old": "{\"_tag\":\"ok\",\"base\":\"0f3b3d4135331e22176d2e3389990b23e3ad2dec\",\"text\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"unicode: ünïcödé ✓\\n\"}}",
+      "new": "{\"_tag\":\"ok\",\"base\":\"0f3b3d4135331e22176d2e3389990b23e3ad2dec\",\"text\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"unicode: ünïcödé ✓\\n\"}}"
     },
     {
       "site": "readAtMergeBase",
       "scenario": "untrimmed content without newline",
       "verdict": "same",
-      "old": "{\"_tag\":\"ok\",\"base\":\"c6fc4b7c9b480a3736dc831d5099a1e3860813ab\",\"text\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"  padded text without newline  \"}}",
-      "new": "{\"_tag\":\"ok\",\"base\":\"c6fc4b7c9b480a3736dc831d5099a1e3860813ab\",\"text\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"  padded text without newline  \"}}"
+      "old": "{\"_tag\":\"ok\",\"base\":\"0f3b3d4135331e22176d2e3389990b23e3ad2dec\",\"text\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"  padded text without newline  \"}}",
+      "new": "{\"_tag\":\"ok\",\"base\":\"0f3b3d4135331e22176d2e3389990b23e3ad2dec\",\"text\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"  padded text without newline  \"}}"
     },
     {
       "site": "readAtMergeBase",
       "scenario": "1 MiB file",
       "verdict": "same",
-      "old": "{\"_tag\":\"ok\",\"base\":\"c6fc4b7c9b480a3736dc831d5099a1e3860813ab\",\"text\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"(self) => self.repeat(Count.normalize(count))\"}}",
-      "new": "{\"_tag\":\"ok\",\"base\":\"c6fc4b7c9b480a3736dc831d5099a1e3860813ab\",\"text\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"(self) => self.repeat(Count.normalize(count))\"}}"
+      "old": "{\"_tag\":\"ok\",\"base\":\"0f3b3d4135331e22176d2e3389990b23e3ad2dec\",\"text\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"(self) => self.repeat(Count.normalize(count))\"}}",
+      "new": "{\"_tag\":\"ok\",\"base\":\"0f3b3d4135331e22176d2e3389990b23e3ad2dec\",\"text\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"(self) => self.repeat(Count.normalize(count))\"}}"
     },
     {
       "site": "readAtMergeBase",
@@ -71,6 +71,13 @@
       "scenario": "disjoint histories",
       "verdict": "same",
       "old": "{\"_tag\":\"error\"}",
+      "new": "{\"_tag\":\"error\"}"
+    },
+    {
+      "site": "readAtMergeBase",
+      "scenario": "unreadable object at the merge-base",
+      "verdict": "fail-closed: a show failure other than absent-at-ref is a typed SkillsCommandError (old answered None)",
+      "old": "{\"_tag\":\"ok\",\"base\":\"0f3b3d4135331e22176d2e3389990b23e3ad2dec\",\"text\":{\"_id\":\"Option\",\"_tag\":\"None\"}}",
       "new": "{\"_tag\":\"error\"}"
     },
     {
