@@ -29,6 +29,7 @@ import {
 } from "@beep/repo-cli/test/Cli";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
+import { NodeServices } from "@effect/platform-node";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
@@ -357,6 +358,24 @@ describe("internal/cli/FsGuards", () => {
     );
 
     it.effect(
+      "maps a missing file through the caller's error adapter",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "fs-guards-hash-missing-" });
+        const missing = path.join(root, "missing.bin");
+
+        const error = yield* hashFileSha256(missing, hashTestError).pipe(Effect.flip);
+
+        expect(error).toEqual(FsGuardTestError.make({ message: `hash: ${missing}` }));
+      })
+    );
+  });
+
+  // Real streaming over a multi-chunk file: the in-memory filesystem appends are quadratic here,
+  // so this case stays on the platform filesystem it is meant to exercise.
+  it.layer(NodeServices.layer, { timeout: "120 seconds" })("hashFileSha256 over the platform filesystem", (it) => {
+    it.effect(
       "hashes a file far larger than one chunk without reading it whole",
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -407,20 +426,6 @@ describe("internal/cli/FsGuards", () => {
         expect(A.length(observedSizes)).toBeGreaterThanOrEqual(chunkCount);
         expect(Math.max(...observedSizes)).toBeLessThanOrEqual(hashFileChunkBytes);
         expect(A.reduce(observedSizes, 0, (total, size) => total + size)).toBe(totalBytes);
-      })
-    );
-
-    it.effect(
-      "maps a missing file through the caller's error adapter",
-      Effect.fnUntraced(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const root = yield* fs.makeTempDirectoryScoped({ prefix: "fs-guards-hash-missing-" });
-        const missing = path.join(root, "missing.bin");
-
-        const error = yield* hashFileSha256(missing, hashTestError).pipe(Effect.flip);
-
-        expect(error).toEqual(FsGuardTestError.make({ message: `hash: ${missing}` }));
       })
     );
   });

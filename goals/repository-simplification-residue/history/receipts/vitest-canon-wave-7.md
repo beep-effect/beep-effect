@@ -17,12 +17,12 @@ and 143 open (43 `platform-filesystem-candidate`, 100 `platform-resource-provena
 
 | Package | Open EV010 at base | Migrated | Open after |
 | --- | ---: | ---: | ---: |
-| `@beep/repo-cli` | 123 | 15 | 108 |
+| `@beep/repo-cli` | 123 | 14 | 109 |
 | `@beep/law-practice-server` | 4 | 2 | 2 |
 | `@beep/m365-mcp`, `@beep/occt` | 3 each | 0 | 3 each |
 | `@beep/practice-identify` | 2 | 0 | 2 |
 | `@beep/box-provisioning`, `@beep/ciops`, `@beep/effect-drizzle`, `@beep/lint-rules`, `@beep/pdf-tools`, `@beep/repo-utils`, `@beep/technical-drawing`, `@beep/utils` | 1 each | 0 | 1 each |
-| **Total** | **143** | **17** | **126** |
+| **Total** | **143** | **16** | **127** |
 
 By class: `platform-filesystem-candidate` 43 to 37 (6 retired), and
 `platform-resource-provenance-review` 100 to 89 (11 retired).
@@ -83,7 +83,7 @@ them, `introduced=0`.
 | --- | --- | --- | --- | ---: |
 | `allowlist-check.test.ts` | repo-cli | resource-provenance-review | 1 | 7 |
 | `cache-synthetic-orchestration.test.ts` | repo-cli | resource-provenance-review | 1 (root `NodeCrypto` kept) | 16 |
-| `cli-kits.test.ts` | repo-cli | resource-provenance-review | 1 + 3 | 30 |
+| `cli-kits.test.ts` | repo-cli | resource-provenance-review | 0 (3 tests on memfs; the large-file streaming test stays on `NodeServices.layer`, so its row stays open) | 30 |
 | `drawings-judge.test.ts` | repo-cli | resource-provenance-review | 1 | 2 |
 | `effect-vitest-store.test.ts` | repo-cli | resource-provenance-review | 1 | 3 |
 | `fallow-audit-cache.test.ts` | repo-cli | resource-provenance-review | 1 | 5 |
@@ -99,8 +99,8 @@ them, `introduced=0`.
 | `PracticeKg.mail-index.test.ts` | law-practice-server | resource-provenance-review | 1 (`Layer.fresh` kept) | 6 |
 | `PracticeKg.register.test.ts` | law-practice-server | resource-provenance-review | 1 (`Layer.fresh` kept) | 6 |
 
-17 files, 17 rows, 264 tests (plus the contract-test fixture repoint below). No assertion, expected value, test name or registration
-changed. No test was skipped, added or removed. The `cli-kits` block already sat beside a
+17 files, 16 rows, 264 tests (plus the contract-test fixture repoint below). No assertion, expected value, test name or registration
+changed. No test was skipped, added or removed. **Correction from hosted CI (#2250):** moving the whole `hashFileSha256` block onto `MemoryFileSystem` made "hashes a file far larger than one chunk without reading it whole" time out at 300 s on hosted Test Unit, because 64 appends to the in-memory file are quadratic. That test exercises real streaming over a multi-chunk file, which is the platform-bound class this receipt describes. It now runs in its own `NodeServices.layer` block, while the three portable cases stay on memory. Its EV010 row stays open, so the wave retires 16 rows, not 17. The `cli-kits` block already sat beside a
 `MemoryFileSystem` block in the same file. The `yeet-settle` `temporary` helper already
 provided a no-op filesystem per test, so its platform swap only changes the services that
 helper does not shadow.
@@ -126,7 +126,7 @@ lifecycle logging) still holds, so it is left unchanged. All 698 exceptions are
 byte-identical. The `files-command` `withReplacedPath` exception and the seven
 `#1855 wave 4 register` exceptions are untouched.
 
-## Not migrated: 126 rows
+## Not migrated: 127 rows
 
 No exception was added. Each class below gives the evidence that the test needs a live
 platform resource, from the memory-filesystem trial unless marked otherwise. Under S31 these
@@ -209,34 +209,35 @@ for #1855's owner/exit register wave.
   is out of this wave's scope. Several are native by source: OCCT and PDF tools run native
   binaries, the m365-mcp attachment source uses `realPath`/`symlink`, and `@beep/utils`
   `FileSystem.test.ts` tests the native filesystem helpers themselves.
+- **H8. Real multi-chunk streaming (1 row).** The `cli-kits` `hashFileSha256` large-file case streams 64 chunks from a real file and proves it never reads the file whole. On `MemoryFileSystem`, its 64 appends are quadratic and it timed out at 300 s on hosted Test Unit, so it stays on `NodeServices.layer`.
 - **Deferred to the next wave (#2247 overlap, 2 rows).** `step-capture-lifecycle.test.ts:15` and
   `:16`.
 
 ## After the wave
 
 `lint effect-vitest --write` was run twice, and the inventory sha256 was identical both times
-(`52e103da886c9f87acf2f9d2471386f11ff2d375ce3bca9b4b0cee0edd50100b`). It holds 943 rows: 698
-exceptions and 245 open. A plain scan reports `introduced=0 resolved=0`.
+(`79812a797da22fcf7424595ea65907910e0eb0f9a3cd4a1853e7876cc162922f`). It holds 944 rows: 698
+exceptions and 246 open. A plain scan reports `introduced=0 resolved=0`.
 
 Against `d46bb55e6b`, paired by `(ruleId, file, occurrence)`:
 
 | | Rows |
 | --- | ---: |
 | Base | 960 (698 exceptions, 262 open) |
-| Gone | 17 (all EV010, all open: 6 `platform-filesystem-candidate`, 11 `platform-resource-provenance-review`) |
+| Gone | 16 (all EV010, all open: 6 `platform-filesystem-candidate`, 10 `platform-resource-provenance-review`) |
 | New | 0 |
 | Status changed | 0 |
-| After | 943 (698 exceptions, 245 open) |
+| After | 944 (698 exceptions, 246 open) |
 
-That reconciles exactly: 262 − 17 = 245 open, 960 − 17 = 943 rows, and exceptions stay at 698.
-EV010 open falls from 143 to 126.
+That reconciles exactly: 262 − 16 = 246 open, 960 − 16 = 944 rows, and exceptions stay at 698.
+EV010 open falls from 143 to 127.
 
 The scan saw 2,802 files after the dependency build (2,798 before). The four extra files are
 built `dist/` copies in test-kit packages, and they produce no rows.
 
 ## What remains
 
-- EV010: 126 open rows. H1 and H6 (9 rows) need #1855 detector rulings. H2-H5 (99 rows) are
+- EV010: 127 open rows, including the `cli-kits` large-file streaming row kept on the platform filesystem. H1 and H6 (9 rows) need #1855 detector rulings. H2-H5 (99 rows) are
   live-resource classes for #1855's owner/exit register. H7 (16 rows) needs a memory-filesystem
   dependency or a native ruling per package. 2 rows are deferred until #2247 merges.
 - Next #1875 wave: wave 8, the two `step-capture-lifecycle` EV010 rows after #2247 merges, plus
@@ -254,7 +255,7 @@ cross-provider lane. Every heavy command ran alone through `beep-heavy` with std
 | Check | Result |
 | --- | --- |
 | `bun run beep lint effect-vitest` | base `introduced=0`. A first pass gave `introduced=7` (EV014 on the new memory layers), fixed with hook timeouts. The final scan gave `introduced=0 resolved=20` before `--write` (17 of this wave's rows plus 3 rows from files later restored to `HEAD`), then `introduced=0 resolved=0` after it. |
-| `--write` byte stability | two consecutive writes, identical sha256 `52e103da...0100b`. 960 rows to 943. |
+| `--write` byte stability | two consecutive writes, identical sha256 `79812a79...2922f`. 960 rows to 944. |
 | Exceptions | 698 before and after, reasons unchanged |
 | repo-cli `bun run check` (tsconfig.check, scripts, test overlay) | exit 0 after restoring H1. The first run failed TS377004 on the three H1 files. |
 | law-practice-server `bun run check` (with `tsconfig.test.json`) | exit 0 |
@@ -277,6 +278,6 @@ cross-provider lane. Every heavy command ran alone through `beep-heavy` with std
 
 ## Reversal
 
-Revert the PR. The 17 files go back to their native layers, the contract test scans `effect-vitest-store.test.ts` again, the 17 EV010 open rows return
+Revert the PR. The 17 files go back to their native layers, the contract test scans `effect-vitest-store.test.ts` again, the 16 EV010 open rows return
 with their previous occurrences, and the inventory returns to the base: 960 rows, 698
 exceptions, 262 open (EV010 143 open). Nothing else is generated.
