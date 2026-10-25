@@ -367,10 +367,7 @@ const collectTemplateFiles = Effect.fn("CatalogUsage.collectTemplateFiles")(func
 const readCatalogUsageSnapshot = Effect.fn("CatalogUsage.readCatalogUsageSnapshot")(function* (
   repoRoot: string
 ): Effect.fn.Return<CatalogUsageSnapshot, CatalogUsageError, SourceEnvironment> {
-  const root = yield* readText(repoRoot, "package.json").pipe(
-    CatalogUsageError.mapError("Failed to parse the root package.json.", "package.json"),
-    Effect.flatMap(readRootCatalogs)
-  );
+  const root = yield* readText(repoRoot, "package.json").pipe(Effect.flatMap(readRootCatalogs));
   const workspaceFiles = yield* collectWorkspacePackageJsonFiles(repoRoot).pipe(
     CatalogUsageError.mapError("Failed to list workspace package manifests.")
   );
