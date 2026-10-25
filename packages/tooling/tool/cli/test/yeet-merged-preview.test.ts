@@ -1,3 +1,4 @@
+import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   defaultYeetRunOptions,
   gitObjectIdFromOutput,
@@ -13,7 +14,6 @@ import {
 } from "@beep/repo-cli/test/Yeet";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
-import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
@@ -29,7 +29,7 @@ const HEAD_SHA = "2222222222222222222222222222222222222222";
 const COMMIT_SHA = "3333333333333333333333333333333333333333";
 
 const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
-  Layer.provideMerge(Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer))
+  Layer.provideMerge(Layer.mergeAll(BunCrypto.layer, MemoryFileSystem.layer, NodePath.layer))
 );
 
 const context = RepoRunContext.make({

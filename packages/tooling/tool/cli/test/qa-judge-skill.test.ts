@@ -1,7 +1,7 @@
+import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { QaJudgeContract, QaJudgeSkillOptions, runQaJudgeSkill } from "@beep/repo-cli/commands/Qa";
 import { renderSkillMarkdown } from "@beep/skill-contract";
 import { it } from "@beep/test-runner";
-import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { expect, vi } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -13,10 +13,10 @@ import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as Str from "effect/String";
 
-const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
+const PlatformLayer = Layer.mergeAll(MemoryFileSystem.layer, NodePath.layer);
 const expectedMarkdown = Result.getOrThrow(renderSkillMarkdown(QaJudgeContract));
 
-it.layer(PlatformLayer)("commands/Qa judge-skill", (it) => {
+it.layer(PlatformLayer, { timeout: "30 seconds" })("commands/Qa judge-skill", (it) => {
   it.effect("writes the rendered artifact bytes to the requested path, creating parent directories", () =>
     Effect.acquireUseRelease(
       Effect.flatMap(FileSystem.FileSystem, (fs) => fs.makeTempDirectory({ prefix: "beep-qa-judge-skill-" })),

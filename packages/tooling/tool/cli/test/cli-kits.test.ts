@@ -29,7 +29,7 @@ import {
 } from "@beep/repo-cli/test/Cli";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -46,6 +46,8 @@ import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+
+const PlatformLayer = Layer.mergeAll(MemoryFileSystem.layer, Path.layer, NodeCrypto.layer);
 
 const decodeRunModeEffect = S.decodeEffect(RunMode);
 
@@ -304,7 +306,7 @@ describe("internal/cli/FsGuards", () => {
     expect(Effect.isEffect(renameOrFail("/b", renameOptions)("/a"))).toBe(true);
   });
 
-  it.layer(NodeServices.layer, { timeout: "120 seconds" })("hashFileSha256", (it) => {
+  it.layer(PlatformLayer, { timeout: "120 seconds" })("hashFileSha256", (it) => {
     it.effect(
       "produces the published SHA-256 test vectors",
       Effect.fnUntraced(function* () {

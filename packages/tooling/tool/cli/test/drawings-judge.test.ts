@@ -1,12 +1,15 @@
+import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { DrawingsCommandError, ingestDrawingJudgeInventory } from "@beep/repo-cli/commands/Drawings";
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertInstanceOf } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
+
+const PlatformLayer = Layer.mergeAll(MemoryFileSystem.layer, Path.layer);
 
 const inventory = (lens: string, evidencePath: string, requiredCount = 1) => ({
   schemaVersion: "qa-inventory/v1",
@@ -50,7 +53,7 @@ const fenced = (value: unknown) =>
   toJson(value).pipe(Effect.map((json) => `\`\`\`json\n${json}\n\`\`\`\nREQUIRED FINDINGS: 1\n`));
 
 describe("beep drawings judge-ingest", () => {
-  it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
+  it.layer(PlatformLayer, { timeout: "30 seconds" })((it) => {
     it.effect(
       "accepts a fenced drawing-rubric inventory and stores it in the pack",
       Effect.fnUntraced(function* () {

@@ -63,6 +63,9 @@ const isEffectVitestPackageTiming = S.is(EffectVitestPackageTiming);
 
 const discoveryLayer = Layer.mergeAll(NodeServices.layer, FsUtilsLive.pipe(Layer.provide(NodeServices.layer)));
 const repositoryRoot = NodeURL.fileURLToPath(new URL("../../../../..", import.meta.url));
+// A checked-in test whose native-subject EV010 row is a reviewed exception, so the scan
+// below always reports at least one finding for it.
+const scannedTestFile = "packages/tooling/tool/cli/test/basic-ftp-compatibility.test.ts";
 
 const fixtureInventoryFileSystem = Effect.fnUntraced(function* () {
   const fs = yield* FileSystem.FileSystem;
@@ -196,7 +199,7 @@ it.layer(discoveryLayer, { timeout: "30 seconds" })("discovery filesystem", (it)
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const fsUtils = yield* FsUtils;
-      const absolute = path.join(repositoryRoot, "packages/tooling/tool/cli/test/effect-vitest-store.test.ts");
+      const absolute = path.join(repositoryRoot, scannedTestFile);
       const inventory = path.join(repositoryRoot, EffectVitestInventoryPath);
       let reported = A.empty<string>();
       const currentConsole = yield* Console.Console;
@@ -218,12 +221,7 @@ it.layer(discoveryLayer, { timeout: "30 seconds" })("discovery filesystem", (it)
       assertTrue(failure._tag === "CliReportedExit");
       assertTrue(failure.message === "effect-vitest: ratchet failed on new instances.");
       assertTrue(O.exists(A.head(reported), (line) => /^\[effect-vitest\] \d+ new finding\(s\)$/u.test(line)));
-      assertTrue(
-        A.some(
-          reported,
-          Str.startsWith("[effect-vitest]   packages/tooling/tool/cli/test/effect-vitest-store.test.ts: ")
-        )
-      );
+      assertTrue(A.some(reported, Str.startsWith(`[effect-vitest]   ${scannedTestFile}: `)));
       assertTrue(O.exists(A.last(reported), Str.startsWith("[effect-vitest] total: ")));
     })
   );
@@ -344,7 +342,7 @@ it.layer(discoveryLayer, { timeout: "30 seconds" })("discovery filesystem", (it)
       const windowsContext = yield* Layer.build(NodePath.layerWin32);
       const windows = Context.get(windowsContext, Path.Path);
       const output = yield* fs.makeTempDirectoryScoped({ prefix: "effect-vitest-paths-" });
-      const file = "packages/tooling/tool/cli/test/effect-vitest-store.test.ts";
+      const file = scannedTestFile;
       const absolute = path.join(repositoryRoot, file);
       const scan = Effect.fnUntraced(function* (prefix: string, index: number) {
         const calls = A.empty<readonly [string, string]>();

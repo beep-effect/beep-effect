@@ -1,8 +1,9 @@
+import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { CacheFixtureRuntime, CacheSyntheticRequest } from "@beep/repo-cli/commands/Cache";
 import { runCacheSyntheticForTesting } from "@beep/repo-cli/test/Cache";
 import { CacheClientPin } from "@beep/repo-configs/cache";
 import { LiteralKit, Sha256HexFromBytes } from "@beep/schema";
-import { NodeCrypto, NodeServices } from "@effect/platform-node";
+import { NodeCrypto } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -24,7 +25,7 @@ import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 
-const platform = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer);
+const platform = Layer.mergeAll(MemoryFileSystem.layer, Path.layer, NodeCrypto.layer);
 const encodeJson = S.encodeEffect(S.fromJsonString(S.Unknown));
 const hashBytes = S.decodeEffect(Sha256HexFromBytes);
 const hash = (text: string) => hashBytes(new TextEncoder().encode(text));
@@ -219,7 +220,7 @@ const fixture = Effect.fn("SyntheticOrchestrationTest.fixture")(function* (fault
   return { root, fs, path, run, request, calls };
 });
 
-it.layer(platform)("synthetic orchestration process boundary", (it) => {
+it.layer(platform, { timeout: "30 seconds" })("synthetic orchestration process boundary", (it) => {
   it.effect(
     "compares fresh, replay, invalidation and adversarial observations and removes disposable roots",
     Effect.fnUntraced(function* () {
