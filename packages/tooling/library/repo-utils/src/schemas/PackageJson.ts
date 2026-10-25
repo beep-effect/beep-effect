@@ -904,6 +904,8 @@ export class PackageJson extends PackageManifest.extend<PackageJson>($I`PackageJ
    * console.log(manifest.toJsonString().includes("ecosystem")) // true
    * ```
    *
+   * @param options - Kit formatting options (indent, sort, stripEmpty, newline).
+   * @returns The formatted package.json text.
    * @category serialization
    * @since 0.0.0
    */
