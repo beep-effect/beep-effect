@@ -24,6 +24,7 @@ train (#1851/#1860) plus detector repairs (#1855), starting with F-S31-EV010.
 Issue #1860 is complete: the third A-train PR landed the catalog removals and the
 `beep quality catalog-usage` detector
 ([record](./history/receipts/catalog-removals-record.md)).
+Issue #1851 is complete: the closeout census finds zero live consumers of any retired A-train surface, with every remaining hit classified as immutable evidence or a name collision ([record](./history/receipts/a-retire-consumer-census.md)).
 Issue #1853 is complete: all five retained patches have a focused test and a
 fail-unpatched/pass-patched pair at the installed version, and none has a published
 upstream exit yet ([record](./history/receipts/patch-proofs-record.md)).

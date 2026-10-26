@@ -41,7 +41,7 @@ a focused test and a current-version fail-unpatched/pass-patched pair, and none 
 a published upstream exit.
 #1861 `residue-hold-exits` is
 complete (`history/receipts/hold-register.md`), ahead of the 2026-10-30 deadline.
-#1851 continues in the A-train.
+#1851 `residue-a-retire` is complete (`history/receipts/a-retire-consumer-census.md`): the closeout census finds zero live consumers of any retired A-train surface.
 #1856 `residue-guidance` is complete: wave 1 classified and fixed the
 guidance surface (`history/receipts/guidance-classification.md`). Wave 2 reviewed
 the 660 inline directives individually; wave 3 added the compile gate for the
