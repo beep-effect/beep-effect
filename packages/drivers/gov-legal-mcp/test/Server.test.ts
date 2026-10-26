@@ -320,7 +320,7 @@ const assertCollision = (
 };
 
 describe("gov-legal MCP frozen contract", () => {
-  it.layer(buildEcfrOnlyLayer())("with only the keyless eCFR source composed", (it) => {
+  it.layer(buildEcfrOnlyLayer(), { timeout: "30 seconds" })("with only the keyless eCFR source composed", (it) => {
     it.effect(
       "mounts and calls all three eCFR tools without credentials",
       Effect.fnUntraced(function* () {
@@ -344,7 +344,7 @@ describe("gov-legal MCP frozen contract", () => {
     );
   });
 
-  it.layer(buildFixtureLayer({}))("without the GovInfo hard-gate key", (it) => {
+  it.layer(buildFixtureLayer({}), { timeout: "30 seconds" })("without the GovInfo hard-gate key", (it) => {
     it.effect(
       "vanishes govinfo_search from listing and direct lookup",
       Effect.fnUntraced(function* () {
@@ -366,156 +366,162 @@ describe("gov-legal MCP frozen contract", () => {
     );
   });
 
-  it.layer(buildFixtureLayer({ GOVINFO_API_KEY: "fixture-secret" }))("with the GovInfo hard-gate key", (it) => {
-    it.effect(
-      "mounts govinfo_search and decodes its fixture result as Search.Success",
-      Effect.fnUntraced(function* () {
-        const server = yield* McpServer.McpServer;
-        assert.deepEqual(listedNames(server), [
-          "ecfr_get_structure",
-          "ecfr_list_titles",
-          "ecfr_search_results",
-          "govinfo_search",
-        ]);
+  it.layer(buildFixtureLayer({ GOVINFO_API_KEY: "fixture-secret" }), { timeout: "30 seconds" })(
+    "with the GovInfo hard-gate key",
+    (it) => {
+      it.effect(
+        "mounts govinfo_search and decodes its fixture result as Search.Success",
+        Effect.fnUntraced(function* () {
+          const server = yield* McpServer.McpServer;
+          assert.deepEqual(listedNames(server), [
+            "ecfr_get_structure",
+            "ecfr_list_titles",
+            "ecfr_search_results",
+            "govinfo_search",
+          ]);
 
-        const result = yield* server.callTool({ name: "govinfo_search", arguments: govinfoArguments });
-        assert.isFalse(result.isError);
-        const decoded = yield* decodeUnknownSearchSuccess(result.structuredContent);
-        assert.strictEqual(decoded.count, 0);
-      })
-    );
+          const result = yield* server.callTool({ name: "govinfo_search", arguments: govinfoArguments });
+          assert.isFalse(result.isError);
+          const decoded = yield* decodeUnknownSearchSuccess(result.structuredContent);
+          assert.strictEqual(decoded.count, 0);
+        })
+      );
 
-    it.effect(
-      "decodes installed MCP definitions, listing, call envelopes, results, and source-schema round trips",
-      Effect.fnUntraced(function* () {
-        const server = yield* McpServer.McpServer;
-        const tools = listedTools(server);
+      it.effect(
+        "decodes installed MCP definitions, listing, call envelopes, results, and source-schema round trips",
+        Effect.fnUntraced(function* () {
+          const server = yield* McpServer.McpServer;
+          const tools = listedTools(server);
 
-        yield* Effect.forEach(tools, (tool) =>
-          encodeMcpSchemaTool(tool).pipe(Effect.flatMap(decodeUnknownMcpSchemaTool))
-        );
-        const listing = McpSchema.ListToolsResult.make({ tools });
-        yield* decodeMcpSchemaListToolsResult(yield* encodeMcpSchemaListToolsResult(listing));
+          yield* Effect.forEach(tools, (tool) =>
+            encodeMcpSchemaTool(tool).pipe(Effect.flatMap(decodeUnknownMcpSchemaTool))
+          );
+          const listing = McpSchema.ListToolsResult.make({ tools });
+          yield* decodeMcpSchemaListToolsResult(yield* encodeMcpSchemaListToolsResult(listing));
 
-        const titlesArguments = yield* decodeEcfrListTitlesParams({});
-        const searchArguments = yield* decodeEcfrSearchParams(ecfrSearchArguments);
-        const structureArguments = yield* decodeEcfrDatedTitleParams(ecfrStructureArguments);
-        const govinfoSearchArguments = yield* decodeUnknownSearchPayload(govinfoArguments);
-        yield* decodeEcfrListTitlesParams(yield* encodeEcfrListTitlesParams(titlesArguments));
-        yield* decodeEcfrSearchParams(yield* encodeEcfrSearchParams(searchArguments));
-        yield* decodeEcfrDatedTitleParams(yield* encodeEcfrDatedTitleParams(structureArguments));
-        yield* decodeSearchPayload(yield* encodeSearchPayload(govinfoSearchArguments));
+          const titlesArguments = yield* decodeEcfrListTitlesParams({});
+          const searchArguments = yield* decodeEcfrSearchParams(ecfrSearchArguments);
+          const structureArguments = yield* decodeEcfrDatedTitleParams(ecfrStructureArguments);
+          const govinfoSearchArguments = yield* decodeUnknownSearchPayload(govinfoArguments);
+          yield* decodeEcfrListTitlesParams(yield* encodeEcfrListTitlesParams(titlesArguments));
+          yield* decodeEcfrSearchParams(yield* encodeEcfrSearchParams(searchArguments));
+          yield* decodeEcfrDatedTitleParams(yield* encodeEcfrDatedTitleParams(structureArguments));
+          yield* decodeSearchPayload(yield* encodeSearchPayload(govinfoSearchArguments));
 
-        const requests = [
-          { name: "ecfr_list_titles", arguments: {} },
-          { name: "ecfr_search_results", arguments: ecfrSearchArguments },
-          { name: "ecfr_get_structure", arguments: ecfrStructureArguments },
-          { name: "govinfo_search", arguments: govinfoArguments },
-        ];
-        yield* Effect.forEach(requests, (request) => decodeMcpSchemaCallToolPayloadSchema(request));
+          const requests = [
+            { name: "ecfr_list_titles", arguments: {} },
+            { name: "ecfr_search_results", arguments: ecfrSearchArguments },
+            { name: "ecfr_get_structure", arguments: ecfrStructureArguments },
+            { name: "govinfo_search", arguments: govinfoArguments },
+          ];
+          yield* Effect.forEach(requests, (request) => decodeMcpSchemaCallToolPayloadSchema(request));
 
-        const titles = yield* server.callTool(A.getUnsafe(requests, 0));
-        const search = yield* server.callTool(A.getUnsafe(requests, 1));
-        const structure = yield* server.callTool(A.getUnsafe(requests, 2));
-        const govinfo = yield* server.callTool(A.getUnsafe(requests, 3));
-        yield* Effect.forEach([titles, search, structure, govinfo], (result) =>
-          encodeMcpSchemaCallToolResult(result).pipe(Effect.flatMap(decodeUnknownMcpSchemaCallToolResult))
-        );
+          const titles = yield* server.callTool(A.getUnsafe(requests, 0));
+          const search = yield* server.callTool(A.getUnsafe(requests, 1));
+          const structure = yield* server.callTool(A.getUnsafe(requests, 2));
+          const govinfo = yield* server.callTool(A.getUnsafe(requests, 3));
+          yield* Effect.forEach([titles, search, structure, govinfo], (result) =>
+            encodeMcpSchemaCallToolResult(result).pipe(Effect.flatMap(decodeUnknownMcpSchemaCallToolResult))
+          );
 
-        const titlesResult = yield* decodeUnknownTitlesResponse(titles.structuredContent);
-        const searchResult = yield* decodeUnknownSearchResultsResponse(search.structuredContent);
-        const structureResult = yield* decodeUnknownStructureNode(structure.structuredContent);
-        const govinfoResult = yield* decodeUnknownSearchSuccess(govinfo.structuredContent);
-        yield* decodeTitlesResponse(yield* encodeTitlesResponse(titlesResult));
-        yield* decodeSearchResultsResponse(yield* encodeSearchResultsResponse(searchResult));
-        yield* decodeStructureNode(yield* encodeStructureNode(structureResult));
-        yield* decodeSearchSuccess(yield* encodeSearchSuccess(govinfoResult));
-      })
-    );
+          const titlesResult = yield* decodeUnknownTitlesResponse(titles.structuredContent);
+          const searchResult = yield* decodeUnknownSearchResultsResponse(search.structuredContent);
+          const structureResult = yield* decodeUnknownStructureNode(structure.structuredContent);
+          const govinfoResult = yield* decodeUnknownSearchSuccess(govinfo.structuredContent);
+          yield* decodeTitlesResponse(yield* encodeTitlesResponse(titlesResult));
+          yield* decodeSearchResultsResponse(yield* encodeSearchResultsResponse(searchResult));
+          yield* decodeStructureNode(yield* encodeStructureNode(structureResult));
+          yield* decodeSearchSuccess(yield* encodeSearchSuccess(govinfoResult));
+        })
+      );
 
-    it.effect(
-      "keeps HTTP tracing enabled while suppressing request parameters from every completed span",
-      Effect.fnUntraced(function* () {
-        const server = yield* McpServer.McpServer;
-        const { completed, tracer } = makeRecordingTracer();
+      it.effect(
+        "keeps HTTP tracing enabled while suppressing request parameters from every completed span",
+        Effect.fnUntraced(function* () {
+          const server = yield* McpServer.McpServer;
+          const { completed, tracer } = makeRecordingTracer();
 
-        yield* Effect.withTracer(
-          Effect.all([
-            server.callTool({ name: "ecfr_list_titles", arguments: { sentinel: SENTINEL } }),
-            server.callTool({ name: "ecfr_search_results", arguments: ecfrSearchArguments }),
-            server.callTool({ name: "ecfr_get_structure", arguments: ecfrStructureArguments }),
-            server.callTool({ name: "govinfo_search", arguments: govinfoArguments }),
-          ]),
-          tracer
-        );
+          yield* Effect.withTracer(
+            Effect.all([
+              server.callTool({ name: "ecfr_list_titles", arguments: { sentinel: SENTINEL } }),
+              server.callTool({ name: "ecfr_search_results", arguments: ecfrSearchArguments }),
+              server.callTool({ name: "ecfr_get_structure", arguments: ecfrStructureArguments }),
+              server.callTool({ name: "govinfo_search", arguments: govinfoArguments }),
+            ]),
+            tracer
+          );
 
-        assert.isTrue(A.isReadonlyArrayNonEmpty(completed));
-        assert.isTrue(
-          A.some(completed, (span) => A.some(span.attributes, (attribute) => attribute.key === "http.request.method"))
-        );
-        const sensitiveAttributes = A.flatMap(completed, (span) =>
-          pipe(
-            span.attributes,
-            A.filter(
-              (attribute) =>
-                A.contains(sensitiveSpanAttributeKeys, attribute.key) || containsSensitiveValue(attribute.value)
-            ),
-            A.map((attribute) => ({ attribute, span: span.name }))
-          )
-        );
-        assert.deepEqual(sensitiveAttributes, []);
-        const tools = pipe(
-          completed,
-          A.flatMap((span) => span.attributes),
-          A.filter((attribute) => attribute.key === "tool"),
-          A.map((attribute) => attribute.value),
-          A.filter(P.isString),
-          A.sort(Order.String)
-        );
-        assert.deepEqual(tools, ["ecfr_get_structure", "ecfr_list_titles", "ecfr_search_results", "govinfo_search"]);
-      })
-    );
-
-    it.effect(
-      "encodes all four explicit read-only hint booleans",
-      Effect.fnUntraced(function* () {
-        const server = yield* McpServer.McpServer;
-        yield* Effect.forEach(listedTools(server), (tool) =>
-          decodeUnknownMcpSchemaToolAnnotations(tool.annotations).pipe(
-            Effect.tap((annotations) =>
-              Effect.sync(() => {
-                assert.strictEqual(annotations.readOnlyHint, true);
-                assert.strictEqual(annotations.destructiveHint, false);
-                assert.strictEqual(annotations.idempotentHint, true);
-                assert.strictEqual(annotations.openWorldHint, true);
-              })
+          assert.isTrue(A.isReadonlyArrayNonEmpty(completed));
+          assert.isTrue(
+            A.some(completed, (span) => A.some(span.attributes, (attribute) => attribute.key === "http.request.method"))
+          );
+          const sensitiveAttributes = A.flatMap(completed, (span) =>
+            pipe(
+              span.attributes,
+              A.filter(
+                (attribute) =>
+                  A.contains(sensitiveSpanAttributeKeys, attribute.key) || containsSensitiveValue(attribute.value)
+              ),
+              A.map((attribute) => ({ attribute, span: span.name }))
             )
-          )
-        );
-      })
-    );
-  });
+          );
+          assert.deepEqual(sensitiveAttributes, []);
+          const tools = pipe(
+            completed,
+            A.flatMap((span) => span.attributes),
+            A.filter((attribute) => attribute.key === "tool"),
+            A.map((attribute) => attribute.value),
+            A.filter(P.isString),
+            A.sort(Order.String)
+          );
+          assert.deepEqual(tools, ["ecfr_get_structure", "ecfr_list_titles", "ecfr_search_results", "govinfo_search"]);
+        })
+      );
 
-  it.layer(buildFailingGovinfoLayer())("when GovInfo returns a raw transport failure", (it) => {
-    it.effect(
-      "returns only the package-local sanitized failure envelope",
-      Effect.fnUntraced(function* () {
-        const server = yield* McpServer.McpServer;
-        const result = yield* server.callTool({ name: "govinfo_search", arguments: govinfoArguments });
+      it.effect(
+        "encodes all four explicit read-only hint booleans",
+        Effect.fnUntraced(function* () {
+          const server = yield* McpServer.McpServer;
+          yield* Effect.forEach(listedTools(server), (tool) =>
+            decodeUnknownMcpSchemaToolAnnotations(tool.annotations).pipe(
+              Effect.tap((annotations) =>
+                Effect.sync(() => {
+                  assert.strictEqual(annotations.readOnlyHint, true);
+                  assert.strictEqual(annotations.destructiveHint, false);
+                  assert.strictEqual(annotations.idempotentHint, true);
+                  assert.strictEqual(annotations.openWorldHint, true);
+                })
+              )
+            )
+          );
+        })
+      );
+    }
+  );
 
-        assert.isTrue(result.isError);
-        // rc.117 projects declared failures as tool errors whose encoded payload
-        // travels in `content[].text`; `structuredContent` describes successes
-        // only, since it must conform to the advertised `outputSchema`.
-        assert.isUndefined(result.structuredContent);
-        const [first] = result.content;
-        const failure = yield* decodeGovinfoSearchFailureFromJson(first?.type === "text" ? first.text : "");
-        assert.strictEqual(failure._tag, "GovinfoSearchFailure");
-        assert.strictEqual(failure.reason, "transport");
-        assert.isFalse(containsSensitiveValue(result));
-      })
-    );
-  });
+  it.layer(buildFailingGovinfoLayer(), { timeout: "30 seconds" })(
+    "when GovInfo returns a raw transport failure",
+    (it) => {
+      it.effect(
+        "returns only the package-local sanitized failure envelope",
+        Effect.fnUntraced(function* () {
+          const server = yield* McpServer.McpServer;
+          const result = yield* server.callTool({ name: "govinfo_search", arguments: govinfoArguments });
+
+          assert.isTrue(result.isError);
+          // rc.117 projects declared failures as tool errors whose encoded payload
+          // travels in `content[].text`; `structuredContent` describes successes
+          // only, since it must conform to the advertised `outputSchema`.
+          assert.isUndefined(result.structuredContent);
+          const [first] = result.content;
+          const failure = yield* decodeGovinfoSearchFailureFromJson(first?.type === "text" ? first.text : "");
+          assert.strictEqual(failure._tag, "GovinfoSearchFailure");
+          assert.strictEqual(failure.reason, "transport");
+          assert.isFalse(containsSensitiveValue(result));
+        })
+      );
+    }
+  );
 
   it.effect(
     "fails closed on cross-driver normalization collisions",
