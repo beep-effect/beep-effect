@@ -830,11 +830,24 @@ const collectFilesImpl = Effect.fn("QualityScriptCommands.collectFiles")(functio
       return A.empty<string>();
     }
 
-    const stat = yield* fs.stat(childPath).pipe(QualityScriptCommandError.mapError(`Failed to stat ${childPath}.`));
-    if (stat.type === "Directory") {
+    // An entry removed between the directory listing and this stat (a scoped
+    // temporary directory another test is tearing down) contributes nothing;
+    // every other stat failure still fails the walk.
+    const stat = yield* fs.stat(childPath).pipe(
+      Effect.asSome,
+      Effect.catchIf(
+        (error) => error.reason._tag === "NotFound",
+        () => Effect.succeedNone
+      ),
+      QualityScriptCommandError.mapError(`Failed to stat ${childPath}.`)
+    );
+    if (O.isNone(stat)) {
+      return A.empty<string>();
+    }
+    if (stat.value.type === "Directory") {
       return shouldSkipDirectory(`${normalized}/`, entry) ? A.empty<string>() : yield* visit(childPath);
     }
-    return stat.type === "File" && shouldInclude(normalized, entry) ? A.of(childPath) : A.empty<string>();
+    return stat.value.type === "File" && shouldInclude(normalized, entry) ? A.of(childPath) : A.empty<string>();
   });
 
   const visit = Effect.fn("QualityScriptCommands.collectFiles.visit")(function* (
