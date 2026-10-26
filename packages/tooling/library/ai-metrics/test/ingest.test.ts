@@ -2090,6 +2090,38 @@ volumes:
   );
 
   it.effect(
+    "fails an unresolvable hook evidence root before writing any run state",
+    Effect.fn(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const tmpDir = yield* fs.makeTempDirectoryScoped();
+      const dataRoot = path.join(tmpDir, "data");
+      const repoRoot = path.join(tmpDir, "repo");
+      yield* makeGitRoot(repoRoot);
+      const error = yield* Effect.flip(
+        runAiMetricsForwarder(
+          AiMetricsForwarderInput.make({
+            dataRoot: O.some(dataRoot),
+            hashSalt: O.some("storage-fixture-namespace"),
+            homeDir: "relative-home",
+            includeAll: true,
+            parquetExportMode: "none",
+            rawArchiveKey: Redacted.make(Base64.encode(new Uint8Array(32).fill(7))),
+            repoRoot,
+          })
+        ).pipe(
+          Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({})),
+          provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: ":memory:" })))
+        )
+      );
+
+      expect(error.message).toContain("Cannot resolve hook evidence root");
+      // No identity registry, config snapshot or raw archive object was written.
+      assertFalse(yield* fs.exists(dataRoot));
+    })
+  );
+
+  it.effect(
     "falls back unknown transcript type metadata to bounded event names",
     Effect.fn(function* () {
       const summary = yield* summarizeTranscriptText(

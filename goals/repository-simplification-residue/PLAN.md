@@ -60,6 +60,7 @@ Wave 3 ruled FP-2 and FP-6 and retired 192 rows with no row or allowlist entry a
 (`history/receipts/detectors-wave-3.md`); wave 4 is the EV014 named-test-layer frontier.
 Wave 4 repaired the EV015 single-test-block, EV006 browser-project and EV002 repeated-lifecycle classes, retiring 79 rows and converting 7 to owner/exit exceptions (`history/receipts/detectors-wave-4.md`); waves 5-9 are the EV003 process-state ruling, the EV014 named test layers and the 693-row owner/exit register.
 Wave 5 ruled EV003 process-state wrappers a judgment class, repaired the EV003 layer-factory and two EV008 classes, retiring 22 rows and converting 13 to owner/exit exceptions (`history/receipts/detectors-wave-5.md`); wave 6 is the EV014 named test layers.
+Wave 6 closed EV014 by resolving imported test layers across files, ruling hermetic in-memory acquisitions acquisition-free and giving the 39 remaining layers an explicit 30 s hook timeout, retiring 233 exceptions with none added (`history/receipts/detectors-wave-6.md`); wave 7 is the EV010 owner/exit register.
 #1875 `residue-vitest-canon` is in progress after wave 1, which leaves 689 open rows
 (`history/receipts/vitest-canon-wave-1.md`).
 Wave 2 retired every open EV009 and EV014 row and left 26 EV015 rows for #1855

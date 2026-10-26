@@ -12,7 +12,7 @@ const decodeArchitectureLabProofResult = S.decodeEffect(ArchitectureLabProofResu
 const encodeArchitectureLabProofResult = S.encodeEffect(ArchitectureLabProofResult);
 
 describe("architecture lab proof app", () => {
-  it.layer(ArchitectureLabServerLive)("composed app services", (it) => {
+  it.layer(ArchitectureLabServerLive, { timeout: "30 seconds" })("composed app services", (it) => {
     it.effect("runs through the composed app layer", () =>
       Effect.gen(function* () {
         const result = yield* runArchitectureLabProof;

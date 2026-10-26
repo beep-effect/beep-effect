@@ -605,36 +605,29 @@ export const readHeavyAdmissionEvent = Effect.fn("Ci.readHeavyAdmissionEvent")(f
 });
 
 /**
- * Render the `$GITHUB_OUTPUT` lines the `check.yml` admission job consumes.
+ * The step outputs the `check.yml` admission job consumes, in publication order.
  *
- * **Example** (Render a run verdict)
+ * **Example** (Project a run verdict)
  *
  * ```ts
- * import { HeavyAdmission, renderHeavyAdmissionGithubOutput } from "@beep/repo-cli/commands/Ci"
+ * import { HeavyAdmission, heavyAdmissionGithubOutputs } from "@beep/repo-cli/commands/Ci"
  *
  * const admission = HeavyAdmission.make({ verdict: "run", admitted: true, sources: ["label"], docsOnly: false, changedPathCount: 2 })
- * console.log(renderHeavyAdmissionGithubOutput(admission))
- * // verdict=run
- * // admitted=true
- * // docs_only=false
- * // sources=label
+ * console.log(heavyAdmissionGithubOutputs(admission))
+ * // [["verdict","run"],["admitted","true"],["docs_only","false"],["sources","label"]]
  * ```
  *
  * @param admission - The decided admission.
- * @returns Newline-terminated `key=value` lines: `verdict`, `admitted`, `docs_only`, `sources`.
+ * @returns The `verdict`, `admitted`, `docs_only` and `sources` output name and value pairs.
  * @category formatting
  * @since 0.0.0
  */
-export const renderHeavyAdmissionGithubOutput = (admission: HeavyAdmission): string =>
-  `${A.join(
-    [
-      `verdict=${admission.verdict}`,
-      `admitted=${admission.admitted}`,
-      `docs_only=${admission.docsOnly}`,
-      `sources=${A.join(admission.sources, ",")}`,
-    ],
-    "\n"
-  )}\n`;
+export const heavyAdmissionGithubOutputs = (admission: HeavyAdmission): ReadonlyArray<readonly [string, string]> => [
+  ["verdict", admission.verdict],
+  ["admitted", `${admission.admitted}`],
+  ["docs_only", `${admission.docsOnly}`],
+  ["sources", A.join(admission.sources, ",")],
+];
 
 /**
  * Render the one-line human summary printed under `--no-json`.

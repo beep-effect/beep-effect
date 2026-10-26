@@ -49,19 +49,22 @@ describe("TextGraph acyclicity", () => {
 });
 
 describe("TextGraph from document (service-backed)", () => {
-  it.layer(WinkTokenizationLive)("fromDocument creates a doc root with sentence children", (it) => {
-    it.effect(
-      "fromDocument creates a doc root with sentence children",
-      Effect.fnUntraced(function* () {
-        const g = yield* TG.fromDocument("Hello there. How are you?");
-        expect(TG.findNodesByType(g, "document")).toHaveLength(1);
-        const sentences = TG.findNodesByType(g, "sentence");
-        expect(sentences.length).toBeGreaterThanOrEqual(2);
-      })
-    );
-  });
+  it.layer(WinkTokenizationLive, { timeout: "30 seconds" })(
+    "fromDocument creates a doc root with sentence children",
+    (it) => {
+      it.effect(
+        "fromDocument creates a doc root with sentence children",
+        Effect.fnUntraced(function* () {
+          const g = yield* TG.fromDocument("Hello there. How are you?");
+          expect(TG.findNodesByType(g, "document")).toHaveLength(1);
+          const sentences = TG.findNodesByType(g, "sentence");
+          expect(sentences.length).toBeGreaterThanOrEqual(2);
+        })
+      );
+    }
+  );
 
-  it.layer(WinkTokenizationLive)("tokenizeNodes is idempotent", (it) => {
+  it.layer(WinkTokenizationLive, { timeout: "30 seconds" })("tokenizeNodes is idempotent", (it) => {
     it.effect(
       "tokenizeNodes is idempotent",
       Effect.fnUntraced(function* () {

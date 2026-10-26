@@ -111,7 +111,7 @@ const StubMcpClientLayer = Layer.succeed(
 const fullLayer = Layer.mergeAll(McpServer.McpServer.layer, registrationLayer, StubMcpClientLayer);
 
 describe("m365-mcp sanitized dispatch", () => {
-  it.layer(fullLayer)("with M365Toolkit mounted via sanitizedToolkit", (it) => {
+  it.layer(fullLayer, { timeout: "30 seconds" })("with M365Toolkit mounted via sanitizedToolkit", (it) => {
     it.effect(
       "does not leak the raw m365_get_site request payload onto span attributes",
       Effect.fnUntraced(function* () {

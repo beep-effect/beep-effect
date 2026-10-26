@@ -68,6 +68,13 @@ export * from "./CiOperational.service.ts";
  */
 export * from "./CiRerunRunnerLoss.ts";
 /**
+ * The runner-file outputs layer the CI commands publish through.
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export * from "./CiRunnerOutputs.ts";
+/**
  * Dependency review service, live layer and verdict rendering.
  *
  * @category cli-commands

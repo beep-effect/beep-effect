@@ -14,6 +14,7 @@
 import { $GithubId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as O from "@beep/utils/Option";
+import { unstubbedFor } from "@beep/utils/TestDouble";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -26,7 +27,6 @@ import { GitHubClient } from "./GitHubClient.ts";
 import { fileOf } from "./GitHubCommit.ts";
 import { GitHubError } from "./GitHubError.ts";
 import { GraphQLDocument } from "./GraphQL.ts";
-import { unstubbedFor } from "./internal/unstubbed.ts";
 import { Repo } from "./Repo.ts";
 import { PageOptions } from "./Rest.ts";
 import type { CommitFile } from "./GitHubCommit.ts";

@@ -66,7 +66,7 @@ const registrationLayer = sanitizedToolkit(NlpToolkit).pipe(Layer.provide(WinkNl
 const fullLayer = Layer.mergeAll(McpServer.McpServer.layer, registrationLayer);
 
 describe("nlp-mcp sanitized dispatch", () => {
-  it.layer(fullLayer)("with NlpToolkit mounted via sanitizedToolkit", (it) => {
+  it.layer(fullLayer, { timeout: "30 seconds" })("with NlpToolkit mounted via sanitizedToolkit", (it) => {
     it.effect(
       "does not leak the raw Tokenize request text onto span attributes",
       Effect.fnUntraced(function* () {
