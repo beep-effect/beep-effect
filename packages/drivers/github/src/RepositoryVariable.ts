@@ -11,6 +11,7 @@
  * @since 0.0.0
  */
 import { $GithubId } from "@beep/identity/packages";
+import { unstubbedShapeFor } from "@beep/utils/TestDouble";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
@@ -18,7 +19,7 @@ import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import { GitHubClient } from "./GitHubClient.ts";
 import { GitHubError } from "./GitHubError.ts";
-import { scopedStoreMembers, unstubbedShapeFor } from "./internal/unstubbed.ts";
+import { scopedStoreMembers } from "./internal/scopedStoreMembers.ts";
 import { Repo } from "./Repo.ts";
 import type * as Rest from "./Rest.ts";
 

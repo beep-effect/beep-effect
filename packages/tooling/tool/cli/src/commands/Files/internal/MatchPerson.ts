@@ -8,6 +8,8 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { A, HostProcessArchitecture, HostProcessPlatform, Str } from "@beep/utils";
+import { isAbsoluteWin32 } from "@beep/xdg/Absolute";
+import { XdgBase } from "@beep/xdg/XdgBase";
 import * as Bool from "effect/Boolean";
 import * as Config from "effect/Config";
 import * as Console from "effect/Console";
@@ -481,18 +483,62 @@ const canonicalizeExistingDirectory = Effect.fn("Files.matchPersonCanonicalizeDi
   return canonical;
 });
 
+/**
+ * Select the person-match cache directory before it is canonicalized.
+ *
+ * **Details**
+ *
+ * `--cache-dir` (resolved against the working directory) wins; then
+ * `beep/photo-face` beneath the XDG cache home (`@beep/xdg`
+ * `XdgBase.resolve("cache")`: `$XDG_CACHE_HOME` when absolute, else `.cache`
+ * under an absolute `$HOME`); then `.cache/beep/photo-face` beneath
+ * `%USERPROFILE%`, the Windows branch. Values are trimmed, and a blank one
+ * counts as unset. `None` means nothing resolves.
+ *
+ * `XdgBase` is POSIX-only, so Windows roots keep their old rungs beside it: a
+ * drive or UNC `XDG_CACHE_HOME` is still used, and a drive or UNC `HOME` still
+ * comes before `USERPROFILE`. A Windows root is what `@beep/xdg/Absolute`
+ * `isAbsoluteWin32` accepts: a drive root, or any two leading separators.
+ *
+ * **Example** (Build the selection effect)
+ *
+ * ```ts
+ * import { selectPersonMatchCacheRoot } from "@beep/repo-cli/test/Files"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ *
+ * console.log(Effect.isEffect(selectPersonMatchCacheRoot(O.none()))) // true
+ * ```
+ *
+ * @param configured - The `--cache-dir` value, when passed.
+ * @returns The selected cache directory, when one resolves.
+ * @category configuration
+ * @since 0.0.0
+ */
+export const selectPersonMatchCacheRoot = Effect.fn("Files.matchPersonSelectCacheRoot")(function* (
+  configured: O.Option<string>
+): Effect.fn.Return<O.Option<string>, never, Path.Path> {
+  const path = yield* Path.Path;
+  const [xdgCacheHome, home, userProfile] = yield* Effect.all(
+    [readOptionalConfig("XDG_CACHE_HOME"), readOptionalConfig("HOME"), readOptionalConfig("USERPROFILE")],
+    { concurrency: 3 }
+  );
+  const xdgCache = O.orElse(O.filter(xdgCacheHome, isAbsoluteWin32), () =>
+    XdgBase.resolve("cache", { value: O.getOrUndefined(xdgCacheHome), home: O.getOrUndefined(home) })
+  );
+  const homeCache = O.orElse(O.filter(home, isAbsoluteWin32), () => userProfile);
+  return pipe(
+    configured,
+    O.map(path.resolve),
+    O.orElse(() => O.map(xdgCache, (root) => path.join(root, "beep", "photo-face"))),
+    O.orElse(() => O.map(homeCache, (root) => path.join(root, ".cache", "beep", "photo-face")))
+  );
+});
+
 const resolveCacheRoot = Effect.fn("Files.matchPersonResolveCacheRoot")(function* (
   configured: O.Option<string>
 ): Effect.fn.Return<string, FilesCommandError, FileSystem.FileSystem | Path.Path> {
-  const path = yield* Path.Path;
-  const xdgCacheHome = yield* readOptionalConfig("XDG_CACHE_HOME");
-  const home = yield* readConfiguredHome();
-  const selected = pipe(
-    configured,
-    O.map(path.resolve),
-    O.orElse(() => O.map(xdgCacheHome, (root) => path.join(root, "beep", "photo-face"))),
-    O.orElse(() => O.map(home, (root) => path.join(root, ".cache", "beep", "photo-face")))
-  );
+  const selected = yield* selectPersonMatchCacheRoot(configured);
 
   if (O.isNone(selected)) {
     return yield* FilesCommandError.make({

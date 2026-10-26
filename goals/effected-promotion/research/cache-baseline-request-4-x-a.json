@@ -1,0 +1,24 @@
+{
+  "previous": "0977edc9da3f1c31454e319ee232c1e3e993eaf85660b5ccb2ca34985fc93e99",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (effected-promotion wave 4, PR 4-X-A, refactor/xdg-adoption)",
+    "reason": "Record the dependency-only drift of @beep/repo-ai-metrics, @beep/docket-intake and @beep/practice-m365-contacts from their new @beep/xdg edge (the 4-X-A adoption, W4-c); no qualification is granted.",
+    "basis": {
+      "path": "goals/effected-promotion/research/cache-baseline-review-4-x-a.md",
+      "sha256": "e2ee59c9049e73e0ba8fe068e7cafd62ee3bd895f921f5e45f930f1157237ee2"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2",
+  "subjects": [
+    "@beep/repo-ai-metrics",
+    "@beep/docket-intake",
+    "@beep/practice-m365-contacts"
+  ]
+}

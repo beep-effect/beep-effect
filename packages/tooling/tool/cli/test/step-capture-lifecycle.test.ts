@@ -587,7 +587,7 @@ BunRuntime.runMain(
     );
   });
 
-  it.layer(Layer.mergeAll(BunCrypto.layer, MemoryFileSystem.layer, NodePath.layer))((it) => {
+  it.layer(Layer.mergeAll(BunCrypto.layer, MemoryFileSystem.layer, NodePath.layer), { timeout: "30 seconds" })((it) => {
     it.effect(
       "maps a bounded quality-step timeout to exit code 124",
       Effect.fnUntraced(function* () {

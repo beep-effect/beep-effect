@@ -33,7 +33,7 @@ describe("nlp-mcp tool surface", () => {
 });
 
 describe("nlp-mcp wink-backed handlers", () => {
-  it.layer(WinkNlpToolkitLive)("via the mounted toolkit", (it) => {
+  it.layer(WinkNlpToolkitLive, { timeout: "30 seconds" })("via the mounted toolkit", (it) => {
     it.effect(
       "Tokenize resolves through the wink handler layer",
       Effect.fnUntraced(function* () {

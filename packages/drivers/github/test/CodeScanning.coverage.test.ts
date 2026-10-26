@@ -7,7 +7,7 @@ import * as Layer from "effect/Layer";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
-const UnstubbedError = S.TaggedStruct("UnstubbedError", { message: S.String });
+const UnstubbedError = S.TaggedStruct("UnstubbedMemberError", { message: S.String });
 
 describe("CodeScanning test doubles", () => {
   it.layer(Repo.layer(RepoRef.make({ owner: "acme", repo: "widget" })), { timeout: "30 seconds" })((it) => {

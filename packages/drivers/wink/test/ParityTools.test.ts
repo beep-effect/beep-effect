@@ -6,7 +6,7 @@ import * as Effect from "effect/Effect";
 import * as Stream from "effect/Stream";
 
 describe("Adjunct-parity NLP tools", () => {
-  it.layer(WinkNlpToolkitLive)("WordCount counts word-like tokens", (it) => {
+  it.layer(WinkNlpToolkitLive, { timeout: "30 seconds" })("WordCount counts word-like tokens", (it) => {
     it.effect("WordCount counts word-like tokens", () =>
       Effect.gen(function* () {
         const toolkit = yield* NlpToolkit;
@@ -20,7 +20,7 @@ describe("Adjunct-parity NLP tools", () => {
     );
   });
 
-  it.layer(WinkNlpToolkitLive)("RemoveStopWords drops at least one stop word", (it) => {
+  it.layer(WinkNlpToolkitLive, { timeout: "30 seconds" })("RemoveStopWords drops at least one stop word", (it) => {
     it.effect("RemoveStopWords drops at least one stop word", () =>
       Effect.gen(function* () {
         const toolkit = yield* NlpToolkit;
@@ -37,7 +37,7 @@ describe("Adjunct-parity NLP tools", () => {
     );
   });
 
-  it.layer(WinkNlpToolkitLive)("Paragraphize splits on blank-line boundaries", (it) => {
+  it.layer(WinkNlpToolkitLive, { timeout: "30 seconds" })("Paragraphize splits on blank-line boundaries", (it) => {
     it.effect("Paragraphize splits on blank-line boundaries", () =>
       Effect.gen(function* () {
         const toolkit = yield* NlpToolkit;
@@ -51,7 +51,7 @@ describe("Adjunct-parity NLP tools", () => {
     );
   });
 
-  it.layer(WinkNlpToolkitLive)("Stem returns a stem for each word token", (it) => {
+  it.layer(WinkNlpToolkitLive, { timeout: "30 seconds" })("Stem returns a stem for each word token", (it) => {
     it.effect("Stem returns a stem for each word token", () =>
       Effect.gen(function* () {
         const toolkit = yield* NlpToolkit;

@@ -124,6 +124,7 @@ const config = {
     "packages/drivers/commands/package.json",
     "packages/drivers/git/package.json",
     "packages/drivers/github/package.json",
+    "packages/drivers/github-actions/package.json",
   ],
   customTypes: {
     catalog: {

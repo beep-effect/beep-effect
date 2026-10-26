@@ -198,6 +198,8 @@
     "@beep/ffmpeg": "workspace:^",
     "@beep/file-processing": "workspace:^",
     "@beep/github": "workspace:^",
+    "@beep/github-actions": "workspace:^",
+    "@beep/github-commands": "workspace:^",
     "@beep/github-reporting": "workspace:^",
     "@beep/glob": "workspace:^",
     "@beep/identity": "workspace:^",
