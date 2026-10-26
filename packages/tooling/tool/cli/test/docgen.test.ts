@@ -2480,6 +2480,84 @@ Alert.Title = AlertTitle;
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
+  it.effect("reads the leading JSDoc of export default expression statements", () =>
+    Effect.gen(function* () {
+      yield* temporaryRepository;
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const tmpDir = process.cwd();
+      yield* fs.writeFileString(
+        path.join(tmpDir, "package.json"),
+        yield* encodeJson({
+          name: "@beep/test-root",
+          private: true,
+          workspaces: ["packages/foundation/*/*"],
+        })
+      );
+
+      const packageDir = path.join(tmpDir, "packages", "foundation", "modeling", "schema");
+      yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
+      yield* fs.writeFileString(
+        path.join(packageDir, "package.json"),
+        yield* encodeJson({
+          name: "@beep/schema",
+          version: "0.0.0",
+        })
+      );
+      yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
+      yield* fs.writeFileString(
+        path.join(packageDir, "src", "Documented.ts"),
+        `/**
+ * Documented default export.
+ *
+ * @since 0.0.0
+ */
+
+const defineRule = <A>(value: A): A => value;
+
+/**
+ * Defines the documented rule.
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export default defineRule({ name: "documented" });
+`
+      );
+      yield* fs.writeFileString(
+        path.join(packageDir, "src", "Undocumented.ts"),
+        `/**
+ * Undocumented default export.
+ *
+ * @since 0.0.0
+ */
+
+const defineRule = <A>(value: A): A => value;
+
+export default defineRule({ name: "undocumented" });
+`
+      );
+
+      const packages = yield* discoverDocgenWorkspacePackages(tmpDir);
+      const target = O.getOrUndefined(A.findFirst(packages, (pkg) => pkg.name === "@beep/schema"));
+
+      expect(target).toBeDefined();
+
+      const analysis = yield* analyzePackageDocumentation(target!);
+      const defaultExports = A.filter(analysis.exports, (entry) => entry.name === "default");
+
+      const missingTagsFor = (filePath: string) =>
+        A.map(
+          A.filter(defaultExports, (entry) => entry.filePath === filePath),
+          (entry) => entry.missingTags
+        );
+
+      expect(missingTagsFor("src/Documented.ts")).toEqual([[]]);
+      expect(missingTagsFor("src/Undocumented.ts")).toEqual([["@category", "@since"]]);
+      expect(analysis.summary.missingDocumentation).toBe(1);
+    }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+  );
+
   it.effect("uses owning declaration JSDoc for same-file export specifier subjects", () =>
     Effect.gen(function* () {
       yield* temporaryRepository;
