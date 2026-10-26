@@ -33,6 +33,7 @@ import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
@@ -237,8 +238,9 @@ describe("findExpectationRewrites", () => {
 
 describe("vitestReplayArgs", () => {
   const file = "test/a.test.ts";
+  // The synchronous lenient decode: a manifest value, with no Effect runtime to run.
   const manifestWith = (scripts: Record<string, string>) =>
-    Effect.runSync(LenientManifest.parse(JSON.stringify({ scripts })));
+    Result.getOrThrow(LenientManifest.decodeResult({ scripts }));
 
   it("replays under Bun when the package's beep:test runs vitest with --bun", () => {
     const manifest = manifestWith({ "beep:test": "bunx --bun vitest run --passWithNoTests" });

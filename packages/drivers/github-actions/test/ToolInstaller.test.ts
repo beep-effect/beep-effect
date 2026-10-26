@@ -2,6 +2,7 @@ import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import { ActionEnvironment, ToolInstaller, ToolInstallerError } from "@beep/github-actions";
 import { ExtractOptions, ProvisionedFile, ProvisionFileOptions } from "@beep/github-actions/ToolInstaller";
 import { MemoryFileSystem } from "@beep/memfs";
+import { currentHostArchitecture, HostProcessArchitecture } from "@beep/utils/HostProcess";
 import { UnstubbedMemberError } from "@beep/utils/TestDouble";
 import { assert, describe, it } from "@effect/vitest";
 import { assertExitFailure, assertExitSuccess, assertNone, assertSome } from "@effect/vitest/utils";
@@ -347,7 +348,12 @@ describe("ToolInstaller", () => {
           liveWithFileSystem(
             root,
             (fs) => {
-              const destination = ToolInstaller.cachePath({ root, tool: "tool", version: "1", arch: process.arch });
+              const destination = ToolInstaller.cachePath({
+                root,
+                tool: "tool",
+                version: "1",
+                arch: currentHostArchitecture,
+              });
               return {
                 ...fs,
                 remove: (file, options) =>
@@ -439,11 +445,30 @@ describe("ToolInstaller", () => {
             const installer = yield* ToolInstaller;
             assert.strictEqual(
               installer.cachePath("node", "22.11.0"),
-              ToolInstaller.cachePath({ root, tool: "node", version: "22.11.0", arch: process.arch })
+              ToolInstaller.cachePath({ root, tool: "node", version: "22.11.0", arch: currentHostArchitecture })
             );
             assert.isFalse(
               yield* fs.exists(installer.cachePath("node", "22.11.0")),
               "cachePath must not create anything"
+            );
+          })
+        )
+      );
+    });
+
+    it.layer(
+      testLayer({
+        make: (root) => live(root).pipe(Layer.provide(Layer.succeed(HostProcessArchitecture, "arm64"))),
+      }),
+      { timeout: "30 seconds" }
+    )((it) => {
+      it.effect("the service's cachePath arch segment is the injected HostProcessArchitecture", () =>
+        TestRoot.use((root) =>
+          Effect.gen(function* () {
+            const installer = yield* ToolInstaller;
+            assert.strictEqual(
+              installer.cachePath("node", "22.11.0"),
+              ToolInstaller.cachePath({ root, tool: "node", version: "22.11.0", arch: "arm64" })
             );
           })
         )
@@ -476,7 +501,12 @@ describe("ToolInstaller", () => {
         TestRoot.use((root) =>
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
-            const expected = ToolInstaller.cachePath({ root, tool: "node", version: "22.11.0", arch: process.arch });
+            const expected = ToolInstaller.cachePath({
+              root,
+              tool: "node",
+              version: "22.11.0",
+              arch: currentHostArchitecture,
+            });
             yield* fs.makeDirectory(expected, { recursive: true });
             assertSome(yield* (yield* ToolInstaller).find("node", "22.11.0"), expected);
           })
@@ -502,7 +532,12 @@ describe("ToolInstaller", () => {
             const { join } = yield* Path.Path;
             // A stray file where a tool directory belongs is corruption, and
             // answering "found" for it hands the caller a path it cannot use.
-            const expected = ToolInstaller.cachePath({ root, tool: "node", version: "1.0.0", arch: process.arch });
+            const expected = ToolInstaller.cachePath({
+              root,
+              tool: "node",
+              version: "1.0.0",
+              arch: currentHostArchitecture,
+            });
             yield* fs.makeDirectory(join(expected, ".."), { recursive: true });
             yield* fs.writeFileString(expected, "not a directory");
             assertNone(yield* (yield* ToolInstaller).find("node", "1.0.0"));
@@ -527,7 +562,7 @@ describe("ToolInstaller", () => {
             const cached = yield* installer.cacheDir(source, "node", "22.11.0");
             assert.strictEqual(
               cached,
-              ToolInstaller.cachePath({ root, tool: "node", version: "22.11.0", arch: process.arch })
+              ToolInstaller.cachePath({ root, tool: "node", version: "22.11.0", arch: currentHostArchitecture })
             );
             assert.strictEqual(yield* fs.readFileString(join(cached, "bin")), "#!/bin/sh\n");
             assertSome(yield* installer.find("node", "22.11.0"), cached);
@@ -656,7 +691,12 @@ describe("ToolInstaller", () => {
             assert.instanceOf(error, ToolInstallerError);
             assert.strictEqual(error.reason, "cacheFailed");
 
-            const destination = ToolInstaller.cachePath({ root, tool: "node", version: "22.11.0", arch: process.arch });
+            const destination = ToolInstaller.cachePath({
+              root,
+              tool: "node",
+              version: "22.11.0",
+              arch: currentHostArchitecture,
+            });
             assert.isFalse(yield* fs.exists(destination), "a failed install must not leave a partial tool behind");
             assertNone(yield* installer.find("node", "22.11.0"));
           })
@@ -957,7 +997,7 @@ describe("ToolInstaller", () => {
             const provisioned = yield* (yield* ToolInstaller).provisionFile(options);
             assert.strictEqual(
               provisioned.directory,
-              ToolInstaller.cachePath({ root, tool: "biome", version: "2.3.4", arch: process.arch })
+              ToolInstaller.cachePath({ root, tool: "biome", version: "2.3.4", arch: currentHostArchitecture })
             );
             // For a single binary the cached directory IS the addPath target.
             assert.strictEqual(provisioned.binDir, provisioned.directory);
@@ -981,7 +1021,12 @@ describe("ToolInstaller", () => {
             Effect.gen(function* () {
               const fs = yield* FileSystem.FileSystem;
               const { join } = yield* Path.Path;
-              const directory = ToolInstaller.cachePath({ root, tool: "biome", version: "2.3.4", arch: process.arch });
+              const directory = ToolInstaller.cachePath({
+                root,
+                tool: "biome",
+                version: "2.3.4",
+                arch: currentHostArchitecture,
+              });
               yield* fs.makeDirectory(directory, { recursive: true });
               yield* fs.writeFileString(join(directory, "biome"), "already cached");
               const provisioned = yield* (yield* ToolInstaller).provisionFile(options);
@@ -1007,7 +1052,12 @@ describe("ToolInstaller", () => {
             Effect.gen(function* () {
               const fs = yield* FileSystem.FileSystem;
               const { join } = yield* Path.Path;
-              const directory = ToolInstaller.cachePath({ root, tool: "biome", version: "2.3.4", arch: process.arch });
+              const directory = ToolInstaller.cachePath({
+                root,
+                tool: "biome",
+                version: "2.3.4",
+                arch: currentHostArchitecture,
+              });
               yield* fs.makeDirectory(directory, { recursive: true });
               yield* fs.writeFileString(join(directory, "other-layout.txt"), "a different writer's idea of biome");
               const provisioned = yield* (yield* ToolInstaller).provisionFile(options);
@@ -1168,7 +1218,7 @@ describe("ToolInstaller", () => {
           const root = yield* Config.String("RUNNER_TOOL_CACHE").pipe(Config.withDefault("/tmp/runner-tool-cache"));
           assert.strictEqual(
             ToolInstaller.makeTest().cachePath("node", "22.11.0"),
-            ToolInstaller.cachePath({ root, tool: "node", version: "22.11.0", arch: process.arch })
+            ToolInstaller.cachePath({ root, tool: "node", version: "22.11.0", arch: currentHostArchitecture })
           );
           assert.strictEqual(
             ToolInstaller.makeTest({ cachePath: dual(2, (_tool: string, _version: string) => "/elsewhere") }).cachePath(
