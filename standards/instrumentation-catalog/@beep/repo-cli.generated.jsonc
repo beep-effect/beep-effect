@@ -1494,6 +1494,7 @@
     {"name":"Files.matchPersonReadConfiguredHome","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Files.matchPersonResolveCacheRoot","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Files.matchPersonResolveUvPath","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"Files.matchPersonSelectCacheRoot","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Files.materializeCanonicalPng","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Files.materializePersonMatchReport","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Files.maximumValidatedPersonMatchFaceScore","owner":"@beep/repo-cli","family":"tooling","conforms":true},

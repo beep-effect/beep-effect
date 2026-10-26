@@ -306,11 +306,11 @@
       }
     },
     "@beep/docket-intake": {
-      "reviewer": "GPT-6.1-Sol medium (coverage input union with subsequent main promotion)",
-      "reason": "Reconcile only coverage receipt environment keys, ignored nested-checkout root inputs and Turbo schema source digests with current main topology/new promotions; preserve every other task field, scope/profile/epoch, removed drivers and qualification ledger. No reuse qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (effected-promotion wave 4, PR 4-X-A, refactor/xdg-adoption)",
+      "reason": "Record the dependency-only drift of @beep/repo-ai-metrics, @beep/docket-intake and @beep/practice-m365-contacts from their new @beep/xdg edge (the 4-X-A adoption, W4-c); no qualification is granted.",
       "basis": {
-        "path": "docs/reports/coverage-tsgo-shim-cache-input-review-2026-10-21.md",
-        "sha256": "c85aec4b476f3867fde28749e2ea004eb3058ef0ced84ef195d99362070aff40"
+        "path": "goals/effected-promotion/research/cache-baseline-review-4-x-a.md",
+        "sha256": "e2ee59c9049e73e0ba8fe068e7cafd62ee3bd895f921f5e45f930f1157237ee2"
       }
     },
     "@beep/documents-domain": {
@@ -1026,11 +1026,11 @@
       }
     },
     "@beep/practice-m365-contacts": {
-      "reviewer": "GPT-6.1-Sol medium (coverage input union with subsequent main promotion)",
-      "reason": "Reconcile only coverage receipt environment keys, ignored nested-checkout root inputs and Turbo schema source digests with current main topology/new promotions; preserve every other task field, scope/profile/epoch, removed drivers and qualification ledger. No reuse qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (effected-promotion wave 4, PR 4-X-A, refactor/xdg-adoption)",
+      "reason": "Record the dependency-only drift of @beep/repo-ai-metrics, @beep/docket-intake and @beep/practice-m365-contacts from their new @beep/xdg edge (the 4-X-A adoption, W4-c); no qualification is granted.",
       "basis": {
-        "path": "docs/reports/coverage-tsgo-shim-cache-input-review-2026-10-21.md",
-        "sha256": "c85aec4b476f3867fde28749e2ea004eb3058ef0ced84ef195d99362070aff40"
+        "path": "goals/effected-promotion/research/cache-baseline-review-4-x-a.md",
+        "sha256": "e2ee59c9049e73e0ba8fe068e7cafd62ee3bd895f921f5e45f930f1157237ee2"
       }
     },
     "@beep/practice-mail-tagging": {
@@ -1114,11 +1114,11 @@
       }
     },
     "@beep/repo-ai-metrics": {
-      "reviewer": "Claude Opus 5.5 (effected-promotion wave 4-C, feat/effected-promotion-w4-cli-kit)",
-      "reason": "Record the new wave-4-C workspace @beep/cli-kit scaffolded by create-package with the generated task set, the dependency-only drift of its two named importers (W4-d), and the input-only growth of the root policy-fingerprint task; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (effected-promotion wave 4, PR 4-X-A, refactor/xdg-adoption)",
+      "reason": "Record the dependency-only drift of @beep/repo-ai-metrics, @beep/docket-intake and @beep/practice-m365-contacts from their new @beep/xdg edge (the 4-X-A adoption, W4-c); no qualification is granted.",
       "basis": {
-        "path": "goals/effected-promotion/research/cache-baseline-review-w4-c.md",
-        "sha256": "2d509dee954c6036a8a808b9e3dc9547cf1f8c57572fb3081c3d7e9fb88800b0"
+        "path": "goals/effected-promotion/research/cache-baseline-review-4-x-a.md",
+        "sha256": "e2ee59c9049e73e0ba8fe068e7cafd62ee3bd895f921f5e45f930f1157237ee2"
       }
     },
     "@beep/repo-cli": {
@@ -28018,7 +28018,8 @@
           "@beep/memfs#audit",
           "@beep/schema#audit",
           "@beep/test-runner#audit",
-          "@beep/test-utils#audit"
+          "@beep/test-utils#audit",
+          "@beep/xdg#audit"
         ],
         "configuration": {
           "cache": false,
@@ -28089,7 +28090,8 @@
           "@beep/memfs#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
-          "@beep/test-utils#build"
+          "@beep/test-utils#build",
+          "@beep/xdg#build"
         ],
         "configuration": {
           "cache": true,
@@ -28136,7 +28138,8 @@
           "@beep/memfs#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
-          "@beep/test-utils#build"
+          "@beep/test-utils#build",
+          "@beep/xdg#build"
         ],
         "configuration": {
           "cache": true,
@@ -28183,7 +28186,8 @@
           "@beep/memfs#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
-          "@beep/test-utils#build"
+          "@beep/test-utils#build",
+          "@beep/xdg#build"
         ],
         "configuration": {
           "cache": false,
@@ -28276,7 +28280,8 @@
           "@beep/memfs#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
-          "@beep/test-utils#transit"
+          "@beep/test-utils#transit",
+          "@beep/xdg#transit"
         ],
         "configuration": {
           "cache": true,
@@ -28486,7 +28491,8 @@
           "@beep/memfs#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
-          "@beep/test-utils#transit"
+          "@beep/test-utils#transit",
+          "@beep/xdg#transit"
         ],
         "configuration": {
           "cache": false,
@@ -28537,7 +28543,8 @@
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
-          "@beep/utils#transit"
+          "@beep/utils#transit",
+          "@beep/xdg#transit"
         ],
         "configuration": {
           "cache": true,
@@ -88750,7 +88757,8 @@
           "@beep/law-practice-use-cases#audit",
           "@beep/m365#audit",
           "@beep/schema#audit",
-          "@beep/test-runner#audit"
+          "@beep/test-runner#audit",
+          "@beep/xdg#audit"
         ],
         "configuration": {
           "cache": false,
@@ -88817,7 +88825,8 @@
           "@beep/law-practice-use-cases#build",
           "@beep/m365#build",
           "@beep/schema#build",
-          "@beep/test-runner#build"
+          "@beep/test-runner#build",
+          "@beep/xdg#build"
         ],
         "configuration": {
           "cache": true,
@@ -88860,7 +88869,8 @@
           "@beep/law-practice-use-cases#build",
           "@beep/m365#build",
           "@beep/schema#build",
-          "@beep/test-runner#build"
+          "@beep/test-runner#build",
+          "@beep/xdg#build"
         ],
         "configuration": {
           "cache": true,
@@ -88903,7 +88913,8 @@
           "@beep/law-practice-use-cases#build",
           "@beep/m365#build",
           "@beep/schema#build",
-          "@beep/test-runner#build"
+          "@beep/test-runner#build",
+          "@beep/xdg#build"
         ],
         "configuration": {
           "cache": false,
@@ -88956,7 +88967,8 @@
           "@beep/law-practice-use-cases#build",
           "@beep/m365#build",
           "@beep/schema#build",
-          "@beep/test-runner#build"
+          "@beep/test-runner#build",
+          "@beep/xdg#build"
         ],
         "configuration": {
           "cache": false,
@@ -89026,7 +89038,8 @@
           "@beep/law-practice-use-cases#transit",
           "@beep/m365#transit",
           "@beep/schema#transit",
-          "@beep/test-runner#transit"
+          "@beep/test-runner#transit",
+          "@beep/xdg#transit"
         ],
         "configuration": {
           "cache": true,
@@ -89232,7 +89245,8 @@
           "@beep/law-practice-use-cases#transit",
           "@beep/m365#transit",
           "@beep/schema#transit",
-          "@beep/test-runner#transit"
+          "@beep/test-runner#transit",
+          "@beep/xdg#transit"
         ],
         "configuration": {
           "cache": false,
@@ -89279,7 +89293,8 @@
           "@beep/m365#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
-          "@beep/utils#transit"
+          "@beep/utils#transit",
+          "@beep/xdg#transit"
         ],
         "configuration": {
           "cache": true,
@@ -96388,7 +96403,8 @@
           "@beep/schema#audit",
           "@beep/test-runner#audit",
           "@beep/test-utils#audit",
-          "@beep/utils#audit"
+          "@beep/utils#audit",
+          "@beep/xdg#audit"
         ],
         "configuration": {
           "cache": false,
@@ -96461,7 +96477,8 @@
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
-          "@beep/utils#build"
+          "@beep/utils#build",
+          "@beep/xdg#build"
         ],
         "configuration": {
           "cache": true,
@@ -96523,7 +96540,8 @@
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
-          "@beep/utils#build"
+          "@beep/utils#build",
+          "@beep/xdg#build"
         ],
         "configuration": {
           "cache": true,
@@ -96572,7 +96590,8 @@
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
-          "@beep/utils#build"
+          "@beep/utils#build",
+          "@beep/xdg#build"
         ],
         "configuration": {
           "cache": false,
@@ -96706,7 +96725,8 @@
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
-          "@beep/utils#transit"
+          "@beep/utils#transit",
+          "@beep/xdg#transit"
         ],
         "configuration": {
           "cache": true,
@@ -96918,7 +96938,8 @@
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
-          "@beep/utils#transit"
+          "@beep/utils#transit",
+          "@beep/xdg#transit"
         ],
         "configuration": {
           "cache": false,
@@ -96971,7 +96992,8 @@
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
           "@beep/utils#transit",
-          "@beep/utils#transit"
+          "@beep/utils#transit",
+          "@beep/xdg#transit"
         ],
         "configuration": {
           "cache": true,
@@ -97029,7 +97051,8 @@
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
           "@beep/utils#transit",
-          "@beep/utils#transit"
+          "@beep/utils#transit",
+          "@beep/xdg#transit"
         ],
         "configuration": {
           "cache": true,

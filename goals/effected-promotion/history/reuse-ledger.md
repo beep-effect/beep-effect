@@ -22,20 +22,23 @@ manifests with 0 full-schema failures.
 | lab `github-actions` `ActionsIdentityToken`, `ActionsProvenance` move | - | wave 5 | They move with `@beep/github-actions` and import the `@beep/sbom` leaves they already use. |
 | lab `sbom` `SigstoreSigner.ts` | - | deferred (D-05, W4-m) | `@beep/sigstore` with its first consumer (a release attestation step), or deleted at C and recoverable by sha. |
 
-## `@beep/xdg` (wave 4, PR 4-X, SPEC W4-c)
+## `@beep/xdg` (wave 4, PRs 4-X and 4-X-A, SPEC W4-c)
 
 | Site | Map id | Status | Notes |
 | --- | --- | --- | --- |
 | m365-mcp `OutboxConfig.ts` `stateRoot` (staging root and audit directory) | #180 | adopted in 4-X | `XdgBase.dir("data")` / `XdgBase.dir("state")`. Parity: the env matrix in `test/OutboxConfig.xdg.test.ts`, committed against the old body first; its divergent rows are inverted on purpose (relative or space-padded values ignored, a value with only trailing whitespace used verbatim instead of trimmed, HOME normalized, the missing-root message names an absolute path). |
 | repo-cli `internal/state/WorkstationState.ts` `resolveWorkstationStateDir` | #167 | adopted in 4-X | `XdgBase.require("state")`; the override variable and the five callers are unchanged. Parity: `test/workstation-state-xdg.test.ts`, committed against the old body first, with the same inverted rows. |
-| ai-metrics `forwarder.ts` and `data-root.ts` `aiMetricsStateHome` | #176, #288 | queued for 4-X-A | Exception Ledger "Duplicate XDG base-directory resolution". |
-| repo-cli `internal/repo-run/BeepCacheRoot.ts` | #168 | queued for 4-X-A | Keeps its override and TMPDIR rungs; only the XDG rung moves. |
-| repo-cli `Worktree/Fleet.service.ts` cache root | #179 | queued for 4-X-A | |
-| repo-cli `HarnessLedger/HarnessLedger.command.ts` | #177 | queued for 4-X-A | |
-| repo-cli `AIMetrics/internal/Programs.ts` | - | queued for 4-X-A | |
-| repo-cli `Files/internal/MatchPerson.ts` `resolveCacheRoot` | #178 | queued for 4-X-A | |
-| apps `docket-intake` `Config.ts` and `practice-m365-contacts` `Contacts.state.ts` | #181, #182 | queued for 4-X-A | |
+| ai-metrics `forwarder.ts` and `data-root.ts` `aiMetricsStateHome` | #176, #288 | adopted in 4-X-A | `aiMetricsStateHome` resolves through `XdgBase.resolve("state")` and keeps its trim and trailing-slash rules. `XdgBase` is POSIX-only and `AiMetricsAbsoluteDataRoot` admits drive and UNC roots, so the Windows rungs stay beside it: a drive or UNC `stateHome` is used as given, and a drive or UNC `homeDir` gets `/.local/state` (rows "a Windows drive HOME", "a UNC HOME", "a Windows drive XDG_STATE_HOME", green against the old body). The forwarder's hook-evidence root reads through `aiMetricsStateHome`, so it agrees with HarnessLedger. `resolveForwarderEvidenceRoot` stays a public root-barrel export on purpose: it is the forwarder's own resolution step (`runAiMetricsForwarder` calls it) and the one named home of the `${BEEP_AGENT_EVIDENCE_ROOT:-${XDG_STATE_HOME:-$HOME/.local/state}/beep/agent-evidence}` precedence the hook writers mirror, not a test-only seam. Parity: `test/data-root.xdg.test.ts`, committed against the old bodies first; inverted rows: a relative value is ignored, HOME is normalized, the forwarder fails instead of reading a relative hook directory. |
+| repo-cli `internal/repo-run/BeepCacheRoot.ts` | #168 | adopted in 4-X-A | Keeps its override and TMPDIR rungs; the XDG rung is `XdgBase.dir("cache")`. Parity: `test/xdg-adoption.test.ts`; inverted rows: a relative `XDG_CACHE_HOME` or `HOME` is ignored instead of resolved against the working directory. |
+| repo-cli `Worktree/Fleet.service.ts` cache root | #179 | adopted in 4-X-A | `Worktree/internal/FleetScannerDir.ts`: `fleetScannerCacheRoot` is `XdgBase.resolve("cache")`, and `selectFleetScannerDir` is the scanner-directory selection `scanFleet` calls, reading `XDG_CACHE_HOME` live through `configStringOptionSync`; both reach tests through `@beep/repo-cli/test/Worktree`, not the public barrel. Parity: `test/xdg-adoption.test.ts`, the pure matrix plus a live-environment block over `selectFleetScannerDir`; inverted rows: an empty or relative `XDG_CACHE_HOME` no longer yields a relative scanner path, and HOME is normalized. Fleet has no Windows branch. |
+| repo-cli `HarnessLedger/HarnessLedger.command.ts` | #177 | adopted in 4-X-A | `resolveHookPulseDir` moved to `HarnessLedger/internal/HookPulseDir.ts` (tests reach it through `@beep/repo-cli/test/HarnessLedger`) and reads through `aiMetricsStateHome`, which is on `XdgBase` and keeps the Windows rungs. Parity: `test/xdg-adoption.test.ts`; inverted rows: a relative value is ignored. |
+| repo-cli `AIMetrics/internal/Programs.ts` | - | adopted in 4-X-A | No local resolution left: `resolveDataRoot` reads the two variables and delegates to `resolveAiMetricsDataRoot`, whose XDG rung is `aiMetricsStateHome`. Parity: `test/xdg-adoption.test.ts`; inverted row: a relative `XDG_STATE_HOME` falls back to HOME instead of failing the absolute-root guard. |
+| repo-cli `Files/internal/MatchPerson.ts` `resolveCacheRoot` | #178 | adopted in 4-X-A | The new `selectPersonMatchCacheRoot` takes `XdgBase.resolve("cache")` after `--cache-dir`; the Windows rungs are kept beside it: a drive or UNC `XDG_CACHE_HOME` is still used, a drive or UNC `HOME` still comes before `USERPROFILE`, and the `USERPROFILE` branch now also covers a relative `HOME`. Parity: `test/xdg-adoption.test.ts` (Windows rows green against the old body). |
+| apps `docket-intake` `Config.ts` and `practice-m365-contacts` `Contacts.state.ts` | #181, #182 | adopted in 4-X-A | Both read `XdgBase.require("state")`; docket-intake drops the state home's trailing slashes before joining its suffix, as the contacts root (`path.join`) does. `contactsStateDirectory` is a module export of an app with no `exports` map, beside `makeContactsState`, and `ContactsStateLive` composes it. Parity: `test/Config.xdg.test.ts` and `test/Contacts.state.xdg.test.ts`; inverted rows: a relative value is ignored or fails, HOME is normalized, a trailing slash on `XDG_STATE_HOME` no longer doubles the separator (docket-intake), and the contacts root no longer requires HOME when `XDG_STATE_HOME` is set. Neither app has a Windows branch. |
 | apps `practice-mail-tagging` `PracticeMailTagging.config.ts` | #183 | excluded | It would start honouring XDG on a deployed practice service (W4-c correction 6). |
+| apps `practice-gateway` `GatewaySettings.ts` `resolveDataDir` | - | excluded (4-X-A) | A deployed practice service, the #183 reason: moving it onto `XdgBase` would change where a running gateway keeps its data for any relative or padded `XDG_DATA_HOME`. Its Windows branch reads `LOCALAPPDATA`. |
+| apps `practice-kg-mcp` `runtime/TelemetryKey.ts` `resolvePracticeKgTelemetryDir` | - | excluded (4-X-A) | A deployed practice service, the #183 reason: the telemetry key directory would move under a relative `XDG_STATE_HOME`, orphaning the stored key. Its Windows branch reads `LOCALAPPDATA`. |
+| repo-workspaces `internal/configDependencyResolution.ts` `environmentStoreRoots` | - | excluded (4-X-A) | Not a beep base directory: it mirrors pnpm's own store lookup (`$PNPM_HOME/store`, `$XDG_DATA_HOME/pnpm/store`, `%LOCALAPPDATA%`), and must read `XDG_DATA_HOME` the way pnpm does, not the way the spec says. |
 
 ## `@beep/repo-workspaces` (waves 4-W-a and 4-W-b, W4-f)
 
@@ -269,10 +272,10 @@ A row naming two PRs is split between them; #143 also appears above for its pack
 | repo-cli test session-continuity.test.ts | #210 | partial | queued: 4-C-A | One `TestTerminal` swap in `accounts-usage.test.ts`; the session-continuity stubs stay (they fail on unexpected input as an assertion). |
 | repo-cli internal/state/WorkstationState.ts | #167 | partial | queued: 4-X | `resolveWorkstationStateDir` onto `@beep/xdg` (W4-c named importer). |
 | m365-mcp OutboxConfig.ts | #180 | partial | queued: 4-X | `OutboxConfig` `stateRoot` onto `@beep/xdg` (W4-c named importer). |
-| ai-metrics forwarder.ts | #176 | partial | queued: 4-X-A | ai-metrics `forwarder.ts`/`data-root.ts` onto `@beep/xdg`. |
-| repo-cli Files/internal/MatchPerson.ts | #178 | partial | queued: 4-X-A | `MatchPerson` cache root after the `--cache-dir` branch; Windows branch kept. |
-| apps | #310 | partial | queued: 4-X-A | apps docket-intake and practice-m365-contacts; practice-mail-tagging excluded (#183). |
-| repo-cli internal/state/WorkstationState.ts, BeepCacheRoot | #261 | partial | queued: 4-X; 4-X-A | `WorkstationState` in 4-X; `BeepCacheRoot` and the Config-combinator sites in 4-X-A. |
+| ai-metrics forwarder.ts | #176 | partial | migrated (4-X-A) | ai-metrics `forwarder.ts`/`data-root.ts` onto `@beep/xdg`. |
+| repo-cli Files/internal/MatchPerson.ts | #178 | partial | migrated (4-X-A) | `MatchPerson` cache root after the `--cache-dir` branch; Windows branch kept. |
+| apps | #310 | partial | migrated (4-X-A) | apps docket-intake and practice-m365-contacts; practice-mail-tagging excluded (#183). |
+| repo-cli internal/state/WorkstationState.ts, BeepCacheRoot | #261 | partial | migrated (4-X; 4-X-A) | `WorkstationState` in 4-X; `BeepCacheRoot` and the Config-combinator sites in 4-X-A. |
 
 ### Roadmap PRs (R1 to R10)
 

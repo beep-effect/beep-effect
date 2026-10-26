@@ -1934,7 +1934,8 @@
           "@beep/memfs",
           "@beep/schema",
           "@beep/test-runner",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/xdg"
         ],
         "allowTypeOnly": [
           "@beep/anthropic",
@@ -1947,7 +1948,8 @@
           "@beep/memfs",
           "@beep/schema",
           "@beep/test-runner",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/xdg"
         ]
       },
       {
@@ -3982,7 +3984,8 @@
           "@beep/m365",
           "@beep/practice-m365-contacts",
           "@beep/schema",
-          "@beep/test-runner"
+          "@beep/test-runner",
+          "@beep/xdg"
         ],
         "allowTypeOnly": [
           "@beep/identity",
@@ -3991,7 +3994,8 @@
           "@beep/m365",
           "@beep/practice-m365-contacts",
           "@beep/schema",
-          "@beep/test-runner"
+          "@beep/test-runner",
+          "@beep/xdg"
         ]
       },
       {
@@ -4305,7 +4309,8 @@
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
-          "@beep/utils"
+          "@beep/utils",
+          "@beep/xdg"
         ],
         "allowTypeOnly": [
           "@beep/cli-kit",
@@ -4320,7 +4325,8 @@
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
-          "@beep/utils"
+          "@beep/utils",
+          "@beep/xdg"
         ]
       },
       {

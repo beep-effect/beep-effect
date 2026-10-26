@@ -13,11 +13,12 @@ import * as Bool from "effect/Boolean";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { dual } from "effect/Function";
+import { dual, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
+import { AbsolutePath } from "./Absolute.ts";
 import { NativeDirs } from "./NativeDirs.ts";
 import { currentPlatform, Xdg } from "./Xdg.ts";
 import type { XdgPaths, XdgPlatform } from "./Xdg.ts";
@@ -148,6 +149,66 @@ export class AppDirsError extends S.TaggedError<AppDirsError, { readonly brand: 
 }
 
 /**
+ * Indicates that a per-kind directory override is not an absolute path.
+ *
+ * **Details**
+ *
+ * Like an invalid namespace, a relative override can only come from code, so
+ * it is a **defect** at layer construction rather than a typed error: used as
+ * given it would win rung 1 and resolve against the working directory.
+ * `directory` names the kind and `path` the rejected value. When several
+ * overrides are relative, the first in `AppDirKind` order is reported.
+ *
+ * **Example** (Describe a relative override)
+ *
+ * ```ts
+ * import { AppDirsOverrideError } from "@beep/xdg/AppDirs";
+ *
+ * const error = AppDirsOverrideError.make({ directory: "cache", path: "cache" });
+ * console.log(error.message); // AppDirs.layer: the cache override must be an absolute path, received "cache"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class AppDirsOverrideError extends S.TaggedError<AppDirsOverrideError, { readonly brand: unique symbol }>(
+  $I`AppDirsOverrideError`
+)(
+  "AppDirsOverrideError",
+  {
+    /** Which directory kind carried the relative override. */
+    directory: AppDirKind.pipe(
+      $I.annoteKey("AppDirsOverrideError.directory", {
+        description: "Which directory kind carried the relative override.",
+      })
+    ),
+    /** The rejected override value. */
+    path: S.String.pipe($I.annoteKey("AppDirsOverrideError.path", { description: "The rejected override value." })),
+  },
+  $I.annoteError<AppDirsOverrideError>("AppDirsOverrideError", {
+    description: "Indicates that a per-kind directory override is not an absolute path.",
+  })
+) {
+  /**
+   * Describes the rejected override.
+   *
+   * **Example** (Read the failure message)
+   *
+   * ```ts
+   * import { AppDirsOverrideError } from "@beep/xdg/AppDirs";
+   *
+   * const error = AppDirsOverrideError.make({ directory: "config", path: "./config" });
+   * console.log(error.message); // AppDirs.layer: the config override must be an absolute path, received "./config"
+   * ```
+   *
+   * @since 0.0.0
+   */
+  override get message(): string {
+    return `AppDirs.layer: the ${this.directory} override must be an absolute path, received ${JSON.stringify(this.path)}`;
+  }
+}
+
+/**
  * The fully resolved, app-namespaced directories.
  *
  * **Example** (Inspect ordered configuration candidates)
@@ -214,13 +275,17 @@ export class ResolvedAppDirs extends S.Opaque<ResolvedAppDirs, { readonly brand:
   }).pipe($I.annoteSchema("ResolvedAppDirs", { description: "The fully resolved, app-namespaced directories." }))
 ) {}
 
+const isAbsoluteOverride = S.is(AbsolutePath);
+
 /**
  * Per-kind directory overrides. Each wins outright over every other rung.
  *
  * **Gotchas**
  *
- * The paths are not validated: `AppDirs.layer` does not decode its options, so
- * a relative override is used as given.
+ * Each path must be absolute (POSIX, a drive root or a UNC share) and is then
+ * used verbatim, unnormalized. `AppDirs.layer` checks its `dirs` at layer
+ * construction and dies with an {@link AppDirsOverrideError} on a relative
+ * one, as it does on an invalid namespace.
  *
  * **Example** (Decode directory overrides)
  *
@@ -237,29 +302,31 @@ export class ResolvedAppDirs extends S.Opaque<ResolvedAppDirs, { readonly brand:
  */
 export class AppDirOverrides extends S.Opaque<AppDirOverrides, { readonly brand: unique symbol }>()(
   S.Struct({
-    /** The config directory path, used as given. */
-    config: S.optionalKey(S.String).pipe(
-      $I.annoteKey("AppDirOverrides.config", { description: "The config directory path, used as given." })
+    /** The config directory path, absolute and used verbatim. */
+    config: S.optionalKey(AbsolutePath).pipe(
+      $I.annoteKey("AppDirOverrides.config", { description: "The config directory path, absolute and used verbatim." })
     ),
-    /** The data directory path, used as given. */
-    data: S.optionalKey(S.String).pipe(
-      $I.annoteKey("AppDirOverrides.data", { description: "The data directory path, used as given." })
+    /** The data directory path, absolute and used verbatim. */
+    data: S.optionalKey(AbsolutePath).pipe(
+      $I.annoteKey("AppDirOverrides.data", { description: "The data directory path, absolute and used verbatim." })
     ),
-    /** The cache directory path, used as given. */
-    cache: S.optionalKey(S.String).pipe(
-      $I.annoteKey("AppDirOverrides.cache", { description: "The cache directory path, used as given." })
+    /** The cache directory path, absolute and used verbatim. */
+    cache: S.optionalKey(AbsolutePath).pipe(
+      $I.annoteKey("AppDirOverrides.cache", { description: "The cache directory path, absolute and used verbatim." })
     ),
-    /** The state directory path, used as given. */
-    state: S.optionalKey(S.String).pipe(
-      $I.annoteKey("AppDirOverrides.state", { description: "The state directory path, used as given." })
+    /** The state directory path, absolute and used verbatim. */
+    state: S.optionalKey(AbsolutePath).pipe(
+      $I.annoteKey("AppDirOverrides.state", { description: "The state directory path, absolute and used verbatim." })
     ),
-    /** The runtime directory path, used as given. */
-    runtime: S.optionalKey(S.String).pipe(
-      $I.annoteKey("AppDirOverrides.runtime", { description: "The runtime directory path, used as given." })
+    /** The runtime directory path, absolute and used verbatim. */
+    runtime: S.optionalKey(AbsolutePath).pipe(
+      $I.annoteKey("AppDirOverrides.runtime", {
+        description: "The runtime directory path, absolute and used verbatim.",
+      })
     ),
   }).pipe(
     $I.annoteSchema("AppDirOverrides", {
-      description: "Per-kind directory overrides, used as given. Each wins outright over every other rung.",
+      description: "Per-kind absolute directory overrides. Each wins outright over every other rung.",
     })
   )
 ) {}
@@ -328,9 +395,11 @@ export class AppDirsOptions extends S.Opaque<AppDirsOptions, { readonly brand: u
         description: "A single dot-directory under HOME that all four kinds collapse to.",
       })
     ),
-    /** Per-kind overrides, used as given (not validated). */
+    /** Per-kind absolute overrides, checked at layer construction. */
     dirs: S.optionalKey(AppDirOverrides).pipe(
-      $I.annoteKey("AppDirsOptions.dirs", { description: "Per-kind overrides, used as given (not validated)." })
+      $I.annoteKey("AppDirsOptions.dirs", {
+        description: "Per-kind absolute overrides, checked at layer construction.",
+      })
     ),
   }).pipe(
     $I.annoteSchema("AppDirsOptions", {
@@ -344,7 +413,7 @@ export class AppDirsOptions extends S.Opaque<AppDirsOptions, { readonly brand: u
  *
  * **Details**
  *
- * 1. an explicit `dirs.<kind>` override;
+ * 1. an explicit `dirs.<kind>` override, absolute (checked at layer construction);
  * 2. the XDG environment variable, namespaced (`$XDG_CONFIG_HOME/<ns>`);
  * 3. the native directory, when `native: true` and the platform has one;
  * 4. `$HOME/<fallbackDir>` — all four kinds collapse to the one directory;
@@ -491,6 +560,20 @@ const badNamespace = (namespace: string): AppDirsNamespaceError | undefined => {
   return undefined;
 };
 
+/** The first relative override in `AppDirKind` order, if any. Same discipline as the namespace: a defect. */
+const badOverride = (dirs: typeof AppDirOverrides.Encoded | undefined): AppDirsOverrideError | undefined =>
+  pipe(
+    AppDirKind.literals,
+    A.findFirst((directory) =>
+      pipe(
+        O.fromUndefinedOr(dirs?.[directory]),
+        O.filter((path) => !isAbsoluteOverride(path)),
+        O.map((path) => AppDirsOverrideError.make({ directory, path }))
+      )
+    ),
+    O.getOrUndefined
+  );
+
 /**
  * App-namespaced XDG directories, with on-demand creation.
  *
@@ -579,7 +662,7 @@ export class AppDirs extends Context.Service<
     return Layer.effect(
       AppDirs,
       Effect.gen(function* () {
-        const invalid = badNamespace(options.namespace);
+        const invalid = badNamespace(options.namespace) ?? badOverride(options.dirs);
         if (invalid !== undefined) return yield* Effect.die(invalid);
 
         const paths = yield* Xdg;
