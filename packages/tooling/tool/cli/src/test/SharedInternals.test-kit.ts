@@ -12,6 +12,7 @@ export * from "../internal/cli/TurboCache.ts";
 export * from "../internal/duckdb/WithDuckDb.ts";
 export * from "../internal/GlobPattern.ts";
 export * from "../internal/github/index.ts";
+export * from "../internal/ManifestRead.ts";
 export * from "../internal/PathContainment.ts";
 export * from "../internal/publication/PublicationLedger.ts";
 export * from "../internal/quality/SchemaFirstPolicyFinding.ts";

@@ -14,7 +14,6 @@ import {
   ReportRendererServiceLive,
   ResolverService,
   ResolverServiceLive,
-  RootPackageJsonDocument,
   readLockfileResolvedVersion,
   resolveBunVersions,
   resolveEffectCatalog,
@@ -28,6 +27,7 @@ import {
   UpdateApplierServiceLive,
   updateCatalogEntry,
   updateJsoncSchemaUrl,
+  updatePackageManagerField,
   updateVercelBunVersion,
   VersionCategoryReport,
   VersionDriftItem,
@@ -39,9 +39,9 @@ import { FsUtilsLive } from "@beep/repo-utils";
 import { SemVer } from "@beep/semver/SemVer";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { A, R } from "@beep/utils";
+import { A } from "@beep/utils";
 import { describe, expect, vi } from "@effect/vitest";
-import { assertNone, assertSome, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -125,13 +125,16 @@ it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync Effect Ca
     );
 
     it.effect(
-      "parses package.json JSONC with comments and trailing commas through the shared schema module",
+      "rejects package.json JSONC: comments and trailing commas are not JSON",
       Effect.fn(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const tmpDir = yield* fs.makeTempDirectoryScoped();
         const packageJsonPath = path.join(tmpDir, "package.json");
 
+        // npm, Node and changesets read package.json with JSON.parse, so a
+        // manifest only a JSONC parser accepts is broken for the toolchain;
+        // the root catalog reader now fails on it instead of hiding it.
         yield* fs.writeFileString(
           packageJsonPath,
           `{
@@ -144,13 +147,9 @@ it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync Effect Ca
           }\n`
         );
 
-        const state = yield* resolveEffectCatalog(tmpDir);
-        const report = buildEffectReport(state);
+        const error = yield* Effect.flip(resolveEffectCatalog(tmpDir));
 
-        expect(report.status).toBe("drift");
-        expect(report.items).toHaveLength(1);
-        expect(report.items[0]?.field).toBe("catalog.@effect/opentelemetry");
-        expect(report.items[0]?.expected).toBe("^4.0.0-beta.28");
+        assertTrue(Str.startsWith("Failed to parse package.json")(error.message));
       })
     );
   });
@@ -250,6 +249,49 @@ it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync Effect Ca
         expect(changed).toBe(true);
         expect(decodedUpdated.catalog["@effect/opentelemetry"]).toBe("^4.0.0-beta.28");
         expect(decodedUpdated.catalog.effect).toBe("^4.0.0-beta.28");
+      })
+    );
+  });
+
+  describe("PackageJsonUpdater byte preservation", () => {
+    it.effect(
+      "keeps a tab-indented manifest's indentation when it inserts packageManager",
+      Effect.fn(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
+        const packageJsonPath = path.join(tmpDir, "package.json");
+
+        // The retired jsonc edit always inserted 2-space lines.
+        yield* fs.writeFileString(packageJsonPath, '{\n\t"name": "@beep/test-root"\n}\n');
+
+        const changed = yield* updatePackageManagerField(packageJsonPath, "1.4.2");
+
+        assertTrue(changed);
+        strictEqual(
+          yield* fs.readFileString(packageJsonPath),
+          '{\n\t"name": "@beep/test-root",\n\t"packageManager": "bun@1.4.2"\n}\n'
+        );
+      })
+    );
+
+    it.effect(
+      "refuses to invent a root catalog when the manifest declares none",
+      Effect.fn(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
+        const packageJsonPath = path.join(tmpDir, "package.json");
+        const original = '{\n  "name": "@beep/test-root"\n}\n';
+
+        // Drift items come from an existing catalog; the retired jsonc edit
+        // created `catalog` here, the kit edit fails instead.
+        yield* fs.writeFileString(packageJsonPath, original);
+
+        const error = yield* Effect.flip(updateCatalogEntry(packageJsonPath, "effect", { versionSpecifier: "^4.0.0" }));
+
+        assertTrue(Str.startsWith(`Failed to update ${packageJsonPath}`)(error.message));
+        strictEqual(yield* fs.readFileString(packageJsonPath), original);
       })
     );
   });
@@ -1047,7 +1089,6 @@ it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync installed
       expect(exactVersionFromSpecifier("~2.5.6")).toBe("2.5.6");
       expect(exactVersionFromSpecifier(">=1.0.0")).toBe("1.0.0");
       expect(exactVersionFromSpecifier(42)).toBe("42");
-      expect(R.keys(RootPackageJsonDocument.make({}).catalog)).toHaveLength(0);
     });
   });
 

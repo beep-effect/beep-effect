@@ -111,6 +111,9 @@
       "path": "../../../foundation/modeling/md/tsconfig.json"
     },
     {
+      "path": "../../../foundation/modeling/package-json/tsconfig.json"
+    },
+    {
       "path": "../../../foundation/modeling/schema/tsconfig.json"
     },
     {

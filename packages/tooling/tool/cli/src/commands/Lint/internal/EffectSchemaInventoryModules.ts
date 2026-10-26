@@ -11,11 +11,14 @@
  * @since 0.0.0
  */
 
+import { StringListField } from "@beep/package-json/ManifestFields";
 import { A, Str } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import { flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { manifestParser } from "../../../internal/ManifestRead.ts";
 import { EffectSchemaInventoryModule, EffectSchemaInventoryPin } from "../EffectSchemaInventory.schemas.ts";
 import { EffectSchemaInventoryCatalogPinError } from "../Lint.errors.ts";
 
@@ -138,38 +141,45 @@ export const findEffectSchemaInventoryModule = (module: string): O.Option<Effect
 const EffectCatalog = S.Struct({ effect: S.optionalKey(S.String) });
 
 const WorkspacesWithCatalog = S.Struct({ catalog: S.optionalKey(EffectCatalog) });
-const isWorkspacesWithCatalog = S.is(WorkspacesWithCatalog);
+const isWorkspacePatternList = S.is(StringListField);
 
-const RootManifest = S.Struct({
-  catalog: S.optionalKey(EffectCatalog),
-  workspaces: S.optionalKey(S.Union([S.Array(S.String), WorkspacesWithCatalog])),
-  config: S.OptionFromOptionalKey(
-    S.Struct({
-      effectSource: S.OptionFromOptionalKey(
-        S.Struct({
-          version: S.String.check(S.isPattern(/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/u)),
-          commit: EffectSchemaInventoryPin,
-        })
-      ),
-    })
-  ),
-});
+// The repo-specific halves of the root manifest the pin needs: the Bun
+// `workspaces.catalog` fallback and `config.effectSource`. The manifest itself
+// reads through `LenientManifest`; these decode the two nested values it types
+// only as open JSON.
+const decodeRootWorkspaces = S.decodeUnknownEffect(S.Union([StringListField, WorkspacesWithCatalog]));
+const decodeRootConfig = S.decodeUnknownEffect(
+  S.Struct({
+    effectSource: S.OptionFromOptionalKey(
+      S.Struct({
+        version: S.String.check(S.isPattern(/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/u)),
+        commit: EffectSchemaInventoryPin,
+      })
+    ),
+  })
+);
+const parseRootManifest = manifestParser(["catalog", "workspaces", "config"]);
 
-const decodeRootManifest = S.decodeUnknownEffect(S.fromJsonString(RootManifest));
-
-const SNAPSHOT_PIN = /effect@([0-9a-f]{40})$/u;
-
-const catalogEffectSpecifier = (manifest: typeof RootManifest.Type): O.Option<string> =>
-  pipe(
-    O.fromUndefinedOr(manifest.catalog?.effect),
+const readRootManifest = Effect.fn("EffectSchemaInventoryModules.readRootManifest")(function* (
+  packageJsonText: string
+) {
+  const manifest = yield* parseRootManifest(packageJsonText);
+  const workspaces = yield* Effect.transposeOption(O.map(O.fromUndefinedOr(manifest.workspaces), decodeRootWorkspaces));
+  const config = yield* Effect.transposeOption(O.map(O.fromUndefinedOr(manifest.config), decodeRootConfig));
+  const specifier = pipe(
+    O.fromUndefinedOr(manifest.catalog),
+    O.flatMap(R.get("effect")),
     O.orElse(() =>
       pipe(
-        O.fromUndefinedOr(manifest.workspaces),
-        O.filter(isWorkspacesWithCatalog),
-        O.flatMap((workspaces) => O.fromUndefinedOr(workspaces.catalog?.effect))
+        workspaces,
+        O.flatMap((value) => (isWorkspacePatternList(value) ? O.none() : O.fromUndefinedOr(value.catalog?.effect)))
       )
     )
   );
+  return { specifier, effectSource: O.flatMap(config, (value) => value.effectSource) };
+});
+
+const SNAPSHOT_PIN = /effect@([0-9a-f]{40})$/u;
 
 /**
  * Read `inventoryPin` from the text of the root `package.json`.
@@ -198,12 +208,11 @@ const catalogEffectSpecifier = (manifest: typeof RootManifest.Type): O.Option<st
 export const parseEffectSchemaInventoryPin = Effect.fn("EffectSchemaInventoryModules.parsePin")(function* (
   packageJsonText: string
 ): Effect.fn.Return<EffectSchemaInventoryPin, EffectSchemaInventoryCatalogPinError> {
-  const manifest = yield* decodeRootManifest(packageJsonText).pipe(
+  const { specifier, effectSource } = yield* readRootManifest(packageJsonText).pipe(
     Effect.mapError(() =>
       EffectSchemaInventoryCatalogPinError.new("<unreadable>", "Root package.json does not decode as a JSON manifest.")
     )
   );
-  const specifier = catalogEffectSpecifier(manifest);
   return yield* Effect.fromOption(
     pipe(
       specifier,
@@ -211,8 +220,7 @@ export const parseEffectSchemaInventoryPin = Effect.fn("EffectSchemaInventoryMod
       O.flatMap((match) => O.fromUndefinedOr(match[1])),
       O.orElse(() =>
         pipe(
-          manifest.config,
-          O.flatMap((config) => config.effectSource),
+          effectSource,
           O.filter((source) => O.contains(source.version)(specifier)),
           O.map((source) => source.commit)
         )

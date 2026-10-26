@@ -38,16 +38,16 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { configStringOption } from "../../../internal/cli/EnvConfig.ts";
+import { manifestParser } from "../../../internal/ManifestRead.ts";
 import { runToExit } from "../../../internal/process/index.ts";
 import { readGitRenames, runGitOutput as runSharedGitOutput } from "../../../internal/repo-run/index.ts";
-import { decodePackageJsonDocument } from "../../Quality/Quality.schemas.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { ExpectationRewrite, ExpectationRewriteVerdict } from "./FinalCheck.schemas.ts";
 import { runGitPathList } from "./GitExec.ts";
+import type { LenientManifest } from "@beep/package-json/LenientManifest";
 import type * as Crypto from "effect/Crypto";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GitCommandErrorAdapter } from "../../../internal/repo-run/index.ts";
-import type { PackageJsonDocument } from "../../Quality/Quality.schemas.ts";
 
 const TEST_FILE_PATTERN = /\.(?:test|spec)\.tsx?$/;
 const SNAPSHOT_FILE_PATTERN = /^(.*)\/__snapshots__\/(.+)\.snap$/;
@@ -56,6 +56,7 @@ const ASSERTION_PATTERN =
 const HUNK_HEADER_PATTERN = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@/;
 const BUN_VITEST_PATTERN = /\bbunx?\s+--bun\s+vitest\b/;
 const VITEST_PATTERN = /\bvitest\b/;
+const parsePackageJson = manifestParser(["scripts"]);
 
 const isAssertionLine = (line: string): boolean => ASSERTION_PATTERN.test(line);
 
@@ -281,10 +282,11 @@ const scriptRunsTestOnBun = (script: string, testPath: string): boolean => {
  * **Example** (Replay a Bun-runtime package's test)
  *
  * ```ts
- * import { PackageJsonDocument } from "@beep/repo-cli/test/Quality"
+ * import { LenientManifest } from "@beep/package-json/LenientManifest"
  * import { vitestReplayArgs } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
  *
- * const manifest = PackageJsonDocument.make({ scripts: { "beep:test": "bunx --bun vitest run" } })
+ * const manifest = Effect.runSync(LenientManifest.parse('{"scripts":{"beep:test":"bunx --bun vitest run"}}'))
  * console.log(vitestReplayArgs(manifest, "test/a.test.ts")) // ["--bun", "vitest", "run", "test/a.test.ts"]
  * ```
  *
@@ -295,11 +297,11 @@ const scriptRunsTestOnBun = (script: string, testPath: string): boolean => {
  * @since 0.0.0
  */
 export const vitestReplayArgs: {
-  (testPath: string): (manifest: PackageJsonDocument) => ReadonlyArray<string>;
-  (manifest: PackageJsonDocument, testPath: string): ReadonlyArray<string>;
+  (testPath: string): (manifest: LenientManifest) => ReadonlyArray<string>;
+  (manifest: LenientManifest, testPath: string): ReadonlyArray<string>;
 } = dual(
   2,
-  (manifest: PackageJsonDocument, testPath: string): ReadonlyArray<string> =>
+  (manifest: LenientManifest, testPath: string): ReadonlyArray<string> =>
     pipe(
       O.fromUndefinedOr(manifest.scripts),
       O.flatMap((scripts) => O.orElse(R.get(scripts, "beep:test"), () => R.get(scripts, "test"))),
@@ -372,7 +374,7 @@ const classifyOnBase = Effect.fn("Yeet.ExpectationRewrite.classifyOnBase")(funct
   }
   const manifest = yield* fs
     .readFileString(path.join(packageDir.value, "package.json"))
-    .pipe(Effect.flatMap(decodePackageJsonDocument), Effect.option);
+    .pipe(Effect.flatMap(parsePackageJson), Effect.option);
   if (O.isNone(manifest)) {
     return verdict("unverified", "the owning package.json on the merge base could not be read or decoded");
   }

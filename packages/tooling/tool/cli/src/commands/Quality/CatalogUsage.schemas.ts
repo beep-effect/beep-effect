@@ -95,31 +95,6 @@ const manifestDependencyFields = {
 };
 
 /**
- * The four dependency fields a `package.json` document declares.
- *
- * **Example** (Construct empty dependency fields)
- *
- * ```ts
- * import { CatalogUsageManifestDependencies } from "@beep/repo-cli/commands/Quality/CatalogUsage.schemas"
- *
- * console.log(CatalogUsageManifestDependencies.make({}).dependencies) // {}
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class CatalogUsageManifestDependencies extends S.Opaque<
-  CatalogUsageManifestDependencies,
-  { readonly brand: unique symbol }
->()(
-  S.Struct(manifestDependencyFields).pipe(
-    $I.annoteSchema("CatalogUsageManifestDependencies", {
-      description: "The dependencies, devDependencies, peerDependencies and optionalDependencies of a package.json.",
-    })
-  )
-) {}
-
-/**
  * Dependency fields of one workspace manifest.
  *
  * **Example** (Construct a manifest with one catalog dependency)

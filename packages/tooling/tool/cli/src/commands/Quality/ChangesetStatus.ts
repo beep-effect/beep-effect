@@ -29,6 +29,7 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { isLabsWorkspacePath } from "../../internal/cli/Labs/index.ts";
+import { manifestParser } from "../../internal/ManifestRead.ts";
 import { runCaptured } from "../../internal/process/index.ts";
 import { changesetPackageReferencesFromText, collectWorkspacePackageJsonFiles } from "./ChangesetGraph.ts";
 import { ChangesetStatusError } from "./Quality.errors.ts";
@@ -233,18 +234,6 @@ export class ChangesetStatusWorkspacePackage extends S.Opaque<
   )
 ) {}
 
-class ChangesetStatusPackageJson extends S.Opaque<ChangesetStatusPackageJson, { readonly brand: unique symbol }>()(
-  S.Struct({
-    name: S.optionalKey(S.String),
-    version: S.optionalKey(S.String),
-    private: S.optionalKey(S.Boolean),
-  }).pipe(
-    $I.annoteSchema("ChangesetStatusPackageJson", {
-      description: "Minimal package.json shape read by the path-aware changeset status wrapper.",
-    })
-  )
-) {}
-
 class ChangesetStatusChangesetConfig extends S.Opaque<
   ChangesetStatusChangesetConfig,
   { readonly brand: unique symbol }
@@ -258,7 +247,7 @@ class ChangesetStatusChangesetConfig extends S.Opaque<
   )
 ) {}
 
-const decodePackageJson = S.decodeUnknownEffect(S.fromJsonString(ChangesetStatusPackageJson));
+const parsePackageJson = manifestParser(["name", "version", "private"]);
 const decodeChangesetConfig = S.decodeUnknownEffect(S.fromJsonString(ChangesetStatusChangesetConfig));
 
 const toNulSeparatedPaths: (output: string) => ReadonlyArray<string> = flow(
@@ -525,6 +514,53 @@ const collectAddedChangesetReferences = Effect.fn("ChangesetStatus.collectAddedC
   return A.flatten(references);
 });
 
+/**
+ * Read one workspace `package.json` text into its changeset status record.
+ *
+ * **Details**
+ *
+ * A present `name`, `version` or `private` must keep its JSON shape, and the
+ * manifest must declare a `name`. Strict JSON only: JSONC text fails.
+ *
+ * **Example** (Read a publishable workspace manifest)
+ *
+ * ```ts
+ * import { readChangesetStatusWorkspacePackage } from "@beep/repo-cli/test/Quality"
+ * import * as Effect from "effect/Effect"
+ *
+ * const workspace = Effect.runSync(
+ *   readChangesetStatusWorkspacePackage('{"name":"@beep/demo","version":"1.0.0"}', "packages/demo")
+ * )
+ * console.log(workspace.name, workspace.publishEnabled) // @beep/demo true
+ * ```
+ *
+ * @param content - Workspace `package.json` text.
+ * @param dir - Repo-relative workspace directory.
+ * @returns The workspace's name, version and publish flag.
+ * @category parsing
+ * @since 0.0.0
+ */
+export const readChangesetStatusWorkspacePackage = Effect.fn("ChangesetStatus.readChangesetStatusWorkspacePackage")(
+  function* (content: string, dir: string): Effect.fn.Return<ChangesetStatusWorkspacePackage, ChangesetStatusError> {
+    const manifestFile = `${dir}/package.json`;
+    const document = yield* parsePackageJson(content).pipe(
+      ChangesetStatusError.mapError(`Failed to parse package manifest ${manifestFile}.`, manifestFile)
+    );
+    if (P.isUndefined(document.name)) {
+      return yield* ChangesetStatusError.make({
+        message: `Workspace package manifest ${manifestFile} does not declare a package name.`,
+        file: manifestFile,
+      });
+    }
+    return ChangesetStatusWorkspacePackage.make({
+      dir,
+      name: document.name,
+      version: O.fromUndefinedOr(document.version),
+      publishEnabled: document.private !== true,
+    });
+  }
+);
+
 const collectChangedWorkspacePackages = Effect.fn("ChangesetStatus.collectChangedWorkspacePackages")(function* (
   repoRoot: string,
   workspaceDirs: ReadonlyArray<string>
@@ -542,21 +578,7 @@ const collectChangedWorkspacePackages = Effect.fn("ChangesetStatus.collectChange
       const content = yield* fs
         .readFileString(path.join(repoRoot, manifestFile))
         .pipe(ChangesetStatusError.mapError(`Failed to read package manifest ${manifestFile}.`, manifestFile));
-      const document = yield* decodePackageJson(content).pipe(
-        ChangesetStatusError.mapError(`Failed to parse package manifest ${manifestFile}.`, manifestFile)
-      );
-      if (P.isUndefined(document.name)) {
-        return yield* ChangesetStatusError.make({
-          message: `Workspace package manifest ${manifestFile} does not declare a package name.`,
-          file: manifestFile,
-        });
-      }
-      return ChangesetStatusWorkspacePackage.make({
-        dir,
-        name: document.name,
-        version: O.fromUndefinedOr(document.version),
-        publishEnabled: document.private !== true,
-      });
+      return yield* readChangesetStatusWorkspacePackage(content, dir);
     }),
     { concurrency: 8 }
   );

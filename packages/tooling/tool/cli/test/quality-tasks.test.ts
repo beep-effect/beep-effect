@@ -8630,6 +8630,32 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       )
     );
 
+    it.effect("reads an object-form workspaces declaration without packages as no workspaces", () =>
+      Effect.andThen(
+        temporaryRepository,
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const tmpDir = process.cwd();
+
+          // The object form's `packages` is optional (a Bun root may carry only
+          // `catalog`); the retired projection required it and failed the read.
+          yield* fs.writeFileString(
+            path.join(tmpDir, "package.json"),
+            yield* encodeJson({
+              name: "@beep/test-root",
+              private: true,
+              workspaces: { catalog: { effect: "4.0.0" } },
+            })
+          );
+
+          const filters = yield* workspaceTaskFiltersForTesting(tmpDir, "test:integration");
+
+          deepStrictEqual(filters, []);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
+
     it.effect("treats unsupported package tasks as explicit no-ops", () =>
       Effect.andThen(
         temporaryRepository,
