@@ -72,6 +72,7 @@ Wave 4 retired 99 repo-cli assertion and harness rows and handed seven EV008/EV0
 The EV012 seams lane retired the three no-seam module mocks through production service seams, with no row or exception added (`history/receipts/vitest-canon-ev012-seams.md`).
 Wave 6 retired 116 repo-cli EV002 rows and handed 19 to #1855
 (`history/receipts/vitest-canon-wave-6.md`); waves 5 and 7 are EV004/EV003 and EV010.
+Wave 7 moved portable-filesystem EV010 tests in 17 files to the memory filesystem, retiring 16 rows, and handed 127 live-resource rows to #1855 in eight evidence classes (`history/receipts/vitest-canon-wave-7.md`); wave 8 is the deferred `step-capture-lifecycle` rows and the wave 5 families.
 #1876 `residue-rdf-pacer` is complete (`history/receipts/rdf-pacer-ports.md`): the
 RDF failure assertions and the Pacer logout witness are ported, and every export
 hunk has a disposition.

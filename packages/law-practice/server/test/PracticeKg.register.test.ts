@@ -5,8 +5,8 @@ import {
   practiceKgRegisterDocketClients,
   readPracticeKgDocketRegister,
 } from "@beep/law-practice-server";
+import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -17,6 +17,8 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
+
+const PlatformLayer = Layer.mergeAll(MemoryFileSystem.layer, Path.layer);
 
 const row = (client: string, docket: string, clientName: string | null = null): PracticeKgDocketRegisterRow =>
   PracticeKgDocketRegisterRow.make({ client, clientName, docket });
@@ -62,7 +64,7 @@ describe("practice KG docket register", () => {
     pipe(same(make(2, "first"), make(3, "first")), assertFalse);
   });
 
-  it.layer(Layer.fresh(NodeServices.layer), { timeout: "10 seconds" })((it) => {
+  it.layer(Layer.fresh(PlatformLayer), { timeout: "10 seconds" })((it) => {
     it.effect(
       "reads register rows in file order, skipping blank lines and defaulting a missing name",
       Effect.fnUntraced(function* () {

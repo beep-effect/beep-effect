@@ -1,4 +1,5 @@
 import { Lockfile } from "@beep/lockfiles/Lockfile";
+import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   BunVersionState,
   buildBunReport,
@@ -39,7 +40,6 @@ import { SemVer } from "@beep/semver/SemVer";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
-import { NodeServices } from "@effect/platform-node";
 import { describe, expect, vi } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import * as Console from "effect/Console";
@@ -71,14 +71,16 @@ const encodeBunVersionStateEffect = S.encodeEffect(BunVersionState);
 
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
 
+const PlatformLayer = Layer.mergeAll(MemoryFileSystem.layer, Path.layer);
+
 const VersionSyncTestLayer = Layer.mergeAll(
-  NodeServices.layer,
+  PlatformLayer,
   FetchHttpClient.layer,
   UpdateApplierServiceLive,
   CategorySelectionServiceLive,
   ReportRendererServiceLive,
   ResolverServiceLive,
-  FsUtilsLive.pipe(Layer.provide(NodeServices.layer))
+  FsUtilsLive.pipe(Layer.provide(PlatformLayer))
 );
 
 it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync Effect Catalog", (it) => {
