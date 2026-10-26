@@ -29,7 +29,7 @@ describe("Ruleset test-double behavior", () => {
         assertExitFailure(exit, cause);
         const defect = yield* cause.pipe(Cause.findDefect, Effect.fromResult);
         assert.deepStrictEqual(yield* S.decodeUnknownEffect(DefectFields)(defect), {
-          _tag: "UnstubbedError",
+          _tag: "UnstubbedMemberError",
           message: "Ruleset.makeTest: list() was called but not stubbed — pass an override.",
         });
         const defaults = yield* Ruleset;

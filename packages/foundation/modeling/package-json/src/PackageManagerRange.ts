@@ -126,13 +126,12 @@ const PACKAGE_MANAGER_NAME_RE = /^[a-z]+$/;
 /** `Schema.String` refined to parse as a semver range (`Range.parseResult` succeeds). The check is erased from the built type. */
 const SemVerRangeString: S.String = S.String.pipe(
   S.check(
+    // The `message` annotation is the issue message under effect 4.0.6; the label is the title.
     S.makeFilter(
-      (value) =>
-        value.length > 0 && Result.isSuccess(Range.parseResult(value))
-          ? undefined
-          : "Expected a semver range (an exact version, a caret/tilde range, a comparator set, ...)",
+      (value) => Str.isNonEmpty(value) && Result.isSuccess(Range.parseResult(value)),
       $I.annote("SemVerRangeStringCheck", {
-        message: "Non-empty SemVer Range",
+        title: "Non-empty SemVer Range",
+        message: "Expected a semver range (an exact version, a caret/tilde range, a comparator set, ...)",
         description:
           "A non-empty string that parses as a semver range, including exact versions, caret or tilde ranges, and comparator sets.",
       })

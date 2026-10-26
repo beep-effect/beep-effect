@@ -8,9 +8,11 @@
 import { $DocketIntakeId } from "@beep/identity/packages";
 import { DocketReviewConfig, ReviewMaxRounds } from "@beep/law-practice-use-cases/DocketIntake";
 import { UnitInterval } from "@beep/schema/UnitInterval";
+import { XdgBase } from "@beep/xdg/XdgBase";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const $I = $DocketIntakeId.create("Config");
 
@@ -80,10 +82,13 @@ const DEFAULT_REVIEW = DocketReviewConfig.make({});
 
 const STATE_SUFFIX = "beep/docket-intake";
 
-// DOCKET_INTAKE_STATE_DIR, else the XDG state home, else the XDG default under the home directory.
+// DOCKET_INTAKE_STATE_DIR, else the XDG state home (`XdgBase`: an absolute XDG_STATE_HOME, else the
+// default under an absolute HOME), its trailing slashes dropped before the suffix is joined. The
+// failure names HOME when neither is absolute.
 const stateDirectory = Config.NonEmptyString("DOCKET_INTAKE_STATE_DIR").pipe(
-  Config.orElse(() => Config.NonEmptyString("XDG_STATE_HOME").pipe(Config.map((root) => `${root}/${STATE_SUFFIX}`))),
-  Config.orElse(() => Config.NonEmptyString("HOME").pipe(Config.map((home) => `${home}/.local/state/${STATE_SUFFIX}`)))
+  Config.orElse(() =>
+    XdgBase.require("state").pipe(Config.map((root) => `${Str.replace(/\/+$/u, "")(root)}/${STATE_SUFFIX}`))
+  )
 );
 
 /**

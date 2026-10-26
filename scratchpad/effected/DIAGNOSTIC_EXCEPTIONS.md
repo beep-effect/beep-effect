@@ -5,7 +5,7 @@ tree on 2026-10-09 after step 2 (zero type, lint and tsgo diagnostics; tests at 
 Each entry is a deliberate choice that the operator can overrule: remove the directive and the
 diagnostic comes back.
 
-Totals: 18 in source, 8 in tests beyond the entry-point headers, 1 service annotation(s).
+Totals: 12 in source, 7 in tests beyond the entry-point headers, 1 service annotation(s).
 
 ## Source
 
@@ -14,12 +14,6 @@ Totals: 18 in source, 8 in tests beyond the entry-point headers, 1 service annot
 | `effected/cli/ui/internal/inkChalk.ts` | 2 | whole file | nodeBuiltinImport | Ink shares its Chalk instance by Node realpath and module resolution; resolving another copy changes colours. |
 | `effected/cli/ui/testing/fakeStreams.ts` | 2 | whole file | nodeBuiltinImport | Ink requires Node stream events, raw-mode methods and write-callback barriers in these terminal fakes. |
 | `effected/engine/ProcessGuard.ts` | 2 | whole file | asyncFunction, newPromise, globalTimers | These process guards install and inject native crashes before Effect loads, preserving host uncaught-error timing. |
-| `effected/github-actions/DetachedProcess.ts` | 2 | whole file | nodeBuiltinImport | Detached children must outlive the Effect scope and inherit native log descriptors before unref. |
-| `effected/github-actions/DetachedProcess.ts` | 60 | next line | schemaNumber | The error reports the pid it refused, which may be NaN or infinite. |
-| `effected/github-actions/DetachedProcess.ts` | 80 | next line | schemaNumber | The error reports the pid it refused, which may be NaN or infinite. |
-| `effected/github-actions/DetachedProcess.ts` | 158 | next line | schemaNumber | The integer check in the pipe rejects NaN and the infinities itself, with its own message. |
-| `effected/github-actions/internal/digest.ts` | 2 | whole file | nodeBuiltinImport | The synchronous and streaming digests require incremental hashing, which Effect Crypto does not expose. |
-| `effected/github-actions/internal/sigv4.ts` | 2 | whole file | nodeBuiltinImport | SigV4 requires synchronous HMAC, which Effect Crypto does not expose. |
 | `effected/memfs/NodeSyncFileSystem.ts` | 2 | whole file | nodeBuiltinImport | This adapter preserves synchronous Node filesystem throws and errno metadata; Effect FileSystem is asynchronous. |
 | `effected/memfs/internal/errno.ts` | 109 | next line | missingPipeableSignature | String paths overlap method strings, and the optional description makes the two call forms ambiguous. |
 | `effected/toml/TomlNode.ts` | 90 | next line | schemaNumber | A TOML float may be `inf` or `nan`, so the finite-only schema would reject valid documents. |
@@ -40,7 +34,6 @@ Totals: 18 in source, 8 in tests beyond the entry-point headers, 1 service annot
 
 | File | Line | Scope | Rule | Reason given in the code |
 | --- | --- | --- | --- | --- |
-| `test/github-actions/results.ts` | 2 | whole file | missingPipeableSignature | This response factory is an internal test helper with a direct-call contract. |
 | `test/jsonc/JsoncFingerprint.test.ts` | 2 | next line | nodeBuiltinImport | The synchronous digest callback is tested against Node's real backend. |
 | `test/jsonc/Properties.test.ts` | 14 | next line | nodeBuiltinImport | Property floor for the jsonc module (effected-port goal 11.4, D10).  Every exported schema and codec round-trips: encoding then decoding returns the value under the schema's own equivalence, and decoding an encoded value never fails. Every parser and formatter keeps its idempotence and fidelity laws, together with the README's guarantees: comments survive edits, value spans are exact, a formatter pass is a whitespace diff, comment stripping keeps offsets with a replacement character, and fingerprints ignore key order (and line endings when asked). The properties already in Jsonc.test.ts (parse agreeing with stripComments, JsoncFromString over one fixed struct) and JsoncFormatter.test.ts (idempotence on plain JSON) are not repeated here.  The synchronous digest twin is checked against Node's real SHA-256 backend. |
 | `test/memfs/FaultInjection.test.ts` | 200 | next line | missingEffectError, globalErrorInEffectFailure | @ts-expect-error -- a bare Error is not a PlatformError This negative type test deliberately supplies a bare Error failure to prove the fault API rejects it. |

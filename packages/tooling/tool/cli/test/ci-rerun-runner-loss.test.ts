@@ -1,3 +1,4 @@
+import { ActionOutputs } from "@beep/github-actions/ActionOutputs";
 import {
   CiRerunRunnerLossInput,
   CiWorkflowJob,
@@ -25,6 +26,7 @@ import {
 } from "@beep/repo-cli/commands/Ci";
 import { GithubJobRecord, GithubJobStepRecord, githubJobHasFailedStep } from "@beep/repo-cli/test/SharedInternals";
 import { findRepoRoot } from "@beep/repo-utils/Root";
+import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome, deepStrictEqual } from "@effect/vitest/utils";
@@ -403,11 +405,16 @@ const failedAttemptReplies: ReadonlyArray<GhReply> = [
   [annotationsEndpoint(12), 0, encodeJson(["Process completed with exit code 1."])],
 ];
 
-const platform = Layer.mergeAll(NodeServices.layer, TestConsole.layer);
+// The suite's runner outputs: only the step-summary test publishes through it.
+const rerunOutputs = ActionOutputs.recording();
+const platform = Layer.mergeAll(NodeServices.layer, TestConsole.layer, rerunOutputs.layer);
 const logs = TestConsole.logLines.pipe(Effect.map(A.map(String)), Effect.map(A.join("\n")));
 const errors = TestConsole.errorLines.pipe(Effect.map(A.map(String)), Effect.map(A.join("\n")));
 const decideRun = (runInput: CiRerunRunnerLossInput) =>
-  runCiRerunRunnerLoss(runInput).pipe(Effect.map((outcome) => outcome.decision));
+  runCiRerunRunnerLoss(runInput).pipe(
+    Effect.map((outcome) => outcome.decision),
+    provideScopedLayer(ActionOutputs.recording().layer)
+  );
 const runCommand = Command.runWith(ciRerunRunnerLossCommand, { version: "0.0.0" });
 const endpoints = (commands: ReadonlyArray<ReadonlyArray<string>>) =>
   A.map(commands, (args) => (args[0] === "api" ? (args[1] ?? "") : A.join(args, " ")));
@@ -417,7 +424,6 @@ it.layer(platform, { timeout: "30 seconds" })("ci rerun-runner-loss", (layerIt) 
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "ci-rerun-runner-loss-" });
-      const summaryPath = `${root}/summary.md`;
       const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
       const replies: ReadonlyArray<GhReply> = [
         [RUN_ENDPOINT, 0, runJson()],
@@ -426,7 +432,7 @@ it.layer(platform, { timeout: "30 seconds" })("ci rerun-runner-loss", (layerIt) 
         ["run rerun --job 11", 0, "✓ Requested rerun of job 11"],
       ];
       const outcome = yield* runCiRerunRunnerLoss(
-        CiRerunRunnerLossInput.make({ runId: 36763005302, stepSummaryPath: O.some(summaryPath), cwd: root })
+        CiRerunRunnerLossInput.make({ runId: 36763005302, stepSummary: true, cwd: root })
       ).pipe(withGh(replies, commands));
       expect(outcome.decision.reason).toBe("runner-loss");
       expect(outcome.dryRun).toBe(false);
@@ -439,7 +445,11 @@ it.layer(platform, { timeout: "30 seconds" })("ci rerun-runner-loss", (layerIt) 
         "repos/{owner}/{repo}/pulls/1338",
         "run rerun --job 11",
       ]);
-      const summary = yield* fs.readFileString(summaryPath);
+      // Parity: the summary appended is exactly the report printed, the bytes the
+      // command wrote to $GITHUB_STEP_SUMMARY before the append moved to `ActionOutputs`.
+      const summaries = A.filter(rerunOutputs.entries(), (entry) => entry.member === "summary");
+      expect(A.map(summaries, (entry) => entry.value)).toEqual([renderRunnerLossRerunSummary(outcome)]);
+      const summary = summaries[0]?.value ?? "";
       expect(summary).toContain("re-ran Heavy / Job 11 with `gh run rerun --job 11`");
       expect(summary).toContain("| Heavy / Job 12 | `12` | beep-ci-i-12 | failed | 0 | left red: not runner loss |");
       expect(yield* logs).toContain("## Runner-loss rerun");

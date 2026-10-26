@@ -8,37 +8,39 @@
  * heavy workflow is called. It reads `GITHUB_EVENT_NAME` / `GITHUB_EVENT_PATH`
  * (overridable by `--event-name` / `--event-path`), diffs against
  * `origin/<base>`, prints the {@link HeavyAdmission} JSON, and with
- * `--github-output` appends `verdict=`, `admitted=`, `docs_only=` and
- * `sources=` to `$GITHUB_OUTPUT`. Every verdict exits 0; only unreadable
+ * `--github-output` publishes the `verdict`, `admitted`, `docs_only` and
+ * `sources` step outputs to `$GITHUB_OUTPUT` through `ActionOutputs`. Every verdict exits 0; only unreadable
  * inputs exit non-zero.
  *
  * @since 0.0.0
  */
+import { ActionOutputs } from "@beep/github-actions/ActionOutputs";
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
+import { BoolKeyDefaultFalse } from "@beep/schema/SchemaUtils/withKeyDefaults";
 import * as Config from "effect/Config";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { runRepoCommandCapture } from "../../internal/repo-run/index.ts";
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
-import { CiCommandError } from "./Ci.errors.ts";
+import { CiCommandError, reportCiCommandError } from "./Ci.errors.ts";
+import { CiRunnerOutputsLive } from "./CiRunnerOutputs.ts";
 import {
   decideHeavyAdmission,
   HeavyAdmission,
   HeavyAdmissionEventName,
   HeavyAdmissionReadInput,
+  heavyAdmissionGithubOutputs,
   readHeavyAdmissionEvent,
-  renderHeavyAdmissionGithubOutput,
   renderHeavyAdmissionSummary,
 } from "./HeavyAdmission.ts";
 import type * as Crypto from "effect/Crypto";
+import type * as FileSystem from "effect/FileSystem";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const $I = $RepoCliId.create("commands/Ci/CiAdmission");
@@ -66,8 +68,9 @@ export const HeavyAdmissionJson = JsonStringCodec(HeavyAdmission);
  * **Details**
  *
  * `eventName` and `eventPath` are `None` when neither the flag nor the
- * environment variable supplied them; `githubOutputPath` is `$GITHUB_OUTPUT`
- * when `--github-output` was requested. `cwd` is the checkout to diff.
+ * environment variable supplied them; `githubOutput` is whether
+ * `--github-output` asked for the verdict as step outputs (published through
+ * `ActionOutputs` to `$GITHUB_OUTPUT`). `cwd` is the checkout to diff.
  *
  * **Example** (Construct an invocation)
  *
@@ -87,7 +90,7 @@ export class CiAdmissionInput extends S.Opaque<CiAdmissionInput, { readonly bran
     eventName: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     eventPath: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     base: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
-    githubOutputPath: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    githubOutput: BoolKeyDefaultFalse,
     json: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(true)),
       S.withDecodingDefaultTypeKey(Effect.succeed(true))
@@ -129,7 +132,7 @@ export const runCiAdmission = Effect.fn("Ci.runCiAdmission")(function* (
 ): Effect.fn.Return<
   HeavyAdmission,
   CiCommandError,
-  FileSystem.FileSystem | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | ActionOutputs
 > {
   const rawEventName = yield* Effect.fromOption(input.eventName, () =>
     CiCommandError.make({ message: "ci admission needs an event name: set GITHUB_EVENT_NAME or pass --event-name." })
@@ -148,11 +151,11 @@ export const runCiAdmission = Effect.fn("Ci.runCiAdmission")(function* (
         Effect.flatMap(Console.log)
       )
     : Console.log(renderHeavyAdmissionSummary(admission));
-  if (O.isSome(input.githubOutputPath)) {
-    const fs = yield* FileSystem.FileSystem;
-    yield* fs
-      .writeFileString(input.githubOutputPath.value, renderHeavyAdmissionGithubOutput(admission), { flag: "a" })
-      .pipe(CiCommandError.mapError(`Failed to append the admission verdict to ${input.githubOutputPath.value}.`));
+  if (input.githubOutput) {
+    const outputs = yield* ActionOutputs;
+    yield* Effect.forEach(heavyAdmissionGithubOutputs(admission), ([name, value]) => outputs.set(name, value), {
+      discard: true,
+    }).pipe(CiCommandError.mapError("Failed to append the admission verdict to $GITHUB_OUTPUT."));
   }
   return admission;
 });
@@ -163,18 +166,18 @@ const envOption = (name: string): Effect.Effect<O.Option<string>> =>
 const flagOrEnv = (flag: O.Option<string>, name: string): Effect.Effect<O.Option<string>> =>
   O.match(flag, { onNone: () => envOption(name), onSome: (value) => Effect.succeedSome(value) });
 
-const githubOutputPathFor = (requested: boolean): Effect.Effect<O.Option<string>, CiCommandError> =>
+const githubOutputFor = (requested: boolean): Effect.Effect<boolean, CiCommandError> =>
   requested
     ? envOption("GITHUB_OUTPUT").pipe(
         Effect.flatMap(
           O.match({
             onNone: () =>
               Effect.fail(CiCommandError.make({ message: "--github-output needs GITHUB_OUTPUT in the environment." })),
-            onSome: (value) => Effect.succeedSome(value),
+            onSome: () => Effect.succeed(true),
           })
         )
       )
-    : Effect.succeedNone;
+    : Effect.succeed(false);
 
 interface CiAdmissionFlags {
   readonly base: O.Option<string>;
@@ -191,12 +194,12 @@ const resolveCiAdmissionInput = Effect.fn("Ci.resolveCiAdmissionInput")(function
   const cwd = yield* findRepoRoot().pipe(CiCommandError.mapError("Failed to locate repository root."));
   const eventName = yield* flagOrEnv(flags.eventName, "GITHUB_EVENT_NAME");
   const eventPath = yield* flagOrEnv(flags.eventPath, "GITHUB_EVENT_PATH");
-  const githubOutputPath = yield* githubOutputPathFor(flags.githubOutput);
+  const githubOutput = yield* githubOutputFor(flags.githubOutput);
   return CiAdmissionInput.make({
     eventName,
     eventPath,
     base: flags.base,
-    githubOutputPath,
+    githubOutput,
     json: flags.json,
     cwd,
   });
@@ -238,15 +241,16 @@ export const ciAdmissionCommand = Command.make(
     ),
     githubOutput: Flag.Boolean("github-output").pipe(
       Flag.withDefault(false),
-      Flag.withDescription("Append verdict=, admitted=, docs_only=, sources= to $GITHUB_OUTPUT")
+      Flag.withDescription("Publish the verdict, admitted, docs_only and sources step outputs to $GITHUB_OUTPUT")
     ),
   },
   (flags) =>
     pipe(
       resolveCiAdmissionInput(flags),
       Effect.flatMap((input) => runCiAdmission(input)),
-      Effect.catchTag("CiCommandError", (error) =>
-        Console.error(`[ci] ${error.message}`).pipe(Effect.andThen(failWithReportedExit(`[ci] ${error.message}`)))
-      )
+      Effect.catchTag("CiCommandError", reportCiCommandError)
     )
-).pipe(Command.withDescription("Decide heavy-matrix admission for the current GitHub event"));
+).pipe(
+  Command.withDescription("Decide heavy-matrix admission for the current GitHub event"),
+  Command.provide(CiRunnerOutputsLive)
+);

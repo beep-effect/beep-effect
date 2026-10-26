@@ -78,10 +78,6 @@
     {"file":"packages/drivers/github/src/WorkflowDispatch.ts","symbol":"PollOptions","kind":"struct-const","owner":"@beep/github","identity":"PollOptions","description":"How often to poll for a dispatched run, and how long to keep polling."},
     {"file":"packages/drivers/github/src/WorkflowDispatch.ts","symbol":"WorkflowInfo","kind":"struct-const","owner":"@beep/github","identity":"WorkflowInfo","description":"One workflow defined in the repository."},
     {"file":"packages/drivers/github/src/WorkflowDispatch.ts","symbol":"WorkflowRunStatus","kind":"schema-class","owner":"@beep/github","identity":"WorkflowRunStatus","description":"Where a workflow run has got to."},
-    {"file":"packages/drivers/github/src/internal/octokit.ts","symbol":"TransportOptions","kind":"struct-const","owner":"@beep/github","identity":"TransportOptions","description":"Transport authentication, retry behavior and HTTP overrides."},
-    {"file":"packages/drivers/github/src/internal/unstubbed.ts","symbol":"UnstubbedAccess","kind":"literal-kit","owner":"@beep/github","identity":"UnstubbedAccess","description":"How a test double's unstubbed member was used: called as a function, or read as a value."},
-    {"file":"packages/drivers/github/src/internal/unstubbed.ts","symbol":"UnstubbedError","kind":"tagged-error","owner":"@beep/github","identity":"UnstubbedError"},
-    {"file":"packages/drivers/github/src/internal/unstubbed.ts","symbol":"UnstubbedMember","kind":"literal-kit","owner":"@beep/github","identity":"UnstubbedMember","description":"How an unstubbed member fails: a function that throws when called, or an effect that dies when run."},
-    {"file":"packages/drivers/github/src/internal/unstubbed.ts","symbol":"UnstubbedTarget","kind":"struct-const","owner":"@beep/github","identity":"UnstubbedTarget","description":"The test double an unstubbed thrower reports for."}
+    {"file":"packages/drivers/github/src/internal/octokit.ts","symbol":"TransportOptions","kind":"struct-const","owner":"@beep/github","identity":"TransportOptions","description":"Transport authentication, retry behavior and HTTP overrides."}
   ]
 }
