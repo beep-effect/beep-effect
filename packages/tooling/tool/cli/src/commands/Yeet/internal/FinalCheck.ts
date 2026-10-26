@@ -43,7 +43,7 @@ import * as Str from "effect/String";
 import { QualityTaskStep, runToExit } from "../../../internal/process/index.ts";
 import { CiLocalStepPlan, ciLaneDispatchStep } from "../../Ci/CiLane.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
-import { findExpectationRewrites, verifyExpectationRewrites } from "./ExpectationRewrite.ts";
+import { collectExpectationRewrites, verifyExpectationRewrites } from "./ExpectationRewrite.ts";
 import {
   FinalCheckGate,
   FinalCheckPlannedStep,
@@ -421,21 +421,8 @@ const runExpectationRewriteGate = Effect.fn("Yeet.runExpectationRewriteGate")(fu
   mergeBase: string
 ) {
   const started = yield* Clock.currentTimeMillis;
-  const command = `git diff --unified=0 ${mergeBase} HEAD -- <test files, snapshots>; replay rewritten tests on the merge base`;
-  const diff = yield* runGitOutput(repoRoot, [
-    "diff",
-    "--unified=0",
-    "--no-color",
-    mergeBase,
-    "HEAD",
-    "--",
-    "*.test.ts",
-    "*.test.tsx",
-    "*.spec.ts",
-    "*.spec.tsx",
-    "*.snap",
-  ]);
-  const rewrites = findExpectationRewrites(diff);
+  const command = `git diff --unified=0 ${Str.slice(0, 12)(mergeBase)} HEAD -- <each modified or renamed test file>; replay rewritten tests on the merge base`;
+  const rewrites = yield* collectExpectationRewrites(repoRoot, mergeBase);
   yield* Console.log(`[yeet] final-check expectation-rewrite: ${A.length(rewrites)} rewritten expectation(s)`);
   const verdicts = yield* verifyExpectationRewrites(repoRoot, mergeBase, rewrites);
   const blocking = A.filter(verdicts, (verdict) => verdict.classification !== "follows-diff");

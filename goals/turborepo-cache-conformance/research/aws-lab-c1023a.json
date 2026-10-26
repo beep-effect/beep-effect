@@ -1,0 +1,122 @@
+{
+  "schemaVersion": "cache-conformance-lab-receipt/v1",
+  "epoch": "c1023a",
+  "profile": "aws-lab",
+  "account": "832907639880",
+  "region": "us-east-1",
+  "stack": "beep-turbo-cache-lab/lab-c1023a",
+  "approvedCeilingUsd": 10,
+  "appliedAt": "2026-10-24T01:10:54Z",
+  "expiresAt": "2026-10-26T01:10:54Z",
+  "preview": "32 creates, 0 updates, 0 deletes; every resource named beep-tcl-c1023a-*; no production resource referenced",
+  "pins": {
+    "incumbentZipSha256": "f865fed950e5226e89afbc976e39a09f59944c688740ed7dc01b732e7e68177c",
+    "incumbentZipSource": "infra/lambda/turbo-cache at the lab branch base (main b6e7399445), built by build.sh into a lab-only artifacts root",
+    "productionZipSha256": "47fcec56b828fa7ce41414f6f9e39c31d9c015d5a5ef34617bde3e004008f8e5",
+    "parityNote": "The two ZIPs differ, so the lab incumbent is main's source, not a byte replica of the deployed production ZIP. Deployed production parity is not claimed.",
+    "shim": "turborepo-remote-cache@2.12.0 sha512-X34C/eyL+cIDQRDBAln0zEa5QsqpCbbbxS7qtiIhgmNGKlQQPFPo6snbOyq7xhRfVKFeyVEIAypTrR7XDZV6pw=="
+  },
+  "isolation": [
+    "Lab-only KMS key and three SecureStrings under /beep-ci/cache-lab/c1023a/, generated in-process, never printed.",
+    "Lab bucket beep-tcl-c1023a-832907639880; lab roles are scoped to it by the unchanged CiTurboCache component."
+  ],
+  "deployedChecks": [
+    {
+      "case": "RC-011",
+      "check": "status/PUT/GET with lab reader and writer bearers",
+      "observed": "200/200/200"
+    },
+    {
+      "case": "RC-011",
+      "check": "unknown bearer GET; missing Authorization",
+      "observed": "403; 401"
+    },
+    {
+      "case": "RC-012",
+      "check": "reader bearer PUT",
+      "observed": "403, no object"
+    },
+    {
+      "case": "RC-012",
+      "check": "IAM simulation of the read role on the lab bucket",
+      "observed": "s3:GetObject allowed; s3:PutObject and s3:DeleteObject implicitDeny"
+    },
+    {
+      "case": "RC-012",
+      "check": "IAM simulation of the write role",
+      "observed": "s3:PutObject and s3:GetObject allowed; s3:DeleteObject implicitDeny"
+    },
+    {
+      "case": "RC-013",
+      "check": "direct lambda:Invoke of the writer with a PUT event lacking the authorizer signature",
+      "observed": "statusCode 403; no object created (bucket held only the smoke artifact)"
+    },
+    {
+      "case": "RC-029",
+      "check": "bucket lifecycle",
+      "observed": "one rule, expire-stale-cache-artifacts: 30-day expiry, incomplete multipart abort after 1 day, enabled",
+      "verdict": "pass (expiry is explicit and observable)"
+    },
+    {
+      "case": "RC-029",
+      "check": "namespace-scoped cleanup of team_foreign/ by the operator principal",
+      "observed": "AccessDenied: the bucket policy statement DenyObjectAccessOutsideCacheRoles denies every object action outside the two cache roles, and neither role holds s3:DeleteObject; team_lab (24 objects) and team_foreign (2) unchanged",
+      "verdict": "fail: no targeted namespace or epoch cleanup exists; only whole-bucket lifecycle expiry. Attributed to the deliberate no-delete integrity design; teardown removes the policy through the stack first"
+    },
+    {
+      "case": "RC-030",
+      "check": "search all three lab log groups (3 h window, ~163 KB) for a synthetic bearer, a synthetic tag value, an artifact-content marker and both lab tokens",
+      "observed": "no occurrence of any value",
+      "verdict": "pass for these synthetic values"
+    },
+    {
+      "case": "RC-030",
+      "check": "logged request fields",
+      "observed": "the reader and writer log the full request URL, including hash and team selector and a 4 KB oversized-hash probe",
+      "verdict": "observation: path cardinality and size are unbounded by validation; not a secret exposure"
+    },
+    {
+      "case": "RC-031",
+      "check": "join the client-visible apigw-requestid of a PUT and a GET to backend log lines",
+      "observed": "0 of 2 ids found in any lab log group; the stage has no access logs; Lambda RequestId and the shim reqId are never returned to the client",
+      "verdict": "fail: client result and backend record cannot be correlated without a time-window guess"
+    }
+  ],
+  "limits": [
+    "RC-013 used the operator principal, which may invoke any function; the check proves the writer's HMAC gate, not that other principals lack lambda:InvokeFunction.",
+    "Teardown evidence is appended at destroy time."
+  ],
+  "encodedSelectorObservation": "The encoded selector teamId=team_lab%2F..%2Fteam_foreign created an object under that literal namespace prefix, not inside team_foreign: no traversal escape, but the input was accepted rather than rejected (RC-015).",
+  "evolved": {
+    "appliedAt": "2026-10-24 (second apply: 31 created, 32 unchanged)",
+    "endpointHost": "c1pygzqke0.execute-api.us-east-1.amazonaws.com",
+    "remediation": "tagPassthrough via the shim's TURBO_REMOTE_CACHE_SIGNATURE_KEY mode switch; reserved concurrency 60 read / 30 write / 60 authorizer",
+    "deployedChecks": [
+      "IAM simulation: read role PutObject/DeleteObject implicitDeny; write role DeleteObject implicitDeny",
+      "lifecycle: same 30-day rule",
+      "stage access logs: none",
+      "tagged PUT/GET round trip: 200, tag returned, bytes identical",
+      "log scan of all three function groups (~1.2 MB): no marker, synthetic bearer, tag or lab bearer; 0 of 2 client request ids found"
+    ]
+  },
+  "teardown": {
+    "at": "2026-10-24T03:21:05Z",
+    "command": "infra/turbo-cache-lab/lab-aws.sh destroy c1023a",
+    "result": "2 bucket policies deleted first, buckets emptied, then 61 resources deleted; stack lab-c1023a removed",
+    "inventory": [
+      "lab-aws.sh inventory: no tagged c1023a resources",
+      "by name prefix beep-tcl-: 0 buckets, 0 functions, 0 APIs, 0 IAM roles, 0 log groups",
+      "SSM /beep-ci/cache-lab/: 0 parameters",
+      "lab KMS key 4c0b3028\u2026: PendingDeletion, deletion 2026-10-31 (no charge while pending)",
+      "production ci-turbo-cache-read unchanged: reserved concurrency 20, last modified 2026-08-13"
+    ],
+    "orphans": "none"
+  },
+  "cost": {
+    "ceilingUsd": 10,
+    "lifetime": "2026-10-24T01:10:54Z..03:21:05Z (about 2.2 h of the 48 h TTL)",
+    "measuredUsage": "about 1,100 API requests across both topologies (corpus ~480 each, smoke, evidence and drill), each backed by at most two Lambda invocations; under 2 MB of stored artifacts; under 4 MB of logs; one KMS key for 2 h",
+    "estimateUsd": "under 0.10",
+    "actual": "Cost Explorer lags by up to 24 h and the beep:lab tag is not an activated cost-allocation tag, so the actual is read from the account bill, not attributed by tag; the measured usage bounds it far below the ceiling"
+  }
+}

@@ -1,6 +1,9 @@
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
+import { LenientManifest } from "@beep/package-json/LenientManifest";
 import { configStringOption } from "@beep/repo-cli/test/SharedInternals";
 import {
+  collectExpectationRewrites,
+  EXPECTATION_DIFF_OVERFLOW,
   ExpectationRewrite,
   FINAL_CHECK_RECEIPT_DIR,
   FinalCheckGate,
@@ -14,6 +17,7 @@ import {
   readFinalCheckReceipt,
   rewrittenTestFiles,
   verifyExpectationRewrites,
+  vitestReplayArgs,
 } from "@beep/repo-cli/test/Yeet";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it } from "@effect/vitest";
@@ -24,8 +28,11 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as R from "effect/Record";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
@@ -171,6 +178,48 @@ describe("findExpectationRewrites", () => {
     ]);
   });
 
+  // #2247: Biome reflowed a block and re-indented its unchanged expectations.
+  it("treats a whitespace-only reflow of assertion lines as no rewrite", () => {
+    const diff = A.join(
+      [
+        "diff --git a/p/test/w.test.ts b/p/test/w.test.ts",
+        "+++ b/p/test/w.test.ts",
+        "@@ -10,3 +10,3 @@",
+        "-    expect(a).toBe(1)",
+        "-    expect(b).toEqual([1,  2])",
+        "-    const c = 3",
+        "+      expect(b).toEqual([1, 2])",
+        "+      expect(a).toBe(1)",
+        "+      const c = 4",
+      ],
+      "\n"
+    );
+    expect(findExpectationRewrites(diff)).toEqual([]);
+  });
+
+  it("still flags a one-token change inside a reflowed block", () => {
+    const diff = A.join(
+      [
+        "diff --git a/p/test/w.test.ts b/p/test/w.test.ts",
+        "+++ b/p/test/w.test.ts",
+        "@@ -10,2 +10,2 @@",
+        "-    expect(a).toBe(1)",
+        "-    expect(b).toEqual([1, 2])",
+        "+      expect(a).toBe(1)",
+        "+      expect(b).toEqual([1, 3])",
+      ],
+      "\n"
+    );
+    expect(findExpectationRewrites(diff)).toEqual([
+      ExpectationRewrite.make({
+        testFile: "p/test/w.test.ts",
+        line: 11,
+        removed: "expect(b).toEqual([1, 2])",
+        added: "expect(b).toEqual([1, 3])",
+      }),
+    ]);
+  });
+
   it("treats a deleted test file as no rewrite", () => {
     const diff = A.join(
       [
@@ -183,6 +232,48 @@ describe("findExpectationRewrites", () => {
       "\n"
     );
     expect(findExpectationRewrites(diff)).toEqual([]);
+  });
+});
+
+describe("vitestReplayArgs", () => {
+  const file = "test/a.test.ts";
+  const manifestWith = (scripts: Record<string, string>) =>
+    Effect.runSync(LenientManifest.parse(JSON.stringify({ scripts })));
+
+  it("replays under Bun when the package's beep:test runs vitest with --bun", () => {
+    const manifest = manifestWith({ "beep:test": "bunx --bun vitest run --passWithNoTests" });
+    expect(vitestReplayArgs(manifest, file)).toEqual(["--bun", "vitest", "run", file]);
+  });
+
+  it("replays plain when beep:test runs vitest without --bun", () => {
+    const manifest = manifestWith({ "beep:test": "bunx vitest run", test: "bunx --bun vitest" });
+    expect(vitestReplayArgs(manifest, file)).toEqual(["vitest", "run", file]);
+  });
+
+  // Both real mixed shapes: most files run on Bun, one named file runs plain.
+  it.each([
+    [
+      "bunx --bun vitest run --passWithNoTests --exclude=test/integration/** --exclude=test/import-boundary.test.ts && bunx vitest run test/import-boundary.test.ts",
+      "test/import-boundary.test.ts",
+    ],
+    [
+      "bunx --bun vitest run --exclude=test/TsNativeApi.test.ts && bunx vitest run test/TsNativeApi.test.ts",
+      "test/TsNativeApi.test.ts",
+    ],
+  ])("uses the runtime of the segment that names the file in %s", (script, named) => {
+    const manifest = manifestWith({ "beep:test": script });
+    expect(vitestReplayArgs(manifest, named)).toEqual(["vitest", "run", named]);
+    expect(vitestReplayArgs(manifest, "test/other.test.ts")).toEqual(["--bun", "vitest", "run", "test/other.test.ts"]);
+  });
+
+  it("falls back to the test script, then to a plain replay", () => {
+    expect(vitestReplayArgs(manifestWith({ test: "bun --bun vitest run" }), file)).toEqual([
+      "--bun",
+      "vitest",
+      "run",
+      file,
+    ]);
+    expect(vitestReplayArgs(manifestWith({}), file)).toEqual(["vitest", "run", file]);
   });
 });
 
@@ -307,10 +398,10 @@ describe("finalCheckRefusal", () => {
   });
 });
 
-const handle = (exitCode: number) =>
+const handle = (exitCode: number, output = "") =>
   ChildProcessSpawner.makeHandle({
-    all: Stream.empty,
-    stdout: Stream.empty,
+    all: Stream.make(new TextEncoder().encode(output)),
+    stdout: Stream.make(new TextEncoder().encode(output)),
     stderr: Stream.empty,
     stdin: Sink.drain,
     exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
@@ -323,13 +414,17 @@ const handle = (exitCode: number) =>
   });
 
 // git and bun install succeed unless their command names a failing step; the
-// merge-base vitest run fails for test files whose path says `masked`.
+// merge-base vitest run fails for test files whose path says `masked`, and for
+// `bun-only` files (they call a Bun API) replayed without `--bun`.
 const scriptedSpawner = (failing: ReadonlyArray<string> = []) =>
   ChildProcessSpawner.make((command) => {
     if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
     const line = A.join([command.command, ...command.args], " ");
     if (A.some(failing, (fragment) => Str.includes(fragment)(line))) return Effect.succeed(handle(1));
-    return Effect.succeed(handle(command.command === "bunx" && Str.includes("masked")(line) ? 1 : 0));
+    const bunOnlyOnNode = Str.includes("bun-only")(line) && !A.contains(command.args, "--bun");
+    return Effect.succeed(
+      handle(command.command === "bunx" && (Str.includes("masked")(line) || bunOnlyOnNode) ? 1 : 0)
+    );
   });
 
 const platformWith = (failing: ReadonlyArray<string> = []) =>
@@ -340,10 +435,171 @@ const platformWith = (failing: ReadonlyArray<string> = []) =>
     Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, scriptedSpawner(failing))
   );
 
+// A moved test tree as #2241 made it: one modified file whose diff is wider than
+// the 512 KiB capture bound, one small modification, one rename with a changed
+// assertion, and an add plus a delete that must never be diffed.
+const WIDE_DIFF = Str.repeat(600 * 1024)("x");
+const smallDiff = (path: string, from: string, to: string) =>
+  A.join(
+    [
+      `diff --git a/${path} b/${path}`,
+      `--- a/${path}`,
+      `+++ b/${path}`,
+      "@@ -7 +7 @@",
+      `-  expect(out).toBe("${from}")`,
+      `+  expect(out).toBe("${to}")`,
+    ],
+    "\n"
+  );
+const treeMoveGit = (commands: Ref.Ref<ReadonlyArray<string>>) =>
+  ChildProcessSpawner.make((command) => {
+    if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
+    const line = A.join([command.command, ...command.args], " ");
+    const reply = (output: string) => Ref.update(commands, A.append(line)).pipe(Effect.as(handle(0, output)));
+    if (Str.includes("--name-only")(line)) return reply("pkg/test/huge.test.ts\0pkg/test/small.test.ts\0");
+    if (Str.includes("--name-status")(line)) {
+      return reply(
+        "R090\0old/test/moved.test.ts\0new/test/moved.test.ts\0A\0new/test/added.test.ts\0D\0old/test/gone.test.ts\0"
+      );
+    }
+    if (Str.includes("huge.test.ts")(line)) return reply(WIDE_DIFF);
+    if (Str.includes("small.test.ts")(line)) return reply(smallDiff("pkg/test/small.test.ts", "a", "b"));
+    if (Str.includes("moved.test.ts")(line)) return reply(smallDiff("new/test/moved.test.ts", "c", "d"));
+    return reply("");
+  });
+
+it.layer(Layer.mergeAll(BunCrypto.layer, Path.layer), { timeout: "30 seconds" })(
+  "collectExpectationRewrites over a moved test tree",
+  (it) => {
+    it.effect("diffs modified and renamed files one at a time and survives a file wider than the capture bound", () =>
+      Effect.gen(function* () {
+        const commands = yield* Ref.make<ReadonlyArray<string>>([]);
+        const rewrites = yield* collectExpectationRewrites("/repo", BASE).pipe(
+          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, treeMoveGit(commands))
+        );
+        expect(rewrites).toEqual([
+          ExpectationRewrite.make({
+            testFile: "pkg/test/huge.test.ts",
+            line: 0,
+            removed: EXPECTATION_DIFF_OVERFLOW,
+            added: EXPECTATION_DIFF_OVERFLOW,
+          }),
+          ExpectationRewrite.make({
+            testFile: "pkg/test/small.test.ts",
+            line: 7,
+            removed: 'expect(out).toBe("a")',
+            added: 'expect(out).toBe("b")',
+          }),
+          ExpectationRewrite.make({
+            testFile: "new/test/moved.test.ts",
+            baseFile: "old/test/moved.test.ts",
+            line: 7,
+            removed: 'expect(out).toBe("c")',
+            added: 'expect(out).toBe("d")',
+          }),
+        ]);
+        const ran = yield* Ref.get(commands);
+        const diffs = A.filter(ran, Str.includes("--unified=0"));
+        expect(diffs).toHaveLength(3);
+        expect(A.some(diffs, Str.includes("*.test.ts"))).toBe(false);
+        expect(A.some(ran, Str.includes("added.test.ts"))).toBe(false);
+        expect(A.some(ran, Str.includes("gone.test.ts"))).toBe(false);
+        assertSome(
+          A.findFirst(diffs, Str.includes("moved.test.ts")),
+          `git diff --unified=0 --no-color --find-renames=50% ${BASE} HEAD -- old/test/moved.test.ts new/test/moved.test.ts`
+        );
+      })
+    );
+  }
+);
+
+// Scripted git for the listing and per-file failure paths of the collector.
+type GitScript = (line: string) => Effect.Effect<ChildProcessSpawner.ChildProcessHandle, PlatformError.PlatformError>;
+const scriptedGit = (script: GitScript) =>
+  ChildProcessSpawner.make((command) =>
+    ChildProcess.isStandardCommand(command)
+      ? script(A.join([command.command, ...command.args], " "))
+      : Effect.die("unexpected pipe")
+  );
+const collectWith = (script: GitScript) =>
+  collectExpectationRewrites("/repo", BASE).pipe(
+    Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, scriptedGit(script))
+  );
+const spawnFailure = PlatformError.systemError({
+  _tag: "NotFound",
+  module: "Command",
+  method: "spawn",
+  pathOrDescriptor: "git",
+  description: "git is not installed",
+});
+
+it.layer(Layer.mergeAll(BunCrypto.layer, Path.layer), { timeout: "30 seconds" })(
+  "collectExpectationRewrites failure paths",
+  (it) => {
+    it.effect("returns nothing when no test file was modified or renamed", () =>
+      Effect.gen(function* () {
+        expect(yield* collectWith(() => Effect.succeed(handle(0)))).toEqual([]);
+      })
+    );
+
+    it.effect("maps a snapshot overflow to its test file and drops a non-test .snap", () =>
+      Effect.gen(function* () {
+        const rewrites = yield* collectWith((line) =>
+          Effect.succeed(
+            Str.includes("--name-only")(line)
+              ? handle(0, "pkg/fixtures/data.snap\0pkg/test/__snapshots__/render.test.ts.snap\0")
+              : Str.includes("--unified=0")(line)
+                ? handle(0, WIDE_DIFF)
+                : handle(0)
+          )
+        );
+        // A `.snap` outside __snapshots__ names no test, so its overflow yields nothing.
+        expect(A.map(rewrites, (rewrite) => rewrite.testFile)).toEqual(["pkg/test/render.test.ts"]);
+        expect(A.every(rewrites, (rewrite) => rewrite.removed === EXPECTATION_DIFF_OVERFLOW)).toBe(true);
+      })
+    );
+
+    it.effect("fails with the command when a per-file diff exits non-zero", () =>
+      Effect.gen(function* () {
+        const error = yield* collectWith((line) =>
+          Effect.succeed(
+            Str.includes("--name-only")(line)
+              ? handle(0, "pkg/test/a.test.ts\0")
+              : handle(Str.includes("--unified=0")(line) ? 128 : 0)
+          )
+        ).pipe(Effect.flip);
+        expect(error).toMatchObject({ _tag: "YeetCommandError", exitCode: 128 });
+        expect(error.message).toContain("pkg/test/a.test.ts failed with exit code 128");
+      })
+    );
+
+    it.effect("fails when the rename table cannot be read, is malformed, or exits non-zero", () =>
+      Effect.gen(function* () {
+        const listingOnly = (
+          nameStatus: Effect.Effect<ChildProcessSpawner.ChildProcessHandle, PlatformError.PlatformError>
+        ) =>
+          collectWith((line) => (Str.includes("--name-status")(line) ? nameStatus : Effect.succeed(handle(0)))).pipe(
+            Effect.flip
+          );
+        expect((yield* listingOnly(spawnFailure.pipe(Effect.fail))).message).toContain(
+          "Failed to run git diff --name-status"
+        );
+        expect((yield* listingOnly(Effect.succeed(handle(0, "R090\0only-one-path\0")))).message).toContain(
+          "malformed rename table"
+        );
+        expect((yield* listingOnly(Effect.succeed(handle(1)))).message).toContain("failed with exit code 1");
+      })
+    );
+  }
+);
+
 const rewriteIn = (testFile: string) => ExpectationRewrite.make({ testFile, line: 3, removed: "a", added: "b" });
 
 // TestClock pins the worktree suffix to 0; HOME comes from the ambient config.
-const seedBaseWorktree = Effect.fnUntraced(function* (files: ReadonlyArray<string>) {
+const seedBaseWorktree = Effect.fnUntraced(function* (
+  files: ReadonlyArray<string>,
+  contents: Readonly<Record<string, string>> = {}
+) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const home = O.getOrElse(yield* configStringOption("HOME"), () => "/repo");
@@ -351,9 +607,14 @@ const seedBaseWorktree = Effect.fnUntraced(function* (files: ReadonlyArray<strin
   yield* Effect.forEach(
     files,
     (file) =>
-      fs
-        .makeDirectory(path.dirname(path.join(baseRoot, file)), { recursive: true })
-        .pipe(Effect.andThen(fs.writeFileString(path.join(baseRoot, file), "{}"))),
+      fs.makeDirectory(path.dirname(path.join(baseRoot, file)), { recursive: true }).pipe(
+        Effect.andThen(
+          fs.writeFileString(
+            path.join(baseRoot, file),
+            O.getOrElse(R.get(contents, file), () => "{}")
+          )
+        )
+      ),
     { discard: true }
   );
 });
@@ -365,22 +626,65 @@ it.layer(platformWith(), { timeout: "30 seconds" })("expectation rewrites replay
         "pkg/package.json",
         "pkg/test/masked.test.ts",
         "pkg/test/honest.test.ts",
+        "pkg/test/old-name.test.ts",
         "loose/orphan.test.ts",
       ]);
       const verdicts = yield* verifyExpectationRewrites("/repo", BASE, [
         rewriteIn("pkg/test/masked.test.ts"),
         rewriteIn("pkg/test/masked.test.ts"),
         rewriteIn("pkg/test/honest.test.ts"),
+        ExpectationRewrite.make({
+          testFile: "pkg/test/new-name.test.ts",
+          baseFile: "pkg/test/old-name.test.ts",
+          line: 3,
+          removed: "a",
+          added: "b",
+        }),
         rewriteIn("pkg/test/missing.test.ts"),
         rewriteIn("loose/orphan.test.ts"),
       ]);
       expect(A.map(verdicts, (verdict) => [verdict.testFile, verdict.classification, verdict.rewrites])).toEqual([
         ["pkg/test/masked.test.ts", "masks-base-red", 2],
         ["pkg/test/honest.test.ts", "follows-diff", 1],
+        // A renamed file is replayed where the merge base holds it.
+        ["pkg/test/new-name.test.ts", "follows-diff", 1],
         ["pkg/test/missing.test.ts", "unverified", 1],
         ["loose/orphan.test.ts", "unverified", 1],
       ]);
       expect(verdicts[0]?.detail).toContain("vitest exit 1");
+    })
+  );
+});
+
+it.layer(platformWith(), { timeout: "30 seconds" })("merge-base replay runtime", (it) => {
+  it.effect("replays each test file under its owning package's declared test runtime", () =>
+    Effect.gen(function* () {
+      yield* seedBaseWorktree(
+        [
+          "bunpkg/package.json",
+          "bunpkg/test/bun-only.test.ts",
+          "nodepkg/package.json",
+          "nodepkg/test/bun-only.test.ts",
+          "badpkg/package.json",
+          "badpkg/test/a.test.ts",
+        ],
+        {
+          "bunpkg/package.json": '{"scripts":{"beep:test":"bunx --bun vitest run"}}',
+          "nodepkg/package.json": '{"scripts":{"beep:test":"bunx vitest run"}}',
+          "badpkg/package.json": "{not json",
+        }
+      );
+      const verdicts = yield* verifyExpectationRewrites("/repo", BASE, [
+        rewriteIn("bunpkg/test/bun-only.test.ts"),
+        rewriteIn("nodepkg/test/bun-only.test.ts"),
+        rewriteIn("badpkg/test/a.test.ts"),
+      ]);
+      expect(A.map(verdicts, (verdict) => [verdict.testFile, verdict.classification])).toEqual([
+        ["bunpkg/test/bun-only.test.ts", "follows-diff"],
+        ["nodepkg/test/bun-only.test.ts", "masks-base-red"],
+        ["badpkg/test/a.test.ts", "unverified"],
+      ]);
+      expect(verdicts[2]?.detail).toContain("package.json");
     })
   );
 });

@@ -139,17 +139,17 @@ secret failure through desktop sign-in.
 
 ## Acceptance criteria
 
-- [ ] The pinned corpus covers all source-plan cases with stable identities, deterministic regeneration and distinct spec/stable/canary verdicts.
-- [ ] Every executed case has exact-version, namespace/profile and direct wire/backend receipts; faults cannot masquerade as ordinary misses.
-- [ ] The named topologies receive comparable cases and measured load; source hypotheses are never scored as runtime passes.
-- [ ] Lab deployment has numeric cost/TTL/load controls, isolated resources/credentials, immutable pins, a preview and successful teardown evidence.
-- [ ] The frozen rubric yields an attributable recommendation or explicit no-eligible result, with no preselected migration.
-- [ ] Qualification can consume signed-boundary receipts and the corpus can be rerun as an upgrade gate.
-- [ ] Relevant package/protocol checks pass; failures are attributed and no
+- [x] The pinned corpus covers all source-plan cases with stable identities, deterministic regeneration and distinct spec/stable/canary verdicts.
+- [x] Every executed case has exact-version, namespace/profile and direct wire/backend receipts; faults cannot masquerade as ordinary misses.
+- [x] The named topologies receive comparable cases and measured load; source hypotheses are never scored as runtime passes.
+- [x] Lab deployment has numeric cost/TTL/load controls, isolated resources/credentials, immutable pins, a preview and successful teardown evidence.
+- [x] The frozen rubric yields an attributable recommendation or explicit no-eligible result, with no preselected migration.
+- [x] Qualification can consume signed-boundary receipts and the corpus can be rerun as an upgrade gate.
+- [x] Relevant package/protocol checks pass; failures are attributed and no
   introduced regression remains.
-- [ ] The final implementation PR reaches Yeet `merge-ready: yes`, with
+- [x] The final implementation PR reaches Yeet `merge-ready: yes`, with
   required checks and reviews handled.
-- [ ] Final evidence, reflection and lifecycle closeout land in that same PR.
+- [x] Final evidence, reflection and lifecycle closeout land in that same PR.
 
 Packet creation satisfies no implementation criterion. A partial or blocked
 result remains active/paused with receipts, not completed-retained.
@@ -188,6 +188,22 @@ this goal.
   Prepare the change/preview before requesting a missing material decision.
 - A change would overwrite another owner's artifacts, weaken required statuses,
   or bypass the approved secret or runner-admission paths.
+
+## Decision log
+
+| Date | Decision | Reason | Reversal |
+| --- | --- | --- | --- |
+| 2026-10-23 | Score `turbo@2.11.10` (stable, matches the repo lock) and `2.11.9-canary.1` (the current `canary` dist-tag, which trails stable). | The SPEC asks for the exact published canary; npm published no canary after 2.11.9. | Re-pin when a newer canary is published; regenerate client receipts. |
+| 2026-10-23 | Score Ducktors `2.14.3`; record `2.14.4` without scoring it. | 2.14.4 was published hours before the refresh; the repo's two-week supply-chain age floor applies. | Re-pin after 2026-11-06 and rerun the corpus. |
+| 2026-10-23 | Bruno pin moves from 4.0.17 to 4.0.20, and a `bruno-loopback` topology joins the comparison. | PR #2000 put Bruno 4.0.20 on consumer-host loopback over R2 (opt-in, inactive); comparing a release nobody runs would be moot. The live R2 bucket is never a write target. | Drop the topology if the R2 cohort is retired. |
+| 2026-10-23 | The local container lab lives in `infra/lambda/turbo-cache/lab/` and is not bundled. | Its gateway must load the pinned shim and the incumbent's own authorizer/writer source; that package already owns them and is outside fallow's scope. No adapter source changes. | Move the three files to their own directory and add an install step. |
+| 2026-10-23 | The lab's S3-compatible store is `versity/versitygw` v1.0.17 by digest. | MinIO no longer publishes community images; versitygw is Apache-2.0 and serves a POSIX directory. | Swap the image line in `lab.sh`. |
+| 2026-10-23 | The AWS lab is a separate Pulumi project reusing `CiTurboCache` unchanged under a `beep-tcl-<epoch>` name; Bruno and upstream Ducktors are not deployed to AWS. | One shared-file writer and no production stack contact. Both candidates deploy as single processes, so the local lab is their deployed shape. | Add Fargate services to the lab entry if a deployed candidate shape changes. |
+| 2026-10-24 | `CiTurboCache` gains optional lab-only `remediation` arguments (tag passthrough, reserved concurrency); defaults equal the deployed values. | Lets the lab deploy the evolved incumbent without forking the component; the lab preview showed the existing 32 resources unchanged and production passes no remediation. | Remove the optional argument; no deployed stack uses it. |
+| 2026-10-24 | The corpus now resolves response `$ref`s, so error responses carry their documented `application/json` type and strict scoring checks it; the five local topologies were rerun on all four executors, while the two AWS runs are kept. | Review finding: unresolved refs left every error response without a media type, so error content types were never scored. Every recorded AWS error exchange already carried `application/json`, so the stricter check yields the same AWS verdicts; redeploying would only re-measure them. | Revert the resolver and rerun the local lab. |
+| 2026-10-24 | The final PR is #2238, one squashed commit on main, replacing #2226. | #2226's history held public digest fields (`openapiSha256`, `openapiGitBlob`) that hosted secret scanning flags as `generic-api-key` under main's config; a PR cannot widen its own allowlist and rewriting published history needs a force push. The fields were renamed to `specSha256`/`specGitBlob`. | Reopen #2226 only if #2238 is abandoned. |
+| 2026-10-24 | The comparison recommends retaining and evolving the incumbent; no migration packet opens. | Frozen rubric: no topology passes G5, so no candidate is eligible; the evolved incumbent improves five gates with no regression. | Rerun the corpus when a candidate adds tenant binding. |
+| 2026-10-23 | Lab spend (P2) escalated with a prepared preview; the operator approved a USD 10 ceiling, a 48-hour TTL and the read-only production size census in chat on 2026-10-23. | AGENTS.md autonomy charter: money escalates. | `lab-aws.sh destroy <epoch>` and inventory; the approval covers this lab only. |
 
 ## Exception ledger
 

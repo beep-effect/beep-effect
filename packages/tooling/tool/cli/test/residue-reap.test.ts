@@ -1,13 +1,20 @@
-import { renderResidueReportLinesForTesting } from "@beep/repo-cli/test/Quality";
+import { WorktreeMergedPullRequest } from "@beep/repo-cli/commands/Worktree";
+import { makeResidueTerminalLaneProbe, renderResidueReportLinesForTesting } from "@beep/repo-cli/test/Quality";
 import {
+  layerResidueTerminalLaneProbeTest,
   ProcessTable,
+  ProcessTableEntry,
+  processTableFromEntries,
   ResidueReapAction,
   ResidueReapCandidate,
   ResidueReapReport,
   ResidueRetentionRuling,
+  ResidueTerminalLaneAuthority,
+  ResidueTerminalLaneProbe,
   runRepoCommandCapture,
   runResidueReap,
 } from "@beep/repo-cli/test/RepoRun";
+import { PrRepository, SessionLedger, SessionLedgerRow } from "@beep/repo-cli/test/Session";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, vi } from "@effect/vitest";
@@ -15,11 +22,13 @@ import { assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
+import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as F from "effect/Function";
 import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -28,6 +37,7 @@ import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
+import type { ResidueTerminalLaneProbeShape } from "@beep/repo-cli/test/RepoRun";
 
 const decodeResidueReapReportJson = S.decodeEffect(S.fromJsonString(ResidueReapReport));
 const encodeResidueReapReportJson = S.encodeEffect(S.fromJsonString(ResidueReapReport));
@@ -36,6 +46,12 @@ const FIXTURE_NOW_MILLIS = 2_000_000_000_000;
 const noLiveCwd = () => Effect.succeedSome(false);
 const pidAlive = (alive: HashSet.HashSet<string>) => (pid: string) => Effect.succeedSome(HashSet.has(alive, pid));
 const noLivePid = pidAlive(HashSet.empty());
+
+// Every suite runs without a terminal-lane authority unless a test provides one.
+const ResidueReapTestLayer = Layer.merge(
+  NodeServices.layer,
+  layerResidueTerminalLaneProbeTest(() => Effect.succeedNone)
+);
 
 const makeTempDirectory = FileSystem.FileSystem.use((fs) => fs.makeTempDirectory({ prefix: "residue-reap-test-" }));
 
@@ -163,7 +179,7 @@ const makeFixture = Effect.fn("ResidueReapTest.makeFixture")(function* (root: st
   };
 });
 
-it.layer(NodeServices.layer, { timeout: "30 seconds" })("residue reap", (it) => {
+it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("residue reap", (it) => {
   it.effect("classifies age, protects durable names, and keeps file and directory actions distinct", () =>
     Effect.acquireUseRelease(
       makeTempDirectory,
@@ -1497,7 +1513,7 @@ it.effect.prop(
   { arbitrary: { runs: 20, seed: 7 } }
 );
 
-it.layer(NodeServices.layer, { timeout: "30 seconds" })("checkout retention archives", (it) => {
+it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("checkout retention archives", (it) => {
   it.effect("persists dry-run ownership and moves without deleting, then restores", () =>
     Effect.acquireUseRelease(
       makeTempDirectory,
@@ -2149,7 +2165,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("checkout retention arch
   );
 });
 
-it.layer(NodeServices.layer, { timeout: "30 seconds" })("archive interruption recovery", (it) => {
+it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("archive interruption recovery", (it) => {
   for (const phase of ["intent", "moved"] as const) {
     it.effect(`recovers SIGKILL after ${phase} without losing payload`, () =>
       Effect.acquireUseRelease(
@@ -2162,14 +2178,15 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("archive interruption re
                 const path = yield* Path.Path;
                 const encoded = yield* S.encodeEffect(ResidueInvocationJson)(fixture);
                 const script = `
-            import { runResidueReap } from "@beep/repo-cli/test/RepoRun";
+            import { layerResidueTerminalLaneProbeTest, runResidueReap } from "@beep/repo-cli/test/RepoRun";
             import { NodeServices } from "@effect/platform-node";
             import * as Effect from "effect/Effect";
+            import * as Layer from "effect/Layer";
             const options = ${encoded};
             await Effect.runPromise(runResidueReap({ ...options, classes: ["checkout-generated"], apply: true,
               probeLiveCwd: () => Effect.succeedSome(false), probePidAlive: () => Effect.succeedSome(false),
               archiveCheckpoint: (at) => Effect.sync(() => { if (at === "${phase}") process.kill(process.pid, "SIGKILL"); }),
-            }).pipe(Effect.provide(NodeServices.layer)));
+            }).pipe(Effect.provide(Layer.merge(NodeServices.layer, layerResidueTerminalLaneProbeTest(() => Effect.succeedNone)))));
           `;
                 const killed = yield* runRepoCommandCapture("bun", ["--eval", script], process.cwd()).pipe(
                   Effect.match({ onFailure: () => true, onSuccess: (capture) => !N.Equivalence(capture.exitCode, 0) })
@@ -2196,7 +2213,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("archive interruption re
   }
 });
 
-it.layer(NodeServices.layer, { timeout: "30 seconds" })("retention fences", (it) => {
+it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("retention fences", (it) => {
   it.effect("retains a candidate with an open descriptor even without a lock suffix", () =>
     Effect.acquireUseRelease(
       makeTempDirectory,
@@ -2377,6 +2394,356 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("retention fences", (it)
               yield* fs.makeDirectory(path.dirname(fixture.target));
               yield* runResidueReap({ ...fixture, restore: id });
               expect(yield* fs.readFileString(path.join(fixture.target, "payload.txt"))).toBe("preserve these bytes");
+            })
+          )
+        ),
+      removeTempDirectory
+    )
+  );
+});
+const TERMINAL_LANE_PR = 1871;
+const TERMINAL_LANE_OWNER = `terminal-lane#${TERMINAL_LANE_PR}`;
+const fixtureRepository = PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" });
+
+const gitLine = Effect.fn("ResidueReapTest.gitLine")(function* (cwd: string, args: ReadonlyArray<string>) {
+  return Str.trim(yield* runFixtureCommand(cwd, "git", args));
+});
+
+// A primary clone with a github origin and one linked lane worktree on `feat/lane`.
+// `head` is the lane's HEAD, `base` its parent, and `descendant` a commit built on
+// HEAD that the lane never checked out (the PR head of the ancestor case).
+const terminalLaneFixture = Effect.fn("ResidueReapTest.terminalLaneFixture")(function* (root: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const primary = yield* makeEmbeddedRepo(root);
+  const homeRoot = path.join(root, "home");
+  const lane = path.join(root, "repo-worktrees", "lane");
+  yield* fs.makeDirectory(homeRoot, { recursive: true });
+  yield* runFixtureCommand(primary, "git", [
+    "remote",
+    "add",
+    "origin",
+    "https://github.com/beep-effect/beep-effect.git",
+  ]);
+  yield* fs.writeFileString(path.join(primary, ".gitignore"), ".beep/\n");
+  yield* fs.writeFileString(path.join(primary, "README.md"), "fixture\n");
+  yield* runFixtureCommand(primary, "git", ["add", "."]);
+  yield* runFixtureCommand(primary, "git", ["commit", "--quiet", "-m", "base"]);
+  yield* runFixtureCommand(primary, "git", ["worktree", "add", "--quiet", "-b", "feat/lane", lane]);
+  yield* fs.writeFileString(path.join(lane, "notes.md"), "lane work\n");
+  yield* runFixtureCommand(lane, "git", ["add", "."]);
+  yield* runFixtureCommand(lane, "git", ["commit", "--quiet", "-m", "lane work"]);
+  const head = yield* gitLine(lane, ["rev-parse", "HEAD"]);
+  const base = yield* gitLine(lane, ["rev-parse", "HEAD~1"]);
+  const tree = yield* gitLine(lane, ["rev-parse", "HEAD^{tree}"]);
+  const descendant = yield* gitLine(lane, ["commit-tree", tree, "-p", head, "-m", "pushed after"]);
+  const commonDir = yield* gitLine(lane, ["rev-parse", "--path-format=absolute", "--git-common-dir"]);
+  const target = path.join(lane, ".beep", "ci", "obsolete");
+  const material = path.join(lane, ".beep", "fallow");
+  const primaryTarget = path.join(primary, ".beep", "ci", "obsolete");
+  yield* Effect.forEach(
+    [target, material, primaryTarget],
+    (directory) => fs.makeDirectory(directory, { recursive: true }),
+    {
+      discard: true,
+    }
+  );
+  yield* fs.writeFileString(path.join(target, "payload.txt"), "lane residue");
+  yield* fs.writeFileString(path.join(material, "cache.json"), "owner material");
+  yield* fs.writeFileString(path.join(primaryTarget, "payload.txt"), "primary residue");
+  yield* touchTreeDaysAgo(root, path.join(lane, ".beep"), 45);
+  yield* touchTreeDaysAgo(root, path.join(primary, ".beep"), 45);
+  return {
+    primary,
+    lane,
+    head,
+    base,
+    descendant,
+    commonDir,
+    target,
+    material,
+    primaryTarget,
+    options: {
+      repoRoot: lane,
+      homeRoot,
+      classes: ["checkout-generated", "checkout-material"] as const,
+      nowMillis: FIXTURE_NOW_MILLIS,
+      probeLiveCwd: noLiveCwd,
+      probePidAlive: noLivePid,
+    },
+  };
+});
+
+type LaneFacts = {
+  readonly mergedHeads?: O.Option<ReadonlyArray<string>>;
+  readonly ledger?: ReadonlyArray<SessionLedgerRow>;
+};
+
+// The live probe over real git, with gh answered from `mergedHeads` and the session
+// ledger answered from `ledger`.
+const liveLaneProbe = ({ mergedHeads = O.some(A.empty()), ledger = A.empty() }: LaneFacts) => {
+  const merged = Effect.succeed(
+    mergedHeads.pipe(
+      O.map(A.map((headRefOid) => WorktreeMergedPullRequest.make({ number: TERMINAL_LANE_PR, headRefOid })))
+    )
+  );
+  return merged.pipe(
+    F.constant,
+    makeResidueTerminalLaneProbe,
+    Effect.provideService(
+      SessionLedger,
+      SessionLedger.of({ append: F.constant(Effect.void), list: F.constant(Effect.succeed(ledger)) })
+    )
+  );
+};
+
+const withLaneProbe =
+  (probe: ResidueTerminalLaneProbeShape) =>
+  <A, E, R>(effect: Effect.Effect<A, E, R>) =>
+    Effect.provideService(effect, ResidueTerminalLaneProbe, probe);
+
+const laneLedgerRow = (checkout: string, state: "open" | "blocked" | "done") =>
+  SessionLedgerRow.make({
+    repository: fixtureRepository,
+    clone: checkout,
+    checkout,
+    lane: "lane",
+    branch: "feat/lane",
+    state,
+    next: "finish the lane",
+    summary: O.none(),
+    pr: O.none(),
+    harness: "claude-code",
+    sessionId: O.none(),
+    recordedAt: DateTime.makeUnsafe(0),
+  });
+
+const laneAuthority = (fixture: Effect.Success<ReturnType<typeof terminalLaneFixture>>) =>
+  ResidueTerminalLaneAuthority.make({
+    checkoutRoot: fixture.lane,
+    commonDir: fixture.commonDir,
+    branch: "feat/lane",
+    pullRequest: TERMINAL_LANE_PR,
+    pullRequestHead: fixture.head,
+    head: fixture.head,
+    headRelation: "equal",
+    verifiedAt: DateTime.makeUnsafe(0),
+  });
+
+it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("terminal-lane authority", (it) => {
+  for (const relation of ["equal", "ancestor"] as const) {
+    it.effect(`archives a merged lane's generated residue when HEAD is ${relation} to the PR head`, () =>
+      Effect.acquireUseRelease(
+        makeTempDirectory,
+        (root) =>
+          terminalLaneFixture(root).pipe(
+            Effect.flatMap((fixture) =>
+              Effect.gen(function* () {
+                const fs = yield* FileSystem.FileSystem;
+                const probe = yield* liveLaneProbe({
+                  mergedHeads: O.some([Str.Equivalence(relation, "equal") ? fixture.head : fixture.descendant]),
+                });
+                const dry = yield* runResidueReap(fixture.options).pipe(withLaneProbe(probe));
+                const row = candidateByPath(dry, fixture.target);
+                expect(row.action).toBe("archive-move");
+                expect(row.owner).toBe(TERMINAL_LANE_OWNER);
+                expect(row.terminalState).toBe("completed");
+                expect(row.retentionReason).toContain(`PR #${TERMINAL_LANE_PR} MERGED`);
+                expect(row.retentionReason).toContain(`HEAD ${relation}`);
+                const material = candidateByPath(dry, fixture.material);
+                expect(material.skipReason).toBe("owner-ruling-required");
+                expect(material.owner).toBe(TERMINAL_LANE_OWNER);
+                const applied = yield* runResidueReap({ ...fixture.options, apply: true }).pipe(withLaneProbe(probe));
+                expect(applied.reapedCount).toBe(1);
+                expect(candidateByPath(applied, fixture.target).owner).toBe(TERMINAL_LANE_OWNER);
+                expect(yield* fs.exists(fixture.target)).toBe(false);
+                expect(yield* fs.exists(fixture.material)).toBe(true);
+              })
+            )
+          ),
+        removeTempDirectory
+      )
+    );
+  }
+
+  it.effect("keeps near-miss lanes owner-ruled", () =>
+    Effect.acquireUseRelease(
+      makeTempDirectory,
+      (root) =>
+        terminalLaneFixture(root).pipe(
+          Effect.flatMap((fixture) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              const merged = O.some([fixture.head]);
+              const ownerRuled = Effect.fn("ResidueReapTest.ownerRuled")(function* (
+                facts: LaneFacts,
+                target: string = fixture.target,
+                options: Partial<typeof fixture.options> = {}
+              ) {
+                const probe = yield* liveLaneProbe(facts);
+                const report = yield* runResidueReap({ ...fixture.options, ...options }).pipe(withLaneProbe(probe));
+                const row = candidateByPath(report, target);
+                expect(row.action).toBe("skip");
+                expect(row.skipReason).toBe("owner-ruling-required");
+                expect(row.owner).toBe("owner-unverified");
+              });
+              // HEAD ahead of the merged PR head.
+              yield* ownerRuled({ mergedHeads: O.some([fixture.base]) });
+              // No merged PR (an open PR is not listed as merged), and gh failing.
+              yield* ownerRuled({ mergedHeads: O.some(A.empty()) });
+              yield* ownerRuled({ mergedHeads: O.none() });
+              // A live session-ledger row naming the checkout; a done row does not block.
+              yield* ownerRuled({ mergedHeads: merged, ledger: [laneLedgerRow(fixture.lane, "blocked")] });
+              // The primary clone is never a terminal lane, even with a merged PR for its branch.
+              const primaryHead = yield* gitLine(fixture.primary, ["rev-parse", "HEAD"]);
+              yield* ownerRuled({ mergedHeads: O.some([primaryHead]) }, fixture.primaryTarget, {
+                repoRoot: fixture.primary,
+              });
+              // A live process whose cwd is inside the lane.
+              const table = processTableFromEntries({
+                self: 987_000,
+                entries: [ProcessTableEntry.make({ pid: 987_654, parent: 1, command: "zsh", cwd: fixture.lane })],
+              });
+              yield* ownerRuled({ mergedHeads: merged }).pipe(Effect.provideService(ProcessTable, table));
+              // A dirty tree.
+              yield* fs.writeFileString(path.join(fixture.lane, "scratch.md"), "uncommitted\n");
+              yield* ownerRuled({ mergedHeads: merged });
+              yield* fs.remove(path.join(fixture.lane, "scratch.md"));
+              // The same lane, clean and with only a done row of its own, is terminal: open
+              // rows for the primary clone and for a vanished checkout name other paths.
+              const proven = yield* runResidueReap(fixture.options).pipe(
+                withLaneProbe(
+                  yield* liveLaneProbe({
+                    mergedHeads: merged,
+                    ledger: [
+                      laneLedgerRow(fixture.lane, "done"),
+                      laneLedgerRow(fixture.primary, "open"),
+                      laneLedgerRow(path.join(root, "vanished-lane"), "open"),
+                    ],
+                  })
+                )
+              );
+              expect(candidateByPath(proven, fixture.target).action).toBe("archive-move");
+            })
+          )
+        ),
+      removeTempDirectory
+    )
+  );
+
+  it.effect("re-probes at apply and skips a lane whose authority lapsed after discovery", () =>
+    Effect.acquireUseRelease(
+      makeTempDirectory,
+      (root) =>
+        terminalLaneFixture(root).pipe(
+          Effect.flatMap((fixture) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const calls = yield* Ref.make(0);
+              // Answers for the dry run's discovery and the apply run's discovery, then lapses.
+              const probe = withLaneProbe({
+                verify: () =>
+                  Ref.updateAndGet(calls, N.increment).pipe(
+                    Effect.map((call) => (call <= 2 ? O.some(laneAuthority(fixture)) : O.none()))
+                  ),
+              });
+              const options = { ...fixture.options, classes: ["checkout-generated"] as const };
+              const dry = yield* runResidueReap(options).pipe(probe);
+              expect(candidateByPath(dry, fixture.target).action).toBe("archive-move");
+              const applied = yield* runResidueReap({ ...options, apply: true }).pipe(probe);
+              const row = candidateByPath(applied, fixture.target);
+              expect(applied.reapedCount).toBe(0);
+              expect(row.action).toBe("skip");
+              expect(row.skipReason).toBe("terminal-state-unverified");
+              expect(yield* Ref.get(calls)).toBe(3);
+              expect(yield* fs.readFileString(`${fixture.target}/payload.txt`)).toBe("lane residue");
+            })
+          )
+        ),
+      removeTempDirectory
+    )
+  );
+
+  it.effect("resumes an interrupted terminal-lane archive from its intent journal", () =>
+    Effect.acquireUseRelease(
+      makeTempDirectory,
+      (root) =>
+        terminalLaneFixture(root).pipe(
+          Effect.flatMap((fixture) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              const probe = withLaneProbe({ verify: F.constant(Effect.succeedSome(laneAuthority(fixture))) });
+              const options = { ...fixture.options, classes: ["checkout-generated"] as const };
+              const interrupted = yield* runResidueReap({
+                ...options,
+                apply: true,
+                archiveCheckpoint: (phase) =>
+                  Str.Equivalence(phase, "intent") ? Effect.die("simulated crash") : Effect.void,
+              }).pipe(probe, Effect.exit);
+              expect(interrupted._tag).toBe("Failure");
+              expect(yield* fs.exists(fixture.target)).toBe(true);
+              const runsRoot = path.join(fixture.lane, ".beep", "residue-reap");
+              const runId = O.getOrThrow(A.head(A.filter(yield* fs.readDirectory(runsRoot), S.is(RunDirectoryName))));
+              expect(yield* fs.readFileString(path.join(runsRoot, runId, "archive", "0.intent.json"))).toContain(
+                `"phase":"intent"`
+              );
+              const resumed = yield* runResidueReap({ ...options, resume: runId }).pipe(probe);
+              expect(resumed.reapedCount).toBe(1);
+              expect(candidateByPath(resumed, fixture.target).owner).toBe(TERMINAL_LANE_OWNER);
+              expect(yield* fs.exists(fixture.target)).toBe(false);
+              yield* runResidueReap({ ...options, restore: runId }).pipe(probe);
+              expect(yield* fs.readFileString(path.join(fixture.target, "payload.txt"))).toBe("lane residue");
+            })
+          )
+        ),
+      removeTempDirectory
+    )
+  );
+
+  it.effect("lets a ruling file govern and never probes a foreign owner", () =>
+    Effect.acquireUseRelease(
+      makeTempDirectory,
+      (root) =>
+        terminalLaneFixture(root).pipe(
+          Effect.flatMap((fixture) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              const probed = yield* Ref.make(A.empty<string>());
+              const probe = withLaneProbe({
+                verify: (checkoutRoot) =>
+                  Ref.update(probed, A.append(checkoutRoot)).pipe(Effect.as(O.some(laneAuthority(fixture)))),
+              });
+              const options = { ...fixture.options, classes: ["checkout-generated"] as const };
+              const foreign = yield* runResidueReap({
+                ...options,
+                repoRoot: fixture.primary,
+                checkoutRoots: [fixture.primary, fixture.lane],
+              }).pipe(probe);
+              const fenced = candidateByPath(foreign, fixture.target);
+              expect(fenced.skipReason).toBe("foreign-owner");
+              expect(fenced.retentionReason).toBe("fleet observation only; archive from the owning checkout");
+              expect(yield* Ref.get(probed)).toEqual([fixture.primary]);
+              const ruling = ResidueRetentionRuling.make({
+                path: ".beep/ci/obsolete",
+                owner: "quality-fixture",
+                state: "active",
+                disposition: "regenerable",
+                evidence: "standards/retention.json",
+                regeneration: "synthetic scanner",
+                reason: "still in use",
+              });
+              yield* fs.makeDirectory(path.join(fixture.lane, ".beep", "retention"), { recursive: true });
+              yield* fs.writeFileString(
+                path.join(fixture.lane, ".beep", "retention", "checkout-generated.json"),
+                yield* encodeRulingArrayJson([ruling])
+              );
+              const governed = candidateByPath(yield* runResidueReap(options).pipe(probe), fixture.target);
+              expect(governed.skipReason).toBe("terminal-state-unverified");
+              expect(governed.owner).toBe("quality-fixture");
+              expect(yield* Ref.get(probed)).toEqual([fixture.primary]);
             })
           )
         ),

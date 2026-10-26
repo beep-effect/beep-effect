@@ -1,3 +1,4 @@
+import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   isProcessIdentityAliveWithStartForTesting,
   isProcessPidAlive,
@@ -11,7 +12,6 @@ import {
 } from "@beep/repo-cli/test/RepoRun";
 import { it } from "@beep/test-runner";
 import { HostProcessPlatform } from "@beep/utils";
-import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import { expect, vi } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
@@ -38,7 +38,7 @@ const withProcStat = Effect.fnUntraced(function* <Value, Error, Requirements>(
   return yield* effect.pipe(Effect.provideService(FileSystem.FileSystem, testFileSystem));
 });
 
-it.layer(NodeFileSystem.layer)("ProcessIdentity", (it) => {
+it.layer(MemoryFileSystem.layer, { timeout: "30 seconds" })("ProcessIdentity", (it) => {
   it("models every supported source-prefixed identity", () => {
     expect(ProcessIdentitySource.literals).toStrictEqual(["proc", "ps", "win"]);
     expect(ProcessIdentityStatus.literals).toStrictEqual(["alive", "dead", "unknown"]);

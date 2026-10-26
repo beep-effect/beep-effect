@@ -1,0 +1,14 @@
+name: beep-turbo-cache-lab
+runtime:
+  name: nodejs
+  options:
+    # Classic TypeScript API for the Pulumi runtime: infra's TS6 (path from src/internal).
+    nodeargs: --require ../../pulumi-typescript6.cjs
+description: Disposable turbo-cache conformance lab (goal turborepo-cache-conformance). Never production.
+main: ../src/internal/turbo-cache-lab-entry.ts
+config:
+  aws:region: us-east-1
+  aws:defaultTags:
+    value:
+      tags:
+        beep:lab: turbo-cache-conformance

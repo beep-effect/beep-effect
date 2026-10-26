@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "cache-conformance-target/v1",
+  "profile": "local-container",
+  "topology": "bruno-policy",
+  "baseUrl": "http://127.0.0.1:17102",
+  "backend": {
+    "id": "brunojppb/turbo-cache-server",
+    "release": "4.0.20",
+    "digest": "sha256:52334c002a55276b29e059caaf19c83326d50ede4280a13dbe48aebde0b816fd"
+  },
+  "namespace": {
+    "teamId": "team_lab",
+    "foreignTeamId": "team_foreign"
+  },
+  "credentials": {
+    "reader": "LAB_READ_TOKEN",
+    "writer": "LAB_WRITE_TOKEN",
+    "foreign": "LAB_READ_TOKEN",
+    "unknown": "LAB_UNKNOWN_TOKEN"
+  },
+  "policy": {
+    "readerWriterSplit": true,
+    "tenantBinding": false
+  },
+  "requestTimeoutMs": 10000
+}

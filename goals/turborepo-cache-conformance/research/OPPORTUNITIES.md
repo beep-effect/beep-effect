@@ -109,3 +109,69 @@ probe assertion stopped request creation; no canary observation was accepted.
 Version checks now run outside a workspace, while native fixture summaries
 still must match the requested exact version. This avoids confusing Turbo's
 workspace inference with a changed executable.
+
+## 2026-10-23 — corpus and lab slice
+
+### MinIO community images are gone
+
+`docker pull minio/minio:<release>` answered "pull access denied". MinIO no
+longer publishes community images, so the lab store moved to
+`versity/versitygw` v1.0.17 by digest. A pinned-image availability check in the
+lab script's `up` would have reported this before the first fetch.
+
+### Public digests trip gitleaks' generic-api-key rule
+
+The first commit stopped on seven `generic-api-key` findings: every one was
+an OpenAPI blob or SHA-256 digest field (corpus source, run receipts). No lab
+bearer was present (checked against each value with `git grep --cached`). A
+path- and field-scoped allowlist was added beside the qualification goal's
+equivalent one. A repo-wide digest-field allowlist convention would remove
+the per-goal entries.
+
+### Runner bearer rule contradicted single-token topologies
+
+`conformance-run` first required four distinct bearers, which no single-token
+topology can provide (Bruno alone hands every caller one token). All five
+runs failed before any request. The rule now demands distinct bearers only
+where the target claims a role split or tenant binding. The target schema
+should have carried that rule from the start.
+
+### The incumbent's bucket policy blocks lab teardown
+
+`aws s3 rm` on a lab namespace returned AccessDenied: `DenyObjectAccessOutsideCacheRoles`
+denies every object action outside the cache roles, and neither role may
+delete. The prepared teardown would have failed at "empty the bucket".
+`lab-aws.sh destroy` now removes the bucket policy through the stack first
+(`--target` dry run matched exactly that resource). This is also the RC-029
+finding: there is no targeted namespace or epoch cleanup.
+
+### Lab ZIP is not the deployed ZIP
+
+`build.sh` from main produced `f865fed9…`; the production artifact path holds
+`47fcec56…`. The lab therefore measures main's incumbent source. A recorded
+build-input manifest next to each deployed ZIP would let a lab rebuild the
+exact deployed bytes.
+
+### The canary client fetch had never run
+
+Every `conformance-native --client canary --fetch-client` run failed with
+`Cannot extract package/bin/turbo`. The stable runs had passed only because the
+resolver copied the repo-installed stable binary, so the download path was
+untested. `@turbo/linux-64` tarballs hold `turbo-linux-x64/bin/turbo`, which I
+had seen during the pin refresh. A fetch test against a real pinned tarball
+(or a fixture with the real member layout) would have caught it.
+
+### The observed peak was the throttle cap
+
+The envelope rule multiplies the observed peak concurrency, but the observed
+read/write peaks (20/10) equal the incumbent's reserved concurrency, and the
+production read function logged 25,760 throttles in 30 days. Without the
+throttle query, the envelope would have looked representative. Any envelope
+derived from a capped system should check throttles and the cap first.
+
+### Native shim tag passthrough is a hidden mode switch
+
+The shim strips `x-artifact-tag` unless `TURBO_REMOTE_CACHE_SIGNATURE_KEY` is
+set, never verifies with that value, and then 404s every untagged object. The
+first evolved wire run scored total failure because the wire executor wrote
+untagged; the runners now tag every write and keep one explicit untagged check.

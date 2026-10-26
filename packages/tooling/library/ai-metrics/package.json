@@ -72,6 +72,7 @@
     "@beep/phoenix": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/utils": "workspace:^",
+    "@beep/xdg": "workspace:^",
     "@opentelemetry/api": "catalog:",
     "@opentelemetry/core": "catalog:",
     "@opentelemetry/exporter-trace-otlp-proto": "catalog:",

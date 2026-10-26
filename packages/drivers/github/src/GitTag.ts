@@ -13,6 +13,7 @@
 
 import { $GithubId } from "@beep/identity/packages";
 import { SemVer } from "@beep/semver";
+import { unstubbedFor } from "@beep/utils/TestDouble";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -26,7 +27,6 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { GitHubClient } from "./GitHubClient.ts";
 import { GitHubError } from "./GitHubError.ts";
-import { unstubbedFor } from "./internal/unstubbed.ts";
 import { Repo } from "./Repo.ts";
 import { PageOptions } from "./Rest.ts";
 

@@ -1344,6 +1344,9 @@ export class DocgenError extends S.TaggedError<DocgenError, { readonly brand: un
     message: S.String.annotateKey({
       description: "Human-readable docgen failure message.",
     }),
+    cause: S.optionalKey(S.Defect({ includeStack: true })).annotateKey({
+      description: "Underlying typed failure, when docgen wraps one from a dependency.",
+    }),
   },
   $I.annoteError<DocgenError>("DocgenError", {
     description: "Typed error used throughout docgen parsing and generation operations.",

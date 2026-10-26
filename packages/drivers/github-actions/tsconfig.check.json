@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./tsconfig.json",
+  "references": [
+    {
+      "path": "../github/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/capability/walker/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/github-commands/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/glob/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/identity/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/npm-spec/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/sbom/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/schema/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/utils/tsconfig.json"
+    },
+    {
+      "path": "../../tooling/test-kit/fc-runs/tsconfig.json"
+    },
+    {
+      "path": "../../tooling/test-kit/memfs/tsconfig.json"
+    },
+    {
+      "path": "../../tooling/test-kit/test-utils/tsconfig.json"
+    }
+  ],
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "incremental": false,
+    "noEmit": true,
+    "rootDir": "../../../."
+  }
+}

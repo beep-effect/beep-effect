@@ -3,13 +3,13 @@
   "initiative": {
     "id": "turborepo-cache-conformance",
     "title": "Turborepo cache conformance",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-09-08",
-    "updated": "2026-09-29",
+    "updated": "2026-10-24",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/turborepo-cache-conformance",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Deliver a reusable exact-version Remote Cache conformance corpus and a bounded, evidence-neutral comparison of the named backend topologies.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -23,7 +23,24 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Deliver a reusable exact-version Remote Cache conformance corpus and a bounded, evidence-neutral comparison of the named backend topologies. Complete only after SPEC acceptance, representative evidence, final same-PR reflection/lifecycle, and Yeet merge-ready: yes.",
-    "grandfathered": false
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 2238,
+        "role": "final"
+      },
+      {
+        "number": 2244,
+        "role": "supporting"
+      }
+    ],
+    "acceptanceEvidence": [
+      {
+        "kind": "packet-history",
+        "ref": "goals/turborepo-cache-conformance/history/receipts/2026-10-24-completion-gate.md",
+        "gating": false
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -54,7 +71,20 @@
     "research/owned-protocol-runner.json",
     "research/frozen-workflow-stable-protocol.json",
     "research/frozen-workflow-canary-protocol.json",
-    "research/complete-protocol-validation.json"
+    "research/complete-protocol-validation.json",
+    "research/pins-2026-10-23.json",
+    "research/corpus-fixture-design.md",
+    "research/conformance-corpus.json",
+    "research/remote-cache-openapi.json",
+    "research/load-envelope-2026-10-23.json",
+    "research/lab-deployment-preview.md",
+    "research/aws-lab-c1023a.json",
+    "research/local-observability-2026-10-23.json",
+    "research/evidence/aws-c1023a-beep-incumbent.json",
+    "research/evidence/aws-c1023a-beep-incumbent-evolved.json",
+    "research/evidence/local-container.json",
+    "research/comparison.json",
+    "research/comparison.md"
   ],
   "agentLaunchers": [
     {
@@ -69,37 +99,37 @@
     {
       "id": "P0",
       "name": "Pins, corpus and budget plan",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Local differential runner",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Disposable AWS lab",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Execute and compare",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Verify and tear down",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P5",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P6",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -116,5 +146,5 @@
     "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
     "Do not overwrite another owner's artifacts or weaken hosted proof."
   ],
-  "statusNote": "Active early handoff for task qualification under delegated blocker-resolution authority. PR #1327 merged; remaining work is consolidated on the final implementation branch. Single writer for shared Cache contracts and local signed fixtures. Broader packet criteria remain incomplete; no cloud deployment or production readiness is claimed."
+  "statusNote": "Corpus, wire/lab/native runners and frozen-rubric comparison complete across seven targets; AWS lab (USD 10 ceiling, operator-approved) torn down with an empty inventory. No eligible replacement: retain and evolve the incumbent. Production unchanged. Completion-gate receipt records the RELAXED orchestrator merge of #2238 (no merge-ready: yes line; Test Unit cancelled at merge, green on main) and the #2244 coverage-baseline follow-up; production read throttling handed to turborepo-cache-trust-observability."
 }

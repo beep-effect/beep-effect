@@ -25,6 +25,16 @@ describe("XdgBase", () => {
   );
 
   describe("resolve", () => {
+    // README Deviations "absolute HOME, two meanings": Xdg.layer accepts a Windows HOME, XdgBase does not.
+    it.effect("treats a Windows HOME or value as absent, unlike Xdg.layer", () =>
+      Effect.sync(() => {
+        for (const windows of ["C:/x", "C:\\Users\\ada", "\\\\server\\share"]) {
+          assertNone(XdgBase.resolve("state", { home: windows }));
+          assertSome(XdgBase.resolve("state", { value: windows, home: "/home/ada" }), "/home/ada/.local/state");
+        }
+      })
+    );
+
     it.effect("uses an absolute value verbatim", () =>
       Effect.sync(() => {
         assertSome(XdgBase.resolve("config", { value: "/x//y/", home: "/home/ada" }), "/x//y/");

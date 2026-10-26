@@ -1,4 +1,9 @@
-import { AccountCostControls, AccountCostControlsConfig, loadAccountCostControlsConfig } from "@beep/infra";
+import {
+  AccountCostControls,
+  AccountCostControlsConfig,
+  decodeNotificationRecipients,
+  loadAccountCostControlsConfig,
+} from "@beep/infra";
 import { it } from "@beep/test-runner";
 import { describe, expect, vi } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
@@ -49,6 +54,16 @@ describe("@beep/infra AccountCostControls", { concurrent: false }, () => {
       (config) => Effect.sync(() => pulumi.runtime.setAllConfig(config))
     )
   );
+
+  it("decodes recipients into deduplicated secrets and redacts invalid values", () => {
+    const recipients = decodeNotificationRecipients(["ops@example.com", "ops@example.com", "cost@example.com"]);
+    expect(recipients).toHaveLength(2);
+    assertTrue(A.every(recipients, pulumi.Output.isInstance));
+    expect(() => decodeNotificationRecipients(["private-recipient-value"])).toThrow(
+      /^Invalid accountCostControls notification recipients; values are redacted$/u
+    );
+    expect(() => decodeNotificationRecipients([])).toThrow(/values are redacted$/u);
+  });
 
   it.effect("redacts malformed recipient values at the Pulumi output boundary", () =>
     Effect.acquireUseRelease(

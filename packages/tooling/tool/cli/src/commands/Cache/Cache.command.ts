@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { CachePolicyAuditReport, CacheQualificationStore } from "@beep/repo-configs/cache";
+import { CacheClientChannel, CachePolicyAuditReport, CacheQualificationStore } from "@beep/repo-configs/cache";
 import { A, Str, thunk0 } from "@beep/utils";
 import * as Clock from "effect/Clock";
 import * as Config from "effect/Config";
@@ -17,6 +17,7 @@ import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
@@ -32,6 +33,21 @@ import { nearestRank } from "../../internal/stats/NearestRank.ts";
 import { CacheProducerAcceptanceReference, CacheProducerImportRequest } from "./Cache.acceptance.schemas.ts";
 import { loadCacheProducerStoreConfiguration, persistCacheProducerAcceptance } from "./Cache.acceptance.store.ts";
 import { collectCacheCensus } from "./Cache.census.ts";
+import {
+  CacheConformanceComparison,
+  CacheConformanceEvidence,
+  compareCacheConformanceRuns,
+  renderCacheConformanceComparison,
+} from "./Cache.conformance.compare.ts";
+import { buildCacheConformanceCorpus, syncCacheConformanceCorpus } from "./Cache.conformance.corpus.ts";
+import { resolveCacheConformanceClient, runCacheConformanceNative } from "./Cache.conformance.native.ts";
+import { CacheConformanceRun, CacheConformanceTarget } from "./Cache.conformance.schemas.ts";
+import {
+  loadCacheConformanceBearers,
+  loadCacheConformanceEnvelope,
+  runCacheConformance,
+  runCacheConformanceLab,
+} from "./Cache.conformance.ts";
 import { CacheDependencyMaterialization } from "./Cache.dependencies.schemas.ts";
 import { materializeCacheDependencies } from "./Cache.dependencies.ts";
 import { CacheEntrypointReviewRequest } from "./Cache.entrypoints.schemas.ts";
@@ -68,6 +84,7 @@ import {
 } from "./Cache.schemas.ts";
 import { CacheQualificationLive, CacheQualificationService } from "./Cache.service.ts";
 import type * as Layer from "effect/Layer";
+import type { CacheConformanceBearers, CacheConformanceCorpus } from "./Cache.conformance.schemas.ts";
 
 const TurboTaskCache = S.Struct({
   status: S.String,
@@ -887,6 +904,163 @@ const cacheProtocolReviewCommand = Command.make(
     }).pipe(renderCacheFailure)
 ).pipe(Command.withDescription("Validate bounded synthetic protocol observations without granting qualification"));
 
+const cacheConformanceCorpusCommand = Command.make(
+  "conformance-corpus",
+  {
+    check: Flag.Boolean("check").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Fail when the committed corpus differs from the regenerated one")
+    ),
+  },
+  ({ check }) =>
+    syncCacheConformanceCorpus(process.cwd(), check).pipe(
+      Effect.flatMap((path) => Console.log(check ? `${path} is current.` : `${path} written.`)),
+      renderCacheFailure
+    )
+).pipe(Command.withDescription("Generate the Remote Cache conformance corpus from the pinned OpenAPI blob and plan"));
+
+const conformanceRunJson = S.fromJsonString(CacheConformanceRun, { space: 2 });
+const encodeComparisonJson = S.encodeEffect(S.fromJsonString(CacheConformanceComparison, { space: 2 }));
+
+const writeConformanceRun = Effect.fn("Cache.writeConformanceRun")(function* (
+  report: CacheConformanceRun,
+  output: string
+) {
+  yield* writeEncoded(report, { encode: S.encodeEffect(conformanceRunJson) }, O.some(output), false);
+  yield* Console.log(
+    A.join(
+      A.map(
+        report.summary,
+        (row) =>
+          `${row.dimension}: pass ${row.pass}, fail ${row.fail}, unsupported-optional ${row.unsupportedOptional}, not-applicable ${row.notApplicable}, not-executed ${row.notExecuted}`
+      ),
+      "\n"
+    )
+  );
+});
+
+const readConformanceTarget = Effect.fn("Cache.readConformanceTarget")(function* (target: string) {
+  const descriptor = CacheConformanceTarget.make(yield* readCacheRequest(target, CacheConformanceTarget));
+  return { descriptor, bearers: yield* loadCacheConformanceBearers(descriptor) };
+});
+
+const conformanceTargetFlag = Flag.File("target").pipe(
+  Flag.withDescription("Target descriptor (cache-conformance-target/v1); bearers come from the env vars it names")
+);
+const conformanceOutputFlag = Flag.Path("output", { pathType: "file" }).pipe(
+  Flag.withDescription("Write the cache-conformance-run/v1 report to this path")
+);
+
+// Command names stay literal at each Command.make site: the knowledge
+// command-surface derivation reads them statically.
+const runConformanceTarget =
+  <R>(
+    run: (
+      descriptor: CacheConformanceTarget,
+      bearers: CacheConformanceBearers,
+      corpus: CacheConformanceCorpus
+    ) => Effect.Effect<CacheConformanceRun, CacheCommandError, R>
+  ) =>
+  ({ target, output }: { readonly target: string; readonly output: string }) =>
+    Effect.gen(function* () {
+      const { descriptor, bearers } = yield* readConformanceTarget(target);
+      const corpus = yield* buildCacheConformanceCorpus(process.cwd());
+      yield* writeConformanceRun(yield* run(descriptor, bearers, corpus), output);
+    }).pipe(renderCacheFailure);
+
+const cacheConformanceRunCommand = Command.make(
+  "conformance-run",
+  { target: conformanceTargetFlag, output: conformanceOutputFlag },
+  runConformanceTarget((descriptor, bearers, corpus) => runCacheConformance(corpus, descriptor, bearers))
+).pipe(
+  Command.withDescription("Score one Remote Cache target over direct HTTP; native and lab cases are not executed"),
+  Command.provide(FetchHttpClient.layer)
+);
+
+const cacheConformanceNativeCommand = Command.make(
+  "conformance-native",
+  {
+    target: conformanceTargetFlag,
+    client: Flag.Literals("client", CacheClientChannel.literals).pipe(
+      Flag.withDescription("Pinned client channel to run: stable or canary")
+    ),
+    output: conformanceOutputFlag,
+    fetchClient: Flag.Boolean("fetch-client").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Download the pinned platform tarball from the npm registry when the client is not cached")
+    ),
+  },
+  ({ target, client, output, fetchClient }) =>
+    Effect.gen(function* () {
+      const { descriptor, bearers } = yield* readConformanceTarget(target);
+      const corpus = yield* buildCacheConformanceCorpus(process.cwd());
+      const resolved = yield* resolveCacheConformanceClient(process.cwd(), client, fetchClient);
+      yield* writeConformanceRun(
+        yield* runCacheConformanceNative(process.cwd(), corpus, descriptor, bearers, resolved),
+        output
+      );
+    }).pipe(renderCacheFailure)
+).pipe(
+  Command.withDescription("Run the exact pinned Turbo client's signed matrix (RC-017..RC-022) through the fault proxy"),
+  Command.provide(FetchHttpClient.layer)
+);
+
+const cacheConformanceLabCommand = Command.make(
+  "conformance-lab",
+  { target: conformanceTargetFlag, output: conformanceOutputFlag },
+  runConformanceTarget((descriptor, bearers, corpus) =>
+    loadCacheConformanceEnvelope(process.cwd()).pipe(
+      Effect.flatMap((envelope) => runCacheConformanceLab(corpus, descriptor, bearers, envelope))
+    )
+  )
+).pipe(
+  Command.withDescription("Inject RC-023 fault classes through the proxy and measure the RC-027/RC-028 envelopes"),
+  Command.provide(FetchHttpClient.layer)
+);
+
+const cacheConformanceCompareCommand = Command.make(
+  "conformance-compare",
+  {
+    runs: Flag.File("runs").pipe(
+      Flag.atLeast(1),
+      Flag.withDescription("Run reports to merge per target and compare; repeat the flag for each file")
+    ),
+    evidence: Flag.File("evidence").pipe(
+      Flag.atLeast(0),
+      Flag.withDescription(
+        "Executed deployed or log evidence (cache-conformance-evidence/v1) to merge into the gates; repeatable"
+      )
+    ),
+    output: Flag.Path("output", { pathType: "file" }).pipe(
+      Flag.withDescription("Write the comparison JSON here and the Markdown summary beside it (.md)")
+    ),
+  },
+  ({ runs, evidence, output }) =>
+    Effect.gen(function* () {
+      const reports = yield* Effect.forEach(runs, (run) =>
+        readCacheRequest(run, CacheConformanceRun, S.Natural.make(32 * 1024 * 1024)).pipe(
+          Effect.map(CacheConformanceRun.make)
+        )
+      );
+      const documents = yield* Effect.forEach(evidence, (file) =>
+        readCacheRequest(file, CacheConformanceEvidence, S.Natural.make(4 * 1024 * 1024)).pipe(
+          Effect.map(CacheConformanceEvidence.make)
+        )
+      );
+      const comparison = yield* A.match(reports, {
+        onEmpty: () => Effect.fail(CacheCommandError.new("Pass at least one --runs report.")),
+        onNonEmpty: (all) => compareCacheConformanceRuns(process.cwd(), all, documents),
+      });
+      yield* writeEncoded(comparison, { encode: encodeComparisonJson }, O.some(output), false);
+      const markdown = Str.endsWith(".json")(output) ? `${Str.slice(0, -5)(output)}.md` : `${output}.md`;
+      yield* Effect.tryPromise({
+        try: () => Bun.write(markdown, renderCacheConformanceComparison(comparison)),
+        catch: (cause) => CacheCommandError.new(`Failed to write ${markdown}.`, cause),
+      });
+      yield* Console.log(comparison.verdict);
+    }).pipe(renderCacheFailure)
+).pipe(Command.withDescription("Merge run reports per target and score the frozen rubric's hard gates"));
+
 const cacheExecuteCommand = Command.make(
   "execute",
   { args: Argument.String("args").pipe(Argument.variadic) },
@@ -934,7 +1108,7 @@ const cacheRemoteReadsCommand = Command.make(
 
 const cacheCommandDefinition = Command.make("cache", {}, () =>
   Console.log(
-    "cache commands: census, audit, inspect, baseline, fingerprint, profile, activation, transition, synthetic, dependencies, pilot, pilot-signed, accept, protocol-run, protocol-review, warm, probe, dashboard, execute"
+    "cache commands: census, audit, inspect, baseline, fingerprint, profile, activation, transition, synthetic, dependencies, pilot, pilot-signed, accept, protocol-run, protocol-review, conformance-corpus, conformance-run, conformance-native, conformance-lab, conformance-compare, warm, probe, dashboard, execute"
   )
 ).pipe(
   Command.withDescription("Turbo cache recovery and evidence operations"),
@@ -956,6 +1130,11 @@ const cacheCommandDefinition = Command.make("cache", {}, () =>
     cacheAcceptCommand,
     cacheProtocolRunCommand,
     cacheProtocolReviewCommand,
+    cacheConformanceCorpusCommand,
+    cacheConformanceRunCommand,
+    cacheConformanceNativeCommand,
+    cacheConformanceLabCommand,
+    cacheConformanceCompareCommand,
     cacheWarmCommand,
     cacheProbeCommand,
     cacheDashboardCommand,

@@ -22,6 +22,7 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import { manifestParser } from "../../../../internal/ManifestRead.ts";
 import {
   NetworkUnavailableError,
   VersionCategoryReport,
@@ -51,18 +52,38 @@ class BunRelease extends S.Opaque<BunRelease, { readonly brand: unique symbol }>
   )
 ) {}
 
-class BunPackageJsonDocument extends S.Opaque<BunPackageJsonDocument, { readonly brand: unique symbol }>()(
-  S.Struct({
-    packageManager: S.String.pipe(
-      S.withConstructorDefault(Effect.succeed("")),
-      S.withDecodingDefaultKey(Effect.succeed(""))
-    ),
-  }).pipe(
-    $I.annoteSchema("BunPackageJsonDocument", {
-      description: "Subset of root package.json fields required by the Bun resolver.",
-    })
-  )
-) {}
+const parsePackageJson = manifestParser(["packageManager"]);
+
+/**
+ * Read the raw `packageManager` field of the root `package.json` text.
+ *
+ * **Details**
+ *
+ * An absent field reads as `""`; a present one must be a string. Strict JSON
+ * only: JSONC text fails.
+ *
+ * **Example** (Read the Bun pin)
+ *
+ * ```ts
+ * import { readPackageManagerField } from "@beep/repo-cli/test/VersionSync"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.runSync(readPackageManagerField('{"packageManager":"bun@1.3.0"}'))) // bun@1.3.0
+ * ```
+ *
+ * @param text - The root manifest document as read from disk.
+ * @returns The `packageManager` value, or `""` when absent.
+ * @category parsing
+ * @since 0.0.0
+ */
+export const readPackageManagerField = Effect.fn("BunResolver.readPackageManagerField")(function* (
+  text: string
+): Effect.fn.Return<string, VersionSyncError> {
+  const manifest = yield* parsePackageJson(text).pipe(
+    VersionSyncError.mapError("Failed to parse package.json", "package.json")
+  );
+  return manifest.packageManager ?? "";
+});
 
 /**
  * Vercel command fields that carry explicit Bun runtime pins.
@@ -259,10 +280,7 @@ export const resolveBunVersions: {
       .readFileString(pkgJsonPath)
       .pipe(VersionSyncError.mapError("Failed to read package.json", "package.json"));
 
-    const pkgJson = yield* decodeJsoncTextAs(BunPackageJsonDocument)(pkgJsonContent).pipe(
-      VersionSyncError.mapError("Failed to parse package.json", "package.json")
-    );
-    const packageManagerField = extractPackageManagerVersion(pkgJson.packageManager);
+    const packageManagerField = extractPackageManagerVersion(yield* readPackageManagerField(pkgJsonContent));
 
     const vercelJsonPath = path.join(repoRoot, "apps", "oip-web", "vercel.json");
     const vercelDocument = yield* fs.exists(vercelJsonPath).pipe(

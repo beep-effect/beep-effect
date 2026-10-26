@@ -1,4 +1,10 @@
-import { CiTurboCache, CiTurboCachePulumiConfigValues, loadCiTurboCacheConfig } from "@beep/infra";
+import {
+  CiTurboCache,
+  CiTurboCachePulumiConfigValues,
+  CiTurboCacheRemediation,
+  loadCiTurboCacheConfig,
+  resolveTurboCacheLabBuckets,
+} from "@beep/infra";
 import { it } from "@beep/test-runner";
 import { assert, describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
@@ -149,6 +155,172 @@ describe("@beep/infra CiTurboCache", () => {
       assert.notStrictEqual(writeUri, functionArn("ci-turbo-cache-test-write"));
     })
   );
+});
+
+describe("@beep/infra CiTurboCache remediation", { concurrent: false }, () => {
+  type FunctionInputs = {
+    readonly environment?: { readonly variables?: Readonly<Record<string, string>> };
+    readonly reservedConcurrentExecutions?: number;
+  };
+
+  const functionInputsFor = Effect.fnUntraced(function* (remediation?: CiTurboCacheRemediation) {
+    const functions = MutableHashMap.empty<string, FunctionInputs>();
+    yield* Effect.acquireUseRelease(
+      Effect.tryPromise(() =>
+        pulumi.runtime.setMocks(
+          {
+            call: () => ({ accountId: "123456789012", json: "{}", partition: "aws" }),
+            newResource: (args) => {
+              if (args.type === "aws:lambda/function:Function") {
+                MutableHashMap.set(functions, args.name, args.inputs as FunctionInputs);
+              }
+              return { id: `${args.name}-id`, state: args.inputs };
+            },
+          },
+          "beep-effect",
+          "test"
+        )
+      ),
+      () =>
+        Effect.sync(() => {
+          new CiTurboCache("ci-turbo-cache-test", {
+            config: CiTurboCachePulumiConfigValues.make(validConfigValues),
+            ...(remediation === undefined ? {} : { remediation }),
+          });
+        }),
+      () => Effect.tryPromise(() => pulumi.runtime.disconnect())
+    );
+    return (name: string) => pipe(MutableHashMap.get(functions, `ci-turbo-cache-test-${name}`), O.getOrUndefined);
+  });
+
+  it.effect(
+    "keeps the deployed concurrency and no tag passthrough when no remediation is passed",
+    Effect.fnUntraced(function* () {
+      const fn = yield* functionInputsFor();
+      expect(fn("read")?.reservedConcurrentExecutions).toBe(20);
+      expect(fn("write")?.reservedConcurrentExecutions).toBe(10);
+      expect(fn("authorizer")?.reservedConcurrentExecutions).toBe(20);
+      expect(fn("read")?.environment?.variables?.TURBO_REMOTE_CACHE_SIGNATURE_KEY).toBeUndefined();
+      expect(fn("write")?.environment?.variables?.TURBO_REMOTE_CACHE_SIGNATURE_KEY).toBeUndefined();
+    })
+  );
+
+  it.effect(
+    "applies tag passthrough to both shim functions and the requested concurrency",
+    Effect.fnUntraced(function* () {
+      const fn = yield* functionInputsFor(
+        CiTurboCacheRemediation.make({
+          tagPassthrough: true,
+          readReservedConcurrency: 60,
+          writeReservedConcurrency: 30,
+          authorizerReservedConcurrency: 60,
+        })
+      );
+      expect(fn("read")?.reservedConcurrentExecutions).toBe(60);
+      expect(fn("write")?.reservedConcurrentExecutions).toBe(30);
+      expect(fn("authorizer")?.reservedConcurrentExecutions).toBe(60);
+      expect(fn("read")?.environment?.variables?.TURBO_REMOTE_CACHE_SIGNATURE_KEY).toBe("tag-passthrough-mode-switch");
+      expect(fn("write")?.environment?.variables?.TURBO_REMOTE_CACHE_SIGNATURE_KEY).toBe("tag-passthrough-mode-switch");
+      expect(fn("authorizer")?.environment?.variables?.TURBO_REMOTE_CACHE_SIGNATURE_KEY).toBeUndefined();
+    })
+  );
+});
+
+describe("@beep/infra CiTurboCache throttle alarms", { concurrent: false }, () => {
+  type AlarmInputs = {
+    readonly alarmActions?: ReadonlyArray<string>;
+    readonly comparisonOperator?: string;
+    readonly dimensions?: { readonly FunctionName?: string };
+    readonly metricName?: string;
+    readonly namespace?: string;
+    readonly statistic?: string;
+    readonly threshold?: number;
+    readonly treatMissingData?: string;
+  };
+  type Declared = { readonly type: string; readonly inputs: AlarmInputs & { readonly protocol?: string } };
+
+  const resourcesFor = Effect.fnUntraced(function* (throttleAlarmRecipients?: ReadonlyArray<string>) {
+    const resources = MutableHashMap.empty<string, Declared>();
+    yield* Effect.acquireUseRelease(
+      Effect.tryPromise(() =>
+        pulumi.runtime.setMocks(
+          {
+            call: () => ({ accountId: "123456789012", json: "{}", partition: "aws" }),
+            newResource: (args) => {
+              MutableHashMap.set(resources, args.name, { type: args.type, inputs: args.inputs as Declared["inputs"] });
+              return {
+                id: `${args.name}-id`,
+                state: { ...args.inputs, arn: `arn:aws:mock:us-east-1:123456789012:${args.name}` },
+              };
+            },
+          },
+          "beep-effect",
+          "test"
+        )
+      ),
+      () =>
+        Effect.sync(() => {
+          new CiTurboCache("ci-turbo-cache-test", {
+            config: CiTurboCachePulumiConfigValues.make(validConfigValues),
+            ...(throttleAlarmRecipients === undefined ? {} : { throttleAlarmRecipients }),
+          });
+        }),
+      () => Effect.tryPromise(() => pulumi.runtime.disconnect())
+    );
+    return (name: string) => pipe(MutableHashMap.get(resources, `ci-turbo-cache-test-${name}`), O.getOrUndefined);
+  });
+
+  it.effect(
+    "declares no topic or alarms without recipients",
+    Effect.fnUntraced(function* () {
+      const resource = yield* resourcesFor();
+      expect(resource("throttles")).toBeUndefined();
+      expect(resource("read-throttles")).toBeUndefined();
+    })
+  );
+
+  it.effect(
+    "alarms on any throttle of each function and notifies every recipient by email",
+    Effect.fnUntraced(function* () {
+      const resource = yield* resourcesFor(["ops@example.com", "cost@example.com"]);
+      expect(resource("throttles")?.type).toBe("aws:sns/topic:Topic");
+      expect(resource("throttles-recipient-0")?.inputs.protocol).toBe("email");
+      expect(resource("throttles-recipient-1")?.inputs.protocol).toBe("email");
+      expect(resource("throttles-recipient-2")).toBeUndefined();
+      for (const role of ["read", "write", "authorizer"]) {
+        const alarm = resource(`${role}-throttles`);
+        expect(alarm?.type).toBe("aws:cloudwatch/metricAlarm:MetricAlarm");
+        expect(alarm?.inputs).toMatchObject({
+          alarmActions: ["arn:aws:mock:us-east-1:123456789012:ci-turbo-cache-test-throttles"],
+          comparisonOperator: "GreaterThanThreshold",
+          dimensions: { FunctionName: `ci-turbo-cache-test-${role}` },
+          metricName: "Throttles",
+          namespace: "AWS/Lambda",
+          statistic: "Sum",
+          threshold: 0,
+          treatMissingData: "notBreaching",
+        });
+      }
+    })
+  );
+});
+
+describe("@beep/infra resolveTurboCacheLabBuckets", () => {
+  it("derives the lab component prefix and the evolved bucket", () => {
+    expect(resolveTurboCacheLabBuckets({ epoch: "c1023a", bucketName: "beep-tcl-c1023a-123456789012" })).toEqual({
+      componentPrefix: "beep-tcl-c1023a",
+      evolvedBucket: "beep-tcl-c1023a-evo-123456789012",
+    });
+  });
+
+  it("rejects a malformed epoch and a bucket outside the lab prefix", () => {
+    expect(() => resolveTurboCacheLabBuckets({ epoch: "C1", bucketName: "beep-tcl-C1-123456789012" })).toThrow(
+      "turboCacheLab:epoch"
+    );
+    expect(() => resolveTurboCacheLabBuckets({ epoch: "c1023a", bucketName: "beep-turbo-cache-123456789012" })).toThrow(
+      "lab prefix"
+    );
+  });
 });
 
 describe("@beep/infra loadCiTurboCacheConfig", { concurrent: false }, () => {

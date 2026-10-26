@@ -11,11 +11,11 @@
  * @since 0.0.0
  */
 import { $GithubId } from "@beep/identity/packages";
+import { unstubbedFor } from "@beep/utils/TestDouble";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { GitHubClient } from "./GitHubClient.ts";
-import { unstubbedFor } from "./internal/unstubbed.ts";
 import { Repo } from "./Repo.ts";
 import type { GitHubError } from "./GitHubError.ts";
 

@@ -25,27 +25,38 @@
  * @since 0.0.0
  */
 
+import { $RepoCliId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { configStringOption } from "../../../internal/cli/EnvConfig.ts";
+import { manifestParser } from "../../../internal/ManifestRead.ts";
 import { runToExit } from "../../../internal/process/index.ts";
+import { readGitRenames, runGitOutput as runSharedGitOutput } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { ExpectationRewrite, ExpectationRewriteVerdict } from "./FinalCheck.schemas.ts";
+import { runGitPathList } from "./GitExec.ts";
+import type { LenientManifest } from "@beep/package-json/LenientManifest";
 import type * as Crypto from "effect/Crypto";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import type { GitCommandErrorAdapter } from "../../../internal/repo-run/index.ts";
 
 const TEST_FILE_PATTERN = /\.(?:test|spec)\.tsx?$/;
 const SNAPSHOT_FILE_PATTERN = /^(.*)\/__snapshots__\/(.+)\.snap$/;
 const ASSERTION_PATTERN =
   /\b(?:expect|assert|assert[A-Z]\w*|deepStrictEqual|strictEqual|deepEqual)\s*\(|\.(?:toBe|toEqual|toStrictEqual|toContain|toContainEqual|toMatch|toMatchObject|toMatchInlineSnapshot|toMatchSnapshot|toThrow|toThrowError|toHaveLength|toHaveProperty)\b/;
 const HUNK_HEADER_PATTERN = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@/;
+const BUN_VITEST_PATTERN = /\bbunx?\s+--bun\s+vitest\b/;
+const VITEST_PATTERN = /\bvitest\b/;
+const parsePackageJson = manifestParser(["scripts"]);
 
 const isAssertionLine = (line: string): boolean => ASSERTION_PATTERN.test(line);
 
@@ -58,6 +69,8 @@ type HunkState = {
 };
 
 type DiffFile = { readonly path: string; readonly testFile: string };
+
+type AssertionLines = { readonly removed: ReadonlyArray<string>; readonly added: ReadonlyArray<AddedLine> };
 
 type ScanState = {
   readonly rewrites: ReadonlyArray<ExpectationRewrite>;
@@ -73,10 +86,31 @@ const testFileForPath = (path: string): O.Option<string> =>
         O.map((match) => `${match[1]}/${match[2]}`)
       );
 
+const normalizeWhitespace = (line: string): string => Str.trim(Str.replace(/\s+/g, " ")(line));
+
+// Cancel each added assertion against a removed one that differs only in
+// whitespace, as a formatter reflow leaves them (#2247); a real change, even
+// one token, stays unmatched.
+const withoutReflowedAssertions = (removed: ReadonlyArray<string>, added: ReadonlyArray<AddedLine>): AssertionLines => {
+  const initial: AssertionLines = { removed, added: [] };
+  return A.reduce(added, initial, (state, entry) =>
+    O.match(
+      A.findFirstIndex(state.removed, (line) => normalizeWhitespace(line) === normalizeWhitespace(entry.text)),
+      {
+        onNone: () => ({ removed: state.removed, added: A.append(state.added, entry) }),
+        onSome: (index) => ({ removed: A.remove(state.removed, index), added: state.added }),
+      }
+    )
+  );
+};
+
 const hunkRewrites = (path: string, testFile: string, hunk: HunkState): ReadonlyArray<ExpectationRewrite> => {
-  const snapshot = !TEST_FILE_PATTERN.test(path);
-  const removed = snapshot ? hunk.removed : A.filter(hunk.removed, isAssertionLine);
-  const added = snapshot ? hunk.added : A.filter(hunk.added, (entry) => isAssertionLine(entry.text));
+  const { removed, added } = TEST_FILE_PATTERN.test(path)
+    ? withoutReflowedAssertions(
+        A.filter(hunk.removed, isAssertionLine),
+        A.filter(hunk.added, (entry) => isAssertionLine(entry.text))
+      )
+    : { removed: hunk.removed, added: hunk.added };
   return pipe(
     O.fromNullishOr(A.head(removed).pipe(O.getOrUndefined)),
     O.match({
@@ -159,7 +193,9 @@ const scanLine = (state: ScanState, line: string): ScanState =>
  * Reads `git diff --unified=0` output. A rewrite is a hunk in a `*.test.ts`
  * or `*.spec.ts` file that removes at least one assertion line and adds at
  * least one, or any hunk in a `__snapshots__/*.snap` file that both removes
- * and adds lines. Newly added assertions alone are never a rewrite.
+ * and adds lines. Newly added assertions alone are never a rewrite, and an
+ * added assertion line equal to a removed one after collapsing whitespace is
+ * a formatter reflow, not a rewrite.
  *
  * **Example** (Find a rewritten expectation)
  *
@@ -212,6 +248,78 @@ export const rewrittenTestFiles = (
     A.map((testFile) => [testFile, A.length(A.filter(rewrites, (rewrite) => rewrite.testFile === testFile))] as const)
   );
 
+// Test files a vitest segment names as positional arguments; `--exclude=...`
+// and other flags are not file arguments.
+const segmentFileArguments = (segment: string): ReadonlyArray<string> =>
+  pipe(
+    Str.split(Str.trim(segment), /\s+/),
+    A.filter((token) => !Str.startsWith("-")(token) && TEST_FILE_PATTERN.test(token)),
+    A.map(Str.replace(/^\.\//, ""))
+  );
+
+const scriptRunsTestOnBun = (script: string, testPath: string): boolean => {
+  const vitestSegments = A.filter(Str.split(script, "&&"), (segment) => VITEST_PATTERN.test(segment));
+  return pipe(
+    A.findFirst(vitestSegments, (segment) => A.contains(segmentFileArguments(segment), testPath)),
+    O.orElse(() => A.findFirst(vitestSegments, flow(segmentFileArguments, A.isReadonlyArrayEmpty))),
+    O.exists((segment) => BUN_VITEST_PATTERN.test(segment))
+  );
+};
+
+/**
+ * Build the `bunx` arguments that replay one test file on its package's own
+ * test runtime.
+ *
+ * **Details**
+ *
+ * Reads the package's `beep:test` script, falling back to `test`, and splits
+ * it on `&&`. The vitest segment that names the test file as an argument
+ * decides the runtime; when none names it, the vitest segment with no file
+ * argument does. A segment that runs vitest under Bun (`bunx --bun vitest`
+ * or `bun --bun vitest`) makes the replay pass `--bun`; anything else runs
+ * plain `bunx vitest`, which uses Node.
+ *
+ * **Example** (Replay a Bun-runtime package's test)
+ *
+ * ```ts
+ * import { LenientManifest } from "@beep/package-json/LenientManifest"
+ * import { vitestReplayArgs } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * const manifest = Effect.runSync(LenientManifest.parse('{"scripts":{"beep:test":"bunx --bun vitest run"}}'))
+ * console.log(vitestReplayArgs(manifest, "test/a.test.ts")) // ["--bun", "vitest", "run", "test/a.test.ts"]
+ * ```
+ *
+ * @param manifest - Decoded `package.json` of the test file's owning package.
+ * @param testPath - Test file path relative to the package directory.
+ * @returns Arguments for `bunx`.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const vitestReplayArgs: {
+  (testPath: string): (manifest: LenientManifest) => ReadonlyArray<string>;
+  (manifest: LenientManifest, testPath: string): ReadonlyArray<string>;
+} = dual(
+  2,
+  (manifest: LenientManifest, testPath: string): ReadonlyArray<string> =>
+    pipe(
+      O.fromUndefinedOr(manifest.scripts),
+      O.flatMap((scripts) => O.orElse(R.get(scripts, "beep:test"), () => R.get(scripts, "test"))),
+      O.exists((script) => scriptRunsTestOnBun(script, testPath))
+    )
+      ? ["--bun", "vitest", "run", testPath]
+      : ["vitest", "run", testPath]
+);
+
+// The first rewrite of a file carries its merge-base path; files diffed in
+// place have none and live at the same path.
+const baseFileFor = (rewrites: ReadonlyArray<ExpectationRewrite>, testFile: string): string =>
+  pipe(
+    A.findFirst(rewrites, (rewrite) => rewrite.testFile === testFile),
+    O.flatMap((rewrite) => O.fromUndefinedOr(rewrite.baseFile)),
+    O.getOrElse(() => testFile)
+  );
+
 const commandFailure = (command: string) => (cause: { readonly message: string }) =>
   YeetCommandError.make({ message: `${command} failed: ${cause.message}`, command, exitCode: 1 });
 
@@ -245,26 +353,35 @@ const packageDirFor = Effect.fn("Yeet.ExpectationRewrite.packageDirFor")(functio
   return O.none<string>();
 });
 
+// `testFile` names the file on the head (what the verdict reports); `baseFile`
+// is where the merge base holds it, which differs after a rename.
 const classifyOnBase = Effect.fn("Yeet.ExpectationRewrite.classifyOnBase")(function* (
   baseRoot: string,
   testFile: string,
+  baseFile: string,
   rewrites: number
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const verdict = (classification: ExpectationRewriteVerdict["classification"], detail: string) =>
     ExpectationRewriteVerdict.make({ testFile, classification, rewrites, detail });
-  if (!(yield* fs.exists(path.join(baseRoot, testFile)).pipe(Effect.orElseSucceed(() => false)))) {
-    return verdict("unverified", "the test file does not exist on the merge base");
+  if (!(yield* fs.exists(path.join(baseRoot, baseFile)).pipe(Effect.orElseSucceed(() => false)))) {
+    return verdict("unverified", `the test file does not exist on the merge base (${baseFile})`);
   }
-  const packageDir = yield* packageDirFor(baseRoot, testFile);
+  const packageDir = yield* packageDirFor(baseRoot, baseFile);
   if (O.isNone(packageDir)) {
     return verdict("unverified", "no owning package.json was found for the test file on the merge base");
   }
-  yield* Console.log(`[yeet] final-check: replaying the merge-base version of ${testFile} on the merge base`);
+  const manifest = yield* fs
+    .readFileString(path.join(packageDir.value, "package.json"))
+    .pipe(Effect.flatMap(parsePackageJson), Effect.option);
+  if (O.isNone(manifest)) {
+    return verdict("unverified", "the owning package.json on the merge base could not be read or decoded");
+  }
+  yield* Console.log(`[yeet] final-check: replaying the merge-base version of ${baseFile} on the merge base`);
   const exitCode = yield* runInherited(
     "bunx",
-    ["vitest", "run", path.relative(packageDir.value, path.join(baseRoot, testFile))],
+    vitestReplayArgs(manifest.value, path.relative(packageDir.value, path.join(baseRoot, baseFile))),
     packageDir.value,
     { CI: "true" }
   ).pipe(Effect.catch((cause) => Console.error(`[yeet] final-check: ${cause.message}`).pipe(Effect.as(-1))));
@@ -278,6 +395,167 @@ const classifyOnBase = Effect.fn("Yeet.ExpectationRewrite.classifyOnBase")(funct
         );
 });
 
+const $I = $RepoCliId.create("commands/Yeet/internal/ExpectationRewrite");
+
+/**
+ * Git pathspec selecting the test files and snapshots the gate scans.
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const EXPECTATION_TEST_PATHSPEC: ReadonlyArray<string> = [
+  "*.test.ts",
+  "*.test.tsx",
+  "*.spec.ts",
+  "*.spec.tsx",
+  "*.snap",
+];
+
+/**
+ * Placeholder recorded for a test file whose own diff exceeded the capture
+ * bound; the file is replayed whole on the merge base instead.
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const EXPECTATION_DIFF_OVERFLOW =
+  "(diff exceeded the capture limit; the whole file is replayed on the merge base)";
+
+class ExpectationDiffOverflow extends S.TaggedError<ExpectationDiffOverflow, { readonly brand: unique symbol }>(
+  $I`ExpectationDiffOverflow`
+)(
+  "ExpectationDiffOverflow",
+  { commandLine: S.String },
+  $I.annoteError<ExpectationDiffOverflow>("ExpectationDiffOverflow", {
+    description: "One test file's unified diff exceeded the repo-run capture bound.",
+  })
+) {}
+
+const gitFailure = {
+  onSpawnFailure: (commandLine: string) => YeetCommandError.new(`Failed to run ${commandLine}.`),
+  onNonZeroExit: ({ commandLine, exitCode }: { readonly commandLine: string; readonly exitCode: number }) =>
+    YeetCommandError.make({
+      message: `${commandLine} failed with exit code ${exitCode}.`,
+      command: commandLine,
+      exitCode,
+    }),
+};
+
+// The rename table is read raw and unbounded, so truncation cannot occur there.
+const listingAdapter: GitCommandErrorAdapter<YeetCommandError> = { ...gitFailure, onTruncated: O.none() };
+
+// A single file's diff that overflows is a typed outcome, not a failure: the
+// file is replayed whole on the merge base.
+const fileDiffAdapter: GitCommandErrorAdapter<YeetCommandError | ExpectationDiffOverflow> = {
+  ...gitFailure,
+  onTruncated: O.some((commandLine) => ExpectationDiffOverflow.make({ commandLine })),
+};
+
+// The merge-base path of a renamed file, mapped through the snapshot rule;
+// a file diffed in place has none.
+const renamedFrom = (basePath: string, headPath: string): O.Option<string> =>
+  basePath === headPath ? O.none() : O.some(O.getOrElse(testFileForPath(basePath), () => basePath));
+
+const withBaseFile =
+  (baseFile: O.Option<string>) =>
+  (rewrite: ExpectationRewrite): ExpectationRewrite =>
+    O.match(baseFile, {
+      onNone: () => rewrite,
+      onSome: (file) => ExpectationRewrite.make({ ...rewrite, baseFile: file }),
+    });
+
+// A `.snap` outside `__snapshots__/` matches the pathspec but names no test, so
+// its overflow yields nothing, as its small diff would.
+const overflowRewrite = (headPath: string, baseFile: O.Option<string>): ReadonlyArray<ExpectationRewrite> =>
+  pipe(
+    testFileForPath(headPath),
+    O.map((testFile) =>
+      withBaseFile(baseFile)(
+        ExpectationRewrite.make({
+          testFile,
+          line: 0,
+          removed: EXPECTATION_DIFF_OVERFLOW,
+          added: EXPECTATION_DIFF_OVERFLOW,
+        })
+      )
+    ),
+    O.toArray
+  );
+
+const diffTestFile = Effect.fn("Yeet.ExpectationRewrite.diffTestFile")(function* (
+  repoRoot: string,
+  mergeBase: string,
+  basePath: string,
+  headPath: string
+) {
+  const baseFile = renamedFrom(basePath, headPath);
+  const paths = O.isNone(baseFile) ? [headPath] : [basePath, headPath];
+  return yield* runSharedGitOutput(
+    repoRoot,
+    ["diff", "--unified=0", "--no-color", "--find-renames=50%", mergeBase, "HEAD", "--", ...paths],
+    fileDiffAdapter
+  ).pipe(
+    Effect.map((diff) => A.map(findExpectationRewrites(diff), withBaseFile(baseFile))),
+    Effect.catchTag("ExpectationDiffOverflow", () => Effect.succeed(overflowRewrite(headPath, baseFile)))
+  );
+});
+
+/**
+ * Collect the rewritten expectations between the merge base and `HEAD`.
+ *
+ * **Details**
+ *
+ * Only files Git reports as modified or renamed are diffed, each on its own:
+ * an added file removes nothing and a deleted file adds nothing, so neither
+ * can hold a rewrite, and together they are what makes one whole-tree diff
+ * of a moved test directory overflow the capture bound (#2241). A renamed
+ * file is diffed with both of its paths so Git pairs them and shows only the
+ * changed hunks. A single file whose diff still overflows becomes one
+ * {@link EXPECTATION_DIFF_OVERFLOW} rewrite, so it is replayed whole.
+ *
+ * **Example** (Build the collector)
+ *
+ * ```ts
+ * import { collectExpectationRewrites } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(collectExpectationRewrites("/repo", "abc123"))) // true
+ * ```
+ *
+ * @param repoRoot - Checkout whose diff is scanned.
+ * @param mergeBase - Merge base of the branch with its base ref.
+ * @returns Every rewritten expectation, modified files first, then renames.
+ * @category workflows
+ * @since 0.0.0
+ */
+export const collectExpectationRewrites = Effect.fn("Yeet.collectExpectationRewrites")(function* (
+  repoRoot: string,
+  mergeBase: string
+): Effect.fn.Return<
+  ReadonlyArray<ExpectationRewrite>,
+  YeetCommandError,
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const modified = yield* runGitPathList(repoRoot, [
+    "diff",
+    "--name-only",
+    "-z",
+    "--diff-filter=M",
+    mergeBase,
+    "HEAD",
+    "--",
+    ...EXPECTATION_TEST_PATHSPEC,
+  ]);
+  const renamed = yield* readGitRenames(repoRoot, mergeBase, "HEAD", EXPECTATION_TEST_PATHSPEC, listingAdapter, () =>
+    YeetCommandError.make({ message: "git diff --name-status returned a malformed rename table.", exitCode: 1 })
+  );
+  const fromModified = yield* Effect.forEach(modified, (path) => diffTestFile(repoRoot, mergeBase, path, path));
+  const fromRenamed = yield* Effect.forEach(renamed, (rename) =>
+    diffTestFile(repoRoot, mergeBase, rename.sourcePath, rename.targetPath)
+  );
+  return A.flatten([...fromModified, ...fromRenamed]);
+});
+
 /**
  * Replay each rewritten test file, unmodified, on the merge base.
  *
@@ -286,7 +564,8 @@ const classifyOnBase = Effect.fn("Yeet.ExpectationRewrite.classifyOnBase")(funct
  * Materializes a detached merge-base worktree under
  * `~/.cache/beep/final-check/`, installs it with
  * `bun install --frozen-lockfile`, runs `vitest run <file>` from each test
- * file's owning package, and removes the worktree afterwards. No worktree is created when
+ * file's owning package on that package's declared test runtime (see
+ * {@link vitestReplayArgs}), and removes the worktree afterwards. No worktree is created when
  * there are no rewrites.
  *
  * **Example** (Build the replay effect)
@@ -338,7 +617,9 @@ export const verifyExpectationRewrites = Effect.fn("Yeet.verifyExpectationRewrit
       if (installExit !== 0) {
         return unverifiedAll(`bun install in the merge-base worktree exited ${installExit}`);
       }
-      return yield* Effect.forEach(files, ([testFile, count]) => classifyOnBase(baseRoot, testFile, count));
+      return yield* Effect.forEach(files, ([testFile, count]) =>
+        classifyOnBase(baseRoot, testFile, baseFileFor(rewrites, testFile), count)
+      );
     }),
     () => runInherited("git", ["worktree", "remove", "--force", baseRoot], repoRoot).pipe(Effect.ignore)
   );

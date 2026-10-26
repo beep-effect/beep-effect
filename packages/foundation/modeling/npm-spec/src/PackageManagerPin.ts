@@ -119,7 +119,7 @@ export class InvalidPackageManagerPinError extends S.TaggedError<
  *
  * **Details**
  *
- * Structurally identical to `@beep/scratchpad/effected/workspaces`' `PackageManagerName` and
+ * Structurally identical to `@beep/repo-workspaces`' `PackageManagerName` and
  * `@beep/commands`' `Launcher`, and assigns freely to both. It is
  * deliberately a mirror, not an import: either edge would point from this
  * package at a downstream consumer and invert the dependency direction.
@@ -179,10 +179,12 @@ const isPinName = S.is(PackageManagerPinName);
 // re-parses differently. Rejecting it at the field keeps decode/encode sound.
 const pinVersion = SemVer.pipe(
   S.check(
+    // The `message` annotation is the issue message under effect 4.0.6; the label is the title.
     S.makeFilter(
-      (version: SemVer) => (version.build.length === 0 ? undefined : "Expected a version without build metadata"),
+      (version: SemVer) => version.build.length === 0,
       $I.annote("PinVersionCheck", {
-        message: "Pinnable version",
+        title: "Pinnable version",
+        message: "Expected a version without build metadata",
         description: "An exact version without build metadata, which the pin grammar cannot represent.",
       })
     )

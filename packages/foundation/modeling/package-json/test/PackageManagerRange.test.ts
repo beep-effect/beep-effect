@@ -28,7 +28,8 @@ describe("PackageManagerRange.FromString", () => {
     assert.deepStrictEqual(
       range.ast.checks?.[0]?.annotations,
       $I.annote("SemVerRangeStringCheck", {
-        message: "Non-empty SemVer Range",
+        title: "Non-empty SemVer Range",
+        message: "Expected a semver range (an exact version, a caret/tilde range, a comparator set, ...)",
         description:
           "A non-empty string that parses as a semver range, including exact versions, caret or tilde ranges, and comparator sets.",
       })

@@ -11825,7 +11825,514 @@
             "functions": 0
           }
         },
-        "packages/drivers/github/src/internal/unstubbed.ts": {
+        "packages/drivers/github/src/internal/scopedStoreMembers.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        }
+      }
+    },
+    "@beep/github-actions": {
+      "path": "packages/drivers/github-actions",
+      "lines": 100,
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "uncovered": {
+        "lines": 0,
+        "statements": 0,
+        "branches": 0,
+        "functions": 0
+      },
+      "files": {
+        "packages/drivers/github-actions/src/Action.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/github-actions/src/ActionCache.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/github-actions/src/ActionEnvironment.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/github-actions/src/ActionInput.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/github-actions/src/ActionLogger.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/github-actions/src/ActionOutputs.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/github-actions/src/ActionState.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/github-actions/src/ActionsIdentityToken.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/github-actions/src/ActionsProvenance.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/github-actions/src/Artifact.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/github-actions/src/BlobEnvelope.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/github-actions/src/BlobStore.githubCache.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/github-actions/src/BlobStore.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/github-actions/src/BlobTransfer.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/github-actions/src/CacheKey.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/github-actions/src/ChildEnv.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/github-actions/src/DetachedProcess.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/github-actions/src/DryRun.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/github-actions/src/GitHubToken.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/github-actions/src/OidcTokenIssuer.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/github-actions/src/PackageManagerInstaller.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/github-actions/src/Secret.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/github-actions/src/ToolInstaller.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/github-actions/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/github-actions/src/internal/actionsResults.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/github-actions/src/internal/archiveCommands.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/github-actions/src/internal/azureBlob.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/github-actions/src/internal/cacheService.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/github-actions/src/internal/digest.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/github-actions/src/internal/durationInput.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/github-actions/src/internal/fsProbe.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/github-actions/src/internal/jwt.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/github-actions/src/internal/messageText.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/github-actions/src/internal/pnpmExe.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/github-actions/src/internal/runner.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/github-actions/src/internal/runnerFile.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/github-actions/src/internal/runnerServices.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/github-actions/src/internal/sigv4.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/github-actions/src/internal/spawn.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/github-actions/src/internal/storedBlob.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/github-actions/src/internal/twirp.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -12015,18 +12522,6 @@
           }
         },
         "packages/foundation/modeling/github-reporting/src/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/github-reporting/src/internal/unstubbed.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -13347,34 +13842,58 @@
     },
     "@beep/infra": {
       "path": "infra",
-      "lines": 61.44,
-      "statements": 61.56,
-      "branches": 36.92,
-      "functions": 57.04,
+      "lines": 72.23,
+      "statements": 72.28,
+      "branches": 51.21,
+      "functions": 70.45,
       "uncovered": {
-        "lines": 278,
-        "statements": 284,
-        "branches": 41,
-        "functions": 64
+        "lines": 231,
+        "statements": 237,
+        "branches": 40,
+        "functions": 52
       },
       "files": {
         "infra/src/AIMetrics.ts": {
-          "lines": 50.58,
-          "statements": 48.31,
-          "branches": 30,
-          "functions": 25.92,
+          "lines": 55.55,
+          "statements": 53.68,
+          "branches": 36.36,
+          "functions": 36.66,
           "uncovered": {
-            "lines": 42,
-            "statements": 46,
+            "lines": 40,
+            "statements": 44,
             "branches": 7,
-            "functions": 20
+            "functions": 19
+          }
+        },
+        "infra/src/AccountCostControls.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         },
         "infra/src/CiFleetController.ts": {
-          "lines": 93.47,
-          "statements": 93.47,
+          "lines": 98.03,
+          "statements": 98.03,
           "branches": 100,
-          "functions": 66.66,
+          "functions": 83.33,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "infra/src/CiRunners.ts": {
+          "lines": 97.97,
+          "statements": 98.05,
+          "branches": 100,
+          "functions": 92.59,
           "uncovered": {
             "lines": 3,
             "statements": 3,
@@ -13382,33 +13901,21 @@
             "functions": 2
           }
         },
-        "infra/src/CiRunners.ts": {
-          "lines": 55.9,
-          "statements": 56.25,
-          "branches": 75,
-          "functions": 38.88,
-          "uncovered": {
-            "lines": 56,
-            "statements": 56,
-            "branches": 1,
-            "functions": 11
-          }
-        },
         "infra/src/CiTurboCache.ts": {
-          "lines": 96.82,
-          "statements": 96.82,
+          "lines": 100,
+          "statements": 100,
           "branches": 100,
-          "functions": 75,
+          "functions": 100,
           "uncovered": {
-            "lines": 2,
-            "statements": 2,
+            "lines": 0,
+            "statements": 0,
             "branches": 0,
-            "functions": 1
+            "functions": 0
           }
         },
         "infra/src/OipWeb.ts": {
-          "lines": 37.86,
-          "statements": 37.5,
+          "lines": 39.04,
+          "statements": 38.67,
           "branches": 18.91,
           "functions": 12.5,
           "uncovered": {
@@ -13419,13 +13926,13 @@
           }
         },
         "infra/src/OpenClaw.ts": {
-          "lines": 78.83,
-          "statements": 79.89,
+          "lines": 80.88,
+          "statements": 81.77,
           "branches": 80,
-          "functions": 89.47,
+          "functions": 89.65,
           "uncovered": {
-            "lines": 40,
-            "statements": 40,
+            "lines": 39,
+            "statements": 39,
             "branches": 2,
             "functions": 6
           }
@@ -13478,6 +13985,18 @@
             "functions": 0
           }
         },
+        "infra/src/internal/InfraArtifactPath.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "infra/src/internal/PulumiConfigSchema.ts": {
           "lines": 100,
           "statements": 100,
@@ -13508,8 +14027,8 @@
           "branches": 100,
           "functions": 100,
           "uncovered": {
-            "lines": 19,
-            "statements": 19,
+            "lines": 23,
+            "statements": 23,
             "branches": 0,
             "functions": 0
           }
@@ -13532,8 +14051,8 @@
           "branches": 100,
           "functions": 100,
           "uncovered": {
-            "lines": 17,
-            "statements": 17,
+            "lines": 19,
+            "statements": 19,
             "branches": 0,
             "functions": 0
           }
@@ -13546,6 +14065,18 @@
           "uncovered": {
             "lines": 5,
             "statements": 5,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "infra/src/internal/turbo-cache-lab-entry.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 7,
+            "statements": 7,
             "branches": 0,
             "functions": 0
           }
@@ -23186,7 +23717,7 @@
       "path": "packages/foundation/capability/observability",
       "lines": 86.48,
       "statements": 86.48,
-      "branches": 73.03,
+      "branches": 72.65,
       "functions": 77.67,
       "uncovered": {
         "lines": 170,
@@ -23486,7 +24017,7 @@
         "packages/foundation/capability/observability/src/server/HttpApiTelemetry.ts": {
           "lines": 76.82,
           "statements": 78.16,
-          "branches": 55,
+          "branches": 54.34,
           "functions": 71.87,
           "uncovered": {
             "lines": 19,
@@ -30705,6 +31236,90 @@
             "statements": 62,
             "branches": 22,
             "functions": 29
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.compare.ts": {
+          "lines": 92.3,
+          "statements": 91.97,
+          "branches": 74.41,
+          "functions": 86.91,
+          "uncovered": {
+            "lines": 13,
+            "statements": 15,
+            "branches": 22,
+            "functions": 14
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.corpus.ts": {
+          "lines": 92.13,
+          "statements": 92.39,
+          "branches": 80.95,
+          "functions": 81.48,
+          "uncovered": {
+            "lines": 7,
+            "statements": 7,
+            "branches": 4,
+            "functions": 5
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.native.ts": {
+          "lines": 79.12,
+          "statements": 76.47,
+          "branches": 78.49,
+          "functions": 77.27,
+          "uncovered": {
+            "lines": 38,
+            "statements": 48,
+            "branches": 20,
+            "functions": 15
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.proxy.ts": {
+          "lines": 88.32,
+          "statements": 87.67,
+          "branches": 83.33,
+          "functions": 73.52,
+          "uncovered": {
+            "lines": 16,
+            "statements": 18,
+            "branches": 8,
+            "functions": 18
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 66.66,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 1,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.ts": {
+          "lines": 94.9,
+          "statements": 94.25,
+          "branches": 88.33,
+          "functions": 93.33,
+          "uncovered": {
+            "lines": 8,
+            "statements": 10,
+            "branches": 7,
+            "functions": 6
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.wire.ts": {
+          "lines": 96.41,
+          "statements": 96.1,
+          "branches": 84.88,
+          "functions": 92.45,
+          "uncovered": {
+            "lines": 17,
+            "statements": 20,
+            "branches": 13,
+            "functions": 12
           }
         },
         "packages/tooling/tool/cli/src/commands/Cache/Cache.dependencies.schemas.ts": {
@@ -41822,6 +42437,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/library/repo-workspaces/src/LayerPolicy.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/tooling/library/repo-workspaces/src/LockfileReader.ts": {
           "lines": 100,
           "statements": 100,
@@ -41835,6 +42462,18 @@
           }
         },
         "packages/tooling/library/repo-workspaces/src/PackageManagerName.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-workspaces/src/PackedInstall.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -41882,6 +42521,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/library/repo-workspaces/src/SourceBoundary.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/tooling/library/repo-workspaces/src/VersioningStrategy.ts": {
           "lines": 100,
           "statements": 100,
@@ -41907,6 +42558,18 @@
           }
         },
         "packages/tooling/library/repo-workspaces/src/WorkspaceDiscovery.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-workspaces/src/WorkspaceLayering.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -42062,6 +42725,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/library/repo-workspaces/src/internal/dependencyFields.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/tooling/library/repo-workspaces/src/internal/enumerate.ts": {
           "lines": 100,
           "statements": 100,
@@ -42122,6 +42797,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/library/repo-workspaces/src/internal/packedInstallPlan.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/tooling/library/repo-workspaces/src/internal/patterns.ts": {
           "lines": 100,
           "statements": 100,
@@ -42147,6 +42834,18 @@
           }
         },
         "packages/tooling/library/repo-workspaces/src/internal/roots.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-workspaces/src/internal/sourceText.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -42191,6 +42890,18 @@
             "lines": 0,
             "statements": 1,
             "branches": 1,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/repo-workspaces/src/testing.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
             "functions": 0
           }
         }
@@ -45063,8 +45774,8 @@
     },
     "@beep/semantica": {
       "path": "apps/labs/semantica",
-      "lines": 80.07,
-      "statements": 79.94,
+      "lines": 79.97,
+      "statements": 79.84,
       "branches": 76.07,
       "functions": 72.18,
       "uncovered": {
@@ -51359,6 +52070,18 @@
             "functions": 4
           }
         },
+        "packages/foundation/modeling/utils/src/TestDouble.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/foundation/modeling/utils/src/Text.ts": {
           "lines": 44.44,
           "statements": 40,
@@ -52751,6 +53474,18 @@
         "functions": 0
       },
       "files": {
+        "packages/foundation/capability/xdg/src/Absolute.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/foundation/capability/xdg/src/AppDirs.ts": {
           "lines": 100,
           "statements": 100,
@@ -52812,18 +53547,6 @@
           }
         },
         "packages/foundation/capability/xdg/src/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/capability/xdg/src/internal/absolute.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,

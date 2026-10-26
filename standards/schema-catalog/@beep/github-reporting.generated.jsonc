@@ -20,7 +20,6 @@
     {"file":"packages/foundation/modeling/github-reporting/src/ManagedDocument.ts","symbol":"ManagedDocument","kind":"schema-class","owner":"@beep/github-reporting","identity":"ManagedDocument","description":"A marker-delimited document: named regions a tool owns, inside text a human may also edit."},
     {"file":"packages/foundation/modeling/github-reporting/src/ManagedDocument.ts","symbol":"ManagedDocumentError","kind":"tagged-error","owner":"@beep/github-reporting","identity":"ManagedDocumentError"},
     {"file":"packages/foundation/modeling/github-reporting/src/ManagedDocument.ts","symbol":"ManagedDocumentSource","kind":"struct-const","owner":"@beep/github-reporting","identity":"ManagedDocumentSource","description":"Source text and identity of a managed document."},
-    {"file":"packages/foundation/modeling/github-reporting/src/ManagedDocument.ts","symbol":"RejectedRegionDialectError","kind":"tagged-error","owner":"@beep/github-reporting","identity":"RejectedRegionDialectError"},
-    {"file":"packages/foundation/modeling/github-reporting/src/internal/unstubbed.ts","symbol":"UnstubbedMemberError","kind":"tagged-error","owner":"@beep/github-reporting","identity":"UnstubbedMemberError"}
+    {"file":"packages/foundation/modeling/github-reporting/src/ManagedDocument.ts","symbol":"RejectedRegionDialectError","kind":"tagged-error","owner":"@beep/github-reporting","identity":"RejectedRegionDialectError"}
   ]
 }

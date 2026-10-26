@@ -1,3 +1,4 @@
+import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   ALLOWLIST_PATH,
   AllowlistCheckOptions,
@@ -7,11 +8,11 @@ import {
 } from "@beep/repo-cli/test/Laws";
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
-import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -36,7 +37,9 @@ const writeRepoFile = Effect.fn("AllowlistCheckTest.writeRepoFile")(function* (
   yield* fs.writeFileString(absolutePath, content).pipe(Effect.orDie);
 });
 
-it.layer(NodeServices.layer, { timeout: "5 seconds" })("allowlist-check", (it) => {
+const PlatformLayer = Layer.mergeAll(MemoryFileSystem.layer, Path.layer);
+
+it.layer(PlatformLayer, { timeout: "5 seconds" })("allowlist-check", (it) => {
   it("formats schema diagnostics with path labels and optional redaction", () => {
     const result = decodeUnknownStructInlineSchemaResult({ token: "sk-test-secret" });
 

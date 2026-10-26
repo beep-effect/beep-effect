@@ -24,7 +24,7 @@ const sources = import.meta.glob<string>("../../src/**/*.ts", { query: "?raw", i
 
 const fixtures = import.meta.glob<string>("../fixtures/*.json", { query: "?raw", import: "default", eager: true });
 
-/** Every `src` module, keyed by its path below `src/` (`Xdg.ts`, `internal/absolute.ts`). */
+/** Every `src` module, keyed by its path below `src/` (`Xdg.ts`, `Absolute.ts`). */
 export const sourceModules: Readonly<Record<string, string>> = R.fromEntries(
   A.map(R.toEntries(sources), ([key, text]) => [Str.replace("../../src/", "")(key), text] as const)
 );
