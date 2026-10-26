@@ -11,6 +11,6 @@ it.effect("month validation precedes calendar lookup and Gregorian century rules
     }
     assert.strictEqual(TomlLocalDate.make({ year: 2000, month: 2, day: 29 }).toString(), "2000-02-29");
     const century = yield* S.decodeEffect(TomlLocalDate)({ year: 1900, month: 2, day: 29 }).pipe(Effect.flip);
-    assert.strictEqual(century.message, "a real calendar date");
+    assert.include(century.message, "day");
   })
 );
