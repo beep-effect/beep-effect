@@ -458,7 +458,7 @@ const cases: ReadonlyArray<Case> = [
   {
     name: "link to a directory",
     run: (fs, p) => fs.link(p("dir"), p("dirlink")),
-    expect: fail("Unknown", "link", "EPERM"),
+    expect: fail("PermissionDenied", "link", "EPERM"),
   },
   {
     name: "link onto an existing entry",
