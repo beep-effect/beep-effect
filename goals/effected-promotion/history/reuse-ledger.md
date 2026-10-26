@@ -19,7 +19,7 @@ manifests with 0 full-schema failures.
 | `@beep/github` `Attestation.ts` JSDoc, `KNOWLEDGE.md` | - | 4-S (done) | Prose only: statements are `@beep/sbom`'s, signing is the lab signer's. No code edge. |
 | skill-contract `EvidenceReceipt.ts` | #138 | excluded | Stricter than the kit (a typed `{ sha256 }` digest, a literal `predicateType` per schema, a `NonEmptyArray` subject) and already thin; adopting `InTotoStatement` would loosen it. |
 | `@beep/github` `Attestation.ts` `predicateType` literal | - | excluded | A string in a JSDoc example and a test; a driver-to-modeling edge for one constant is not worth it. |
-| lab `github-actions` `ActionsIdentityToken`, `ActionsProvenance` move | - | wave 5 | They move with `@beep/github-actions` and import the `@beep/sbom` leaves they already use. |
+| lab `github-actions` `ActionsIdentityToken`, `ActionsProvenance` move | - | W5 (done) | They moved with `@beep/github-actions` (`src/ActionsIdentityToken.ts`, `src/ActionsProvenance.ts`) and import the `@beep/sbom` leaves they already used; their suites pass in the package. |
 | lab `sbom` `SigstoreSigner.ts` | - | deferred (D-05, W4-m) | `@beep/sigstore` with its first consumer (a release attestation step), or deleted at C and recoverable by sha. |
 
 ## `@beep/xdg` (wave 4, PRs 4-X and 4-X-A, SPEC W4-c)
@@ -342,15 +342,22 @@ A row naming two PRs is split between them; #143 also appears above for its pack
 
 ### Wave 5 (`@beep/github-actions`)
 
+W5 moves the whole lab module into `packages/drivers/github-actions` and adopts it in repo-cli: the `ci` commands
+publish their runner files through `ActionOutputs` over `CiRunnerOutputsLive` (`Ci/CiRunnerOutputs.ts`, an
+`ActionEnvironment` seeded from the current `ConfigProvider`). Parity: `test/ci-runner-outputs.test.ts`,
+`test/ci-heavy-admission.test.ts`, `test/ci-rerun-runner-loss.test.ts` and `test/ci-command.test.ts`; the `ci job-env`
+end-to-end suite in `test/ci-runner-security.test.ts` reads the new blocks unchanged.
+
 | Site | Map id | Verdict | Status | Notes |
 | --- | --- | --- | --- | --- |
-| repo-cli Ci/CiOperational.service.ts | #87 | confirmed | queued: W5 | `WorkflowCommand.warning` with the runner-file migration. |
-| repo-cli Ci/CiOperational.service.ts | #93 | partial | queued: W5 | `CiOperational` runner-file writer; key=value outputs pinned by tests and check.yml stay. |
-| repo-cli Ci/Ci.command.ts | #94 | partial | queued: W5 | `Ci.command` summary append with a local console fallback. |
-| repo-cli Ci/CiAdmission.ts | #95 | partial | queued: W5 | `CiAdmission` 4-line append; the pure renderer stays. |
-| repo-cli Ci/CiRerunRunnerLoss.ts | #96 | partial | queued: W5 | `CiRerunRunnerLoss` summary; tests move to a recording double. |
-| repo-cli Ci/CiOperational.service.ts, Ci/HeavyAdmission (runner files) | #271 | partial | queued: W5 | `CiOperational` runner-file writer; key=value outputs pinned by tests and check.yml stay. |
-| repo-cli Ci | #312 | partial | queued: W5 | `CiOperational` runner-file writer; key=value outputs pinned by tests and check.yml stay. |
+| repo-cli Ci/CiOperational.service.ts | #87 | confirmed | adopted in W5 | The runner-resources warning is `WorkflowCommand.warning` (`@beep/github-commands`); bytes pinned identical. |
+| repo-cli Ci/CiOperational.service.ts | #93 | partial | adopted in W5 | `ci job-env` writes `GITHUB_ENV` through `ActionOutputs.exportVariable` (derived heredoc delimiter instead of a random `beep_ci_env_<uuid>`; the entries the runner reads are pinned equal, adversarial values included; one deviation: the old command appended every block in one write, the new one appends one block per entry in order, so an I/O failure partway leaves the earlier entries in `GITHUB_ENV`. Every name is a fixed constant that passes the name check, so only a runner-file write can fail there, and that fails the step, so no later step reads the partial file; the single append was not atomic against a short write either) and `ci runner-resources` appends its summary through `ActionOutputs.summary`. Excluded: `ci change-profile` keeps its two `key=value` `GITHUB_OUTPUT` lines, which its end-to-end tests and `check.yml` pin byte for byte. |
+| repo-cli Ci/Ci.command.ts | #94 | partial | adopted in W5 | `ci append-turbo-summary` appends through `ActionOutputs.summary` and prints to stdout off a runner; the append is pinned byte-identical to the old read-then-write (`${previous}${rendered}`). |
+| repo-cli Ci/CiAdmission.ts | #95 | partial | adopted in W5 | `ci admission --github-output` publishes `verdict`, `admitted`, `docs_only`, `sources` with `ActionOutputs.set`; `heavyAdmissionGithubOutputs` is the pure projection that replaces the `key=value` renderer, and the entries the runner reads are pinned equal to the old lines. `CiAdmissionInput.githubOutputPath` becomes `githubOutput`. |
+| repo-cli Ci/CiRerunRunnerLoss.ts | #96 | partial | adopted in W5 | The decision summary appends through `ActionOutputs.summary`; the tests use the `ActionOutputs.recording()` double and pin the summary bytes to the printed report. `CiRerunRunnerLossInput.stepSummaryPath` becomes `stepSummary`. |
+| repo-cli Ci/CiOperational.service.ts, Ci/HeavyAdmission (runner files) | #271 | partial | adopted in W5 | Covered by #93 and #95 above; the `change-profile` `key=value` lines are the recorded exclusion. |
+| repo-cli Ci | #312 | partial | adopted in W5 | Umbrella for #87 and #93..#96, all adopted; `reportCiCommandError` is now one shared reporter for the `ci` subcommands. |
+| `@beep/github` `makeTest` doubles (18 resource modules) | - | confirmed | consolidated in W5 (W4-w) | The driver's own unstubbed helper (`UnstubbedError`, target, access and member kinds, shape builder) is folded into `@beep/utils/TestDouble`, which becomes the one owner of the concept: one `UnstubbedMemberError` raised both by `unstubbed` (an `Effect` that dies) and by `unstubbedFor` (a synchronous throw), with `unstubbedShapeFor` building a whole double. Messages are unchanged; the defect tag in five coverage suites reads `UnstubbedMemberError`. The github-only `scopedStoreMembers` record stays in `@beep/github/internal/scopedStoreMembers`. |
 
 ### Follow-up goal: repo-cli gh/git consolidation (W4-l)
 

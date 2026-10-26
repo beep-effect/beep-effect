@@ -25,7 +25,6 @@
     "test:effected": "bun effected/audit.ts test"
   },
   "dependencies": {
-    "@azure/storage-blob": "^12.33.0",
     "@beep/cli-kit": "workspace:^",
     "@beep/commands": "workspace:^",
     "@beep/config-file": "workspace:^",

@@ -38,7 +38,6 @@ import {
   turboEnvExtendsAmbient,
   turboEnvOverrides,
 } from "../../internal/cli/EnvConfig.ts";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import {
   isLabsWorkspaceDir,
   LABS_TURBO_EXCLUDE_FILTER,
@@ -53,7 +52,7 @@ import {
   runQualityTaskStreamingLaneGroup,
   runQualityTaskStreamingStepGroup,
 } from "../Quality/Tasks.ts";
-import { CiCommandError, CiLanePartitionError } from "./Ci.errors.ts";
+import { CiCommandError, CiLanePartitionError, reportCiCommandError } from "./Ci.errors.ts";
 import {
   ciCoveragePlan,
   ciCoverageTestArgs,
@@ -2387,9 +2386,6 @@ const partitionFlagChoices: ReadonlyArray<readonly [CiLanePartitionId, CiLanePar
   CiLanePartitionId.literals,
   (partition) => [partition, partition] as const
 );
-
-const reportCiCommandError = (error: { readonly message: string }) =>
-  Console.error(`[ci] ${error.message}`).pipe(Effect.andThen(failWithReportedExit(`[ci] ${error.message}`)));
 
 /**
  * `beep ci lane` command: run one CI lane body or list the lane inventory.

@@ -571,7 +571,6 @@
     {"name":"Ci.readCounter","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Ci.readHeavyAdmissionChangedPaths","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Ci.readHeavyAdmissionEvent","owner":"@beep/repo-cli","family":"tooling","conforms":true},
-    {"name":"Ci.renderEnvironmentEntry","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Ci.reportFromLaneTimingWindowRows","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Ci.rerunRunnerLoss.readAnnotationsPage","owner":"@beep/repo-cli","family":"tooling","conforms":false},
     {"name":"Ci.rerunRunnerLoss.readBranchHead","owner":"@beep/repo-cli","family":"tooling","conforms":false},

@@ -1,7 +1,10 @@
 {
   "catalog": {
     "@arizeai/phoenix-client": "7.16.2",
+    "@azure/core-http-compat": "2.5.0",
+    "@azure/core-rest-pipeline": "1.25.0",
     "@azure/msal-node": "^7.1.1",
+    "@azure/storage-blob": "12.34.0",
     "@babel/cli": "^8.0.6",
     "@babel/code-frame": "^8.0.6",
     "@babel/core": "^8.0.7",
@@ -573,6 +576,7 @@
     "apps/practice-review-hub",
     "packages/drivers/commands",
     "packages/drivers/git",
-    "packages/drivers/github"
+    "packages/drivers/github",
+    "packages/drivers/github-actions"
   ]
 }

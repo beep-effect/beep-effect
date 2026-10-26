@@ -372,6 +372,12 @@
         ]
       },
       {
+        "name": "@beep/github-actions",
+        "patterns": [
+          "packages/drivers/github-actions/src/**"
+        ]
+      },
+      {
         "name": "@beep/github-commands",
         "patterns": [
           "packages/foundation/modeling/github-commands/src/**"
@@ -2501,6 +2507,39 @@
         ]
       },
       {
+        "from": "@beep/github-actions",
+        "allow": [
+          "@beep/fc-runs",
+          "@beep/github",
+          "@beep/github-actions",
+          "@beep/github-commands",
+          "@beep/glob",
+          "@beep/identity",
+          "@beep/memfs",
+          "@beep/npm-spec",
+          "@beep/sbom",
+          "@beep/schema",
+          "@beep/test-utils",
+          "@beep/utils",
+          "@beep/walker"
+        ],
+        "allowTypeOnly": [
+          "@beep/fc-runs",
+          "@beep/github",
+          "@beep/github-actions",
+          "@beep/github-commands",
+          "@beep/glob",
+          "@beep/identity",
+          "@beep/memfs",
+          "@beep/npm-spec",
+          "@beep/sbom",
+          "@beep/schema",
+          "@beep/test-utils",
+          "@beep/utils",
+          "@beep/walker"
+        ]
+      },
+      {
         "from": "@beep/github-commands",
         "allow": [
           "@beep/fc-runs",
@@ -4344,6 +4383,8 @@
           "@beep/ffmpeg",
           "@beep/file-processing",
           "@beep/github",
+          "@beep/github-actions",
+          "@beep/github-commands",
           "@beep/github-reporting",
           "@beep/glob",
           "@beep/identity",
@@ -4398,6 +4439,8 @@
           "@beep/ffmpeg",
           "@beep/file-processing",
           "@beep/github",
+          "@beep/github-actions",
+          "@beep/github-commands",
           "@beep/github-reporting",
           "@beep/glob",
           "@beep/identity",

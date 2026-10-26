@@ -8,6 +8,7 @@
  */
 import { $GithubReportingId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
+import { unstubbed } from "@beep/utils/TestDouble";
 import * as A from "effect/Array";
 import * as BigInt from "effect/BigInt";
 import * as Bool from "effect/Boolean";
@@ -28,7 +29,6 @@ import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import * as Str from "effect/String";
 import { CheckState } from "./CheckState.ts";
-import { unstubbed } from "./internal/unstubbed.ts";
 import { ManagedDocument } from "./ManagedDocument.ts";
 
 const $I = $GithubReportingId.create("CheckDocument");

@@ -1338,6 +1338,35 @@
         "bun-types": "catalog:",
       },
     },
+    "packages/drivers/github-actions": {
+      "name": "@beep/github-actions",
+      "version": "0.0.0",
+      "dependencies": {
+        "@azure/storage-blob": "catalog:",
+        "@beep/github": "workspace:^",
+        "@beep/github-commands": "workspace:^",
+        "@beep/glob": "workspace:^",
+        "@beep/identity": "workspace:^",
+        "@beep/npm-spec": "workspace:^",
+        "@beep/sbom": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@beep/utils": "workspace:^",
+        "@beep/walker": "workspace:^",
+        "@effect/platform-node": "catalog:",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@azure/core-http-compat": "catalog:",
+        "@azure/core-rest-pipeline": "catalog:",
+        "@beep/fc-runs": "workspace:^",
+        "@beep/memfs": "workspace:^",
+        "@beep/test-utils": "workspace:^",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "@typescript/native": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
     "packages/drivers/gov-legal-mcp": {
       "name": "@beep/gov-legal-mcp",
       "version": "0.0.0",
@@ -3956,6 +3985,8 @@
         "@beep/ffmpeg": "workspace:^",
         "@beep/file-processing": "workspace:^",
         "@beep/github": "workspace:^",
+        "@beep/github-actions": "workspace:^",
+        "@beep/github-commands": "workspace:^",
         "@beep/github-reporting": "workspace:^",
         "@beep/glob": "workspace:^",
         "@beep/identity": "workspace:^",
@@ -4154,7 +4185,6 @@
       "name": "@beep/scratchpad",
       "version": "0.0.0",
       "dependencies": {
-        "@azure/storage-blob": "^12.33.0",
         "@beep/cli-kit": "workspace:^",
         "@beep/commands": "workspace:^",
         "@beep/config-file": "workspace:^",
@@ -4288,7 +4318,10 @@
   },
   "catalog": {
     "@arizeai/phoenix-client": "7.16.2",
+    "@azure/core-http-compat": "2.5.0",
+    "@azure/core-rest-pipeline": "1.25.0",
     "@azure/msal-node": "^7.1.1",
+    "@azure/storage-blob": "12.34.0",
     "@babel/cli": "^8.0.6",
     "@babel/code-frame": "^8.0.6",
     "@babel/core": "^8.0.7",
@@ -4780,6 +4813,8 @@
     "@beep/git": ["@beep/git@workspace:packages/drivers/git"],
 
     "@beep/github": ["@beep/github@workspace:packages/drivers/github"],
+
+    "@beep/github-actions": ["@beep/github-actions@workspace:packages/drivers/github-actions"],
 
     "@beep/github-commands": ["@beep/github-commands@workspace:packages/foundation/modeling/github-commands"],
 

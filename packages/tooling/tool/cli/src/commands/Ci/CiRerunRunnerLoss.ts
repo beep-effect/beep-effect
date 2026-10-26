@@ -9,7 +9,7 @@
  * failed job's check-run annotations, decides with
  * {@link decideRunnerLossRerun}, requests one `gh run rerun --job <id>` for
  * the lost job it chose unless `--dry-run` was passed, prints the report, and
- * appends it to `$GITHUB_STEP_SUMMARY` when that is set. Every verdict exits
+ * appends it to `$GITHUB_STEP_SUMMARY` through `ActionOutputs` when that is set. Every verdict exits
  * 0; only unreadable GitHub state or a refused rerun exits non-zero.
  *
  * **Gotchas**
@@ -20,22 +20,23 @@
  *
  * @since 0.0.0
  */
+import { ActionOutputs } from "@beep/github-actions/ActionOutputs";
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
+import { BoolKeyDefaultFalse } from "@beep/schema/SchemaUtils/withKeyDefaults";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { ghOutput } from "../../internal/github/index.ts";
-import { CiCommandError } from "./Ci.errors.ts";
+import { CiCommandError, reportCiCommandError } from "./Ci.errors.ts";
+import { CiRunnerOutputsLive } from "./CiRunnerOutputs.ts";
 import { CiWorkflowJobsPage, ghApiJson } from "./LaneTimings.ts";
 import {
   decideRunnerLossRerun,
@@ -53,6 +54,7 @@ import {
   runnerLossRerunArgs,
 } from "./RunnerLossRerun.ts";
 import type * as Crypto from "effect/Crypto";
+import type * as FileSystem from "effect/FileSystem";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { CiWorkflowJob } from "./LaneTimings.ts";
 import type { RunnerLossFailedJob } from "./RunnerLossRerun.ts";
@@ -81,7 +83,8 @@ const JOBS_MAX_PAGES = 10;
  *
  * `attempt` is `None` to evaluate the run's latest attempt; the workflow
  * passes the attempt whose completion triggered it, so a late event never
- * judges a newer attempt. `stepSummaryPath` is `$GITHUB_STEP_SUMMARY` when set.
+ * judges a newer attempt. `stepSummary` is whether `$GITHUB_STEP_SUMMARY` is
+ * set, so the decision is appended to it through `ActionOutputs`.
  *
  * **Example** (A dry run of one run)
  *
@@ -111,7 +114,7 @@ export class CiRerunRunnerLossInput extends S.Opaque<CiRerunRunnerLossInput, { r
       S.withConstructorDefault(Effect.succeed(RUNNER_LOSS_MAX_JOB_RERUNS)),
       S.withDecodingDefaultTypeKey(Effect.succeed(RUNNER_LOSS_MAX_JOB_RERUNS))
     ),
-    stepSummaryPath: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    stepSummary: BoolKeyDefaultFalse,
     cwd: S.String,
   }).pipe(
     $I.annoteSchema("CiRerunRunnerLossInput", {
@@ -380,7 +383,7 @@ const requestRerun = Effect.fn("Ci.rerunRunnerLoss.requestRerun")(function* (
  */
 export const runCiRerunRunnerLoss = Effect.fn("Ci.runCiRerunRunnerLoss")(function* (
   input: CiRerunRunnerLossInput
-): Effect.fn.Return<RunnerLossRerunReport, CiCommandError, FileSystem.FileSystem | GhRequirements> {
+): Effect.fn.Return<RunnerLossRerunReport, CiCommandError, ActionOutputs | GhRequirements> {
   const run = yield* readRun(input.cwd, input.runId);
   const attempt = O.getOrElse(input.attempt, () => run.run_attempt);
   const failedJobs = yield* readFailedJobs(input.cwd, run, attempt);
@@ -404,11 +407,11 @@ export const runCiRerunRunnerLoss = Effect.fn("Ci.runCiRerunRunnerLoss")(functio
   const report = RunnerLossRerunReport.make({ decision, dryRun: input.dryRun });
   const summary = renderRunnerLossRerunSummary(report);
   yield* Console.log(summary);
-  if (O.isSome(input.stepSummaryPath)) {
-    const fs = yield* FileSystem.FileSystem;
-    yield* fs
-      .writeFileString(input.stepSummaryPath.value, summary, { flag: "a" })
-      .pipe(CiCommandError.mapError(`Failed to append the rerun decision to ${input.stepSummaryPath.value}.`));
+  if (input.stepSummary) {
+    const outputs = yield* ActionOutputs;
+    yield* outputs
+      .summary(summary)
+      .pipe(CiCommandError.mapError("Failed to append the rerun decision to $GITHUB_STEP_SUMMARY."));
   }
   return report;
 });
@@ -425,9 +428,9 @@ const resolveCiRerunRunnerLossInput = Effect.fn("Ci.resolveCiRerunRunnerLossInpu
   flags: CiRerunRunnerLossFlags
 ): Effect.fn.Return<CiRerunRunnerLossInput, CiCommandError, FileSystem.FileSystem> {
   const cwd = yield* findRepoRoot().pipe(CiCommandError.mapError("Failed to locate repository root."));
-  const stepSummaryPath = yield* Config.option(Config.String("GITHUB_STEP_SUMMARY")).pipe(
+  const stepSummary = yield* Config.option(Config.String("GITHUB_STEP_SUMMARY")).pipe(
     Effect.orElseSucceed(O.none<string>),
-    Effect.map(O.filter(Str.isNonEmpty))
+    Effect.map(O.exists(Str.isNonEmpty))
   );
   return CiRerunRunnerLossInput.make({
     runId: flags.runId,
@@ -435,7 +438,7 @@ const resolveCiRerunRunnerLossInput = Effect.fn("Ci.resolveCiRerunRunnerLossInpu
     maxAttempt: flags.maxAttempt,
     maxJobReruns: flags.maxJobReruns,
     dryRun: flags.dryRun,
-    stepSummaryPath,
+    stepSummary,
     cwd,
   });
 });
@@ -480,8 +483,9 @@ export const ciRerunRunnerLossCommand = Command.make(
     pipe(
       resolveCiRerunRunnerLossInput(flags),
       Effect.flatMap(runCiRerunRunnerLoss),
-      Effect.catchTag("CiCommandError", (error) =>
-        Console.error(`[ci] ${error.message}`).pipe(Effect.andThen(failWithReportedExit(`[ci] ${error.message}`)))
-      )
+      Effect.catchTag("CiCommandError", reportCiCommandError)
     )
-).pipe(Command.withDescription("Re-run the jobs of a completed workflow run that lost their runner"));
+).pipe(
+  Command.withDescription("Re-run the jobs of a completed workflow run that lost their runner"),
+  Command.provide(CiRunnerOutputsLive)
+);
