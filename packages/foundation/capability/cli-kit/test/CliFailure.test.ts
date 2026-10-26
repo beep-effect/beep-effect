@@ -212,11 +212,7 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
       owner: S.String,
       groups: S.Record(S.String, S.Struct({ repos: S.Array(S.String) })),
     });
-    const decode = (input: unknown) =>
-      S.decodeUnknownEffect(Config)(input, { onExcessProperty: "error", errors: "all" }).pipe(
-        Effect.exit,
-        Effect.runSync
-      );
+    const decode = S.decodeUnknownExit(Config, { onExcessProperty: "error", errors: "all" });
     const failureOf = (input: unknown): { readonly issue: unknown } => {
       const exit = decode(input);
       if (!Exit.isFailure(exit)) throw new Error("expected a failure");
