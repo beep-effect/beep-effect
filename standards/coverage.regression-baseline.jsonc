@@ -23222,7 +23222,7 @@
       "path": "packages/foundation/capability/observability",
       "lines": 86.48,
       "statements": 86.48,
-      "branches": 73.03,
+      "branches": 72.65,
       "functions": 77.67,
       "uncovered": {
         "lines": 170,
@@ -23522,7 +23522,7 @@
         "packages/foundation/capability/observability/src/server/HttpApiTelemetry.ts": {
           "lines": 76.82,
           "statements": 78.16,
-          "branches": 55,
+          "branches": 54.34,
           "functions": 71.87,
           "uncovered": {
             "lines": 19,
@@ -45279,8 +45279,8 @@
     },
     "@beep/semantica": {
       "path": "apps/labs/semantica",
-      "lines": 80.07,
-      "statements": 79.94,
+      "lines": 79.97,
+      "statements": 79.84,
       "branches": 76.07,
       "functions": 72.18,
       "uncovered": {
