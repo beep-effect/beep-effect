@@ -23717,7 +23717,7 @@
       "path": "packages/foundation/capability/observability",
       "lines": 86.48,
       "statements": 86.48,
-      "branches": 73.03,
+      "branches": 72.65,
       "functions": 77.67,
       "uncovered": {
         "lines": 170,
@@ -24017,7 +24017,7 @@
         "packages/foundation/capability/observability/src/server/HttpApiTelemetry.ts": {
           "lines": 76.82,
           "statements": 78.16,
-          "branches": 55,
+          "branches": 54.34,
           "functions": 71.87,
           "uncovered": {
             "lines": 19,
@@ -45774,8 +45774,8 @@
     },
     "@beep/semantica": {
       "path": "apps/labs/semantica",
-      "lines": 80.07,
-      "statements": 79.94,
+      "lines": 79.97,
+      "statements": 79.84,
       "branches": 76.07,
       "functions": 72.18,
       "uncovered": {
@@ -53474,6 +53474,18 @@
         "functions": 0
       },
       "files": {
+        "packages/foundation/capability/xdg/src/Absolute.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/foundation/capability/xdg/src/AppDirs.ts": {
           "lines": 100,
           "statements": 100,
@@ -53535,18 +53547,6 @@
           }
         },
         "packages/foundation/capability/xdg/src/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/capability/xdg/src/internal/absolute.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,

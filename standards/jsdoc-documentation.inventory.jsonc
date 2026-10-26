@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-25T04:03:58.034Z",
+  "generatedAt": "2026-10-26T21:41:44.883Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -65,8 +65,8 @@
     "cleanPackages": 102,
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 79,
-    "publicModules": 3546,
-    "publicExports": 25277,
+    "publicModules": 3547,
+    "publicExports": 25288,
     "openModules": 403,
     "openExports": 1382,
     "missingExportExamples": 7,
@@ -49618,8 +49618,8 @@
           "exportKind": "class",
           "filePath": "src/TomlDateTime.ts",
           "repoPath": "packages/foundation/modeling/toml/src/TomlDateTime.ts",
-          "line": 194,
-          "anchor": "packages-foundation-modeling-toml-src-tomldatetime-ts-194-tomllocaldate",
+          "line": 196,
+          "anchor": "packages-foundation-modeling-toml-src-tomldatetime-ts-196-tomllocaldate",
           "currentTags": [
             "@public",
             "@category",
@@ -49641,8 +49641,8 @@
           "exportKind": "class",
           "filePath": "src/TomlDateTime.ts",
           "repoPath": "packages/foundation/modeling/toml/src/TomlDateTime.ts",
-          "line": 238,
-          "anchor": "packages-foundation-modeling-toml-src-tomldatetime-ts-238-tomllocaltime",
+          "line": 240,
+          "anchor": "packages-foundation-modeling-toml-src-tomldatetime-ts-240-tomllocaltime",
           "currentTags": [
             "@public",
             "@category",
@@ -49664,8 +49664,8 @@
           "exportKind": "class",
           "filePath": "src/TomlDateTime.ts",
           "repoPath": "packages/foundation/modeling/toml/src/TomlDateTime.ts",
-          "line": 282,
-          "anchor": "packages-foundation-modeling-toml-src-tomldatetime-ts-282-tomllocaldatetime",
+          "line": 284,
+          "anchor": "packages-foundation-modeling-toml-src-tomldatetime-ts-284-tomllocaldatetime",
           "currentTags": [
             "@public",
             "@category",
@@ -49687,8 +49687,8 @@
           "exportKind": "class",
           "filePath": "src/TomlDateTime.ts",
           "repoPath": "packages/foundation/modeling/toml/src/TomlDateTime.ts",
-          "line": 328,
-          "anchor": "packages-foundation-modeling-toml-src-tomldatetime-ts-328-tomloffsetdatetime",
+          "line": 330,
+          "anchor": "packages-foundation-modeling-toml-src-tomldatetime-ts-330-tomloffsetdatetime",
           "currentTags": [
             "@public",
             "@category",
@@ -107202,8 +107202,8 @@
           "exportKind": "class",
           "filePath": "src/DependencySpecifier.ts",
           "repoPath": "packages/foundation/modeling/npm-spec/src/DependencySpecifier.ts",
-          "line": 752,
-          "anchor": "packages-foundation-modeling-npm-spec-src-dependencyspecifier-ts-752-dependencyspecifier",
+          "line": 754,
+          "anchor": "packages-foundation-modeling-npm-spec-src-dependencyspecifier-ts-754-dependencyspecifier",
           "currentTags": [
             "@public",
             "@category",
@@ -107705,8 +107705,8 @@
           "exportKind": "class",
           "filePath": "src/PackageManagerPin.ts",
           "repoPath": "packages/foundation/modeling/npm-spec/src/PackageManagerPin.ts",
-          "line": 232,
-          "anchor": "packages-foundation-modeling-npm-spec-src-packagemanagerpin-ts-232-packagemanagerpin",
+          "line": 234,
+          "anchor": "packages-foundation-modeling-npm-spec-src-packagemanagerpin-ts-234-packagemanagerpin",
           "currentTags": [
             "@public",
             "@category",
@@ -123546,8 +123546,8 @@
           "exportKind": "type",
           "filePath": "src/License.ts",
           "repoPath": "packages/foundation/modeling/package-json/src/License.ts",
-          "line": 171,
-          "anchor": "packages-foundation-modeling-package-json-src-license-ts-171-spdxlicense",
+          "line": 174,
+          "anchor": "packages-foundation-modeling-package-json-src-license-ts-174-spdxlicense",
           "currentTags": [
             "@public",
             "@category",
@@ -123569,8 +123569,8 @@
           "exportKind": "const",
           "filePath": "src/License.ts",
           "repoPath": "packages/foundation/modeling/package-json/src/License.ts",
-          "line": 211,
-          "anchor": "packages-foundation-modeling-package-json-src-license-ts-211-licenseexpressionof",
+          "line": 214,
+          "anchor": "packages-foundation-modeling-package-json-src-license-ts-214-licenseexpressionof",
           "currentTags": [
             "@param",
             "@returns",
@@ -124884,8 +124884,8 @@
           "exportKind": "class",
           "filePath": "src/PackageManagerRange.ts",
           "repoPath": "packages/foundation/modeling/package-json/src/PackageManagerRange.ts",
-          "line": 169,
-          "anchor": "packages-foundation-modeling-package-json-src-packagemanagerrange-ts-169-invalidpackagemanagerrangeerror",
+          "line": 168,
+          "anchor": "packages-foundation-modeling-package-json-src-packagemanagerrange-ts-168-invalidpackagemanagerrangeerror",
           "currentTags": [
             "@public",
             "@category",
@@ -124907,8 +124907,8 @@
           "exportKind": "class",
           "filePath": "src/PackageManagerRange.ts",
           "repoPath": "packages/foundation/modeling/package-json/src/PackageManagerRange.ts",
-          "line": 312,
-          "anchor": "packages-foundation-modeling-package-json-src-packagemanagerrange-ts-312-packagemanagerrange",
+          "line": 311,
+          "anchor": "packages-foundation-modeling-package-json-src-packagemanagerrange-ts-311-packagemanagerrange",
           "currentTags": [
             "@public",
             "@category",
@@ -170447,9 +170447,902 @@
       ]
     },
     {
+      "packageName": "@beep/xdg",
+      "packagePath": "packages/foundation/capability/xdg",
+      "topoOrder": 45,
+      "status": "clean",
+      "sourceCoverage": {
+        "srcDir": "src",
+        "sourceFileCount": 7,
+        "publicModuleCount": 7,
+        "publicExportCount": 31
+      },
+      "docgenCoverage": {
+        "hasDocgenConfig": true,
+        "enforceDescriptions": false,
+        "enforceExamples": false,
+        "enforceVersion": true
+      },
+      "counts": {
+        "openModules": 0,
+        "openExports": 0,
+        "missingExportExamples": 0,
+        "missingExportCategories": 0,
+        "missingExportSince": 0,
+        "missingExportSummaries": 0,
+        "forbiddenTagFindings": 0,
+        "malformedConditionalTagFindings": 0,
+        "exampleImportFindings": 0,
+        "unsafeExampleFindings": 0,
+        "schemaAnnotationFindings": 0,
+        "documentationRuleFindings": {
+          "undescribed-see": 0,
+          "multiple-description-paragraphs": 0,
+          "leading-blank": 0,
+          "trailing-blank": 0,
+          "invalid-heading": 0,
+          "section-out-of-order": 0,
+          "duplicate-section": 0,
+          "empty-section": 0,
+          "section-after-example": 0,
+          "invalid-when-to-use-prefix": 0,
+          "malformed-example": 0,
+          "duplicate-example": 0,
+          "loose-ts-fence": 0,
+          "forbidden-remarks": 0,
+          "no-root-package-import": 0
+        }
+      },
+      "modules": [
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/Absolute.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/Absolute.ts",
+          "line": 1,
+          "anchor": "packages-foundation-capability-xdg-src-absolute-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 5,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/AppDirs.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/AppDirs.ts",
+          "line": 1,
+          "anchor": "packages-foundation-capability-xdg-src-appdirs-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 10,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/NativeDirs.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/NativeDirs.ts",
+          "line": 1,
+          "anchor": "packages-foundation-capability-xdg-src-nativedirs-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 1,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/Xdg.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/Xdg.ts",
+          "line": 1,
+          "anchor": "packages-foundation-capability-xdg-src-xdg-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 6,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/XdgBase.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/XdgBase.ts",
+          "line": 1,
+          "anchor": "packages-foundation-capability-xdg-src-xdgbase-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 3,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/XdgConfig.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/XdgConfig.ts",
+          "line": 1,
+          "anchor": "packages-foundation-capability-xdg-src-xdgconfig-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 1,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/index.ts",
+          "line": 1,
+          "anchor": "packages-foundation-capability-xdg-src-index-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 5,
+          "remediationStatus": "resolved"
+        }
+      ],
+      "exports": [
+        {
+          "symbolName": "isAbsolutePosix",
+          "exportKind": "const",
+          "filePath": "src/Absolute.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/Absolute.ts",
+          "line": 47,
+          "anchor": "packages-foundation-capability-xdg-src-absolute-ts-47-isabsoluteposix",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "isAbsoluteWin32",
+          "exportKind": "const",
+          "filePath": "src/Absolute.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/Absolute.ts",
+          "line": 70,
+          "anchor": "packages-foundation-capability-xdg-src-absolute-ts-70-isabsolutewin32",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "absolutePathPattern",
+          "exportKind": "const",
+          "filePath": "src/Absolute.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/Absolute.ts",
+          "line": 93,
+          "anchor": "packages-foundation-capability-xdg-src-absolute-ts-93-absolutepathpattern",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "AbsolutePosixPath",
+          "exportKind": "const",
+          "filePath": "src/Absolute.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/Absolute.ts",
+          "line": 110,
+          "anchor": "packages-foundation-capability-xdg-src-absolute-ts-110-absoluteposixpath",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "AbsolutePath",
+          "exportKind": "const",
+          "filePath": "src/Absolute.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/Absolute.ts",
+          "line": 136,
+          "anchor": "packages-foundation-capability-xdg-src-absolute-ts-136-absolutepath",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "AppDirsNamespaceError",
+          "exportKind": "class",
+          "filePath": "src/AppDirs.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/AppDirs.ts",
+          "line": 47,
+          "anchor": "packages-foundation-capability-xdg-src-appdirs-ts-47-appdirsnamespaceerror",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "AppDirKind",
+          "exportKind": "const",
+          "filePath": "src/AppDirs.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/AppDirs.ts",
+          "line": 79,
+          "anchor": "packages-foundation-capability-xdg-src-appdirs-ts-79-appdirkind",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "AppDirKind",
+          "exportKind": "type",
+          "filePath": "src/AppDirs.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/AppDirs.ts",
+          "line": 90,
+          "anchor": "packages-foundation-capability-xdg-src-appdirs-ts-90-appdirkind",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "AppDirsError",
+          "exportKind": "class",
+          "filePath": "src/AppDirs.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/AppDirs.ts",
+          "line": 116,
+          "anchor": "packages-foundation-capability-xdg-src-appdirs-ts-116-appdirserror",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "AppDirsOverrideError",
+          "exportKind": "class",
+          "filePath": "src/AppDirs.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/AppDirs.ts",
+          "line": 174,
+          "anchor": "packages-foundation-capability-xdg-src-appdirs-ts-174-appdirsoverrideerror",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ResolvedAppDirs",
+          "exportKind": "class",
+          "filePath": "src/AppDirs.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/AppDirs.ts",
+          "line": 230,
+          "anchor": "packages-foundation-capability-xdg-src-appdirs-ts-230-resolvedappdirs",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "AppDirOverrides",
+          "exportKind": "class",
+          "filePath": "src/AppDirs.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/AppDirs.ts",
+          "line": 303,
+          "anchor": "packages-foundation-capability-xdg-src-appdirs-ts-303-appdiroverrides",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "AppDirsOptions",
+          "exportKind": "class",
+          "filePath": "src/AppDirs.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/AppDirs.ts",
+          "line": 356,
+          "anchor": "packages-foundation-capability-xdg-src-appdirs-ts-356-appdirsoptions",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "AppDirs",
+          "exportKind": "class",
+          "filePath": "src/AppDirs.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/AppDirs.ts",
+          "line": 608,
+          "anchor": "packages-foundation-capability-xdg-src-appdirs-ts-608-appdirs",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "AppDirsShape",
+          "exportKind": "type",
+          "filePath": "src/AppDirs.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/AppDirs.ts",
+          "line": 728,
+          "anchor": "packages-foundation-capability-xdg-src-appdirs-ts-728-appdirsshape",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "NativeDirs",
+          "exportKind": "class",
+          "filePath": "src/NativeDirs.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/NativeDirs.ts",
+          "line": 38,
+          "anchor": "packages-foundation-capability-xdg-src-nativedirs-ts-38-nativedirs",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "XdgPlatform",
+          "exportKind": "const",
+          "filePath": "src/Xdg.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/Xdg.ts",
+          "line": 46,
+          "anchor": "packages-foundation-capability-xdg-src-xdg-ts-46-xdgplatform",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "XdgPlatform",
+          "exportKind": "type",
+          "filePath": "src/Xdg.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/Xdg.ts",
+          "line": 67,
+          "anchor": "packages-foundation-capability-xdg-src-xdg-ts-67-xdgplatform",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "currentPlatform",
+          "exportKind": "const",
+          "filePath": "src/Xdg.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/Xdg.ts",
+          "line": 96,
+          "anchor": "packages-foundation-capability-xdg-src-xdg-ts-96-currentplatform",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "XdgEnvError",
+          "exportKind": "class",
+          "filePath": "src/Xdg.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/Xdg.ts",
+          "line": 124,
+          "anchor": "packages-foundation-capability-xdg-src-xdg-ts-124-xdgenverror",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "XdgPaths",
+          "exportKind": "class",
+          "filePath": "src/Xdg.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/Xdg.ts",
+          "line": 188,
+          "anchor": "packages-foundation-capability-xdg-src-xdg-ts-188-xdgpaths",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "Xdg",
+          "exportKind": "class",
+          "filePath": "src/Xdg.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/Xdg.ts",
+          "line": 283,
+          "anchor": "packages-foundation-capability-xdg-src-xdg-ts-283-xdg",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "XdgBaseKind",
+          "exportKind": "const",
+          "filePath": "src/XdgBase.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/XdgBase.ts",
+          "line": 36,
+          "anchor": "packages-foundation-capability-xdg-src-xdgbase-ts-36-xdgbasekind",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "XdgBaseKind",
+          "exportKind": "type",
+          "filePath": "src/XdgBase.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/XdgBase.ts",
+          "line": 49,
+          "anchor": "packages-foundation-capability-xdg-src-xdgbase-ts-49-xdgbasekind",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "XdgBase",
+          "exportKind": "class",
+          "filePath": "src/XdgBase.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/XdgBase.ts",
+          "line": 157,
+          "anchor": "packages-foundation-capability-xdg-src-xdgbase-ts-157-xdgbase",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "XdgConfig",
+          "exportKind": "class",
+          "filePath": "src/XdgConfig.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/XdgConfig.ts",
+          "line": 82,
+          "anchor": "packages-foundation-capability-xdg-src-xdgconfig-ts-82-xdgconfig",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export { AbsolutePath, AbsolutePosixPath, absolutePathPattern, isAbsolutePosix, isAbsoluteWin32 } from \"./Absolute.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/index.ts",
+          "line": 19,
+          "anchor": "packages-foundation-capability-xdg-src-index-ts-19-export-absolutepath-absoluteposixpath-absolutepathpattern-isabsoluteposix-isabsolutewin32-from-absolute-ts",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export {\n  AppDirKind,\n  AppDirOverrides,\n  AppDirs,\n  AppDirsError,\n  AppDirsNamespaceError,\n  AppDirsOptions,\n  AppDirsOverrideError,\n  type AppDirsShape,\n  ResolvedAppDirs,\n} from \"./AppDirs.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/index.ts",
+          "line": 20,
+          "anchor": "packages-foundation-capability-xdg-src-index-ts-20-export-appdirkind-appdiroverrides-appdirs-appdirserror-appdirsnamespaceerror-appdirsoptions-appdirsoverrideerror-type-appdirsshape-resolvedappdirs-from-appdirs-ts",
+          "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export { NativeDirs } from \"./NativeDirs.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/index.ts",
+          "line": 31,
+          "anchor": "packages-foundation-capability-xdg-src-index-ts-31-export-nativedirs-from-nativedirs-ts",
+          "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export { currentPlatform, Xdg, XdgEnvError, XdgPaths, XdgPlatform } from \"./Xdg.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/index.ts",
+          "line": 32,
+          "anchor": "packages-foundation-capability-xdg-src-index-ts-32-export-currentplatform-xdg-xdgenverror-xdgpaths-xdgplatform-from-xdg-ts",
+          "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export { XdgBase, XdgBaseKind } from \"./XdgBase.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/foundation/capability/xdg/src/index.ts",
+          "line": 33,
+          "anchor": "packages-foundation-capability-xdg-src-index-ts-33-export-xdgbase-xdgbasekind-from-xdgbase-ts",
+          "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        }
+      ]
+    },
+    {
       "packageName": "@beep/mcp-kit",
       "packagePath": "packages/foundation/capability/mcp-kit",
-      "topoOrder": 45,
+      "topoOrder": 46,
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
@@ -173628,7 +174521,7 @@
     {
       "packageName": "@beep/ontology-domain",
       "packagePath": "packages/ontology/domain",
-      "topoOrder": 46,
+      "topoOrder": 47,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -174693,7 +175586,7 @@
     {
       "packageName": "@beep/shacl",
       "packagePath": "packages/drivers/shacl",
-      "topoOrder": 47,
+      "topoOrder": 48,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -174943,7 +175836,7 @@
     {
       "packageName": "@beep/agents-use-cases",
       "packagePath": "packages/agents/use-cases",
-      "topoOrder": 48,
+      "topoOrder": 49,
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
@@ -178541,7 +179434,7 @@
     {
       "packageName": "@beep/law-practice-domain",
       "packagePath": "packages/law-practice/domain",
-      "topoOrder": 49,
+      "topoOrder": 50,
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
@@ -205348,7 +206241,7 @@
     {
       "packageName": "@beep/langextract",
       "packagePath": "packages/foundation/capability/langextract",
-      "topoOrder": 50,
+      "topoOrder": 51,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -208861,7 +209754,7 @@
     {
       "packageName": "@beep/epistemic-use-cases",
       "packagePath": "packages/epistemic/use-cases",
-      "topoOrder": 51,
+      "topoOrder": 52,
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
@@ -213048,7 +213941,7 @@
     {
       "packageName": "@beep/api-transport",
       "packagePath": "packages/foundation/capability/api-transport",
-      "topoOrder": 52,
+      "topoOrder": 53,
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
@@ -213414,7 +214307,7 @@
     {
       "packageName": "@beep/epistemic-config",
       "packagePath": "packages/epistemic/config",
-      "topoOrder": 53,
+      "topoOrder": 54,
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
@@ -214078,7 +214971,7 @@
     {
       "packageName": "@beep/postgres",
       "packagePath": "packages/drivers/postgres",
-      "topoOrder": 54,
+      "topoOrder": 55,
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
@@ -215215,7 +216108,7 @@
     {
       "packageName": "@beep/epistemic-tables",
       "packagePath": "packages/epistemic/tables",
-      "topoOrder": 55,
+      "topoOrder": 56,
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
@@ -218218,7 +219111,7 @@
     {
       "packageName": "@beep/github",
       "packagePath": "packages/drivers/github",
-      "topoOrder": 56,
+      "topoOrder": 57,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -223198,7 +224091,7 @@
     {
       "packageName": "@beep/managed-section",
       "packagePath": "packages/foundation/modeling/managed-section",
-      "topoOrder": 57,
+      "topoOrder": 58,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -224041,7 +224934,7 @@
     {
       "packageName": "@beep/sbom",
       "packagePath": "packages/foundation/modeling/sbom",
-      "topoOrder": 58,
+      "topoOrder": 59,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -225968,7 +226861,7 @@
     {
       "packageName": "@beep/chalk",
       "packagePath": "packages/foundation/capability/chalk",
-      "topoOrder": 59,
+      "topoOrder": 60,
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
@@ -227028,7 +227921,7 @@
     {
       "packageName": "@beep/acp",
       "packagePath": "packages/drivers/acp",
-      "topoOrder": 60,
+      "topoOrder": 61,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -250448,7 +251341,7 @@
     {
       "packageName": "@beep/tsconfig",
       "packagePath": "packages/foundation/modeling/tsconfig",
-      "topoOrder": 61,
+      "topoOrder": 62,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -252035,13 +252928,13 @@
     {
       "packageName": "@beep/repo-ai-metrics",
       "packagePath": "packages/tooling/library/ai-metrics",
-      "topoOrder": 62,
+      "topoOrder": 63,
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
         "sourceFileCount": 31,
         "publicModuleCount": 31,
-        "publicExportCount": 587
+        "publicExportCount": 588
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -252341,7 +253234,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 14,
+          "exportCount": 15,
           "remediationStatus": "resolved"
         },
         {
@@ -255459,8 +256352,8 @@
           "exportKind": "const",
           "filePath": "src/data-root.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/data-root.ts",
-          "line": 72,
-          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-72-aimetricsabsolutedataroot",
+          "line": 74,
+          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-74-aimetricsabsolutedataroot",
           "currentTags": [
             "@category",
             "@since"
@@ -255481,8 +256374,8 @@
           "exportKind": "type",
           "filePath": "src/data-root.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/data-root.ts",
-          "line": 87,
-          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-87-aimetricsabsolutedataroot",
+          "line": 89,
+          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-89-aimetricsabsolutedataroot",
           "currentTags": [
             "@category",
             "@since"
@@ -255503,8 +256396,8 @@
           "exportKind": "const",
           "filePath": "src/data-root.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/data-root.ts",
-          "line": 117,
-          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-117-aimetricsdatarootsource",
+          "line": 119,
+          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-119-aimetricsdatarootsource",
           "currentTags": [
             "@see",
             "@category",
@@ -255526,8 +256419,8 @@
           "exportKind": "type",
           "filePath": "src/data-root.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/data-root.ts",
-          "line": 130,
-          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-130-aimetricsdatarootsource",
+          "line": 132,
+          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-132-aimetricsdatarootsource",
           "currentTags": [
             "@see",
             "@category",
@@ -255549,8 +256442,8 @@
           "exportKind": "class",
           "filePath": "src/data-root.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/data-root.ts",
-          "line": 179,
-          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-179-aimetricsdatarootinput",
+          "line": 181,
+          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-181-aimetricsdatarootinput",
           "currentTags": [
             "@category",
             "@since"
@@ -255571,8 +256464,8 @@
           "exportKind": "class",
           "filePath": "src/data-root.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/data-root.ts",
-          "line": 216,
-          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-216-aimetricsdataroot",
+          "line": 218,
+          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-218-aimetricsdataroot",
           "currentTags": [
             "@category",
             "@since"
@@ -255593,8 +256486,8 @@
           "exportKind": "class",
           "filePath": "src/data-root.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/data-root.ts",
-          "line": 247,
-          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-247-aimetricsdatarooterror",
+          "line": 249,
+          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-249-aimetricsdatarooterror",
           "currentTags": [
             "@category",
             "@since"
@@ -255615,8 +256508,8 @@
           "exportKind": "class",
           "filePath": "src/data-root.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/data-root.ts",
-          "line": 284,
-          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-284-aimetricsstatehomeinput",
+          "line": 286,
+          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-286-aimetricsstatehomeinput",
           "currentTags": [
             "@category",
             "@since"
@@ -255637,8 +256530,8 @@
           "exportKind": "const",
           "filePath": "src/data-root.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/data-root.ts",
-          "line": 349,
-          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-349-aimetricsstatehome",
+          "line": 362,
+          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-362-aimetricsstatehome",
           "currentTags": [
             "@param",
             "@returns",
@@ -255661,8 +256554,8 @@
           "exportKind": "const",
           "filePath": "src/data-root.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/data-root.ts",
-          "line": 389,
-          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-389-aimetricsstateroot",
+          "line": 406,
+          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-406-aimetricsstateroot",
           "currentTags": [
             "@param",
             "@returns",
@@ -255685,8 +256578,8 @@
           "exportKind": "const",
           "filePath": "src/data-root.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/data-root.ts",
-          "line": 453,
-          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-453-resolveaimetricsdataroot",
+          "line": 470,
+          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-470-resolveaimetricsdataroot",
           "currentTags": [
             "@param",
             "@returns",
@@ -255709,8 +256602,8 @@
           "exportKind": "const",
           "filePath": "src/data-root.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/data-root.ts",
-          "line": 503,
-          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-503-requireabsoluteaimetricsdataroot",
+          "line": 520,
+          "anchor": "packages-tooling-library-ai-metrics-src-data-root-ts-520-requireabsoluteaimetricsdataroot",
           "currentTags": [
             "@param",
             "@returns",
@@ -256777,8 +257670,8 @@
           "exportKind": "class",
           "filePath": "src/forwarder.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/forwarder.ts",
-          "line": 420,
-          "anchor": "packages-tooling-library-ai-metrics-src-forwarder-ts-420-aimetricsforwardererror",
+          "line": 421,
+          "anchor": "packages-tooling-library-ai-metrics-src-forwarder-ts-421-aimetricsforwardererror",
           "currentTags": [
             "@category",
             "@since"
@@ -256799,8 +257692,8 @@
           "exportKind": "class",
           "filePath": "src/forwarder.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/forwarder.ts",
-          "line": 466,
-          "anchor": "packages-tooling-library-ai-metrics-src-forwarder-ts-466-aimetricsforwarderinput",
+          "line": 467,
+          "anchor": "packages-tooling-library-ai-metrics-src-forwarder-ts-467-aimetricsforwarderinput",
           "currentTags": [
             "@see",
             "@category",
@@ -256828,8 +257721,8 @@
           "exportKind": "class",
           "filePath": "src/forwarder.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/forwarder.ts",
-          "line": 533,
-          "anchor": "packages-tooling-library-ai-metrics-src-forwarder-ts-533-aimetricsforwardersourcecoverage",
+          "line": 534,
+          "anchor": "packages-tooling-library-ai-metrics-src-forwarder-ts-534-aimetricsforwardersourcecoverage",
           "currentTags": [
             "@category",
             "@since"
@@ -256850,8 +257743,8 @@
           "exportKind": "class",
           "filePath": "src/forwarder.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/forwarder.ts",
-          "line": 586,
-          "anchor": "packages-tooling-library-ai-metrics-src-forwarder-ts-586-aimetricsforwarderotlpexported",
+          "line": 587,
+          "anchor": "packages-tooling-library-ai-metrics-src-forwarder-ts-587-aimetricsforwarderotlpexported",
           "currentTags": [
             "@see",
             "@category",
@@ -256873,8 +257766,8 @@
           "exportKind": "class",
           "filePath": "src/forwarder.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/forwarder.ts",
-          "line": 641,
-          "anchor": "packages-tooling-library-ai-metrics-src-forwarder-ts-641-aimetricsforwarderotlpexportfailed",
+          "line": 642,
+          "anchor": "packages-tooling-library-ai-metrics-src-forwarder-ts-642-aimetricsforwarderotlpexportfailed",
           "currentTags": [
             "@see",
             "@category",
@@ -256896,8 +257789,8 @@
           "exportKind": "const",
           "filePath": "src/forwarder.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/forwarder.ts",
-          "line": 694,
-          "anchor": "packages-tooling-library-ai-metrics-src-forwarder-ts-694-aimetricsforwarderotlpexport",
+          "line": 695,
+          "anchor": "packages-tooling-library-ai-metrics-src-forwarder-ts-695-aimetricsforwarderotlpexport",
           "currentTags": [
             "@category",
             "@since"
@@ -256918,8 +257811,8 @@
           "exportKind": "type",
           "filePath": "src/forwarder.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/forwarder.ts",
-          "line": 716,
-          "anchor": "packages-tooling-library-ai-metrics-src-forwarder-ts-716-aimetricsforwarderotlpexport",
+          "line": 717,
+          "anchor": "packages-tooling-library-ai-metrics-src-forwarder-ts-717-aimetricsforwarderotlpexport",
           "currentTags": [
             "@see",
             "@category",
@@ -256941,8 +257834,8 @@
           "exportKind": "class",
           "filePath": "src/forwarder.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/forwarder.ts",
-          "line": 759,
-          "anchor": "packages-tooling-library-ai-metrics-src-forwarder-ts-759-aimetricsforwarderrunresult",
+          "line": 760,
+          "anchor": "packages-tooling-library-ai-metrics-src-forwarder-ts-760-aimetricsforwarderrunresult",
           "currentTags": [
             "@see",
             "@category",
@@ -256964,8 +257857,8 @@
           "exportKind": "class",
           "filePath": "src/forwarder.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/forwarder.ts",
-          "line": 848,
-          "anchor": "packages-tooling-library-ai-metrics-src-forwarder-ts-848-aimetricsforwardertimerinput",
+          "line": 849,
+          "anchor": "packages-tooling-library-ai-metrics-src-forwarder-ts-849-aimetricsforwardertimerinput",
           "currentTags": [
             "@see",
             "@category",
@@ -256987,9 +257880,33 @@
           "exportKind": "class",
           "filePath": "src/forwarder.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/forwarder.ts",
-          "line": 912,
-          "anchor": "packages-tooling-library-ai-metrics-src-forwarder-ts-912-aimetricsforwardertimerplan",
+          "line": 913,
+          "anchor": "packages-tooling-library-ai-metrics-src-forwarder-ts-913-aimetricsforwardertimerplan",
           "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "resolveForwarderEvidenceRoot",
+          "exportKind": "const",
+          "filePath": "src/forwarder.ts",
+          "repoPath": "packages/tooling/library/ai-metrics/src/forwarder.ts",
+          "line": 990,
+          "anchor": "packages-tooling-library-ai-metrics-src-forwarder-ts-990-resolveforwarderevidenceroot",
+          "currentTags": [
+            "@param",
+            "@returns",
             "@category",
             "@since"
           ],
@@ -257009,8 +257926,8 @@
           "exportKind": "const",
           "filePath": "src/forwarder.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/forwarder.ts",
-          "line": 1024,
-          "anchor": "packages-tooling-library-ai-metrics-src-forwarder-ts-1024-renderaimetricsforwardertimerplan",
+          "line": 1088,
+          "anchor": "packages-tooling-library-ai-metrics-src-forwarder-ts-1088-renderaimetricsforwardertimerplan",
           "currentTags": [
             "@param",
             "@returns",
@@ -257033,8 +257950,8 @@
           "exportKind": "const",
           "filePath": "src/forwarder.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/forwarder.ts",
-          "line": 1405,
-          "anchor": "packages-tooling-library-ai-metrics-src-forwarder-ts-1405-runaimetricsforwarder",
+          "line": 1469,
+          "anchor": "packages-tooling-library-ai-metrics-src-forwarder-ts-1469-runaimetricsforwarder",
           "currentTags": [
             "@effects",
             "@see",
@@ -257063,8 +257980,8 @@
           "exportKind": "const",
           "filePath": "src/forwarder.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/forwarder.ts",
-          "line": 1678,
-          "anchor": "packages-tooling-library-ai-metrics-src-forwarder-ts-1678-forwarderrunresulttojson",
+          "line": 1735,
+          "anchor": "packages-tooling-library-ai-metrics-src-forwarder-ts-1735-forwarderrunresulttojson",
           "currentTags": [
             "@category",
             "@since"
@@ -257085,8 +258002,8 @@
           "exportKind": "const",
           "filePath": "src/forwarder.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/forwarder.ts",
-          "line": 1723,
-          "anchor": "packages-tooling-library-ai-metrics-src-forwarder-ts-1723-forwardertimerplantojson",
+          "line": 1780,
+          "anchor": "packages-tooling-library-ai-metrics-src-forwarder-ts-1780-forwardertimerplantojson",
           "currentTags": [
             "@see",
             "@category",
@@ -265934,7 +266851,7 @@
     {
       "packageName": "@beep/technical-drawing",
       "packagePath": "packages/foundation/capability/technical-drawing",
-      "topoOrder": 63,
+      "topoOrder": 64,
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
@@ -272133,7 +273050,7 @@
     {
       "packageName": "@beep/ffmpeg",
       "packagePath": "packages/drivers/ffmpeg",
-      "topoOrder": 64,
+      "topoOrder": 65,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -274737,7 +275654,7 @@
     {
       "packageName": "@beep/pretext",
       "packagePath": "packages/drivers/pretext",
-      "topoOrder": 65,
+      "topoOrder": 66,
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
@@ -275737,7 +276654,7 @@
     {
       "packageName": "@beep/ontology-use-cases",
       "packagePath": "packages/ontology/use-cases",
-      "topoOrder": 66,
+      "topoOrder": 67,
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
@@ -281092,7 +282009,7 @@
     {
       "packageName": "@beep/cosmos",
       "packagePath": "packages/drivers/cosmos",
-      "topoOrder": 67,
+      "topoOrder": 68,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -281761,7 +282678,7 @@
     {
       "packageName": "@beep/agents-client",
       "packagePath": "packages/agents/client",
-      "topoOrder": 68,
+      "topoOrder": 69,
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
@@ -282850,7 +283767,7 @@
     {
       "packageName": "@beep/documents-domain",
       "packagePath": "packages/documents/domain",
-      "topoOrder": 69,
+      "topoOrder": 70,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -285260,7 +286177,7 @@
     {
       "packageName": "@beep/architecture-lab-domain",
       "packagePath": "packages/architecture-lab/domain",
-      "topoOrder": 70,
+      "topoOrder": 71,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -286691,7 +287608,7 @@
     {
       "packageName": "@beep/uspto",
       "packagePath": "packages/drivers/uspto",
-      "topoOrder": 71,
+      "topoOrder": 72,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -287407,7 +288324,7 @@
     {
       "packageName": "@beep/law-practice-tables",
       "packagePath": "packages/law-practice/tables",
-      "topoOrder": 72,
+      "topoOrder": 73,
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
@@ -290148,7 +291065,7 @@
     {
       "packageName": "@beep/law-practice-use-cases",
       "packagePath": "packages/law-practice/use-cases",
-      "topoOrder": 73,
+      "topoOrder": 74,
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
@@ -306858,7 +307775,7 @@
     {
       "packageName": "@beep/tika",
       "packagePath": "packages/drivers/tika",
-      "topoOrder": 74,
+      "topoOrder": 75,
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
@@ -307851,7 +308768,7 @@
     {
       "packageName": "@beep/libpff",
       "packagePath": "packages/drivers/libpff",
-      "topoOrder": 75,
+      "topoOrder": 76,
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
@@ -309016,7 +309933,7 @@
     {
       "packageName": "@beep/box",
       "packagePath": "packages/drivers/box",
-      "topoOrder": 76,
+      "topoOrder": 77,
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
@@ -328551,7 +329468,7 @@
     {
       "packageName": "@beep/epistemic-server",
       "packagePath": "packages/epistemic/server",
-      "topoOrder": 77,
+      "topoOrder": 78,
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
@@ -330428,7 +331345,7 @@
     {
       "packageName": "@beep/m365",
       "packagePath": "packages/drivers/m365",
-      "topoOrder": 78,
+      "topoOrder": 79,
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
@@ -334317,7 +335234,7 @@
     {
       "packageName": "@beep/nlp-processing",
       "packagePath": "packages/foundation/capability/nlp-processing",
-      "topoOrder": 79,
+      "topoOrder": 80,
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
@@ -342347,726 +343264,6 @@
             "@since",
             "@category"
           ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        }
-      ]
-    },
-    {
-      "packageName": "@beep/xdg",
-      "packagePath": "packages/foundation/capability/xdg",
-      "topoOrder": 80,
-      "status": "clean",
-      "sourceCoverage": {
-        "srcDir": "src",
-        "sourceFileCount": 6,
-        "publicModuleCount": 6,
-        "publicExportCount": 24
-      },
-      "docgenCoverage": {
-        "hasDocgenConfig": true,
-        "enforceDescriptions": false,
-        "enforceExamples": false,
-        "enforceVersion": true
-      },
-      "counts": {
-        "openModules": 0,
-        "openExports": 0,
-        "missingExportExamples": 0,
-        "missingExportCategories": 0,
-        "missingExportSince": 0,
-        "missingExportSummaries": 0,
-        "forbiddenTagFindings": 0,
-        "malformedConditionalTagFindings": 0,
-        "exampleImportFindings": 0,
-        "unsafeExampleFindings": 0,
-        "schemaAnnotationFindings": 0,
-        "documentationRuleFindings": {
-          "undescribed-see": 0,
-          "multiple-description-paragraphs": 0,
-          "leading-blank": 0,
-          "trailing-blank": 0,
-          "invalid-heading": 0,
-          "section-out-of-order": 0,
-          "duplicate-section": 0,
-          "empty-section": 0,
-          "section-after-example": 0,
-          "invalid-when-to-use-prefix": 0,
-          "malformed-example": 0,
-          "duplicate-example": 0,
-          "loose-ts-fence": 0,
-          "forbidden-remarks": 0,
-          "no-root-package-import": 0
-        }
-      },
-      "modules": [
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/AppDirs.ts",
-          "repoPath": "packages/foundation/capability/xdg/src/AppDirs.ts",
-          "line": 1,
-          "anchor": "packages-foundation-capability-xdg-src-appdirs-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 9,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/NativeDirs.ts",
-          "repoPath": "packages/foundation/capability/xdg/src/NativeDirs.ts",
-          "line": 1,
-          "anchor": "packages-foundation-capability-xdg-src-nativedirs-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 1,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/Xdg.ts",
-          "repoPath": "packages/foundation/capability/xdg/src/Xdg.ts",
-          "line": 1,
-          "anchor": "packages-foundation-capability-xdg-src-xdg-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 6,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/XdgBase.ts",
-          "repoPath": "packages/foundation/capability/xdg/src/XdgBase.ts",
-          "line": 1,
-          "anchor": "packages-foundation-capability-xdg-src-xdgbase-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 3,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/XdgConfig.ts",
-          "repoPath": "packages/foundation/capability/xdg/src/XdgConfig.ts",
-          "line": 1,
-          "anchor": "packages-foundation-capability-xdg-src-xdgconfig-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 1,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/foundation/capability/xdg/src/index.ts",
-          "line": 1,
-          "anchor": "packages-foundation-capability-xdg-src-index-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 4,
-          "remediationStatus": "resolved"
-        }
-      ],
-      "exports": [
-        {
-          "symbolName": "AppDirsNamespaceError",
-          "exportKind": "class",
-          "filePath": "src/AppDirs.ts",
-          "repoPath": "packages/foundation/capability/xdg/src/AppDirs.ts",
-          "line": 46,
-          "anchor": "packages-foundation-capability-xdg-src-appdirs-ts-46-appdirsnamespaceerror",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "AppDirKind",
-          "exportKind": "const",
-          "filePath": "src/AppDirs.ts",
-          "repoPath": "packages/foundation/capability/xdg/src/AppDirs.ts",
-          "line": 78,
-          "anchor": "packages-foundation-capability-xdg-src-appdirs-ts-78-appdirkind",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "AppDirKind",
-          "exportKind": "type",
-          "filePath": "src/AppDirs.ts",
-          "repoPath": "packages/foundation/capability/xdg/src/AppDirs.ts",
-          "line": 89,
-          "anchor": "packages-foundation-capability-xdg-src-appdirs-ts-89-appdirkind",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "AppDirsError",
-          "exportKind": "class",
-          "filePath": "src/AppDirs.ts",
-          "repoPath": "packages/foundation/capability/xdg/src/AppDirs.ts",
-          "line": 115,
-          "anchor": "packages-foundation-capability-xdg-src-appdirs-ts-115-appdirserror",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "ResolvedAppDirs",
-          "exportKind": "class",
-          "filePath": "src/AppDirs.ts",
-          "repoPath": "packages/foundation/capability/xdg/src/AppDirs.ts",
-          "line": 169,
-          "anchor": "packages-foundation-capability-xdg-src-appdirs-ts-169-resolvedappdirs",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "AppDirOverrides",
-          "exportKind": "class",
-          "filePath": "src/AppDirs.ts",
-          "repoPath": "packages/foundation/capability/xdg/src/AppDirs.ts",
-          "line": 238,
-          "anchor": "packages-foundation-capability-xdg-src-appdirs-ts-238-appdiroverrides",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "AppDirsOptions",
-          "exportKind": "class",
-          "filePath": "src/AppDirs.ts",
-          "repoPath": "packages/foundation/capability/xdg/src/AppDirs.ts",
-          "line": 289,
-          "anchor": "packages-foundation-capability-xdg-src-appdirs-ts-289-appdirsoptions",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "AppDirs",
-          "exportKind": "class",
-          "filePath": "src/AppDirs.ts",
-          "repoPath": "packages/foundation/capability/xdg/src/AppDirs.ts",
-          "line": 525,
-          "anchor": "packages-foundation-capability-xdg-src-appdirs-ts-525-appdirs",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "AppDirsShape",
-          "exportKind": "type",
-          "filePath": "src/AppDirs.ts",
-          "repoPath": "packages/foundation/capability/xdg/src/AppDirs.ts",
-          "line": 645,
-          "anchor": "packages-foundation-capability-xdg-src-appdirs-ts-645-appdirsshape",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "NativeDirs",
-          "exportKind": "class",
-          "filePath": "src/NativeDirs.ts",
-          "repoPath": "packages/foundation/capability/xdg/src/NativeDirs.ts",
-          "line": 38,
-          "anchor": "packages-foundation-capability-xdg-src-nativedirs-ts-38-nativedirs",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "XdgPlatform",
-          "exportKind": "const",
-          "filePath": "src/Xdg.ts",
-          "repoPath": "packages/foundation/capability/xdg/src/Xdg.ts",
-          "line": 46,
-          "anchor": "packages-foundation-capability-xdg-src-xdg-ts-46-xdgplatform",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "XdgPlatform",
-          "exportKind": "type",
-          "filePath": "src/Xdg.ts",
-          "repoPath": "packages/foundation/capability/xdg/src/Xdg.ts",
-          "line": 67,
-          "anchor": "packages-foundation-capability-xdg-src-xdg-ts-67-xdgplatform",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "currentPlatform",
-          "exportKind": "const",
-          "filePath": "src/Xdg.ts",
-          "repoPath": "packages/foundation/capability/xdg/src/Xdg.ts",
-          "line": 96,
-          "anchor": "packages-foundation-capability-xdg-src-xdg-ts-96-currentplatform",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "XdgEnvError",
-          "exportKind": "class",
-          "filePath": "src/Xdg.ts",
-          "repoPath": "packages/foundation/capability/xdg/src/Xdg.ts",
-          "line": 123,
-          "anchor": "packages-foundation-capability-xdg-src-xdg-ts-123-xdgenverror",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "XdgPaths",
-          "exportKind": "class",
-          "filePath": "src/Xdg.ts",
-          "repoPath": "packages/foundation/capability/xdg/src/Xdg.ts",
-          "line": 185,
-          "anchor": "packages-foundation-capability-xdg-src-xdg-ts-185-xdgpaths",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "Xdg",
-          "exportKind": "class",
-          "filePath": "src/Xdg.ts",
-          "repoPath": "packages/foundation/capability/xdg/src/Xdg.ts",
-          "line": 278,
-          "anchor": "packages-foundation-capability-xdg-src-xdg-ts-278-xdg",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "XdgBaseKind",
-          "exportKind": "const",
-          "filePath": "src/XdgBase.ts",
-          "repoPath": "packages/foundation/capability/xdg/src/XdgBase.ts",
-          "line": 37,
-          "anchor": "packages-foundation-capability-xdg-src-xdgbase-ts-37-xdgbasekind",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "XdgBaseKind",
-          "exportKind": "type",
-          "filePath": "src/XdgBase.ts",
-          "repoPath": "packages/foundation/capability/xdg/src/XdgBase.ts",
-          "line": 50,
-          "anchor": "packages-foundation-capability-xdg-src-xdgbase-ts-50-xdgbasekind",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "XdgBase",
-          "exportKind": "class",
-          "filePath": "src/XdgBase.ts",
-          "repoPath": "packages/foundation/capability/xdg/src/XdgBase.ts",
-          "line": 168,
-          "anchor": "packages-foundation-capability-xdg-src-xdgbase-ts-168-xdgbase",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "XdgConfig",
-          "exportKind": "class",
-          "filePath": "src/XdgConfig.ts",
-          "repoPath": "packages/foundation/capability/xdg/src/XdgConfig.ts",
-          "line": 82,
-          "anchor": "packages-foundation-capability-xdg-src-xdgconfig-ts-82-xdgconfig",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export {\n  AppDirKind,\n  AppDirOverrides,\n  AppDirs,\n  AppDirsError,\n  AppDirsNamespaceError,\n  AppDirsOptions,\n  type AppDirsShape,\n  ResolvedAppDirs,\n} from \"./AppDirs.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/foundation/capability/xdg/src/index.ts",
-          "line": 18,
-          "anchor": "packages-foundation-capability-xdg-src-index-ts-18-export-appdirkind-appdiroverrides-appdirs-appdirserror-appdirsnamespaceerror-appdirsoptions-type-appdirsshape-resolvedappdirs-from-appdirs-ts",
-          "currentTags": [
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export { NativeDirs } from \"./NativeDirs.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/foundation/capability/xdg/src/index.ts",
-          "line": 28,
-          "anchor": "packages-foundation-capability-xdg-src-index-ts-28-export-nativedirs-from-nativedirs-ts",
-          "currentTags": [],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export { currentPlatform, Xdg, XdgEnvError, XdgPaths, XdgPlatform } from \"./Xdg.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/foundation/capability/xdg/src/index.ts",
-          "line": 29,
-          "anchor": "packages-foundation-capability-xdg-src-index-ts-29-export-currentplatform-xdg-xdgenverror-xdgpaths-xdgplatform-from-xdg-ts",
-          "currentTags": [],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export { XdgBase, XdgBaseKind } from \"./XdgBase.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/foundation/capability/xdg/src/index.ts",
-          "line": 30,
-          "anchor": "packages-foundation-capability-xdg-src-index-ts-30-export-xdgbase-xdgbasekind-from-xdgbase-ts",
-          "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
@@ -360567,7 +360764,7 @@
         "srcDir": "src",
         "sourceFileCount": 24,
         "publicModuleCount": 24,
-        "publicExportCount": 161
+        "publicExportCount": 162
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -360625,7 +360822,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 5,
+          "exportCount": 6,
           "remediationStatus": "resolved"
         },
         {
@@ -361141,8 +361338,8 @@
           "exportKind": "type",
           "filePath": "src/Action.ts",
           "repoPath": "packages/drivers/github-actions/src/Action.ts",
-          "line": 45,
-          "anchor": "packages-drivers-github-actions-src-action-ts-45-actionservices",
+          "line": 50,
+          "anchor": "packages-drivers-github-actions-src-action-ts-50-actionservices",
           "currentTags": [
             "@public",
             "@category",
@@ -361164,8 +361361,8 @@
           "exportKind": "class",
           "filePath": "src/Action.ts",
           "repoPath": "packages/drivers/github-actions/src/Action.ts",
-          "line": 82,
-          "anchor": "packages-drivers-github-actions-src-action-ts-82-actionruntime",
+          "line": 87,
+          "anchor": "packages-drivers-github-actions-src-action-ts-87-actionruntime",
           "currentTags": [
             "@public",
             "@category",
@@ -361187,8 +361384,8 @@
           "exportKind": "interface",
           "filePath": "src/Action.ts",
           "repoPath": "packages/drivers/github-actions/src/Action.ts",
-          "line": 141,
-          "anchor": "packages-drivers-github-actions-src-action-ts-141-actionrunoptions",
+          "line": 146,
+          "anchor": "packages-drivers-github-actions-src-action-ts-146-actionrunoptions",
           "currentTags": [
             "@public",
             "@category",
@@ -361210,8 +361407,31 @@
           "exportKind": "const",
           "filePath": "src/Action.ts",
           "repoPath": "packages/drivers/github-actions/src/Action.ts",
-          "line": 213,
-          "anchor": "packages-drivers-github-actions-src-action-ts-213-describecause",
+          "line": 231,
+          "anchor": "packages-drivers-github-actions-src-action-ts-231-describecause",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ActionFailedError",
+          "exportKind": "class",
+          "filePath": "src/Action.ts",
+          "repoPath": "packages/drivers/github-actions/src/Action.ts",
+          "line": 288,
+          "anchor": "packages-drivers-github-actions-src-action-ts-288-actionfailederror",
           "currentTags": [
             "@public",
             "@category",
@@ -361233,8 +361453,8 @@
           "exportKind": "class",
           "filePath": "src/Action.ts",
           "repoPath": "packages/drivers/github-actions/src/Action.ts",
-          "line": 299,
-          "anchor": "packages-drivers-github-actions-src-action-ts-299-action",
+          "line": 445,
+          "anchor": "packages-drivers-github-actions-src-action-ts-445-action",
           "currentTags": [
             "@public",
             "@category",
@@ -363246,8 +363466,8 @@
           "exportKind": "type",
           "filePath": "src/DetachedProcess.ts",
           "repoPath": "packages/drivers/github-actions/src/DetachedProcess.ts",
-          "line": 455,
-          "anchor": "packages-drivers-github-actions-src-detachedprocess-ts-455-processid",
+          "line": 457,
+          "anchor": "packages-drivers-github-actions-src-detachedprocess-ts-457-processid",
           "currentTags": [
             "@category",
             "@since"
@@ -363268,8 +363488,8 @@
           "exportKind": "class",
           "filePath": "src/DetachedProcess.ts",
           "repoPath": "packages/drivers/github-actions/src/DetachedProcess.ts",
-          "line": 473,
-          "anchor": "packages-drivers-github-actions-src-detachedprocess-ts-473-detachedspawnoptions",
+          "line": 475,
+          "anchor": "packages-drivers-github-actions-src-detachedprocess-ts-475-detachedspawnoptions",
           "currentTags": [
             "@public",
             "@category",
@@ -363291,8 +363511,8 @@
           "exportKind": "namespace",
           "filePath": "src/DetachedProcess.ts",
           "repoPath": "packages/drivers/github-actions/src/DetachedProcess.ts",
-          "line": 569,
-          "anchor": "packages-drivers-github-actions-src-detachedprocess-ts-569-detachedspawnoptions",
+          "line": 571,
+          "anchor": "packages-drivers-github-actions-src-detachedprocess-ts-571-detachedspawnoptions",
           "currentTags": [
             "@public",
             "@category",
@@ -363314,8 +363534,8 @@
           "exportKind": "class",
           "filePath": "src/DetachedProcess.ts",
           "repoPath": "packages/drivers/github-actions/src/DetachedProcess.ts",
-          "line": 595,
-          "anchor": "packages-drivers-github-actions-src-detachedprocess-ts-595-readinessoptions",
+          "line": 597,
+          "anchor": "packages-drivers-github-actions-src-detachedprocess-ts-597-readinessoptions",
           "currentTags": [
             "@public",
             "@category",
@@ -363337,8 +363557,8 @@
           "exportKind": "namespace",
           "filePath": "src/DetachedProcess.ts",
           "repoPath": "packages/drivers/github-actions/src/DetachedProcess.ts",
-          "line": 618,
-          "anchor": "packages-drivers-github-actions-src-detachedprocess-ts-618-readinessoptions",
+          "line": 620,
+          "anchor": "packages-drivers-github-actions-src-detachedprocess-ts-620-readinessoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -363359,8 +363579,8 @@
           "exportKind": "interface",
           "filePath": "src/DetachedProcess.ts",
           "repoPath": "packages/drivers/github-actions/src/DetachedProcess.ts",
-          "line": 653,
-          "anchor": "packages-drivers-github-actions-src-detachedprocess-ts-653-detachedprocessops",
+          "line": 655,
+          "anchor": "packages-drivers-github-actions-src-detachedprocess-ts-655-detachedprocessops",
           "currentTags": [
             "@public",
             "@category",
@@ -363382,8 +363602,8 @@
           "exportKind": "class",
           "filePath": "src/DetachedProcess.ts",
           "repoPath": "packages/drivers/github-actions/src/DetachedProcess.ts",
-          "line": 728,
-          "anchor": "packages-drivers-github-actions-src-detachedprocess-ts-728-detachedprocess",
+          "line": 730,
+          "anchor": "packages-drivers-github-actions-src-detachedprocess-ts-730-detachedprocess",
           "currentTags": [
             "@public",
             "@category",
@@ -364268,8 +364488,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/github-actions/src/index.ts",
-          "line": 29,
-          "anchor": "packages-drivers-github-actions-src-index-ts-29-export-type-annotationproperties-workflowcommand-from-beep-github-commands",
+          "line": 30,
+          "anchor": "packages-drivers-github-actions-src-index-ts-30-export-type-annotationproperties-workflowcommand-from-beep-github-commands",
           "currentTags": [
             "@packageDocumentation",
             "@since"
@@ -364286,12 +364506,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export {\n  Action,\n  type ActionRunOptions,\n  ActionRuntime,\n  type ActionServices,\n  describeCause,\n} from \"./Action.ts\";",
+          "symbolName": "export {\n  Action,\n  ActionFailedError,\n  type ActionRunOptions,\n  ActionRuntime,\n  type ActionServices,\n  describeCause,\n} from \"./Action.ts\";",
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/github-actions/src/index.ts",
-          "line": 30,
-          "anchor": "packages-drivers-github-actions-src-index-ts-30-export-action-type-actionrunoptions-actionruntime-type-actionservices-describecause-from-action-ts",
+          "line": 31,
+          "anchor": "packages-drivers-github-actions-src-index-ts-31-export-action-actionfailederror-type-actionrunoptions-actionruntime-type-actionservices-describecause-from-action-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -364309,8 +364529,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/github-actions/src/index.ts",
-          "line": 37,
-          "anchor": "packages-drivers-github-actions-src-index-ts-37-export-actioncache-actioncacheerror-type-actioncacheshape-from-actioncache-ts",
+          "line": 39,
+          "anchor": "packages-drivers-github-actions-src-index-ts-39-export-actioncache-actioncacheerror-type-actioncacheshape-from-actioncache-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -364328,8 +364548,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/github-actions/src/index.ts",
-          "line": 38,
-          "anchor": "packages-drivers-github-actions-src-index-ts-38-export-actionenvironment-actionenvironmenterror-type-actionenvironmentshape-githubcontext-runnercontext-from-actionenvironment-ts",
+          "line": 40,
+          "anchor": "packages-drivers-github-actions-src-index-ts-40-export-actionenvironment-actionenvironmenterror-type-actionenvironmentshape-githubcontext-runnercontext-from-actionenvironment-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -364347,8 +364567,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/github-actions/src/index.ts",
-          "line": 45,
-          "anchor": "packages-drivers-github-actions-src-index-ts-45-export-actioninput-type-pairsoptions-from-actioninput-ts",
+          "line": 47,
+          "anchor": "packages-drivers-github-actions-src-index-ts-47-export-actioninput-type-pairsoptions-from-actioninput-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -364366,8 +364586,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/github-actions/src/index.ts",
-          "line": 46,
-          "anchor": "packages-drivers-github-actions-src-index-ts-46-export-actionlogger-type-actionloggershape-type-withbufferoptions-type-withstepoptions-from-actionlogger-ts",
+          "line": 48,
+          "anchor": "packages-drivers-github-actions-src-index-ts-48-export-actionlogger-type-actionloggershape-type-withbufferoptions-type-withstepoptions-from-actionlogger-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -364385,8 +364605,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/github-actions/src/index.ts",
-          "line": 52,
-          "anchor": "packages-drivers-github-actions-src-index-ts-52-export-type-actionoutputerror-actionoutputs-type-actionoutputsshape-detachedoutputerror-invalidoutputnameerror-outputencodeerror-recordedoutput-type-recordedoutputmember-type-recordingoutputs-runnerfileunavailableerror-runnerfilewriteerror-from-actionoutputs-ts",
+          "line": 54,
+          "anchor": "packages-drivers-github-actions-src-index-ts-54-export-type-actionoutputerror-actionoutputs-type-actionoutputsshape-detachedoutputerror-invalidoutputnameerror-outputencodeerror-recordedoutput-type-recordedoutputmember-type-recordingoutputs-runnerfileunavailableerror-runnerfilewriteerror-from-actionoutputs-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -364404,8 +364624,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/github-actions/src/index.ts",
-          "line": 65,
-          "anchor": "packages-drivers-github-actions-src-index-ts-65-export-actionstate-actionstateerror-type-actionstateshape-invalidactionstatenameerror-from-actionstate-ts",
+          "line": 67,
+          "anchor": "packages-drivers-github-actions-src-index-ts-67-export-actionstate-actionstateerror-type-actionstateshape-invalidactionstatenameerror-from-actionstate-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -364423,8 +364643,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/github-actions/src/index.ts",
-          "line": 66,
-          "anchor": "packages-drivers-github-actions-src-index-ts-66-export-actionsidentitytoken-from-actionsidentitytoken-ts",
+          "line": 68,
+          "anchor": "packages-drivers-github-actions-src-index-ts-68-export-actionsidentitytoken-from-actionsidentitytoken-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -364442,8 +364662,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/github-actions/src/index.ts",
-          "line": 67,
-          "anchor": "packages-drivers-github-actions-src-index-ts-67-export-actionsprovenance-from-actionsprovenance-ts",
+          "line": 69,
+          "anchor": "packages-drivers-github-actions-src-index-ts-69-export-actionsprovenance-from-actionsprovenance-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -364461,8 +364681,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/github-actions/src/index.ts",
-          "line": 68,
-          "anchor": "packages-drivers-github-actions-src-index-ts-68-export-artifact-artifacterror-type-artifactitem-type-artifactref-type-artifactshape-type-downloadoptions-type-downloadresult-type-uploadoptions-type-uploadresult-from-artifact-ts",
+          "line": 70,
+          "anchor": "packages-drivers-github-actions-src-index-ts-70-export-artifact-artifacterror-type-artifactitem-type-artifactref-type-artifactshape-type-downloadoptions-type-downloadresult-type-uploadoptions-type-uploadresult-from-artifact-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -364480,8 +364700,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/github-actions/src/index.ts",
-          "line": 79,
-          "anchor": "packages-drivers-github-actions-src-index-ts-79-export-blobenvelope-type-blobenvelopeerror-blobmetadatadecodeerror-blobmetadataencodeerror-notablobenvelopeerror-truncatedblobenvelopeerror-unsupportedblobenvelopeversionerror-from-blobenvelope-ts",
+          "line": 81,
+          "anchor": "packages-drivers-github-actions-src-index-ts-81-export-blobenvelope-type-blobenvelopeerror-blobmetadatadecodeerror-blobmetadataencodeerror-notablobenvelopeerror-truncatedblobenvelopeerror-unsupportedblobenvelopeversionerror-from-blobenvelope-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -364499,8 +364719,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/github-actions/src/index.ts",
-          "line": 88,
-          "anchor": "packages-drivers-github-actions-src-index-ts-88-export-githubcacheblobstore-from-blobstore-githubcache-ts",
+          "line": 90,
+          "anchor": "packages-drivers-github-actions-src-index-ts-90-export-githubcacheblobstore-from-blobstore-githubcache-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -364518,8 +364738,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/github-actions/src/index.ts",
-          "line": 89,
-          "anchor": "packages-drivers-github-actions-src-index-ts-89-export-blobstore-blobstoreerror-type-blobstoreshape-type-s3config-type-storedblob-from-blobstore-ts",
+          "line": 91,
+          "anchor": "packages-drivers-github-actions-src-index-ts-91-export-blobstore-blobstoreerror-type-blobstoreshape-type-s3config-type-storedblob-from-blobstore-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -364537,8 +364757,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/github-actions/src/index.ts",
-          "line": 90,
-          "anchor": "packages-drivers-github-actions-src-index-ts-90-export-blobtransfererror-type-datablobtransfer-type-fileblobtransfer-from-blobtransfer-ts",
+          "line": 92,
+          "anchor": "packages-drivers-github-actions-src-index-ts-92-export-blobtransfererror-type-datablobtransfer-type-fileblobtransfer-from-blobtransfer-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -364556,8 +364776,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/github-actions/src/index.ts",
-          "line": 91,
-          "anchor": "packages-drivers-github-actions-src-index-ts-91-export-cachekey-cachekeybadpatternerror-type-cachekeyerror-cachekeyreaderror-invaliddigestlengtherror-from-cachekey-ts",
+          "line": 93,
+          "anchor": "packages-drivers-github-actions-src-index-ts-93-export-cachekey-cachekeybadpatternerror-type-cachekeyerror-cachekeyreaderror-invaliddigestlengtherror-from-cachekey-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -364575,8 +364795,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/github-actions/src/index.ts",
-          "line": 98,
-          "anchor": "packages-drivers-github-actions-src-index-ts-98-export-childenv-type-pathprependenv-type-pathprependoptions-from-childenv-ts",
+          "line": 100,
+          "anchor": "packages-drivers-github-actions-src-index-ts-100-export-childenv-type-pathprependenv-type-pathprependoptions-from-childenv-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -364594,8 +364814,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/github-actions/src/index.ts",
-          "line": 99,
-          "anchor": "packages-drivers-github-actions-src-index-ts-99-export-detachedlogunavailableerror-detachednotreadyerror-detachedprocess-type-detachedprocesserror-type-detachedprocessops-detachedsignalfailederror-detachedspawnfailederror-type-detachedspawnoptions-invalidpiderror-missingprocessiderror-processid-type-readinessoptions-from-detachedprocess-ts",
+          "line": 101,
+          "anchor": "packages-drivers-github-actions-src-index-ts-101-export-detachedlogunavailableerror-detachednotreadyerror-detachedprocess-type-detachedprocesserror-type-detachedprocessops-detachedsignalfailederror-detachedspawnfailederror-type-detachedspawnoptions-invalidpiderror-missingprocessiderror-processid-type-readinessoptions-from-detachedprocess-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -364613,8 +364833,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/github-actions/src/index.ts",
-          "line": 113,
-          "anchor": "packages-drivers-github-actions-src-index-ts-113-export-dryrun-type-dryrunshape-from-dryrun-ts",
+          "line": 115,
+          "anchor": "packages-drivers-github-actions-src-index-ts-115-export-dryrun-type-dryrunshape-from-dryrun-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -364632,8 +364852,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/github-actions/src/index.ts",
-          "line": 114,
-          "anchor": "packages-drivers-github-actions-src-index-ts-114-export-type-clientlayeroptions-githubtoken-githubtokenerror-type-provisionoptions-type-readoptions-from-githubtoken-ts",
+          "line": 116,
+          "anchor": "packages-drivers-github-actions-src-index-ts-116-export-type-clientlayeroptions-githubtoken-githubtokenerror-type-provisionoptions-type-readoptions-from-githubtoken-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -364651,8 +364871,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/github-actions/src/index.ts",
-          "line": 121,
-          "anchor": "packages-drivers-github-actions-src-index-ts-121-export-oidcclaims-oidctokenerror-oidctokenissuer-type-oidctokenissuershape-from-oidctokenissuer-ts",
+          "line": 123,
+          "anchor": "packages-drivers-github-actions-src-index-ts-123-export-oidcclaims-oidctokenerror-oidctokenissuer-type-oidctokenissuershape-from-oidctokenissuer-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -364670,8 +364890,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/github-actions/src/index.ts",
-          "line": 122,
-          "anchor": "packages-drivers-github-actions-src-index-ts-122-export-ambientpackagemanager-cachedpackagemanager-installedpackagemanager-packagemanagerinstaller-packagemanagerinstallererror-type-packagemanagerinstallershape-type-packagemanagerinstalloptions-from-packagemanagerinstaller-ts",
+          "line": 124,
+          "anchor": "packages-drivers-github-actions-src-index-ts-124-export-ambientpackagemanager-cachedpackagemanager-installedpackagemanager-packagemanagerinstaller-packagemanagerinstallererror-type-packagemanagerinstallershape-type-packagemanagerinstalloptions-from-packagemanagerinstaller-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -364689,8 +364909,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/github-actions/src/index.ts",
-          "line": 131,
-          "anchor": "packages-drivers-github-actions-src-index-ts-131-export-secret-from-secret-ts",
+          "line": 133,
+          "anchor": "packages-drivers-github-actions-src-index-ts-133-export-secret-from-secret-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -364708,8 +364928,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/github-actions/src/index.ts",
-          "line": 132,
-          "anchor": "packages-drivers-github-actions-src-index-ts-132-export-type-extractoptions-type-provisionedfile-type-provisionfileoptions-type-tooldownloadoptions-toolinstaller-toolinstallererror-type-toolinstallershape-from-toolinstaller-ts",
+          "line": 134,
+          "anchor": "packages-drivers-github-actions-src-index-ts-134-export-type-extractoptions-type-provisionedfile-type-provisionfileoptions-type-tooldownloadoptions-toolinstaller-toolinstallererror-type-toolinstallershape-from-toolinstaller-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -511949,8 +512169,8 @@
           "exportKind": "const",
           "filePath": "src/commands/HarnessLedger/HarnessLedger.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/HarnessLedger/HarnessLedger.command.ts",
-          "line": 139,
-          "anchor": "packages-tooling-tool-cli-src-commands-harnessledger-harnessledger-command-ts-139-harnessledgerproposecommand",
+          "line": 135,
+          "anchor": "packages-tooling-tool-cli-src-commands-harnessledger-harnessledger-command-ts-135-harnessledgerproposecommand",
           "currentTags": [
             "@category",
             "@since"
@@ -511971,8 +512191,8 @@
           "exportKind": "const",
           "filePath": "src/commands/HarnessLedger/HarnessLedger.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/HarnessLedger/HarnessLedger.command.ts",
-          "line": 227,
-          "anchor": "packages-tooling-tool-cli-src-commands-harnessledger-harnessledger-command-ts-227-harnessledgerdispositioncommand",
+          "line": 223,
+          "anchor": "packages-tooling-tool-cli-src-commands-harnessledger-harnessledger-command-ts-223-harnessledgerdispositioncommand",
           "currentTags": [
             "@category",
             "@since"
@@ -511993,8 +512213,8 @@
           "exportKind": "const",
           "filePath": "src/commands/HarnessLedger/HarnessLedger.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/HarnessLedger/HarnessLedger.command.ts",
-          "line": 332,
-          "anchor": "packages-tooling-tool-cli-src-commands-harnessledger-harnessledger-command-ts-332-harnessledgerlistcommand",
+          "line": 328,
+          "anchor": "packages-tooling-tool-cli-src-commands-harnessledger-harnessledger-command-ts-328-harnessledgerlistcommand",
           "currentTags": [
             "@category",
             "@since"
@@ -512015,8 +512235,8 @@
           "exportKind": "const",
           "filePath": "src/commands/HarnessLedger/HarnessLedger.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/HarnessLedger/HarnessLedger.command.ts",
-          "line": 473,
-          "anchor": "packages-tooling-tool-cli-src-commands-harnessledger-harnessledger-command-ts-473-harnessledgerprunereportlines",
+          "line": 449,
+          "anchor": "packages-tooling-tool-cli-src-commands-harnessledger-harnessledger-command-ts-449-harnessledgerprunereportlines",
           "currentTags": [
             "@param",
             "@returns",
@@ -512039,8 +512259,8 @@
           "exportKind": "const",
           "filePath": "src/commands/HarnessLedger/HarnessLedger.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/HarnessLedger/HarnessLedger.command.ts",
-          "line": 529,
-          "anchor": "packages-tooling-tool-cli-src-commands-harnessledger-harnessledger-command-ts-529-harnessledgerpruneproposalscommand",
+          "line": 505,
+          "anchor": "packages-tooling-tool-cli-src-commands-harnessledger-harnessledger-command-ts-505-harnessledgerpruneproposalscommand",
           "currentTags": [
             "@category",
             "@since"
@@ -512061,8 +512281,8 @@
           "exportKind": "const",
           "filePath": "src/commands/HarnessLedger/HarnessLedger.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/HarnessLedger/HarnessLedger.command.ts",
-          "line": 614,
-          "anchor": "packages-tooling-tool-cli-src-commands-harnessledger-harnessledger-command-ts-614-harnessledgerreconcilecommand",
+          "line": 590,
+          "anchor": "packages-tooling-tool-cli-src-commands-harnessledger-harnessledger-command-ts-590-harnessledgerreconcilecommand",
           "currentTags": [
             "@category",
             "@since"
@@ -512083,8 +512303,8 @@
           "exportKind": "const",
           "filePath": "src/commands/HarnessLedger/HarnessLedger.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/HarnessLedger/HarnessLedger.command.ts",
-          "line": 665,
-          "anchor": "packages-tooling-tool-cli-src-commands-harnessledger-harnessledger-command-ts-665-harnessledgercommand",
+          "line": 641,
+          "anchor": "packages-tooling-tool-cli-src-commands-harnessledger-harnessledger-command-ts-641-harnessledgercommand",
           "currentTags": [
             "@category",
             "@since"
@@ -564349,8 +564569,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Fleet.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
-          "line": 88,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-88-fleet-surface-exclude-prefixes",
+          "line": 89,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-89-fleet-surface-exclude-prefixes",
           "currentTags": [
             "@category",
             "@since"
@@ -564371,8 +564591,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Fleet.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
-          "line": 130,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-130-classifyfleetliveness",
+          "line": 131,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-131-classifyfleetliveness",
           "currentTags": [
             "@param",
             "@returns",
@@ -564395,8 +564615,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Fleet.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
-          "line": 215,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-215-parsestatusporcelainz",
+          "line": 216,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-216-parsestatusporcelainz",
           "currentTags": [
             "@param",
             "@returns",
@@ -564419,8 +564639,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Fleet.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
-          "line": 255,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-255-parsemergetreeconflictnames",
+          "line": 256,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-256-parsemergetreeconflictnames",
           "currentTags": [
             "@param",
             "@returns",
@@ -564443,8 +564663,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Fleet.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
-          "line": 296,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-296-transcriptprojectdirname",
+          "line": 297,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-297-transcriptprojectdirname",
           "currentTags": [
             "@param",
             "@returns",
@@ -564467,8 +564687,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Fleet.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
-          "line": 326,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-326-parseprocstatstarttime",
+          "line": 327,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-327-parseprocstatstarttime",
           "currentTags": [
             "@param",
             "@returns",
@@ -564497,8 +564717,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Fleet.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
-          "line": 384,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-384-buildcontestedindex",
+          "line": 385,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-385-buildcontestedindex",
           "currentTags": [
             "@param",
             "@returns",
@@ -564521,8 +564741,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Worktree/Fleet.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
-          "line": 402,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-402-fleetmirrorserviceshape",
+          "line": 403,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-403-fleetmirrorserviceshape",
           "currentTags": [
             "@category",
             "@since"
@@ -564543,8 +564763,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Worktree/Fleet.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
-          "line": 443,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-443-fleetmirrorservice",
+          "line": 444,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-444-fleetmirrorservice",
           "currentTags": [
             "@category",
             "@since"
@@ -564565,8 +564785,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Fleet.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
-          "line": 1375,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-1375-fleetmirrorservicelive",
+          "line": 1372,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-1372-fleetmirrorservicelive",
           "currentTags": [
             "@category",
             "@since"
@@ -570402,8 +570622,8 @@
           "exportKind": "class",
           "filePath": "src/ConfigDependencySpec.ts",
           "repoPath": "packages/tooling/library/repo-workspaces/src/ConfigDependencySpec.ts",
-          "line": 170,
-          "anchor": "packages-tooling-library-repo-workspaces-src-configdependencyspec-ts-170-configdependencyspec",
+          "line": 172,
+          "anchor": "packages-tooling-library-repo-workspaces-src-configdependencyspec-ts-172-configdependencyspec",
           "currentTags": [
             "@public",
             "@category",
@@ -602227,8 +602447,8 @@
           "exportKind": "class",
           "filePath": "src/Config.ts",
           "repoPath": "apps/docket-intake/src/Config.ts",
-          "line": 36,
-          "anchor": "apps-docket-intake-src-config-ts-36-docketintakeappconfig",
+          "line": 38,
+          "anchor": "apps-docket-intake-src-config-ts-38-docketintakeappconfig",
           "currentTags": [
             "@category",
             "@since"
@@ -602249,8 +602469,8 @@
           "exportKind": "const",
           "filePath": "src/Config.ts",
           "repoPath": "apps/docket-intake/src/Config.ts",
-          "line": 104,
-          "anchor": "apps-docket-intake-src-config-ts-104-docketintakeappconfigfromenv",
+          "line": 109,
+          "anchor": "apps-docket-intake-src-config-ts-109-docketintakeappconfigfromenv",
           "currentTags": [
             "@category",
             "@since"
@@ -632166,7 +632386,7 @@
         "srcDir": "src",
         "sourceFileCount": 9,
         "publicModuleCount": 8,
-        "publicExportCount": 27
+        "publicExportCount": 28
       },
       "docgenCoverage": {
         "hasDocgenConfig": false,
@@ -632356,7 +632576,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 3,
+          "exportCount": 4,
           "remediationStatus": "resolved"
         },
         {
@@ -632894,8 +633114,8 @@
           "exportKind": "class",
           "filePath": "src/Contacts.state.ts",
           "repoPath": "apps/practice-m365-contacts/src/Contacts.state.ts",
-          "line": 33,
-          "anchor": "apps-practice-m365-contacts-src-contacts-state-ts-33-contactsstate",
+          "line": 34,
+          "anchor": "apps-practice-m365-contacts-src-contacts-state-ts-34-contactsstate",
           "currentTags": [
             "@category",
             "@since"
@@ -632916,8 +633136,30 @@
           "exportKind": "const",
           "filePath": "src/Contacts.state.ts",
           "repoPath": "apps/practice-m365-contacts/src/Contacts.state.ts",
-          "line": 52,
-          "anchor": "apps-practice-m365-contacts-src-contacts-state-ts-52-makecontactsstate",
+          "line": 53,
+          "anchor": "apps-practice-m365-contacts-src-contacts-state-ts-53-makecontactsstate",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "contactsStateDirectory",
+          "exportKind": "const",
+          "filePath": "src/Contacts.state.ts",
+          "repoPath": "apps/practice-m365-contacts/src/Contacts.state.ts",
+          "line": 116,
+          "anchor": "apps-practice-m365-contacts-src-contacts-state-ts-116-contactsstatedirectory",
           "currentTags": [
             "@category",
             "@since"
@@ -632938,8 +633180,8 @@
           "exportKind": "const",
           "filePath": "src/Contacts.state.ts",
           "repoPath": "apps/practice-m365-contacts/src/Contacts.state.ts",
-          "line": 106,
-          "anchor": "apps-practice-m365-contacts-src-contacts-state-ts-106-contactsstatelive",
+          "line": 132,
+          "anchor": "apps-practice-m365-contacts-src-contacts-state-ts-132-contactsstatelive",
           "currentTags": [
             "@category",
             "@since"
@@ -641813,7 +642055,7 @@
         "srcDir": "src",
         "sourceFileCount": 11,
         "publicModuleCount": 11,
-        "publicExportCount": 107
+        "publicExportCount": 108
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -641893,7 +642135,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 3,
+          "exportCount": 4,
           "remediationStatus": "resolved"
         },
         {
@@ -642291,12 +642533,36 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "decodeNotificationRecipients",
+          "exportKind": "const",
+          "filePath": "src/AccountCostControls.ts",
+          "repoPath": "infra/src/AccountCostControls.ts",
+          "line": 93,
+          "anchor": "infra-src-accountcostcontrols-ts-93-decodenotificationrecipients",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "loadAccountCostControlsConfig",
           "exportKind": "const",
           "filePath": "src/AccountCostControls.ts",
           "repoPath": "infra/src/AccountCostControls.ts",
-          "line": 84,
-          "anchor": "infra-src-accountcostcontrols-ts-84-loadaccountcostcontrolsconfig",
+          "line": 118,
+          "anchor": "infra-src-accountcostcontrols-ts-118-loadaccountcostcontrolsconfig",
           "currentTags": [
             "@category",
             "@since"
@@ -642317,8 +642583,8 @@
           "exportKind": "class",
           "filePath": "src/AccountCostControls.ts",
           "repoPath": "infra/src/AccountCostControls.ts",
-          "line": 119,
-          "anchor": "infra-src-accountcostcontrols-ts-119-accountcostcontrols",
+          "line": 153,
+          "anchor": "infra-src-accountcostcontrols-ts-153-accountcostcontrols",
           "currentTags": [
             "@category",
             "@since"
@@ -642829,8 +643095,8 @@
           "exportKind": "const",
           "filePath": "src/CiTurboCache.ts",
           "repoPath": "infra/src/CiTurboCache.ts",
-          "line": 120,
-          "anchor": "infra-src-citurbocache-ts-120-citurbocachepulumiconfigvalues",
+          "line": 121,
+          "anchor": "infra-src-citurbocache-ts-121-citurbocachepulumiconfigvalues",
           "currentTags": [
             "@category",
             "@since"
@@ -642851,8 +643117,8 @@
           "exportKind": "type",
           "filePath": "src/CiTurboCache.ts",
           "repoPath": "infra/src/CiTurboCache.ts",
-          "line": 143,
-          "anchor": "infra-src-citurbocache-ts-143-citurbocachepulumiconfigvalues",
+          "line": 144,
+          "anchor": "infra-src-citurbocache-ts-144-citurbocachepulumiconfigvalues",
           "currentTags": [
             "@see",
             "@category",
@@ -642874,8 +643140,8 @@
           "exportKind": "const",
           "filePath": "src/CiTurboCache.ts",
           "repoPath": "infra/src/CiTurboCache.ts",
-          "line": 165,
-          "anchor": "infra-src-citurbocache-ts-165-loadciturbocacheconfig",
+          "line": 166,
+          "anchor": "infra-src-citurbocache-ts-166-loadciturbocacheconfig",
           "currentTags": [
             "@category",
             "@since"
@@ -642896,8 +643162,8 @@
           "exportKind": "const",
           "filePath": "src/CiTurboCache.ts",
           "repoPath": "infra/src/CiTurboCache.ts",
-          "line": 218,
-          "anchor": "infra-src-citurbocache-ts-218-resolveturbocachelabbuckets",
+          "line": 220,
+          "anchor": "infra-src-citurbocache-ts-220-resolveturbocachelabbuckets",
           "currentTags": [
             "@param",
             "@returns",
@@ -642920,8 +643186,8 @@
           "exportKind": "class",
           "filePath": "src/CiTurboCache.ts",
           "repoPath": "infra/src/CiTurboCache.ts",
-          "line": 273,
-          "anchor": "infra-src-citurbocache-ts-273-citurbocacheremediation",
+          "line": 275,
+          "anchor": "infra-src-citurbocache-ts-275-citurbocacheremediation",
           "currentTags": [
             "@category",
             "@since"
@@ -642942,8 +643208,8 @@
           "exportKind": "class",
           "filePath": "src/CiTurboCache.ts",
           "repoPath": "infra/src/CiTurboCache.ts",
-          "line": 362,
-          "anchor": "infra-src-citurbocache-ts-362-citurbocache",
+          "line": 364,
+          "anchor": "infra-src-citurbocache-ts-364-citurbocache",
           "currentTags": [
             "@category",
             "@since"

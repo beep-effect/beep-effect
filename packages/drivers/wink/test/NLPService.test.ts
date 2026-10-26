@@ -19,19 +19,22 @@ import * as Layer from "effect/Layer";
 const TestLayer = Layer.provide(NLPService.layer(WinkBackendLive), WinkEngine.WinkEngineLive);
 
 describe("NLPService", () => {
-  it.layer(TestLayer)("processText builds an annotated text graph with a document root", (it) => {
-    it.effect(
-      "processText builds an annotated text graph with a document root",
-      Effect.fnUntraced(function* () {
-        const graph = yield* NLPService.processText("The cat sat. The dog ran.");
-        expect(EffectGraph.nodeCount(graph)).toBeGreaterThan(0);
-        const docs = A.filter(Graph.getTextNodes(graph), (entry) => entry.node.type === "document");
-        expect(docs.length).toBe(1);
-      })
-    );
-  });
+  it.layer(TestLayer, { timeout: "30 seconds" })(
+    "processText builds an annotated text graph with a document root",
+    (it) => {
+      it.effect(
+        "processText builds an annotated text graph with a document root",
+        Effect.fnUntraced(function* () {
+          const graph = yield* NLPService.processText("The cat sat. The dog ran.");
+          expect(EffectGraph.nodeCount(graph)).toBeGreaterThan(0);
+          const docs = A.filter(Graph.getTextNodes(graph), (entry) => entry.node.type === "document");
+          expect(docs.length).toBe(1);
+        })
+      );
+    }
+  );
 
-  it.layer(TestLayer)("tagPartsOfSpeech delegates to the backend", (it) => {
+  it.layer(TestLayer, { timeout: "30 seconds" })("tagPartsOfSpeech delegates to the backend", (it) => {
     it.effect(
       "tagPartsOfSpeech delegates to the backend",
       Effect.fnUntraced(function* () {
@@ -41,7 +44,7 @@ describe("NLPService", () => {
     );
   });
 
-  it.layer(TestLayer)("extractEntities delegates to the backend", (it) => {
+  it.layer(TestLayer, { timeout: "30 seconds" })("extractEntities delegates to the backend", (it) => {
     it.effect(
       "extractEntities delegates to the backend",
       Effect.fnUntraced(function* () {

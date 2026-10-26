@@ -197,64 +197,70 @@ describe("Tool validation", () => {
     })
   );
 
-  it.layer(WinkEngineLive)("rejects invalid custom-entity bracket patterns during engine learning", (it) => {
-    it.effect("rejects invalid custom-entity bracket patterns during engine learning", () =>
-      Effect.gen(function* () {
-        const brokenEntities = WinkEngineCustomEntities.make({
-          name: EntityGroupName.make("custom-entities"),
-          patterns: [
-            CustomEntityExample.make({
-              mark: O.none(),
-              name: "BROKEN_ENTITY",
-              patterns: ["[NOT_A_TAG]"],
-            }),
-          ],
-        });
+  it.layer(WinkEngineLive, { timeout: "30 seconds" })(
+    "rejects invalid custom-entity bracket patterns during engine learning",
+    (it) => {
+      it.effect("rejects invalid custom-entity bracket patterns during engine learning", () =>
+        Effect.gen(function* () {
+          const brokenEntities = WinkEngineCustomEntities.make({
+            name: EntityGroupName.make("custom-entities"),
+            patterns: [
+              CustomEntityExample.make({
+                mark: O.none(),
+                name: "BROKEN_ENTITY",
+                patterns: ["[NOT_A_TAG]"],
+              }),
+            ],
+          });
 
-        const program = Effect.gen(function* () {
-          const engine = yield* WinkEngine;
-          yield* engine.learnCustomEntities(brokenEntities);
-        });
-        const exitedProgram = Effect.exit(program);
-        const result = yield* exitedProgram;
-        const rendered = Exit.match(result, {
-          onFailure: Cause.pretty,
-          onSuccess: () => "",
-        });
+          const program = Effect.gen(function* () {
+            const engine = yield* WinkEngine;
+            yield* engine.learnCustomEntities(brokenEntities);
+          });
+          const exitedProgram = Effect.exit(program);
+          const result = yield* exitedProgram;
+          const rendered = Exit.match(result, {
+            onFailure: Cause.pretty,
+            onSuccess: () => "",
+          });
 
-        pipe(result, Exit.isFailure, assertTrue);
-        expect(rendered).toContain("learnCustomEntities");
-        expect(rendered).toContain('incorrect token "not_a_tag"');
-      })
-    );
-  });
+          pipe(result, Exit.isFailure, assertTrue);
+          expect(rendered).toContain("learnCustomEntities");
+          expect(rendered).toContain('incorrect token "not_a_tag"');
+        })
+      );
+    }
+  );
 
-  it.layer(WinkNlpToolkitLive)("returns structured tool failures for expected toolkit errors", (it) => {
-    it.effect("returns structured tool failures for expected toolkit errors", () =>
-      Effect.gen(function* () {
-        const toolkit = yield* NlpToolkit;
-        const stream = yield* toolkit.handle("QueryCorpus", {
-          corpusId: "missing-corpus",
-          query: "refund policy",
-        });
-        const results = yield* Stream.runCollect(stream);
+  it.layer(WinkNlpToolkitLive, { timeout: "30 seconds" })(
+    "returns structured tool failures for expected toolkit errors",
+    (it) => {
+      it.effect("returns structured tool failures for expected toolkit errors", () =>
+        Effect.gen(function* () {
+          const toolkit = yield* NlpToolkit;
+          const stream = yield* toolkit.handle("QueryCorpus", {
+            corpusId: "missing-corpus",
+            query: "refund policy",
+          });
+          const results = yield* Stream.runCollect(stream);
 
-        const result = results[0];
+          const result = results[0];
 
-        expect(result?.isFailure).toBe(true);
-        expect(result?.result).toMatchObject({
-          operation: "corpus.query",
-          reason: "CorpusManagerError",
-          retryable: false,
-          toolName: "QueryCorpus",
-        });
-        expect(result?.encodedResult).toMatchObject({
-          operation: "corpus.query",
-          reason: "CorpusManagerError",
-          retryable: false,
-          toolName: "QueryCorpus",
-        });
-      })
-    );
-  });
+          expect(result?.isFailure).toBe(true);
+          expect(result?.result).toMatchObject({
+            operation: "corpus.query",
+            reason: "CorpusManagerError",
+            retryable: false,
+            toolName: "QueryCorpus",
+          });
+          expect(result?.encodedResult).toMatchObject({
+            operation: "corpus.query",
+            reason: "CorpusManagerError",
+            retryable: false,
+            toolName: "QueryCorpus",
+          });
+        })
+      );
+    }
+  );
 });

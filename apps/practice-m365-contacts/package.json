@@ -37,6 +37,7 @@
     "@beep/law-practice-use-cases": "workspace:^",
     "@beep/m365": "workspace:^",
     "@beep/schema": "workspace:^",
+    "@beep/xdg": "workspace:^",
     "@effect/platform-bun": "catalog:",
     "effect": "catalog:"
   },

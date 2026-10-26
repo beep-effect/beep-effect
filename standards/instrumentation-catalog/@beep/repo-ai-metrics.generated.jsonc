@@ -136,6 +136,7 @@
     {"name":"AiMetrics.requireInstallDataRoot","owner":"@beep/repo-ai-metrics","family":"tooling","conforms":true},
     {"name":"AiMetrics.requireRawArchiveKeySecretRef","owner":"@beep/repo-ai-metrics","family":"tooling","conforms":true},
     {"name":"AiMetrics.requireSecretRef","owner":"@beep/repo-ai-metrics","family":"tooling","conforms":true},
+    {"name":"AiMetrics.resolveForwarderEvidenceRoot","owner":"@beep/repo-ai-metrics","family":"tooling","conforms":true},
     {"name":"AiMetrics.retention.deleteIngestRunRows","owner":"@beep/repo-ai-metrics","family":"tooling","conforms":false},
     {"name":"AiMetrics.retention.deleteRowsForPlan","owner":"@beep/repo-ai-metrics","family":"tooling","conforms":false},
     {"name":"AiMetrics.retention.deleteRowsWithIds","owner":"@beep/repo-ai-metrics","family":"tooling","conforms":false},
