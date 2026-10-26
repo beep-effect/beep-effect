@@ -1130,11 +1130,11 @@
       }
     },
     "@beep/repo-cli": {
-      "reviewer": "Claude Opus 5.5 (effected-promotion wave 5, feat/effected-promotion-w5-github-actions)",
-      "reason": "Record the new wave-5 workspace @beep/github-actions scaffolded by create-package with the generated task set and its exact root catalog pins (re-recorded after the review fix dropped its @beep/github-reporting dependency for the @beep/utils/TestDouble leaf), the dependency-only drift of @beep/repo-cli for the runner-file adoptions, and the input-only growth of the root policy-fingerprint task, as measured in the review; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (effected-promotion 3-A4, effected-3a4)",
+      "reason": "Record the dependency-only drift of @beep/repo-cli and @beep/repo-docgen from their new @beep/package-json edges (package.json readers, map sites #130-#135, #143, #277, #307); repo-cli's closure is unchanged and docgen's gains four modeling packages, as measured in the review; no qualification is granted.",
       "basis": {
-        "path": "goals/effected-promotion/research/cache-baseline-review-w5.md",
-        "sha256": "82cc35a850e16864a9f147487e08a7c26d13601ec2f1a75a0a134299fb938c91"
+        "path": "goals/effected-promotion/research/cache-baseline-review-3-a4.md",
+        "sha256": "70bb26318627b0e8a23d86dfc31e16754c2a9abae160b9da762a58128796f023"
       }
     },
     "@beep/repo-configs": {
@@ -1146,11 +1146,11 @@
       }
     },
     "@beep/repo-docgen": {
-      "reviewer": "Claude Opus 5.5 (effected-promotion wave 3-3, feat/effected-promotion-w3-3)",
-      "reason": "Record the new wave-3-3 workspace @beep/config-file scaffolded by create-package with the generated task set, the dependency-only drift of its two named importers (W3-e), and the input-only growth of the root policy-fingerprint task; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (effected-promotion 3-A4, effected-3a4)",
+      "reason": "Record the dependency-only drift of @beep/repo-cli and @beep/repo-docgen from their new @beep/package-json edges (package.json readers, map sites #130-#135, #143, #277, #307); repo-cli's closure is unchanged and docgen's gains four modeling packages, as measured in the review; no qualification is granted.",
       "basis": {
-        "path": "goals/effected-promotion/research/cache-baseline-review-w3-3.md",
-        "sha256": "00b790bfdaf02fa234c5b0b74927889b9e330a9ba5a792c94b7e864e18a2fc69"
+        "path": "goals/effected-promotion/research/cache-baseline-review-3-a4.md",
+        "sha256": "70bb26318627b0e8a23d86dfc31e16754c2a9abae160b9da762a58128796f023"
       }
     },
     "@beep/repo-tsconfig": {
@@ -97822,6 +97822,7 @@
           "@beep/obs#audit",
           "@beep/observability#audit",
           "@beep/occt#audit",
+          "@beep/package-json#audit",
           "@beep/palantiri#audit",
           "@beep/pdf-tools#audit",
           "@beep/phoenix#audit",
@@ -97936,6 +97937,7 @@
           "@beep/obs#build",
           "@beep/observability#build",
           "@beep/occt#build",
+          "@beep/package-json#build",
           "@beep/palantiri#build",
           "@beep/pdf-tools#build",
           "@beep/phoenix#build",
@@ -98039,6 +98041,7 @@
           "@beep/obs#build",
           "@beep/observability#build",
           "@beep/occt#build",
+          "@beep/package-json#build",
           "@beep/palantiri#build",
           "@beep/pdf-tools#build",
           "@beep/phoenix#build",
@@ -98129,6 +98132,7 @@
           "@beep/obs#build",
           "@beep/observability#build",
           "@beep/occt#build",
+          "@beep/package-json#build",
           "@beep/palantiri#build",
           "@beep/pdf-tools#build",
           "@beep/phoenix#build",
@@ -98268,6 +98272,7 @@
           "@beep/obs#transit",
           "@beep/observability#transit",
           "@beep/occt#transit",
+          "@beep/package-json#transit",
           "@beep/palantiri#transit",
           "@beep/pdf-tools#transit",
           "@beep/phoenix#transit",
@@ -98403,6 +98408,7 @@
           "@beep/obs#transit",
           "@beep/observability#transit",
           "@beep/occt#transit",
+          "@beep/package-json#transit",
           "@beep/palantiri#transit",
           "@beep/pdf-tools#transit",
           "@beep/phoenix#transit",
@@ -98656,6 +98662,7 @@
           "@beep/obs#transit",
           "@beep/observability#transit",
           "@beep/occt#transit",
+          "@beep/package-json#transit",
           "@beep/palantiri#transit",
           "@beep/pdf-tools#transit",
           "@beep/phoenix#transit",
@@ -98749,6 +98756,7 @@
           "@beep/obs#transit",
           "@beep/observability#transit",
           "@beep/occt#transit",
+          "@beep/package-json#transit",
           "@beep/palantiri#transit",
           "@beep/pdf-tools#transit",
           "@beep/phoenix#transit",
@@ -98867,6 +98875,7 @@
           "@beep/obs#transit",
           "@beep/observability#transit",
           "@beep/occt#transit",
+          "@beep/package-json#transit",
           "@beep/palantiri#transit",
           "@beep/pdf-tools#transit",
           "@beep/phoenix#transit",
@@ -99624,6 +99633,7 @@
           "@beep/config-file#audit",
           "@beep/identity#audit",
           "@beep/md#audit",
+          "@beep/package-json#audit",
           "@beep/repo-utils#audit",
           "@beep/schema#audit",
           "@beep/test-runner#audit",
@@ -99694,6 +99704,7 @@
           "@beep/config-file#build",
           "@beep/identity#build",
           "@beep/md#build",
+          "@beep/package-json#build",
           "@beep/repo-utils#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -99753,6 +99764,7 @@
           "@beep/config-file#build",
           "@beep/identity#build",
           "@beep/md#build",
+          "@beep/package-json#build",
           "@beep/repo-utils#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -99799,6 +99811,7 @@
           "@beep/config-file#build",
           "@beep/identity#build",
           "@beep/md#build",
+          "@beep/package-json#build",
           "@beep/repo-utils#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -99930,6 +99943,7 @@
           "@beep/config-file#transit",
           "@beep/identity#transit",
           "@beep/md#transit",
+          "@beep/package-json#transit",
           "@beep/repo-utils#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
@@ -100139,6 +100153,7 @@
           "@beep/config-file#transit",
           "@beep/identity#transit",
           "@beep/md#transit",
+          "@beep/package-json#transit",
           "@beep/repo-utils#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
@@ -100188,6 +100203,7 @@
           "@beep/config-file#transit",
           "@beep/identity#transit",
           "@beep/md#transit",
+          "@beep/package-json#transit",
           "@beep/repo-utils#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
@@ -100243,6 +100259,7 @@
           "@beep/config-file#transit",
           "@beep/identity#transit",
           "@beep/md#transit",
+          "@beep/package-json#transit",
           "@beep/repo-utils#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",

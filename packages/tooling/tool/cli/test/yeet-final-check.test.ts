@@ -1,5 +1,5 @@
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
-import { PackageJsonDocument } from "@beep/repo-cli/test/Quality";
+import { LenientManifest } from "@beep/package-json/LenientManifest";
 import { configStringOption } from "@beep/repo-cli/test/SharedInternals";
 import {
   collectExpectationRewrites,
@@ -237,16 +237,16 @@ describe("findExpectationRewrites", () => {
 
 describe("vitestReplayArgs", () => {
   const file = "test/a.test.ts";
+  const manifestWith = (scripts: Record<string, string>) =>
+    Effect.runSync(LenientManifest.parse(JSON.stringify({ scripts })));
 
   it("replays under Bun when the package's beep:test runs vitest with --bun", () => {
-    const manifest = PackageJsonDocument.make({ scripts: { "beep:test": "bunx --bun vitest run --passWithNoTests" } });
+    const manifest = manifestWith({ "beep:test": "bunx --bun vitest run --passWithNoTests" });
     expect(vitestReplayArgs(manifest, file)).toEqual(["--bun", "vitest", "run", file]);
   });
 
   it("replays plain when beep:test runs vitest without --bun", () => {
-    const manifest = PackageJsonDocument.make({
-      scripts: { "beep:test": "bunx vitest run", test: "bunx --bun vitest" },
-    });
+    const manifest = manifestWith({ "beep:test": "bunx vitest run", test: "bunx --bun vitest" });
     expect(vitestReplayArgs(manifest, file)).toEqual(["vitest", "run", file]);
   });
 
@@ -261,19 +261,19 @@ describe("vitestReplayArgs", () => {
       "test/TsNativeApi.test.ts",
     ],
   ])("uses the runtime of the segment that names the file in %s", (script, named) => {
-    const manifest = PackageJsonDocument.make({ scripts: { "beep:test": script } });
+    const manifest = manifestWith({ "beep:test": script });
     expect(vitestReplayArgs(manifest, named)).toEqual(["vitest", "run", named]);
     expect(vitestReplayArgs(manifest, "test/other.test.ts")).toEqual(["--bun", "vitest", "run", "test/other.test.ts"]);
   });
 
   it("falls back to the test script, then to a plain replay", () => {
-    expect(vitestReplayArgs(PackageJsonDocument.make({ scripts: { test: "bun --bun vitest run" } }), file)).toEqual([
+    expect(vitestReplayArgs(manifestWith({ test: "bun --bun vitest run" }), file)).toEqual([
       "--bun",
       "vitest",
       "run",
       file,
     ]);
-    expect(vitestReplayArgs(PackageJsonDocument.make({}), file)).toEqual(["vitest", "run", file]);
+    expect(vitestReplayArgs(manifestWith({}), file)).toEqual(["vitest", "run", file]);
   });
 });
 

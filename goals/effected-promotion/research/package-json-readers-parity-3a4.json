@@ -1,0 +1,128 @@
+{
+  "schemaVersion": 1,
+  "tool": "goals/effected-promotion/ops/package-json-readers-parity.ts",
+  "scope": "git ls-files '*package.json' excluding **/test/fixtures/**",
+  "commit": "e6486764df9e7057aa964023c7614e4034dd27a9",
+  "manifests": 193,
+  "sites": [
+    {
+      "site": "repo-cli Quality/ChangesetGraph.ts root (workspace patterns)",
+      "manifests": 193,
+      "agree": 193,
+      "rejectedByBoth": 0,
+      "divergences": []
+    },
+    {
+      "site": "repo-cli Quality/ChangesetGraph.ts member (name, private)",
+      "manifests": 193,
+      "agree": 193,
+      "rejectedByBoth": 0,
+      "divergences": []
+    },
+    {
+      "site": "repo-cli Quality/ChangesetStatus.ts (name, version, private)",
+      "manifests": 193,
+      "agree": 193,
+      "rejectedByBoth": 0,
+      "divergences": []
+    },
+    {
+      "site": "repo-cli Quality/internal/PackageVerify.ts (scripts of a named manifest)",
+      "manifests": 193,
+      "agree": 193,
+      "rejectedByBoth": 0,
+      "divergences": []
+    },
+    {
+      "site": "repo-cli Quality/internal/QualityArtifactSupport.ts (name, scripts, dependencies, patterns)",
+      "manifests": 193,
+      "agree": 193,
+      "rejectedByBoth": 0,
+      "divergences": []
+    },
+    {
+      "site": "repo-cli Quality/Tasks.ts (name, scripts, workspace patterns)",
+      "manifests": 193,
+      "agree": 193,
+      "rejectedByBoth": 0,
+      "divergences": []
+    },
+    {
+      "site": "repo-cli Quality/CatalogUsage.ts root (catalog, catalogs, overrides)",
+      "manifests": 193,
+      "agree": 193,
+      "rejectedByBoth": 0,
+      "divergences": []
+    },
+    {
+      "site": "repo-cli Quality/CatalogUsage.ts (four dependency buckets)",
+      "manifests": 193,
+      "agree": 193,
+      "rejectedByBoth": 0,
+      "divergences": []
+    },
+    {
+      "site": "repo-cli VersionSync BunResolver.ts (packageManager)",
+      "manifests": 193,
+      "agree": 193,
+      "rejectedByBoth": 0,
+      "divergences": []
+    },
+    {
+      "site": "repo-cli VersionSync RootCatalog.ts (catalog, devDependencies)",
+      "manifests": 193,
+      "agree": 193,
+      "rejectedByBoth": 0,
+      "divergences": []
+    },
+    {
+      "site": "repo-cli Lint/PackageTestTypecheck.ts (name, scripts of a named manifest)",
+      "manifests": 193,
+      "agree": 193,
+      "rejectedByBoth": 0,
+      "divergences": []
+    },
+    {
+      "site": "repo-cli Lint/internal/EffectSchemaInventoryModules.ts (inventory pin)",
+      "manifests": 193,
+      "agree": 193,
+      "rejectedByBoth": 192,
+      "divergences": []
+    },
+    {
+      "site": "docgen Configuration.ts (name, homepage)",
+      "manifests": 193,
+      "agree": 193,
+      "rejectedByBoth": 4,
+      "divergences": []
+    },
+    {
+      "site": "docgen Version.ts (version)",
+      "manifests": 193,
+      "agree": 193,
+      "rejectedByBoth": 1,
+      "divergences": []
+    },
+    {
+      "site": "repo-cli VersionSync PackageJsonUpdater.ts (packageManager edit bytes)",
+      "manifests": 193,
+      "agree": 192,
+      "rejectedByBoth": 0,
+      "divergences": [
+        {
+          "path": "scratchpad/effected/sbom/package.json",
+          "oracle": "{\n\t\"name\": \"@effected/sbom\",\n\t\"version\": \"0.10.0\",\n\t\"private\": true,\n\t\"description\": \"Sigstore DSSE signing for in-toto statements; the SBOM, provenance and statement models live in @beep/sbom.\",\n\t\"keywords\": [\n\t\t\"sbom\",\n\t\t\"cyclonedx\",\n\t\t\"sigstore\",\n\t\t\"slsa\",\n\t\t\"provenance\",\n\t\t\"ntia\",\n\t\t\"effect\",\n\t\t\"effected\"\n\t],\n\t\"homepage\": \"https://github.com/spencerbeggs/effected/tree/main/packages/sbom#readme\",\n\t\"bugs\": {\n\t\t\"url\": \"https://github.com/spencerbeggs/effected/issues\"\n\t},\n\t\"repository\": {\n\t\t\"type\": \"git\",\n\t\t\"url\": \"git+https://github.com/spencerbeggs/effected.git\",\n\t\t\"directory\": \"packages/sbom\"\n\t},\n\t\"license\": \"MIT\",\n\t\"author\": {\n\t\t\"name\": \"C. Spencer Beggs\",\n\t\t\"email\": \"spencer@beggs.codes\",\n\t\t\"url\": \"https://spencerbeg.gs\"\n\t},\n\t\"sideEffects\": false,\n\t\"type\": \"module\",\n\t\"exports\": {\n\t\t\".\": \"./index.ts\",\n\t\t\"./package.json\": \"./package.json\"\n\t},\n\t\"scripts\": {\n\t\t\"build:dev\": \"node savvy.build.ts --target dev\",\n\t\t\"build:prod\": \"node savvy.build.ts --target prod\",\n\t\t\"prepare\": \"turbo run build:dev\",\n\t\t\"types:check\": \"tsc --noEmit\"\n\t},\n\t\"dependencies\": {\n\t\t\"@beep/sbom\": \"workspace:^\",\n\t\t\"@sigstore/bundle\": \"^5.0.0\",\n\t\t\"@sigstore/sign\": \"^5.0.0\",\n\t\t\"@beep/identity\": \"workspace:^\",\n\t\t\"@beep/schema\": \"workspace:^\"\n\t},\n\t\"devDependencies\": {\n\t\t\"@effect/platform-node\": \"catalog:effect\",\n\t\t\"@effect/vitest\": \"catalog:effect\",\n\t\t\"@savvy-web/bundler\": \"^2.4.22\",\n\t\t\"@types/node\": \"catalog:build\",\n\t\t\"effect\": \"catalog:effect\",\n\t\t\"typescript\": \"catalog:build\"\n\t},\n\t\"peerDependencies\": {\n\t\t\"effect\": \"catalog:effect:peers\"\n\t},\n\t\"engines\": {\n\t\t\"node\": \">=24.11.0\"\n\t},\n\t\"publishConfig\": {\n\t\t\"access\": \"public\",\n\t\t\"directory\": \"dist/dev/pkg\",\n\t\t\"linkDirectory\": true,\n\t\t\"targets\": {\n\t\t\t\"npm\": true\n\t\t}\n  },\n  \"packageManager\": \"bun@9.9.9\"\n}\n",
+          "adopted": "{\n\t\"name\": \"@effected/sbom\",\n\t\"version\": \"0.10.0\",\n\t\"private\": true,\n\t\"description\": \"Sigstore DSSE signing for in-toto statements; the SBOM, provenance and statement models live in @beep/sbom.\",\n\t\"keywords\": [\n\t\t\"sbom\",\n\t\t\"cyclonedx\",\n\t\t\"sigstore\",\n\t\t\"slsa\",\n\t\t\"provenance\",\n\t\t\"ntia\",\n\t\t\"effect\",\n\t\t\"effected\"\n\t],\n\t\"homepage\": \"https://github.com/spencerbeggs/effected/tree/main/packages/sbom#readme\",\n\t\"bugs\": {\n\t\t\"url\": \"https://github.com/spencerbeggs/effected/issues\"\n\t},\n\t\"repository\": {\n\t\t\"type\": \"git\",\n\t\t\"url\": \"git+https://github.com/spencerbeggs/effected.git\",\n\t\t\"directory\": \"packages/sbom\"\n\t},\n\t\"license\": \"MIT\",\n\t\"author\": {\n\t\t\"name\": \"C. Spencer Beggs\",\n\t\t\"email\": \"spencer@beggs.codes\",\n\t\t\"url\": \"https://spencerbeg.gs\"\n\t},\n\t\"sideEffects\": false,\n\t\"type\": \"module\",\n\t\"exports\": {\n\t\t\".\": \"./index.ts\",\n\t\t\"./package.json\": \"./package.json\"\n\t},\n\t\"scripts\": {\n\t\t\"build:dev\": \"node savvy.build.ts --target dev\",\n\t\t\"build:prod\": \"node savvy.build.ts --target prod\",\n\t\t\"prepare\": \"turbo run build:dev\",\n\t\t\"types:check\": \"tsc --noEmit\"\n\t},\n\t\"dependencies\": {\n\t\t\"@beep/sbom\": \"workspace:^\",\n\t\t\"@sigstore/bundle\": \"^5.0.0\",\n\t\t\"@sigstore/sign\": \"^5.0.0\",\n\t\t\"@beep/identity\": \"workspace:^\",\n\t\t\"@beep/schema\": \"workspace:^\"\n\t},\n\t\"devDependencies\": {\n\t\t\"@effect/platform-node\": \"catalog:effect\",\n\t\t\"@effect/vitest\": \"catalog:effect\",\n\t\t\"@savvy-web/bundler\": \"^2.4.22\",\n\t\t\"@types/node\": \"catalog:build\",\n\t\t\"effect\": \"catalog:effect\",\n\t\t\"typescript\": \"catalog:build\"\n\t},\n\t\"peerDependencies\": {\n\t\t\"effect\": \"catalog:effect:peers\"\n\t},\n\t\"engines\": {\n\t\t\"node\": \">=24.11.0\"\n\t},\n\t\"publishConfig\": {\n\t\t\"access\": \"public\",\n\t\t\"directory\": \"dist/dev/pkg\",\n\t\t\"linkDirectory\": true,\n\t\t\"targets\": {\n\t\t\t\"npm\": true\n\t\t}\n\t},\n\t\"packageManager\": \"bun@9.9.9\"\n}\n"
+        }
+      ]
+    },
+    {
+      "site": "repo-cli VersionSync PackageJsonUpdater.ts (catalog entry edit bytes, manifests with a catalog)",
+      "manifests": 193,
+      "agree": 193,
+      "rejectedByBoth": 0,
+      "divergences": []
+    }
+  ],
+  "unclassifiedDivergences": 0
+}
