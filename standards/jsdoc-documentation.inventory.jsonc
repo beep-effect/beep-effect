@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-27T19:34:57.824Z",
+  "generatedAt": "2026-10-27T20:19:00.168Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -62,19 +62,19 @@
   },
   "totals": {
     "packages": 183,
-    "cleanPackages": 116,
+    "cleanPackages": 117,
     "packagesWithoutPublicSrcSurface": 2,
-    "packagesNeedingRemediation": 65,
+    "packagesNeedingRemediation": 64,
     "publicModules": 3546,
     "publicExports": 25242,
     "openModules": 344,
-    "openExports": 458,
+    "openExports": 379,
     "missingExportExamples": 7,
     "missingExportCategories": 0,
     "missingExportSince": 0,
     "forbiddenTagFindings": 0,
     "malformedConditionalTagFindings": 0,
-    "exampleImportFindings": 380,
+    "exampleImportFindings": 301,
     "unsafeExampleFindings": 0,
     "schemaAnnotationFindings": 0,
     "undescribed-see": 10,
@@ -91,7 +91,7 @@
     "duplicate-example": 0,
     "loose-ts-fence": 0,
     "forbidden-remarks": 0,
-    "no-root-package-import": 374,
+    "no-root-package-import": 295,
     "rootPolicyOpen": 0
   },
   "packages": [
@@ -368395,7 +368395,7 @@
       "packageName": "@beep/skill-contract",
       "packagePath": "packages/foundation/modeling/skill-contract",
       "topoOrder": 91,
-      "status": "needs-remediation",
+      "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
         "sourceFileCount": 9,
@@ -368410,14 +368410,14 @@
       },
       "counts": {
         "openModules": 0,
-        "openExports": 79,
+        "openExports": 0,
         "missingExportExamples": 0,
         "missingExportCategories": 0,
         "missingExportSince": 0,
         "missingExportSummaries": 0,
         "forbiddenTagFindings": 0,
         "malformedConditionalTagFindings": 0,
-        "exampleImportFindings": 79,
+        "exampleImportFindings": 0,
         "unsafeExampleFindings": 0,
         "schemaAnnotationFindings": 0,
         "documentationRuleFindings": {
@@ -368435,7 +368435,7 @@
           "duplicate-example": 0,
           "loose-ts-fence": 0,
           "forbidden-remarks": 0,
-          "no-root-package-import": 79
+          "no-root-package-import": 0
         }
       },
       "modules": [
@@ -368654,18 +368654,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "EvidenceLadderReceiptTypes",
@@ -368682,18 +368676,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "Accepted",
@@ -368710,18 +368698,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "Persisted",
@@ -368738,18 +368720,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "Delivered",
@@ -368766,18 +368742,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "SemanticallyApplied",
@@ -368794,18 +368764,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "EvidenceLadderState",
@@ -368822,18 +368786,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "EvidenceLadderState",
@@ -368862,8 +368820,8 @@
           "exportKind": "const",
           "filePath": "src/EvidenceLadder.ts",
           "repoPath": "packages/foundation/modeling/skill-contract/src/EvidenceLadder.ts",
-          "line": 263,
-          "anchor": "packages-foundation-modeling-skill-contract-src-evidenceladder-ts-263-evidenceladderfor",
+          "line": 267,
+          "anchor": "packages-foundation-modeling-skill-contract-src-evidenceladder-ts-267-evidenceladderfor",
           "currentTags": [
             "@param",
             "@returns",
@@ -368874,26 +368832,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "transportCompleted",
           "exportKind": "const",
           "filePath": "src/EvidenceLadder.ts",
           "repoPath": "packages/foundation/modeling/skill-contract/src/EvidenceLadder.ts",
-          "line": 300,
-          "anchor": "packages-foundation-modeling-skill-contract-src-evidenceladder-ts-300-transportcompleted",
+          "line": 304,
+          "anchor": "packages-foundation-modeling-skill-contract-src-evidenceladder-ts-304-transportcompleted",
           "currentTags": [
             "@param",
             "@returns",
@@ -368904,26 +368856,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "advanceToPersisted",
           "exportKind": "const",
           "filePath": "src/EvidenceLadder.ts",
           "repoPath": "packages/foundation/modeling/skill-contract/src/EvidenceLadder.ts",
-          "line": 320,
-          "anchor": "packages-foundation-modeling-skill-contract-src-evidenceladder-ts-320-advancetopersisted",
+          "line": 324,
+          "anchor": "packages-foundation-modeling-skill-contract-src-evidenceladder-ts-324-advancetopersisted",
           "currentTags": [
             "@param",
             "@returns",
@@ -368934,26 +368880,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "advanceToDelivered",
           "exportKind": "const",
           "filePath": "src/EvidenceLadder.ts",
           "repoPath": "packages/foundation/modeling/skill-contract/src/EvidenceLadder.ts",
-          "line": 346,
-          "anchor": "packages-foundation-modeling-skill-contract-src-evidenceladder-ts-346-advancetodelivered",
+          "line": 350,
+          "anchor": "packages-foundation-modeling-skill-contract-src-evidenceladder-ts-350-advancetodelivered",
           "currentTags": [
             "@param",
             "@returns",
@@ -368964,26 +368904,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "advanceToSemanticallyApplied",
           "exportKind": "const",
           "filePath": "src/EvidenceLadder.ts",
           "repoPath": "packages/foundation/modeling/skill-contract/src/EvidenceLadder.ts",
-          "line": 372,
-          "anchor": "packages-foundation-modeling-skill-contract-src-evidenceladder-ts-372-advancetosemanticallyapplied",
+          "line": 376,
+          "anchor": "packages-foundation-modeling-skill-contract-src-evidenceladder-ts-376-advancetosemanticallyapplied",
           "currentTags": [
             "@param",
             "@returns",
@@ -368994,18 +368928,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "EvidenceDigest",
@@ -369022,18 +368950,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "EvidenceSubject",
@@ -369050,26 +368972,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "EvidenceReceipt",
           "exportKind": "const",
           "filePath": "src/EvidenceReceipt.ts",
           "repoPath": "packages/foundation/modeling/skill-contract/src/EvidenceReceipt.ts",
-          "line": 133,
-          "anchor": "packages-foundation-modeling-skill-contract-src-evidencereceipt-ts-133-evidencereceipt",
+          "line": 134,
+          "anchor": "packages-foundation-modeling-skill-contract-src-evidencereceipt-ts-134-evidencereceipt",
           "currentTags": [
             "@param",
             "@returns",
@@ -369080,26 +368996,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "AttestationResource",
           "exportKind": "class",
           "filePath": "src/EvidenceReceipt.ts",
           "repoPath": "packages/foundation/modeling/skill-contract/src/EvidenceReceipt.ts",
-          "line": 159,
-          "anchor": "packages-foundation-modeling-skill-contract-src-evidencereceipt-ts-159-attestationresource",
+          "line": 160,
+          "anchor": "packages-foundation-modeling-skill-contract-src-evidencereceipt-ts-160-attestationresource",
           "currentTags": [
             "@category",
             "@since"
@@ -369108,26 +369018,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "GateSummaryVerifier",
           "exportKind": "class",
           "filePath": "src/EvidenceReceipt.ts",
           "repoPath": "packages/foundation/modeling/skill-contract/src/EvidenceReceipt.ts",
-          "line": 184,
-          "anchor": "packages-foundation-modeling-skill-contract-src-evidencereceipt-ts-184-gatesummaryverifier",
+          "line": 185,
+          "anchor": "packages-foundation-modeling-skill-contract-src-evidencereceipt-ts-185-gatesummaryverifier",
           "currentTags": [
             "@category",
             "@since"
@@ -369136,26 +369040,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "GateVerificationResult",
           "exportKind": "const",
           "filePath": "src/EvidenceReceipt.ts",
           "repoPath": "packages/foundation/modeling/skill-contract/src/EvidenceReceipt.ts",
-          "line": 209,
-          "anchor": "packages-foundation-modeling-skill-contract-src-evidencereceipt-ts-209-gateverificationresult",
+          "line": 210,
+          "anchor": "packages-foundation-modeling-skill-contract-src-evidencereceipt-ts-210-gateverificationresult",
           "currentTags": [
             "@category",
             "@since"
@@ -369164,26 +369062,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "GateVerificationResult",
           "exportKind": "type",
           "filePath": "src/EvidenceReceipt.ts",
           "repoPath": "packages/foundation/modeling/skill-contract/src/EvidenceReceipt.ts",
-          "line": 221,
-          "anchor": "packages-foundation-modeling-skill-contract-src-evidencereceipt-ts-221-gateverificationresult",
+          "line": 222,
+          "anchor": "packages-foundation-modeling-skill-contract-src-evidencereceipt-ts-222-gateverificationresult",
           "currentTags": [
             "@category",
             "@since"
@@ -369204,8 +369096,8 @@
           "exportKind": "const",
           "filePath": "src/EvidenceReceipt.ts",
           "repoPath": "packages/foundation/modeling/skill-contract/src/EvidenceReceipt.ts",
-          "line": 237,
-          "anchor": "packages-foundation-modeling-skill-contract-src-evidencereceipt-ts-237-gateverifiedlevel",
+          "line": 238,
+          "anchor": "packages-foundation-modeling-skill-contract-src-evidencereceipt-ts-238-gateverifiedlevel",
           "currentTags": [
             "@category",
             "@since"
@@ -369214,26 +369106,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "GateVerifiedLevel",
           "exportKind": "type",
           "filePath": "src/EvidenceReceipt.ts",
           "repoPath": "packages/foundation/modeling/skill-contract/src/EvidenceReceipt.ts",
-          "line": 249,
-          "anchor": "packages-foundation-modeling-skill-contract-src-evidencereceipt-ts-249-gateverifiedlevel",
+          "line": 250,
+          "anchor": "packages-foundation-modeling-skill-contract-src-evidencereceipt-ts-250-gateverifiedlevel",
           "currentTags": [
             "@category",
             "@since"
@@ -369254,8 +369140,8 @@
           "exportKind": "class",
           "filePath": "src/EvidenceReceipt.ts",
           "repoPath": "packages/foundation/modeling/skill-contract/src/EvidenceReceipt.ts",
-          "line": 284,
-          "anchor": "packages-foundation-modeling-skill-contract-src-evidencereceipt-ts-284-gateresultsummary",
+          "line": 285,
+          "anchor": "packages-foundation-modeling-skill-contract-src-evidencereceipt-ts-285-gateresultsummary",
           "currentTags": [
             "@category",
             "@since"
@@ -369264,26 +369150,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "GateSummary",
           "exportKind": "class",
           "filePath": "src/EvidenceReceipt.ts",
           "repoPath": "packages/foundation/modeling/skill-contract/src/EvidenceReceipt.ts",
-          "line": 361,
-          "anchor": "packages-foundation-modeling-skill-contract-src-evidencereceipt-ts-361-gatesummary",
+          "line": 362,
+          "anchor": "packages-foundation-modeling-skill-contract-src-evidencereceipt-ts-362-gatesummary",
           "currentTags": [
             "@category",
             "@since"
@@ -369292,26 +369172,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "GateSummaryPredicateType",
           "exportKind": "const",
           "filePath": "src/EvidenceReceipt.ts",
           "repoPath": "packages/foundation/modeling/skill-contract/src/EvidenceReceipt.ts",
-          "line": 383,
-          "anchor": "packages-foundation-modeling-skill-contract-src-evidencereceipt-ts-383-gatesummarypredicatetype",
+          "line": 384,
+          "anchor": "packages-foundation-modeling-skill-contract-src-evidencereceipt-ts-384-gatesummarypredicatetype",
           "currentTags": [
             "@category",
             "@since"
@@ -369320,26 +369194,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "GateSummaryReceipt",
           "exportKind": "const",
           "filePath": "src/EvidenceReceipt.ts",
           "repoPath": "packages/foundation/modeling/skill-contract/src/EvidenceReceipt.ts",
-          "line": 401,
-          "anchor": "packages-foundation-modeling-skill-contract-src-evidencereceipt-ts-401-gatesummaryreceipt",
+          "line": 402,
+          "anchor": "packages-foundation-modeling-skill-contract-src-evidencereceipt-ts-402-gatesummaryreceipt",
           "currentTags": [
             "@category",
             "@since"
@@ -369348,26 +369216,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "GateSummaryReceipt",
           "exportKind": "type",
           "filePath": "src/EvidenceReceipt.ts",
           "repoPath": "packages/foundation/modeling/skill-contract/src/EvidenceReceipt.ts",
-          "line": 409,
-          "anchor": "packages-foundation-modeling-skill-contract-src-evidencereceipt-ts-409-gatesummaryreceipt",
+          "line": 410,
+          "anchor": "packages-foundation-modeling-skill-contract-src-evidencereceipt-ts-410-gatesummaryreceipt",
           "currentTags": [
             "@category",
             "@since"
@@ -369398,18 +369260,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "GateId",
@@ -369450,18 +369306,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "GateSeverity",
@@ -369478,18 +369328,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "GateSeverity",
@@ -369528,18 +369372,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "GateApplicabilityKind",
@@ -369578,26 +369416,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "ConditionalGateApplicability",
           "exportKind": "class",
           "filePath": "src/Gate.ts",
           "repoPath": "packages/foundation/modeling/skill-contract/src/Gate.ts",
-          "line": 191,
-          "anchor": "packages-foundation-modeling-skill-contract-src-gate-ts-191-conditionalgateapplicability",
+          "line": 192,
+          "anchor": "packages-foundation-modeling-skill-contract-src-gate-ts-192-conditionalgateapplicability",
           "currentTags": [
             "@category",
             "@since"
@@ -369606,26 +369438,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "GateApplicability",
           "exportKind": "const",
           "filePath": "src/Gate.ts",
           "repoPath": "packages/foundation/modeling/skill-contract/src/Gate.ts",
-          "line": 225,
-          "anchor": "packages-foundation-modeling-skill-contract-src-gate-ts-225-gateapplicability",
+          "line": 226,
+          "anchor": "packages-foundation-modeling-skill-contract-src-gate-ts-226-gateapplicability",
           "currentTags": [
             "@category",
             "@since"
@@ -369634,26 +369460,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "GateApplicability",
           "exportKind": "type",
           "filePath": "src/Gate.ts",
           "repoPath": "packages/foundation/modeling/skill-contract/src/Gate.ts",
-          "line": 240,
-          "anchor": "packages-foundation-modeling-skill-contract-src-gate-ts-240-gateapplicability",
+          "line": 241,
+          "anchor": "packages-foundation-modeling-skill-contract-src-gate-ts-241-gateapplicability",
           "currentTags": [
             "@category",
             "@since"
@@ -369674,8 +369494,8 @@
           "exportKind": "const",
           "filePath": "src/Gate.ts",
           "repoPath": "packages/foundation/modeling/skill-contract/src/Gate.ts",
-          "line": 257,
-          "anchor": "packages-foundation-modeling-skill-contract-src-gate-ts-257-evidencepredicatetype",
+          "line": 258,
+          "anchor": "packages-foundation-modeling-skill-contract-src-gate-ts-258-evidencepredicatetype",
           "currentTags": [
             "@category",
             "@since"
@@ -369684,26 +369504,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "EvidencePredicateType",
           "exportKind": "type",
           "filePath": "src/Gate.ts",
           "repoPath": "packages/foundation/modeling/skill-contract/src/Gate.ts",
-          "line": 270,
-          "anchor": "packages-foundation-modeling-skill-contract-src-gate-ts-270-evidencepredicatetype",
+          "line": 271,
+          "anchor": "packages-foundation-modeling-skill-contract-src-gate-ts-271-evidencepredicatetype",
           "currentTags": [
             "@category",
             "@since"
@@ -369724,8 +369538,8 @@
           "exportKind": "class",
           "filePath": "src/Gate.ts",
           "repoPath": "packages/foundation/modeling/skill-contract/src/Gate.ts",
-          "line": 289,
-          "anchor": "packages-foundation-modeling-skill-contract-src-gate-ts-289-gateevidencerequirement",
+          "line": 290,
+          "anchor": "packages-foundation-modeling-skill-contract-src-gate-ts-290-gateevidencerequirement",
           "currentTags": [
             "@category",
             "@since"
@@ -369734,26 +369548,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "GateDeclaration",
           "exportKind": "class",
           "filePath": "src/Gate.ts",
           "repoPath": "packages/foundation/modeling/skill-contract/src/Gate.ts",
-          "line": 330,
-          "anchor": "packages-foundation-modeling-skill-contract-src-gate-ts-330-gatedeclaration",
+          "line": 331,
+          "anchor": "packages-foundation-modeling-skill-contract-src-gate-ts-331-gatedeclaration",
           "currentTags": [
             "@category",
             "@since"
@@ -369762,26 +369570,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "GateRegistry",
           "exportKind": "class",
           "filePath": "src/Gate.ts",
           "repoPath": "packages/foundation/modeling/skill-contract/src/Gate.ts",
-          "line": 384,
-          "anchor": "packages-foundation-modeling-skill-contract-src-gate-ts-384-gateregistry",
+          "line": 385,
+          "anchor": "packages-foundation-modeling-skill-contract-src-gate-ts-385-gateregistry",
           "currentTags": [
             "@category",
             "@since"
@@ -369790,26 +369592,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "GateOutcome",
           "exportKind": "const",
           "filePath": "src/Gate.ts",
           "repoPath": "packages/foundation/modeling/skill-contract/src/Gate.ts",
-          "line": 406,
-          "anchor": "packages-foundation-modeling-skill-contract-src-gate-ts-406-gateoutcome",
+          "line": 407,
+          "anchor": "packages-foundation-modeling-skill-contract-src-gate-ts-407-gateoutcome",
           "currentTags": [
             "@category",
             "@since"
@@ -369818,26 +369614,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "GateOutcome",
           "exportKind": "type",
           "filePath": "src/Gate.ts",
           "repoPath": "packages/foundation/modeling/skill-contract/src/Gate.ts",
-          "line": 418,
-          "anchor": "packages-foundation-modeling-skill-contract-src-gate-ts-418-gateoutcome",
+          "line": 419,
+          "anchor": "packages-foundation-modeling-skill-contract-src-gate-ts-419-gateoutcome",
           "currentTags": [
             "@category",
             "@since"
@@ -369858,8 +369648,8 @@
           "exportKind": "const",
           "filePath": "src/Gate.ts",
           "repoPath": "packages/foundation/modeling/skill-contract/src/Gate.ts",
-          "line": 444,
-          "anchor": "packages-foundation-modeling-skill-contract-src-gate-ts-444-isodatetimestring",
+          "line": 445,
+          "anchor": "packages-foundation-modeling-skill-contract-src-gate-ts-445-isodatetimestring",
           "currentTags": [
             "@category",
             "@since"
@@ -369880,8 +369670,8 @@
           "exportKind": "type",
           "filePath": "src/Gate.ts",
           "repoPath": "packages/foundation/modeling/skill-contract/src/Gate.ts",
-          "line": 476,
-          "anchor": "packages-foundation-modeling-skill-contract-src-gate-ts-476-isodatetimestring",
+          "line": 477,
+          "anchor": "packages-foundation-modeling-skill-contract-src-gate-ts-477-isodatetimestring",
           "currentTags": [
             "@category",
             "@since"
@@ -369902,8 +369692,8 @@
           "exportKind": "const",
           "filePath": "src/Gate.ts",
           "repoPath": "packages/foundation/modeling/skill-contract/src/Gate.ts",
-          "line": 529,
-          "anchor": "packages-foundation-modeling-skill-contract-src-gate-ts-529-gateauditrecord",
+          "line": 530,
+          "anchor": "packages-foundation-modeling-skill-contract-src-gate-ts-530-gateauditrecord",
           "currentTags": [
             "@param",
             "@returns",
@@ -369914,26 +369704,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "GateVerdict",
           "exportKind": "const",
           "filePath": "src/Gate.ts",
           "repoPath": "packages/foundation/modeling/skill-contract/src/Gate.ts",
-          "line": 595,
-          "anchor": "packages-foundation-modeling-skill-contract-src-gate-ts-595-gateverdict",
+          "line": 596,
+          "anchor": "packages-foundation-modeling-skill-contract-src-gate-ts-596-gateverdict",
           "currentTags": [
             "@param",
             "@returns",
@@ -369944,26 +369728,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "GateEvaluator",
           "exportKind": "type",
           "filePath": "src/Gate.ts",
           "repoPath": "packages/foundation/modeling/skill-contract/src/Gate.ts",
-          "line": 620,
-          "anchor": "packages-foundation-modeling-skill-contract-src-gate-ts-620-gateevaluator",
+          "line": 621,
+          "anchor": "packages-foundation-modeling-skill-contract-src-gate-ts-621-gateevaluator",
           "currentTags": [
             "@category",
             "@since"
@@ -369994,18 +369772,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "BudgetDuration",
@@ -370044,18 +369816,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "RecoveryBudgetConsumed",
@@ -370072,18 +369838,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "RecoveryAttemptOutcome",
@@ -370100,18 +369860,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "RecoveryAttemptOutcome",
@@ -370150,18 +369904,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "FailureTerminalReason",
@@ -370178,18 +369926,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "FailureTerminalReason",
@@ -370228,18 +369970,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "FailurePredicateType",
@@ -370256,18 +369992,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "FailureReceipt",
@@ -370284,18 +370014,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "FailureReceipt",
@@ -370334,18 +370058,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "BoundedRecoveryPolicy",
@@ -370362,18 +370080,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "RecoveryPolicy",
@@ -370390,18 +370102,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "RecoveryPolicy",
@@ -370440,18 +370146,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "SchemaReferenceId",
@@ -370490,18 +370190,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "SkillCompletionReceipt",
@@ -370518,18 +370212,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "SkillCompletion",
@@ -370568,18 +370256,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "toSkillCompletionReceipt",
@@ -370598,18 +370280,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "EvaluateSkillCompletionInput",
@@ -370626,18 +370302,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "CompletionInvariantReason",
@@ -370654,18 +370324,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "CompletionInvariantReason",
@@ -370704,18 +370368,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "CompletionAllowed",
@@ -370732,18 +370390,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "CompletionDenied",
@@ -370760,18 +370412,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "CompletionEvaluation",
@@ -370788,18 +370434,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "CompletionEvaluation",
@@ -370841,18 +370481,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "LiveVerified",
@@ -370869,18 +370503,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "DeployableBlocked",
@@ -370897,18 +370525,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "FailedWithPartialEffects",
@@ -370925,18 +370547,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "SkillTerminal",
@@ -370953,18 +370569,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "SkillTerminal",
@@ -371003,18 +370613,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "SkillContractId",
@@ -371053,18 +370657,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "SkillContract",
@@ -371081,18 +370679,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "SkillMarkdownProjection",
@@ -371109,18 +370701,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "SkillArtifactDenialReason",
@@ -371137,18 +370723,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "SkillArtifactDenialReason",
@@ -371187,18 +370767,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "SkillArtifactAllowed",
@@ -371215,18 +370789,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "SkillArtifactDenied",
@@ -371243,18 +370811,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "SkillArtifactVerdict",
@@ -371271,18 +370833,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "SkillArtifactVerdict",
@@ -371321,18 +370877,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "projectSkillDocument",
@@ -371351,18 +370901,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "renderSkillMarkdown",
@@ -371381,18 +370925,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "decodeSkillFrontmatter",
@@ -371411,18 +370949,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "verifySkillArtifact",
@@ -371441,18 +370973,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/skill-contract package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * from \"./EvidenceLadder.ts\";",
