@@ -51,6 +51,7 @@ retiring 192 rows and adding no row or allowlist entry
 Wave 4 repaired the EV015 single-test-block, EV006 browser-project and EV002 repeated-lifecycle classes, retiring 79 rows and converting 7 to owner/exit exceptions ([record](./history/receipts/detectors-wave-4.md)); waves 5-9 take the EV003 process-state ruling, the EV014 named test layers and the owner/exit register.
 Wave 5 ruled EV003 process-state wrappers a judgment class and repaired the EV003 layer-factory and two EV008 classes, retiring 22 rows and converting 13 to owner/exit exceptions ([record](./history/receipts/detectors-wave-5.md)); wave 6 takes the EV014 named test layers.
 Wave 6 closed EV014: imported test layers resolve across files, hermetic in-memory acquisitions are acquisition-free, and 39 real acquisitions take an explicit hook timeout, retiring all 233 exceptions with none added ([record](./history/receipts/detectors-wave-6.md)); wave 7 takes the EV010 owner/exit register.
+Wave 7 is the EV010 owner/exit register: three detector repairs retire 17 rows, 80 open live-resource rows become owner/exit exceptions, and every EV010 exception now names an owner and exit ([record](./history/receipts/detectors-wave-7.md)).
 Issue #1875 is in progress: wave 1 completed the `@beep/editor`, `@beep/libpff` and
 `@beep/test-runner` cohorts and left 689 open rows
 ([record](./history/receipts/vitest-canon-wave-1.md)).

@@ -962,6 +962,27 @@ describe("Git", () => {
     );
   });
 
+  describe("make", () => {
+    it.effect("builds the same live service as the layer, provided without a layer", () =>
+      Effect.gen(function* () {
+        const program = Git.use((git) => git.repoRoot(cwd)).pipe(Effect.provideServiceEffect(Git, Git.make));
+        const result = yield* Effect.scopedWith((scope) =>
+          Effect.flatMap(
+            Layer.buildWithScope(
+              Layer.mergeAll(
+                scripted(() => ({ stdout: "/repo\n", exit: 0 })),
+                ConfigProvider.layer(ConfigProvider.fromEnvRecord({}))
+              ),
+              scope
+            ),
+            (context) => Effect.provideContext(program, context)
+          )
+        );
+        assert.strictEqual(result, "/repo");
+      })
+    );
+  });
+
   describe("repoRoot", () => {
     it.effect("returns the trimmed toplevel path", () =>
       Effect.gen(function* () {

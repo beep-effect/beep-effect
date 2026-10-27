@@ -6948,7 +6948,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Actual committed repository specification paths and bytes are the subject. Seeding MemoryFileSystem with expected filenames would fabricate this provenance. Public scoped platform provision preserves those checks, all9catalog entries and4generated contracts."
+      "reason": "The committed repository specification paths and bytes are the subject: all 9 catalog entries and 4 generated contracts are read from the checkout, and seeding MemoryFileSystem with expected filenames would fabricate that provenance. Owner: @beep/api-docs. Exit: retire when the catalog reads its specifications through an injected source instead of the checkout."
     },
     {
       "id": "EV010:apps/labs/ciops/test/evidence.test.ts:3:@effect/platform-bun/BunFileSystem@0#1",
@@ -6991,7 +6991,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "These tests fold the tracked run4-fleet pin, the 2026-10-01 redacted snapshot, the change-event ledger and the committed adoption table, and assert each SHA-256 over the raw bytes (including a drifted ledger copy in a scoped temp directory). The native bytes are the subject, so MemoryFileSystem contents would fabricate the digest provenance. Retain BunFileSystem and BunCrypto through the suite layer with a 120-second budget."
+      "reason": "The tests fold the tracked run4-fleet pin, the 2026-10-01 redacted snapshot, the change-event ledger and the committed adoption table, and assert SHA-256 digests over their raw bytes; memory contents would fabricate the digest provenance. Owner: @beep/ciops. Exit: retire when the KPI fold takes its inputs as decoded values and the digest pins move to a dedicated committed-bytes check."
     },
     {
       "id": "EV010:apps/labs/ciops/test/lane-plan.test.ts:5:@effect/platform-bun/BunFileSystem@0#1",
@@ -7013,7 +7013,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "These tests pin the committed gate-order handoff fixture and the live time-to-certainty handoff by the SHA-256 of their raw file bytes. The native bytes are the subject, so MemoryFileSystem contents would fabricate the digest provenance. Retain BunFileSystem and BunCrypto through the suite layer with a ten-second hook budget."
+      "reason": "The tests pin the committed gate-order handoff fixture and the live time-to-certainty handoff by the SHA-256 of their raw bytes; memory contents would fabricate the digest provenance. Owner: @beep/ciops. Exit: retire when the lane plan takes its handoffs as decoded values and the digest pins move to a dedicated committed-bytes check."
     },
     {
       "id": "EV010:apps/labs/ciops/test/live-replay.test.ts:5:@effect/platform-bun/BunFileSystem@0#1",
@@ -7035,7 +7035,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "These tests replay the tracked run4-fleet pin, the frozen S6 golden journal and the lab's surrogate fixtures, and assert the pinned journal and manifest SHA-256 over their raw bytes. The native bytes are the subject, so MemoryFileSystem contents would fabricate the digest provenance. Retain BunFileSystem and BunCrypto through the suite layer with a twenty-second budget."
+      "reason": "The tests replay the tracked run4-fleet pin, the frozen S6 golden journal and the surrogate fixtures, and assert the pinned journal and manifest SHA-256 over their raw bytes; memory contents would fabricate the digest provenance. Owner: @beep/ciops. Exit: retire when the replay takes its journal as a decoded value and the digest pins move to a dedicated committed-bytes check."
     },
     {
       "id": "EV010:apps/labs/ciops/test/projection.test.ts:5:@effect/platform-bun/BunFileSystem@0#1",
@@ -7057,7 +7057,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "These tests read the tracked ratified S6 policy, frozen admission journal and golden Turtle/NDJSON fixtures. Native file bytes are the independent oracle, so replacing them with MemoryFileSystem contents would change the subject. Retain BunFileSystem through the instrumented suite layer with a five-second hook budget; decode the read-only policy once through TestPolicy and retain exact golden comparisons."
+      "reason": "The tests read the tracked ratified S6 policy, frozen admission journal and golden Turtle/NDJSON fixtures; the native bytes are the independent oracle for the exact golden comparisons. Owner: @beep/ciops. Exit: retire when the projection reads its policy and goldens through an injected source."
     },
     {
       "id": "EV010:apps/labs/lejeune-bolt-workbench/test/BundleBuilder.test.ts:6:@effect/platform-bun/BunServices@0#1",
@@ -7079,7 +7079,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native filesystem symlink publication, temp directories and durable readback are the subject. Public per-case BunServices/Crypto layers retain scoped cleanup; MemoryFileSystem would replace the tested atomic publication behavior."
+      "reason": "Native symlink publication, temporary directories and durable readback are the subject; MemoryFileSystem would replace the atomic publication behavior under test. Owner: @beep/lejeune-bolt-workbench. Exit: retire when MemoryFileSystem models symlink publication and the bundle builder's cases move to it."
     },
     {
       "id": "EV010:apps/labs/semantica/test/C0Input.test.ts:7:@effect/platform-bun/BunServices@0#1",
@@ -7101,7 +7101,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Real F1 catalog bytes, PDF parsing and document-source filesystem access are input subjects; minimal input composition retains those services and real Crypto."
+      "reason": "Real F1 catalog bytes, PDF parsing and document-source filesystem access are the input subjects, with real Crypto. Owner: @beep/semantica. Exit: retire when the C0 input composition reads its catalog through an injected document source."
     },
     {
       "id": "EV010:apps/labs/semantica/test/C0Slice.test.ts:5:@effect/platform-bun/BunServices@0#1",
@@ -7123,7 +7123,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "The same test sequences live and replay over actual F1 files, a disk provider cache, native PGlite ledger and exact report bytes. Removing cache/gold files is part of the oracle."
+      "reason": "The test sequences live and replay runs over actual F1 files, a disk provider cache, a native PGlite ledger and exact report bytes, and removing cache and gold files is part of the oracle. Owner: @beep/semantica. Exit: retire when the slice runs over an injected cache and an in-memory PGlite ledger."
     },
     {
       "id": "EV010:apps/labs/semantica/test/Fixtures.test.ts:4:@effect/platform-bun/BunServices@0#1",
@@ -7145,7 +7145,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native temporary corpus files, exact manifest drift and independently generated byte-identical PDFs are artifact subjects; actual Path and Crypto remain."
+      "reason": "Native temporary corpus files, exact manifest drift and independently generated byte-identical PDFs are the artifact subjects. Owner: @beep/semantica. Exit: retire when the fixture generator writes to an injected sink and the byte identity moves to a dedicated check."
     },
     {
       "id": "EV010:apps/labs/semantica/test/Gold.test.ts:4:@effect/platform-bun/BunServices@0#1",
@@ -7167,7 +7167,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Generated gold artifacts are written and reread in test-local native directories, preserving actual serialization, quote anchors and exact corpus counts."
+      "reason": "Generated gold artifacts are written and reread in test-local native directories, which keeps the real serialization, quote anchors and exact corpus counts. Owner: @beep/semantica. Exit: retire when the suite moves to MemoryFileSystem.layer: its stated subject is ordinary temporary files, which the memory filesystem also provides (a #1875 migration candidate)."
     },
     {
       "id": "EV010:apps/labs/semantica/test/GoldSource.test.ts:8:@effect/platform-bun/BunServices@0#1",
@@ -7189,7 +7189,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Selected native gold files are deliberately mutated before readback; exact read-failed, stale-reference and digest-failed errors are subjects."
+      "reason": "Selected native gold files are mutated before readback, so the exact read-failed, stale-reference and digest-failed errors are the subjects. Owner: @beep/semantica. Exit: retire when the gold source reads through an injected store whose faults the test can script."
     },
     {
       "id": "EV010:apps/labs/semantica/test/Ledger.test.ts:5:@effect/platform-bun/BunServices@0#1",
@@ -7211,7 +7211,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native PGlite owns a data directory under a test-local temporary root; database finalization must precede root removal. MemoryFS cannot prove SQL conflict persistence."
+      "reason": "Native PGlite owns a data directory under a test-local temporary root, database finalization must precede root removal, and SQL conflict persistence is the subject. Owner: @beep/semantica. Exit: retire when the ledger runs on an in-memory PGlite instance for every case."
     },
     {
       "id": "EV010:apps/labs/semantica/test/ProjectionExpectation.test.ts:4:@effect/platform-bun/BunServices@0#1",
@@ -7233,7 +7233,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "The committed G-projection file is the independent frozen artifact subject. This test does not claim actual hosted embedding or native query execution."
+      "reason": "The committed G-projection file is the independent frozen artifact subject; the test claims no hosted embedding or native query execution. Owner: @beep/semantica. Exit: retire when the projection expectation is imported as a fixture value."
     },
     {
       "id": "EV010:apps/labs/semantica/test/ProviderCache.test.ts:7:@effect/platform-bun/BunServices@0#1",
@@ -7255,7 +7255,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Real lock directories, owner PID, mTime, rename/reclaim races and atomic target publication are subjects. Injected filesystem observations delegate to the actual native operations."
+      "reason": "Real lock directories, owner PID, mtime, rename/reclaim races and atomic target publication are the subjects, and injected filesystem observations delegate to the native operations. Owner: @beep/semantica. Exit: retire when MemoryFileSystem models lock directories, mtimes and rename races and the cache cases move to it."
     },
     {
       "id": "EV010:apps/labs/semantica/test/Reasoning.test.ts:4:@effect/platform-bun/BunServices@0#1",
@@ -7277,7 +7277,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native Bun/EYE child processes, bounded stdout/stderr, cancellation and post-close PGlite recovery are subjects; a fake spawner or MemoryFS cannot prove them."
+      "reason": "Native Bun/EYE child processes, bounded stdout/stderr, cancellation and post-close PGlite recovery are the subjects; a fake spawner or memory filesystem cannot prove them. Owner: @beep/semantica. Exit: retire when the reasoner runs behind a scripted spawner and an in-memory PGlite."
     },
     {
       "id": "EV010:apps/practice-identify/test/PracticeIdentify.runtime.test.ts:2:@effect/platform-node/NodeServices@0#1",
@@ -7320,7 +7320,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "The native adapter deliberately runs the same manifest-loader conformance cases as MemoryFileSystem. Public layers own native scoped temporary directories; keeping this adapter comparison does not claim database or MCP startup coverage."
+      "reason": "The native adapter deliberately runs the same manifest-loader conformance cases as MemoryFileSystem; native scoped temporary directories are its side of that comparison, without database or MCP startup claims. Owner: @beep/practice-kg-mcp. Exit: retire when the adapter comparison is retired or MemoryFileSystem becomes the only supported loader backend."
     },
     {
       "id": "EV010:apps/practice-m365-contacts/test/Contacts.test.ts:12:@effect/platform-bun/BunServices@0#1",
@@ -7342,7 +7342,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native file modes, exclusive writer locks, durable journal readback, malformed on-disk journals and private JSONL export publication are the subjects. BunServices supplies FileSystem, Path and Crypto through the harness-owned scoped layer with a five-second acquisition budget. MemoryFileSystem would replace the tested operating-system permissions and lock behavior."
+      "reason": "Native file modes, exclusive writer locks, durable journal readback, malformed on-disk journals and private JSONL export publication are the subjects; MemoryFileSystem would replace the operating-system permissions and lock behavior. Owner: @beep/practice-m365-contacts. Exit: retire when MemoryFileSystem models file modes and exclusive locks and the contacts cases move to it."
     },
     {
       "id": "EV010:apps/practice-mail-tagging/test/PracticeMailTagging.lock.test.ts:10:@effect/platform-bun/BunFileSystem@0#1",
@@ -7364,29 +7364,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "The live process probe reads Linux /proc (the kernel boot id and /proc/<pid>/stat) through the platform FileSystem; the only way to prove it reads this machine's real identity is the Bun filesystem layer. The test is read-only, touches no repository or operator file, and every other lock test uses the in-memory filesystem with a fake probe."
-    },
-    {
-      "id": "EV010:apps/professional-desktop/test/integration/PgliteDataDirCompatibility.test.ts:3:@effect/platform-bun/BunFileSystem@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/professional-desktop",
-      "file": "apps/professional-desktop/test/integration/PgliteDataDirCompatibility.test.ts",
-      "line": 3,
-      "endLine": 3,
-      "symbol": "@effect/platform-bun/BunFileSystem",
-      "occurrence": "v2:689f2ca9582e57cd48cd48977a32f050ebbc170ed72e17f695a1478642d29772",
-      "class": "platform-filesystem-candidate",
-      "evidence": "import * as BunFileSystem from \"@effect/platform-bun/BunFileSystem\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "See goals/effect-vitest-canon/research/desktop-sidecar-boundaries-proof.md. The subject is the actual PGlite data directory across legacy-engine creation, engine close/reopen, PG_VERSION markers, host chmod unreadability, and extension-bundle cleanup. An in-memory Effect filesystem would not be the native engine filesystem and would change the subject. Nine cases pass under both Node and Bun; local provider lifetime wrappers remain a separate open Resource-lens review."
+      "reason": "The live process probe reads Linux /proc (the kernel boot id and /proc/<pid>/stat) to prove it sees this machine's identity; the test is read-only, and every other lock test already uses the memory filesystem with a fake probe. Owner: @beep/practice-mail-tagging. Exit: retire when the probe's procfs reads move behind an injected identity source with a separate live smoke check."
     },
     {
       "id": "EV010:apps/professional-desktop/test/integration/contradiction-sidecar-contract.test.ts:12:@effect/platform-bun/BunFileSystem@0#1",
@@ -7408,7 +7386,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "See goals/effect-vitest-canon/research/desktop-sidecar-boundaries-proof.md. The public fixture configures RuntimeTest, which internally provides BunServices.layer to OntologyServerLive. Its workspace must be visible to that runtime filesystem; replacing only the outer adapter would create a disconnected virtual workspace. The contract case passes under Node and Bun."
+      "reason": "RuntimeTest internally provides BunServices.layer to OntologyServerLive, so the fixture workspace must be visible to that runtime filesystem; replacing only the outer adapter would create a disconnected virtual workspace (goals/effect-vitest-canon/research/desktop-sidecar-boundaries-proof.md). Owner: @beep/professional-desktop. Exit: retire when RuntimeTest accepts the fixture's FileSystem instead of providing BunServices.layer itself."
     },
     {
       "id": "EV010:apps/professional-desktop/test/integration/execution-authority.pglite.test.ts:26:@effect/platform-node@0#1",
@@ -7430,7 +7408,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native platform services are owned by public it.layer fixtures. Real ontology workspace paths and optional loopback HTTP sockets remain the subject; each helper call retains its own workspace, handler and MCP session/client scope. The original cases and success/failure workspace cleanup probes pass under both in-process and socket modes. Memory substitution would change this integration boundary."
+      "reason": "Real ontology workspace paths and optional loopback HTTP sockets are the integration subject, with native platform services owned by public it.layer fixtures and per-call workspace, handler and MCP session scopes. Owner: @beep/professional-desktop. Exit: retire when the execution-authority cases run over an injected workspace store with the socket mode split into its own block."
     },
     {
       "id": "EV010:apps/professional-desktop/test/integration/ontology-mcp-http.test.ts:24:@effect/platform-node@0#1",
@@ -7452,7 +7430,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native platform services are owned by public it.layer fixtures. Real ontology workspace paths and optional loopback HTTP sockets remain the subject; each helper call retains its own workspace, handler and MCP session/client scope. The original cases and success/failure workspace cleanup probes pass under both in-process and socket modes. Memory substitution would change this integration boundary."
+      "reason": "Real ontology workspace paths and optional loopback HTTP sockets are the integration subject, with native platform services owned by public it.layer fixtures and per-call workspace, handler and MCP session scopes. Owner: @beep/professional-desktop. Exit: retire when the MCP HTTP cases run over an injected workspace store with the socket mode split into its own block."
     },
     {
       "id": "EV010:apps/professional-desktop/test/integration/sidecar-ipc-stdio.test.ts:20:@effect/platform-bun/BunFileSystem@0#1",
@@ -7474,7 +7452,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "See goals/effect-vitest-canon/research/desktop-sidecar-boundaries-proof.md. The subject is the compiled Bun sidecar subprocess over stdin/stdout. CHAT_DB_PATH and ONTOLOGY_WORKSPACE_ROOT pass actual temporary paths across the process boundary. A process-local MemoryFileSystem cannot back the child process. Retain the real host boundary and the previously proven owned process/stderr/temporary-directory lifetimes."
+      "reason": "The subject is the compiled Bun sidecar subprocess over stdin/stdout; CHAT_DB_PATH and ONTOLOGY_WORKSPACE_ROOT pass real temporary paths across the process boundary, which a process-local memory filesystem cannot back (goals/effect-vitest-canon/research/desktop-sidecar-boundaries-proof.md). Owner: @beep/professional-desktop. Exit: retire when the sidecar contract is proven in process and the subprocess smoke check moves out of this suite."
     },
     {
       "id": "EV010:apps/professional-desktop/test/integration/sidecar-smoke.test.ts:25:@effect/platform-bun/BunFileSystem@0#1",
@@ -7496,7 +7474,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "See goals/effect-vitest-canon/research/desktop-sidecar-boundaries-proof.md. The public it.layer fixture owns a real temporary ontology workspace for RuntimeTest, whose internal BunServices.layer supplies the ontology filesystem. The original smoke case passes under Node and Bun; a temporary host-filesystem probe proves the workspace exists during acquisition and is removed after suite finalization. Replacing only the outer adapter would disconnect fixture and runtime filesystems."
+      "reason": "The fixture owns a real temporary ontology workspace for RuntimeTest, whose internal BunServices.layer supplies the ontology filesystem; replacing only the outer adapter would disconnect fixture and runtime filesystems (goals/effect-vitest-canon/research/desktop-sidecar-boundaries-proof.md). Owner: @beep/professional-desktop. Exit: retire when RuntimeTest accepts the fixture's FileSystem instead of providing BunServices.layer itself."
     },
     {
       "id": "EV010:apps/professional-desktop/test/tailwind-sources.test.ts:2:@effect/platform-bun/BunFileSystem@0#1",
@@ -7518,7 +7496,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "See goals/effect-vitest-canon/research/desktop-sidecar-boundaries-proof.md. The subject is the checked-in package.json and src/styles/globals.css relationship. Reading the actual repository files detects missing Tailwind source declarations; copying their expected content into MemoryFileSystem would replace the source under test with a fixture. The filesystem is owned by the public it.layer fixture."
+      "reason": "The subject is the checked-in package.json and src/styles/globals.css relationship; reading the real files detects missing Tailwind source declarations, which copied content would not (goals/effect-vitest-canon/research/desktop-sidecar-boundaries-proof.md). Owner: @beep/professional-desktop. Exit: retire when the Tailwind source check runs as a lint over the committed files instead of a filesystem test."
     },
     {
       "id": "EV010:infra/ci-runners/sdks/ghaRunners/test/build.test.js:2:node:fs@6#1",
@@ -7540,7 +7518,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "The standalone node:test build suite runs the selected real compiler, captures exact argv/cwd and copies a manifest. Keep real temporary directories and context.after cleanup, stale-compiler nonexecution and absent postinstall checks."
+      "reason": "The standalone node:test build suite runs the selected real compiler, captures exact argv and cwd, and copies a manifest in real temporary directories with context.after cleanup. Owner: @beep/infra. Exit: retire when the build script takes an injected compiler runner and output directory."
     },
     {
       "id": "EV010:infra/ci-runners/sdks/ghaRunners/test/build.test.js:3:node:os@6#1",
@@ -7562,7 +7540,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "The standalone node:test build suite runs the selected real compiler, captures exact argv/cwd and copies a manifest. Keep real temporary directories and context.after cleanup, stale-compiler nonexecution and absent postinstall checks."
+      "reason": "The standalone node:test build suite takes real temporary directories from os.tmpdir() for the compiler run, manifest copy and stale-compiler checks. Owner: @beep/infra. Exit: retire when the build script takes an injected output directory."
     },
     {
       "id": "EV010:infra/test/OpenClaw.test.ts:37:@effect/platform-node/NodeServices@0#1",
@@ -7584,7 +7562,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native Node Crypto and ChildProcess are the subjects. Only the rendered Bash missing-mode usage path executes, with exit1 and usage diagnostic retained; provider, secret and privileged modes remain unexecuted strings."
+      "reason": "Native Node Crypto and ChildProcess are the subjects: only the rendered Bash missing-mode usage path executes (exit 1 with its usage diagnostic), and provider, secret and privileged modes stay unexecuted strings. Owner: @beep/infra. Exit: retire when the rendered script's usage path is checked by a scripted spawner."
     },
     {
       "id": "EV010:packages/agents/domain/test/AgentsDomain.test.ts:28:@effect/platform-node@0#1",
@@ -7606,7 +7584,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "This parity test traverses actual packages/agents source through native NodeServices. A seeded memory filesystem would replace the source subject and erase real checkout provenance and read failures. The isolated layer owns its lifecycle."
+      "reason": "The parity test traverses the actual packages/agents source; a seeded memory filesystem would replace the source subject and erase real checkout provenance and read failures. Owner: @beep/agents-domain. Exit: retire when the parity check runs as a lint over the committed sources."
     },
     {
       "id": "EV010:packages/documents/server/test/DocumentIntake.test.ts:12:@effect/platform-bun/BunFileSystem@0#1",
@@ -7628,7 +7606,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native filesystem behavior is the test subject: actual materialized bytes, symlink/root-boundary protection, inode/procfs fallback or atomic updates. Public fresh layers own services and test scopes own temporary directories; MemoryFileSystem would replace the behavior being verified."
+      "reason": "Native filesystem behavior is the subject: materialized bytes, symlink and root-boundary protection, inode/procfs fallback and atomic updates. Owner: @beep/documents-server. Exit: retire when MemoryFileSystem models symlinks and inode identity and the intake cases move to it."
     },
     {
       "id": "EV010:packages/documents/server/test/FilingDecisionLlm.test.ts:16:@effect/platform-bun/BunFileSystem@0#1",
@@ -7650,7 +7628,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native filesystem behavior is the test subject: actual materialized bytes, symlink/root-boundary protection, inode/procfs fallback or atomic updates. Public fresh layers own services and test scopes own temporary directories; MemoryFileSystem would replace the behavior being verified."
+      "reason": "The filing-decision cases share the documents-server native fixture: materialized bytes and atomic updates in scoped temporary directories. Owner: @beep/documents-server. Exit: retire when the suite moves to MemoryFileSystem.layer: its stated subject is ordinary temporary files, which the memory filesystem also provides (a #1875 migration candidate)."
     },
     {
       "id": "EV010:packages/documents/server/test/VaultSyncDrift.test.ts:19:@effect/platform-bun/BunFileSystem@0#1",
@@ -7672,7 +7650,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native filesystem behavior is the test subject: actual materialized bytes, symlink/root-boundary protection, inode/procfs fallback or atomic updates. Public fresh layers own services and test scopes own temporary directories; MemoryFileSystem would replace the behavior being verified."
+      "reason": "The drift cases share the documents-server native fixture: materialized bytes and atomic updates in scoped temporary directories. Owner: @beep/documents-server. Exit: retire when the suite moves to MemoryFileSystem.layer: its stated subject is ordinary temporary files, which the memory filesystem also provides (a #1875 migration candidate)."
     },
     {
       "id": "EV010:packages/documents/server/test/VaultSyncEngine.test.ts:26:@effect/platform-bun/BunFileSystem@0#1",
@@ -7694,7 +7672,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native filesystem behavior is the test subject: actual materialized bytes, symlink/root-boundary protection, inode/procfs fallback or atomic updates. Public fresh layers own services and test scopes own temporary directories; MemoryFileSystem would replace the behavior being verified."
+      "reason": "Native filesystem behavior is the subject: materialized bytes, symlink and root-boundary protection, procfs fallback and atomic updates in the vault sync engine. Owner: @beep/documents-server. Exit: retire when MemoryFileSystem models symlinks and procfs and the engine cases move to it."
     },
     {
       "id": "EV010:packages/documents/server/test/VaultSyncReviewRegressions.test.ts:22:@effect/platform-bun/BunFileSystem@0#1",
@@ -7716,7 +7694,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native filesystem behavior is the test subject: actual materialized bytes, symlink/root-boundary protection, inode/procfs fallback or atomic updates. Public fresh layers own services and test scopes own temporary directories; MemoryFileSystem would replace the behavior being verified."
+      "reason": "Native filesystem behavior is the subject: materialized bytes, symlink and root-boundary protection and atomic updates in the vault sync review regressions. Owner: @beep/documents-server. Exit: retire when MemoryFileSystem models symlinks and the regression cases move to it."
     },
     {
       "id": "EV010:packages/drivers/acp/test/integration/client.integration.test.ts:6:@effect/platform-node/NodeServices@0#1",
@@ -7738,7 +7716,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native Bun child spawning, piped stdio and real termination/exit-code behavior are the test subjects; NodeServices supplies native process/path services. MemoryFileSystem is not a substitute."
+      "reason": "Native Bun child spawning, piped stdio and real termination and exit codes are the subjects; NodeServices supplies the native process and path services. Owner: @beep/acp. Exit: retire when the ACP client cases run against a scripted spawner with the live child kept as a separate opt-in check."
     },
     {
       "id": "EV010:packages/drivers/acp/test/protocol.test.ts:13:@effect/platform-node/NodeServices@0#1",
@@ -7760,7 +7738,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native Bun child spawning, piped stdio and real termination/exit-code behavior are the test subjects; NodeServices supplies native process/path services. MemoryFileSystem is not a substitute."
+      "reason": "Native Bun child spawning, piped stdio and real termination and exit codes are the subjects; NodeServices supplies the native process and path services. Owner: @beep/acp. Exit: retire when the protocol cases run against a scripted spawner."
     },
     {
       "id": "EV010:packages/drivers/ai-provider-cli/test/AiProviderCliSession.test.ts:9:@effect/platform-node/NodeServices@0#1",
@@ -7782,7 +7760,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Real filesystem and process services are the test subject: private path modes, symlink refusal, SQLite file persistence, or owned native stdio lifecycle. The bounded outer it.layer owns these resources; a mocked filesystem or omitted process service would not exercise those boundaries."
+      "reason": "Private path modes, symlink refusal, SQLite file persistence and owned native stdio lifecycles are the subjects, under one bounded outer it.layer. Owner: @beep/ai-provider-cli. Exit: retire when the session cases run over an injected store and a scripted spawner."
     },
     {
       "id": "EV010:packages/drivers/box-provisioning/test/BoxContentMigration.test.ts:12:@effect/platform-node-shared/NodeFileSystem@0#1",
@@ -7825,7 +7803,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native DuckDB SQL, database files and Parquet paths are the subjects. Scoped native directories and separate instance/connection finalizers preserve host-visible compatibility; MemoryFileSystem would erase it."
+      "reason": "Native DuckDB SQL, database files and Parquet paths are the subjects; scoped native directories and separate instance and connection finalizers keep host-visible compatibility. Owner: @beep/duckdb. Exit: retire when the service cases run on an in-memory DuckDB database with Parquet paths in a dedicated native block."
     },
     {
       "id": "EV010:packages/drivers/ffmpeg/test/FFmpeg.capture.failures.test.ts:12:@effect/platform-node@0#1",
@@ -7847,7 +7825,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native filesystem staging and outputs are the scripted suites subject; the integration additionally requires actual ffmpeg and ffprobe for timestamp, artifact and container metadata proof. MemoryFS or fake native output would erase those subjects."
+      "reason": "Native filesystem staging and outputs are the scripted suite's subject, and the integration needs real ffmpeg and ffprobe for timestamp, artifact and container metadata. Owner: @beep/ffmpeg. Exit: retire when the scripted cases run over MemoryFileSystem and the ffmpeg integration moves to an opt-in live suite."
     },
     {
       "id": "EV010:packages/drivers/ffmpeg/test/FFmpeg.capture.test.ts:46:@effect/platform-node@0#1",
@@ -7869,7 +7847,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native filesystem staging and outputs are the scripted suites subject; the integration additionally requires actual ffmpeg and ffprobe for timestamp, artifact and container metadata proof. MemoryFS or fake native output would erase those subjects."
+      "reason": "Native filesystem staging and outputs are the scripted suite's subject, and the integration needs real ffmpeg and ffprobe for timestamp, artifact and container metadata. Owner: @beep/ffmpeg. Exit: retire when the scripted cases run over MemoryFileSystem and the ffmpeg integration moves to an opt-in live suite."
     },
     {
       "id": "EV010:packages/drivers/ffmpeg/test/FFmpeg.service.test.ts:29:@effect/platform-node@0#1",
@@ -7891,7 +7869,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native filesystem staging and outputs are the scripted suites subject; the integration additionally requires actual ffmpeg and ffprobe for timestamp, artifact and container metadata proof. MemoryFS or fake native output would erase those subjects."
+      "reason": "Native filesystem staging and outputs are the scripted suite's subject, and the integration needs real ffmpeg and ffprobe for timestamp, artifact and container metadata. Owner: @beep/ffmpeg. Exit: retire when the scripted cases run over MemoryFileSystem and the ffmpeg integration moves to an opt-in live suite."
     },
     {
       "id": "EV010:packages/drivers/gov-legal-mcp/test/Server.test.ts:49:@effect/platform-node/NodeServices@0#1",
@@ -7913,7 +7891,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "The test compares real scoped temporary-file bytes with the checked-in generated artifact. Preserve native Node filesystem services and test-owned cleanup; a MemoryFS substitute changes the subject."
+      "reason": "The test compares real scoped temporary-file bytes with the checked-in generated artifact. Owner: @beep/gov-legal-mcp. Exit: retire when the generated artifact is compared as an imported fixture value."
     },
     {
       "id": "EV010:packages/drivers/libpff/test/Libpff.service.test.ts:21:@effect/platform-node@0#1",
@@ -7935,7 +7913,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Retain the actual NodeServices platform: native subprocess spawning, filesystem/PATH/shebang/symlink behavior and crypto-backed artifact identities remain the test subjects. Bubblewrap executes when present; absent PST is explicitly skipped. An in-memory filesystem or stubbed process layer would not prove these boundaries."
+      "reason": "Native subprocess spawning, PATH, shebang and symlink behavior and crypto-backed artifact identities are the subjects; Bubblewrap runs when present and an absent PST is skipped explicitly. Owner: @beep/libpff. Exit: retire when the libpff service cases run behind a scripted spawner with the live export kept in the opt-in integration suite."
     },
     {
       "id": "EV010:packages/drivers/libpff/test/integration/Libpff.pffexport.live.test.ts:14:@effect/platform-node@0#1",
@@ -7957,7 +7935,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Retain the actual NodeServices platform: native subprocess spawning, filesystem/PATH/shebang/symlink behavior and crypto-backed artifact identities remain the test subjects. Bubblewrap executes when present; absent PST is explicitly skipped. An in-memory filesystem or stubbed process layer would not prove these boundaries."
+      "reason": "The live pffexport integration spawns the native libpff tools over real PST paths, with Bubblewrap when present. Owner: @beep/libpff. Exit: retire when the live export moves out of the default test run."
     },
     {
       "id": "EV010:packages/drivers/m365-mcp/test/OutboxAttachmentSource.test.ts:4:@effect/platform-node/NodeFileSystem@0#1",
@@ -7967,27 +7945,6 @@
       "file": "packages/drivers/m365-mcp/test/OutboxAttachmentSource.test.ts",
       "line": 4,
       "endLine": 4,
-      "symbol": "@effect/platform-node/NodeFileSystem",
-      "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
-      "class": "platform-filesystem-candidate",
-      "evidence": "import * as NodeFileSystem from \"@effect/platform-node/NodeFileSystem\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV010:packages/drivers/m365-mcp/test/OutboxAuditLog.test.ts:14:@effect/platform-node/NodeFileSystem@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/m365-mcp",
-      "file": "packages/drivers/m365-mcp/test/OutboxAuditLog.test.ts",
-      "line": 14,
-      "endLine": 14,
       "symbol": "@effect/platform-node/NodeFileSystem",
       "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
       "class": "platform-filesystem-candidate",
@@ -8042,7 +7999,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Retain native Node filesystem and path services for actual streaming files and realPath-based allowed-root guards. No memory substitute or HTTP conformance claim is made for local file operations. All original fixture inputs and native cleanup behavior remain."
+      "reason": "Real streaming files and realPath-based allowed-root guards are the subjects of the native Node filesystem and path services. Owner: @beep/nlp-mcp. Exit: retire when MemoryFileSystem implements realPath containment and streaming and the cases move to it."
     },
     {
       "id": "EV010:packages/drivers/nlp-mcp/test/integration/Streaming.test.ts:6:@effect/platform-node/NodeFileSystem@0#1",
@@ -8064,7 +8021,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Retain native Node filesystem and path services for actual streaming files and realPath-based allowed-root guards. No memory substitute or HTTP conformance claim is made for local file operations. All original fixture inputs and native cleanup behavior remain."
+      "reason": "Real streaming files and realPath-based allowed-root guards are the subjects of the native Node filesystem and path services. Owner: @beep/nlp-mcp. Exit: retire when MemoryFileSystem implements realPath containment and streaming and the cases move to it."
     },
     {
       "id": "EV010:packages/drivers/occt/test/Occt.service.test.ts:35:@effect/platform-node@0#1",
@@ -8149,7 +8106,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native PGlite persistent dataDir is the integration subject. Its internal filesystem cannot use Effect MemoryFileSystem; outer Node services provide scoped temporary directories that outlive both database clients."
+      "reason": "PGlite's persistent dataDir is the integration subject; its internal filesystem cannot use the Effect memory filesystem, and the scoped temporary directories must outlive both database clients. Owner: @beep/pglite. Exit: retire when the persistence cases are covered by an in-memory PGlite reopen check."
     },
     {
       "id": "EV010:packages/drivers/postgres/test/Postgres.errors.test.ts:24:@effect/platform-node/NodeServices@0#1",
@@ -8171,7 +8128,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native migrator reads node:fs. A scoped native temporary parent and uncreated child establish ENOENT; an in-memory filesystem would not control that failure path."
+      "reason": "The native migrator reads node:fs, and a scoped native temporary parent with an uncreated child establishes the ENOENT failure path. Owner: @beep/postgres. Exit: retire when the migrator reads its migrations through the Effect FileSystem."
     },
     {
       "id": "EV010:packages/drivers/postgres/test/integration/Postgres.pglite.test.ts:17:@effect/platform-node/NodeServices@0#1",
@@ -8193,7 +8150,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Effect FileSystem hashes host migration SQL that native drizzle reads through node:fs. Keep shared host-visible fixture content, ordered journal assertions and sequential registration."
+      "reason": "Effect FileSystem hashes host migration SQL that native drizzle reads through node:fs, so the fixture content must be host-visible. Owner: @beep/postgres. Exit: retire when drizzle's migrator reads through the Effect FileSystem."
     },
     {
       "id": "EV010:packages/drivers/tika/test/integration/Tika.server.live.test.ts:7:@effect/platform-node@0#1",
@@ -8215,7 +8172,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Retain NodeServices for real temporary executable files, actual child processes and snapshot-versus-locator proof in tika-app, and native fixture files plus real HTTP in the opt-in server suite. Injected HTTP unit tests no longer provide NodeServices. Shell stubs are not JVM/JAR conformance; absent live URL is explicit non-execution, not parser proof."
+      "reason": "Real temporary executable files, child processes and snapshot-versus-locator proof in tika-app, and native fixture files with real HTTP in the opt-in server suite, are the subjects. Owner: @beep/tika. Exit: retire when the tika-app cases run behind a scripted spawner and the server suite stays opt-in."
     },
     {
       "id": "EV010:packages/ecosystem/effect-drizzle/test/import-boundary.test.ts:3:@effect/platform-node@0#1",
@@ -8258,7 +8215,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "This harness shares one actual SQLite file between Node drizzle-kit, Bun Database and the Effect SQLite adapter. MemoryFileSystem cannot provide native paths to those processes. Scoped migration-child and database cleanup are verified without changing the 90000ms hook budget or native numeric and DDL witnesses."
+      "reason": "One real SQLite file is shared between Node drizzle-kit, Bun Database and the Effect SQLite adapter; the memory filesystem cannot give native paths to those processes. Owner: @beep/effect-drizzle. Exit: retire when the three adapters can share an in-memory SQLite database."
     },
     {
       "id": "EV010:packages/epistemic/server/test/integration/ContradictionTriage.p0.pglite.test.ts:15:@effect/platform-node/NodeFileSystem@0#1",
@@ -8280,7 +8237,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Actual native filesystem storage is the persistent PGlite close/reopen subject. The public outer TempDirServices layer owns the directory; MemoryFileSystem cannot replace database storage. This is not a crash or fsync claim."
+      "reason": "Native storage is the persistent PGlite close/reopen subject, in a directory owned by the outer TempDirServices layer; this makes no crash or fsync claim. Owner: @beep/epistemic-server. Exit: retire when the reopen case runs on an in-memory PGlite instance."
     },
     {
       "id": "EV010:packages/epistemic/server/test/integration/ContradictionTriage.pglite.test.ts:69:@effect/platform-node/NodeFileSystem@0#1",
@@ -8302,7 +8259,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Actual native filesystem storage is the persistent PGlite close/reopen subject. The public outer TempDirServices layer owns the directory; MemoryFileSystem cannot replace database storage. This is not a crash or fsync claim."
+      "reason": "Native storage is the persistent PGlite close/reopen subject, in a directory owned by the outer TempDirServices layer; this makes no crash or fsync claim. Owner: @beep/epistemic-server. Exit: retire when the reopen case runs on an in-memory PGlite instance."
     },
     {
       "id": "EV010:packages/epistemic/server/test/integration/EdgeAuthority.restart.pglite.test.ts:29:@effect/platform-node/NodeFileSystem@0#1",
@@ -8324,29 +8281,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Actual native filesystem storage is the persistent PGlite close/reopen subject. The public outer TempDirServices layer owns the directory; MemoryFileSystem cannot replace database storage. This is not a crash or fsync claim."
-    },
-    {
-      "id": "EV010:packages/foundation/capability/file-processing/test/PathSafety.test.ts:8:@effect/platform-bun/BunFileSystem@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/file-processing",
-      "file": "packages/foundation/capability/file-processing/test/PathSafety.test.ts",
-      "line": 8,
-      "endLine": 8,
-      "symbol": "@effect/platform-bun/BunFileSystem",
-      "occurrence": "v2:689f2ca9582e57cd48cd48977a32f050ebbc170ed72e17f695a1478642d29772",
-      "class": "platform-filesystem-candidate",
-      "evidence": "import * as BunFileSystem from \"@effect/platform-bun/BunFileSystem\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "Real native filesystem behavior is the subject: symlink containment, permission mode0600, atomic rename and cleanup failure. MemoryFS would erase those guarantees. Each root and instrumented service remains test-local and scoped."
+      "reason": "Native storage is the persistent PGlite close/reopen subject, in a directory owned by the outer TempDirServices layer; this makes no crash or fsync claim. Owner: @beep/epistemic-server. Exit: retire when the restart case runs on an in-memory PGlite instance."
     },
     {
       "id": "EV010:packages/foundation/capability/observability/test/Boundary.test.ts:4:@effect/platform-node@0#1",
@@ -8368,7 +8303,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "The subject is the actual checkout and three real compiler fixture configurations. MemoryFileSystem would erase that boundary test; NodeServices supplies the scoped real child process."
+      "reason": "The subject is the actual checkout and three real compiler fixture configurations, with a scoped real child process. Owner: @beep/observability. Exit: retire when the boundary check runs as a lint over the committed sources."
     },
     {
       "id": "EV010:packages/foundation/capability/technical-drawing/test/FigureSet.test.ts:55:@effect/platform-node@0#1",
@@ -8392,28 +8327,6 @@
       "status": "open"
     },
     {
-      "id": "EV010:packages/foundation/modeling/ontology/test/SemanticFoundation.test.ts:31:@effect/platform-bun/BunFileSystem@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/ontology",
-      "file": "packages/foundation/modeling/ontology/test/SemanticFoundation.test.ts",
-      "line": 31,
-      "endLine": 31,
-      "symbol": "@effect/platform-bun/BunFileSystem",
-      "occurrence": "v2:689f2ca9582e57cd48cd48977a32f050ebbc170ed72e17f695a1478642d29772",
-      "class": "platform-filesystem-candidate",
-      "evidence": "import * as BunFileSystem from \"@effect/platform-bun/BunFileSystem\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The symlink escape and missing realpath cases intentionally exercise the native filesystem. Both temporary roots remain makeTempDirectoryScoped under it.effect; exact symlink, missing-root and missing-slice subjects and error paths remain. Memory substitution would remove the platform boundary being tested."
-    },
-    {
       "id": "EV010:packages/foundation/modeling/pandoc-ast/test/Pandoc.codec.test.ts:40:@effect/platform-bun/BunFileSystem@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -8433,7 +8346,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Preserve actual committed Pandoc JSON fixture reads through BunFileSystem. Six native layer registrations own that service; replacing committed bytes with a seeded in-memory expected projection would change the subject. Missing-fixture controls fail all six readers. No Pandoc executable or filesystem conformance is claimed."
+      "reason": "Committed Pandoc JSON fixture reads are the subject: replacing them with seeded expected projections would change it, and the missing-fixture controls fail all six readers; no Pandoc executable is claimed. Owner: @beep/pandoc-ast. Exit: retire when the Pandoc fixtures are imported as JSON values."
     },
     {
       "id": "EV010:packages/foundation/modeling/pandoc-ast/test/Pandoc.mapping.test.ts:17:@effect/platform-bun/BunFileSystem@0#1",
@@ -8455,7 +8368,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Preserve actual committed Pandoc JSON fixture reads through BunFileSystem. Six native layer registrations own that service; replacing committed bytes with a seeded in-memory expected projection would change the subject. Missing-fixture controls fail all six readers. No Pandoc executable or filesystem conformance is claimed."
+      "reason": "Committed Pandoc JSON fixture reads are the subject: replacing them with seeded expected projections would change it, and the missing-fixture controls fail all six readers; no Pandoc executable is claimed. Owner: @beep/pandoc-ast. Exit: retire when the Pandoc fixtures are imported as JSON values."
     },
     {
       "id": "EV010:packages/foundation/modeling/pandoc-ast/test/integration/Pandoc.integration.test.ts:6:@effect/platform-bun/BunFileSystem@0#1",
@@ -8477,7 +8390,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Preserve actual committed Pandoc JSON fixture reads through BunFileSystem. Six native layer registrations own that service; replacing committed bytes with a seeded in-memory expected projection would change the subject. Missing-fixture controls fail all six readers. No Pandoc executable or filesystem conformance is claimed."
+      "reason": "Committed Pandoc JSON fixture reads are the subject: replacing them with seeded expected projections would change it, and the missing-fixture controls fail all six readers; no Pandoc executable is claimed. Owner: @beep/pandoc-ast. Exit: retire when the Pandoc fixtures are imported as JSON values."
     },
     {
       "id": "EV010:packages/foundation/modeling/utils/test/FileSystem.test.ts:2:node:os@0#1",
@@ -8520,7 +8433,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native tracked golden assets are the subject. readPackageFile obtains FileSystem and Path from BunServices and reads the checked-in asset and bridge files; replacing those bytes with MemoryFileSystem fixtures would remove the independent on-disk oracle. Retain BunServices through the instrumented it.layer suite with an explicit five-second hook budget, the exact five-path assertion and all existing content checks."
+      "reason": "The tracked golden assets are the subject: readPackageFile reads the checked-in asset and bridge files as the independent on-disk oracle for the exact five-path assertion. Owner: @beep/brand. Exit: retire when the asset check runs as a lint over the committed files."
     },
     {
       "id": "EV010:packages/law-practice/server/test/MailTagging.files.test.ts:38:@effect/platform-bun/BunFileSystem@0#1",
@@ -8542,7 +8455,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native filesystem behavior is the test subject: the file-backed mail-tagging ledgers and checkpoint are proven through real appends, fsync, whole-file reads, and a temp-file rename inside a scoped temporary directory. Effect v4 core has no in-memory FileSystem (only layerNoop), so BunFileSystem is retained through it.layer with a thirty-second hook budget."
+      "reason": "The file-backed mail-tagging ledgers and checkpoint are proven through real appends, fsync, whole-file reads and a temporary-file rename in a scoped temporary directory. Owner: @beep/law-practice-server. Exit: retire when the suite moves to MemoryFileSystem.layer: its stated subject is ordinary temporary files, which the memory filesystem also provides (a #1875 migration candidate)."
     },
     {
       "id": "EV010:packages/law-practice/server/test/MailTagging.layers.test.ts:50:@effect/platform-bun/BunFileSystem@0#1",
@@ -8564,7 +8477,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native filesystem behavior is the test subject: the live mail-tagging use-case layers are proven end to end over the file-backed ledgers and checkpoint (real appends, fsync, temp-file rename) inside a scoped temporary directory. Effect v4 core has no in-memory FileSystem (only layerNoop), so BunFileSystem is retained through it.layer with a thirty-second hook budget."
+      "reason": "The live mail-tagging use-case layers run end to end over the file-backed ledgers and checkpoint (appends, fsync, temporary-file rename) in a scoped temporary directory. Owner: @beep/law-practice-server. Exit: retire when the suite moves to MemoryFileSystem.layer: its stated subject is ordinary temporary files, which the memory filesystem also provides (a #1875 migration candidate)."
     },
     {
       "id": "EV010:packages/law-practice/server/test/PracticeKg.compare.test.ts:15:@effect/platform-node@0#1",
@@ -8628,7 +8541,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native filesystem, symbolic links, UTF-8 bytes, DuckDB/PGlite persistence and reopen boundaries are subjects of this integration suite. Public outer NodeServices fixtures own scoped paths; MemoryFileSystem cannot replace the native engine inputs or symlink semantics."
+      "reason": "Native filesystem, symbolic links, UTF-8 bytes, DuckDB/PGlite persistence and reopen boundaries are the subjects of this integration suite. Owner: @beep/law-practice-server. Exit: retire when the projections run over in-memory engines with the symlink cases in a dedicated native block."
     },
     {
       "id": "EV010:packages/ontology/server/test/OntoauthorMatCompetency.test.ts:26:@effect/platform-node@0#1",
@@ -8650,7 +8563,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Retain actual Node filesystem and path services for real Turtle fixtures and native temp roots, symlink canonicalization, pinned startup roots and atomic rename behavior. Public scoped layer fixtures own their lifetime; a memory filesystem would remove these subjects."
+      "reason": "Real Turtle fixtures, native temporary roots, symlink canonicalization, pinned startup roots and atomic rename behavior are the subjects. Owner: @beep/ontology-server. Exit: retire when MemoryFileSystem models symlink canonicalization and the competency cases read their Turtle fixtures as imported text."
     },
     {
       "id": "EV010:packages/ontology/server/test/OntologyTools.test.ts:20:@effect/platform-node@0#1",
@@ -8672,7 +8585,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Retain actual Node filesystem and path services for real Turtle fixtures and native temp roots, symlink canonicalization, pinned startup roots and atomic rename behavior. Public scoped layer fixtures own their lifetime; a memory filesystem would remove these subjects."
+      "reason": "Real Turtle fixtures, native temporary roots, symlink canonicalization, pinned startup roots and atomic rename behavior are the subjects. Owner: @beep/ontology-server. Exit: retire when MemoryFileSystem models symlink canonicalization and the tool cases read their Turtle fixtures as imported text."
     },
     {
       "id": "EV010:packages/ontology/server/test/SessionServer.test.ts:32:@effect/platform-node@0#1",
@@ -8694,7 +8607,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Retain actual Node filesystem and path services for real Turtle fixtures and native temp roots, symlink canonicalization, pinned startup roots and atomic rename behavior. Public scoped layer fixtures own their lifetime; a memory filesystem would remove these subjects."
+      "reason": "Real Turtle fixtures, native temporary roots, symlink canonicalization, pinned startup roots and atomic rename behavior are the subjects. Owner: @beep/ontology-server. Exit: retire when MemoryFileSystem models symlink canonicalization and the session cases read their Turtle fixtures as imported text."
     },
     {
       "id": "EV010:packages/ontology/use-cases/test/BrowserWorkerImportGraph.test.ts:21:@effect/platform-node/NodeServices@0#1",
@@ -8716,7 +8629,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native esbuild resolution, scoped disk bundle writes and file-URL evaluation are the actual subjects. Public fixture acquisition is bounded to30seconds;120000ms body limit, browser conditions, disabled tree shaking and all forbidden-import/export assertions remain. MemoryFS would replace the loader boundary."
+      "reason": "Native esbuild resolution, scoped disk bundle writes and file-URL evaluation are the subjects, with browser conditions and all forbidden-import assertions. Owner: @beep/ontology-use-cases. Exit: retire when the import-graph check uses esbuild's in-memory output and plugin resolution."
     },
     {
       "id": "EV010:packages/tooling/library/ai-metrics/test/agent-effectiveness.test.ts:36:@effect/platform-node@0#1",
@@ -8738,7 +8651,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native temporary DuckDB paths, persisted runtime records and scenario-local Phoenix SDK witnesses require the real filesystem."
+      "reason": "Native temporary DuckDB paths, persisted runtime records and scenario-local Phoenix SDK witnesses need the real filesystem. Owner: @beep/repo-ai-metrics. Exit: retire when the scenarios run on an in-memory DuckDB database."
     },
     {
       "id": "EV010:packages/tooling/library/ai-metrics/test/archive.test.ts:8:@effect/platform-node@0#1",
@@ -8760,7 +8673,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native encrypted archive files and crypto round trips retain actual persistence; each platform group contains one test, including the negative-clock case."
+      "reason": "Native encrypted archive files and crypto round trips are the persistence subject, one test per platform group including the negative-clock case. Owner: @beep/repo-ai-metrics. Exit: retire when the suite moves to MemoryFileSystem.layer: its stated subject is ordinary temporary files, which the memory filesystem also provides (a #1875 migration candidate)."
     },
     {
       "id": "EV010:packages/tooling/library/ai-metrics/test/circuit-breaker.test.ts:11:@effect/platform-node@0#1",
@@ -8782,7 +8695,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Real temporary files exercise circuit-breaker persistence and replacement."
+      "reason": "Real temporary files exercise circuit-breaker persistence and replacement. Owner: @beep/repo-ai-metrics. Exit: retire when the suite moves to MemoryFileSystem.layer: its stated subject is ordinary temporary files, which the memory filesystem also provides (a #1875 migration candidate)."
     },
     {
       "id": "EV010:packages/tooling/library/ai-metrics/test/config-snapshot-bounds.test.ts:15:@effect/platform-node@0#1",
@@ -8804,7 +8717,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Real directory trees and delegated stat paths exercise repository boundaries, bounded walking and truncation."
+      "reason": "Real directory trees and delegated stat paths exercise repository boundaries, bounded walking and truncation. Owner: @beep/repo-ai-metrics. Exit: retire when MemoryFileSystem's stat matches the delegated stat paths and the walk cases move to it."
     },
     {
       "id": "EV010:packages/tooling/library/ai-metrics/test/duckdb.test.ts:4:@effect/platform-node@0#1",
@@ -8826,7 +8739,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "The native DuckDB driver consumes physical temporary database paths; an in-memory filesystem would change the subject."
+      "reason": "The native DuckDB driver consumes physical temporary database paths. Owner: @beep/repo-ai-metrics. Exit: retire when the driver cases run on an in-memory DuckDB database."
     },
     {
       "id": "EV010:packages/tooling/library/ai-metrics/test/identity-registry.test.ts:17:@effect/platform-node@0#1",
@@ -8848,7 +8761,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native atomic renames, lock contention and stale-lock behavior require real files; two live-clock cases retain bounded retry deadlines."
+      "reason": "Native atomic renames, lock contention and stale-lock behavior need real files, and two live-clock cases keep bounded retry deadlines. Owner: @beep/repo-ai-metrics. Exit: retire when MemoryFileSystem models rename races and lock contention and the registry cases move to it."
     },
     {
       "id": "EV010:packages/tooling/library/ai-metrics/test/retention.test.ts:14:@effect/platform-node@0#1",
@@ -8870,7 +8783,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native DuckDB NULL/cutoff retention closes seed, mutation and reopened verification connections inside the temporary directory lifetime."
+      "reason": "Native DuckDB NULL/cutoff retention closes seed, mutation and reopened verification connections inside the temporary directory lifetime. Owner: @beep/repo-ai-metrics. Exit: retire when the retention cases run on an in-memory DuckDB database."
     },
     {
       "id": "EV010:packages/tooling/library/ai-metrics/test/telemetry-v2-store.test.ts:19:@effect/platform-node@0#1",
@@ -8892,7 +8805,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Real persisted telemetry artifacts and complete decoded payload equality retain filesystem behavior."
+      "reason": "Real persisted telemetry artifacts and complete decoded payload equality keep the filesystem behavior. Owner: @beep/repo-ai-metrics. Exit: retire when the suite moves to MemoryFileSystem.layer: its stated subject is ordinary temporary files, which the memory filesystem also provides (a #1875 migration candidate)."
     },
     {
       "id": "EV010:packages/tooling/library/ai-metrics/test/telemetry-v2.test.ts:16:@effect/platform-node@0#1",
@@ -8914,7 +8827,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Physical telemetry artifacts, temporary paths and scoped platform services retain actual filesystem semantics."
+      "reason": "Physical telemetry artifacts, temporary paths and scoped platform services keep the real filesystem semantics. Owner: @beep/repo-ai-metrics. Exit: retire when the suite moves to MemoryFileSystem.layer: its stated subject is ordinary temporary files, which the memory filesystem also provides (a #1875 migration candidate)."
     },
     {
       "id": "EV010:packages/tooling/library/ai-sync/test/ai-sync.test.ts:41:@effect/platform-node@0#1",
@@ -8936,7 +8849,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native NodeServices is retained only for assertions about real checked-in generated artifacts, safety policy and turbo config. Three synthetic filesystem cases now use MemoryFileSystem with unique scoped directories."
+      "reason": "NodeServices serves only the assertions over real checked-in generated artifacts, safety policy and turbo config; the three synthetic filesystem cases already use MemoryFileSystem. Owner: @beep/ai-sync. Exit: retire when the committed-artifact assertions run as a lint over the checkout."
     },
     {
       "id": "EV010:packages/tooling/library/repo-utils/test/DependencyIndex.test.ts:5:@effect/platform-node/NodeFileSystem@0#1",
@@ -8958,7 +8871,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Dependency graph discovery uses native SharedGlob; real scoped workspace files must be visible to its host filesystem scans."
+      "reason": "Dependency graph discovery uses native SharedGlob, so the scoped workspace files must be visible to its host filesystem scans. Owner: @beep/repo-utils. Exit: retire when SharedGlob runs over the Effect FileSystem."
     },
     {
       "id": "EV010:packages/tooling/library/repo-utils/test/FsUtils.test.ts:6:@effect/platform-node@0#1",
@@ -8980,7 +8893,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native glob, file-type, realpath and symlink subjects retain host filesystem fixtures; abstract-only cases use isolated MemoryFileSystem."
+      "reason": "Native glob, file-type, realPath and symlink subjects keep host filesystem fixtures; the abstract-only cases already use MemoryFileSystem. Owner: @beep/repo-utils. Exit: retire when SharedGlob runs over the Effect FileSystem and MemoryFileSystem models realPath and symlinks."
     },
     {
       "id": "EV010:packages/tooling/library/repo-utils/test/Root.test.ts:4:@effect/platform-node/NodeFileSystem@0#1",
@@ -9002,7 +8915,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Real checkout root discovery is the subject; synthetic marker fixtures already use isolated MemoryFileSystem."
+      "reason": "Real checkout root discovery is the subject; the synthetic marker fixtures already use MemoryFileSystem. Owner: @beep/repo-utils. Exit: retire when root discovery is only tested over synthetic markers."
     },
     {
       "id": "EV010:packages/tooling/library/repo-utils/test/TsConfig.test.ts:6:@effect/platform-node/NodeFileSystem@0#1",
@@ -9024,7 +8937,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Tsconfig discovery combines native SharedGlob and filesystem reads over real scoped workspace files."
+      "reason": "Tsconfig discovery combines native SharedGlob and filesystem reads over real scoped workspace files. Owner: @beep/repo-utils. Exit: retire when SharedGlob runs over the Effect FileSystem."
     },
     {
       "id": "EV010:packages/tooling/library/repo-utils/test/TsNativeApi.test.ts:9:@effect/platform-node@0#1",
@@ -9067,29 +8980,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Dependency discovery including the peer-only witness uses native SharedGlob over real scoped workspace manifests."
-    },
-    {
-      "id": "EV010:packages/tooling/library/repo-utils/test/Workspaces.test.ts:12:@effect/platform-node/NodeFileSystem@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-utils",
-      "file": "packages/tooling/library/repo-utils/test/Workspaces.test.ts",
-      "line": 12,
-      "endLine": 12,
-      "symbol": "@effect/platform-node/NodeFileSystem",
-      "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
-      "class": "platform-filesystem-candidate",
-      "evidence": "import * as NodeFileSystem from \"@effect/platform-node/NodeFileSystem\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "Positive workspace patterns use native SharedGlob; missing-root and pre-glob positive controls stay coherently in MemoryFileSystem."
+      "reason": "Dependency discovery, including the peer-only witness, uses native SharedGlob over real scoped workspace manifests. Owner: @beep/repo-utils. Exit: retire when SharedGlob runs over the Effect FileSystem."
     },
     {
       "id": "EV010:packages/tooling/library/repo-utils/test/integration/monorepo.test.ts:18:@effect/platform-node/NodeFileSystem@0#1",
@@ -9111,7 +9002,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Integration intentionally reads the actual checkout and discovers workspace paths with native SharedGlob."
+      "reason": "The integration reads the actual checkout and discovers workspace paths with native SharedGlob. Owner: @beep/repo-utils. Exit: retire when the monorepo integration moves to a checkout lint."
     },
     {
       "id": "EV010:packages/tooling/library/repo-utils/test/schemas/BiomeJson.test.ts:5:@effect/platform-node@0#1",
@@ -9133,7 +9024,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Real Biome subprocess and module-relative checkout configuration are native subjects; controlled spawners use isolated memory fixtures."
+      "reason": "A real Biome subprocess and the module-relative checkout configuration are the native subjects; the controlled-spawner cases already use memory fixtures. Owner: @beep/repo-utils. Exit: retire when the Biome case runs behind a scripted spawner."
     },
     {
       "id": "EV010:packages/tooling/policy-pack/lint-rules/test/docs-rules.test.ts:3:@effect/platform-node/NodeFileSystem@0#1",
@@ -9176,7 +9067,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native Biome/oxlint subprocesses consume the actual temporary configuration, source, plugin and supporting files. Registry tests also inspect checked-in rule files and active JSONC plugin configuration. A memory-only writer would change the subprocess/filesystem subject. Retain native NodeServices and per-invocation acquireUseRelease ownership; both configured runtime proofs pass."
+      "reason": "Native Biome and oxlint subprocesses read the real temporary configuration, source, plugin and supporting files. Owner: @beep/lint-rules. Exit: retire when the rule cases run in process through the linters' APIs."
     },
     {
       "id": "EV010:packages/tooling/policy-pack/lint-rules/test/registry.test.ts:6:@effect/platform-node@0#1",
@@ -9198,7 +9089,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native Biome/oxlint subprocesses consume the actual temporary configuration, source, plugin and supporting files. Registry tests also inspect checked-in rule files and active JSONC plugin configuration. A memory-only writer would change the subprocess/filesystem subject. Retain native NodeServices and per-invocation acquireUseRelease ownership; both configured runtime proofs pass."
+      "reason": "Native Biome and oxlint subprocesses read the real temporary configuration files, and the registry tests inspect checked-in rule files and the active JSONC plugin configuration. Owner: @beep/lint-rules. Exit: retire when the registry reads its rules through an injected source and the subprocess cases run in process."
     },
     {
       "id": "EV010:packages/tooling/policy-pack/lint-rules/test/rules.test.ts:3:@effect/platform-node@0#1",
@@ -9220,29 +9111,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native Biome/oxlint subprocesses consume the actual temporary configuration, source, plugin and supporting files. Registry tests also inspect checked-in rule files and active JSONC plugin configuration. A memory-only writer would change the subprocess/filesystem subject. Retain native NodeServices and per-invocation acquireUseRelease ownership; both configured runtime proofs pass."
-    },
-    {
-      "id": "EV010:packages/tooling/policy-pack/repo-configs/test/EffectTsgoEffectFnPolicy.test.ts:5:@effect/platform-node/NodeFileSystem@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-configs",
-      "file": "packages/tooling/policy-pack/repo-configs/test/EffectTsgoEffectFnPolicy.test.ts",
-      "line": 5,
-      "endLine": 5,
-      "symbol": "@effect/platform-node/NodeFileSystem",
-      "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
-      "class": "platform-filesystem-candidate",
-      "evidence": "import * as NodeFileSystem from \"@effect/platform-node/NodeFileSystem\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "Real compiler subprocesses consume the native temporary project and node_modules symlink. MemoryFileSystem would erase that subject; command child scopes close before test-directory cleanup."
+      "reason": "Native Biome and oxlint subprocesses read the real temporary configuration, source, plugin and supporting files. Owner: @beep/lint-rules. Exit: retire when the rule cases run in process through the linters' APIs."
     },
     {
       "id": "EV010:packages/tooling/policy-pack/repo-configs/test/effect-first-regressions.test.ts:5:@effect/platform-node@0#1",
@@ -9264,7 +9133,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Actual checkout source, standards allowlist and generated snapshot bytes are the parity subject. Seeding expected text into MemoryFileSystem would make these regressions self-confirming."
+      "reason": "The actual checkout source, standards allowlist and generated snapshot bytes are the parity subject; seeded text would make the regressions self-confirming. Owner: @beep/repo-configs. Exit: retire when the parity check runs as a lint over the committed sources."
     },
     {
       "id": "EV010:packages/tooling/policy-pack/repo-configs/test/effect-steering-guidance.test.ts:4:@effect/platform-node@0#1",
@@ -9286,7 +9155,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "The real canonical skill file and its positive/negative text requirements are the subject. A seeded filesystem would only verify its fixture rather than current steering."
+      "reason": "The real canonical skill file and its positive and negative text requirements are the subject; a seeded filesystem would verify only its fixture. Owner: @beep/repo-configs. Exit: retire when the steering check runs as a lint over the committed skill."
     },
     {
       "id": "EV010:packages/tooling/test-kit/test-utils/test/ConformanceLedger.test.ts:7:@effect/platform-bun/BunFileSystem@0#1",
@@ -9308,7 +9177,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Retained native producer/consumer boundary: fixture writer uses BunFileSystem, production evidence reader Bun.file. Virtualizing only writer would split stores; production seam not authorized."
+      "reason": "The fixture writer uses BunFileSystem while the production evidence reader uses Bun.file, so virtualizing only the writer would split the stores. Owner: @beep/test-utils. Exit: retire when the evidence reader reads through the Effect FileSystem."
     },
     {
       "id": "EV010:packages/tooling/test-kit/test-utils/test/FileSystemWriteCompatibility.test.ts:1:@effect/platform-node/NodeFileSystem@0#1",
@@ -9330,7 +9199,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Retained native filesystem as subject: adapter conformance or native write offset/seek/append comparison intentionally exercises actual Node/Bun filesystem; MemoryFS replacement would remove native behavior under test."
+      "reason": "Native write offset, seek and append behavior of the Node and Bun filesystems is compared directly as the adapter conformance subject. Owner: @beep/test-utils. Exit: retire when the native adapter comparison is retired."
     },
     {
       "id": "EV010:packages/tooling/test-kit/test-utils/test/Vitest.runtime.test.ts:3:@effect/platform-node@0#1",
@@ -9352,7 +9221,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Retained native worker fixture boundary: spawned Vitest consumes actual files and output/abort/report evidence is retained before scoped directory deletion. Emulator would erase worker/process subject."
+      "reason": "A spawned Vitest worker consumes actual files, and its output, abort and report evidence is read before scoped directory deletion. Owner: @beep/test-utils. Exit: retire when the runtime cases run against an in-process worker double."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/AgentMessage.attached.test.ts:28:@effect/platform-node@0#1",
@@ -9374,7 +9243,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "The attached boundary fixtures exercise production private file permissions, real file-backed SQLite grants and dispatch, hashed correlation checkpoints, canonical workspace realPath checks and cleanup. Outer it.layer(NodeServices.layer) intentionally supplies FileSystem, Path and Crypto in both Node/Bun runners. Replacing it with an in-memory filesystem or shared store removes the real resource/authority subject; scoped test lifetime owns the built client and temporary directory."
+      "reason": "Private file permissions, file-backed SQLite grants and dispatch, hashed correlation checkpoints, canonical workspace realPath checks and cleanup are the subjects in both Node and Bun runners. Owner: @beep/repo-cli. Exit: retire when the attached cases run over an in-memory SQLite store and a memory volume that models modes and realPath."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/AgentMessage.runtime.test.ts:20:@effect/platform-node@0#1",
@@ -9396,7 +9265,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Outer it.layer supplies NodeServices filesystem, path and process-spawner services used by the real private SQLite fixture, external writer and owned process cleanup. A fake filesystem or detached process would change the integration subject."
+      "reason": "The private SQLite fixture, an external writer process and owned process cleanup need the real filesystem, path and process-spawner services. Owner: @beep/repo-cli. Exit: retire when the runtime cases run over an in-memory store with the external writer behind a scripted spawner."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/AgentMessage.tools.test.ts:17:@effect/platform-node@0#1",
@@ -9418,7 +9287,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "NodeServices supplies the real filesystem and path services for fresh private SQLite mailboxes and grant-bound MCP authorization fixtures. The bounded outer it.layer owns the temporary resources; a mocked filesystem would remove the persistence and path boundary being exercised."
+      "reason": "Fresh private SQLite mailboxes and grant-bound MCP authorization fixtures need the real filesystem and path services. Owner: @beep/repo-cli. Exit: retire when the tool cases run over an in-memory SQLite mailbox."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/accounts-usage.test.ts:58:@effect/platform-node@0#1",
@@ -9440,28 +9309,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "The live poller suite reads a real temporary auth directory: directory listing, per-file reads, and a missing-directory NotFound are the subject. NodeServices supplies that filesystem and Path; HttpClient is stubbed per test."
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/agent-effectiveness-command.test.ts:14:@effect/platform-node@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/agent-effectiveness-command.test.ts",
-      "line": 14,
-      "endLine": 14,
-      "symbol": "@effect/platform-node",
-      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
+      "reason": "The live poller suite reads a real temporary auth directory: directory listing, per-file reads and a missing-directory NotFound are the subject, with HttpClient stubbed per test. Owner: @beep/repo-cli. Exit: retire when the suite moves to MemoryFileSystem.layer: its stated subject is ordinary temporary files, which the memory filesystem also provides (a #1875 migration candidate)."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/agent-effectiveness-eval-scorer.test.ts:27:@effect/platform-node@0#1",
@@ -9482,7 +9330,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The scorer reads the committed fixtures/agent-effectiveness scorer task and fixture trees through import.meta.url and resolves the checkout with findRepoRoot. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the scorer fixtures are seeded into a MemoryFileSystem volume and the root is injected."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/architecture-operation-plan.test.ts:18:@effect/platform-node@0#1",
@@ -9503,7 +9352,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The plan is checked against the committed accepted-work-item manifest under the real checkout root (new URL(\"../../../../..\", import.meta.url)), and Bun.spawnSync probes real paths. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the manifest is read from a seeded volume and the path probes go through FileSystem."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/basic-ftp-compatibility.test.ts:2:@effect/platform-node@0#1",
@@ -9525,7 +9375,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native dependency compatibility boundary: the scoped child process resolves the installed Box SDK dependency graph and opens loopback FTP control/data sockets. MemoryFileSystem cannot represent module resolution or OS sockets. The public live-services layer owns the child; a 10-second child deadline bounds protocol hangs. CI=true Node/Bun tests and a corrupt-payload negative control pass. See research/basic-ftp-security-repair.md."
+      "reason": "A scoped child process resolves the installed Box SDK dependency graph and opens loopback FTP control and data sockets; memory cannot represent module resolution or OS sockets (research/basic-ftp-security-repair.md). Owner: @beep/repo-cli. Exit: retire when the basic-ftp compatibility proof moves out of the unit suite."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/bun-spawn-env-parity.test.ts:5:@effect/platform-node@0#1",
@@ -9547,7 +9397,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native runtime conformance subject: child processes execute actual Node and Bun against the root compatibility shim. Public NodeServices layer owns scoped reporter roots and StepExec child lifetimes. Memory cannot represent OS child environments or executable identity. Applied generated package script passes both twenty-case reports; see research/spawn-env-scope-proof.md."
+      "reason": "Child processes run the real Node and Bun binaries against the root compatibility shim; memory cannot represent OS child environments or executable identity (research/spawn-env-scope-proof.md). Owner: @beep/repo-cli. Exit: retire when the spawn environment parity check moves out of the unit suite."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/cache-accept-cli.test.ts:15:@effect/platform-node@0#1",
@@ -9569,7 +9419,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Reviewed in goals/turborepo-task-qualification/research/test-resource-boundaries.md. NodeServices and NodeCrypto provide real private issuer files and cryptographic authentication shared with a spawned CLI. Permissions, durable bytes and subprocess visibility are test subjects; an in-memory filesystem would remove those checks. This exception covers import provenance only, not the separate live-clock or provider-lifetime findings."
+      "reason": "Real private issuer files and cryptographic authentication are shared with a spawned CLI, so permissions, durable bytes and subprocess visibility are the subjects (goals/turborepo-task-qualification/research/test-resource-boundaries.md). Owner: @beep/repo-cli. Exit: retire when the accept command is exercised in process over a memory volume that models file modes."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/cache-baseline-merge.test.ts:18:@effect/platform-node@0#1",
@@ -9590,7 +9440,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The test runs git merge-file through ChildProcess.make on real temp files. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the merge driver is exercised with a scripted spawner."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/cache-command.test.ts:4:@effect/platform-node@0#1",
@@ -9611,7 +9462,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The warm-lane tests run bun --version, git and bun -e through Bun.spawnSync and runCacheWarmLaneForTesting. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the warm lane runs behind a scripted spawner."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/cache-conformance-lab.test.ts:26:@effect/platform-node@0#1",
@@ -9632,7 +9484,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The lab builds its corpus from the real checkout (buildCacheConformanceCorpus(repoRoot)) and serves it from the loopback cache-conformance-server. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the corpus is seeded into memory and the lab server reads it through FileSystem."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/cache-conformance.test.ts:10:@effect/platform-node@0#1",
@@ -9653,7 +9506,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "buildCacheConformanceCorpus(repoRoot) walks the real checkout to build the corpus under test. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the corpus builder takes a seeded root instead of the checkout."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/cache-dependencies.test.ts:4:@effect/platform-node@0#1",
@@ -9674,7 +9528,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The integrity walk is checked against real symlinks, utimes and chmod modes in an installed node_modules tree. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the walk runs over a memory volume that models links and modes."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/cache-entrypoints.test.ts:14:@effect/platform-node@0#1",
@@ -9696,7 +9551,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native import retained deliberately for physical scope/symlink/nofollow/digest/UTF8 and original bytes safety cases. Only positive arbitrary JSON preservation law uses separate witnessed Memory provider. Native detector token is not removed or claimed fixed."
+      "reason": "The physical scope, symlink, no-follow, digest, UTF-8 and original-bytes safety cases need the native filesystem; only the JSON preservation law uses a memory provider. Owner: @beep/repo-cli. Exit: retire when MemoryFileSystem models symlinks and no-follow opens and the safety cases move to it."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts:44:@effect/platform-node@0#1",
@@ -9717,7 +9572,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The pilot runs a ChildProcessSpawner over real overlays and asserts readLink on the CLAUDE.md symlink. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the pilot's spawner and overlay links run on a memory volume."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/cache-producer.test.ts:21:@effect/platform-node@0#1",
@@ -9739,7 +9595,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Reviewed in goals/turborepo-task-qualification/research/test-resource-boundaries.md. The producer tests deliberately exercise native permission bits, symlinks, hard links, revocation markers and reopen behavior through NodeServices, with real crypto through NodeCrypto. Providers are explicit it.layer registrations. This exception covers import provenance only, not the shared-clock finding."
+      "reason": "Native permission bits, symlinks, hard links, revocation markers and reopen behavior are the producer subjects, with real crypto (goals/turborepo-task-qualification/research/test-resource-boundaries.md). Owner: @beep/repo-cli. Exit: retire when MemoryFileSystem models modes and links and the producer cases move to it."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/cache-protocol-runner.test.ts:6:@effect/platform-node@0#1",
@@ -9761,7 +9617,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Reviewed in goals/turborepo-task-qualification/research/test-resource-boundaries.md. Protocol worker tests use real scoped filesystem roots and the real local HTTP fixture to check bounded capture traversal, native-summary selection and output containment. Filesystem, path, crypto and HTTP services are explicit it.layer providers with real-clock services for socket progress. Native process execution is controlled and fails closed if the seam is bypassed; this is not native protocol qualification."
+      "reason": "Real scoped filesystem roots and the local HTTP fixture check bounded capture traversal, native-summary selection and output containment; native process execution fails closed (goals/turborepo-task-qualification/research/test-resource-boundaries.md). Owner: @beep/repo-cli. Exit: retire when the protocol worker cases run over a seeded memory volume with the HTTP fixture in process."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/cache-signed-runner.test.ts:19:@effect/platform-node@0#1",
@@ -9783,7 +9639,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Reviewed in goals/turborepo-task-qualification/research/test-resource-boundaries.md. Signed supervisor tests require real scoped files for containment, mount-root resolution, issuer byte mutation and bounded report reads. NodeFileSystem, NodePath and NodeCrypto are explicit it.layer providers. Admission and subprocess execution are controlled doubles; the native process service fails closed. These tests establish supervisor behavior, not native sandbox qualification."
+      "reason": "Real scoped files are needed for containment, mount-root resolution, issuer byte mutation and bounded report reads, while admission and subprocess execution are controlled doubles (goals/turborepo-task-qualification/research/test-resource-boundaries.md). Owner: @beep/repo-cli. Exit: retire when MemoryFileSystem models mount-root resolution and the supervisor cases move to it."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/changeset-graph.test.ts:11:@effect/platform-node@0#1",
@@ -9805,7 +9661,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "NodeServices is intentional because the release-path tests run real git against scoped temporary repository files; TestConsole captures the actual command error. All 11 cases pass with CI=true on Node and Bun; full package audit (663.2s) and docgen (27.8s) passed."
+      "reason": "The release-path tests run real git against scoped temporary repository files, and TestConsole captures the real command error. Owner: @beep/repo-cli. Exit: retire when git runs behind a scripted spawner."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/check-census.test.ts:8:@effect/platform-node@0#1",
@@ -9826,7 +9682,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The census runs the checkout's installed tsgo (found from findRepoRoot) over a fixture tree, and the shim resolves the compiler from the spawn cwd. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the census accepts a stub compiler service instead of the installed binary."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/ci-command.test.ts:6:@effect/platform-node@0#1",
@@ -9848,7 +9705,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "NodeServices supplies the real filesystem and process services for a native Git exit-128 test; replacing them with MemoryFileSystem would change the subject. Each scenario acquires a scoped layer and its own TestConsole."
+      "reason": "A native git exit-128 is the subject, through the real filesystem and process services, with a scoped layer and TestConsole per scenario. Owner: @beep/repo-cli. Exit: retire when git runs behind a scripted spawner."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/ci-heavy-admission.test.ts:22:@effect/platform-node@0#1",
@@ -9869,7 +9726,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The ci admission command path resolves the checkout with findRepoRoot() before reading the event payload. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the admission command takes an injected root."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/ci-lane-timings.test.ts:34:@effect/platform-node@0#1",
@@ -9911,7 +9769,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The lane runner calls process.chdir(directory) and restores it, and reads the committed branch-protection contexts through import.meta.url. process.chdir needs the directory on the real filesystem (#1875 wave 7 trial: ENOENT on chdir). Owner: @beep/repo-cli. Exit: retire when the lane runner takes its working directory as a parameter."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/ci-rerun-runner-loss.test.ts:30:@effect/platform-node@0#1",
@@ -9932,7 +9791,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The test reads committed sources at path.join(findRepoRoot(), relative) to pin the rerun contract. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the pinned sources are passed as fixture text instead of read from the checkout."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/cli-kits.test.ts:32:@effect/platform-node@0#1",
@@ -9953,7 +9813,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The hashFileSha256 large-file case streams 64 chunks from a real file and proves it never reads the file whole; on MemoryFileSystem its 64 appends are quadratic and timed out at 300 s on hosted Test Unit (#2250). Owner: @beep/repo-cli. Exit: retire when MemoryFileSystem appends in linear time or the case streams a seeded file."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/commitlint-config.test.ts:4:@effect/platform-node@0#1",
@@ -9974,7 +9835,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The committed fixtures/commitlint tree and the checkout's commitlint config (findRepoRoot) are the subject. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the config loader takes an injected root seeded in memory."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/corpus-command.test.ts:55:@effect/platform-node@0#1",
@@ -9996,7 +9858,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native inode/hash/archive/process/DuckDB fixture boundaries justify NodeServices; Memory cannot prove them. Verified on committed source 457e1ead916b457f7071c3e4554d5e1355cca3a3: Node22 and Bun each passed all 2,287 CLI tests including the 198 selected cases; full CLI package audit (657.2s) and docgen (21.5s) passed. See research/cli-nine-applied-scope-proof.md. Original evidence and IDs retained."
+      "reason": "Native inode, hash, archive, process and DuckDB fixture boundaries are the subjects (research/cli-nine-applied-scope-proof.md). Owner: @beep/repo-cli. Exit: retire when the corpus command cases run over in-memory engines and a scripted spawner, with the inode cases in a dedicated native block."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/corpus-preservation.test.ts:42:@effect/platform-node@0#1",
@@ -10017,49 +9879,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/corpus-provenance-index.test.ts:27:@effect/platform-bun@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/corpus-provenance-index.test.ts",
-      "line": 27,
-      "endLine": 27,
-      "symbol": "@effect/platform-bun",
-      "occurrence": "v2:9e77cd79daa758d2a326930d4f4108c2b730c00f6d783ae85924e284823dafba",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { BunServices } from \"@effect/platform-bun\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/corpus-provenance-index.test.ts:28:@effect/platform-node@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/corpus-provenance-index.test.ts",
-      "line": 28,
-      "endLine": 28,
-      "symbol": "@effect/platform-node",
-      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "CapacityPreflightServiceLive probes free space with a child process over the real archive root, and the manifest rows carry native mtimes. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when every block provides a scripted capacity spawner and reads seeded timestamps."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/coverage-baseline-subtraction.test.ts:7:@effect/platform-node@0#1",
@@ -10081,7 +9902,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "NodeServices is intentional because the tests exercise real baseline JSONC file emission, subtraction, and byte identity in scoped temporary directories. All four cases pass on Node and Bun; full package audit (663.2s) and docgen (27.8s) passed."
+      "reason": "The tests emit real baseline JSONC files in scoped temporary directories and check subtraction and byte identity. Owner: @beep/repo-cli. Exit: retire when the suite moves to MemoryFileSystem.layer: its stated subject is ordinary temporary files, which the memory filesystem also provides (a #1875 migration candidate)."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/coverage-turbo-inputs.test.ts:4:@effect/platform-node@0#1",
@@ -10102,7 +9923,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The checkout's node_modules/.bin/turbo (findRepoRoot) dry-runs the real turbo.json to read coverage task inputs. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the turbo task graph is read from a captured fixture instead of the installed binary."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/create-package-identity-template.test.ts:2:@effect/platform-node@0#1",
@@ -10123,7 +9945,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The test reads the committed IdentityRegistration.ts and IdentityExportBlock.ts sources through import.meta.url. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the template sources are imported as text fixtures instead of read from the checkout."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/docgen-stall-watchdog.test.ts:7:@effect/platform-node@0#1",
@@ -10145,7 +9968,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native ChildProcessSpawner and process-tree ps/procfs diagnostics are the subject, alongside real repository-root FileSystem discovery. Memory would not establish native timeout/group teardown/exit/diagnostic contracts. Preserve NodeServices provider."
+      "reason": "Native ChildProcessSpawner and process-tree ps/procfs diagnostics are the subject, alongside real repository-root discovery. Owner: @beep/repo-cli. Exit: retire when the watchdog's process-tree probes become an injected service."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/drawings-command.test.ts:47:@effect/platform-node@0#1",
@@ -10166,7 +9989,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "PdfBackendToolsLive renders and rasterizes real PDFs through poppler binaries. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the PDF backend is replaced by a recording double."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/drawings-intake.test.ts:24:@effect/platform-node@0#1",
@@ -10208,7 +10032,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The test chdirs into a temp directory before running the CLI entry point through Bun.spawnSync. process.chdir needs the directory on the real filesystem (#1875 wave 7 trial: ENOENT on chdir). Owner: @beep/repo-cli. Exit: retire when the effect-fn command takes its root as an argument instead of process.cwd()."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/effect-schema-inventory-fixture.test.ts:16:@effect/platform-node@0#1",
@@ -10229,7 +10054,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The committed effect-schema inventory fixture and the root package.json are read under the checkout root from import.meta.url. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the fixture tree is seeded into a MemoryFileSystem volume."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/effect-vitest-contract.test.ts:32:@effect/platform-node@0#1",
@@ -10250,7 +10076,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The contract scans the committed standards/effect-vitest.inventory.jsonc and test files under the checkout root from import.meta.url. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the scan accepts a seeded repository volume."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/effect-vitest-primitives.test.ts:17:@effect/platform-node@0#1",
@@ -10271,7 +10098,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The test reads the committed fixtures/effect-vitest-406 tree and the package and repository roots resolved from import.meta.url. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the fixtures are seeded into memory and the roots are injected."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/explore-check.test.ts:14:@effect/platform-node@0#1",
@@ -10293,7 +10121,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "NodeServices remains intentional because the command scans real temporary goal and exploration directories and writes packet event files through the host filesystem. The eight captured-output tests pass on Node and Bun."
+      "reason": "The command scans temporary goal and exploration directories and writes packet event files. Owner: @beep/repo-cli. Exit: retire when the suite moves to MemoryFileSystem.layer: its stated subject is ordinary temporary files, which the memory filesystem also provides (a #1875 migration candidate)."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/explore-graduate-plan.test.ts:13:@effect/platform-node@0#1",
@@ -10315,7 +10143,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "NodeServices remains intentional because the command test reads a real temporary exploration manifest and goal packets through the host filesystem, the same boundary the snapshot reader crosses in production."
+      "reason": "The command reads a temporary exploration manifest and goal packets, the same boundary the snapshot reader crosses in production. Owner: @beep/repo-cli. Exit: retire when the suite moves to MemoryFileSystem.layer: its stated subject is ordinary temporary files, which the memory filesystem also provides (a #1875 migration candidate)."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/fixtures/graft/crux-batches.test.js:5:node:fs@0#1",
@@ -10336,7 +10164,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "A node:test fixture that runs the installed graft binary through node:child_process execFileSync. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the fixture stops resolving graft from PATH."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/gate-order-handoff.test.ts:32:@effect/platform-node@0#1",
@@ -10357,7 +10186,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The committed fixtures/gate-order-handoff-knip-retired.json is read at findRepoRoot(). The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the handoff fixture is seeded into a MemoryFileSystem volume."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/goals-doctor-path-security.test.ts:3:@effect/platform-node@0#1",
@@ -10378,7 +10208,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "temporaryWorkingDirectory from support/CommandTest.ts chdirs into a temp project before goals doctor runs. process.chdir needs the directory on the real filesystem (#1875 wave 7 trial: ENOENT on chdir). Owner: @beep/repo-cli. Exit: retire when goals doctor resolves its root from an injected path instead of process.cwd()."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/goals-graph.test.ts:26:@effect/platform-node@0#1",
@@ -10399,7 +10230,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The graph command runs in a temp working directory and git status --porcelain spawns in the checkout. process.chdir needs the directory on the real filesystem (#1875 wave 7 trial: ENOENT on chdir). Owner: @beep/repo-cli. Exit: retire when the graph takes an injected root and the git probe runs behind a scripted spawner."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/goals-manifest-capabilities.test.ts:11:@effect/platform-node@0#1",
@@ -10420,7 +10252,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The test runs git ls-files at findRepoRoot() and the command resolves its root from the working directory. process.chdir needs the directory on the real filesystem (#1875 wave 7 trial: ENOENT on chdir). Owner: @beep/repo-cli. Exit: retire when the manifest list is read from a seeded volume and the root is injected."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/goals-packet-convention-migration.test.ts:33:@effect/platform-node@0#1",
@@ -10462,7 +10295,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "withTempWorkingDirectory from support/CommandTest.ts chdirs into each temp project. process.chdir needs the directory on the real filesystem (#1875 wave 7 trial: ENOENT on chdir). Owner: @beep/repo-cli. Exit: retire when goals set-risk-tier resolves its root from an injected path."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/graft-deep-refresh.test.ts:28:@effect/platform-node@0#1",
@@ -10483,7 +10317,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The refresh captures real subprocess output and probes process liveness through runCommand. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the refresh runner takes a scripted spawner for every case."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/identity-registration-removal.test.ts:14:@effect/platform-node@0#1",
@@ -10525,7 +10360,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "NodeChildProcessSpawner.layer runs the inventory tooling over a real temp repository. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the inventory runs in process over a seeded volume."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/knowledge-doctor-evaluators.test.ts:24:@effect/platform-node@0#1",
@@ -10546,7 +10382,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "One evaluator reads the live goal packets at findRepoRoot() and the committed skills-provenance lock under import.meta.dirname. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the evaluators run over a seeded packet tree instead of the checkout."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/knowledge-doctor-grouping.test.ts:24:@effect/platform-node@0#1",
@@ -10567,7 +10404,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "listGoalPackets(findRepoRoot()) groups the checkout's real goal packets. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the grouping runs over a seeded packet tree."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/knowledge-doctor.test.ts:27:@effect/platform-node@0#1",
@@ -10588,7 +10426,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The doctor spawns derived commands through ChildProcessSpawner over the checkout's packages/tooling/tool/cli. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the derived commands run behind a scripted spawner."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/knowledge-mint-bootstrap.test.ts:2:@effect/platform-node@0#1",
@@ -10609,7 +10448,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The bootstrap runs in a Bun child process (ChildProcess.make(\"bun\")) with a fake op on PATH. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the bootstrap accepts an injected op runner and runs in process."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/knowledge-refs-rewrite.test.ts:7:@effect/platform-node@0#1",
@@ -10631,7 +10471,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Owner repository-simplification-confidence / lane C. Real platform boundary verifies subprocess, symlink, permissions and physical-file behavior; memory cannot model this subject. Reconsider when lane B's census lands."
+      "reason": "A real platform boundary verifies subprocess, symlink, permission and physical-file behavior that memory cannot model (repository-simplification-confidence lane C). Owner: @beep/repo-cli. Exit: retire when the rewrite cases run behind a scripted spawner on a memory volume that models links and modes."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/knowledge-refs.test.ts:31:@effect/platform-node@0#1",
@@ -10652,7 +10492,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The refs scan reads committed documentation and fixtures from the checkout, and one test of 62 fails on memory (#1875 wave 7). The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when that test moves to a seeded volume and the import no longer serves it."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts:27:@effect/platform-node@0#1",
@@ -10673,7 +10514,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The delta spawns git through ChildProcessSpawner and links node_modules into a temp checkout. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when git runs behind a scripted spawner."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/lab-identity-segment.test.ts:13:@effect/platform-node@0#1",
@@ -10694,7 +10536,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "withTempWorkingDirectory chdirs into the temp project whose bun.lock marks the root. process.chdir needs the directory on the real filesystem (#1875 wave 7 trial: ENOENT on chdir). Owner: @beep/repo-cli. Exit: retire when the identity segment command takes an injected root."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/laws-package.test.ts:12:@effect/platform-node@0#1",
@@ -10716,7 +10559,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Physical source/config reads and TSMorph project loading/preload/cache behavior are integration subjects. FsUtils/NodeServices are the shared outer layer; each compiler case owns a separate mutable TSMorphServiceLive pool. Preserve exact source counts, preload isolation, exclusions, and scoped roots; MemoryFS would bypass the physical compiler boundary. Source and import provenance: research/cli-continuation-nine-lineage.json; reviewed scope: research/cli-continuation-nine-proof.md."
+      "reason": "Physical source and config reads and TSMorph project loading, preload and cache behavior are the integration subjects (research/cli-continuation-nine-proof.md). Owner: @beep/repo-cli. Exit: retire when the laws package loads its compiler projects through the Effect FileSystem."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/lint-judge-rubric.test.ts:17:@effect/platform-node/NodeFileSystem@0#1",
@@ -10737,7 +10580,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The rubric tests read committed rubric sources at findRepoRoot(). The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the rubric sources are seeded into a MemoryFileSystem volume."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/lint-subcommand-allowlist.test.ts:8:@effect/platform-node@0#1",
@@ -10758,7 +10602,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The allowlist is checked against the real packages/tooling/tool/cli/src tree at findRepoRoot(). The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the allowlist check reads a seeded source tree."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/lint-workers.test.ts:7:@effect/platform-node@0#1",
@@ -10780,7 +10625,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native filesystem and child-process services are the tested boundary: real Bun CLI children read representative on-disk compiler projects; Memory cannot supply child-visible files. Scoped acquisition and positive/negative cleanup controls preserve ownership. See goals/effect-vitest-canon/research/cli-lint-workers-package-proof.json."
+      "reason": "Real Bun CLI child processes read representative on-disk compiler projects, which memory cannot supply to a child (goals/effect-vitest-canon/research/cli-lint-workers-package-proof.json). Owner: @beep/repo-cli. Exit: retire when the lint workers run in process."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/match-person-model-store.test.ts:5:@effect/platform-node@0#1",
@@ -10802,7 +10647,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Retain native NodeServices for actual physical stream/sink wx/a staging flags and atomic rename/install. No Memory substitution or unexercised DB/lock/symlink claim."
+      "reason": "Physical stream and sink staging flags (wx, a) and atomic rename-install are the subjects. Owner: @beep/repo-cli. Exit: retire when the suite moves to MemoryFileSystem.layer: its stated subject is ordinary temporary files, which the memory filesystem also provides (a #1875 migration candidate)."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/models-locators.test.ts:16:@effect/platform-node@0#1",
@@ -10823,7 +10668,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "readFixtureText reads the committed test/fixtures model locator files from disk. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the fixtures are seeded into memory or imported as text."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/native-runtime-prefix.test.ts:5:@effect/platform-node@0#1",
@@ -10844,7 +10690,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The prefix check reads the real checkout at findRepoRoot() through FsUtilsLive. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the check runs over a seeded workspace volume."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/package-scripts.policy.test.ts:12:@effect/platform-node@0#1",
@@ -10866,7 +10713,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "FsUtilsLive uses SharedGlob native filesystem traversal through Bun/Node; replacing NodeServices with MemoryFileSystem alone would change workspace discovery semantics. The scoped layer and native workspace behavior are qualified in goals/effect-vitest-canon/research/cli-package-scripts-policy-proof.json. A Memory-backed Glob would require a separate implementation."
+      "reason": "FsUtilsLive traverses the workspace with native SharedGlob, so MemoryFileSystem alone would change discovery semantics (goals/effect-vitest-canon/research/cli-package-scripts-policy-proof.json). Owner: @beep/repo-cli. Exit: retire when SharedGlob runs over the Effect FileSystem."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/package-verify.test.ts:25:@effect/platform-node/NodeFileSystem@0#1",
@@ -10887,7 +10734,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "NodeChildProcessSpawner.layer and Bun.spawnSync run git over a real temp package. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when package-verify runs behind a scripted spawner over a seeded volume."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/palantiri-command.test.ts:34:@effect/platform-node@0#1",
@@ -10908,7 +10756,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The live parcel command needs ChildProcessSpawner at runtime and writes collector state under a temp HOME. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the command's process probes take a scripted spawner."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/process-attachment.test.ts:21:@effect/platform-node@0#1",
@@ -10950,7 +10799,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The digest is computed over the committed fixtures/proof-epoch tree under import.meta.dirname. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the proof-epoch fixture is seeded into a MemoryFileSystem volume."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/proof-job.test.ts:14:@effect/platform-node@0#1",
@@ -10992,7 +10842,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "One test reads the committed src/commands/Yeet/internal sources under import.meta.dirname. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when that source check reads fixture text instead of the checkout."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/qa-judge-contract-parity.test.ts:59:@effect/platform-node/NodeFileSystem@0#1",
@@ -11014,51 +10865,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native NodeFileSystem preserved for physical symlink/alias/stat/canonical-path artifact group and committed SKILL read. Memory selected only intermediate virtual existence/aggregate groups, actual make/scoped acquisition/realPath witness and Node+Bun parity verified. Verified on committed source 457e1ead916b457f7071c3e4554d5e1355cca3a3: Node22 and Bun each passed all 2,287 CLI tests including the 198 selected cases; full CLI package audit (657.2s) and docgen (21.5s) passed. See research/cli-nine-applied-scope-proof.md. Original evidence and IDs retained."
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/quality-artifact-generators.test.ts:12:@effect/platform-node/NodeFileSystem@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/quality-artifact-generators.test.ts",
-      "line": 12,
-      "endLine": 12,
-      "symbol": "@effect/platform-node/NodeFileSystem",
-      "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
-      "class": "platform-filesystem-candidate",
-      "evidence": "import * as NodeFileSystem from \"@effect/platform-node/NodeFileSystem\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The generator reads physical package/config/TypeScript inputs and the authored topo-sort shell script, then writes/reads explicit JSDoc and CI artifact paths. Native FS and NodeChildProcessSpawner support actual compiler/toposort integration; fixture roots and labs exclusion remain case-local. Do not substitute MemoryFS for these compiler/process inputs. Source and import provenance: research/cli-continuation-nine-lineage.json; reviewed scope: research/cli-continuation-nine-proof.md."
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/quality-scheduler-degraded-inputs.test.ts:12:@effect/platform-node/NodeFileSystem@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/quality-scheduler-degraded-inputs.test.ts",
-      "line": 12,
-      "endLine": 12,
-      "symbol": "@effect/platform-node/NodeFileSystem",
-      "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
-      "class": "platform-filesystem-candidate",
-      "evidence": "import * as NodeFileSystem from \"@effect/platform-node/NodeFileSystem\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "Host fallback readings and rejection of actual native directory mode 0755 are subjects. Preserve /proc/meminfo read stubs, finite-positive host fallback, 0700 safety refusal, unchanged retained mode, and empty lease/ticket file behavior. Private scoped roots + runtime-root override avoid actual scheduler state. MemoryFS or root execution would not prove native permission/fallback behavior. Source and import provenance: research/cli-continuation-nine-lineage.json; reviewed scope: research/cli-continuation-nine-proof.md."
+      "reason": "The physical symlink, alias, stat and canonical-path artifact group and the committed SKILL read need the native filesystem; the virtual groups already use MemoryFileSystem (research/cli-nine-applied-scope-proof.md). Owner: @beep/repo-cli. Exit: retire when MemoryFileSystem models symlinks and canonical paths and the committed SKILL is imported as text."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/quality-scheduler-drift.test.ts:18:@effect/platform-node/NodeFileSystem@0#1",
@@ -11080,28 +10887,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native filesystem remains for real scheduler lease publication/link behavior and queue state. Two procfs reading cases use MemoryFileSystem. Native scoped roots are released, proven by lifecycle controls. See research/cli-scheduler-drift-package-proof.json."
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/quality-scheduler.test.ts:79:@effect/platform-node/NodeFileSystem@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/quality-scheduler.test.ts",
-      "line": 79,
-      "endLine": 79,
-      "symbol": "@effect/platform-node/NodeFileSystem",
-      "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
-      "class": "platform-filesystem-candidate",
-      "evidence": "import * as NodeFileSystem from \"@effect/platform-node/NodeFileSystem\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
+      "reason": "Real scheduler lease publication, link behavior and queue state need the native filesystem; the two procfs cases already use MemoryFileSystem (research/cli-scheduler-drift-package-proof.json). Owner: @beep/repo-cli. Exit: retire when MemoryFileSystem models link-based lease publication and the drift cases move to it."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/quality-tasks.test.ts:167:@effect/platform-node/NodeFileSystem@0#1",
@@ -11122,7 +10908,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "runGit and NodeChildProcessSpawner run git and the quality task steps against real temp repositories. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the task runner takes a scripted spawner."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/research-history-sift.test.ts:5:@effect/platform-node@0#1",
@@ -11165,7 +10952,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native research-library evidence fixture exercises real filesystem hashing, symlink containment, immutable/atomic artifact publication and scoped cleanup; this suite also invokes native Git or external PDF/transcript subprocess evidence. MemoryFileSystem would change the platform identity/provenance subject. Shared NodeServices are acquired through it.layer with a 30-second hook timeout; per-test resources stay runner-scoped."
+      "reason": "Real filesystem hashing, symlink containment, immutable and atomic artifact publication and scoped cleanup are the subjects, and the suite runs native git or PDF and transcript subprocesses. Owner: @beep/repo-cli. Exit: retire when the acquisition cases run over a memory volume that models links and a scripted spawner."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/research-library-paper-bounds.test.ts:3:@effect/platform-node@0#1",
@@ -11187,7 +10974,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "The adapter regression verifies retained immutable bytes and real filesystem hash publication under a scoped temporary directory. NodeServices and NodeCrypto are shared through it.layer; HTTP bodies and the PDF subprocess are fully intercepted. No external network or native extractor runs. A memory filesystem would replace the artifact publication boundary under test."
+      "reason": "Retained immutable bytes and real hash publication under a scoped temporary directory are the adapter regression's subject; HTTP and the PDF subprocess are intercepted. Owner: @beep/repo-cli. Exit: retire when the suite moves to MemoryFileSystem.layer: its stated subject is ordinary temporary files, which the memory filesystem also provides (a #1875 migration candidate)."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/research-library-views.test.ts:34:@effect/platform-node@0#1",
@@ -11209,7 +10996,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native research-library evidence fixture exercises real filesystem hashing, symlink containment, immutable/atomic artifact publication and scoped cleanup; this suite also invokes native Git or external PDF/transcript subprocess evidence. MemoryFileSystem would change the platform identity/provenance subject. Shared NodeServices are acquired through it.layer with a 30-second hook timeout; per-test resources stay runner-scoped."
+      "reason": "Real filesystem hashing, symlink containment, immutable and atomic artifact publication and scoped cleanup are the subjects of the views fixture. Owner: @beep/repo-cli. Exit: retire when MemoryFileSystem models symlink containment and the views cases move to it."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/residue-reap.test.ts:19:@effect/platform-node@0#1",
@@ -11231,7 +11018,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native descriptor/inode containment, procfs, symlinks, chmod, Git and GNU touch/find subjects require OS services. Public layer owns services; individual typed acquireUseRelease brackets preserve visible cleanup errors and shorter fixture lifetimes. See research/residue-reap-scope-proof.md."
+      "reason": "Native descriptor and inode containment, procfs, symlinks, chmod, git and GNU touch/find are the subjects (research/residue-reap-scope-proof.md). Owner: @beep/repo-cli. Exit: retire when the reaper's OS probes become injected services."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/restoration-archive-coverage.test.ts:12:@effect/platform-node@0#1",
@@ -11253,28 +11040,6 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "open"
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/reviewer-bootstrap.test.ts:4:@effect/platform-node/NodeFileSystem@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/reviewer-bootstrap.test.ts",
-      "line": 4,
-      "endLine": 4,
-      "symbol": "@effect/platform-node/NodeFileSystem",
-      "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
-      "class": "platform-filesystem-candidate",
-      "evidence": "import * as NodeFileSystem from \"@effect/platform-node/NodeFileSystem\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The child Bun process executes temporary op and op-doctor fixtures through the real OS PATH and verifies FIFO stdin. MemoryFileSystem cannot expose executable files to that process. NodeFileSystem and NodePath are provided explicitly; makeTempDirectoryScoped removes fixtures at test scope exit. Only public placeholder data is used."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/roadmap-refs.test.ts:8:@effect/platform-node@0#1",
@@ -11337,7 +11102,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The lint command runs in a temp working directory whose root marker findRepoRoot resolves. process.chdir needs the directory on the real filesystem (#1875 wave 7 trial: ENOENT on chdir). Owner: @beep/repo-cli. Exit: retire when the schema-catalog lint takes an injected root."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/schema-first-parity.test.ts:17:@effect/platform-node@0#1",
@@ -11358,7 +11124,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The parity test calls process.chdir(directory) inside an acquireRelease. process.chdir needs the directory on the real filesystem (#1875 wave 7 trial: ENOENT on chdir). Owner: @beep/repo-cli. Exit: retire when the parity check takes its root as a parameter."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/schema-topology.test.ts:4:@effect/platform-node@0#1",
@@ -11379,7 +11146,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "withTempWorkingDirectory chdirs into the temp project before the topology runs. process.chdir needs the directory on the real filesystem (#1875 wave 7 trial: ENOENT on chdir). Owner: @beep/repo-cli. Exit: retire when the topology command takes an injected root."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/session-ledger.test.ts:24:@effect/platform-node@0#1",
@@ -11401,7 +11169,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "NodeServices is required for native git subprocesses, linked worktrees, chmod/stat, and real path semantics in this suite. MemoryFileSystem would change the command subject."
+      "reason": "Native git subprocesses, linked worktrees, chmod/stat and real path semantics are the subjects. Owner: @beep/repo-cli. Exit: retire when git runs behind a scripted spawner over a memory volume."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/single-project-emit.test.ts:4:@effect/platform-node@0#1",
@@ -11422,7 +11190,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The emit test resolves the real checkout with findRepoRoot() and reads its projects. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the emitter runs over a seeded workspace volume."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/skills-command.test.ts:18:@effect/platform-node@0#1",
@@ -11443,7 +11212,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The skills command runs in a temp working directory and the link tests assert real readLink results. process.chdir needs the directory on the real filesystem (#1875 wave 7 trial: ENOENT on chdir). Owner: @beep/repo-cli. Exit: retire when the skills command takes an injected root and the link cases run on a symlink-capable memory volume."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/skills-materialize.test.ts:22:@effect/platform-node@0#1",
@@ -11464,7 +11234,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The committed fixtures/skills-provenance lock is read through import.meta.url, and the layout tests link .agents/skills to .claude/skills. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the lock is seeded into memory and the link layout runs on a memory volume that supports symlinks."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/skills-provenance.test.ts:49:@effect/platform-node@0#1",
@@ -11506,7 +11277,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The committed skills-provenance lock and the checkout root (import.meta.url) are inputs, and relock links .agents/skills. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the lock is seeded into memory and the root is injected."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts:15:@effect/platform-node@0#1",
@@ -11590,7 +11362,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "One test of 28 runs src/internal/cli/Stdout.ts in a bun child to observe real stdout. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when that case moves to its own block and the import no longer serves the in-process cases."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:36:@effect/platform-node@0#1",
@@ -11611,7 +11384,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The command writes and checks outputs at path.join(process.cwd(), outputPath) after chdir, and createTar packs real files. process.chdir needs the directory on the real filesystem (#1875 wave 7 trial: ENOENT on chdir). Owner: @beep/repo-cli. Exit: retire when the command takes an injected output root."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/test-tsgo-turbo-inputs.test.ts:15:@effect/platform-node@0#1",
@@ -11632,7 +11406,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The checkout's node_modules/.bin/turbo (findRepoRoot) dry-runs the real turbo.json to read test-tsgo inputs. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the task graph is read from a captured fixture."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/test-typecheck-coverage.test.ts:6:@effect/platform-node/NodeFileSystem@0#1",
@@ -11674,7 +11449,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The reaper spawns lsof and git through runCommand, reads /proc/locks, and walks real symlinks and directory mtimes. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the reaper's process and procfs probes become injected services."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:12:@effect/platform-node/NodeFileSystem@0#1",
@@ -11695,7 +11471,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "Each test sets rootDir = process.cwd() after chdir, and the file merges NodeServices.layer after MemoryFileSystem.layer. process.chdir needs the directory on the real filesystem (#1875 wave 7 trial: ENOENT on chdir). Owner: @beep/repo-cli. Exit: retire when tsconfig-sync takes an injected root instead of process.cwd()."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/turbo-lane-digest.test.ts:21:@effect/platform-node@0#1",
@@ -11716,7 +11493,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "Native modification times choose the newest turbo summary: the test sets utimes on stale and fresh files, and the #1875 wave 7 memory trial failed its newest-per-task assertions. Owner: @beep/repo-cli. Exit: retire when the digest reads timestamps from the summaries instead of file mtimes."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/worktree-command.test.ts:50:@effect/platform-node@0#1",
@@ -11761,27 +11539,6 @@
       "status": "open"
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/yeet-ack.test.ts:17:@effect/platform-node/NodeFileSystem@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-ack.test.ts",
-      "line": 17,
-      "endLine": 17,
-      "symbol": "@effect/platform-node/NodeFileSystem",
-      "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
-      "class": "platform-filesystem-candidate",
-      "evidence": "import * as NodeFileSystem from \"@effect/platform-node/NodeFileSystem\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-artifact-writers.test.ts:33:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -11801,7 +11558,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Physical verdict/status/closeout artifacts and exactly-once terminal journal persistence are read back through production codecs; writer failures and interruption terminal records remain. Native scoped directories, independently read persisted bytes and cleanup defects preserve this disk integration cohort. This is a boundary adjudication, not evidence of a live external command or an assertion that MemoryFS cannot implement the writer interface. Source and import provenance: research/cli-continuation-nine-lineage.json; reviewed scope: research/cli-continuation-nine-proof.md."
+      "reason": "Physical verdict, status and closeout artifacts and exactly-once terminal journal persistence are read back through production codecs; this is a disk-integration boundary, not a claim that memory cannot implement the writer (research/cli-continuation-nine-proof.md). Owner: @beep/repo-cli. Exit: retire when the suite moves to MemoryFileSystem.layer: its stated subject is ordinary temporary files, which the memory filesystem also provides (a #1875 migration candidate)."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-base-conflict.test.ts:58:@effect/platform-node/NodeFileSystem@0#1",
@@ -11822,7 +11579,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The base-conflict monitor appends inbox rows, and the inbox active projection runs flock, sh and jq through Bun.spawnSync in the real inbox directory. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the inbox projection runs in process or behind an injected lock service."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-check-fidelity.test.ts:18:@effect/platform-node/NodeFileSystem@0#1",
@@ -11843,7 +11601,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The check-fidelity monitor appends inbox rows, and the inbox active projection runs flock, sh and jq through Bun.spawnSync in the real inbox directory. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the inbox projection runs in process or behind an injected lock service."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:32:@effect/platform-node@0#1",
@@ -11864,7 +11623,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The wiring tests chdir into a temp checkout, run git through ChildProcess, and read the committed fixtures/yeet-publish-plan plans. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the publish wiring takes an injected root, a scripted git spawner and seeded plans."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-comment-actor.test.ts:14:@effect/platform-node/NodeFileSystem@0#1",
@@ -11885,7 +11645,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "pollYeetPrCommentRows appends inbox rows, and the inbox active projection runs flock, sh and jq through Bun.spawnSync in the real inbox directory. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the inbox projection runs in process or behind an injected lock service."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-converge.test.ts:41:@effect/platform-node/NodeFileSystem@0#1",
@@ -11906,7 +11667,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The converge loop appends inbox rows, and the inbox active projection runs flock, sh and jq through Bun.spawnSync in the real inbox directory. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the inbox projection runs in process or behind an injected lock service."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-economics.test.ts:37:@effect/platform-node@0#1",
@@ -11949,7 +11711,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "NodeServices.layer remains required for real child-process shell hooks, filesystem, Git, symlink, mode and exclusive-create behavior. A memory filesystem would change the subject. Nine scenarios pass on Node and Bun; @beep/repo-cli package audit and docgen passed at source 318551c4690c7c06c05beb499bc0628ec39b4355."
+      "reason": "Real child-process shell hooks, filesystem, git, symlink, mode and exclusive-create behavior are the subjects. Owner: @beep/repo-cli. Exit: retire when the hook adapter runs its shell hooks behind a scripted spawner on a memory volume that models modes."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-inbox-porcelain.test.ts:38:@effect/platform-node/NodeFileSystem@0#1",
@@ -11970,7 +11732,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The porcelain runners resolve the checkout from a stubbed process.cwd, and every append runs the inbox projection (flock, sh, jq) through Bun.spawnSync in the real inbox directory. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the inbox projection runs in process and the runners take an injected root."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-inbox-view.test.ts:29:@effect/platform-node/NodeFileSystem@0#1",
@@ -11991,29 +11754,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/yeet-inbox.test.ts:32:@effect/platform-node/NodeFileSystem@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-inbox.test.ts",
-      "line": 32,
-      "endLine": 32,
-      "symbol": "@effect/platform-node/NodeFileSystem",
-      "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
-      "class": "platform-filesystem-candidate",
-      "evidence": "import * as NodeFileSystem from \"@effect/platform-node/NodeFileSystem\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
       "status": "exception",
-      "reason": "Native symlink/no-follow refusal, exclusive-create EEXIST race and active-index staging are actual OS filesystem subjects. Public layers own services; per-test makeTempDirectoryScoped exposes removal failures. Persisted-byte invariant requires Some before and after duplicate append. See research/yeet-inbox-scope-proof.md."
+      "reason": "Every append runs the inbox projection (flock, sh, jq) through Bun.spawnSync in the real inbox directory, and two cases assert that symlinked ack files are refused. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the inbox projection runs in process and the link cases keep a native block."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-merge-gate.test.ts:30:@effect/platform-node@0#1",
@@ -12034,7 +11776,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The gate decodes committed fixtures/yeet-merge-gate JSON and runs bunx commitlint through the spawner. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when commitlint runs behind a scripted spawner and the fixtures are seeded."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts:16:@effect/platform-node/NodeFileSystem@0#1",
@@ -12056,7 +11799,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Real filesystem persistence/output capture and scoped artifact directories are retained; GitHub/child command results are SCRIPTED through ChildProcessSpawner.make, not network calls or real GitHub subprocess proof. Recorder replacement, preserved earlier records, spawn failure/red polarity and bounded retries remain. Keep native disk integration distinct from the pure per-case spawner values and controlled test clock. Source and import provenance: research/cli-continuation-nine-lineage.json; reviewed scope: research/cli-continuation-nine-proof.md."
+      "reason": "Real filesystem persistence, output capture and scoped artifact directories are kept, while GitHub and child command results are scripted through ChildProcessSpawner.make (research/cli-continuation-nine-proof.md). Owner: @beep/repo-cli. Exit: retire when the suite moves to MemoryFileSystem.layer: its stated subject is ordinary temporary files, which the memory filesystem also provides (a #1875 migration candidate)."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-monitor-ready.test.ts:42:@effect/platform-node/NodeFileSystem@0#1",
@@ -12066,27 +11809,6 @@
       "file": "packages/tooling/tool/cli/test/yeet-monitor-ready.test.ts",
       "line": 42,
       "endLine": 42,
-      "symbol": "@effect/platform-node/NodeFileSystem",
-      "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
-      "class": "platform-filesystem-candidate",
-      "evidence": "import * as NodeFileSystem from \"@effect/platform-node/NodeFileSystem\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/yeet-portfolio-index-guard.test.ts:12:@effect/platform-node/NodeFileSystem@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-portfolio-index-guard.test.ts",
-      "line": 12,
-      "endLine": 12,
       "symbol": "@effect/platform-node/NodeFileSystem",
       "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
       "class": "platform-filesystem-candidate",
@@ -12119,7 +11841,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The comment-row poller appends inbox rows, and the inbox active projection runs flock, sh and jq through Bun.spawnSync in the real inbox directory. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the inbox projection runs in process or behind an injected lock service."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-pr-wave-notifier.test.ts:38:@effect/platform-node@0#1",
@@ -12140,7 +11863,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The notifier runs the committed .claude/hooks/yeet-pr-wave-notifier.sh worker as a child process. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the worker runs behind a scripted spawner."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-push-ack-timeline.test.ts:23:@effect/platform-node/NodeFileSystem@0#1",
@@ -12161,7 +11885,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "appendYeetInboxRow writes the red rows, and the inbox active projection runs flock, sh and jq through Bun.spawnSync in the real inbox directory. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the inbox projection runs in process or behind an injected lock service."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-ready-gate.test.ts:39:@effect/platform-node@0#1",
@@ -12182,7 +11907,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The gate runs git through ChildProcess.make against real temp repositories. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when git runs behind a scripted spawner."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-remediation.test.ts:29:@effect/platform-node/NodeFileSystem@0#1",
@@ -12203,7 +11929,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The dispatch blocks append inbox rows through the flock, sh and jq projection (Bun.spawnSync) and assert that symlinked dispatch state and inbox directories are refused. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the inbox projection runs in process and the link cases keep a native block."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-reply-engine.test.ts:34:@effect/platform-node/NodeFileSystem@0#1",
@@ -12225,7 +11952,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Physical drafts and reply-report.json bytes are written/read/decoded, with denial/report/exit polarity preserved. ChildProcessSpawner.make answers a fail-closed scripted gh protocol: no hosted GitHub action is tested or authorized. Native draft/report root ownership is retained as the resource lens requires; pure scripted spawner values are supplied per case. Source and import provenance: research/cli-continuation-nine-lineage.json; reviewed scope: research/cli-continuation-nine-proof.md."
+      "reason": "Physical drafts and reply-report.json bytes are written, read and decoded, while gh answers through a fail-closed scripted protocol (research/cli-continuation-nine-proof.md). Owner: @beep/repo-cli. Exit: retire when the suite moves to MemoryFileSystem.layer: its stated subject is ordinary temporary files, which the memory filesystem also provides (a #1875 migration candidate)."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-resume.test.ts:19:@effect/platform-node@0#1",
@@ -12246,7 +11973,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The resume tests create real git repositories with Bun.spawnSync(git init, git remote add). A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the resume reads git state through a scripted spawner."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-review-body-signal.test.ts:8:@effect/platform-node@0#1",
@@ -12267,7 +11995,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The committed fixtures/pr-review-bodies files are read through import.meta.url. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the review bodies are imported as text fixtures."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-review-fixes.test.ts:21:@effect/platform-node/NodeFileSystem@0#1",
@@ -12288,7 +12017,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "NodeChildProcessSpawner.layer and Bun.spawnSync run git over real temp repositories. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when git runs behind a scripted spawner."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-review-window.test.ts:26:@effect/platform-node@0#1",
@@ -12330,7 +12060,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "Only the \"yeet ready native repo root\" block uses NodeServices.layer: runYeetReady gets no root there, so it resolves the real checkout from the working directory. Every other block already runs on MemoryFileSystem. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when runYeetReady takes an injected repository root."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-status-triage.test.ts:37:@effect/platform-node@0#1",
@@ -12351,7 +12082,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The committed fixtures/pr-review-bodies/pr1184-threads.json capture is read through import.meta.url. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the capture is imported as a text fixture."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-sweep-retire.test.ts:40:@effect/platform-node@0#1",
@@ -12393,7 +12125,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "NodeChildProcessSpawner.layer runs the watch loop's processes, and one case links the failures file. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the watch loop takes a scripted spawner."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-wave-exempt.test.ts:34:@effect/platform-node/NodeFileSystem@0#1",
@@ -12414,7 +12147,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "appendYeetInboxRow writes the wave rows, and the inbox active projection runs flock, sh and jq through Bun.spawnSync in the real inbox directory. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the inbox projection runs in process or behind an injected lock service."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-wave-rerun.test.ts:54:@effect/platform-node/NodeFileSystem@0#1",
@@ -12435,28 +12169,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/yeet.test.ts:153:@effect/platform-node/NodeFileSystem@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet.test.ts",
-      "line": 153,
-      "endLine": 153,
-      "symbol": "@effect/platform-node/NodeFileSystem",
-      "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
-      "class": "platform-filesystem-candidate",
-      "evidence": "import * as NodeFileSystem from \"@effect/platform-node/NodeFileSystem\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The rerun appends inbox rows and records a real submitter pid, and the inbox active projection runs flock, sh and jq through Bun.spawnSync in the real inbox directory. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the inbox projection runs in process or behind an injected lock service."
     },
     {
       "id": "EV010:packages/tooling/tool/docgen/test/Core.test.ts:4:@effect/platform-bun/BunServices@0#1",
@@ -12478,7 +12192,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "The real native filesystem/process is the subject: compiler execution, proof-manifest bytes/digests, or module-relative package identity. MemoryFS would erase that boundary; no live provider or container is used."
+      "reason": "Compiler execution, proof-manifest bytes and digests and module-relative package identity on the real filesystem and process are the subjects. Owner: @beep/repo-docgen. Exit: retire when the docgen core cases run over a seeded memory volume with the compiler behind a scripted spawner."
     },
     {
       "id": "EV010:packages/tooling/tool/docgen/test/version.test.ts:4:@effect/platform-bun/BunServices@0#1",
@@ -12500,7 +12214,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "The real native filesystem/process is the subject: compiler execution, proof-manifest bytes/digests, or module-relative package identity. MemoryFS would erase that boundary; no live provider or container is used."
+      "reason": "Module-relative package identity is read from the real package files. Owner: @beep/repo-docgen. Exit: retire when the version is read from an imported package manifest."
     },
     {
       "id": "EV010:packages/workspace/server/test/WorkspaceSourceTextResolver.test.ts:25:@effect/platform-bun/BunFileSystem@0#1",
@@ -12522,7 +12236,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Retain native Bun filesystem for real temporary vault directories, containment and symlink rejection, exact SHA-256 bytes, installed DOCX extraction and the 32 MiB plus one byte control. Memory filesystem is not an equivalent subject."
+      "reason": "Real temporary vault directories, containment and symlink rejection, exact SHA-256 bytes, installed DOCX extraction and the 32 MiB plus one byte control are the subjects. Owner: @beep/workspace-server. Exit: retire when MemoryFileSystem models symlink rejection and the resolver cases move to it."
     },
     {
       "id": "EV010:packages/workspace/server/test/WorkspaceVaultStore.test.ts:6:@effect/platform-bun/BunFileSystem@0#1",
@@ -12544,7 +12258,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Retain native Bun filesystem for real temporary vault directories, containment and symlink rejection, exact SHA-256 bytes, installed DOCX extraction and the 32 MiB plus one byte control. Memory filesystem is not an equivalent subject."
+      "reason": "Real temporary vault directories, containment and symlink rejection, exact SHA-256 bytes and the 32 MiB plus one byte control are the subjects. Owner: @beep/workspace-server. Exit: retire when MemoryFileSystem models symlink rejection and the vault store cases move to it."
     },
     {
       "id": "EV012:apps/professional-desktop/test/chat-ui.test.tsx:61:vi.mock@0#1",
