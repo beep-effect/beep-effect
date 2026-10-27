@@ -82,16 +82,6 @@
       "reason": "Plain data whose fields come from a checked struct const (ciRunnersNetworkConfigStruct.pipe(S.check(...))), which the schema-opaque-default codemod could not classify (keep reason fields-expression-unknown), so it stays a branded S.Class. Follow-up: convert by hand to a branded S.Opaque over that struct."
     },
     {
-      "file": "infra/src/CiTurboCache.ts",
-      "symbol": "resolveTurboCacheLabBuckets",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-fn-schema",
-      "line": 220,
-      "owner": "@beep/infra",
-      "reason": "Exported function \"resolveTurboCacheLabBuckets\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
-    },
-    {
       "file": "infra/src/OipWeb.ts",
       "symbol": "OipPulumiStateBackendConfig",
       "kind": "plain-data-schema-class",
