@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-10-27T13:37:08.129Z
+Generated: 2026-10-27T14:07:01.911Z
 
 ## Scope
 
@@ -744,13 +744,13 @@ Export findings:
 - `src/Html.form-control.ts:231` `ButtonState` (const) - 1 example import violation(s)
 - `src/Html.form-control.ts:303` `resolveButtonState` (const) - 1 example import violation(s)
 - `src/Html.meta.ts:607` `HTML_GLOBAL_ATTRIBUTE_NAMES` (const) - 1 documentation section/link violation(s)
-- `src/Html.policy.ts:511` `SafeHtmlAst` (const) - 1 example import violation(s)
-- `src/Html.policy.ts:536` `SafeHtmlAst` (type) - 1 example import violation(s)
-- `src/Html.policy.ts:558` `SafeHtmlNode` (const) - 1 example import violation(s)
-- `src/Html.policy.ts:813` `inspectSafeHtml` (const) - 1 example import violation(s)
-- `src/Html.policy.ts:842` `enforceSafeHtml` (const) - 1 example import violation(s)
-- `src/Html.policy.ts:868` `safeHtmlAstConformant` (const) - 1 example import violation(s)
-- `src/Html.policy.ts:896` `safeHtmlAstRoot` (const) - 1 example import violation(s)
+- `src/Html.policy.ts:512` `SafeHtmlAst` (const) - 1 example import violation(s)
+- `src/Html.policy.ts:537` `SafeHtmlAst` (type) - 1 example import violation(s)
+- `src/Html.policy.ts:559` `SafeHtmlNode` (const) - 1 example import violation(s)
+- `src/Html.policy.ts:814` `inspectSafeHtml` (const) - 1 example import violation(s)
+- `src/Html.policy.ts:843` `enforceSafeHtml` (const) - 1 example import violation(s)
+- `src/Html.policy.ts:869` `safeHtmlAstConformant` (const) - 1 example import violation(s)
+- `src/Html.policy.ts:897` `safeHtmlAstRoot` (const) - 1 example import violation(s)
 - `src/Html.script.ts:44` `HtmlMimeType` (const) - 1 example import violation(s)
 - `src/Html.script.ts:86` `JavaScriptMimeTypeEssence` (const) - 1 example import violation(s)
 - `src/Html.script.ts:140` `ScriptDataBlockMimeType` (const) - 1 example import violation(s)
@@ -1977,10 +1977,10 @@ Export findings:
 - `src/SemanticFoundation.models.ts:191` `ConceptAlignment` (class) - 1 example import violation(s)
 - `src/SemanticFoundation.models.ts:224` `TaxonomyConcept` (class) - 1 example import violation(s)
 - `src/SemanticFoundation.models.ts:293` `FilingRoot` (class) - 1 example import violation(s)
-- `src/TaxonomyLoader.ts:224` `VendorAlignmentManifestEntry` (class) - 1 example import violation(s)
-- `src/TaxonomyLoader.ts:283` `VendorConceptSlice` (class) - 1 example import violation(s)
-- `src/TaxonomyLoader.ts:493` `VendorSliceConceptMismatch` (class) - 1 example import violation(s)
-- `src/TaxonomyLoader.ts:529` `VendorAlignmentTargetNotFound` (class) - 1 example import violation(s)
+- `src/TaxonomyLoader.ts:223` `VendorAlignmentManifestEntry` (class) - 1 example import violation(s)
+- `src/TaxonomyLoader.ts:282` `VendorConceptSlice` (class) - 1 example import violation(s)
+- `src/TaxonomyLoader.ts:492` `VendorSliceConceptMismatch` (class) - 1 example import violation(s)
+- `src/TaxonomyLoader.ts:528` `VendorAlignmentTargetNotFound` (class) - 1 example import violation(s)
 - `src/TaxonomyRegistry.ts:36` `LibrarianInput` (class) - 1 example import violation(s)
 - `src/TaxonomyRegistry.ts:110` `TaxonomyConceptNotFound` (class) - 1 example import violation(s)
 - `src/TaxonomyRegistry.ts:134` `UnsupportedDocumentClass` (class) - 1 example import violation(s)

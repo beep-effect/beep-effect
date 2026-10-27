@@ -169,20 +169,19 @@ export type VendorLoadStatus = typeof VendorLoadStatus.Type;
  * @category models
  * @since 0.0.0
  */
-export class VendorManifestEntry extends S.Class<VendorManifestEntry, { readonly brand: unique symbol }>(
-  $I`VendorManifestEntry`
-)(
-  {
+export class VendorManifestEntry extends S.Opaque<VendorManifestEntry, { readonly brand: unique symbol }>()(
+  S.Struct({
     _tag: S.tagDefaultOmit("VendorTaxonomySeedSlice"),
     format: S.tag("jsonld"),
     id: S.NonEmptyString,
     loadStatus: VendorLoadStatus,
     path: VendorSlicePath,
     verified: S.tag(true),
-  },
-  $I.annote("VendorManifestEntry", {
-    description: "Manifest row for one verified, explicitly vetted, alignment-free JSON-LD taxonomy slice.",
-  })
+  }).pipe(
+    $I.annoteSchema("VendorManifestEntry", {
+      description: "Manifest row for one verified, explicitly vetted, alignment-free JSON-LD taxonomy slice.",
+    })
+  )
 ) {
   static readonly decodeUnknownJsonStringEffect = S.decodeUnknownEffect(S.fromJsonString(VendorManifestEntry));
 }
@@ -221,11 +220,11 @@ export class VendorManifestEntry extends S.Class<VendorManifestEntry, { readonly
  * @category models
  * @since 0.0.0
  */
-export class VendorAlignmentManifestEntry extends S.Class<
+export class VendorAlignmentManifestEntry extends S.Opaque<
   VendorAlignmentManifestEntry,
   { readonly brand: unique symbol }
->($I`VendorAlignmentManifestEntry`)(
-  {
+>()(
+  S.Struct({
     _tag: S.tagDefaultOmit("VendorConceptAlignmentSlice"),
     conceptIri: HttpsIriReference,
     fetchUrl: HttpsIriReference,
@@ -238,26 +237,26 @@ export class VendorAlignmentManifestEntry extends S.Class<
     namespaceIri: HttpsIriReference,
     path: VendorSlicePath,
     verified: S.tag(true),
-  },
-  $I.annote("VendorAlignmentManifestEntry", {
-    description: "Asset-pack manifest directive for one vetted external concept alignment.",
-  })
-) {}
-
-const VendorAlignmentManifestEntryBoundary = VendorAlignmentManifestEntry.check(
-  S.makeFilter(
-    (entry) =>
-      Bool.and(
-        Str.startsWith(entry.namespaceIri)(entry.conceptIri),
-        Str.startsWith(entry.namespaceIri)(entry.fetchUrl)
-      ),
-    $I.annote("VendorAlignmentAuthorityCheck", {
-      title: "Vendor Alignment Authority",
-      description: "A vendor alignment whose concept and source IRIs remain under its manifested namespace.",
-      message: "Vendor concept and source IRIs must remain under the manifested namespace",
+  }).pipe(
+    S.check(
+      S.makeFilter(
+        (entry) =>
+          Bool.and(
+            Str.startsWith(entry.namespaceIri)(entry.conceptIri),
+            Str.startsWith(entry.namespaceIri)(entry.fetchUrl)
+          ),
+        $I.annote("VendorAlignmentAuthorityCheck", {
+          title: "Vendor Alignment Authority",
+          description: "A vendor alignment whose concept and source IRIs remain under its manifested namespace.",
+          message: "Vendor concept and source IRIs must remain under the manifested namespace",
+        })
+      )
+    ),
+    $I.annoteSchema("VendorAlignmentManifestEntry", {
+      description: "Asset-pack manifest directive for one vetted external concept alignment.",
     })
   )
-);
+) {}
 
 /**
  * Boundary shape decoded from an individual external JSON-LD class response.
@@ -594,7 +593,7 @@ type LoadedVendorSlice = LoadedAlignmentSlice | LoadedTaxonomySeedSlice;
 
 const decodeAssetManifestRow = S.decodeUnknownEffect(S.fromJsonString(VendorAssetManifestRow));
 const decodeManifestEntry = S.decodeUnknownEffect(S.fromJsonString(VendorManifestEntry));
-const decodeAlignmentManifestEntry = S.decodeUnknownEffect(S.fromJsonString(VendorAlignmentManifestEntryBoundary));
+const decodeAlignmentManifestEntry = S.decodeUnknownEffect(S.fromJsonString(VendorAlignmentManifestEntry));
 const decodeVendorConceptSlice = S.decodeUnknownEffect(S.fromJsonString(VendorConceptSlice));
 const alignmentEquivalence = S.toEquivalence(ConceptAlignment);
 
