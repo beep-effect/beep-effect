@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-27T16:27:23.079Z",
+  "generatedAt": "2026-10-27T17:39:10.927Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -479485,8 +479485,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiCoverage.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiCoverage.ts",
-          "line": 684,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cicoverage-ts-684-cicoveragetestargs",
+          "line": 687,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cicoverage-ts-687-cicoveragetestargs",
           "currentTags": [
             "@category",
             "@since"
