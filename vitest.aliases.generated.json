@@ -2209,5 +2209,8 @@
   ],
   "@beep/schema/IeeeNumber": [
     "./packages/foundation/modeling/schema/src/IeeeNumber.ts"
+  ],
+  "@beep/schema/CredentialPatternBank": [
+    "./packages/foundation/modeling/schema/src/CredentialPatternBank/index.ts"
   ]
 }
