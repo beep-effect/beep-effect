@@ -4,7 +4,7 @@
  * **Example** (Make package identity ID)
  *
  * ```ts import.meta.vitest name="Make package identity ID"
- * import { make } from "@beep/identity"
+ * import { make } from "@beep/identity/Id"
  *
  * const { $MyPkgId } = make("my-pkg")
  * const id = $MyPkgId.make("Service")
@@ -20,7 +20,7 @@
  * **Example** (Expand CURIE to IRI)
  *
  * ```ts
- * import { expand } from "@beep/identity"
+ * import { expand } from "@beep/identity/Curie"
  *
  * console.log(expand("skos:prefLabel"))
  * ```
@@ -35,7 +35,7 @@ export * from "./Curie.ts";
  * **Example** (Build a single-point family)
  *
  * ```ts import.meta.vitest name="Build a single-point family"
- * import { Fibered } from "@beep/identity"
+ * import { Fibered } from "@beep/identity/Fibered"
  * import * as S from "effect/Schema"
  *
  * const family = Fibered.make({
@@ -60,7 +60,7 @@ export * from "./Fibered.ts";
  * **Example** (Compose branded package ID)
  *
  * ```ts
- * import { make } from "@beep/identity"
+ * import { make } from "@beep/identity/Id"
  *
  * const { $MyPkgId } = make("my-pkg")
  * console.log($MyPkgId.make("Service"))
@@ -76,7 +76,7 @@ export * from "./Id.ts";
  * **Example** (Create an empty local registry)
  *
  * ```ts
- * import { IdentityRegistry } from "@beep/identity"
+ * import { IdentityRegistry } from "@beep/identity/IdentityRegistry"
  *
  * console.log(IdentityRegistry.layerLocal([]))
  * ```
@@ -91,7 +91,7 @@ export * from "./IdentityRegistry.ts";
  * **Example** (Emit prefixed name or IRI)
  *
  * ```ts
- * import { prefixedNameOrIri } from "@beep/identity"
+ * import { prefixedNameOrIri } from "@beep/identity/PnLocal"
  *
  * console.log(prefixedNameOrIri("prefLabel", {
  *   prefix: "skos",
@@ -109,7 +109,7 @@ export * from "./PnLocal.ts";
  * **Example** (Use prebuilt package composer)
  *
  * ```ts
- * import { $DataId } from "@beep/identity"
+ * import { $DataId } from "@beep/identity/packages"
  *
  * console.log($DataId.make("CurrencyCodes"))
  * ```
@@ -124,7 +124,7 @@ export * from "./packages.ts";
  * **Example** (Read core vocab IRI)
  *
  * ```ts
- * import { CoreVocab } from "@beep/identity"
+ * import { CoreVocab } from "@beep/identity/Vocab"
  *
  * console.log(CoreVocab.rdf.iri)
  * ```

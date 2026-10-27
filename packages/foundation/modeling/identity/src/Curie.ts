@@ -99,7 +99,8 @@ const expandOptionImpl = <const V extends VocabShape>(curie: string, vocab: V): 
  * ```ts import.meta.vitest name="Optional CURIE expansion results"
  * import { pipe } from "effect/Function";
  * import * as O from "effect/Option"
- * import { CoreVocab, expandOption } from "@beep/identity"
+ * import { CoreVocab } from "@beep/identity/Vocab"
+ * import { expandOption } from "@beep/identity/Curie"
  *
  * O.isSome(expandOption("skos:prefLabel", CoreVocab)) // => true
  * O.isNone(expandOption("bogus:term", CoreVocab)) // => true
@@ -151,7 +152,8 @@ const contractOptionImpl = <const V extends VocabShape>(iri: string, vocab: V): 
  * ```ts import.meta.vitest name="Optional IRI contraction results"
  * import { pipe } from "effect/Function";
  * import * as O from "effect/Option"
- * import { CoreVocab, contractOption } from "@beep/identity"
+ * import { CoreVocab } from "@beep/identity/Vocab"
+ * import { contractOption } from "@beep/identity/Curie"
  *
  * const iri = "http://www.w3.org/2004/02/skos/core#prefLabel"
  * O.isSome(contractOption(iri, CoreVocab)) // => true
@@ -252,7 +254,7 @@ function expandImpl(curie: string, vocab: VocabShape = CoreVocab): unknown {
  * **Example** (Expand known CURIE to IRI)
  *
  * ```ts import.meta.vitest name="Expand known CURIE to IRI"
- * import { expand } from "@beep/identity"
+ * import { expand } from "@beep/identity/Curie"
  *
  * const iri = expand("skos:prefLabel")
  * iri // => "http://www.w3.org/2004/02/skos/core#prefLabel"
@@ -300,7 +302,7 @@ function contractImpl(iri: string, vocab: VocabShape = CoreVocab): unknown {
  * **Example** (Contract IRI to CURIE literal)
  *
  * ```ts import.meta.vitest name="Contract IRI to CURIE literal"
- * import { contract } from "@beep/identity"
+ * import { contract } from "@beep/identity/Curie"
  *
  * const curie = contract("http://www.w3.org/2004/02/skos/core#prefLabel")
  * curie // => "skos:prefLabel"
@@ -356,7 +358,7 @@ function expandPredicateImpl(predicate: string, vocab: VocabShape = CoreVocab): 
  * **Example** (Expand inverse predicate CURIE)
  *
  * ```ts import.meta.vitest name="Expand inverse predicate CURIE"
- * import { expandPredicate } from "@beep/identity"
+ * import { expandPredicate } from "@beep/identity/Curie"
  *
  * const expanded = expandPredicate("^rdfs:subClassOf")
  * expanded?.inverse // => true
@@ -376,7 +378,8 @@ export const expandPredicate: ExpandPredicateDataLast & ExpandPredicateDataFirst
  * **Example** (Build codec from vocabulary)
  *
  * ```ts
- * import { CoreVocab, makeCurieCodec } from "@beep/identity"
+ * import { CoreVocab } from "@beep/identity/Vocab"
+ * import { makeCurieCodec } from "@beep/identity/Curie"
  *
  * const codec = makeCurieCodec(CoreVocab)
  * console.log(codec.decode("skos:prefLabel"))
@@ -396,7 +399,7 @@ export const makeCurieCodec = <const V extends VocabShape>(vocab: V) => ({
  * **Example** (Decode CoreVocab CURIE)
  *
  * ```ts import.meta.vitest name="Decode CoreVocab CURIE"
- * import { CoreCurieCodec } from "@beep/identity"
+ * import { CoreCurieCodec } from "@beep/identity/Curie"
  *
  * const iri = CoreCurieCodec.decode("rdfs:label")
  * iri // => "http://www.w3.org/2000/01/rdf-schema#label"
@@ -414,7 +417,8 @@ export const CoreCurieCodec = makeCurieCodec(CoreVocab);
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { CoreVocab, makeCurieFromIri } from "@beep/identity"
+ * import { CoreVocab } from "@beep/identity/Vocab"
+ * import { makeCurieFromIri } from "@beep/identity/Curie"
  *
  * const decode = S.decodeUnknownEffect(makeCurieFromIri(CoreVocab))
  * console.log(typeof decode)
@@ -438,7 +442,7 @@ export const makeCurieFromIri = <const V extends VocabShape>(vocab: V) =>
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { CurieFromIri } from "@beep/identity"
+ * import { CurieFromIri } from "@beep/identity/Curie"
  *
  * const decode = S.decodeUnknownEffect(CurieFromIri)
  * console.log(typeof decode)
