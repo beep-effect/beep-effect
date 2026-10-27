@@ -12,6 +12,7 @@ import {
   resolveWorkspaceDirs,
   topologicalSort,
   workspaceDependencyNames,
+  workspaceGlobsFrom,
 } from "@beep/repo-utils";
 import { renderBiomeJson } from "@beep/repo-utils/schemas/BiomeJson";
 import {
@@ -193,31 +194,6 @@ const relativeFromRoot = (rootDir: string, filePath: string, path: Path.Path): s
 const normalizeRelativeRef = (sourceDir: string, targetPath: string, path: Path.Path): string =>
   toPosixPath(path.relative(sourceDir, targetPath));
 
-// fallow-ignore-next-line code-duplication -- config-updater helper twin of the CreatePackage/TsconfigSync copy, converged after the tstyche removal and the JSDoc grammar migration. Owner: @beep/repo-cli. Exit: consolidate both onto `@beep/repo-utils` (workspaceGlobsFrom/readPackageJsonFile) and delete the twins.
-const workspacePatternsFromPackageJson = (
-  workspaces: O.Option<ReadonlyArray<string> | { readonly packages?: ReadonlyArray<string> }>
-): ReadonlyArray<string> => {
-  if (O.isNone(workspaces)) {
-    return A.empty();
-  }
-
-  const value: unknown = workspaces.value;
-  if (A.isArray(value) && A.every(value, P.isString)) {
-    return value;
-  }
-
-  if (
-    P.isObject(value) &&
-    P.hasProperty(value, "packages") &&
-    A.isArray(value.packages) &&
-    A.every(value.packages, P.isString)
-  ) {
-    return value.packages;
-  }
-
-  return A.empty();
-};
-
 const SYNCPACK_SOURCE_ARRAY_PATTERN = /source:\s*\[(?<body>[\s\S]*?)\],/m;
 const SYNC_SOURCE_ENTRY_PATTERN = /"([^"]+)"/g;
 
@@ -321,21 +297,13 @@ const buildWorkspaceDescriptors = Effect.fn(function* (rootDir: string) {
       .exists(path.join(absoluteDir, DOCGEN_CONFIG_FILENAME))
       .pipe(Effect.orElseSucceed(thunkFalse));
     const aliasTargets = pipe(
-      packageJson.exports,
+      O.fromUndefinedOr(packageJson.exports),
       O.flatMap(resolveRootExportTarget),
       O.map((rootExportTarget) => buildCanonicalAliasTargets(relativeDir, rootExportTarget))
     );
-    const wildcardExportTarget = pipe(packageJson.exports, O.flatMap(resolveWildcardExportTarget));
-    const packageSubpathAliasTargets = buildPackageSubpathAliasTargets(
-      packageName,
-      relativeDir,
-      O.getOrUndefined(packageJson.exports)
-    );
-    const scopedWildcardAliasTargets = buildScopedWildcardAliasTargets(
-      packageName,
-      relativeDir,
-      O.getOrUndefined(packageJson.exports)
-    );
+    const wildcardExportTarget = pipe(O.fromUndefinedOr(packageJson.exports), O.flatMap(resolveWildcardExportTarget));
+    const packageSubpathAliasTargets = buildPackageSubpathAliasTargets(packageName, relativeDir, packageJson.exports);
+    const scopedWildcardAliasTargets = buildScopedWildcardAliasTargets(packageName, relativeDir, packageJson.exports);
     const sourceOnlySubpathAliasTargets = TsconfigSyncSchemaInternals.buildSourceOnlySubpathAliasTargets(
       packageName,
       relativeDir
@@ -835,7 +803,7 @@ const planRootSyncpackSync = Effect.fn(function* (rootDir: string) {
   const syncpackFilePath = path.join(rootDir, "syncpack.config.ts");
   const original = yield* readFileString(syncpackFilePath);
   const current = yield* readSyncpackSources(original);
-  const workspacePatterns = workspacePatternsFromPackageJson(packageJson.workspaces);
+  const workspacePatterns = workspaceGlobsFrom(packageJson.workspaces);
   const expected = buildCanonicalSyncpackSources(workspacePatterns);
 
   if (arraysEqual(current, expected)) {

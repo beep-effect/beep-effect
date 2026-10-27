@@ -48,6 +48,13 @@ const getJsDocs = (node: Node): ReadonlyArray<JSDoc> => {
     }
   }
 
+  // `export default <expression>` resolves to the expression itself; its JSDoc
+  // lives on the owning ExportAssignment statement.
+  const parent = node.getParent();
+  if (parent !== undefined && Node.isExportAssignment(parent)) {
+    return parent.getJsDocs();
+  }
+
   return A.empty();
 };
 

@@ -1,6 +1,8 @@
 /**
  * A module containing utilities for interacting with the file system.
  *
+ * **Details**
+ *
  * Alongside the async, layer-bound `makeWaitForFile` helper (built on
  * `effect/FileSystem`), this module provides synchronous, layer-free `Effect`
  * wrappers over Node's `node:fs` sync API. The wrappers mirror effect's

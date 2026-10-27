@@ -1,5 +1,5 @@
 import * as NodeBuffer from "node:buffer";
-import { EventEmitter } from "node:events";
+import * as NodeEvents from "node:events";
 import * as NodeStreamConsumers from "node:stream/consumers";
 import * as B from "@beep/box";
 import {
@@ -94,7 +94,7 @@ type PromiseController<A> = {
   readonly resolve: (value: A | PromiseLike<A>) => void;
 };
 
-class FakeEventStream extends EventEmitter {
+class FakeEventStream extends NodeEvents.EventEmitter {
   readonly emissions: ReadonlyArray<unknown>;
   readonly keepOpen: boolean;
   readonly onRead: () => void;

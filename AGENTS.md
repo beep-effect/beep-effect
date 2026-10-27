@@ -273,7 +273,7 @@ needed only for the escalation list below.
   package or app. Never `mkdir` one, copy a sibling, or hand-write its
   manifest: the command emits the generated scripts block, tsconfig overlays,
   identity registration, and the per-package `turbo.json` that a `noEmit`
-  build (`tsc-rs -p tsconfig.check.json`) needs so Turbo stops warning
+  build (`tsrs -p tsconfig.check.json`) needs so Turbo stops warning
   "no output files found". `bun run beep lint package-scripts` rejects a
   package missing that override; repair it with the command, not by hand.
 
@@ -351,7 +351,10 @@ needed only for the escalation list below.
   - the review window has elapsed: at least 20 minutes (`BEEP_YEET_REVIEW_WINDOW`)
     since the later of the latest "marked ready for review" event and the
     latest push to the head. No reviewer has to post (review bots never gate);
-    a window that cannot be read is unknown, never elapsed.
+    a window that cannot be read is unknown, never elapsed. The one exception
+    is the `beep-reviewer` check, and only while `main`'s ruleset requires it;
+    `beep reviewer ruleset release|require --apply` switches it off and on
+    (`docs/ops/beep-reviewer-app.md`).
 
   S11 exception (operator 2026-10-09, standing repo-wide since 2026-10-13):
   a PR whose owner called final may merge over failing jobs, required ones
@@ -443,7 +446,7 @@ If you touch this, load or run this first. Do not hand-author around it.
 | JSDoc on exports | `.patterns/jsdoc-documentation.md` |
 | Gesture-bearing UI | browser-qa-loop skill |
 | Tailwind className / style props in UI code | bun run lint:shadcn (strict @shadcn/lint; policy .oxlintrc.shadcn.json, runbook docs/runbooks/design-system-lint.md) |
-| `@effect/tsgo` / `tsc-rs` / `@typescript/native` bumps | [TypeScript toolchain runbook](docs/runbooks/typescript-toolchain.md) |
+| `@effect/tsgo` / `tsrs` / `@typescript/native` bumps | [TypeScript toolchain runbook](docs/runbooks/typescript-toolchain.md) |
 | PR publish / checks | yeet skill |
 | Any stopping point (done, blocked, merge-ready, retired) | closeout skill |
 

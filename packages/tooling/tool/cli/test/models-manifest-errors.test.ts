@@ -187,7 +187,7 @@ layer(Layer.mergeAll(storeLayer, NodeServices.layer), { timeout: "10 seconds" })
         expect(error._tag).toBe("ModelsManifestError");
         expect(error.path).toBe(file);
         expect(error.message).toContain("Failed to parse YAML");
-      }).pipe(Effect.scoped)
+      })
     );
 
     it.effect("reports a missing manifest as a read failure", () =>
@@ -201,7 +201,7 @@ layer(Layer.mergeAll(storeLayer, NodeServices.layer), { timeout: "10 seconds" })
         const error = yield* Effect.flip(store.load(file));
         expect(error._tag).toBe("ModelsManifestError");
         expect(error.message).toContain("Failed to read the models manifest");
-      }).pipe(Effect.scoped)
+      })
     );
   }
 );

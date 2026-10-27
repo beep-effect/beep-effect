@@ -52,8 +52,10 @@ const isRealCalendarDate = S.makeFilter(
     const max = daysInMonth(year, month);
     return day <= max || `day ${day} does not exist in ${pad(year, 4)}-${pad(month, 2)} (month has ${max} days)`;
   },
+  // The predicate names the offending day, so no static `message` annotation:
+  // under effect 4.0.6 a `message` annotation would replace that text.
   $I.annote("isRealCalendarDate", {
-    message: "a real calendar date",
+    title: "a real calendar date",
     description: "The day must exist in the given Gregorian month and year, accounting for leap years.",
   })
 );

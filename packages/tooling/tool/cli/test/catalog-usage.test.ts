@@ -257,6 +257,18 @@ describe("catalog usage", () => {
         }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
       );
 
+      it.effect("reports a missing root package.json as a read failure, not a parse failure", () =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const tmpDir = yield* fs.makeTempDirectoryScoped({ prefix: "catalog-usage-test-" });
+
+          const error = yield* runCatalogUsageCheck(tmpDir).pipe(Effect.flip);
+
+          expect(error).toBeInstanceOf(CatalogUsageError);
+          expect(error.message).toBe("Failed to read package.json.");
+        })
+      );
+
       it.effect("maps a failing gate to the quality command error when dispatched from the CLI", () =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;

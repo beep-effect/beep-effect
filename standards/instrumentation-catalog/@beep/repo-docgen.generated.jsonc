@@ -7,6 +7,7 @@
   "instruments": [],
   "spans": [
     {"name":"Configuration.readDocgenConfig","owner":"@beep/repo-docgen","family":"tooling","conforms":true},
+    {"name":"Configuration.readPackageJson","owner":"@beep/repo-docgen","family":"tooling","conforms":true},
     {"name":"Configuration.readTSConfig","owner":"@beep/repo-docgen","family":"tooling","conforms":true},
     {"name":"DocgenProofManifest.collectFileDigests","owner":"@beep/repo-docgen","family":"tooling","conforms":true},
     {"name":"DocgenProofManifest.computeDocgenProofPayload","owner":"@beep/repo-docgen","family":"tooling","conforms":true},
@@ -15,6 +16,7 @@
     {"name":"DocgenProofManifest.verifyDocgenProofManifest","owner":"@beep/repo-docgen","family":"tooling","conforms":true},
     {"name":"DocgenProofManifest.writeDocgenProofManifest","owner":"@beep/repo-docgen","family":"tooling","conforms":true},
     {"name":"InternalJsonFile.readDecodedJsonFile","owner":"@beep/repo-docgen","family":"tooling","conforms":true},
+    {"name":"Version.readManifestVersion","owner":"@beep/repo-docgen","family":"tooling","conforms":true},
     {"name":"Version.readModuleVersion","owner":"@beep/repo-docgen","family":"tooling","conforms":true},
     {"name":"checkClass","owner":"@beep/repo-docgen","family":"tooling","conforms":false},
     {"name":"checkEntry","owner":"@beep/repo-docgen","family":"tooling","conforms":false},

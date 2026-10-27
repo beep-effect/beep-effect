@@ -3,6 +3,8 @@
  * even when modules are imported multiple times (e.g., due to mixing CommonJS and ESM builds)
  * or during hot-reloading in development environments like Next.js or Remix.
  *
+ * **Details**
+ *
  * It achieves this by using a versioned global store, identified by a unique `Symbol` tied to
  * the current version of the `effect` library. The store holds values that are keyed by an identifier,
  * allowing the reuse of previously computed instances across imports or reloads.
@@ -49,7 +51,7 @@ export type GlobalValueOf<A> = A extends unknown ? A : never;
  * **Example** (Cached compute across imports)
  *
  * ```ts
- * import { globalValue } from "@beep/utils"
+ * import { globalValue } from "@beep/utils/GlobalValue"
  *
  * let computed = 0
  * const cacheId = Symbol("docs-cache")

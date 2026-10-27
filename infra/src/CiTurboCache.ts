@@ -18,6 +18,7 @@
 import { $InfraId } from "@beep/identity/packages";
 import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { resolveInfraArtifactPath } from "./internal/InfraArtifactPath.ts";
@@ -178,6 +179,7 @@ export const loadCiTurboCacheConfig = (env: InfraPathEnv = process.env): CiTurbo
 type CiTurboCacheArgs = {
   readonly config: CiTurboCachePulumiConfigValues;
   readonly remediation?: CiTurboCacheRemediation;
+  readonly throttleAlarmRecipients?: ReadonlyArray<pulumi.Input<string>>;
 };
 
 const TurboCacheLabEpoch = S.String.check(
@@ -192,6 +194,37 @@ const TurboCacheLabEpoch = S.String.check(
 ).pipe($I.annoteSchema("TurboCacheLabEpoch", { description: "Disposable conformance-lab epoch identifier." }));
 
 /**
+ * Input to {@link resolveTurboCacheLabBuckets}: a lab stack's raw epoch and bucket name.
+ *
+ * **Details**
+ *
+ * Both fields stay plain strings: the resolver validates them itself so an
+ * invalid value surfaces as a Pulumi `RunError` with the stack-config message.
+ *
+ * **Example** (Describe a lab stack)
+ *
+ * ```ts
+ * import { TurboCacheLabBucketsInput } from "@beep/infra"
+ *
+ * const input = TurboCacheLabBucketsInput.make({ epoch: "c1023a", bucketName: "beep-tcl-c1023a-123456789012" })
+ * console.assert(input.epoch === "c1023a")
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class TurboCacheLabBucketsInput extends S.Opaque<TurboCacheLabBucketsInput, { readonly brand: unique symbol }>()(
+  S.Struct({
+    epoch: S.String.annotateKey({ description: "The `turboCacheLab:epoch` stack config value." }),
+    bucketName: S.String.annotateKey({ description: "The lab incumbent's configured bucket name." }),
+  }).pipe(
+    $I.annoteSchema("TurboCacheLabBucketsInput", {
+      description: "Raw lab epoch and incumbent bucket name, validated by resolveTurboCacheLabBuckets.",
+    })
+  )
+) {}
+
+/**
  * Validate a disposable lab's epoch and bucket name and derive its resource names.
  *
  * **Details**
@@ -204,9 +237,11 @@ const TurboCacheLabEpoch = S.String.check(
  * **Example** (Derive lab names)
  *
  * ```ts
- * import { resolveTurboCacheLabBuckets } from "@beep/infra"
+ * import { resolveTurboCacheLabBuckets, TurboCacheLabBucketsInput } from "@beep/infra"
  *
- * const names = resolveTurboCacheLabBuckets({ epoch: "c1023a", bucketName: "beep-tcl-c1023a-123456789012" })
+ * const names = resolveTurboCacheLabBuckets(
+ *   TurboCacheLabBucketsInput.make({ epoch: "c1023a", bucketName: "beep-tcl-c1023a-123456789012" })
+ * )
  * console.assert(names.evolvedBucket === "beep-tcl-c1023a-evo-123456789012")
  * ```
  *
@@ -215,13 +250,7 @@ const TurboCacheLabEpoch = S.String.check(
  * @category configuration
  * @since 0.0.0
  */
-export const resolveTurboCacheLabBuckets = ({
-  epoch,
-  bucketName,
-}: {
-  readonly epoch: string;
-  readonly bucketName: string;
-}) => {
+export const resolveTurboCacheLabBuckets = ({ epoch, bucketName }: TurboCacheLabBucketsInput) => {
   if (!S.is(TurboCacheLabEpoch)(epoch)) {
     throw new pulumi.RunError("turboCacheLab:epoch must be 4-16 lowercase alphanumerics");
   }
@@ -242,13 +271,13 @@ const ReservedConcurrency = S.Int.check(S.isBetween({ minimum: 1, maximum: 1000 
 );
 
 /**
- * Optional evolved-incumbent settings, used by the disposable conformance lab.
+ * Optional evolved-incumbent settings for the conformance lab and production.
  *
  * **Details**
  *
- * Omitted fields keep the deployed values (no tag passthrough, reserved
- * concurrency 20 read, 10 write, 20 authorizer), so the production stack is
- * unchanged when it passes none. `tagPassthrough` sets the shim's
+ * Omitted fields keep the original values (no tag passthrough, reserved
+ * concurrency 20 read, 10 write, 20 authorizer). Production passes only the
+ * concurrency fields, sized from the lab's 1.5x load envelope. `tagPassthrough` sets the shim's
  * `TURBO_REMOTE_CACHE_SIGNATURE_KEY` to a fixed non-secret mode switch: the
  * pinned shim then stores and returns `x-artifact-tag` without ever verifying
  * with that value.
@@ -813,6 +842,52 @@ export class CiTurboCache extends pulumi.ComponentResource {
       },
       { parent: this }
     );
+
+    // Each throttled read is a silent Turbo cache miss and each throttled write
+    // a lost upload, so any throttle in a five-minute window alarms.
+    const throttleAlarmRecipients = args.throttleAlarmRecipients ?? [];
+    if (A.isReadonlyArrayNonEmpty(throttleAlarmRecipients)) {
+      const throttleTopic = new aws.sns.Topic(
+        `${name}-throttles`,
+        { name: `${name}-throttles`, tags: defaultTags },
+        { parent: this }
+      );
+      A.forEach(throttleAlarmRecipients, (endpoint, index) => {
+        new aws.sns.TopicSubscription(
+          `${name}-throttles-recipient-${index}`,
+          { endpoint, protocol: "email", topic: throttleTopic.arn },
+          { additionalSecretOutputs: ["endpoint"], parent: this }
+        );
+      });
+      A.forEach(
+        [
+          ["read", readFunction],
+          ["write", writeFunction],
+          ["authorizer", authorizerFunction],
+        ] as const,
+        ([role, fn]) => {
+          new aws.cloudwatch.MetricAlarm(
+            `${name}-${role}-throttles`,
+            {
+              alarmActions: [throttleTopic.arn],
+              alarmDescription: `The ${role} Lambda was throttled at its reserved concurrency.`,
+              comparisonOperator: "GreaterThanThreshold",
+              dimensions: { FunctionName: fn.name },
+              evaluationPeriods: 1,
+              metricName: "Throttles",
+              name: `${name}-${role}-throttles`,
+              namespace: "AWS/Lambda",
+              period: 300,
+              statistic: "Sum",
+              tags: defaultTags,
+              threshold: 0,
+              treatMissingData: "notBreaching",
+            },
+            { parent: this }
+          );
+        }
+      );
+    }
 
     this.apiEndpoint = api.apiEndpoint;
     this.bucketName = bucket.bucket;

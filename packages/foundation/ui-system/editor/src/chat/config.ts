@@ -1,6 +1,8 @@
 /**
  * Schema-first UI configuration for the feature-flagged {@link ChatComposer}.
  *
+ * **Details**
+ *
  * Per the repo schema-first law, the composer's config surface, slash items,
  * mention candidates, and the mention source are all modeled as `effect/Schema`:
  * {@link ComposerFeatures}, {@link SlashItem}, and {@link MentionOption} are

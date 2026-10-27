@@ -1,5 +1,5 @@
 {
-  "previous": "077bf9c7ed840454d0b847ac2cb0c0f30105b0b7e462fad434690fceda91d7f2",
+  "previous": "0b63ca38b50745355ec261b5358618244db5af5ad05a105fd954998d878a837a",
   "review": {
     "reviewer": "Claude Opus 5.5 (effected-promotion roadmap R8, refactor/managed-section-templates)",
     "reason": "Record the dependency-only drift of @beep/repo-cli, which gains a direct @beep/managed-section edge for the R8 generated-region readers; the package was already upstream through @beep/github-reporting, so no closure grows; no qualification is granted.",

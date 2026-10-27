@@ -18,7 +18,6 @@ import { dual, pipe } from "effect/Function";
 import * as Match from "effect/Match";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
-import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -27,7 +26,6 @@ import { runCaptured } from "../../internal/process/index.ts";
 import { compilerOutputLines, isCompilerDiagnosticLine, nameFilterPredicate } from "./internal/CheckCensusOutput.ts";
 import { QualityScriptCommandError } from "./Quality.errors.ts";
 import type * as Crypto from "effect/Crypto";
-import type { Ordering } from "effect/Ordering";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const $I = $RepoCliId.create("commands/Quality/CheckCensusGate");
@@ -69,6 +67,34 @@ export const CHECK_CENSUS_BASELINE_PATH = "standards/check-census.regression-bas
  * @since 0.0.0
  */
 export const CHECK_CENSUS_CHECK_TIME_BAND_PERCENT = 5;
+
+/**
+ * Instantiation noise floor: the largest difference between two single-checker
+ * samples of the same program that still counts as unchanged.
+ *
+ * **Details**
+ *
+ * tsgo's instantiation count is not byte-deterministic, even with
+ * `--singleThreaded` and a fresh build-info file. Repeated samples of one tree
+ * (2026-10-27, `7.0.2+effect-tsgo.0.59.0`) measured `@beep/law-practice-domain`
+ * at 819,367 to 819,375 and `@beep/git` at 110,792 to 110,801, while
+ * `@beep/schema` and `@beep/repo-cli` repeated exactly. Without a floor an
+ * unchanged program could fail the gate, or print a tighten hint, at random. A
+ * difference of at most this many instantiations is `unchanged`; only a larger
+ * one is an `increase` or a `decrease`.
+ *
+ * **Example** (Read the noise floor)
+ *
+ * ```ts
+ * import { CHECK_CENSUS_INSTANTIATION_NOISE } from "@beep/repo-cli/commands/Quality/CheckCensusGate"
+ *
+ * console.log(CHECK_CENSUS_INSTANTIATION_NOISE) // 32
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const CHECK_CENSUS_INSTANTIATION_NOISE = 32;
 
 /**
  * The one command that re-measures every baseline row.
@@ -675,11 +701,18 @@ export const parseCheckCensusSample: {
   }
 );
 
-const instantiationVerdictOf: (ordering: Ordering) => CheckCensusInstantiationVerdict = Match.type<Ordering>().pipe(
-  Match.when(1, () => CheckCensusInstantiationVerdict.Enum.increase),
-  Match.when(-1, () => CheckCensusInstantiationVerdict.Enum.decrease),
-  Match.orElse(() => CheckCensusInstantiationVerdict.Enum.unchanged)
-);
+const instantiationVerdictOf = (baseline: number, current: number): CheckCensusInstantiationVerdict =>
+  Match.value(current - baseline).pipe(
+    Match.when(
+      (delta) => delta > CHECK_CENSUS_INSTANTIATION_NOISE,
+      () => CheckCensusInstantiationVerdict.Enum.increase
+    ),
+    Match.when(
+      (delta) => delta < -CHECK_CENSUS_INSTANTIATION_NOISE,
+      () => CheckCensusInstantiationVerdict.Enum.decrease
+    ),
+    Match.orElse(() => CheckCensusInstantiationVerdict.Enum.unchanged)
+  );
 
 // Integer arithmetic keeps the band exact and defined for a zero baseline.
 const checkTimeVerdictOf = (baselineMs: number, currentMs: number): CheckCensusCheckTimeVerdict =>
@@ -700,7 +733,9 @@ const checkTimeVerdictOf = (baselineMs: number, currentMs: number): CheckCensusC
  *
  * **Details**
  *
- * Instantiations are compared exactly: any increase is the hard verdict.
+ * Instantiations are compared outside a noise floor of
+ * {@link CHECK_CENSUS_INSTANTIATION_NOISE}: an increase beyond it is the hard
+ * verdict, and a difference within it is `unchanged`.
  * Check time is compared against a {@link CHECK_CENSUS_CHECK_TIME_BAND_PERCENT}
  * percent band around the baselined value. Types are carried for the report
  * and receive no verdict.
@@ -745,7 +780,7 @@ export const compareCheckCensusSample: {
         checkTimeMs: row.checkTimeMs,
       }),
       current,
-      instantiations: instantiationVerdictOf(Order.Number(current.instantiations, row.instantiations)),
+      instantiations: instantiationVerdictOf(row.instantiations, current.instantiations),
       checkTime: checkTimeVerdictOf(row.checkTimeMs, current.checkTimeMs),
     })
 );

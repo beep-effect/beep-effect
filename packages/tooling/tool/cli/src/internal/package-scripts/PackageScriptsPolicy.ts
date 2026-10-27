@@ -193,7 +193,7 @@ const taskDrift = (
     : [{ _tag: "wrong-binding", name, expected: after.value, actual: before.value }];
 };
 
-// A `beep:build` that only type-checks (`tsc-rs -p tsconfig.check.json`) writes nothing
+// A `beep:build` that only type-checks (`tsrs -p tsconfig.check.json`) writes nothing
 // to disk, so the workspace must override the root `build.outputs` with `[]` in its own
 // `turbo.json`; otherwise Turbo warns "no output files found" on every root build.
 // `bun run beep create-package` emits that override for service apps.
@@ -238,7 +238,7 @@ const diffBlock: PackageScriptsPolicyShape["diff"] = (actual, expected) => {
   return drift;
 };
 
-// `tsc-rs` is the only TypeScript checker a `beep:build`, `beep:check`, or `beep:check:*` script
+// `tsrs` is the only TypeScript checker a `beep:build`, `beep:check`, or `beep:check:*` script
 // may run. Every word of the command counts, not just each segment's head, so runner flag values
 // (`bunx -p typescript tsc`), wrappers (`env … tsc`, `node node_modules/typescript/bin/tsc`) and
 // assignments (`TSC=tsgo`) cannot hide a checker. Each word is normalized first: a trailing

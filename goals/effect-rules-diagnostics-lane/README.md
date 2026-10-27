@@ -1,6 +1,8 @@
 # Effect rules on their own diagnostics lane
 
 Lifecycle: `completed-retained`. Implementation, performance wave and verification are complete; the packet closes in the lane PR.
+
+**Retired 2026-10-27** by `goals/tsrs-gates` PR 2: the Effect-patched tsrs gates every rule inside `Heavy / Check`, so the standalone lane, its profile and its hosted job were removed (see the Decision Log in `SPEC.md`).
 The Claude orchestrator owns git, publication and the final lifecycle flip.
 
 The [spike decision](history/2026-10-14-spike.md) is GO: 287 workspace check/test

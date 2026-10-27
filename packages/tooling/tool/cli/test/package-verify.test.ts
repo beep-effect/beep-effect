@@ -159,6 +159,31 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
       ]);
     });
 
+    // The quick check typechecks against built dependency declarations too; without the closure
+    // build a stale or missing dependency build reported errors hosted Check never sees.
+    it("builds upstream check dependencies through Turbo before the package script", () => {
+      const plan = packageVerifyStepPlanForTesting(
+        "/repo",
+        demoWorkspace,
+        PackageVerifyStepSpec.make({ step: "check", script: "beep:check" })
+      );
+
+      expect(A.map(plan, ({ args, command, cwd, label }) => ({ args, command, cwd, label }))).toEqual([
+        {
+          label: "check:build-closure",
+          command: "bun",
+          args: ["x", "turbo", "run", "build", "--filter=@beep/demo^..."],
+          cwd: "/repo",
+        },
+        {
+          label: "check",
+          command: "bun",
+          args: ["run", "beep:check"],
+          cwd: "/repo/packages/demo",
+        },
+      ]);
+    });
+
     it.effect("does not run the package audit when its closure build fails", () =>
       Effect.flatMap(temporaryDirectory, (tmpDir) =>
         Effect.gen(function* () {
@@ -300,6 +325,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
               const fs = yield* FileSystem.FileSystem;
               const path = yield* Path.Path;
               yield* seedWorkspaceRepository(tmpDir, { "beep:lint": "true", "beep:check": "true" });
+              // The quick check builds the upstream closure through the workspace's Turbo first.
+              const turbo = path.join(tmpDir, "node_modules/.bin/turbo");
+              yield* fs.makeDirectory(path.dirname(turbo), { recursive: true });
+              yield* fs.writeFileString(turbo, "#!/bin/sh\nexit 0\n");
+              yield* fs.chmod(turbo, 0o755);
 
               const report = yield* runPackageVerify({ packageName: O.some("@beep/demo"), quick: true });
 
@@ -383,6 +413,12 @@ export const invalidCategory = 1;
           const error = yield* readPackageWorkspaceForTesting("@beep/demo", packageDir).pipe(Effect.flip);
 
           expect(error.message).toContain(`Failed to decode ${path.join(packageDir, "package.json")}`);
+
+          // The retired projection required `name`; the lenient read keeps that verdict.
+          yield* fs.writeFileString(path.join(packageDir, "package.json"), yield* encodeJson({ private: true }));
+          const nameless = yield* readPackageWorkspaceForTesting("@beep/demo", packageDir).pipe(Effect.flip);
+          expect(nameless.message).toContain(`Failed to decode ${path.join(packageDir, "package.json")}`);
+          expect(String(nameless.cause)).toContain("does not declare a package name");
 
           yield* fs.writeFileString(path.join(packageDir, "package.json"), yield* encodeJson({ name: "@beep/demo" }));
           const workspace = yield* readPackageWorkspaceForTesting("@beep/demo", packageDir);
@@ -635,6 +671,40 @@ export const invalidCategory = 1;
           if (row?.kind === "local-shard-failed") {
             expect(row.severity).toBe("P0");
             expect(row.capsule.command).toBe("bun x turbo run build --filter=@beep/demo^... && bun run beep:audit");
+          }
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("records the Turbo closure build in a quick check failure capsule", () =>
+      Effect.flatMap(temporaryDirectory, (tmpDir) =>
+        Effect.gen(function* () {
+          yield* recordPackageVerifyInboxForTesting(
+            PackageVerifyReport.make({
+              headSha: "abc123",
+              packageName: "@beep/demo",
+              packageDir: `${tmpDir}/packages/demo`,
+              quick: true,
+              repoRoot: tmpDir,
+              results: [
+                PackageVerifyStepResult.make({
+                  step: "check",
+                  script: "beep:check",
+                  skipped: false,
+                  ok: false,
+                  durationMillis: 20,
+                  exitCode: O.some(2),
+                  output: "type error",
+                }),
+              ],
+            })
+          );
+
+          const inbox = yield* loadYeetInboxView(tmpDir);
+          const row = inbox.entries[0]?.row;
+          expect(row?.kind).toBe("local-shard-failed");
+          if (row?.kind === "local-shard-failed") {
+            expect(row.capsule.command).toBe("bun x turbo run build --filter=@beep/demo^... && bun run beep:check");
           }
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))

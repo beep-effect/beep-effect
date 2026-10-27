@@ -36,7 +36,7 @@ const normalise = ([x1, y1, x2, y2]: Segment2): Segment2 => {
  * **Example** (Two orderings of one segment)
  *
  * ```ts
- * import { canonicalSegments } from "@beep/technical-drawing"
+ * import { canonicalSegments } from "@beep/technical-drawing/Geometry.segments"
  *
  * console.log(canonicalSegments([[5, 0, 0, 0]]), canonicalSegments([[0, 0, 5, 0]]))
  * ```
@@ -60,7 +60,7 @@ export const canonicalSegments: (segments: ReadonlyArray<Segment2>) => ReadonlyA
  * **Example** (Mirror a segment)
  *
  * ```ts
- * import { mirrorSegments } from "@beep/technical-drawing"
+ * import { mirrorSegments } from "@beep/technical-drawing/Geometry.segments"
  *
  * console.log(mirrorSegments([[0, 0, 4, 0], [4, 0, 4, 2]]))
  * ```
@@ -88,7 +88,7 @@ export const mirrorSegments = (segments: ReadonlyArray<Segment2>): ReadonlyArray
  * **Example** (Compare a view with itself)
  *
  * ```ts
- * import { sameSegments } from "@beep/technical-drawing"
+ * import { sameSegments } from "@beep/technical-drawing/Geometry.segments"
  *
  * console.log(sameSegments({ left: [[0, 0, 1, 1]], right: [[1, 1, 0, 0]] }))
  * ```

@@ -9,7 +9,7 @@ import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
-import { Node, SyntaxKind } from "ts-morph";
+import { Node, SyntaxKind, ts } from "ts-morph";
 import { EffectVitestLintError } from "../Lint.errors.ts";
 import { EffectVitestFinding, EffectVitestReplacement } from "../Lint.schemas.ts";
 import { EffectVitestRulePolicies } from "./EffectVitestPolicy.ts";
@@ -32,12 +32,18 @@ import {
 import type { LazyArg } from "effect/Function";
 import type {
   CallExpression,
+  ClassDeclaration,
+  ConditionalExpression,
+  ExportDeclaration,
   Expression,
   Identifier,
   ImportDeclaration,
+  MethodDeclaration,
   Node as MorphNode,
+  NewExpression,
   SourceFile,
   VariableDeclaration,
+  YieldExpression,
 } from "ts-morph";
 import type { EffectVitestRuleId, EffectVitestSeverity } from "../Lint.schemas.ts";
 import type { EffectVitestFunctionNode, EffectVitestHarnessIndex, EffectVitestImports } from "./EffectVitestSyntax.ts";
@@ -50,9 +56,15 @@ const EXIT_MODULES = ["effect", "effect/Exit"];
 const CONTEXT_MODULES = ["effect", "effect/Context"];
 const SCHEDULE_MODULES = ["effect", "effect/Schedule"];
 const TEST_CLOCK_MODULES = ["effect/testing", "effect/testing/TestClock"];
+const ATOM_REGISTRY_MODULES = ["effect/reactivity", "effect/reactivity/AtomRegistry"];
+const LOGGER_MODULES = ["effect", "effect/Logger"];
+const FETCH_HTTP_CLIENT_MODULES = ["effect/http", "effect/http/FetchHttpClient"];
+const LANGUAGE_MODEL_MODULES = ["effect/ai", "effect/ai/LanguageModel"];
 const ARBITRARY_MODULES = ["effect", "effect/Arbitrary"];
 const FAST_CHECK_MODULES = ["effect/testing", "effect/testing/FastCheck", "fast-check"];
 const VITEST_MODULES = ["@effect/vitest", "vitest"];
+const REF_MODULES = ["effect", "effect/Ref"];
+const CONFIG_PROVIDER_MODULES = ["effect", "effect/ConfigProvider"];
 
 // A fixed dispatch index avoids scanning the full member list for every call.
 const detectorCallMembers = HashSet.fromIterable([
@@ -204,9 +216,1176 @@ const isPlatformServiceLayer: LayerLeaf = (expression, imports) =>
     isProvenanceExpression(expression, imports, [root, `${root}/${name}`], name, ["layer", `${name}.layer`])
   );
 
-const isAcquisitionFreeLayer = layerComposedOf(
-  (expression, imports) => isStubLayerLeaf(expression, imports) || isPlatformServiceLayer(expression, imports)
-);
+// --- EV014 test-layer acquisition (#1855 wave 6) -----------------------------------------------
+//
+// EV014 asks whether the layer an `it.layer` block builds in its hook acquires something a hook
+// budget should bound. A layer is acquisition-free when every leaf it composes is a stub
+// (`succeed`/`sync`/`mock`/`empty`/`succeedContext`), a platform service bundle, a named
+// in-memory library layer, or a hermetic in-memory acquisition: a `Layer.effect` or
+// `Layer.unwrap` whose effect only reads services and allocates Effect state. References are
+// followed through same-file bindings, imports into other repository sources (bundler-style
+// module resolution, as vitest resolves them), class static members and factory calls, whose
+// parameters are bound to the call's arguments. Anything unresolved acquires.
+
+// Bundler resolution: package `exports`, `.ts` extension imports and extensionless relatives.
+const LAYER_RESOLUTION_OPTIONS: ts.CompilerOptions = {
+  module: ts.ModuleKind.ESNext,
+  moduleResolution: ts.ModuleResolutionKind.Bundler,
+  allowImportingTsExtensions: true,
+  noEmit: true,
+};
+const LAYER_SOURCE_EXTENSIONS = [".ts", ".tsx", ".mts", ".cts"];
+const LAYER_ANALYSIS_DEPTH = 24;
+
+type LayerFunction = EffectVitestFunctionNode | MethodDeclaration;
+// `argument` is `None` when the call cannot say which value the parameter receives (at or after a
+// spread argument), so neither a positional argument nor the parameter's default may stand in for it.
+type LayerBinding = { readonly parameter: MorphNode; readonly argument: O.Option<Expression>; readonly env: LayerEnv };
+type LayerEnv = ReadonlyArray<LayerBinding>;
+type LayerEntity =
+  | { readonly _tag: "Value"; readonly expression: Expression; readonly env: LayerEnv }
+  | { readonly _tag: "Function"; readonly definition: LayerFunction; readonly env: LayerEnv }
+  | { readonly _tag: "Class"; readonly declaration: ClassDeclaration }
+  | { readonly _tag: "Module"; readonly source: SourceFile }
+  // An `effect` module export, which ships only as `.d.ts`: `name` is a member, or `*` for the namespace.
+  | { readonly _tag: "EffectExport"; readonly module: string; readonly name: string };
+
+const isEffectModuleSpecifier = (specifier: string): boolean =>
+  specifier === "effect" || Str.startsWith("effect/")(specifier);
+
+// The `effect` barrel exports each module as a namespace (`import { Effect } from "effect"`).
+const effectExport = (module: string, name: string): LayerEntity =>
+  module === "effect" && name !== "*"
+    ? { _tag: "EffectExport", module: `effect/${name}`, name: "*" }
+    : { _tag: "EffectExport", module, name };
+
+/**
+ * Per-file EV014 resolution context: import contexts of reached sources and resolved modules.
+ * Both caches live for one `detectEffectVitestFindings` call, like the file's own AST caches.
+ */
+type LayerAnalysis = {
+  readonly importsOf: (source: SourceFile) => EffectVitestImports;
+  readonly moduleSource: (from: SourceFile, specifier: string) => O.Option<SourceFile>;
+};
+
+const makeLayerAnalysis = (sourceFile: SourceFile, imports: EffectVitestImports): LayerAnalysis => {
+  // Keyed by file path: both caches live only for this call, so weak identity buys nothing.
+  const contexts = MutableHashMap.empty<string, EffectVitestImports>();
+  MutableHashMap.set(contexts, sourceFile.getFilePath(), imports);
+  const modules = MutableHashMap.empty<string, O.Option<SourceFile>>();
+  const importsOf = (source: SourceFile): EffectVitestImports => {
+    const key = source.getFilePath();
+    const cached = MutableHashMap.get(contexts, key);
+    if (O.isSome(cached)) return cached.value;
+    const collected = collectEffectVitestImports(source);
+    MutableHashMap.set(contexts, key, collected);
+    return collected;
+  };
+  // A wrapped node outside any Project has no module resolution host, so nothing resolves.
+  const resolveSource = (from: SourceFile, specifier: string): O.Option<SourceFile> =>
+    O.flatMap(O.liftThrowable(() => from.getProject())(), (project) =>
+      O.flatMap(
+        O.fromUndefinedOr(
+          ts.resolveModuleName(
+            specifier,
+            from.getFilePath(),
+            LAYER_RESOLUTION_OPTIONS,
+            project.getModuleResolutionHost()
+          ).resolvedModule
+        ),
+        ({ extension, resolvedFileName }) =>
+          // Declaration files and installed packages carry no initializer to classify.
+          A.contains(LAYER_SOURCE_EXTENSIONS, extension) && !Str.includes("/node_modules/")(resolvedFileName)
+            ? O.fromUndefinedOr(
+                project.getSourceFile(resolvedFileName) ?? project.addSourceFileAtPathIfExists(resolvedFileName)
+              )
+            : O.none()
+      )
+    );
+  const moduleSource = (from: SourceFile, specifier: string): O.Option<SourceFile> => {
+    const key = `${from.getFilePath()}\u0000${specifier}`;
+    const cached = MutableHashMap.get(modules, key);
+    if (O.isSome(cached)) return cached.value;
+    const resolved = resolveSource(from, specifier);
+    MutableHashMap.set(modules, key, resolved);
+    return resolved;
+  };
+  return { importsOf, moduleSource };
+};
+
+// ts-morph's `isFunctionLikeDeclaration` omits function expressions such as `Effect.gen(function* () {})`,
+// so a statement's own function is found with both predicates.
+const isFunctionBoundary = (node: MorphNode): boolean =>
+  Node.isFunctionLikeDeclaration(node) || Node.isFunctionExpression(node);
+
+const stripLayerExpression = (expression: Expression): Expression => {
+  let current: Expression = expression;
+  while (
+    Node.isParenthesizedExpression(current) ||
+    Node.isAsExpression(current) ||
+    Node.isSatisfiesExpression(current) ||
+    Node.isNonNullExpression(current) ||
+    Node.isTypeAssertion(current)
+  )
+    current = current.getExpression();
+  return current;
+};
+
+const isLayerFunctionNode = (node: MorphNode): node is LayerFunction =>
+  Node.isArrowFunction(node) ||
+  Node.isFunctionExpression(node) ||
+  Node.isFunctionDeclaration(node) ||
+  Node.isMethodDeclaration(node);
+
+const valueEntity = (expression: Expression, env: LayerEnv): LayerEntity => {
+  const value = stripLayerExpression(expression);
+  return isLayerFunctionNode(value)
+    ? { _tag: "Function", definition: value, env }
+    : { _tag: "Value", expression: value, env };
+};
+
+const parameterEntity = (parameter: MorphNode, env: LayerEnv): O.Option<LayerEntity> =>
+  O.match(
+    A.findFirst(env, (binding) => binding.parameter === parameter),
+    {
+      onNone: () =>
+        Node.isParameterDeclaration(parameter)
+          ? O.map(O.fromUndefinedOr(parameter.getInitializer()), (initializer) => valueEntity(initializer, env))
+          : O.none(),
+      onSome: ({ argument, env: argumentEnv }) => O.map(argument, (value) => valueEntity(value, argumentEnv)),
+    }
+  );
+
+const importEntity = (
+  declaration: ImportDeclaration,
+  name: string,
+  analysis: LayerAnalysis,
+  depth: number
+): O.Option<LayerEntity> => {
+  const source = declaration.getSourceFile();
+  return O.flatMap(
+    A.findFirst(
+      O.getOrElse(MutableHashMap.get(analysis.importsOf(source).bindingsByLocal, name), A.empty),
+      (binding) => binding.declaration === declaration
+    ),
+    (binding) =>
+      isEffectModuleSpecifier(binding.module)
+        ? O.some(effectExport(binding.module, binding.imported))
+        : O.flatMap(analysis.moduleSource(source, binding.module), (target) =>
+            binding.imported === "*"
+              ? O.some<LayerEntity>({ _tag: "Module", source: target })
+              : moduleExport(target, binding.imported, analysis, depth + 1)
+          )
+  );
+};
+
+const declarationEntity = (
+  declaration: MorphNode,
+  name: string,
+  env: LayerEnv,
+  analysis: LayerAnalysis,
+  depth: number
+): O.Option<LayerEntity> => {
+  if (Node.isVariableDeclaration(declaration))
+    return declaration.getName() === name
+      ? O.map(O.fromUndefinedOr(declaration.getInitializer()), (initializer) => valueEntity(initializer, []))
+      : O.none();
+  if (Node.isFunctionDeclaration(declaration)) return O.some({ _tag: "Function", definition: declaration, env: [] });
+  if (Node.isClassDeclaration(declaration)) return O.some({ _tag: "Class", declaration });
+  if (Node.isParameterDeclaration(declaration)) return parameterEntity(declaration, env);
+  return Node.isImportDeclaration(declaration) && !declaration.isTypeOnly()
+    ? importEntity(declaration, name, analysis, depth)
+    : O.none();
+};
+
+// An exported `const`, `function` or `class` declared in the module itself.
+const declaredExport = (source: SourceFile, name: string): O.Option<MorphNode> =>
+  A.findFirst(source.getStatements(), (statement): O.Option<MorphNode> => {
+    if (Node.isVariableStatement(statement))
+      return statement.hasExportKeyword()
+        ? A.findFirst(statement.getDeclarations(), (candidate) => candidate.getName() === name)
+        : O.none();
+    return (Node.isFunctionDeclaration(statement) || Node.isClassDeclaration(statement)) &&
+      statement.hasExportKeyword() &&
+      statement.getName() === name
+      ? O.some(statement)
+      : O.none();
+  });
+
+// `export * as name from`, `export { local as name } from` or a local `export { local as name }`.
+const namedReExport = (
+  statement: ExportDeclaration,
+  name: string,
+  analysis: LayerAnalysis,
+  depth: number
+): O.Option<LayerEntity> => {
+  const source = statement.getSourceFile();
+  const specifier = O.fromUndefinedOr(statement.getModuleSpecifierValue());
+  if (statement.getNamespaceExport()?.getName() === name)
+    return O.flatMap(specifier, (module) =>
+      isEffectModuleSpecifier(module)
+        ? O.some(effectExport(module, "*"))
+        : O.map(analysis.moduleSource(source, module), (target): LayerEntity => ({ _tag: "Module", source: target }))
+    );
+  return O.flatMap(
+    A.findFirst(
+      statement.getNamedExports(),
+      (exported) => !exported.isTypeOnly() && (exported.getAliasNode()?.getText() ?? exported.getName()) === name
+    ),
+    (exported) =>
+      O.match(specifier, {
+        onNone: () => {
+          const local = exported.getNameNode();
+          return Node.isIdentifier(local) ? resolveLayerIdentifier(local, [], analysis, depth + 1) : O.none();
+        },
+        onSome: (module) =>
+          isEffectModuleSpecifier(module)
+            ? O.some(effectExport(module, exported.getName()))
+            : O.flatMap(analysis.moduleSource(source, module), (target) =>
+                moduleExport(target, exported.getName(), analysis, depth + 1)
+              ),
+      })
+  );
+};
+
+const starSpecifier = (statement: ExportDeclaration): O.Option<string> =>
+  statement.hasNamedExports() || statement.getNamespaceExport() !== undefined
+    ? O.none()
+    : O.fromUndefinedOr(statement.getModuleSpecifierValue());
+
+const starExport = (
+  statement: ExportDeclaration,
+  name: string,
+  analysis: LayerAnalysis,
+  depth: number
+): O.Option<LayerEntity> =>
+  O.flatMap(
+    O.filter(starSpecifier(statement), (module) => !isEffectModuleSpecifier(module)),
+    (module) =>
+      O.flatMap(analysis.moduleSource(statement.getSourceFile(), module), (target) =>
+        moduleExport(target, name, analysis, depth + 1)
+      )
+  );
+
+// `export * from "effect/Array"` (the `@beep/utils` modules): a name the module does not declare itself is the
+// `effect` module's export. Effect stars are tried after every other export, so they never shadow a local one.
+const effectStarExport = (statement: ExportDeclaration, name: string): O.Option<LayerEntity> =>
+  O.map(O.filter(starSpecifier(statement), isEffectModuleSpecifier), (module) => effectExport(module, name));
+
+// Syntax-only export lookup: exported declarations, then named and namespace re-exports, then
+// `export *` targets. Type-only exports never carry a layer.
+const moduleExport = (
+  source: SourceFile,
+  name: string,
+  analysis: LayerAnalysis,
+  depth: number
+): O.Option<LayerEntity> => {
+  if (depth > LAYER_ANALYSIS_DEPTH) return O.none();
+  const exports = A.filter(source.getExportDeclarations(), (statement) => !statement.isTypeOnly());
+  return O.flatMap(declaredExport(source, name), (declaration) =>
+    declarationEntity(declaration, name, [], analysis, depth)
+  ).pipe(
+    O.orElse(() => A.findFirst(exports, (statement) => namedReExport(statement, name, analysis, depth))),
+    O.orElse(() => A.findFirst(exports, (statement) => starExport(statement, name, analysis, depth))),
+    O.orElse(() => A.findFirst(exports, (statement) => effectStarExport(statement, name)))
+  );
+};
+
+const resolveLayerIdentifier = (
+  identifier: Identifier,
+  env: LayerEnv,
+  analysis: LayerAnalysis,
+  depth: number
+): O.Option<LayerEntity> =>
+  depth > LAYER_ANALYSIS_DEPTH
+    ? O.none()
+    : O.flatMap(analysis.importsOf(identifier.getSourceFile()).resolveBinding(identifier), (declaration) =>
+        declarationEntity(declaration, identifier.getText(), env, analysis, depth)
+      );
+
+const resolveLayerReference = (
+  expression: Expression,
+  env: LayerEnv,
+  analysis: LayerAnalysis,
+  depth: number
+): O.Option<LayerEntity> => {
+  const reference = stripLayerExpression(expression);
+  if (Node.isIdentifier(reference)) return resolveLayerIdentifier(reference, env, analysis, depth);
+  if (!Node.isPropertyAccessExpression(reference)) return O.none();
+  const base = stripLayerExpression(reference.getExpression());
+  const owner =
+    base.getKind() === SyntaxKind.ThisKeyword
+      ? O.map(O.fromUndefinedOr(base.getFirstAncestorByKind(SyntaxKind.ClassDeclaration)), (declaration) => ({
+          _tag: "Class" as const,
+          declaration,
+        }))
+      : resolveLayerReference(base, env, analysis, depth + 1);
+  return O.flatMap(owner, (entity): O.Option<LayerEntity> => {
+    if (entity._tag === "Module") return moduleExport(entity.source, reference.getName(), analysis, depth + 1);
+    // A member of a named `effect` export is a member of that module (`import { HttpClient } from "effect/http"`).
+    if (entity._tag === "EffectExport")
+      return O.some(
+        entity.name === "*"
+          ? effectExport(entity.module, reference.getName())
+          : { _tag: "EffectExport", module: `${entity.module}/${entity.name}`, name: reference.getName() }
+      );
+    if (entity._tag !== "Class") return O.none();
+    const property = entity.declaration.getStaticProperty(reference.getName());
+    if (Node.isPropertyDeclaration(property))
+      return O.map(O.fromUndefinedOr(property.getInitializer()), (initializer) => valueEntity(initializer, []));
+    return O.map(
+      O.fromUndefinedOr(entity.declaration.getStaticMethod(reference.getName())),
+      (definition): LayerEntity => ({ _tag: "Function", definition, env: [] })
+    );
+  });
+};
+
+// The implementation of `dual(arity, implementation)` from effect/Function.
+const dualImplementation = (value: Expression, analysis: LayerAnalysis): O.Option<Expression> => {
+  if (!Node.isCallExpression(value) || value.getArguments().length !== 2) return O.none();
+  const implementation = value.getArguments()[1];
+  return Node.isExpression(implementation) &&
+    isProvenanceCall(value, analysis.importsOf(value.getSourceFile()), ["effect", "effect/Function"], "Function", [
+      "dual",
+    ])
+    ? O.some(implementation)
+    : O.none();
+};
+
+// A callee through aliases (`const make = makeInMemory`) and `dual(arity, implementation)`.
+const resolveLayerCallee = (
+  callee: Expression,
+  env: LayerEnv,
+  analysis: LayerAnalysis,
+  depth: number
+): O.Option<LayerEntity> =>
+  O.flatMap(resolveLayerReference(callee, env, analysis, depth), (entity) => {
+    if (entity._tag !== "Value" || depth > LAYER_ANALYSIS_DEPTH) return O.some(entity);
+    const value = entity.expression;
+    if (Node.isIdentifier(value) || Node.isPropertyAccessExpression(value))
+      return resolveLayerCallee(value, entity.env, analysis, depth + 1);
+    return O.some(
+      O.match(dualImplementation(value, analysis), {
+        onNone: () => entity,
+        onSome: (implementation) => valueEntity(implementation, entity.env),
+      })
+    );
+  });
+
+const layerFunctionReturns = (definition: LayerFunction): ReadonlyArray<Expression> => {
+  const body = definition.getBody();
+  if (body === undefined) return [];
+  if (!Node.isBlock(body)) return Node.isExpression(body) ? [body] : [];
+  return A.getSomes(
+    A.map(
+      A.filter(
+        body.getDescendantsOfKind(SyntaxKind.ReturnStatement),
+        (statement) => statement.getFirstAncestor(isFunctionBoundary) === definition
+      ),
+      (statement) => O.fromUndefinedOr(statement.getExpression())
+    )
+  );
+};
+
+type LayerJudge = (expression: Expression, env: LayerEnv, analysis: LayerAnalysis, depth: number) => boolean;
+
+// Parameters bound to a call's positional arguments, ahead of the definition's own bindings. Positions
+// hold only before the first spread argument: every parameter at or after it binds to an unknown value.
+const bindArguments = (
+  definition: LayerFunction,
+  argumentsOf: ReadonlyArray<MorphNode>,
+  callerEnv: LayerEnv,
+  definitionEnv: LayerEnv
+): LayerEnv => {
+  // Without a spread every position is known; a missing argument then falls back to the parameter's default.
+  const firstSpread = O.getOrElse(A.findFirstIndex(argumentsOf, Node.isSpreadElement), () => Number.POSITIVE_INFINITY);
+  return [
+    ...A.getSomes(
+      A.map(definition.getParameters(), (parameter, index): O.Option<LayerBinding> => {
+        if (parameter.isRestParameter()) return O.none();
+        if (index >= firstSpread) return O.some({ parameter, argument: O.none(), env: callerEnv });
+        const argument = argumentsOf[index];
+        return Node.isExpression(argument)
+          ? O.some({ parameter, argument: O.some(argument), env: callerEnv })
+          : O.none();
+      })
+    ),
+    ...definitionEnv,
+  ];
+};
+
+// The generator of `Effect.fn(name)(function* () {})`, `Effect.fn(function* () {})` or
+// `Effect.fnUntraced(function* () {})`. Extra pipeable arguments are not followed.
+const effectFunctionGenerator = (expression: Expression, analysis: LayerAnalysis): O.Option<LayerFunction> => {
+  if (!Node.isCallExpression(expression)) return O.none();
+  const imports = analysis.importsOf(expression.getSourceFile());
+  const callee = expression.getExpression();
+  const defined =
+    isProvenanceCall(expression, imports, EFFECT_MODULES, "Effect", ["fn", "fnUntraced"]) &&
+    (!Node.isCallExpression(callee) ||
+      A.every(
+        callee.getArguments(),
+        (argument) => Node.isStringLiteral(argument) || Node.isNoSubstitutionTemplateLiteral(argument)
+      ));
+  const args = expression.getArguments();
+  const generator = args[0];
+  return defined &&
+    args.length === 1 &&
+    Node.isExpression(generator) &&
+    isLayerFunctionNode(stripLayerExpression(generator))
+    ? O.some(stripLayerExpression(generator) as LayerFunction)
+    : O.none();
+};
+
+// Every return of a resolved function, judged with its parameters bound to the call's arguments.
+const judgeFunctionReturns = (
+  definition: LayerFunction,
+  argumentsOf: ReadonlyArray<MorphNode>,
+  callerEnv: LayerEnv,
+  definitionEnv: LayerEnv,
+  judge: LayerJudge,
+  analysis: LayerAnalysis,
+  depth: number
+): boolean => {
+  const returns = layerFunctionReturns(definition);
+  const env = bindArguments(definition, argumentsOf, callerEnv, definitionEnv);
+  return (
+    A.isReadonlyArrayNonEmpty(returns) && A.every(returns, (returned) => judge(returned, env, analysis, depth + 1))
+  );
+};
+
+// Follows a reference to its value, or a call to the returns of the function it resolves to.
+const followLayerValue = (
+  expression: Expression,
+  env: LayerEnv,
+  analysis: LayerAnalysis,
+  depth: number,
+  judge: LayerJudge
+): boolean => {
+  if (depth > LAYER_ANALYSIS_DEPTH) return false;
+  const value = stripLayerExpression(expression);
+  if (Node.isCallExpression(value))
+    return O.exists(resolveLayerCallee(value.getExpression(), env, analysis, depth + 1), (entity) => {
+      if (entity._tag === "Function")
+        return judgeFunctionReturns(entity.definition, value.getArguments(), env, entity.env, judge, analysis, depth);
+      // `Effect.fn(name)(function* (...) {})` and `Effect.fnUntraced(function* (...) {})` define effect
+      // factories: the call runs the generator with its parameters bound to the arguments.
+      return (
+        entity._tag === "Value" &&
+        judge === isHermeticEffect &&
+        O.exists(effectFunctionGenerator(entity.expression, analysis), (generator) =>
+          isHermeticGenerator(
+            generator,
+            bindArguments(generator, value.getArguments(), env, entity.env),
+            analysis,
+            depth
+          )
+        )
+      );
+    });
+  return O.exists(
+    resolveLayerReference(value, env, analysis, depth + 1),
+    (entity) => entity._tag === "Value" && judge(entity.expression, entity.env, analysis, depth + 1)
+  );
+};
+
+const callbackReturns = (
+  callback: MorphNode | undefined,
+  env: LayerEnv,
+  analysis: LayerAnalysis,
+  depth: number,
+  judge: LayerJudge
+): boolean => {
+  if (callback === undefined || !Node.isExpression(callback)) return false;
+  const value = stripLayerExpression(callback);
+  return isLayerFunctionNode(value)
+    ? isHermeticSyncBody(value, env, analysis, depth + 1) &&
+        judgeFunctionReturns(value, [], env, env, judge, analysis, depth)
+    : judge(value, env, analysis, depth + 1);
+};
+
+const STUB_LAYER_MEMBERS = ["succeed", "mock", "succeedContext"];
+const LAYER_COMPOSERS = ["merge", "mergeAll", "provide", "provideMerge", "fresh"];
+
+// `ConfigProvider.layer(provider)` is `Layer.succeed(ConfigProvider)(provider)` unless the argument is an
+// Effect (effect/ConfigProvider.ts); a `ConfigProvider.fromUnknown(...)` argument is a provider value.
+const isConfigProviderValueLayer = (call: CallExpression, imports: EffectVitestImports): boolean => {
+  const provider = call.getArguments()[0];
+  return (
+    isProvenanceCall(call, imports, CONFIG_PROVIDER_MODULES, "ConfigProvider", ["layer"]) &&
+    call.getArguments().length === 1 &&
+    Node.isCallExpression(provider) &&
+    isProvenanceCall(provider, imports, CONFIG_PROVIDER_MODULES, "ConfigProvider", ["fromUnknown"])
+  );
+};
+
+// `Logger.layer([Logger.make(...)])` adds logger values in a `Layer.effect`; it yields only entries
+// that are Effects (effect/Logger.ts), and `Logger.make` returns a logger value.
+const isLoggerValueLayer = (call: CallExpression, imports: EffectVitestImports): boolean => {
+  const loggers = call.getArguments()[0];
+  return (
+    isProvenanceCall(call, imports, LOGGER_MODULES, "Logger", ["layer"]) &&
+    Node.isArrayLiteralExpression(loggers) &&
+    A.every(
+      loggers.getElements(),
+      (logger) => Node.isCallExpression(logger) && isProvenanceCall(logger, imports, LOGGER_MODULES, "Logger", ["make"])
+    )
+  );
+};
+
+// Effect's own in-memory layers, whose declarations ship only as `.d.ts`: `Path.layer` is
+// `Layer.succeed(Path)(posixImpl)` (effect/Path.ts), `TestClock.layer()` is `Layer.effectContext`
+// over an in-memory clock and scheduler (effect/testing/TestClock.ts), `AtomRegistry.layer` is
+// `layerOptions()`, a `Layer.effect` that builds an in-memory registry with a finalizer
+// (effect/reactivity/AtomRegistry.ts), and `FetchHttpClient.layer` is
+// `HttpClient.layerMergedContext(Effect.succeed(fetch))` (effect/http/FetchHttpClient.ts).
+const isLibraryMemoryLayer = (expression: Expression, imports: EffectVitestImports): boolean =>
+  Node.isCallExpression(expression)
+    ? isProvenanceCall(expression, imports, TEST_CLOCK_MODULES, "TestClock", ["layer"]) ||
+      isProvenanceCall(expression, imports, ATOM_REGISTRY_MODULES, "AtomRegistry", ["layerOptions"]) ||
+      isConfigProviderValueLayer(expression, imports) ||
+      isLoggerValueLayer(expression, imports)
+    : isProvenanceExpression(expression, imports, ["effect", "effect/Path"], "Path", ["layer"]) ||
+      isProvenanceExpression(expression, imports, ATOM_REGISTRY_MODULES, "AtomRegistry", ["layer"]) ||
+      isProvenanceExpression(expression, imports, FETCH_HTTP_CLIENT_MODULES, "FetchHttpClient", ["layer"]);
+
+// One syntactic case of a judge: the call shapes it matches and how it judges them.
+type LayerCallRule = {
+  readonly matches: (call: CallExpression, imports: EffectVitestImports) => boolean;
+  readonly judge: (call: CallExpression, env: LayerEnv, analysis: LayerAnalysis, depth: number) => boolean;
+};
+type LayerReferenceRule = (
+  reference: Expression,
+  imports: EffectVitestImports,
+  env: LayerEnv,
+  analysis: LayerAnalysis,
+  depth: number
+) => boolean;
+type LayerJudgeRules = { readonly reference: LayerReferenceRule; readonly calls: ReadonlyArray<LayerCallRule> };
+
+// A judge tries its own rules, then follows the expression to a value or a factory's returns. The rules
+// are read lazily because the three judges refer to one another.
+const makeLayerJudge = (rules: () => LayerJudgeRules): LayerJudge => {
+  const judge: LayerJudge = (expression, env, analysis, depth) => {
+    if (depth > LAYER_ANALYSIS_DEPTH) return false;
+    const value = stripLayerExpression(expression);
+    const imports = analysis.importsOf(value.getSourceFile());
+    const { reference, calls } = rules();
+    if (!Node.isCallExpression(value))
+      return reference(value, imports, env, analysis, depth) || followLayerValue(value, env, analysis, depth, judge);
+    return O.match(
+      A.findFirst(calls, ({ matches }) => matches(value, imports)),
+      {
+        onNone: () => followLayerValue(value, env, analysis, depth, judge),
+        onSome: (rule) => rule.judge(value, env, analysis, depth),
+      }
+    );
+  };
+  return judge;
+};
+
+const memberCall =
+  (modules: ReadonlyArray<string>, namespace: string, members: ReadonlyArray<string>) =>
+  (call: CallExpression, imports: EffectVitestImports): boolean =>
+    isProvenanceCall(call, imports, modules, namespace, members);
+
+const holds = (): boolean => true;
+
+const expressionArgument = (call: CallExpression, index: number): O.Option<Expression> =>
+  O.filter(O.fromUndefinedOr(call.getArguments()[index]), Node.isExpression);
+
+const judgesArgument =
+  (index: number, judge: () => LayerJudge) =>
+  (call: CallExpression, env: LayerEnv, analysis: LayerAnalysis, depth: number): boolean =>
+    O.exists(expressionArgument(call, index), (argument) => judge()(argument, env, analysis, depth + 1));
+
+const judgesCallback =
+  (index: number, judge: () => LayerJudge) =>
+  (call: CallExpression, env: LayerEnv, analysis: LayerAnalysis, depth: number): boolean =>
+    callbackReturns(call.getArguments()[index], env, analysis, depth, judge());
+
+// `f(self, continuation)`: a hermetic `self`, then the continuation judged by `continuation`.
+const continuedEffect =
+  (continuation: (call: CallExpression, env: LayerEnv, analysis: LayerAnalysis, depth: number) => boolean) =>
+  (call: CallExpression, env: LayerEnv, analysis: LayerAnalysis, depth: number): boolean =>
+    call.getArguments().length === 2 &&
+    judgesArgument(0, () => isHermeticEffect)(call, env, analysis, depth) &&
+    continuation(call, env, analysis, depth);
+
+// `flatMap`/`andThen`/`tap`/`acquireRelease`: a continuation whose body and returns are hermetic.
+const sequencedEffect = continuedEffect(judgesCallback(1, () => isHermeticEffect));
+
+const withStageImports = (
+  stage: MorphNode,
+  analysis: LayerAnalysis,
+  judge: (stage: Expression, imports: EffectVitestImports) => boolean
+): boolean => Node.isExpression(stage) && judge(stage, analysis.importsOf(stage.getSourceFile()));
+
+const pipedThrough = (
+  call: CallExpression,
+  env: LayerEnv,
+  analysis: LayerAnalysis,
+  depth: number,
+  receiver: LayerJudge,
+  stage: (stage: MorphNode, env: LayerEnv, analysis: LayerAnalysis, depth: number) => boolean
+): boolean =>
+  receiver(pipeReceiver(call), env, analysis, depth + 1) &&
+  A.every(call.getArguments(), (candidate) => stage(candidate, env, analysis, depth));
+
+const isLayerOperandFree = (operand: MorphNode, env: LayerEnv, analysis: LayerAnalysis, depth: number): boolean =>
+  Node.isArrayLiteralExpression(operand)
+    ? A.every(operand.getElements(), (element) => isLayerFree(element, env, analysis, depth + 1))
+    : Node.isExpression(operand) && isLayerFree(operand, env, analysis, depth + 1);
+
+const isFreeLayerStage = (stage: MorphNode, env: LayerEnv, analysis: LayerAnalysis, depth: number): boolean =>
+  withStageImports(stage, analysis, (expression, imports) =>
+    Node.isCallExpression(expression)
+      ? expression.getArguments().length === 1 &&
+        isProvenanceCall(expression, imports, LAYER_MODULES, "Layer", ["provide", "provideMerge", "merge"]) &&
+        A.every(expression.getArguments(), (operand) => isLayerOperandFree(operand, env, analysis, depth))
+      : isProvenanceExpression(expression, imports, LAYER_MODULES, "Layer", ["fresh"])
+  );
+
+const isPipeCall = (call: CallExpression): boolean => {
+  const callee = call.getExpression();
+  return Node.isPropertyAccessExpression(callee) && callee.getName() === "pipe";
+};
+
+const pipeReceiver = (call: CallExpression): Expression => {
+  const callee = call.getExpression();
+  return Node.isPropertyAccessExpression(callee) ? callee.getExpression() : callee;
+};
+
+// The effect argument of `Layer.effect(tag, effect)`, `Layer.effect(tag)(effect)` or
+// `Layer.effectContext(effect)`: the last argument, once the call has all of its operands.
+const layerEffectArgument = (call: CallExpression, required: number): O.Option<Expression> =>
+  Node.isCallExpression(call.getExpression()) || call.getArguments().length >= required
+    ? O.filter(A.last(call.getArguments()), Node.isExpression)
+    : O.none();
+
+const hermeticLayerEffect =
+  (required: number) =>
+  (call: CallExpression, env: LayerEnv, analysis: LayerAnalysis, depth: number): boolean =>
+    O.exists(layerEffectArgument(call, required), (effect) => isHermeticEffect(effect, env, analysis, depth + 1));
+
+const TOOLKIT_MODULES = ["effect/ai", "effect/ai/Toolkit"];
+
+const isToolkitLayerCall = (call: CallExpression): boolean => {
+  const callee = call.getExpression();
+  return Node.isPropertyAccessExpression(callee) && callee.getName() === "toLayer" && call.getArguments().length === 1;
+};
+
+// `toolkit.toLayer(build)` is `Layer.effectContext(toolkit.toHandlers(build))`, which reads the context and
+// yields `build` when it is an Effect (effect/ai/Toolkit.ts). It is free when the receiver resolves to
+// `Toolkit.make(...)`/`Toolkit.merge(...)` and `build` is a handler record or a hermetic effect.
+const isToolkitLayer = (call: CallExpression, env: LayerEnv, analysis: LayerAnalysis, depth: number): boolean => {
+  const toolkit = O.exists(
+    resolveLayerCallee(pipeReceiver(call), env, analysis, depth + 1),
+    (entity) =>
+      entity._tag === "Value" &&
+      Node.isCallExpression(entity.expression) &&
+      isProvenanceCall(
+        entity.expression,
+        analysis.importsOf(entity.expression.getSourceFile()),
+        TOOLKIT_MODULES,
+        "Toolkit",
+        ["make", "merge"]
+      )
+  );
+  return (
+    toolkit &&
+    O.exists(
+      expressionArgument(call, 0),
+      (build) =>
+        Node.isObjectLiteralExpression(stripLayerExpression(build)) || isHermeticEffect(build, env, analysis, depth + 1)
+    )
+  );
+};
+
+const isLayerFree: LayerJudge = makeLayerJudge(() => LAYER_FREE_RULES);
+
+const LAYER_FREE_RULES: LayerJudgeRules = {
+  reference: (reference, imports) =>
+    isLibraryMemoryLayer(reference, imports) ||
+    isPlatformServiceLayer(reference, imports) ||
+    isProvenanceExpression(reference, imports, LAYER_MODULES, "Layer", ["empty"]),
+  calls: [
+    { matches: isLibraryMemoryLayer, judge: holds },
+    { matches: memberCall(LAYER_MODULES, "Layer", STUB_LAYER_MEMBERS), judge: holds },
+    {
+      matches: memberCall(LAYER_MODULES, "Layer", ["sync", "syncContext"]),
+      judge: (call, env, analysis, depth) =>
+        O.exists(layerEffectArgument(call, call.getArguments().length === 1 ? 1 : 2), (thunk) =>
+          isHermeticCallable(thunk, env, analysis, depth)
+        ),
+    },
+    { matches: memberCall(LAYER_MODULES, "Layer", ["effect", "scoped"]), judge: hermeticLayerEffect(2) },
+    { matches: memberCall(LAYER_MODULES, "Layer", ["effectContext", "effectDiscard"]), judge: hermeticLayerEffect(1) },
+    { matches: memberCall(LAYER_MODULES, "Layer", ["suspend"]), judge: judgesCallback(0, () => isLayerFree) },
+    { matches: memberCall(LAYER_MODULES, "Layer", ["unwrap"]), judge: judgesArgument(0, () => producesFreeLayer) },
+    {
+      matches: memberCall(LAYER_MODULES, "Layer", LAYER_COMPOSERS),
+      judge: (call, env, analysis, depth) =>
+        !Node.isCallExpression(call.getExpression()) &&
+        A.isReadonlyArrayNonEmpty(call.getArguments()) &&
+        A.every(call.getArguments(), (operand) => isLayerOperandFree(operand, env, analysis, depth)),
+    },
+    { matches: isToolkitLayerCall, judge: isToolkitLayer },
+    {
+      matches: isPipeCall,
+      judge: (call, env, analysis, depth) => pipedThrough(call, env, analysis, depth, isLayerFree, isFreeLayerStage),
+    },
+  ],
+};
+
+const EFFECT_CONSTANTS = ["succeed", "fail", "die", "context", "service", "serviceOption"];
+// In-memory Effect state: constructors plus the non-blocking reads and writes of a ref or deferred.
+// `Deferred.await`, `Queue.take` and the like can suspend, so they are not listed.
+const MEMORY_STATE = [
+  { namespace: "Ref", members: ["make", "get", "set", "update", "updateAndGet", "getAndSet", "modify"] },
+  { namespace: "SynchronizedRef", members: ["make"] },
+  { namespace: "SubscriptionRef", members: ["make"] },
+  { namespace: "TxRef", members: ["make"] },
+  { namespace: "Deferred", members: ["make", "succeed", "done"] },
+  { namespace: "Queue", members: ["make", "unbounded", "bounded", "sliding", "dropping"] },
+  { namespace: "PubSub", members: ["unbounded", "bounded", "sliding", "dropping"] },
+  { namespace: "Latch", members: ["make"] },
+  { namespace: "Semaphore", members: ["make"] },
+  { namespace: "Cache", members: ["make"] },
+];
+
+// Reading the current time is an in-memory clock read, not a wait.
+const isClockRead = (expression: Expression, imports: EffectVitestImports): boolean =>
+  isProvenanceExpression(expression, imports, ["effect", "effect/Clock"], "Clock", [
+    "currentTimeMillis",
+    "currentTimeNanos",
+  ]) || isProvenanceExpression(expression, imports, ["effect", "effect/DateTime"], "DateTime", ["now", "nowAsDate"]);
+
+const isMemoryStateCall = (call: CallExpression, imports: EffectVitestImports): boolean =>
+  A.some(MEMORY_STATE, ({ namespace, members }) =>
+    isProvenanceCall(call, imports, ["effect", `effect/${namespace}`], namespace, members)
+  );
+
+// `Effect` constants, in-memory state, and `LanguageModel.make(params)`, which reads optional services and
+// returns the model (effect/ai/LanguageModel.ts).
+const isHermeticConstructor = (call: CallExpression, imports: EffectVitestImports): boolean =>
+  isProvenanceCall(call, imports, EFFECT_MODULES, "Effect", EFFECT_CONSTANTS) ||
+  isMemoryStateCall(call, imports) ||
+  isProvenanceCall(call, imports, LANGUAGE_MODEL_MODULES, "LanguageModel", ["make"]);
+
+// `Context.Service<...>()(...)`, `Context.Tag(...)` or `Context.Reference(...)` declares a service key.
+const declaresServiceKey = (expression: MorphNode | undefined, imports: EffectVitestImports): boolean =>
+  expression !== undefined &&
+  A.some(
+    [expression, ...expression.getDescendantsOfKind(SyntaxKind.PropertyAccessExpression)],
+    (candidate) =>
+      Node.isExpression(candidate) &&
+      !Node.isCallExpression(candidate) &&
+      isProvenanceExpression(candidate, imports, CONTEXT_MODULES, "Context", ["Service", "Tag", "Reference"])
+  );
+
+// Effect modules export their service key under the module's own name: `FileSystem.FileSystem`, with the
+// module imported as `* as FileSystem from "effect/FileSystem"` or `{ FileSystem } from "effect"`.
+const isModuleServiceKey = (expression: Expression, imports: EffectVitestImports): boolean => {
+  if (!Node.isPropertyAccessExpression(expression)) return false;
+  const base = expression.getExpression();
+  const name = expression.getName();
+  return (
+    Node.isIdentifier(base) &&
+    A.some(
+      O.getOrElse(MutableHashMap.get(imports.bindingsByLocal, base.getText()), A.empty),
+      (binding) =>
+        (binding.imported === "*" &&
+          (Str.startsWith("effect/")(binding.module) || Str.startsWith("@effect/")(binding.module)) &&
+          Str.endsWith(`/${name}`)(binding.module)) ||
+        (binding.module === "effect" && binding.imported === name)
+    )
+  );
+};
+
+const entityDeclaresServiceKey = (entity: LayerEntity, analysis: LayerAnalysis): boolean => {
+  if (entity._tag === "Class")
+    return A.some(entity.declaration.getHeritageClauses(), (clause) =>
+      A.some(clause.getTypeNodes(), (type) =>
+        declaresServiceKey(type.getExpression(), analysis.importsOf(entity.declaration.getSourceFile()))
+      )
+    );
+  return (
+    entity._tag === "Value" &&
+    Node.isCallExpression(entity.expression) &&
+    declaresServiceKey(entity.expression.getExpression(), analysis.importsOf(entity.expression.getSourceFile()))
+  );
+};
+
+const readsServiceKey: LayerReferenceRule = (reference, imports, env, analysis, depth) =>
+  isModuleServiceKey(reference, imports) ||
+  O.exists(resolveLayerReference(reference, env, analysis, depth + 1), (entity) =>
+    entityDeclaresServiceKey(entity, analysis)
+  );
+
+const ownYields = (generator: LayerFunction): ReadonlyArray<YieldExpression> =>
+  A.filter(
+    generator.getDescendantsOfKind(SyntaxKind.YieldExpression),
+    (expression) => expression.getFirstAncestor(isFunctionBoundary) === generator
+  );
+
+const generatorCallback = (call: CallExpression): O.Option<LayerFunction> =>
+  O.flatMap(A.last(call.getArguments()), (argument) =>
+    Node.isExpression(argument) && isLayerFunctionNode(stripLayerExpression(argument))
+      ? O.some(stripLayerExpression(argument) as LayerFunction)
+      : O.none()
+  );
+
+const isHermeticGenerator = (generator: LayerFunction, env: LayerEnv, analysis: LayerAnalysis, depth: number) =>
+  isHermeticSyncBody(generator, env, analysis, depth) &&
+  A.every(ownYields(generator), (expression) =>
+    O.exists(
+      O.fromUndefinedOr(expression.getExpression()),
+      (operand) => expression.getAsteriskToken() !== undefined && isHermeticEffect(operand, env, analysis, depth + 1)
+    )
+  );
+
+// --- What a thunk or a generator body runs (#1855 wave 6, review round on #2247) ---------------
+//
+// A thunk handed to `Effect.sync`/`suspend`/`promise`/`try`/`tryPromise` or `Layer.sync`, a callback the
+// acquisition applies (`map`, `flatMap`, `pipe` stages), and every statement of a generator run during the
+// hook, so each is judged by the calls in its own body, not by the constructor it is passed to. A body is
+// hermetic when every call it makes itself (nested functions only define values, so their bodies are not
+// counted) is one of:
+// - an `effect` module function (curried calls included), except the `run*` entry points; a data module
+//   (`Array`, `Option`, `Record`, `Struct`, `String`, `Match`, `pipe`, ...) applies its function arguments
+//   at once, so they are judged too, while other modules (`Effect`, `Layer`, `HttpClient.make`, ...) take
+//   callbacks they run later;
+// - a repository function whose own body is hermetic, with its parameters bound to the call's arguments;
+// - an `Effect.fn`/`Effect.fnUntraced` factory, whose call only builds an effect;
+// - `of`/`make` on a class built from an `effect` base (`Context.Service`, `Schema.Class`, ...);
+// - a `pipe` method, or a built-in (`JSON`, `Object`, `Array`, `Math`, `Number`, `String`, `Boolean`,
+//   `Symbol`, `BigInt`, `Promise`, `Date`), with function arguments judged; `new` only of the built-in
+//   value constructors.
+// Any other call, including an unresolved one, is acquisition. `Effect.try` follows the same rule as
+// `Effect.sync`: whether a thunk may throw says nothing about what it does, and the body rule already
+// flags the external work (`loadWinkRuntime` calls the imported `wink-nlp` loader).
+// Gotcha: a function passed by an unresolved name to an `effect` helper (`A.map(xs, f)`) is not followed.
+const RUN_MEMBERS = ["runSync", "runSyncExit", "runPromise", "runPromiseExit", "runFork", "runCallback"];
+const EAGER_NAMESPACES = [
+  "Array",
+  "Option",
+  "Result",
+  "Record",
+  "Struct",
+  "Tuple",
+  "String",
+  "Number",
+  "Boolean",
+  "BigInt",
+  "Predicate",
+  "Function",
+  "Match",
+  "Iterable",
+  "Chunk",
+  "HashMap",
+  "HashSet",
+  "MutableHashMap",
+  "MutableHashSet",
+  "Order",
+  "Equivalence",
+];
+const SYNC_GLOBALS = [
+  "JSON",
+  "Object",
+  "Array",
+  "Math",
+  "Number",
+  "String",
+  "Boolean",
+  "Symbol",
+  "BigInt",
+  "Promise",
+  "Date",
+];
+const SYNC_CONSTRUCTORS = [
+  "Map",
+  "Set",
+  "WeakMap",
+  "WeakSet",
+  "Array",
+  "Error",
+  "TypeError",
+  "RangeError",
+  "Date",
+  "URL",
+  "RegExp",
+  "TextEncoder",
+  "TextDecoder",
+  "AbortController",
+];
+
+const lastSegment = (module: string): string => O.getOrElse(A.last(Str.split("/")(module)), () => module);
+
+// The unbound global an identifier or `Global.member` chain starts from.
+const unboundGlobal = (callee: Expression, analysis: LayerAnalysis): O.Option<string> => {
+  let base: Expression = callee;
+  while (Node.isPropertyAccessExpression(base)) base = stripLayerExpression(base.getExpression());
+  return Node.isIdentifier(base) && O.isNone(analysis.importsOf(base.getSourceFile()).resolveBinding(base))
+    ? O.some(base.getText())
+    : O.none();
+};
+
+const isEffectBasedClass = (declaration: ClassDeclaration, analysis: LayerAnalysis): boolean =>
+  A.some(declaration.getHeritageClauses(), (clause) =>
+    A.some(clause.getTypeNodes(), (type) =>
+      A.some(
+        [type.getExpression(), ...type.getExpression().getDescendantsOfKind(SyntaxKind.Identifier)],
+        (candidate) =>
+          Node.isIdentifier(candidate) &&
+          O.exists(resolveLayerIdentifier(candidate, [], analysis, 0), (entity) => entity._tag === "EffectExport")
+      )
+    )
+  );
+
+// A value `effect` defines: an `effect` export, a class built from an `effect` base, or the result of an
+// `effect` constructor (`Toolkit.make(...)`).
+const isEffectDefinedValue = (entity: LayerEntity, analysis: LayerAnalysis, depth: number): boolean => {
+  // A namespace (`HttpClient`) is not a value: `HttpClient.make(...)` is an ordinary module function.
+  if (entity._tag === "EffectExport") return entity.name !== "*";
+  if (entity._tag === "Class") return isEffectBasedClass(entity.declaration, analysis);
+  return (
+    entity._tag === "Value" &&
+    Node.isCallExpression(entity.expression) &&
+    O.exists(
+      resolveLayerCallee(stripLayerExpression(entity.expression.getExpression()), entity.env, analysis, depth + 1),
+      (callee) => callee._tag === "EffectExport"
+    )
+  );
+};
+
+// `Tag.of(...)`, `Schema.make(...)` or `toolkit.of(...)` on a value `effect` defines: these build a value.
+const isEffectClassConstructor = (callee: Expression, env: LayerEnv, analysis: LayerAnalysis, depth: number) =>
+  Node.isPropertyAccessExpression(callee) &&
+  A.contains(["of", "make"], callee.getName()) &&
+  O.exists(resolveLayerReference(callee.getExpression(), env, analysis, depth + 1), (entity) =>
+    isEffectDefinedValue(entity, analysis, depth)
+  );
+
+const isEffectFunctionFactory = (entity: LayerEntity, analysis: LayerAnalysis): boolean =>
+  entity._tag === "Value" && O.isSome(effectFunctionGenerator(entity.expression, analysis));
+
+const functionLiteral = (argument: MorphNode): O.Option<LayerFunction> => {
+  if (!Node.isExpression(argument)) return O.none();
+  const value = stripLayerExpression(argument);
+  return isLayerFunctionNode(value) ? O.some(value) : O.none();
+};
+
+const functionArgumentsHermetic = (
+  call: CallExpression | NewExpression,
+  env: LayerEnv,
+  analysis: LayerAnalysis,
+  depth: number
+): boolean =>
+  A.every(call.getArguments(), (argument) =>
+    O.match(functionLiteral(argument), {
+      onNone: constTrue,
+      onSome: (definition) => isHermeticSyncBody(definition, env, analysis, depth + 1),
+    })
+  );
+
+// The calls of a curried chain, outermost first: `Effect.fn("name")(generator)` is two calls on one callee.
+const curriedCalls = (call: CallExpression): ReadonlyArray<CallExpression> => {
+  const calls = [call];
+  let callee = stripLayerExpression(call.getExpression());
+  while (Node.isCallExpression(callee)) {
+    calls.push(callee);
+    callee = stripLayerExpression(callee.getExpression());
+  }
+  return calls;
+};
+
+const resolvedCallHermetic = (call: CallExpression, env: LayerEnv, analysis: LayerAnalysis, depth: number) => {
+  const calls = curriedCalls(call);
+  const innermost = O.getOrElse(A.last(calls), () => call);
+  return O.exists(
+    resolveLayerCallee(stripLayerExpression(innermost.getExpression()), env, analysis, depth + 1),
+    (entity) => {
+      if (entity._tag === "EffectExport") {
+        const member = entity.name === "*" ? lastSegment(entity.module) : entity.name;
+        return (
+          !A.contains(RUN_MEMBERS, member) &&
+          (!A.contains(EAGER_NAMESPACES, lastSegment(entity.module)) ||
+            A.every(calls, (level) => functionArgumentsHermetic(level, env, analysis, depth)))
+        );
+      }
+      // Calling what a repository function returns runs code this rule does not follow.
+      if (calls.length > 1) return false;
+      if (entity._tag === "Function")
+        return isHermeticSyncBody(
+          entity.definition,
+          bindArguments(entity.definition, call.getArguments(), env, entity.env),
+          analysis,
+          depth + 1
+        );
+      return isEffectFunctionFactory(entity, analysis);
+    }
+  );
+};
+
+const isHermeticSyncCall = (
+  call: CallExpression | NewExpression,
+  env: LayerEnv,
+  analysis: LayerAnalysis,
+  depth: number
+): boolean => {
+  if (depth > LAYER_ANALYSIS_DEPTH) return false;
+  const callee = stripLayerExpression(call.getExpression());
+  const global = unboundGlobal(callee, analysis);
+  if (Node.isNewExpression(call))
+    return (
+      Node.isIdentifier(callee) &&
+      O.exists(global, (name) => A.contains(SYNC_CONSTRUCTORS, name)) &&
+      functionArgumentsHermetic(call, env, analysis, depth)
+    );
+  const builtIn =
+    O.exists(global, (name) => A.contains(SYNC_GLOBALS, name)) ||
+    (Node.isPropertyAccessExpression(callee) && callee.getName() === "pipe") ||
+    isEffectClassConstructor(callee, env, analysis, depth);
+  return builtIn
+    ? functionArgumentsHermetic(call, env, analysis, depth)
+    : resolvedCallHermetic(call, env, analysis, depth);
+};
+
+// A call a body makes itself; a `yield*` operand is an effect the generator runs, judged as one.
+const isOwnSyncCall = (node: MorphNode, definition: LayerFunction): node is CallExpression | NewExpression => {
+  if (!Node.isCallExpression(node) && !Node.isNewExpression(node)) return false;
+  if (node.getFirstAncestor(isFunctionBoundary) !== definition) return false;
+  let parent = node.getParent();
+  while (Node.isParenthesizedExpression(parent)) parent = parent.getParent();
+  return !(Node.isYieldExpression(parent) && parent.getAsteriskToken() !== undefined);
+};
+
+const isHermeticSyncBody = (definition: LayerFunction, env: LayerEnv, analysis: LayerAnalysis, depth: number) =>
+  depth <= LAYER_ANALYSIS_DEPTH &&
+  A.every(definition.getDescendants(), (node) =>
+    isOwnSyncCall(node, definition) ? isHermeticSyncCall(node, env, analysis, depth) : true
+  );
+
+// A function value the acquisition calls: a literal or a resolved function by its body, an `effect`
+// function, an `Effect.fn` factory, or an `effect`-based class's `of`/`make`.
+const isHermeticCallable = (expression: Expression, env: LayerEnv, analysis: LayerAnalysis, depth: number) => {
+  const callable = stripLayerExpression(expression);
+  if (isLayerFunctionNode(callable)) return isHermeticSyncBody(callable, env, analysis, depth + 1);
+  if (isEffectClassConstructor(callable, env, analysis, depth)) return true;
+  return O.exists(resolveLayerCallee(callable, env, analysis, depth + 1), (entity) => {
+    if (entity._tag === "EffectExport") return !A.contains(RUN_MEMBERS, entity.name);
+    if (entity._tag === "Function") return isHermeticSyncBody(entity.definition, entity.env, analysis, depth + 1);
+    return isEffectFunctionFactory(entity, analysis);
+  });
+};
+
+const judgesCallable =
+  (index: number) =>
+  (call: CallExpression, env: LayerEnv, analysis: LayerAnalysis, depth: number): boolean =>
+    O.exists(expressionArgument(call, index), (callable) => isHermeticCallable(callable, env, analysis, depth));
+
+// The thunk of `Effect.try(thunk)`/`tryPromise(thunk)` or of their `{ try, catch }` options.
+const tryThunk = (call: CallExpression): O.Option<Expression | MethodDeclaration> =>
+  O.flatMap(expressionArgument(call, 0), (argument): O.Option<Expression | MethodDeclaration> => {
+    const options = stripLayerExpression(argument);
+    if (!Node.isObjectLiteralExpression(options)) return O.some(argument);
+    const property = options.getProperty("try");
+    // `try` is a reserved word, so the thunk is a property assignment or a method, never a shorthand.
+    if (Node.isPropertyAssignment(property)) return O.fromUndefinedOr(property.getInitializer());
+    return Node.isMethodDeclaration(property) ? O.some(property) : O.none();
+  });
+
+const hermeticTry = (call: CallExpression, env: LayerEnv, analysis: LayerAnalysis, depth: number): boolean =>
+  O.exists(tryThunk(call), (thunk) =>
+    Node.isMethodDeclaration(thunk)
+      ? isHermeticSyncBody(thunk, env, analysis, depth + 1)
+      : isHermeticCallable(thunk, env, analysis, depth)
+  );
+
+const hermeticGen = (call: CallExpression, env: LayerEnv, analysis: LayerAnalysis, depth: number): boolean =>
+  O.exists(generatorCallback(call), (generator) => isHermeticGenerator(generator, env, analysis, depth));
+
+const isHermeticStage = (stage: MorphNode, env: LayerEnv, analysis: LayerAnalysis, depth: number): boolean =>
+  withStageImports(stage, analysis, (expression, imports) => {
+    if (!Node.isCallExpression(expression))
+      return isProvenanceExpression(expression, imports, EFFECT_MODULES, "Effect", ["asVoid", "orDie"]);
+    return (
+      isProvenanceCall(expression, imports, EFFECT_MODULES, "Effect", ["as", "withSpan"]) ||
+      (isProvenanceCall(expression, imports, EFFECT_MODULES, "Effect", ["map"]) &&
+        judgesCallable(0)(expression, env, analysis, depth)) ||
+      (isProvenanceCall(expression, imports, EFFECT_MODULES, "Effect", ["flatMap", "andThen", "tap"]) &&
+        judgesCallback(0, () => isHermeticEffect)(expression, env, analysis, depth))
+    );
+  });
+
+// A hermetic acquisition reads services and allocates in-memory Effect state; it has no I/O,
+// process, network, clock wait or unresolved effect. Thunk-taking constructors (`sync`, `suspend`,
+// `promise`, `try`, `tryPromise`) are judged by what their thunk runs (see the body rules above).
+const isHermeticEffect: LayerJudge = makeLayerJudge(() => HERMETIC_EFFECT_RULES);
+
+const HERMETIC_EFFECT_RULES: LayerJudgeRules = {
+  reference: (reference, imports, env, analysis, depth) =>
+    isProvenanceExpression(reference, imports, EFFECT_MODULES, "Effect", ["void", "scope"]) ||
+    isClockRead(reference, imports) ||
+    readsServiceKey(reference, imports, env, analysis, depth),
+  calls: [
+    { matches: isHermeticConstructor, judge: holds },
+    { matches: memberCall(EFFECT_MODULES, "Effect", ["gen"]), judge: hermeticGen },
+    { matches: memberCall(EFFECT_MODULES, "Effect", ["sync", "promise"]), judge: judgesCallable(0) },
+    { matches: memberCall(EFFECT_MODULES, "Effect", ["try", "tryPromise"]), judge: hermeticTry },
+    { matches: memberCall(EFFECT_MODULES, "Effect", ["suspend"]), judge: judgesCallback(0, () => isHermeticEffect) },
+    { matches: memberCall(EFFECT_MODULES, "Effect", ["map"]), judge: continuedEffect(judgesCallable(1)) },
+    {
+      matches: memberCall(EFFECT_MODULES, "Effect", ["as", "asVoid", "orDie"]),
+      judge: judgesArgument(0, () => isHermeticEffect),
+    },
+    {
+      matches: memberCall(EFFECT_MODULES, "Effect", ["flatMap", "andThen", "tap", "acquireRelease"]),
+      judge: sequencedEffect,
+    },
+    {
+      matches: memberCall(EFFECT_MODULES, "Effect", ["addFinalizer"]),
+      judge: judgesCallback(0, () => isHermeticEffect),
+    },
+    {
+      matches: memberCall(["effect", "effect/Scope"], "Scope", ["addFinalizer"]),
+      judge: (call, env, analysis, depth) =>
+        call.getArguments().length === 2 && judgesArgument(1, () => isHermeticEffect)(call, env, analysis, depth),
+    },
+    {
+      matches: isPipeCall,
+      judge: (call, env, analysis, depth) =>
+        pipedThrough(call, env, analysis, depth, isHermeticEffect, isHermeticStage),
+    },
+  ],
+};
+
+// The effect handed to `Layer.unwrap` must be hermetic and yield an acquisition-free layer.
+const producesFreeLayer: LayerJudge = makeLayerJudge(() => FREE_LAYER_EFFECT_RULES);
+
+const FREE_LAYER_EFFECT_RULES: LayerJudgeRules = {
+  reference: () => false,
+  calls: [
+    { matches: memberCall(EFFECT_MODULES, "Effect", ["succeed"]), judge: judgesArgument(0, () => isLayerFree) },
+    { matches: memberCall(EFFECT_MODULES, "Effect", ["sync"]), judge: judgesCallback(0, () => isLayerFree) },
+    {
+      matches: memberCall(EFFECT_MODULES, "Effect", ["map"]),
+      judge: continuedEffect(judgesCallback(1, () => isLayerFree)),
+    },
+    {
+      matches: memberCall(EFFECT_MODULES, "Effect", ["gen"]),
+      judge: (call, env, analysis, depth) =>
+        hermeticGen(call, env, analysis, depth) &&
+        O.exists(generatorCallback(call), (generator) =>
+          judgeFunctionReturns(generator, [], env, env, isLayerFree, analysis, depth)
+        ),
+    },
+  ],
+};
+
+const isAcquisitionFreeLayer = (layer: Expression, analysis: LayerAnalysis): boolean =>
+  isLayerFree(layer, [], analysis, 0);
 
 const isContextProvision = (
   expression: Expression,
@@ -214,12 +1393,49 @@ const isContextProvision = (
   seen: ReadonlyArray<string> = []
 ): boolean => {
   if (Node.isCallExpression(expression)) {
-    return isProvenanceCall(expression, imports, CONTEXT_MODULES, "Context", ["make", "empty", "add", "merge"]);
+    return (
+      isProvenanceCall(expression, imports, CONTEXT_MODULES, "Context", ["make", "empty", "add", "merge"]) ||
+      isContextPipe(expression, imports, seen) ||
+      isContextFactoryCall(expression, imports, seen)
+    );
   }
   if (!Node.isIdentifier(expression) || A.contains(seen, expression.getText())) return false;
   return O.exists(localInitializer(expression, imports), (initializer) =>
     isContextProvision(initializer, imports, [...seen, expression.getText()])
   );
+};
+
+// `Context.make(...).pipe(Context.add(...))` stays a Context when every stage is a data-last Context combinator.
+const isContextPipe = (call: CallExpression, imports: EffectVitestImports, seen: ReadonlyArray<string>): boolean => {
+  const callee = call.getExpression();
+  return (
+    Node.isPropertyAccessExpression(callee) &&
+    callee.getName() === "pipe" &&
+    isContextProvision(callee.getExpression(), imports, seen) &&
+    A.every(
+      call.getArguments(),
+      (stage) =>
+        Node.isCallExpression(stage) && isProvenanceCall(stage, imports, CONTEXT_MODULES, "Context", ["add", "merge"])
+    )
+  );
+};
+
+// A call of a same-file function is a Context when every value that function returns is one.
+const isContextFactoryCall = (
+  call: CallExpression,
+  imports: EffectVitestImports,
+  seen: ReadonlyArray<string>
+): boolean => {
+  const callee = call.getExpression();
+  if (!Node.isIdentifier(callee) || A.contains(seen, callee.getText())) return false;
+  return O.exists(imports.resolveBinding(callee), (declaration) => {
+    const definition = Node.isVariableDeclaration(declaration) ? declaration.getInitializer() : declaration;
+    const returns = definition !== undefined && isLayerFunctionNode(definition) ? layerFunctionReturns(definition) : [];
+    return (
+      A.isReadonlyArrayNonEmpty(returns) &&
+      A.every(returns, (value) => isContextProvision(value, imports, [...seen, callee.getText()]))
+    );
+  });
 };
 
 const isResourceExpression = (
@@ -470,7 +1686,7 @@ const isLayerFactory = (definition: EffectVitestFunctionNode, imports: EffectVit
   if (!Node.isBlock(body)) return isLayerValued(body, imports);
   const returns = A.filter(
     body.getDescendantsOfKind(SyntaxKind.ReturnStatement),
-    (statement) => statement.getFirstAncestor(Node.isFunctionLikeDeclaration) === definition
+    (statement) => statement.getFirstAncestor(isFunctionBoundary) === definition
   );
   return (
     A.isReadonlyArrayNonEmpty(returns) &&
@@ -979,6 +2195,12 @@ const platformResourceReview = (moduleName: string, members: ReadonlyArray<strin
   (A.contains(platformServicesModules, moduleName) && A.contains(members, "layer"));
 
 const servicesBundleNames = ["NodeServices", "BunServices"];
+const fileSystemLayerModules = [
+  "@effect/platform-bun/BunFileSystem",
+  "@effect/platform-node/NodeFileSystem",
+  "@effect/platform-node-shared/NodeFileSystem",
+];
+const memoryFileSystemModules = ["@beep/memfs", "@beep/memfs/MemoryFileSystem"];
 // Results of these operations are POSIX link resolution or inode metadata.
 const nativeFileSystemOperations = ["chmod", "chown", "link", "readLink", "realPath", "symlink", "utimes"];
 const testKitModules = ["@beep/test-utils", "@beep/test-runner"];
@@ -1024,15 +2246,20 @@ const memberAccess = (node: MorphNode, member: string): O.Option<MorphNode> => {
     : O.none();
 };
 
-const isBundleBinding = (imported: string, subpath: boolean): boolean =>
-  imported === "*" || (subpath ? imported === "layer" : A.contains(servicesBundleNames, imported));
+// A platform layer module: its subpath modules export `layer`, and its roots export the named bundles.
+type PlatformBundle = { readonly subpathModules: ReadonlyArray<string>; readonly names: ReadonlyArray<string> };
+const servicesBundle: PlatformBundle = { subpathModules: platformServicesModules, names: servicesBundleNames };
+const fileSystemBundle: PlatformBundle = { subpathModules: fileSystemLayerModules, names: [] };
+
+const isBundleBinding = (imported: string, subpath: boolean, names: ReadonlyArray<string>): boolean =>
+  imported === "*" || (subpath ? imported === "layer" : A.contains(names, imported));
 
 // Some(None) skips a non-bundle namespace member; None makes the provenance opaque.
-const namespaceBundleMember = (reference: Identifier): O.Option<O.Option<MorphNode>> => {
+const namespaceBundleMember = (reference: Identifier, names: ReadonlyArray<string>): O.Option<O.Option<MorphNode>> => {
   const member = platformReferenceMember(reference);
-  if (O.exists(member, (name) => name !== "opaque" && !A.contains(servicesBundleNames, name))) return O.some(O.none());
+  if (O.exists(member, (name) => name !== "opaque" && !A.contains(names, name))) return O.some(O.none());
   const parent = reference.getParent();
-  return O.exists(member, (name) => A.contains(servicesBundleNames, name)) && parent !== undefined
+  return O.exists(member, (name) => A.contains(names, name)) && parent !== undefined
     ? O.some(O.some(parent))
     : O.none();
 };
@@ -1041,10 +2268,11 @@ const namespaceBundleMember = (reference: Identifier): O.Option<O.Option<MorphNo
 const bundleReferenceLayers = (
   reference: Identifier,
   imported: string,
-  namespacedBundle: boolean
+  namespacedBundle: boolean,
+  names: ReadonlyArray<string>
 ): O.Option<ReadonlyArray<MorphNode>> =>
   O.flatMap(
-    namespacedBundle ? namespaceBundleMember(reference) : O.some(O.some<MorphNode>(reference)),
+    namespacedBundle ? namespaceBundleMember(reference, names) : O.some(O.some<MorphNode>(reference)),
     O.match({
       onNone: () => O.some(A.empty<MorphNode>()),
       onSome: (node) => (imported === "layer" ? O.some(A.of(node)) : O.map(memberAccess(node, "layer"), A.of)),
@@ -1052,20 +2280,21 @@ const bundleReferenceLayers = (
   );
 
 // None means a bundle reference that is not a `layer` value, so provenance stays opaque.
-const servicesBundleLayers = (
+const platformBundleLayers = (
   declaration: ImportDeclaration,
-  imports: EffectVitestImports
+  imports: EffectVitestImports,
+  bundle: PlatformBundle
 ): O.Option<ReadonlyArray<MorphNode>> => {
-  const subpath = A.contains(platformServicesModules, declaration.getModuleSpecifierValue());
+  const subpath = A.contains(bundle.subpathModules, declaration.getModuleSpecifierValue());
   const bundles = A.filter(
     imports.bindings,
-    (candidate) => candidate.declaration === declaration && isBundleBinding(candidate.imported, subpath)
+    (candidate) => candidate.declaration === declaration && isBundleBinding(candidate.imported, subpath, bundle.names)
   );
   return O.map(
     O.all(
       A.flatMap(bundles, (binding) =>
         A.map(bindingReferences(declaration, binding.local, imports), (reference) =>
-          bundleReferenceLayers(reference, binding.imported, binding.imported === "*" && !subpath)
+          bundleReferenceLayers(reference, binding.imported, binding.imported === "*" && !subpath, bundle.names)
         )
       )
     ),
@@ -1135,6 +2364,82 @@ const suppliesSubject = (parent: CallExpression, current: MorphNode, imports: Ef
   isProvenanceCall(parent, imports, LAYER_MODULES, "Layer", ["provide", "provideMerge"]) &&
   O.exists(providerTarget(parent, current, imports), (target) => providesWorkspaceSubject(target, imports));
 
+// `MemoryFileSystem.layer`, `layerWith(...)` or `layerFaulty(...)` from `@beep/memfs`, imported
+// by name or reached through a namespace import of either module.
+const memoryFileSystemMembers = (members: ReadonlyArray<string>): ReadonlyArray<string> => [
+  ...members,
+  ...A.map(members, (member) => `MemoryFileSystem.${member}`),
+];
+const isMemoryFileSystemLayer = (node: MorphNode, imports: EffectVitestImports): boolean =>
+  Node.isCallExpression(node)
+    ? isProvenanceCall(
+        node,
+        imports,
+        memoryFileSystemModules,
+        "MemoryFileSystem",
+        memoryFileSystemMembers(["layerWith", "layerFaulty"])
+      )
+    : Node.isPropertyAccessExpression(node) &&
+      isProvenanceExpression(
+        node,
+        imports,
+        memoryFileSystemModules,
+        "MemoryFileSystem",
+        memoryFileSystemMembers(["layer"])
+      );
+
+// A merge builds its operands into one context where a later service replaces an earlier one,
+// so a memory filesystem operand after the bundle replaces the bundle's FileSystem.
+const memoryReplacesFileSystem = (
+  parent: CallExpression,
+  current: MorphNode,
+  imports: EffectVitestImports
+): boolean => {
+  const operands = parent.getArguments();
+  return (
+    operands.length >= 2 &&
+    isProvenanceCall(parent, imports, LAYER_MODULES, "Layer", ["merge", "mergeAll"]) &&
+    O.exists(
+      A.findFirstIndex(operands, (operand) => operand === current),
+      (index) => A.some(A.drop(operands, index + 1), (operand) => isMemoryFileSystemLayer(operand, imports))
+    )
+  );
+};
+
+// `NodeServices.layer`, `BunServices.layer` or a services subpath `layer`, uncalled.
+const isServicesBundleLayer = (node: MorphNode, imports: EffectVitestImports): boolean =>
+  (Node.isIdentifier(node) || Node.isPropertyAccessExpression(node)) &&
+  (A.some(servicesBundleNames, (name) => isProvenanceExpression(node, imports, platformRoots, name, ["layer"])) ||
+    isProvenanceExpression(node, imports, platformServicesModules, "Services", ["layer"]));
+
+// A runtime choice between the Node and Bun bundles: either branch may be the value, so the
+// chosen bundle reaches every harness the conditional reaches. Any other branch stays opaque.
+const runtimeBundleChoice = (
+  conditional: ConditionalExpression,
+  current: MorphNode,
+  imports: EffectVitestImports
+): boolean => {
+  const branches = [conditional.getWhenTrue(), conditional.getWhenFalse()];
+  return (
+    A.some(branches, (branch) => branch === current) &&
+    A.every(branches, (branch) => isServicesBundleLayer(branch, imports))
+  );
+};
+
+// One step through a Layer combinator call that takes the current layer as an argument.
+const compositionStep = (
+  parent: CallExpression,
+  current: MorphNode,
+  imports: EffectVitestImports,
+  provided: boolean
+): FlowStep => {
+  // The bundle's FileSystem reaches no harness; its other services are not filesystem provenance.
+  if (memoryReplacesFileSystem(parent, current, imports)) return done(O.some([]));
+  if (isDataLastLayerStage(current, imports) && isLayerPipe(parent, imports)) return climb(provided);
+  if (!isPreservingLayerCall(parent, imports)) return done(O.none());
+  return climb(provided || suppliesSubject(parent, current, imports));
+};
+
 const callStep = (
   parent: CallExpression,
   current: MorphNode,
@@ -1144,9 +2449,7 @@ const callStep = (
   if (!isArgumentOf(parent, current)) return done(O.none());
   if (isHarnessMethodCall(parent, imports, "layer"))
     return done(parent.getArguments()[0] === current ? O.some([{ harness: parent, subject: provided }]) : O.none());
-  if (isDataLastLayerStage(current, imports) && isLayerPipe(parent, imports)) return climb(provided);
-  if (!isPreservingLayerCall(parent, imports)) return done(O.none());
-  return climb(provided || suppliesSubject(parent, current, imports));
+  return compositionStep(parent, current, imports, provided);
 };
 
 const isFollowableBinding = (
@@ -1186,6 +2489,7 @@ const parentStep = (
   visited: FlowCache
 ): FlowStep => {
   if (Node.isParenthesizedExpression(parent)) return climb(provided);
+  if (Node.isConditionalExpression(parent) && runtimeBundleChoice(parent, current, imports)) return climb(provided);
   if (Node.isCallExpression(parent)) return callStep(parent, current, imports, provided);
   if (Node.isVariableDeclaration(parent))
     return done(declarationFlows(parent, current, imports, seen, provided, visited));
@@ -1219,8 +2523,9 @@ const bindingFlows = (
   visited: FlowCache
 ): O.Option<ReadonlyArray<HarnessFlow>> => {
   const flows = A.empty<HarnessFlow>();
+  const references = bindingReferences(declaration, declaration.getName(), imports);
   let opaque = false;
-  for (const reference of bindingReferences(declaration, declaration.getName(), imports)) {
+  for (const reference of references) {
     const reached = harnessFlows(reference, imports, seen, false, visited);
     if (O.isNone(reached)) {
       opaque = true;
@@ -1228,7 +2533,8 @@ const bindingFlows = (
     }
     flows.push(...reached.value);
   }
-  const result = opaque || A.isReadonlyArrayEmpty(flows) ? O.none() : O.some(flows);
+  // An unused binding stays opaque; references whose FileSystem is replaced contribute no flows.
+  const result = opaque || A.isReadonlyArrayEmpty(references) ? O.none() : O.some(flows);
   MutableHashMap.set(visited, declaration.getStart(), result);
   return result;
 };
@@ -1691,7 +2997,7 @@ const harnessHasOpaquePlatformReferences = (harness: CallExpression, imports: Ef
 // A services bundle used only by the shared harness is not filesystem evidence.
 // Keep portable filesystem candidates unless the existing native-subject proof succeeds.
 const canonicalPlatformIntegration = (declaration: ImportDeclaration, imports: EffectVitestImports): boolean =>
-  O.exists(servicesBundleLayers(declaration, imports), (layers) => {
+  O.exists(platformBundleLayers(declaration, imports, servicesBundle), (layers) => {
     const visited: FlowCache = MutableHashMap.empty();
     return O.exists(O.all(A.map(layers, (layer) => harnessFlows(layer, imports, [], false, visited))), (nested) => {
       const flows = A.flatten(nested);
@@ -1707,8 +3013,9 @@ const canonicalPlatformIntegration = (declaration: ImportDeclaration, imports: E
           (!Node.isIdentifier(node) || !isNamePosition(node)) &&
           isProvenanceExpression(node, imports, ["effect", "effect/FileSystem"], "FileSystem", ["FileSystem"])
       );
+      // Every reached layer either flows to these harnesses or has its FileSystem replaced by memory.
       return (
-        !A.isReadonlyArrayEmpty(harnesses) &&
+        !A.isReadonlyArrayEmpty(layers) &&
         A.every(
           harnesses,
           (harness) =>
@@ -1720,6 +3027,21 @@ const canonicalPlatformIntegration = (declaration: ImportDeclaration, imports: E
               imports
             )
         )
+      );
+    });
+  });
+
+// A native FileSystem layer stays a memory filesystem candidate unless every harness it reaches
+// calls a link or inode operation on the FileSystem it binds; a provided subject is not enough here.
+const nativeFileSystemLayerIntegration = (declaration: ImportDeclaration, imports: EffectVitestImports): boolean =>
+  A.contains(fileSystemLayerModules, declaration.getModuleSpecifierValue()) &&
+  O.exists(platformBundleLayers(declaration, imports, fileSystemBundle), (layers) => {
+    const visited: FlowCache = MutableHashMap.empty();
+    return O.exists(O.all(A.map(layers, (layer) => harnessFlows(layer, imports, [], false, visited))), (nested) => {
+      const flows = A.flatten(nested);
+      return (
+        !A.isReadonlyArrayEmpty(flows) &&
+        A.every(flows, ({ harness }) => harnessProvesNativeFileSystem({ harness, subject: false }, imports))
       );
     });
   });
@@ -1864,6 +3186,7 @@ type DetectorState = {
   readonly calls: ReadonlyArray<CallExpression>;
   readonly file: string;
   readonly owner: string;
+  readonly layers: LayerAnalysis;
 };
 
 const inspectContext = (call: CallExpression, member: string, canonicalMember: string, state: DetectorState) => {
@@ -1972,8 +3295,6 @@ const testBodyBindings = (
           )
   );
 
-const REF_MODULES = ["effect", "effect/Ref"];
-const CONFIG_PROVIDER_MODULES = ["effect", "effect/ConfigProvider"];
 const LAYER_COMBINATORS = ["merge", "mergeAll", "provide", "provideMerge", "fresh"];
 const LAYER_VALUES = [...LAYER_COMBINATORS, "succeed", "sync", "effect", "scoped", "unwrap", "mock", "empty"];
 
@@ -2747,11 +4068,11 @@ const detectServiceMock = ({ call, member }: ReturnType<typeof inspectContext>, 
 };
 
 const detectLayerTimeout = ({ call }: ReturnType<typeof inspectContext>, state: DetectorState): void => {
-  const { imports, makeFinding, findings, file, owner } = state;
+  const { imports, makeFinding, findings, file, owner, layers } = state;
 
   if (isHarnessMethodCall(call, imports, "layer") && !Node.isCallExpression(call.getExpression())) {
     const layer = call.getArguments()[0];
-    if (Node.isExpression(layer) && !isAcquisitionFreeLayer(layer, imports) && !layerHasTimeout(call)) {
+    if (Node.isExpression(layer) && !layerHasTimeout(call) && !isAcquisitionFreeLayer(layer, layers)) {
       findings.push(makeFinding({ ruleId: "EV014", node: call, file, owner, symbol: "it.layer", judgment: true }));
     }
   }
@@ -2794,10 +4115,23 @@ const testerConfinedTo = (registration: CallExpression, block: EffectVitestFunct
     );
   });
 
+// A nested `it.layer` builds `Layer.provideMerge(nested, parentEnv)`, whose later context wins, so a direct
+// `TestClock.layer()` argument (a new layer object, built once in the forked memo map) replaces the parent clock.
+const installsFreshTestClock = (block: EffectVitestFunctionNode, imports: EffectVitestImports): boolean => {
+  const registration = block.getParent();
+  const builder = Node.isCallExpression(registration) ? registration.getExpression() : undefined;
+  const layer = Node.isCallExpression(builder) ? builder.getArguments()[0] : undefined;
+  return Node.isCallExpression(layer) && isProvenanceCall(layer, imports, TEST_CLOCK_MODULES, "TestClock", ["layer"]);
+};
+
 // `@effect/vitest` builds every top-level `it.layer` in a fresh memo map, so its TestClock is the block's
-// own. Nested blocks fork the parent's memo map and share its TestClock, so they never qualify.
+// own. Nested blocks fork the parent's memo map and share its TestClock unless their own layer installs a
+// fresh one.
 const ownsUnsharedTestClock = (block: EffectVitestFunctionNode, adjust: CallExpression, state: DetectorState) =>
-  O.isNone(state.harness.enclosingLayerBlock(block)) &&
+  O.match(state.harness.enclosingLayerBlock(block), {
+    onNone: constTrue,
+    onSome: () => installsFreshTestClock(block, state.imports),
+  }) &&
   A.match(
     A.filter(callbackCalls(block), (call) => O.isSome(classifyHarnessCall(call, state.imports))),
     {
@@ -3031,12 +4365,13 @@ const emitPlatformFinding = (
   members: ReadonlyArray<string>,
   osTemp: boolean,
   nativeFileSystem: LazyArg<boolean>,
+  nativeFileSystemLayer: LazyArg<boolean>,
   state: DetectorState
 ): void => {
   const { makeFinding, findings, file, owner } = state;
   const filesystemMember = moduleName === "@effect/platform-bun" ? "BunFileSystem" : "NodeFileSystem";
   const filesystem = platformFileSystemImport(moduleName) || osTemp || A.contains(members, filesystemMember);
-  if (!filesystem && (!platformResourceReview(moduleName, members) || nativeFileSystem())) return;
+  if (filesystem ? nativeFileSystemLayer() : !platformResourceReview(moduleName, members) || nativeFileSystem()) return;
   const review = filesystem
     ? {}
     : {
@@ -3064,6 +4399,7 @@ const detectPlatformImport = (declaration: ImportDeclaration, state: DetectorSta
     members,
     osTemp,
     () => canonicalPlatformIntegration(declaration, imports),
+    () => nativeFileSystemLayerIntegration(declaration, imports),
     state
   );
 };
@@ -3114,7 +4450,7 @@ const detectPlatformRequire = (call: CallExpression, state: DetectorState): void
   const moduleName = argument.getLiteralValue();
   const osTemp = A.contains(["node:os", "os"], moduleName) && requiredOsTemp(call, declaration, state);
   const members = A.contains(platformMemberModules, moduleName) ? platformRequiredMembers(call, state.imports) : [];
-  emitPlatformFinding(declaration, moduleName, members, osTemp, constFalse, state);
+  emitPlatformFinding(declaration, moduleName, members, osTemp, constFalse, constFalse, state);
 };
 
 const detectResourceDefinition = (
@@ -3201,6 +4537,7 @@ export const detectEffectVitestFindings: {
       calls,
       file,
       owner,
+      layers: makeLayerAnalysis(sourceFile, imports),
     };
 
     for (const call of calls) inspectCall(call, state);

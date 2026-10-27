@@ -1,6 +1,6 @@
 services:
   redis:
-    image: redis:8.10.2
+    image: redis:8.10.3
     container_name: beep-redis
     ports:
       - "${REDIS_PORT:-6379}:${REDIS_PORT:-6379}"
@@ -32,7 +32,7 @@ services:
       - "${DB_PG_PORT:-5432}:${DB_PG_PORT:-5432}"
 
   grafana:
-    image: grafana/otel-lgtm:0.38.0
+    image: grafana/otel-lgtm:0.38.1
     container_name: grafana
     restart: unless-stopped
     ports:

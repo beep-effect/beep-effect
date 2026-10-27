@@ -24,12 +24,12 @@ const $I = $EditorId.create("capability/projection");
  * ```ts import.meta.vitest name="Create an unbound help row"
  * import { ShortcutHelpEntry } from "@beep/editor/capability/projection"
  * import { CommandId } from "@beep/editor/capability/schemas"
- * import * as Option from "effect/Option";
+ * import * as O from "effect/Option";
  * const entry = ShortcutHelpEntry.make({
  *   commandId: CommandId.make("format.bold"), label: "Bold", helpText: "Toggle bold.",
- *   chord: Option.none()
+ *   chord: O.none()
  * })
- * Option.isNone(entry.chord) // => true
+ * O.isNone(entry.chord) // => true
  * ```
  *
  * @category projections

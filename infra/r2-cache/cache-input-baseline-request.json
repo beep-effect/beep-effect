@@ -1,0 +1,20 @@
+{
+  "previous": "0814131e713a896a024831efbcfbeb8382ca944ef90dcf954126b107e902047d",
+  "review": {
+    "reviewer": "Codex GPT-6.1-Sol source review",
+    "reason": "Align only //#lint:effect-imports with its existing dist exclusion; generated outputs no longer invalidate an unchanged source scan. Real source edits still invalidate the task. No qualification is granted.",
+    "basis": {
+      "path": "infra/r2-cache/cache-input-review.md",
+      "sha256": "1a2d2e954172fead379e4fa8fca48578dab86fa6096f020451cf7e6ec0798d5c"
+    }
+  },
+  "subjects": ["//"],
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2"
+}

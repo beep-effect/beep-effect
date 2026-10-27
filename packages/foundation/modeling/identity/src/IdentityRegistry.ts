@@ -23,7 +23,7 @@ const $I = $IdentityId.create("IdentityRegistry");
  * **Example** (Check an encoding literal)
  *
  * ```ts import.meta.vitest name="Check an encoding literal"
- * import { IdentityEncoding } from "@beep/identity"
+ * import { IdentityEncoding } from "@beep/identity/IdentityRegistry"
  *
  * IdentityEncoding.literals.includes("curie") // => true
  * ```
@@ -50,7 +50,7 @@ const makeIdentityRefMember = <Encoding extends IdentityEncoding>(encoding: S.Li
  * **Example** (Decode an IRI reference)
  *
  * ```ts import.meta.vitest name="Decode an IRI reference"
- * import { IdentityRef } from "@beep/identity"
+ * import { IdentityRef } from "@beep/identity/IdentityRegistry"
  * import * as S from "effect/Schema"
  *
  * const ref = S.decodeSync(IdentityRef)({
@@ -87,7 +87,7 @@ export type IdentityRef = typeof IdentityRef.Type;
  * **Example** (Construct a registry entry)
  *
  * ```ts
- * import { IdentityEntry } from "@beep/identity"
+ * import { IdentityEntry } from "@beep/identity/IdentityRegistry"
  *
  * const entry = IdentityEntry.make({
  *   identity: "@beep/identity/Widget",
@@ -119,7 +119,8 @@ export class IdentityEntry extends S.Opaque<IdentityEntry, { readonly brand: uni
    * **Example** (Build an entry from a package composer)
    *
    * ```ts import.meta.vitest name="Build an entry from a package composer"
-   * import { $IdentityId, IdentityEntry } from "@beep/identity"
+   * import { $IdentityId } from "@beep/identity/packages"
+   * import { IdentityEntry } from "@beep/identity/IdentityRegistry"
    *
    * const composer = $IdentityId.create("Widget")
    * const entry = IdentityEntry.fromComposer(composer, { label: "Widget" })
@@ -168,7 +169,7 @@ export declare namespace IdentityEntry {
  * **Example** (Construct a missing-reference failure)
  *
  * ```ts import.meta.vitest name="Construct a missing-reference failure"
- * import { IdentityNotFoundError } from "@beep/identity"
+ * import { IdentityNotFoundError } from "@beep/identity/IdentityRegistry"
  *
  * const error = IdentityNotFoundError.make({
  *   ref: { _tag: "curie", value: "beep:missing" }
@@ -195,7 +196,7 @@ export class IdentityNotFoundError extends S.TaggedError<IdentityNotFoundError, 
  * **Example** (Construct an identity conflict)
  *
  * ```ts import.meta.vitest name="Construct an identity conflict"
- * import { IdentityRegistryConflictError } from "@beep/identity"
+ * import { IdentityRegistryConflictError } from "@beep/identity/IdentityRegistry"
  *
  * const error = IdentityRegistryConflictError.make({
  *   encoding: "identity",
@@ -237,7 +238,7 @@ export interface IdentityRegistryShape {
  * **Example** (Provide an empty local registry)
  *
  * ```ts
- * import { IdentityRegistry } from "@beep/identity"
+ * import { IdentityRegistry } from "@beep/identity/IdentityRegistry"
  * import * as Effect from "effect/Effect";
  * const program = IdentityRegistry.use((registry) =>
  *   registry.resolve({ _tag: "identity", value: "@beep/missing" })
@@ -258,7 +259,7 @@ export class IdentityRegistry extends Context.Service<IdentityRegistry, Identity
    * **Example** (Create a local registry layer)
    *
    * ```ts
-   * import { IdentityEntry, IdentityRegistry } from "@beep/identity"
+   * import { IdentityEntry, IdentityRegistry } from "@beep/identity/IdentityRegistry"
    *
    * const entry = IdentityEntry.make({
    *   identity: "@beep/identity/Widget",

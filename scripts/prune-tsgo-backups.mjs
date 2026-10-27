@@ -30,6 +30,8 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 
 const typescriptPackagesRoot = path.join(process.cwd(), "node_modules", "@typescript");
+// `effect-tsgo patch --tsrs` keeps its backup beside the binary at the @tsrs/<platform> package root.
+const tsrsPackagesRoot = path.join(process.cwd(), "node_modules", "@tsrs");
 
 // `.original.12` - a rotated-out patched binary. Never the plain `.original`.
 const isReclaimable = (name) => /\.original\.\d+$/.test(name) || name.endsWith(".patched");
@@ -45,16 +47,23 @@ const pruneDirectory = (directory) =>
       return reclaimedBytes + size;
     }, 0);
 
-const libDirectories = () =>
-  fs
-    .readdirSync(typescriptPackagesRoot)
-    .map((packageName) => path.join(typescriptPackagesRoot, packageName, "lib"))
-    .filter((directory) => fs.existsSync(directory));
+const packageDirectories = (root, ...segments) =>
+  fs.existsSync(root)
+    ? fs
+        .readdirSync(root)
+        .map((packageName) => path.join(root, packageName, ...segments))
+        .filter((directory) => fs.existsSync(directory))
+    : [];
+
+const libDirectories = () => [
+  ...packageDirectories(typescriptPackagesRoot, "lib"),
+  ...packageDirectories(tsrsPackagesRoot),
+];
 
 const main = () => {
-  // A fresh clone has no @typescript packages until install finishes; nothing
-  // to prune is the normal case, not a failure.
-  if (!fs.existsSync(typescriptPackagesRoot)) return;
+  // A fresh clone has no @typescript or @tsrs packages until install finishes;
+  // nothing to prune is the normal case, not a failure.
+  if (!fs.existsSync(typescriptPackagesRoot) && !fs.existsSync(tsrsPackagesRoot)) return;
   const reclaimedBytes = libDirectories().reduce((total, directory) => total + pruneDirectory(directory), 0);
   console.log(`[prune-tsgo-backups] reclaimed ~${Math.round(reclaimedBytes / 1024 / 1024)} MB of stale binary backups`);
 };

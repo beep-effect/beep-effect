@@ -298,7 +298,6 @@ describe("ThreadStore in-memory", () => {
       const exit = yield* ThreadStoreInMemoryLayer.pipe(
         Layer.provide(FailingInitializationCryptoLayer),
         Layer.build,
-        Effect.scoped,
         Effect.exit
       );
 

@@ -240,18 +240,67 @@ describe("MessageView", { concurrent: false }, () => {
   });
 });
 
+// Shell renders must not depend on the host: against the real HTTP protocol the
+// thread query fails fast where nothing listens and stays pending where the
+// connection hangs, so which arm the empty state rendered varied by machine
+// (and so did this file's branch coverage). Each shell render names its client.
+const shellChatClient = (listThreads: Effect.Effect<ReadonlyArray<never>, ChatActionError>) =>
+  Layer.mergeAll(
+    Layer.succeed(
+      ChatClient,
+      ChatClient.of(((tag: string) =>
+        tag === "ListThreads" ? listThreads : Effect.never) as unknown as ChatClient["Service"])
+    ),
+    Reactivity.layer
+  );
+
+const renderShell = (listThreads: Effect.Effect<ReadonlyArray<never>, ChatActionError>) =>
+  render(
+    <RegistryProvider initialValues={[[ChatClient.runtime.layer, shellChatClient(listThreads)]]}>
+      <ChatApp />
+    </RegistryProvider>
+  );
+
 describe("ChatApp", { concurrent: false }, () => {
-  it("renders the chat shell in its empty/loading state without a live server", () => {
-    const { getByTestId, unmount } = render(<ChatApp />);
+  it("renders the chat shell in its loading state while the thread list is pending", () => {
+    const { getByTestId, queryByTestId, unmount } = renderShell(Effect.never);
 
     // shell chrome: sidebar (with the New thread control) and the app frame.
     expect(getByTestId("chat-app")).toBeInTheDocument();
     expect(getByTestId("sidebar")).toBeInTheDocument();
     expect(getByTestId("sidebar-new")).toBeInTheDocument();
-    // with no live server and no selection, no thread is active yet.
-    expect(getByTestId("chat-no-thread")).toBeInTheDocument();
+    // with no selection and the list still loading, no thread is active and
+    // the sidebar shows neither the empty nor the failed state.
+    expect(getByTestId("chat-no-thread")).toHaveTextContent("Starting your first thread");
+    expect(queryByTestId("sidebar-load-failed")).toBeNull();
+    expect(queryByTestId("sidebar-empty")).toBeNull();
     unmount();
   });
+
+  it.effect(
+    "names the failed thread load instead of pretending the workspace is empty",
+    Effect.fnUntraced(function* () {
+      const { findByTestId, getByTestId, unmount } = renderShell(
+        ChatActionError.new("desktop sidecar unreachable").pipe(Effect.fail)
+      );
+
+      yield* Effect.promise(() => findByTestId("sidebar-load-failed"));
+      expect(getByTestId("chat-no-thread")).toHaveTextContent("Chat is unavailable");
+      expect(getByTestId("sidebar-load-failed")).toHaveTextContent("Threads unavailable");
+      unmount();
+    })
+  );
+
+  it.effect(
+    "shows the calm empty sidebar once the thread list settles with nothing to show",
+    Effect.fnUntraced(function* () {
+      const { findByTestId, queryByTestId, unmount } = renderShell(Effect.succeed([]));
+
+      yield* Effect.promise(() => findByTestId("sidebar-empty"));
+      expect(queryByTestId("sidebar-load-failed")).toBeNull();
+      unmount();
+    })
+  );
 });
 
 describe("ChatTurnErrorToasts", { concurrent: false }, () => {

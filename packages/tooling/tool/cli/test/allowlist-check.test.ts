@@ -1,20 +1,28 @@
+import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   ALLOWLIST_PATH,
   AllowlistCheckOptions,
+  AllowlistCheckSummary,
   formatRedactedSchemaDiagnostics,
   formatSchemaDiagnostics,
+  reportAllowlistCheckSummary,
   runAllowlistCheck,
 } from "@beep/repo-cli/test/Laws";
+import { buildAllowlistSnapshotModuleFromJsoncText } from "@beep/repo-configs/internal/laws/EffectLawsAllowlistSnapshotCodegen";
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
-import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
+import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import * as TestConsole from "effect/testing/TestConsole";
+import type * as Scope from "effect/Scope";
 
 const decodeUnknownStructInlineSchemaResult = S.decodeUnknownResult(
   S.Struct({
@@ -36,7 +44,45 @@ const writeRepoFile = Effect.fn("AllowlistCheckTest.writeRepoFile")(function* (
   yield* fs.writeFileString(absolutePath, content).pipe(Effect.orDie);
 });
 
-it.layer(NodeServices.layer, { timeout: "5 seconds" })("allowlist-check", (it) => {
+const ALLOWLIST_SNAPSHOT_PATH =
+  "packages/tooling/policy-pack/repo-configs/src/internal/laws/generated/EffectLawsAllowlistSnapshot.ts";
+
+const renderSingleEntryAllowlist = (kind: string): string =>
+  A.join(
+    [
+      "{",
+      '  "$schema": "./effect-laws.allowlist.schema.json",',
+      '  "version": 1,',
+      '  "entries": [',
+      "    {",
+      '      "rule": "beep-laws/no-native-runtime",',
+      '      "file": "packages/demo/src/index.ts",',
+      `      "kind": "${kind}",`,
+      '      "reason": "test",',
+      '      "owner": "@beep/test",',
+      '      "issue": "TEST-ALLOWLIST"',
+      "    }",
+      "  ]",
+      "}",
+    ],
+    "\n"
+  );
+
+const makeRepoWithEntry = Effect.fn("AllowlistCheckTest.makeRepoWithEntry")(function* (
+  sourceText: string,
+  kind: string
+): Effect.fn.Return<string, never, FileSystem.FileSystem | Path.Path | Scope.Scope> {
+  const fs = yield* FileSystem.FileSystem;
+  const tmpDir = yield* fs.makeTempDirectoryScoped().pipe(Effect.orDie);
+  yield* writeRepoFile(tmpDir, "bun.lock", "");
+  yield* writeRepoFile(tmpDir, "packages/demo/src/index.ts", sourceText);
+  yield* writeRepoFile(tmpDir, ALLOWLIST_PATH, renderSingleEntryAllowlist(kind));
+  return tmpDir;
+});
+
+const PlatformLayer = Layer.mergeAll(MemoryFileSystem.layer, Path.layer);
+
+it.layer(PlatformLayer, { timeout: "5 seconds" })("allowlist-check", (it) => {
   it("formats schema diagnostics with path labels and optional redaction", () => {
     const result = decodeUnknownStructInlineSchemaResult({ token: "sk-test-secret" });
 
@@ -316,5 +362,118 @@ it.layer(NodeServices.layer, { timeout: "5 seconds" })("allowlist-check", (it) =
       expect(summary.ok).toBe(true);
       expect(summary.diagnostics).toEqual([]);
     }).pipe(Effect.orDie)
+  );
+
+  it.effect("reports allowlist entries that no longer match a current violation", () =>
+    Effect.gen(function* () {
+      const tmpDir = yield* makeRepoWithEntry("export const value = 1;\n", "object-method");
+
+      const summary = yield* runAllowlistCheck(AllowlistCheckOptions.make({ cwd: tmpDir }));
+
+      expect(summary.ok).toBe(false);
+      expect(summary.diagnostics).toEqual([
+        "entries.0: No current violation matches allowlist key beep-laws/no-native-runtime::packages/demo/src/index.ts::object-method",
+      ]);
+    }).pipe(Effect.orDie)
+  );
+
+  it.effect("matches native-error entries for globalThis constructor access", () =>
+    Effect.gen(function* () {
+      const tmpDir = yield* makeRepoWithEntry(
+        'export const created = new globalThis.Error("a");\nexport const called = globalThis["TypeError"]("b");\n',
+        "native-error"
+      );
+
+      const summary = yield* runAllowlistCheck(AllowlistCheckOptions.make({ cwd: tmpDir }));
+
+      expect(summary.ok).toBe(true);
+      expect(summary.diagnostics).toEqual([]);
+    }).pipe(Effect.orDie)
+  );
+
+  it.effect("reports a missing allowlist file", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const tmpDir = yield* fs.makeTempDirectoryScoped();
+      yield* writeRepoFile(tmpDir, "bun.lock", "");
+
+      const summary = yield* runAllowlistCheck(AllowlistCheckOptions.make({ cwd: tmpDir }));
+
+      expect(summary.ok).toBe(false);
+      expect(summary.diagnostics).toEqual([`missing file: ${ALLOWLIST_PATH}`]);
+    }).pipe(Effect.orDie)
+  );
+
+  it.effect("reports JSONC parse errors with their offsets", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const tmpDir = yield* fs.makeTempDirectoryScoped();
+      yield* writeRepoFile(tmpDir, "bun.lock", "");
+      yield* writeRepoFile(tmpDir, ALLOWLIST_PATH, '{ "version": 1, "entries": [');
+
+      const summary = yield* runAllowlistCheck(AllowlistCheckOptions.make({ cwd: tmpDir }));
+
+      expect(summary.ok).toBe(false);
+      expect(summary.diagnostics[0]).toMatch(/^parse error at offset \d+$/);
+    }).pipe(Effect.orDie)
+  );
+
+  it.effect("checks the generated allowlist snapshot when its directory exists", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const tmpDir = yield* makeRepoWithEntry("export const value = Object.keys({ ok: true });\n", "object-method");
+      const options = AllowlistCheckOptions.make({ cwd: tmpDir });
+      yield* fs.makeDirectory(path.dirname(path.join(tmpDir, ALLOWLIST_SNAPSHOT_PATH)), { recursive: true });
+
+      const missing = yield* runAllowlistCheck(options);
+      expect(missing.ok).toBe(false);
+      expect(missing.diagnostics).toEqual([`${ALLOWLIST_SNAPSHOT_PATH}: Generated allowlist snapshot is missing.`]);
+
+      yield* writeRepoFile(tmpDir, ALLOWLIST_SNAPSHOT_PATH, "export const ALLOWLIST_SNAPSHOT = {} as const;\n");
+      const stale = yield* runAllowlistCheck(options);
+      expect(stale.ok).toBe(false);
+      expect(stale.diagnostics).toEqual([
+        `${ALLOWLIST_SNAPSHOT_PATH}: Generated allowlist snapshot is stale; run package codegen.`,
+      ]);
+
+      const expectedSnapshot = yield* buildAllowlistSnapshotModuleFromJsoncText(
+        renderSingleEntryAllowlist("object-method")
+      );
+      yield* writeRepoFile(tmpDir, ALLOWLIST_SNAPSHOT_PATH, expectedSnapshot);
+      const synced = yield* runAllowlistCheck(options);
+      expect(synced.ok).toBe(true);
+      expect(synced.diagnostics).toEqual([]);
+    }).pipe(Effect.orDie)
+  );
+
+  it.effect("reports an OK summary on the log channel and failures on the error channel", () =>
+    Effect.gen(function* () {
+      yield* reportAllowlistCheckSummary(AllowlistCheckSummary.make({ ok: true }));
+      yield* reportAllowlistCheckSummary(
+        AllowlistCheckSummary.make({ ok: false, diagnostics: ["entries.0: first", "entries.1: second"] })
+      );
+
+      expect(yield* TestConsole.logLines).toEqual(["[laws-allowlist] OK"]);
+      expect(yield* TestConsole.errorLines).toEqual([
+        "[laws-allowlist] found 2 issue(s):",
+        "- entries.0: first",
+        "- entries.1: second",
+      ]);
+    }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+  );
+  it.effect("rejects empty entry metadata before checking referenced files", () =>
+    Effect.gen(function* () {
+      const tmpDir = yield* makeRepoWithEntry("export const value = 1;", "object-method");
+      yield* writeRepoFile(
+        tmpDir,
+        ALLOWLIST_PATH,
+        Str.replace('"reason": "test"', '"reason": ""')(renderSingleEntryAllowlist("object-method"))
+      );
+      const summary = yield* runAllowlistCheck(AllowlistCheckOptions.make({ cwd: tmpDir }));
+      expect(summary.ok).toBe(false);
+      expect(summary.diagnostics).toEqual([expect.stringContaining("entries.0.reason")]);
+      expect(summary.diagnostics[0]).toContain("Expected non-empty string.");
+    })
   );
 });

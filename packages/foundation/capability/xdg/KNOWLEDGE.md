@@ -176,11 +176,14 @@ xdg **does not depend on** [store](store.md), and must not — see
 
 ## Module layout
 
-Module-per-concept, four files under `src/`: `Xdg.ts` (the environment),
-`NativeDirs.ts` (the pure platform map), `AppDirs.ts` (namespace,
-precedence, creation) and `XdgConfig.ts` (the config-file bridge). Import
-direction is a DAG: `Xdg.ts` depends on nothing, `NativeDirs.ts` and
-`AppDirs.ts` build on it, `XdgConfig.ts` builds on `AppDirs.ts`. There is
+Module-per-concept, six files under `src/`: `Absolute.ts` (the shared
+absolute-path predicates and schemas), `Xdg.ts` (the environment),
+`XdgBase.ts` (the XDG base-directory reads), `NativeDirs.ts` (the pure
+platform map), `AppDirs.ts` (namespace, precedence, creation) and
+`XdgConfig.ts` (the config-file bridge). Import direction is a DAG:
+`Absolute.ts` depends on nothing, `Xdg.ts` and `XdgBase.ts` build on it,
+`NativeDirs.ts` builds on `Xdg.ts`, `AppDirs.ts` on `Absolute.ts`,
+`NativeDirs.ts` and `Xdg.ts`, and `XdgConfig.ts` on `AppDirs.ts`. There is
 no `internal/` directory — there is no engine here, only
 resolution.[^xdg-claude-md]
 

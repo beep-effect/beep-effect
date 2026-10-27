@@ -19,8 +19,10 @@ import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { manifestParser } from "../../../internal/ManifestRead.ts";
 import { QualityTaskStep, runCaptured } from "../../../internal/process/index.ts";
 import { collectDirtyWorktreeFiles } from "../../../internal/repo-run/ChangedFiles.ts";
 import { renderDocgenIssueText } from "../../Docgen/internal/Local.ts";
@@ -214,18 +216,7 @@ export class PackageVerifyReport extends S.Opaque<PackageVerifyReport, { readonl
   )
 ) {}
 
-class PackageVerifyPackageJson extends S.Opaque<PackageVerifyPackageJson, { readonly brand: unique symbol }>()(
-  S.Struct({
-    name: S.String,
-    scripts: S.OptionFromOptionalKey(S.Record(S.String, S.String)),
-  }).pipe(
-    $I.annoteSchema("PackageVerifyPackageJson", {
-      description: "Minimal package.json shape decoded for package verification.",
-    })
-  )
-) {}
-
-const decodePackageVerifyPackageJson = S.decodeUnknownEffect(S.fromJsonString(PackageVerifyPackageJson));
+const parsePackageVerifyPackageJson = manifestParser(["name", "scripts"]);
 const byWorkspaceNameAscending = Order.mapInput(Order.String, (workspace: PackageVerifyWorkspace) => workspace.name);
 const byWorkspacePathLengthDescending = Order.flip(
   Order.mapInput(Order.Number, (workspace: PackageVerifyWorkspace) => Str.length(workspace.dir))
@@ -495,6 +486,63 @@ export const selectPackageVerifyTargetForTesting = Effect.fn("PackageVerify.sele
   });
 });
 
+/**
+ * Read one workspace `package.json` text into its package-verify record.
+ *
+ * **Details**
+ *
+ * The manifest must declare a `name`, and a present `name` or `scripts` must
+ * keep its JSON shape. Strict JSON only: JSONC text fails.
+ *
+ * **Example** (Read a workspace's scripts)
+ *
+ * ```ts
+ * import { readPackageVerifyWorkspace } from "@beep/repo-cli/test/Quality"
+ * import * as Effect from "effect/Effect"
+ *
+ * const workspace = Effect.runSync(
+ *   readPackageVerifyWorkspace(
+ *     '{"name":"@beep/demo","scripts":{"check":"tsc"}}',
+ *     "packages/demo/package.json",
+ *     "@beep/demo",
+ *     "packages/demo"
+ *   )
+ * )
+ * console.log(workspace.scripts) // { check: "tsc" }
+ * ```
+ *
+ * @param content - Workspace `package.json` text.
+ * @param packageJsonPath - Path named in a failure.
+ * @param name - Workspace package name the record carries.
+ * @param dir - Workspace directory the record carries.
+ * @returns The workspace's name, directory and scripts.
+ * @category parsing
+ * @since 0.0.0
+ */
+export const readPackageVerifyWorkspace = Effect.fn("PackageVerify.readPackageVerifyWorkspace")(function* (
+  content: string,
+  packageJsonPath: string,
+  name: string,
+  dir: string
+): Effect.fn.Return<PackageVerifyWorkspace, QualityScriptCommandError> {
+  const packageJson = yield* parsePackageVerifyPackageJson(content).pipe(
+    QualityScriptCommandError.mapError(`Failed to decode ${packageJsonPath}.`)
+  );
+  if (P.isUndefined(packageJson.name)) {
+    return yield* QualityScriptCommandError.new(
+      `${packageJsonPath} does not declare a package name.`,
+      `Failed to decode ${packageJsonPath}.`,
+      {}
+    );
+  }
+
+  return PackageVerifyWorkspace.make({
+    name,
+    dir,
+    scripts: packageJson.scripts ?? R.empty<string>(),
+  });
+});
+
 const readPackageWorkspace = Effect.fn("PackageVerify.readPackageWorkspace")(function* (
   name: string,
   dir: string
@@ -505,18 +553,7 @@ const readPackageWorkspace = Effect.fn("PackageVerify.readPackageWorkspace")(fun
   const content = yield* fs
     .readFileString(packageJsonPath)
     .pipe(QualityScriptCommandError.mapError(`Failed to read ${packageJsonPath}.`));
-  const packageJson = yield* decodePackageVerifyPackageJson(content).pipe(
-    QualityScriptCommandError.mapError(`Failed to decode ${packageJsonPath}.`)
-  );
-
-  return PackageVerifyWorkspace.make({
-    name,
-    dir,
-    scripts: pipe(
-      packageJson.scripts,
-      O.getOrElse(() => R.empty<string>())
-    ),
-  });
+  return yield* readPackageVerifyWorkspace(content, packageJsonPath, name, dir);
 });
 
 /**
@@ -588,6 +625,13 @@ const collectStepOutput = Effect.fn("PackageVerify.collectStepOutput")(function*
   );
 });
 
+// Both scripts typecheck against the dependencies' built declarations, which Turbo's own
+// `check` and `audit` tasks build first (`^build`). Running the bare script against a stale
+// or missing dependency build reports errors hosted Check never sees. The step plan and the
+// inbox capsule read this one rule, so the recorded command is the command that ran.
+const buildsUpstreamClosure = (step: PackageVerifyStepName): boolean =>
+  PackageVerifyStepName.is.audit(step) || PackageVerifyStepName.is.check(step);
+
 const packageVerifyStepPlan = (
   repoRoot: string,
   workspace: PackageVerifyWorkspace,
@@ -599,10 +643,10 @@ const packageVerifyStepPlan = (
     args: ["run", spec.script],
     cwd: workspace.dir,
   });
-  return PackageVerifyStepName.is.audit(spec.step)
+  return buildsUpstreamClosure(spec.step)
     ? [
         QualityTaskStep.make({
-          label: "audit:build-closure",
+          label: `${spec.step}:build-closure`,
           command: "bun",
           args: ["x", "turbo", "run", "build", `--filter=${workspace.name}^...`],
           cwd: repoRoot,
@@ -798,7 +842,7 @@ export const recordPackageVerifyInboxForTesting = Effect.fn("PackageVerify.recor
     recordYeetLocalShardOutcome(
       report.repoRoot,
       YeetLocalShardOutcome.make({
-        command: PackageVerifyStepName.is.audit(result.step)
+        command: buildsUpstreamClosure(result.step)
           ? `bun x turbo run build --filter=${report.packageName}^... && bun run ${result.script}`
           : `bun run ${result.script}`,
         exitCode: O.getOrElse(result.exitCode, () => (result.ok ? 0 : 1)),
@@ -948,9 +992,10 @@ export const packageVerifyStepSpecsForTesting = packageVerifyStepSpecs;
  *
  * **Details**
  *
- * Audit plans refresh the selected package's upstream Turbo build closure
- * without rebuilding the package itself before invoking its package-local
- * audit. Other steps remain direct package script invocations.
+ * Audit and check plans refresh the selected package's upstream Turbo build
+ * closure without rebuilding the package itself before invoking its
+ * package-local script, as Turbo's own `audit` and `check` tasks do. Lint and
+ * docgen remain direct package script invocations.
  *
  * **Example** (Inspect an audit plan)
  *

@@ -431,7 +431,7 @@
         ".claude/skills/schema-first-development",
         ".agents/skills/schema-first-development"
       ],
-      "installedTreeHash": "7955594b646b0ee1c23dde002caa975c0fd431dedf54c43c3af2cdd2a2808db1"
+      "installedTreeHash": "a1e7f3b8ce52a59222b8fdffc71be52f92a7776f684fea0e67808f142f9d2644"
     },
     "shadcn": {
       "_tag": "vendored",
@@ -753,7 +753,7 @@
         ".claude/skills/yeet",
         ".agents/skills/yeet"
       ],
-      "installedTreeHash": "cbc36adaf98e8916d2b4c894e414f9842a02bf36172457dbcc69af96b6d5d9d1"
+      "installedTreeHash": "a6c42b5341370812261aab371231ac66ed1928817de676bc0ac5a92514f4a8d0"
     }
   }
 }

@@ -38,7 +38,7 @@ Waves 1–6f merged (2,991 sites across #1968, #1976, #1983, #1987, #1993, #2008
 Zero-site census, 2026-10-22, on the wave 7 branch at `fe7bc21218`: main at
 `b7c85da54c` (#2026, the last site wave) plus the final epistemics fix, with
 `@effect/tsgo` 0.55.0 installed and `preferEffectString` at error.
-`bun run beep quality effect-diagnostics --concurrency 4` checked 375 projects
+the retired quality effect-diagnostics command (--concurrency 4) checked 375 projects
 (90,238 file visits) and reported 0 `preferEffectString`. The only findings
 left are 7 inherited `preferEffectArray` sites in
 `packages/drivers/duckdb/test/shared/SqlEventLogServerUnencryptedStorageTest.ts`

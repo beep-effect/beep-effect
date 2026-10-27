@@ -27,6 +27,10 @@ import * as Tuple from "effect/Tuple";
 
 const $I = $ProfessionalDesktopId.create("intake/DocumentIntake.models");
 
+// Each intake data schema carries its own string-keyed nominal brand. The xstate machines map and intersect every
+// schema reachable from their contexts, inputs, outputs and events: an anonymous `brand: unique symbol` cannot be
+// named in declaration emit (TS2527), and two of them on the shared `brand` key intersect to never.
+
 const MAX_INTAKE_FILE_BYTES = 25 * 1024 * 1024;
 
 const formatMegabytes = (bytes: number): string => `${N.round(bytes / (1024 * 1024), 1)} MB`;
@@ -63,7 +67,10 @@ const IntakeFileSize = S.Int.check(
  * @category models
  * @since 0.0.0
  */
-export class IntakeFileMetadata extends S.Opaque<IntakeFileMetadata, {}>()(
+export class IntakeFileMetadata extends S.Opaque<
+  IntakeFileMetadata,
+  { readonly "~beep/intake/IntakeFileMetadata": "IntakeFileMetadata" }
+>()(
   S.Struct({
     name: S.String,
     size: IntakeFileSize,
@@ -102,7 +109,10 @@ export const intakeRefusal = (file: IntakeFileMetadata): O.Option<string> =>
     Match.orElse(O.none<string>)
   );
 
-class IntakeResultEntryDocument extends S.Opaque<IntakeResultEntryDocument, {}>()(
+class IntakeResultEntryDocument extends S.Opaque<
+  IntakeResultEntryDocument,
+  { readonly "~beep/intake/IntakeResultEntryDocument": "IntakeResultEntryDocument" }
+>()(
   S.Struct({
     kind: S.tag("document"),
     document: Document,
@@ -113,7 +123,10 @@ class IntakeResultEntryDocument extends S.Opaque<IntakeResultEntryDocument, {}>(
   )
 ) {}
 
-class IntakeResultEntryFailure extends S.Opaque<IntakeResultEntryFailure, {}>()(
+class IntakeResultEntryFailure extends S.Opaque<
+  IntakeResultEntryFailure,
+  { readonly "~beep/intake/IntakeResultEntryFailure": "IntakeResultEntryFailure" }
+>()(
   S.Struct({
     kind: S.tag("failure"),
     fileName: S.NonEmptyString,
@@ -166,7 +179,10 @@ export const IntakeResultEntry = IntakeResultEntryKind.mapMembers(
  */
 export type IntakeResultEntry = typeof IntakeResultEntry.Type;
 
-class VaultSelectionIdle extends S.Opaque<VaultSelectionIdle, {}>()(
+class VaultSelectionIdle extends S.Opaque<
+  VaultSelectionIdle,
+  { readonly "~beep/intake/VaultSelectionIdle": "VaultSelectionIdle" }
+>()(
   S.Struct({ kind: S.tag("idle") }).pipe(
     $I.annoteSchema("VaultSelectionIdle", {
       description: "Workspace vault selection is ready for an operator request.",
@@ -174,7 +190,10 @@ class VaultSelectionIdle extends S.Opaque<VaultSelectionIdle, {}>()(
   )
 ) {}
 
-class VaultSelectionChoosing extends S.Opaque<VaultSelectionChoosing, {}>()(
+class VaultSelectionChoosing extends S.Opaque<
+  VaultSelectionChoosing,
+  { readonly "~beep/intake/VaultSelectionChoosing": "VaultSelectionChoosing" }
+>()(
   S.Struct({ kind: S.tag("choosing") }).pipe(
     $I.annoteSchema("VaultSelectionChoosing", {
       description: "A native workspace vault picker is currently open.",
@@ -182,7 +201,10 @@ class VaultSelectionChoosing extends S.Opaque<VaultSelectionChoosing, {}>()(
   )
 ) {}
 
-class VaultSelectionManual extends S.Opaque<VaultSelectionManual, {}>()(
+class VaultSelectionManual extends S.Opaque<
+  VaultSelectionManual,
+  { readonly "~beep/intake/VaultSelectionManual": "VaultSelectionManual" }
+>()(
   S.Struct({
     kind: S.tag("manual"),
     // A rejected path is retained so the reopened form does not force the
@@ -196,7 +218,10 @@ class VaultSelectionManual extends S.Opaque<VaultSelectionManual, {}>()(
   )
 ) {}
 
-class VaultSelectionSaving extends S.Opaque<VaultSelectionSaving, {}>()(
+class VaultSelectionSaving extends S.Opaque<
+  VaultSelectionSaving,
+  { readonly "~beep/intake/VaultSelectionSaving": "VaultSelectionSaving" }
+>()(
   S.Struct({ kind: S.tag("saving") }).pipe(
     $I.annoteSchema("VaultSelectionSaving", {
       description: "The selected workspace vault root is being persisted.",
@@ -204,7 +229,10 @@ class VaultSelectionSaving extends S.Opaque<VaultSelectionSaving, {}>()(
   )
 ) {}
 
-class VaultSelectionFailed extends S.Opaque<VaultSelectionFailed, {}>()(
+class VaultSelectionFailed extends S.Opaque<
+  VaultSelectionFailed,
+  { readonly "~beep/intake/VaultSelectionFailed": "VaultSelectionFailed" }
+>()(
   S.Struct({
     kind: S.tag("failed"),
     message: S.NonEmptyString,
@@ -309,7 +337,10 @@ export type DocumentIntakeVaultStatus = typeof DocumentIntakeVaultStatus.Type;
  * @category models
  * @since 0.0.0
  */
-export class DocumentIntakeState extends S.Opaque<DocumentIntakeState, {}>()(
+export class DocumentIntakeState extends S.Opaque<
+  DocumentIntakeState,
+  { readonly "~beep/intake/DocumentIntakeState": "DocumentIntakeState" }
+>()(
   S.Struct({
     activeBatches: S.Natural,
     isDragging: S.Boolean,
@@ -354,7 +385,10 @@ export class DocumentIntakeState extends S.Opaque<DocumentIntakeState, {}>()(
  * @category models
  * @since 0.0.0
  */
-export class DroppedDocumentInput extends S.Opaque<DroppedDocumentInput, {}>()(
+export class DroppedDocumentInput extends S.Opaque<
+  DroppedDocumentInput,
+  { readonly "~beep/intake/DroppedDocumentInput": "DroppedDocumentInput" }
+>()(
   S.Struct({
     content: S.Uint8ArrayFromBase64,
     intakeBatchId: IntakeBatchId,
@@ -564,7 +598,10 @@ const IntakeBatchSequence = S.Int.check(S.isGreaterThan(0)).pipe(
  * @category models
  * @since 0.0.0
  */
-export class IntakeBatchInput extends S.Opaque<IntakeBatchInput, {}>()(
+export class IntakeBatchInput extends S.Opaque<
+  IntakeBatchInput,
+  { readonly "~beep/intake/IntakeBatchInput": "IntakeBatchInput" }
+>()(
   S.Struct({
     intakeBatchId: IntakeBatchId,
     workspaceId: WorkspaceIdentity.WorkspaceId,
@@ -600,7 +637,10 @@ export class IntakeBatchInput extends S.Opaque<IntakeBatchInput, {}>()(
  * @category models
  * @since 0.0.0
  */
-export class IntakeBatchContext extends S.Opaque<IntakeBatchContext, {}>()(
+export class IntakeBatchContext extends S.Opaque<
+  IntakeBatchContext,
+  { readonly "~beep/intake/IntakeBatchContext": "IntakeBatchContext" }
+>()(
   S.Struct({
     ...IntakeBatchInput.fields,
     cursor: S.Int,
@@ -632,7 +672,10 @@ export class IntakeBatchContext extends S.Opaque<IntakeBatchContext, {}>()(
  * @category models
  * @since 0.0.0
  */
-export class IntakeBatchOutput extends S.Opaque<IntakeBatchOutput, {}>()(
+export class IntakeBatchOutput extends S.Opaque<
+  IntakeBatchOutput,
+  { readonly "~beep/intake/IntakeBatchOutput": "IntakeBatchOutput" }
+>()(
   S.Struct({
     intakeBatchId: IntakeBatchId,
     entries: S.Array(IntakeResultEntry),
@@ -658,7 +701,10 @@ export class IntakeBatchOutput extends S.Opaque<IntakeBatchOutput, {}>()(
  * @category models
  * @since 0.0.0
  */
-export class IntakeCurrentFileContext extends S.Opaque<IntakeCurrentFileContext, {}>()(
+export class IntakeCurrentFileContext extends S.Opaque<
+  IntakeCurrentFileContext,
+  { readonly "~beep/intake/IntakeCurrentFileContext": "IntakeCurrentFileContext" }
+>()(
   S.Struct({ current: IntakeFile }).pipe(
     $I.annoteSchema("IntakeCurrentFileContext", {
       description: "Context refinement of the batch states that refuse, read or submit one file.",
@@ -681,7 +727,10 @@ export class IntakeCurrentFileContext extends S.Opaque<IntakeCurrentFileContext,
  * @category models
  * @since 0.0.0
  */
-export class ReadFileInput extends S.Opaque<ReadFileInput, {}>()(
+export class ReadFileInput extends S.Opaque<
+  ReadFileInput,
+  { readonly "~beep/intake/ReadFileInput": "ReadFileInput" }
+>()(
   S.Struct({ file: IntakeFile }).pipe(
     $I.annoteSchema("ReadFileInput", {
       description: "The browser file whose bytes are read into memory.",
@@ -704,7 +753,10 @@ export class ReadFileInput extends S.Opaque<ReadFileInput, {}>()(
  * @category models
  * @since 0.0.0
  */
-export class IntakeRefusedStateInput extends S.Opaque<IntakeRefusedStateInput, {}>()(
+export class IntakeRefusedStateInput extends S.Opaque<
+  IntakeRefusedStateInput,
+  { readonly "~beep/intake/IntakeRefusedStateInput": "IntakeRefusedStateInput" }
+>()(
   S.Struct({ message: S.NonEmptyString }).pipe(
     $I.annoteSchema("IntakeRefusedStateInput", {
       description: "Operator-facing reason a file was refused before it was read.",
@@ -732,7 +784,10 @@ export class IntakeRefusedStateInput extends S.Opaque<IntakeRefusedStateInput, {
  * @category models
  * @since 0.0.0
  */
-export class IntakeSubmittingStateInput extends S.Opaque<IntakeSubmittingStateInput, {}>()(
+export class IntakeSubmittingStateInput extends S.Opaque<
+  IntakeSubmittingStateInput,
+  { readonly "~beep/intake/IntakeSubmittingStateInput": "IntakeSubmittingStateInput" }
+>()(
   S.Struct({ content: S.Uint8Array }).pipe(
     $I.annoteSchema("IntakeSubmittingStateInput", {
       description: "Bytes of the file being submitted.",
@@ -776,7 +831,10 @@ export const IntakeBatchEmitted = {
  * @category models
  * @since 0.0.0
  */
-export class DocumentIntakeInput extends S.Opaque<DocumentIntakeInput, {}>()(
+export class DocumentIntakeInput extends S.Opaque<
+  DocumentIntakeInput,
+  { readonly "~beep/intake/DocumentIntakeInput": "DocumentIntakeInput" }
+>()(
   S.Struct({
     workspaceId: WorkspaceIdentity.WorkspaceId,
     configRetryBaseMillis: S.Int.pipe(S.withConstructorDefault(Effect.succeed(2000))).annotateKey({
@@ -820,7 +878,10 @@ export class DocumentIntakeInput extends S.Opaque<DocumentIntakeInput, {}>()(
  * @category models
  * @since 0.0.0
  */
-export class DocumentIntakeContext extends S.Opaque<DocumentIntakeContext, {}>()(
+export class DocumentIntakeContext extends S.Opaque<
+  DocumentIntakeContext,
+  { readonly "~beep/intake/DocumentIntakeContext": "DocumentIntakeContext" }
+>()(
   S.Struct({
     workspaceId: WorkspaceIdentity.WorkspaceId,
     configRetryBaseMillis: S.Int,
@@ -853,7 +914,10 @@ export class DocumentIntakeContext extends S.Opaque<DocumentIntakeContext, {}>()
  * @category models
  * @since 0.0.0
  */
-export class VaultFailureContext extends S.Opaque<VaultFailureContext, {}>()(
+export class VaultFailureContext extends S.Opaque<
+  VaultFailureContext,
+  { readonly "~beep/intake/VaultFailureContext": "VaultFailureContext" }
+>()(
   S.Struct({ vaultFailure: S.NonEmptyString }).pipe(
     $I.annoteSchema("VaultFailureContext", {
       description: "Context refinement of the failed vault-selection state.",
@@ -876,7 +940,10 @@ export class VaultFailureContext extends S.Opaque<VaultFailureContext, {}>()(
  * @category models
  * @since 0.0.0
  */
-export class VaultSavingStateInput extends S.Opaque<VaultSavingStateInput, {}>()(
+export class VaultSavingStateInput extends S.Opaque<
+  VaultSavingStateInput,
+  { readonly "~beep/intake/VaultSavingStateInput": "VaultSavingStateInput" }
+>()(
   S.Struct({ vaultRootPath: S.NonEmptyString }).pipe(
     $I.annoteSchema("VaultSavingStateInput", {
       description: "Trimmed vault root path a saving state persists.",
@@ -899,7 +966,10 @@ export class VaultSavingStateInput extends S.Opaque<VaultSavingStateInput, {}>()
  * @category models
  * @since 0.0.0
  */
-export class VaultFailureStateInput extends S.Opaque<VaultFailureStateInput, {}>()(
+export class VaultFailureStateInput extends S.Opaque<
+  VaultFailureStateInput,
+  { readonly "~beep/intake/VaultFailureStateInput": "VaultFailureStateInput" }
+>()(
   S.Struct({ message: S.NonEmptyString }).pipe(
     $I.annoteSchema("VaultFailureStateInput", {
       description: "Operator-safe message a failed vault save carries into its final state.",
@@ -907,7 +977,10 @@ export class VaultFailureStateInput extends S.Opaque<VaultFailureStateInput, {}>
   )
 ) {}
 
-class PickerOutcomeCancelled extends S.Opaque<PickerOutcomeCancelled, {}>()(
+class PickerOutcomeCancelled extends S.Opaque<
+  PickerOutcomeCancelled,
+  { readonly "~beep/intake/PickerOutcomeCancelled": "PickerOutcomeCancelled" }
+>()(
   S.Struct({ kind: S.tag("cancelled") }).pipe(
     $I.annoteSchema("PickerOutcomeCancelled", {
       description: "The operator closed the folder picker without choosing a folder.",
@@ -915,7 +988,10 @@ class PickerOutcomeCancelled extends S.Opaque<PickerOutcomeCancelled, {}>()(
   )
 ) {}
 
-class PickerOutcomeSaved extends S.Opaque<PickerOutcomeSaved, {}>()(
+class PickerOutcomeSaved extends S.Opaque<
+  PickerOutcomeSaved,
+  { readonly "~beep/intake/PickerOutcomeSaved": "PickerOutcomeSaved" }
+>()(
   S.Struct({ kind: S.tag("saved") }).pipe(
     $I.annoteSchema("PickerOutcomeSaved", {
       description: "The picked folder was persisted as the workspace vault root.",
@@ -923,7 +999,10 @@ class PickerOutcomeSaved extends S.Opaque<PickerOutcomeSaved, {}>()(
   )
 ) {}
 
-class PickerOutcomeFailed extends S.Opaque<PickerOutcomeFailed, {}>()(
+class PickerOutcomeFailed extends S.Opaque<
+  PickerOutcomeFailed,
+  { readonly "~beep/intake/PickerOutcomeFailed": "PickerOutcomeFailed" }
+>()(
   S.Struct({ kind: S.tag("failed"), message: S.NonEmptyString }).pipe(
     $I.annoteSchema("PickerOutcomeFailed", {
       description: "The picker could not open, or the picked folder could not be persisted.",
@@ -931,7 +1010,10 @@ class PickerOutcomeFailed extends S.Opaque<PickerOutcomeFailed, {}>()(
   )
 ) {}
 
-class PickerOutcomeManual extends S.Opaque<PickerOutcomeManual, {}>()(
+class PickerOutcomeManual extends S.Opaque<
+  PickerOutcomeManual,
+  { readonly "~beep/intake/PickerOutcomeManual": "PickerOutcomeManual" }
+>()(
   S.Struct({ kind: S.tag("manual") }).pipe(
     $I.annoteSchema("PickerOutcomeManual", {
       description: "No native folder picker is reachable, so the manual path form is needed.",
@@ -980,7 +1062,10 @@ export const PickerOutcome = PickerOutcomeKind.mapMembers(
   S.toTaggedUnion("kind")
 );
 
-class ManualOutcomeCancelled extends S.Opaque<ManualOutcomeCancelled, {}>()(
+class ManualOutcomeCancelled extends S.Opaque<
+  ManualOutcomeCancelled,
+  { readonly "~beep/intake/ManualOutcomeCancelled": "ManualOutcomeCancelled" }
+>()(
   S.Struct({ kind: S.tag("cancelled") }).pipe(
     $I.annoteSchema("ManualOutcomeCancelled", {
       description: "The operator dismissed the manual vault path form.",
@@ -988,7 +1073,10 @@ class ManualOutcomeCancelled extends S.Opaque<ManualOutcomeCancelled, {}>()(
   )
 ) {}
 
-class ManualOutcomeSaved extends S.Opaque<ManualOutcomeSaved, {}>()(
+class ManualOutcomeSaved extends S.Opaque<
+  ManualOutcomeSaved,
+  { readonly "~beep/intake/ManualOutcomeSaved": "ManualOutcomeSaved" }
+>()(
   S.Struct({ kind: S.tag("saved") }).pipe(
     $I.annoteSchema("ManualOutcomeSaved", {
       description: "The typed path was persisted as the workspace vault root.",
@@ -1041,7 +1129,10 @@ export const ManualOutcome = ManualOutcomeKind.mapMembers(
  * @category models
  * @since 0.0.0
  */
-export class PersistVaultRootInput extends S.Opaque<PersistVaultRootInput, {}>()(
+export class PersistVaultRootInput extends S.Opaque<
+  PersistVaultRootInput,
+  { readonly "~beep/intake/PersistVaultRootInput": "PersistVaultRootInput" }
+>()(
   S.Struct({
     workspaceId: WorkspaceIdentity.WorkspaceId,
     vaultRootPath: S.NonEmptyString,
@@ -1068,7 +1159,10 @@ export class PersistVaultRootInput extends S.Opaque<PersistVaultRootInput, {}>()
  * @category models
  * @since 0.0.0
  */
-export class VaultConfigFeedInput extends S.Opaque<VaultConfigFeedInput, {}>()(
+export class VaultConfigFeedInput extends S.Opaque<
+  VaultConfigFeedInput,
+  { readonly "~beep/intake/VaultConfigFeedInput": "VaultConfigFeedInput" }
+>()(
   S.Struct({ workspaceId: WorkspaceIdentity.WorkspaceId }).pipe(
     $I.annoteSchema("VaultConfigFeedInput", {
       description: "Workspace whose vault configuration the feed reads.",
@@ -1282,7 +1376,10 @@ const IntakeLogAction = LiteralKit([
  * @category models
  * @since 0.0.0
  */
-export class IntakeLogRequest extends S.Opaque<IntakeLogRequest, {}>()(
+export class IntakeLogRequest extends S.Opaque<
+  IntakeLogRequest,
+  { readonly "~beep/intake/IntakeLogRequest": "IntakeLogRequest" }
+>()(
   S.Struct({
     action: IntakeLogAction,
     cause: S.Unknown,

@@ -507,7 +507,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("gate-order handoff (TTC
       const decided = A.getSomes(A.map(handoff.lanes, (lane) => lane.decidedBy));
 
       expect(countBy(decided, (key) => key)).toEqual({
-        "cost-p50": 20,
+        "cost-p50": 19,
         "first-red-share": 6,
         "declaration-index": 5,
         "lane-class": 1,
@@ -521,7 +521,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("gate-order handoff (TTC
           Order.String
         )
       ).toEqual(["quality:coverage", "quality:nix", "quality:sast", "quality:security"]);
-      expect(A.filter(handoff.lanes, (lane) => lane.redScheduling === "stop-after-red").length).toBe(29);
+      expect(A.filter(handoff.lanes, (lane) => lane.redScheduling === "stop-after-red").length).toBe(28);
       expect(
         A.every(handoff.lanes, (lane) =>
           O.exists(
@@ -530,9 +530,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("gate-order handoff (TTC
           )
         )
       ).toBe(true);
-      // One cost source per seed row: 33 unique lane ids, exactly the seed's.
+      // One cost source per seed row: 32 unique lane ids, exactly the seed's.
       const costIds = A.map(DEFAULT_GATE_ORDER_COST_SOURCES, (entry) => entry.laneId);
-      expect(HashSet.size(HashSet.fromIterable(costIds))).toBe(33);
+      expect(HashSet.size(HashSet.fromIterable(costIds))).toBe(32);
       expect(A.sort(costIds, Order.String)).toEqual(
         A.sort(
           A.map(DEFAULT_GATE_ORDER_SEED.lanes, (row) => row.laneId),
@@ -542,7 +542,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("gate-order handoff (TTC
       expect(countBy(handoff.lanes, (lane) => lane.costBasis)).toEqual({
         "a1-lane-row": 15,
         "a1-proxy-row": 15,
-        "external-run": 3,
+        "external-run": 2,
       });
       expect(
         A.sort(
@@ -556,7 +556,6 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("gate-order handoff (TTC
         "fallow:health",
         "quality:cache-policy",
         "quality:doctest",
-        "quality:effect-diagnostics",
         "quality:shadcn-lint",
         "quality:storybook",
         "repo-sanity:config-typecheck",

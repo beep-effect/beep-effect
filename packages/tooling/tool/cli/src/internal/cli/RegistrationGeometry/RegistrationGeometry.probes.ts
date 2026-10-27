@@ -3,6 +3,7 @@ import {
   computeTransitiveClosure,
   decodePackageJsonEffect,
   resolveWorkspaceDirs,
+  toSortedRecord,
 } from "@beep/repo-utils";
 import { normalizePath } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
@@ -447,7 +448,7 @@ const collectWorkspaceEdges = Effect.fn("RegistrationGeometry.collectWorkspaceEd
   let edges = A.empty<WorkspaceEdge>();
   for (const [owner, deps] of HashMap.entries(dependencyIndex)) {
     for (const [bucket, entries] of R.toEntries(deps.workspace)) {
-      for (const dependency of R.keys(entries)) {
+      for (const dependency of entries.pipe(toSortedRecord, R.keys)) {
         edges = A.append(edges, { owner, bucket, dependency });
       }
     }
@@ -455,7 +456,10 @@ const collectWorkspaceEdges = Effect.fn("RegistrationGeometry.collectWorkspaceEd
   return edges;
 });
 
-const rootScriptHits = (scripts: Record<string, string>, target: RegistrationTarget): ReadonlyArray<DependentHit> => {
+const rootScriptHits = (
+  scripts: Readonly<Record<string, string>>,
+  target: RegistrationTarget
+): ReadonlyArray<DependentHit> => {
   const mentionsTarget = mentionsAnyToken([target.packageName, target.packagePath]);
   return pipe(
     R.toEntries(scripts),
@@ -680,7 +684,7 @@ export const dependentsOfAtRoot = Effect.fn("RegistrationGeometry.dependentsOfAt
   }
 
   const rootManifest = yield* decodedRootManifest(repoRoot);
-  if (O.isSome(rootManifest.scripts)) hits = A.appendAll(hits, rootScriptHits(rootManifest.scripts.value, target));
+  hits = A.appendAll(hits, rootScriptHits(toSortedRecord(rootManifest.scripts), target));
   hits = A.appendAll(hits, yield* rootPolicyFileHits(repoRoot, target));
 
   return DependentsReport.make({

@@ -38,7 +38,6 @@ export const FinalCheckGate = LiteralKit([
   "lint-policy",
   "lint",
   "repo-sanity",
-  "effect-diagnostics",
   "check",
   "docgen",
   "fallow",

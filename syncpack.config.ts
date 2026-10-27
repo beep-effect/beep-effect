@@ -124,6 +124,7 @@ const config = {
     "packages/drivers/commands/package.json",
     "packages/drivers/git/package.json",
     "packages/drivers/github/package.json",
+    "packages/drivers/github-actions/package.json",
   ],
   customTypes: {
     catalog: {
@@ -141,13 +142,16 @@ const config = {
       // @nodable/flexible-xml-parser, which references Buffer at module
       // scope and breaks every browser bundle.
       // @effect/tsgo pins its seven platform binaries exactly, so only its own
-      // catalog entry moves. A reviewed bump updates the combined root/lane
-      // diagnosticSeverity map and the standalone `beep quality effect-diagnostics`
-      // census before this pin moves.
-      // Effect rules come from @effect/tsgo through that diagnostics lane;
-      // That lane is required; the three ignore flags are true, so tsc-rs
-      // gates TypeScript errors only. Fold standards/effect-diagnostics.profile.json
-      // into compiler maps once tsc-rs knows its rule names (TS377134 otherwise).
+      // catalog entry moves. A reviewed bump updates the root diagnosticSeverity
+      // map and the copied profiles and runs the full check graph as the census
+      // before this pin moves.
+      // tsrs (oxc-project/tsrs) is held with it: `effect-tsgo patch --tsrs` only
+      // has an Effect build for the tsrs versions the installed @effect/tsgo
+      // packages ship (0.59.0 ships 0.20.0-ts7.1.0-beta), so the two pins move
+      // together in one reviewed bump (goals/tsrs-gates).
+      // Every Effect rule gates inside the Effect-patched tsrs: the three
+      // ignoreEffect*InTscExitCode flags are false and the standalone
+      // diagnostics lane is retired (goals/tsrs-gates PR 2, 2026-10-27).
       // 0.53.0 was measured across all workspace check/test projects on
       // 2026-10-14 (goals/effect-rules-diagnostics-lane); the patch-only 0.53.4
       // bump added no rules (hold register, 2026-10-17). All six 0.52 rules are
@@ -157,11 +161,8 @@ const config = {
       // (goals/effect-string-migration) cleared its 2,992 sites.
       // The import-style rules remain declared off; named helper imports are
       // deliberate and Effect barrel imports contradict the module-path law.
-      // tsc-rs (pingdotgg/ts-rust) is not held: `deps:update` moves it to the
-      // latest release, and its six @tsc-rs/<platform> binaries follow through
-      // the lockfile. It stays decoupled from @effect/tsgo. Re-couple only after
-      // tsc-rs ports the newest Effect rules and parity is proved, then remove the
-      // standalone diagnostics lane. See the toolchain runbook.
+      // tsc-rs (pingdotgg/ts-rust) ran the gates from 2026-10-14 until
+      // goals/tsrs-gates replaced it; it is no longer installed. See the runbook.
       // @biomejs/biome stays at 2.5.6: 2.5.15 reformats four @beep/html and
       // @beep/provenance sources and adds a noDeprecatedImports error in
       // @beep/repo-cli (hold register, 2026-10-17). Bump it with that
@@ -198,6 +199,7 @@ const config = {
         "detailed-xml-validator",
         "@biomejs/biome",
         "@effect/tsgo",
+        "tsrs",
         "statelyai",
       ],
       isIgnored: true,

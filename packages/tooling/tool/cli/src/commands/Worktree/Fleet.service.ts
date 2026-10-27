@@ -41,6 +41,7 @@ import * as S from "effect/Schema";
 import { configStringOptionSync } from "../../internal/cli/EnvConfig.ts";
 import { repoRunOutputBound, runCapturedStreams } from "../../internal/process/StepExec.ts";
 import { parseAdmissionProcStatStartTime } from "../../internal/repo-run/index.ts";
+import { selectFleetScannerDir } from "./internal/FleetScannerDir.ts";
 import { WorktreeCommandError } from "./Worktree.errors.ts";
 import {
   FLEET_LIVENESS_WINDOW_SECONDS,
@@ -1246,9 +1247,6 @@ const deriveCheckout = Effect.fn("Fleet.deriveCheckout")(function* (
 
 const homeDirectory = (): O.Option<string> => configStringOptionSync("HOME");
 
-const cacheDirectory = (homeDir: O.Option<string>): O.Option<string> =>
-  O.orElse(configStringOptionSync("XDG_CACHE_HOME"), () => O.map(homeDir, (home) => `${home}/.cache`));
-
 type FleetScope = {
   readonly fleetRoot: string;
   readonly normalizedOrigin: string;
@@ -1299,7 +1297,6 @@ const listFleetCheckouts = Effect.fn("Fleet.listFleetCheckouts")(function* (
 const scanFleet = Effect.fn("Fleet.scanFleet")(function* (
   options: FleetScanOptions
 ): Effect.fn.Return<FleetSnapshot, WorktreeCommandError, FleetMirrorServiceRequirements> {
-  const path = yield* Path.Path;
   const nowMillis = yield* Clock.currentTimeMillis;
   const scannedAt = DateTime.formatIso(yield* DateTime.now);
   const windowSeconds = options.livenessWindowSeconds ?? FLEET_LIVENESS_WINDOW_SECONDS;
@@ -1307,11 +1304,11 @@ const scanFleet = Effect.fn("Fleet.scanFleet")(function* (
   const { fleetRoot, normalizedOrigin, originUrl } = yield* resolveFleetScope(options);
 
   const homeDir = O.orElse(O.fromUndefinedOr(options.homeDir), () => homeDirectory());
-  const scannerDir = pipe(
-    O.fromUndefinedOr(options.scannerDir),
-    O.orElse(() => O.map(cacheDirectory(homeDir), (cache) => path.join(cache, "beep", "fleet-scanner"))),
-    O.getOrElse(() => path.join(fleetRoot, ".beep-fleet-scanner"))
-  );
+  const scannerDir = yield* selectFleetScannerDir({
+    scannerDir: O.fromUndefinedOr(options.scannerDir),
+    homeDir,
+    fleetRoot,
+  });
 
   const { clones, stubs } = yield* enumerateFleet(fleetRoot, normalizedOrigin);
   const processScan = yield* scanProcesses(A.map(stubs, (stub) => stub.path));

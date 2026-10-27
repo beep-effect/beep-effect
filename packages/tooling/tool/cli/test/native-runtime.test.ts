@@ -1,4 +1,4 @@
-import { NoNativeRuntimeRulesOptions, runNoNativeRuntimeRules } from "@beep/repo-cli/test/Laws";
+import { LawScanProject, NoNativeRuntimeRulesOptions, runNoNativeRuntimeRules } from "@beep/repo-cli/test/Laws";
 import { makeSchemaFirstProject } from "@beep/repo-cli/test/Lint";
 import { A, Str } from "@beep/utils";
 import { expect, it } from "@effect/vitest";
@@ -6,6 +6,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as Path from "effect/Path";
+import { Project } from "ts-morph";
 import {
   NodeTestLayer,
   withTempWorkingDirectory,
@@ -364,6 +365,44 @@ it.layer(NodeTestLayer, { timeout: "30 seconds" })("native runtime laws", (it) =
           expect(summary.affectedFiles).toEqual([]);
         })
       );
+    })
+  );
+  it.effect(
+    "distinguishes computed native calls and runtime typeof checks from availability guards",
+    Effect.fnUntraced(function* () {
+      const project = new Project({ useInMemoryFileSystem: true, skipAddingFilesFromTsConfig: true });
+      project.createSourceFile(
+        "/repo/packages/demo/src/computed.ts",
+        A.join(
+          [
+            'export const keys = Object["keys"]({ ok: true });',
+            "export const values = Object.values({ ok: true });",
+            "export const nested = globalThis.Object.keys({ ok: true });",
+            "export const dynamic = Object[method]({ ok: true });",
+            "export const called = helper();",
+            'export const runtime = "string" === typeof value;',
+            'export const member = typeof value.member === "number";',
+            'export const unknownType = typeof value === "unknown";',
+            "export const nonliteral = typeof value === expected;",
+            'export const available = "undefined" !== typeof window;',
+          ],
+          "\n"
+        )
+      );
+      project.createSourceFile("/repo/packages/demo/src/clean.ts", "export const value = 1;");
+      project.createSourceFile("/repo/packages/demo/test/excluded.ts", "export const ignored = new Set();");
+      const summary = yield* runNoNativeRuntimeRules(NoNativeRuntimeRulesOptions.make({ strictCheck: true })).pipe(
+        Effect.provideService(LawScanProject, { project, repoRoot: "/repo" })
+      );
+      expect(summary.scannedFiles).toBe(2);
+      expect(summary.affectedFiles).toEqual(["packages/demo/src/computed.ts"]);
+      expect(A.map(summary.diagnostics, (diagnostic) => diagnostic.messageId)).toEqual([
+        "objectMethod",
+        "objectMethod",
+        "typeofRuntime",
+        "typeofRuntime",
+      ]);
+      expect(summary.strictFailure).toBe(true);
     })
   );
 });

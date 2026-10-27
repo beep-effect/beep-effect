@@ -30,7 +30,6 @@ import * as Match from "effect/Match";
 import * as Num from "effect/Number";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import {
   isCiSync,
@@ -38,7 +37,6 @@ import {
   turboEnvExtendsAmbient,
   turboEnvOverrides,
 } from "../../internal/cli/EnvConfig.ts";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import {
   isLabsWorkspaceDir,
   LABS_TURBO_EXCLUDE_FILTER,
@@ -53,7 +51,7 @@ import {
   runQualityTaskStreamingLaneGroup,
   runQualityTaskStreamingStepGroup,
 } from "../Quality/Tasks.ts";
-import { CiCommandError, CiLanePartitionError } from "./Ci.errors.ts";
+import { CiCommandError, CiLanePartitionError, reportCiCommandError } from "./Ci.errors.ts";
 import {
   ciCoveragePlan,
   ciCoverageTestArgs,
@@ -233,7 +231,6 @@ export const CI_LANE_ID_VALUES = [
   "labs",
   "lint",
   "lint-policy",
-  "effect-diagnostics",
   "nix",
   "property",
   "repo-sanity",
@@ -430,17 +427,6 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     laneClass: "cli-runnable",
     replay: "exact",
     flags: [],
-  }),
-  CiLaneDescriptor.make({
-    id: "effect-diagnostics",
-    workflow: "heavy",
-    contextName: "Heavy / Effect Diagnostics",
-    required: true,
-    laneClass: "cli-runnable",
-    replay: "exact",
-    flags: [...TURBO_SHAPE_FLAGS],
-    notes:
-      "Independent Effect rules: affected workspace dependents on PRs, full inventory on main; hosted job has a 19-GiB cgroup cap.",
   }),
   CiLaneDescriptor.make({
     id: "repo-sanity",
@@ -1688,14 +1674,6 @@ export const ciLaneStepsForTesting: {
       // from ambient `CI=true`, so a local replay scans the same repo-wide
       // surface the required Lint Policy context does. Hosted runs are
       // unchanged: `beep lint policy` already forces the full sweep under CI.
-      "effect-diagnostics": () => [
-        bunRunStep(repoRoot, "ci:effect-diagnostics", [
-          "beep",
-          "quality",
-          "effect-diagnostics",
-          ...(options.affected ? ["--base", options.base] : []),
-        ]),
-      ],
       "lint-policy": () => [bunRunStep(repoRoot, "ci:lint-policy", ["beep", "lint", "policy", "--full"])],
       nix: () => [
         QualityTaskStep.make({
@@ -2227,7 +2205,7 @@ const runCiPartitionedLane = Effect.fn("CiLane.runCiPartitionedLane")(function* 
     workspaceEntries,
     A.filter(([, workspace]) => {
       const relativeDir = normalizeSlashes(path.relative(repoRoot, workspace.dir));
-      return !isLabsWorkspaceDir(relativeDir) && R.has(workspace.scripts, task);
+      return !isLabsWorkspaceDir(relativeDir) && HashMap.has(workspace.manifest.scripts, task);
     }),
     A.map(([name]) => name),
     A.sort(Order.String)
@@ -2387,9 +2365,6 @@ const partitionFlagChoices: ReadonlyArray<readonly [CiLanePartitionId, CiLanePar
   CiLanePartitionId.literals,
   (partition) => [partition, partition] as const
 );
-
-const reportCiCommandError = (error: { readonly message: string }) =>
-  Console.error(`[ci] ${error.message}`).pipe(Effect.andThen(failWithReportedExit(`[ci] ${error.message}`)));
 
 /**
  * `beep ci lane` command: run one CI lane body or list the lane inventory.
@@ -2682,7 +2657,6 @@ const ciLocalLaneFlags = (laneId: CiLaneId, plan: CiLocalStepPlan): ReadonlyArra
     "desktop-ipc": A.empty<string>,
     docgen: () => ["--mode", plan.affected ? "auto" : "full", "--base", plan.base],
     doctest: A.empty<string>,
-    "effect-diagnostics": () => turboShapeFlags,
     ecosystem: A.empty<string>,
     fallow: () => ["--base", plan.base, "--validate-envelopes"],
     "jsdoc-ratchet": A.empty<string>,

@@ -257,7 +257,9 @@ const requireAbsoluteDataRoot = (path: string) =>
  *
  * Precedence is `--data-root`, then `BEEP_AI_METRICS_DATA_ROOT`, then the deploy
  * target's default, where `local` means `${XDG_STATE_HOME:-$HOME/.local/state}/beep/ai-metrics`
- * and `dankserver` means `/srv/data/ai-metrics`. The flag carries the
+ * (resolved by `aiMetricsStateHome` through `@beep/xdg` `XdgBase`, so a relative
+ * `XDG_STATE_HOME` is ignored and a relative `HOME` has no default) and
+ * `dankserver` means `/srv/data/ai-metrics`. The flag carries the
  * environment rung through `Flag.withFallbackConfig`, and the environment is
  * also read here into the schema's `envDataRoot` key, so callers that pass
  * `O.none()` directly — `install preview` and `install compose` — still honor

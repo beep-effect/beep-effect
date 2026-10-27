@@ -1,6 +1,7 @@
 import * as NodeURL from "node:url";
 import { resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
+import { LenientManifest } from "@beep/package-json/LenientManifest";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { A, Err, Str, thunkEmptyStr, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -12,10 +13,10 @@ import * as MutableHashSet from "effect/MutableHashSet";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
-import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { Node } from "ts-morph";
 import { fencedLineState } from "../../../internal/jsdoc/JSDocSections.ts";
+import { manifestParser } from "../../../internal/ManifestRead.ts";
 import { runCaptured } from "../../../internal/process/index.ts";
 import { OpaqueDefect } from "../../../internal/schema/OpaqueDefect.ts";
 import { QualityScriptCommandError } from "../Quality.errors.ts";
@@ -102,52 +103,6 @@ export const JsonRecord = S.Record(S.String, S.Unknown).pipe(
  */
 export type JsonRecord = typeof JsonRecord.Type;
 
-// Dependency names mapped to version specifiers for one package.json bucket.
-const PackageJsonDependencyRecord = S.Record(S.String, S.String);
-
-/**
- * Package manifest fields consumed by Quality artifact generators.
- *
- * **Details**
- *
- * The four dependency buckets are read so coverage scope planning can follow
- * workspace-internal edges to dependents; every bucket is optional because a
- * manifest may omit any of them.
- *
- * **Example** (Describe a manifest with one workspace dependency)
- *
- * ```ts
- * import { PackageJson } from "@beep/repo-cli/commands/Quality/internal/QualityArtifactSupport"
- * import * as R from "effect/Record"
- *
- * const manifest = PackageJson.make({
- *   name: "@beep/pandoc-ast",
- *   scripts: { coverage: "vitest run --coverage" },
- *   dependencies: { "@beep/md": "workspace:^" }
- * })
- * console.log(R.keys(manifest.dependencies ?? {})) // ["@beep/md"]
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class PackageJson extends S.Opaque<PackageJson, { readonly brand: unique symbol }>()(
-  S.Struct({
-    name: S.String,
-    scripts: S.optionalKey(S.Record(S.String, S.String)),
-    workspaces: S.optionalKey(S.Unknown),
-    exports: S.optionalKey(S.Unknown),
-    dependencies: S.optionalKey(PackageJsonDependencyRecord),
-    devDependencies: S.optionalKey(PackageJsonDependencyRecord),
-    peerDependencies: S.optionalKey(PackageJsonDependencyRecord),
-    optionalDependencies: S.optionalKey(PackageJsonDependencyRecord),
-  }).pipe(
-    $I.annoteSchema("PackageJson", {
-      description: "Package manifest fields used by repo CLI support scripts.",
-    })
-  )
-) {}
-
 /**
  * Workspace package metadata discovered from root workspace patterns.
  *
@@ -159,7 +114,7 @@ export class WorkspacePackageInfo extends S.Opaque<WorkspacePackageInfo, { reado
     name: S.String,
     path: S.String,
     absolutePath: S.String,
-    packageJson: PackageJson,
+    packageJson: LenientManifest,
   }).pipe(
     $I.annoteSchema("WorkspacePackageInfo", {
       description: "Discovered workspace package metadata used by repo CLI support scripts.",
@@ -167,7 +122,19 @@ export class WorkspacePackageInfo extends S.Opaque<WorkspacePackageInfo, { reado
   )
 ) {}
 
-const decodePackageJsonResult = S.decodeUnknownResult(PackageJson);
+// The fields Quality artifact generators read from a workspace manifest. The
+// four dependency buckets let coverage scope planning follow workspace-internal
+// edges to dependents; a malformed `workspaces` fails the read instead of
+// silently discovering fewer packages.
+const parsePackageJson = manifestParser([
+  "name",
+  "scripts",
+  "workspaces",
+  "dependencies",
+  "devDependencies",
+  "peerDependencies",
+  "optionalDependencies",
+]);
 const decodeJsoncRecord = decodeJsoncTextAs(JsonRecord);
 
 /**
@@ -298,46 +265,85 @@ const resolveEntryWithinRoot = Effect.fn("QualityArtifactSupport.resolveEntryWit
 });
 
 /**
- * Read and decode a package manifest.
+ * Read one workspace `package.json` text into its discovery record.
  *
- * @category filesystem
+ * **Details**
+ *
+ * The manifest must declare a `name`, and a present `name`, `scripts`,
+ * `workspaces` or dependency bucket must keep its JSON shape. Strict JSON
+ * only: JSONC text fails.
+ *
+ * **Example** (Read a workspace manifest)
+ *
+ * ```ts
+ * import { readWorkspacePackageText } from "@beep/repo-cli/test/Quality"
+ * import * as Effect from "effect/Effect"
+ *
+ * const info = Effect.runSync(
+ *   readWorkspacePackageText('{"name":"@beep/demo"}', "/repo/packages/demo/package.json", "/repo/packages/demo", "packages/demo")
+ * )
+ * console.log(info.name, info.path) // @beep/demo packages/demo
+ * ```
+ *
+ * @param content - Workspace `package.json` text.
+ * @param filePath - Path named in a failure.
+ * @param absolutePath - Absolute workspace directory the record carries.
+ * @param relativePath - Repo-relative workspace directory the record carries.
+ * @returns The workspace's discovery record.
+ * @category parsing
  * @since 0.0.0
  */
-const readPackageJson = Effect.fn("QualityArtifactSupport.readPackageJson")(function* (
-  filePath: string
-): Effect.fn.Return<PackageJson, QualityArtifactGeneratorError, FileSystem.FileSystem> {
-  const json = yield* readJsonc(filePath);
-  return yield* Result.match(decodePackageJsonResult(json), {
-    onFailure: (cause) =>
-      Effect.fail(
-        QualityArtifactGeneratorError.new(cause, `Failed to decode package manifest ${filePath}.`, { filePath })
-      ),
-    onSuccess: Effect.succeed,
-  });
+export const readWorkspacePackageText = Effect.fn("QualityArtifactSupport.readWorkspacePackageText")(function* (
+  content: string,
+  filePath: string,
+  absolutePath: string,
+  relativePath: string
+): Effect.fn.Return<WorkspacePackageInfo, QualityArtifactGeneratorError> {
+  const packageJson = yield* parsePackageJson(content).pipe(
+    QualityArtifactGeneratorError.mapError(`Failed to decode package manifest ${filePath}.`, { filePath })
+  );
+  if (P.isUndefined(packageJson.name)) {
+    return yield* QualityArtifactGeneratorError.new(
+      `${filePath} does not declare a package name.`,
+      `Failed to decode package manifest ${filePath}.`,
+      { filePath }
+    );
+  }
+  return WorkspacePackageInfo.make({ name: packageJson.name, path: relativePath, absolutePath, packageJson });
 });
 
 /**
- * Read the root package manifest for a repository.
+ * Read one workspace package manifest into its discovery record.
  *
  * @category filesystem
  * @since 0.0.0
  */
-const readRootPackage = Effect.fn("QualityArtifactSupport.readRootPackage")(function* (
-  repoRoot: string,
+const readWorkspacePackage = Effect.fn("QualityArtifactSupport.readWorkspacePackage")(function* (
+  absolutePath: string,
+  relativePath: string,
   path: Path.Path
-): Effect.fn.Return<PackageJson, QualityArtifactGeneratorError, FileSystem.FileSystem> {
-  return yield* readPackageJson(path.join(repoRoot, "package.json"));
+): Effect.fn.Return<WorkspacePackageInfo, QualityArtifactGeneratorError, FileSystem.FileSystem> {
+  const filePath = path.join(absolutePath, "package.json");
+  return yield* readWorkspacePackageText(yield* readText(filePath), filePath, absolutePath, relativePath);
 });
 
 /**
  * Extract workspace glob patterns from a package manifest workspace field.
+ *
+ * **Example** (Read the object workspace form)
+ *
+ * ```ts
+ * import { workspacePatternsFrom } from "@beep/repo-cli/test/Quality"
+ *
+ * console.log(workspacePatternsFrom({ packages: ["packages/*"] })) // ["packages/*"]
+ * ```
  *
  * @param workspaces - Raw `package.json` workspaces value.
  * @returns Workspace glob patterns from array or object forms.
  * @category workspaces
  * @since 0.0.0
  */
-const workspacePatternsFrom = (workspaces: unknown): ReadonlyArray<string> => {
+export const workspacePatternsFrom = (workspaces: unknown): ReadonlyArray<string> => {
   if (A.isArray(workspaces)) {
     return A.filter(workspaces, P.isString);
   }
@@ -444,33 +450,18 @@ export const discoverWorkspacePackages = Effect.fn("QualityArtifactSupport.disco
   QualityArtifactGeneratorError,
   FileSystem.FileSystem
 > {
-  const rootPackage = yield* readRootPackage(repoRoot, path);
+  const rootPackage = yield* readWorkspacePackage(repoRoot, ".", path);
   const packages = MutableHashMap.empty<string, WorkspacePackageInfo>();
+  MutableHashMap.set(packages, rootPackage.name, rootPackage);
 
-  MutableHashMap.set(
-    packages,
-    rootPackage.name,
-    WorkspacePackageInfo.make({
-      name: rootPackage.name,
-      path: ".",
-      absolutePath: repoRoot,
-      packageJson: rootPackage,
-    })
-  );
-
-  for (const pattern of workspacePatternsFrom(rootPackage.workspaces)) {
+  for (const pattern of workspacePatternsFrom(rootPackage.packageJson.workspaces)) {
     for (const packagePath of yield* expandWorkspacePattern(pattern, repoRoot, path)) {
-      const packageJson = yield* readPackageJson(path.join(packagePath, "package.json"));
-      MutableHashMap.set(
-        packages,
-        packageJson.name,
-        WorkspacePackageInfo.make({
-          name: packageJson.name,
-          path: repoRelative(packagePath, repoRoot, path),
-          absolutePath: packagePath,
-          packageJson,
-        })
+      const workspacePackage = yield* readWorkspacePackage(
+        packagePath,
+        repoRelative(packagePath, repoRoot, path),
+        path
       );
+      MutableHashMap.set(packages, workspacePackage.name, workspacePackage);
     }
   }
 
@@ -830,11 +821,24 @@ const collectFilesImpl = Effect.fn("QualityScriptCommands.collectFiles")(functio
       return A.empty<string>();
     }
 
-    const stat = yield* fs.stat(childPath).pipe(QualityScriptCommandError.mapError(`Failed to stat ${childPath}.`));
-    if (stat.type === "Directory") {
+    // An entry removed between the directory listing and this stat (a scoped
+    // temporary directory another test is tearing down) contributes nothing;
+    // every other stat failure still fails the walk.
+    const stat = yield* fs.stat(childPath).pipe(
+      Effect.asSome,
+      Effect.catchIf(
+        (error) => error.reason._tag === "NotFound",
+        () => Effect.succeedNone
+      ),
+      QualityScriptCommandError.mapError(`Failed to stat ${childPath}.`)
+    );
+    if (O.isNone(stat)) {
+      return A.empty<string>();
+    }
+    if (stat.value.type === "Directory") {
       return shouldSkipDirectory(`${normalized}/`, entry) ? A.empty<string>() : yield* visit(childPath);
     }
-    return stat.type === "File" && shouldInclude(normalized, entry) ? A.of(childPath) : A.empty<string>();
+    return stat.value.type === "File" && shouldInclude(normalized, entry) ? A.of(childPath) : A.empty<string>();
   });
 
   const visit = Effect.fn("QualityScriptCommands.collectFiles.visit")(function* (

@@ -17,7 +17,7 @@ const $I = $DockId.create("Dock.ids");
  * **Example** (Make and check PanelId)
  *
  * ```ts import.meta.vitest name="Make and check PanelId"
- * import { PanelId } from "@beep/dock"
+ * import { PanelId } from "@beep/dock/Dock.ids"
  * import * as S from "effect/Schema"
  *
  * const id = PanelId.make("panel-one")
@@ -39,7 +39,7 @@ export const PanelId = S.NonEmptyString.pipe(
  * **Example** (Typed PanelId assignment)
  *
  * ```ts import.meta.vitest name="Typed PanelId assignment"
- * import { PanelId } from "@beep/dock"
+ * import { PanelId } from "@beep/dock/Dock.ids"
  *
  * const id: PanelId = PanelId.make("panel-one")
  * id // => "panel-one"
@@ -56,7 +56,7 @@ export type PanelId = typeof PanelId.Type;
  * **Example** (Make and check GroupId)
  *
  * ```ts import.meta.vitest name="Make and check GroupId"
- * import { GroupId } from "@beep/dock"
+ * import { GroupId } from "@beep/dock/Dock.ids"
  * import * as S from "effect/Schema"
  *
  * const id = GroupId.make("group-one")
@@ -78,7 +78,7 @@ export const GroupId = S.NonEmptyString.pipe(
  * **Example** (Typed GroupId assignment)
  *
  * ```ts import.meta.vitest name="Typed GroupId assignment"
- * import { GroupId } from "@beep/dock"
+ * import { GroupId } from "@beep/dock/Dock.ids"
  *
  * const id: GroupId = GroupId.make("group-one")
  * id // => "group-one"
@@ -95,7 +95,7 @@ export type GroupId = typeof GroupId.Type;
  * **Example** (Make and check SplitId)
  *
  * ```ts import.meta.vitest name="Make and check SplitId"
- * import { SplitId } from "@beep/dock"
+ * import { SplitId } from "@beep/dock/Dock.ids"
  * import * as S from "effect/Schema"
  *
  * const id = SplitId.make("split-one")
@@ -117,7 +117,7 @@ export const SplitId = S.NonEmptyString.pipe(
  * **Example** (Typed SplitId assignment)
  *
  * ```ts import.meta.vitest name="Typed SplitId assignment"
- * import { SplitId } from "@beep/dock"
+ * import { SplitId } from "@beep/dock/Dock.ids"
  *
  * const id: SplitId = SplitId.make("split-one")
  * id // => "split-one"
@@ -134,7 +134,7 @@ export type SplitId = typeof SplitId.Type;
  * **Example** (Make and check CommandId)
  *
  * ```ts import.meta.vitest name="Make and check CommandId"
- * import { CommandId } from "@beep/dock"
+ * import { CommandId } from "@beep/dock/Dock.ids"
  * import * as S from "effect/Schema"
  *
  * const id = CommandId.make("command-open-one")
@@ -156,7 +156,7 @@ export const CommandId = S.NonEmptyString.pipe(
  * **Example** (Typed CommandId assignment)
  *
  * ```ts import.meta.vitest name="Typed CommandId assignment"
- * import { CommandId } from "@beep/dock"
+ * import { CommandId } from "@beep/dock/Dock.ids"
  *
  * const id: CommandId = CommandId.make("command-open-one")
  * id // => "command-open-one"
@@ -173,7 +173,7 @@ export type CommandId = typeof CommandId.Type;
  * **Example** (Make and check RendererKey)
  *
  * ```ts import.meta.vitest name="Make and check RendererKey"
- * import { RendererKey } from "@beep/dock"
+ * import { RendererKey } from "@beep/dock/Dock.ids"
  * import * as S from "effect/Schema"
  *
  * const key = RendererKey.make("markdown-preview")
@@ -195,7 +195,7 @@ export const RendererKey = S.NonEmptyString.pipe(
  * **Example** (Typed RendererKey assignment)
  *
  * ```ts import.meta.vitest name="Typed RendererKey assignment"
- * import { RendererKey } from "@beep/dock"
+ * import { RendererKey } from "@beep/dock/Dock.ids"
  *
  * const key: RendererKey = RendererKey.make("markdown-preview")
  * key // => "markdown-preview"
@@ -212,7 +212,7 @@ export type RendererKey = typeof RendererKey.Type;
  * **Example** (Complement split ratio shares)
  *
  * ```ts import.meta.vitest name="Complement split ratio shares"
- * import { SplitRatio } from "@beep/dock"
+ * import { SplitRatio } from "@beep/dock/Dock.ids"
  *
  * const left = SplitRatio.make(6_000)
  * const right = SplitRatio.complement(left)
@@ -242,7 +242,7 @@ export const SplitRatio = S.Int.check(
  * **Example** (Typed SplitRatio assignment)
  *
  * ```ts import.meta.vitest name="Typed SplitRatio assignment"
- * import { SplitRatio } from "@beep/dock"
+ * import { SplitRatio } from "@beep/dock/Dock.ids"
  *
  * const ratio: SplitRatio = SplitRatio.make(5_000)
  * ratio // => 5000

@@ -1,6 +1,8 @@
 /**
  * GraphOperations/Types - core value types for the graph-operations engine.
  *
+ * **Details**
+ *
  * Execution strategies, metrics, cost estimation, validation results, options,
  * execution ids, and operation results. {@link ExecutionMetrics} forms a monoid
  * (its {@link ExecutionMetrics.combine} is associative with {@link ExecutionMetrics.empty}

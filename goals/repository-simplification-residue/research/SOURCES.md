@@ -55,7 +55,7 @@ successor implementation lanes or reasons to park the fifteen owned workstreams.
 - [#1871](https://github.com/beep-effect/beep-effect/issues/1871): owner-verified storage retention.
 - [#1872](https://github.com/beep-effect/beep-effect/issues/1872): approved cold remote-cache reads.
 - [#1873](https://github.com/beep-effect/beep-effect/issues/1873): native cache posture and legacy roots.
-- [#1877](https://github.com/beep-effect/beep-effect/issues/1877): safe reconciled lane retirement. [Inventory and retirement receipt](../history/receipts/2026-10-22-vitest-lane-retirement.md).
+- [#1877](https://github.com/beep-effect/beep-effect/issues/1877): safe reconciled lane retirement. [Inventory](../history/receipts/2026-10-22-vitest-lane-retirement.md), [first retirement](../history/receipts/2026-10-23-vitest-lane-retirement-result.md) and [final pass](../history/receipts/2026-10-27-vitest-lane-retirement-final.md).
 - [#1883](https://github.com/beep-effect/beep-effect/issues/1883): post-merge completion and retirement evidence.
 
 The #1868 window restarts at #1884 merge e4d6f44aa8 after `.ai/mcp` deletion.

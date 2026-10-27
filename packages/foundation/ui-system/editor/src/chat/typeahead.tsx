@@ -9,6 +9,8 @@
  * {@link ComboboxAriaPlugin} completes the pattern by marking the editor root as
  * `role="combobox"`.
  *
+ * **Details**
+ *
  * Per the repo atom-first law the per-editor query/options/request state and the
  * combobox-ARIA root-listener registration are `@effect/atom` families keyed by
  * the `LexicalEditor` (no `useState`/`useEffect`/`useMemo`/`useRef`); the

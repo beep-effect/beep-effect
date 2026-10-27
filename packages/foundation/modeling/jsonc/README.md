@@ -207,7 +207,7 @@ Digests are always exactly 64 lowercase hexadecimal characters, with no `sha256:
 Run these from the package directory, or `bun run beep quality package-verify @beep/jsonc` from the repository root for the full gate:
 
 ```sh
-bun run check             # tsc-rs over src and test
+bun run check             # tsrs over src and test
 bun run lint              # biome
 bun run lint:laws         # Effect laws
 bun run test              # unit and property tests

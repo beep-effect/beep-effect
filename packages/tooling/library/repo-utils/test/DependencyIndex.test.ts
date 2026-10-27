@@ -12,7 +12,6 @@ import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import * as R from "effect/Record";
 
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const TestLayer = FsUtilsLive.pipe(Layer.provideMerge(PlatformLayer));
@@ -43,9 +42,9 @@ it.layer(TestLayer, { timeout: "10 seconds" })("DependencyIndex", (it) => {
         if (O.isSome(pkgADeps)) {
           const deps = pkgADeps.value;
           // @mock/pkg-b is a workspace dep
-          expect(deps.workspace.dependencies).toHaveProperty("@mock/pkg-b");
+          assertTrue(HashMap.has(deps.workspace.dependencies, "@mock/pkg-b"));
           // effect is an npm dep
-          expect(deps.npm.dependencies).toHaveProperty("effect");
+          assertTrue(HashMap.has(deps.npm.dependencies, "effect"));
         }
       })
     );
@@ -59,9 +58,9 @@ it.layer(TestLayer, { timeout: "10 seconds" })("DependencyIndex", (it) => {
         if (O.isSome(pkgBDeps)) {
           const deps = pkgBDeps.value;
           // @mock/pkg-c is a workspace devDep
-          expect(deps.workspace.devDependencies).toHaveProperty("@mock/pkg-c");
+          assertTrue(HashMap.has(deps.workspace.devDependencies, "@mock/pkg-c"));
           // vitest is an npm devDep
-          expect(deps.npm.devDependencies).toHaveProperty("vitest");
+          assertTrue(HashMap.has(deps.npm.devDependencies, "vitest"));
         }
       })
     );
@@ -75,12 +74,12 @@ it.layer(TestLayer, { timeout: "10 seconds" })("DependencyIndex", (it) => {
         if (O.isSome(pkgCDeps)) {
           const deps = pkgCDeps.value;
           // No workspace deps
-          expect(R.keys(deps.workspace.dependencies)).toHaveLength(0);
-          expect(R.keys(deps.workspace.devDependencies)).toHaveLength(0);
+          expect(HashMap.size(deps.workspace.dependencies)).toBe(0);
+          expect(HashMap.size(deps.workspace.devDependencies)).toBe(0);
           // zod is npm dep
-          expect(deps.npm.dependencies).toHaveProperty("zod");
+          assertTrue(HashMap.has(deps.npm.dependencies, "zod"));
           // effect is an npm peerDep
-          expect(deps.npm.peerDependencies).toHaveProperty("effect");
+          assertTrue(HashMap.has(deps.npm.peerDependencies, "effect"));
         }
       })
     );
@@ -95,8 +94,8 @@ it.layer(TestLayer, { timeout: "10 seconds" })("DependencyIndex", (it) => {
           const deps = rootDeps.value;
           expect(deps.packageName).toBe("@beep/root");
           // Root has typescript as a dep and vitest as devDep, both npm
-          expect(deps.npm.dependencies).toHaveProperty("typescript");
-          expect(deps.npm.devDependencies).toHaveProperty("vitest");
+          assertTrue(HashMap.has(deps.npm.dependencies, "typescript"));
+          assertTrue(HashMap.has(deps.npm.devDependencies, "vitest"));
         }
       })
     );

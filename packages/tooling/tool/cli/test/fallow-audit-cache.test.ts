@@ -1,3 +1,4 @@
+import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   DEFAULT_FALLOW_AUDIT_CACHE_MAX_AGE_DAYS,
   ensureFallowAuditCacheRoot,
@@ -10,18 +11,20 @@ import {
   resolveFallowAuditCacheSettings,
 } from "@beep/repo-cli/test/RepoRun";
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
+
+const PlatformLayer = Layer.mergeAll(MemoryFileSystem.layer, Path.layer);
 
 const withEnvironment = (environment: Record<string, string>) =>
   Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(environment));
 
 describe("fallow audit cache", () => {
-  it.layer(NodeServices.layer, { concurrent: false, timeout: "30 seconds" })((it) => {
+  it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
     it.effect("resolves the disk-backed root under the beep cache root by default", () =>
       Effect.gen(function* () {
         const path = yield* Path.Path;

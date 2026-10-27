@@ -1,6 +1,6 @@
 {
   "schemaVersion": "knowledge-doctor-baseline/v1",
-  "mintedAt": "3778297d150b6087d91a552724ad7ee4e02d7222",
+  "mintedAt": "35faa4a00d2eba0603757b24cc181d32b9c0779d",
   "note": "Sealed knowledge-doctor baseline. Only the CI mint writes it, and a re-mint at mintedAt reproduces it byte for byte. A branch may only delete entries; any other edit is baseline-tamper.",
   "entries": [
     {
@@ -1561,15 +1561,6 @@
       "owners": ["@kriegcloud"]
     },
     {
-      "key": "knowledge-doctor/v1:3fc918b8621e87dd2558c111abae7f4af87497e161be162eb7f19ff96a8d5c35",
-      "group": "deleted-target-rot",
-      "kind": "broken-tracked-path",
-      "document": "goals/cloud-agent-readiness/GOAL.md",
-      "subject": "repo-path:scripts/cloud-session-setup.sh",
-      "spanClass": "verified",
-      "owners": ["@kriegcloud"]
-    },
-    {
       "key": "knowledge-doctor/v1:40ca1856ff219de53404c40d058c5e9188d60a7eeb0d7c0eaaafca928be04b34",
       "group": "deleted-target-rot",
       "kind": "broken-tracked-path",
@@ -2565,15 +2556,6 @@
       "kind": "broken-tracked-path",
       "document": "goals/canvas/PLAN.md",
       "subject": "repo-path:apps/canvas",
-      "spanClass": "verified",
-      "owners": ["@kriegcloud"]
-    },
-    {
-      "key": "knowledge-doctor/v1:5d9a27b8d4a82d76ab2ee5c6c5c66b4e460f64f9666e5a1491b8df179516798a",
-      "group": "deleted-target-rot",
-      "kind": "broken-tracked-path",
-      "document": "goals/cloud-agent-readiness/GOAL.md",
-      "subject": "repo-path:scripts/cloud-session-setup.sh",
       "spanClass": "verified",
       "owners": ["@kriegcloud"]
     },
@@ -5445,15 +5427,6 @@
       "kind": "unknown-beep-symbol",
       "document": "goals/gov-legal-data-driver-delivery/SPEC.md",
       "subject": "beep-package:@beep/courtlistener",
-      "spanClass": "verified",
-      "owners": ["@kriegcloud"]
-    },
-    {
-      "key": "knowledge-doctor/v1:c1be40c6cd6a911aff2234b2d7991f80688cd45866c48290a4a31fa9ceb2a0f5",
-      "group": "deleted-target-rot",
-      "kind": "broken-tracked-path",
-      "document": "goals/cloud-agent-readiness/README.md",
-      "subject": "repo-path:scripts/cloud-session-setup.sh",
       "spanClass": "verified",
       "owners": ["@kriegcloud"]
     },

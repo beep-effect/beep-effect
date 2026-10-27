@@ -308,7 +308,7 @@ const removeWorkspaceLiteral = Effect.fn("DeletePackage.removeWorkspaceLiteral")
   const manifest = yield* decodePackageJsonEffect(unknown).pipe(
     Effect.mapError(DomainError.newCause(`Failed to decode ${file}.`))
   );
-  const jsonPath = workspaceLiteralJsonPath(O.getOrUndefined(manifest.workspaces), packagePath);
+  const jsonPath = workspaceLiteralJsonPath(manifest.workspaces, packagePath);
   if (A.isReadonlyArrayNonEmpty(jsonPath)) {
     yield* fs.writeFileString(
       file,

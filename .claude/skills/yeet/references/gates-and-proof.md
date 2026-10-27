@@ -90,7 +90,6 @@ fits a 4-core worker. By default every gate runs and every red is collected;
 | `lint-policy` | Heavy / Lint Policy | `beep lint policy --base`, root docs `oxlint .`, `beep lint deprecated-apis --full` | #2186, #2189, #2201 |
 | `lint` | Lint (package Biome, GritQL), lefthook | `beep ci lane lint --affected`, plus the pre-commit `biome check` over the diff's files | #2187 |
 | `repo-sanity` | Repo Sanity | `beep ci lane repo-sanity --changeset-status` | #2207 |
-| `effect-diagnostics` | Heavy / Effect Diagnostics | `beep ci lane effect-diagnostics --affected` | #2197, #2208, #2221 |
 | `check` | Heavy / Check | `beep ci lane check --affected` | #2208 |
 | `docgen` | Heavy / Docgen | `beep ci lane docgen --mode auto` | #2208 |
 | `fallow` | Fallow Advisory Envelopes | `beep ci lane fallow --validate-envelopes` | #2215 |

@@ -198,7 +198,7 @@ const make = <
  * **Example** (Build and inspect a two-point family)
  *
  * ```ts import.meta.vitest name="Build and inspect a two-point family"
- * import { Fibered } from "@beep/identity"
+ * import { Fibered } from "@beep/identity/Fibered"
  * import * as S from "effect/Schema"
  *
  * const family = Fibered.make({

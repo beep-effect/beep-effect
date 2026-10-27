@@ -16,6 +16,7 @@ export {
   boundedPersonMatchDirectoryNamesForTesting,
   defaultPersonMatchBackendForPlatform,
   runMatchPerson,
+  selectPersonMatchCacheRoot,
   trustedUvExecutableNameForPlatform,
   trustedUvRootDirectoriesForPlatform,
   validatePersonMatchBackendPlatform,

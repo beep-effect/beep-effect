@@ -372,6 +372,12 @@
         ]
       },
       {
+        "name": "@beep/github-actions",
+        "patterns": [
+          "packages/drivers/github-actions/src/**"
+        ]
+      },
+      {
         "name": "@beep/github-commands",
         "patterns": [
           "packages/foundation/modeling/github-commands/src/**"
@@ -1934,7 +1940,8 @@
           "@beep/memfs",
           "@beep/schema",
           "@beep/test-runner",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/xdg"
         ],
         "allowTypeOnly": [
           "@beep/anthropic",
@@ -1947,7 +1954,8 @@
           "@beep/memfs",
           "@beep/schema",
           "@beep/test-runner",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/xdg"
         ]
       },
       {
@@ -2376,6 +2384,7 @@
       {
         "from": "@beep/exiftool",
         "allow": [
+          "@beep/commands",
           "@beep/exiftool",
           "@beep/identity",
           "@beep/memfs",
@@ -2385,6 +2394,7 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/commands",
           "@beep/exiftool",
           "@beep/identity",
           "@beep/memfs",
@@ -2496,6 +2506,39 @@
           "@beep/schema",
           "@beep/semver",
           "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/github-actions",
+        "allow": [
+          "@beep/fc-runs",
+          "@beep/github",
+          "@beep/github-actions",
+          "@beep/github-commands",
+          "@beep/glob",
+          "@beep/identity",
+          "@beep/memfs",
+          "@beep/npm-spec",
+          "@beep/sbom",
+          "@beep/schema",
+          "@beep/test-utils",
+          "@beep/utils",
+          "@beep/walker"
+        ],
+        "allowTypeOnly": [
+          "@beep/fc-runs",
+          "@beep/github",
+          "@beep/github-actions",
+          "@beep/github-commands",
+          "@beep/glob",
+          "@beep/identity",
+          "@beep/memfs",
+          "@beep/npm-spec",
+          "@beep/sbom",
+          "@beep/schema",
+          "@beep/test-utils",
+          "@beep/utils",
+          "@beep/walker"
         ]
       },
       {
@@ -3317,6 +3360,7 @@
       {
         "from": "@beep/obs",
         "allow": [
+          "@beep/commands",
           "@beep/identity",
           "@beep/obs",
           "@beep/schema",
@@ -3324,6 +3368,7 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/commands",
           "@beep/identity",
           "@beep/obs",
           "@beep/schema",
@@ -3767,14 +3812,18 @@
       {
         "from": "@beep/pdf-tools",
         "allow": [
+          "@beep/commands",
           "@beep/identity",
+          "@beep/memfs",
           "@beep/pdf-tools",
           "@beep/schema",
           "@beep/test-runner",
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/commands",
           "@beep/identity",
+          "@beep/memfs",
           "@beep/pdf-tools",
           "@beep/schema",
           "@beep/test-runner",
@@ -3925,6 +3974,7 @@
           "@beep/identity",
           "@beep/law-practice-server",
           "@beep/law-practice-use-cases",
+          "@beep/memfs",
           "@beep/practice-identify",
           "@beep/schema",
           "@beep/uspto"
@@ -3933,6 +3983,7 @@
           "@beep/identity",
           "@beep/law-practice-server",
           "@beep/law-practice-use-cases",
+          "@beep/memfs",
           "@beep/practice-identify",
           "@beep/schema",
           "@beep/uspto"
@@ -3982,7 +4033,8 @@
           "@beep/m365",
           "@beep/practice-m365-contacts",
           "@beep/schema",
-          "@beep/test-runner"
+          "@beep/test-runner",
+          "@beep/xdg"
         ],
         "allowTypeOnly": [
           "@beep/identity",
@@ -3991,7 +4043,8 @@
           "@beep/m365",
           "@beep/practice-m365-contacts",
           "@beep/schema",
-          "@beep/test-runner"
+          "@beep/test-runner",
+          "@beep/xdg"
         ]
       },
       {
@@ -4305,7 +4358,8 @@
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
-          "@beep/utils"
+          "@beep/utils",
+          "@beep/xdg"
         ],
         "allowTypeOnly": [
           "@beep/cli-kit",
@@ -4320,7 +4374,8 @@
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
-          "@beep/utils"
+          "@beep/utils",
+          "@beep/xdg"
         ]
       },
       {
@@ -4337,7 +4392,10 @@
           "@beep/fc-runs",
           "@beep/ffmpeg",
           "@beep/file-processing",
+          "@beep/git",
           "@beep/github",
+          "@beep/github-actions",
+          "@beep/github-commands",
           "@beep/github-reporting",
           "@beep/glob",
           "@beep/identity",
@@ -4352,6 +4410,7 @@
           "@beep/obs",
           "@beep/observability",
           "@beep/occt",
+          "@beep/package-json",
           "@beep/palantiri",
           "@beep/pdf-tools",
           "@beep/phoenix",
@@ -4392,7 +4451,10 @@
           "@beep/fc-runs",
           "@beep/ffmpeg",
           "@beep/file-processing",
+          "@beep/git",
           "@beep/github",
+          "@beep/github-actions",
+          "@beep/github-commands",
           "@beep/github-reporting",
           "@beep/glob",
           "@beep/identity",
@@ -4407,6 +4469,7 @@
           "@beep/obs",
           "@beep/observability",
           "@beep/occt",
+          "@beep/package-json",
           "@beep/palantiri",
           "@beep/pdf-tools",
           "@beep/phoenix",
@@ -4464,6 +4527,7 @@
           "@beep/config-file",
           "@beep/identity",
           "@beep/md",
+          "@beep/package-json",
           "@beep/repo-docgen",
           "@beep/repo-utils",
           "@beep/schema",
@@ -4476,6 +4540,7 @@
           "@beep/config-file",
           "@beep/identity",
           "@beep/md",
+          "@beep/package-json",
           "@beep/repo-docgen",
           "@beep/repo-utils",
           "@beep/schema",
@@ -4513,6 +4578,7 @@
           "@beep/glob",
           "@beep/identity",
           "@beep/memfs",
+          "@beep/package-json",
           "@beep/repo-utils",
           "@beep/schema",
           "@beep/test-runner",
@@ -4524,6 +4590,7 @@
           "@beep/glob",
           "@beep/identity",
           "@beep/memfs",
+          "@beep/package-json",
           "@beep/repo-utils",
           "@beep/schema",
           "@beep/test-runner",
@@ -5028,6 +5095,7 @@
       {
         "from": "@beep/tailscale",
         "allow": [
+          "@beep/commands",
           "@beep/fc-runs",
           "@beep/identity",
           "@beep/schema",
@@ -5035,6 +5103,7 @@
           "@beep/test-runner"
         ],
         "allowTypeOnly": [
+          "@beep/commands",
           "@beep/fc-runs",
           "@beep/identity",
           "@beep/schema",
