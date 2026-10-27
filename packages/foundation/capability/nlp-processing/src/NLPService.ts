@@ -1,6 +1,8 @@
 /**
  * NLPService - high-level facade over a pluggable {@link Backend.NLPBackend}.
  *
+ * **Details**
+ *
  * The main entry point for NLP in the categorical text-processing framework:
  * abstracts the backend behind a clean API ({@link NLPServiceShape.processText}
  * builds an annotated text graph; the other methods surface entities, relations,

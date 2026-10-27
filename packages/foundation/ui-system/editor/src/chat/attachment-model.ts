@@ -5,6 +5,8 @@
  * (`atoms.ts`) can depend on it without a circular import back through the
  * attachment plugins/UI in `attachments.tsx`.
  *
+ * **Details**
+ *
  * Per the repo schema-first law the captured value is modeled as the
  * {@link ComposerAttachment} `S.Class`: its `mimeType` is validated against
  * `@beep/schema`'s {@link MimeType}, its `size` is bounded by

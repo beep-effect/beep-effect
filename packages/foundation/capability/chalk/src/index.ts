@@ -10,7 +10,7 @@
  * **Example** (Shared and isolated chalk)
  *
  * ```ts
- * import chalk, { Chalk, ColorSupportLevel } from "@beep/chalk"
+ * import chalk, { Chalk, ColorSupportLevel } from "@beep/chalk/Chalk"
  * import * as S from "effect/Schema"
  *
  * // Shared instance

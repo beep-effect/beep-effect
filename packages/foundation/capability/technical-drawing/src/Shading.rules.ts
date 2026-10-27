@@ -138,7 +138,7 @@ const lightOf = (frame: { readonly eye: V3; readonly right: V3; readonly up: V3 
  * **Example** (The front elevation's light)
  *
  * ```ts
- * import { Camera } from "@beep/technical-drawing"
+ * import { Camera } from "@beep/technical-drawing/Geometry.schemas"
  * import { viewFactsOf } from "@beep/technical-drawing/Shading.rules"
  *
  * console.log(viewFactsOf(Camera.make({ eye: [0, -1, 0], up: [0, 0, 1] })).light)
@@ -222,10 +222,10 @@ const projectedSpan = (face: FaceFacts, view: ViewFacts): number => {
  * **Example** (A 2-wide band under a 3-wide minimum)
  *
  * ```ts
- * import { BoundingBox } from "@beep/technical-drawing"
+ * import { BoundingBox } from "@beep/technical-drawing/Geometry.schemas"
  * import { aspectOf, viewFactsOf } from "@beep/technical-drawing/Shading.rules"
  * import { FaceFacts } from "@beep/technical-drawing/Shading.schemas"
- * import { Camera } from "@beep/technical-drawing"
+ * import { Camera } from "@beep/technical-drawing/Geometry.schemas"
  *
  * const face = FaceFacts.make({
  *   normal: [0, -1, 0], center: [0, 0, 1], edges: [],
@@ -554,7 +554,7 @@ export const gradedExtents = (input: {
  * **Example** (A plan with a 1.5 minimum stroke)
  *
  * ```ts
- * import { ShadingPlan } from "@beep/technical-drawing"
+ * import { ShadingPlan } from "@beep/technical-drawing/Geometry.schemas"
  * import { legibleStrokeLength } from "@beep/technical-drawing/Shading.rules"
  *
  * const plan = ShadingPlan.make({ minPitch: 1, maxPitch: 3, style: "graded", minStroke: 1.5 })
@@ -904,7 +904,7 @@ export const coveringOutlineDistance = (input: {
  * **Example** (A fragment and a doubled line)
  *
  * ```ts
- * import { Segment2 } from "@beep/technical-drawing"
+ * import { Segment2 } from "@beep/technical-drawing/Geometry.schemas"
  * import { legibleShading } from "@beep/technical-drawing/Shading.rules"
  *
  * const segments = [Segment2.make([0, 0, 10, 0]), Segment2.make([0, 0.3, 4, 0.3]), Segment2.make([0, 0, 0.5, 0])]
@@ -1120,7 +1120,7 @@ const thinnedStrokes = (
  * **Example** (A line moved up under a band of two strokes)
  *
  * ```ts
- * import { Segment2, ShadingBand } from "@beep/technical-drawing"
+ * import { Segment2, ShadingBand } from "@beep/technical-drawing/Geometry.schemas"
  * import { reclippedShading } from "@beep/technical-drawing/Shading.rules"
  *
  * const segments = [Segment2.make([2, 0.6, 2, 10]), Segment2.make([4, 0.6, 4, 1.2])]
@@ -1192,7 +1192,7 @@ export const reclippedShading = (input: {
  * **Example** (The re-clip drops every stroke of one face)
  *
  * ```ts
- * import { ShadingBand, ShadingCoverage } from "@beep/technical-drawing"
+ * import { ShadingBand, ShadingCoverage } from "@beep/technical-drawing/Geometry.schemas"
  * import { reclippedCoverage } from "@beep/technical-drawing/Shading.rules"
  *
  * const coverage = reclippedCoverage({
@@ -1336,7 +1336,7 @@ const darkestEdgeDirection = (face: FaceFacts, view: ViewFacts): O.Option<V3> =>
  * **Example** (A wall hatches vertically)
  *
  * ```ts
- * import { BoundingBox } from "@beep/technical-drawing"
+ * import { BoundingBox } from "@beep/technical-drawing/Geometry.schemas"
  * import { hatchDirectionOf } from "@beep/technical-drawing/Shading.rules"
  * import { FaceFacts } from "@beep/technical-drawing/Shading.schemas"
  *
@@ -1414,7 +1414,7 @@ const sign = (value: number): number => (value < 0 ? -1 : 1);
  * **Example** (A square-on wall anchors on its right edge)
  *
  * ```ts
- * import { BoundingBox, Camera } from "@beep/technical-drawing"
+ * import { BoundingBox, Camera } from "@beep/technical-drawing/Geometry.schemas"
  * import { anchorOf, viewFactsOf } from "@beep/technical-drawing/Shading.rules"
  * import { FaceFacts } from "@beep/technical-drawing/Shading.schemas"
  *
@@ -1696,7 +1696,7 @@ const gradedTreatment = (input: {
  * **Example** (A square-on wall under graded shading)
  *
  * ```ts
- * import { BoundingBox, Camera, ShadingPlan } from "@beep/technical-drawing"
+ * import { BoundingBox, Camera, ShadingPlan } from "@beep/technical-drawing/Geometry.schemas"
  * import { treatmentFor, viewFactsOf } from "@beep/technical-drawing/Shading.rules"
  * import { FaceFacts } from "@beep/technical-drawing/Shading.schemas"
  *

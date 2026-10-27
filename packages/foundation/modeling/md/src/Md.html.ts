@@ -1,6 +1,8 @@
 /**
  * Safe HTML projection for schema-first Markdown documents.
  *
+ * **Details**
+ *
  * Markdown schemas map themselves directly into `@beep/html` nodes. This
  * module applies conformance, policy, and serialization without parsing or
  * sanitizing an intermediate HTML string; opaque `SafeHtml` provenance remains
@@ -30,7 +32,8 @@ import type { SafeDocument } from "./Md.safe.ts";
  * **Example** (Render simple paragraph document)
  *
  * ```ts
- * import { Md, safeHtmlValue } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
+ * import { safeHtmlValue } from "@beep/md/Md.html"
  * import * as Result from "effect/Result";
  * const document = Result.getOrThrow(Md.refineSafeDocument(Md.make([Md.p("Hello")])))
  * console.log(safeHtmlValue(Md.renderSafeHtml(document))) // "<p>Hello</p>"

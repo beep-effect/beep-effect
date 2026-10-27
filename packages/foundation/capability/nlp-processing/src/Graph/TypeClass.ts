@@ -1,6 +1,8 @@
 /**
  * TypeClass - categorical abstractions for text-processing operations on graphs.
  *
+ * **Details**
+ *
  * Formalizes text operations as morphisms in the Kleisli category of `Effect`:
  * a {@link TextOperation} takes one {@link GraphNode} of data `A` and
  * produces an array of nodes of data `B`, possibly requiring context `R` and

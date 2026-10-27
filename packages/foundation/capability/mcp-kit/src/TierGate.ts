@@ -1,6 +1,8 @@
 /**
  * Tier-gate dispatch wrapper.
  *
+ * **Details**
+ *
  * `McpSchema.EnabledWhen` filters `tools/list` only — `tools/call` dispatch
  * never re-checks it (verified `McpServer.ts:255-262` vs. the shared
  * `filterByClient` helper at `McpServer.ts:1490-1512`, used generically by
@@ -52,7 +54,7 @@ const TierGateOutcomeTag = LiteralKit(["approved", "refused"]);
  * **Example** (Check completed settlement)
  *
  * ```ts
- * import { TierGateSettlement } from "@beep/mcp-kit"
+ * import { TierGateSettlement } from "@beep/mcp-kit/TierGate"
  *
  * const settlement = TierGateSettlement.Enum.completed
  * console.log(TierGateSettlement.is.completed(settlement))
@@ -74,7 +76,7 @@ export const TierGateSettlement = LiteralKit(["completed", "failed", "interrupte
  * **Example** (Type interrupted settlement)
  *
  * ```ts
- * import type { TierGateSettlement } from "@beep/mcp-kit"
+ * import type { TierGateSettlement } from "@beep/mcp-kit/TierGate"
  *
  * const settlement: TierGateSettlement = "interrupted"
  * console.log(settlement)
@@ -94,7 +96,7 @@ export type TierGateSettlement = typeof TierGateSettlement.Type;
  * **Example** (Check approved outcome)
  *
  * ```ts
- * import { TierGateOutcome } from "@beep/mcp-kit"
+ * import { TierGateOutcome } from "@beep/mcp-kit/TierGate"
  *
  * const outcome = TierGateOutcome.Enum.approved
  * console.log(TierGateOutcome.is.approved(outcome))
@@ -116,8 +118,8 @@ export const TierGateOutcome = TierGateOutcomeTag.pipe(
  * **Example** (Type refused outcome)
  *
  * ```ts
- * import { TierGateOutcome } from "@beep/mcp-kit"
- * import type { TierGateOutcome as TierGateOutcomeType } from "@beep/mcp-kit"
+ * import { TierGateOutcome } from "@beep/mcp-kit/TierGate"
+ * import type { TierGateOutcome as TierGateOutcomeType } from "@beep/mcp-kit/TierGate"
  *
  * const outcome: TierGateOutcomeType = TierGateOutcome.Enum.refused
  * console.log(outcome)
@@ -264,7 +266,7 @@ export type TierGateVerdict = typeof TierGateVerdict.Type;
  * **Example** (Build tool call request)
  *
  * ```ts
- * import type { ToolCallRequest } from "@beep/mcp-kit"
+ * import type { ToolCallRequest } from "@beep/mcp-kit/TierGate"
  * import * as Tool from "effect/ai/Tool";
  * import * as O from "effect/Option"
  *
@@ -306,8 +308,8 @@ export interface ToolCallRequest {
  * import { strictEqual } from "node:assert"
  * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
- * import type { TierGateShape } from "@beep/mcp-kit"
- * import { TierGateAuditRecord, TierGateVerdict } from "@beep/mcp-kit"
+ * import type { TierGateShape } from "@beep/mcp-kit/TierGate"
+ * import { TierGateAuditRecord, TierGateVerdict } from "@beep/mcp-kit/TierGate"
  *
  * const approvedAudit = TierGateAuditRecord.make({
  *   tool: "search_documents",
@@ -343,7 +345,7 @@ export interface TierGateShape {
  * import { strictEqual } from "node:assert"
  * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
- * import { TierGate, TierGateAuditRecord, TierGateVerdict } from "@beep/mcp-kit"
+ * import { TierGate, TierGateAuditRecord, TierGateVerdict } from "@beep/mcp-kit/TierGate"
  *
  * const approvedAudit = TierGateAuditRecord.make({
  *   tool: "search_documents",
@@ -385,7 +387,7 @@ export class TierGate extends Context.Service<TierGate, TierGateShape>()($I`Tier
  * **Example** (Make approved tools policy)
  *
  * ```ts
- * import { TierGatePolicy } from "@beep/mcp-kit"
+ * import { TierGatePolicy } from "@beep/mcp-kit/TierGate"
  *
  * const policy = TierGatePolicy.make({ approvedTools: ["delete_document"] })
  * console.log(policy.approvedTools)
@@ -453,7 +455,7 @@ const auditReason = (approved: boolean, destructive: boolean, readOnly: boolean)
  * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import * as Tool from "effect/ai/Tool";
- * import { fromApprovedToolsPolicy, TierGatePolicy } from "@beep/mcp-kit"
+ * import { fromApprovedToolsPolicy, TierGatePolicy } from "@beep/mcp-kit/TierGate"
  *
  * const writeTool = Tool.make("delete_document").annotate(Tool.Destructive, true)
  * const gate = fromApprovedToolsPolicy(TierGatePolicy.make({ approvedTools: [] }))
@@ -498,7 +500,7 @@ export const fromApprovedToolsPolicy = (policy: TierGatePolicy): TierGateShape =
  * **Example** (Type dispatched result)
  *
  * ```ts
- * import { TierGateAuditRecord, TierGateDispatchResult } from "@beep/mcp-kit"
+ * import { TierGateAuditRecord, TierGateDispatchResult } from "@beep/mcp-kit/TierGate"
  * import * as O from "effect/Option"
  *
  * const audit = TierGateAuditRecord.make({
@@ -533,7 +535,7 @@ interface TierGateDispatchResultDefinition extends Data.TaggedEnum.WithGenerics<
  * **Example** (Construct refused result)
  *
  * ```ts
- * import { TierGateAuditRecord, TierGateDispatchResult } from "@beep/mcp-kit"
+ * import { TierGateAuditRecord, TierGateDispatchResult } from "@beep/mcp-kit/TierGate"
  * import * as O from "effect/Option"
  *
  * const audit = TierGateAuditRecord.make({
@@ -584,7 +586,7 @@ const settlementOf = <A, E>(exit: Exit.Exit<A, E>): TierGateSettlement => {
  * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  * import * as Tool from "effect/ai/Tool";
- * import { dispatchWithTierGate, fromApprovedToolsPolicy, TierGate, TierGatePolicy } from "@beep/mcp-kit"
+ * import { dispatchWithTierGate, fromApprovedToolsPolicy, TierGate, TierGatePolicy } from "@beep/mcp-kit/TierGate"
  *
  * const writeTool = Tool.make("delete_document").annotate(Tool.Destructive, true)
  * const gate = fromApprovedToolsPolicy(TierGatePolicy.make({ approvedTools: [] }))
@@ -629,7 +631,7 @@ export const dispatchWithTierGate = Effect.fn("dispatchWithTierGate")(function* 
  *
  * ```ts
  * import * as Tool from "effect/ai/Tool";
- * import { TierGatePolicy, withEnabledWhenApprovedTool } from "@beep/mcp-kit"
+ * import { TierGatePolicy, withEnabledWhenApprovedTool } from "@beep/mcp-kit/TierGate"
  *
  * const writeTool = Tool.make("delete_document").annotate(Tool.Destructive, true)
  * const listed = withEnabledWhenApprovedTool(writeTool, TierGatePolicy.make({ approvedTools: [] }))

@@ -11,7 +11,7 @@
  * **Example** (Shared and isolated instances)
  *
  * ```ts
- * import chalk, { Chalk, chalkStderr } from "@beep/chalk"
+ * import chalk, { Chalk, chalkStderr } from "@beep/chalk/Chalk"
  *
  * // Default shared instance (stdout)
  * console.log(chalk.red.bold("Error!"))
@@ -70,7 +70,7 @@ const createChalkStderr = makeCreateChalk(detectedSupportsColor.stderr);
  * **Example** (Chaining and color methods)
  *
  * ```ts
- * import chalk, { type ChalkInstance } from "@beep/chalk"
+ * import chalk, { type ChalkInstance } from "@beep/chalk/Chalk"
  *
  * // Chain styles, then call to apply
  * const warning: ChalkInstance = chalk.yellow.bold
@@ -113,7 +113,7 @@ interface ChalkValue extends ChalkInstance {}
  * **Example** (Isolated truecolor instance)
  *
  * ```ts
- * import { Chalk } from "@beep/chalk"
+ * import { Chalk } from "@beep/chalk/Chalk"
  *
  * const c: Chalk = new Chalk({ level: 3 })
  * console.log(c.green.bold("Success"))
@@ -136,7 +136,7 @@ export type Chalk = ChalkValue;
  * **Example** (Truecolor and disabled levels)
  *
  * ```ts
- * import { Chalk } from "@beep/chalk"
+ * import { Chalk } from "@beep/chalk/Chalk"
  *
  * // Truecolor instance
  * const truecolor = new Chalk({ level: 3 })
@@ -166,7 +166,7 @@ export const Chalk = makeChalkConstructor(ChalkValue, createChalk);
  * **Example** (Decode background color name)
  *
  * ```ts
- * import { BackgroundColorName } from "@beep/chalk"
+ * import { BackgroundColorName } from "@beep/chalk/Chalk"
  * import * as S from "effect/Schema"
  *
  * const decode = S.decodeUnknownSync(BackgroundColorName)
@@ -184,7 +184,7 @@ export const BackgroundColorName = BackgroundColorNameDefinition;
  * **Example** (Assign background color literal)
  *
  * ```ts
- * import type { BackgroundColorName } from "@beep/chalk"
+ * import type { BackgroundColorName } from "@beep/chalk/Chalk"
  *
  * const bg: BackgroundColorName = "bgRed"
  * console.log(bg)
@@ -206,7 +206,7 @@ export type BackgroundColorName = BackgroundColorNameDefinition;
  * **Example** (Decode constructor options)
  *
  * ```ts
- * import { ChalkConstructorOptions } from "@beep/chalk"
+ * import { ChalkConstructorOptions } from "@beep/chalk/Chalk"
  * import * as S from "effect/Schema"
  *
  * const decode = S.decodeUnknownSync(ChalkConstructorOptions)
@@ -229,7 +229,7 @@ export const ChalkConstructorOptions: typeof ChalkConstructorOptionsDefinition =
  * **Example** (Pass options to constructor)
  *
  * ```ts
- * import { Chalk, type ChalkConstructorOptions } from "@beep/chalk"
+ * import { Chalk, type ChalkConstructorOptions } from "@beep/chalk/Chalk"
  *
  * const options: ChalkConstructorOptions = { level: 3 }
  * console.log(new Chalk(options).level)
@@ -251,7 +251,7 @@ export type ChalkConstructorOptions = ChalkConstructorOptionsType;
  * **Example** (Decode Chalk options)
  *
  * ```ts
- * import { ChalkOptions } from "@beep/chalk"
+ * import { ChalkOptions } from "@beep/chalk/Chalk"
  * import * as S from "effect/Schema"
  *
  * const decode = S.decodeUnknownSync(ChalkOptions)
@@ -269,7 +269,7 @@ export const ChalkOptions = ChalkOptionsDefinition;
  * **Example** (Typed options object)
  *
  * ```ts
- * import { ChalkOptions } from "@beep/chalk"
+ * import { ChalkOptions } from "@beep/chalk/Chalk"
  *
  * const opts = ChalkOptions.make({ level: 3 })
  * console.log(opts.level)
@@ -291,7 +291,7 @@ export type ChalkOptions = ChalkOptionsDefinition;
  * **Example** (Render color support info)
  *
  * ```ts
- * import { ColorInfo, supportsColor } from "@beep/chalk"
+ * import { ColorInfo, supportsColor } from "@beep/chalk/Chalk"
  *
  * const info: ColorInfo = supportsColor
  * const rendered = info === false ? "disabled" : `level:${info.level}`
@@ -309,7 +309,7 @@ export const ColorInfo = ColorInfoDefinition;
  * **Example** (Disabled color info)
  *
  * ```ts
- * import type { ColorInfo } from "@beep/chalk"
+ * import type { ColorInfo } from "@beep/chalk/Chalk"
  *
  * const info: ColorInfo = false
  * console.log(info)
@@ -330,7 +330,7 @@ export type ColorInfo = ColorInfoDefinition;
  * **Example** (Decode foreground and background)
  *
  * ```ts
- * import { ColorName } from "@beep/chalk"
+ * import { ColorName } from "@beep/chalk/Chalk"
  * import * as S from "effect/Schema"
  *
  * const decode = S.decodeUnknownSync(ColorName)
@@ -349,7 +349,7 @@ export const ColorName = ColorNameDefinition;
  * **Example** (Assign color name literal)
  *
  * ```ts
- * import type { ColorName } from "@beep/chalk"
+ * import type { ColorName } from "@beep/chalk/Chalk"
  *
  * const name: ColorName = "red"
  * console.log(name)
@@ -371,7 +371,7 @@ export type ColorName = ColorNameDefinition;
  * **Example** (Decode color support object)
  *
  * ```ts
- * import { ColorSupport } from "@beep/chalk"
+ * import { ColorSupport } from "@beep/chalk/Chalk"
  * import * as S from "effect/Schema"
  *
  * const decode = S.decodeUnknownSync(ColorSupport)
@@ -394,7 +394,7 @@ export const ColorSupport = ColorSupportDefinition;
  * **Example** (Truecolor support object)
  *
  * ```ts
- * import { ColorSupport } from "@beep/chalk"
+ * import { ColorSupport } from "@beep/chalk/Chalk"
  *
  * const support = ColorSupport.make({ level: 3, hasBasic: true, has256: true, has16m: true })
  * console.log(support.level)
@@ -415,7 +415,7 @@ export type ColorSupport = ColorSupportDefinition;
  * **Example** (Decode support level)
  *
  * ```ts
- * import { ColorSupportLevel } from "@beep/chalk"
+ * import { ColorSupportLevel } from "@beep/chalk/Chalk"
  * import * as S from "effect/Schema"
  *
  * const decode = S.decodeUnknownSync(ColorSupportLevel)
@@ -433,7 +433,7 @@ export const ColorSupportLevel = ColorSupportLevelDefinition;
  * **Example** (Assign support level)
  *
  * ```ts
- * import type { ColorSupportLevel } from "@beep/chalk"
+ * import type { ColorSupportLevel } from "@beep/chalk/Chalk"
  *
  * const level: ColorSupportLevel = 3
  * console.log(level)
@@ -455,7 +455,7 @@ export type ColorSupportLevel = ColorSupportLevelDefinition;
  * **Example** (Decode level input)
  *
  * ```ts
- * import { ColorSupportLevelInput } from "@beep/chalk"
+ * import { ColorSupportLevelInput } from "@beep/chalk/Chalk"
  * import * as S from "effect/Schema"
  *
  * const decode = S.decodeUnknownSync(ColorSupportLevelInput)
@@ -473,7 +473,7 @@ export const ColorSupportLevelInput = ColorSupportLevelInputDefinition;
  * **Example** (Assign level input)
  *
  * ```ts
- * import type { ColorSupportLevelInput } from "@beep/chalk"
+ * import type { ColorSupportLevelInput } from "@beep/chalk/Chalk"
  *
  * const level: ColorSupportLevelInput = 3
  * console.log(level)
@@ -495,7 +495,7 @@ export type ColorSupportLevelInput = typeof ColorSupportLevelInputDefinition.Typ
  * **Example** (Decode foreground color name)
  *
  * ```ts
- * import { ForegroundColorName } from "@beep/chalk"
+ * import { ForegroundColorName } from "@beep/chalk/Chalk"
  * import * as S from "effect/Schema"
  *
  * const decode = S.decodeUnknownSync(ForegroundColorName)
@@ -513,7 +513,7 @@ export const ForegroundColorName = ForegroundColorNameDefinition;
  * **Example** (Assign foreground color literal)
  *
  * ```ts
- * import type { ForegroundColorName } from "@beep/chalk"
+ * import type { ForegroundColorName } from "@beep/chalk/Chalk"
  *
  * const fg: ForegroundColorName = "cyanBright"
  * console.log(fg)
@@ -535,7 +535,7 @@ export type ForegroundColorName = ForegroundColorNameDefinition;
  * **Example** (Decode modifier name)
  *
  * ```ts
- * import { ModifierName } from "@beep/chalk"
+ * import { ModifierName } from "@beep/chalk/Chalk"
  * import * as S from "effect/Schema"
  *
  * const decode = S.decodeUnknownSync(ModifierName)
@@ -553,7 +553,7 @@ export const ModifierName = ModifierNameDefinition;
  * **Example** (Assign modifier name literal)
  *
  * ```ts
- * import type { ModifierName } from "@beep/chalk"
+ * import type { ModifierName } from "@beep/chalk/Chalk"
  *
  * const mod: ModifierName = "bold"
  * console.log(mod)
@@ -570,7 +570,7 @@ export type ModifierName = ModifierNameDefinition;
  * **Example** (Check underline modifier)
  *
  * ```ts
- * import { modifierNames } from "@beep/chalk"
+ * import { modifierNames } from "@beep/chalk/Chalk"
  *
  * const hasUnderline = modifierNames.includes("underline")
  * console.log(hasUnderline)
@@ -587,7 +587,7 @@ export const modifierNames = modifierNameValues;
  * **Example** (Check cyan foreground)
  *
  * ```ts
- * import { foregroundColorNames } from "@beep/chalk"
+ * import { foregroundColorNames } from "@beep/chalk/Chalk"
  *
  * const hasCyan = foregroundColorNames.includes("cyan")
  * console.log(hasCyan)
@@ -604,7 +604,7 @@ export const foregroundColorNames = foregroundColorNameValues;
  * **Example** (Check bgBlue background)
  *
  * ```ts
- * import { backgroundColorNames } from "@beep/chalk"
+ * import { backgroundColorNames } from "@beep/chalk/Chalk"
  *
  * const hasBgBlue = backgroundColorNames.includes("bgBlue")
  * console.log(hasBgBlue)
@@ -621,7 +621,7 @@ export const backgroundColorNames = backgroundColorNameValues;
  * **Example** (Read first color name)
  *
  * ```ts
- * import { colorNames } from "@beep/chalk"
+ * import { colorNames } from "@beep/chalk/Chalk"
  *
  * const firstColorName = colorNames[0]
  * console.log(firstColorName)
@@ -638,7 +638,7 @@ export const colorNames = colorNameValues;
  * **Example** (Check bold modifier alias)
  *
  * ```ts
- * import { modifiers } from "@beep/chalk"
+ * import { modifiers } from "@beep/chalk/Chalk"
  *
  * const hasBold = modifiers.includes("bold")
  * console.log(hasBold)
@@ -655,7 +655,7 @@ export const modifiers = modifierNames;
  * **Example** (Check red foreground alias)
  *
  * ```ts
- * import { foregroundColors } from "@beep/chalk"
+ * import { foregroundColors } from "@beep/chalk/Chalk"
  *
  * const hasRed = foregroundColors.includes("red")
  * console.log(hasRed)
@@ -672,7 +672,7 @@ export const foregroundColors = foregroundColorNames;
  * **Example** (Check bgRed background alias)
  *
  * ```ts
- * import { backgroundColors } from "@beep/chalk"
+ * import { backgroundColors } from "@beep/chalk/Chalk"
  *
  * const hasBgRed = backgroundColors.includes("bgRed")
  * console.log(hasBgRed)
@@ -689,7 +689,7 @@ export const backgroundColors = backgroundColorNames;
  * **Example** (Check bgYellow color alias)
  *
  * ```ts
- * import { colors } from "@beep/chalk"
+ * import { colors } from "@beep/chalk/Chalk"
  *
  * const hasBgYellow = colors.includes("bgYellow")
  * console.log(hasBgYellow)
@@ -711,7 +711,7 @@ export const colors = colorNames;
  * **Example** (Read stdout support level)
  *
  * ```ts
- * import { supportsColor } from "@beep/chalk"
+ * import { supportsColor } from "@beep/chalk/Chalk"
  *
  * const level = supportsColor === false ? 0 : supportsColor.level
  * console.log(level)
@@ -733,7 +733,7 @@ export const supportsColor = detectedSupportsColor.stdout;
  * **Example** (Read stderr support level)
  *
  * ```ts
- * import { supportsColorStderr } from "@beep/chalk"
+ * import { supportsColorStderr } from "@beep/chalk/Chalk"
  *
  * const level = supportsColorStderr === false ? 0 : supportsColorStderr.level
  * console.log(level)
@@ -760,7 +760,7 @@ const ChalkStderr = makeChalkConstructor(ChalkStderrValue, createChalkStderr);
  * **Example** (Style stderr error text)
  *
  * ```ts
- * import { chalkStderr } from "@beep/chalk"
+ * import { chalkStderr } from "@beep/chalk/Chalk"
  *
  * const rendered = chalkStderr.red.bold("Error!")
  * console.log(rendered.length > 0)
@@ -782,7 +782,7 @@ export const chalkStderr: ChalkInstance = new ChalkStderr();
  * **Example** (Chain styles and colors)
  *
  * ```ts
- * import chalk from "@beep/chalk"
+ * import chalk from "@beep/chalk/Chalk"
  *
  * // Simple styling
  * console.log(chalk.green("Success"))

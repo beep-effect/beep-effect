@@ -155,7 +155,7 @@ export type PathLookup = InternalPathLookup;
  *
  * ```ts
  * import { pipe } from "effect/Function";
- * import { Struct } from "@beep/utils"
+ * import * as Struct from "@beep/utils/Struct"
  *
  * const user = { profile: { name: "Alice", age: 30 } }
  *
@@ -200,7 +200,7 @@ export const dotGet: {
  *
  * ```ts
  * import { pipe } from "effect/Function";
- * import { Struct } from "@beep/utils"
+ * import * as Struct from "@beep/utils/Struct"
  *
  * const user = { profile: { name: "Alice" } }
  *
@@ -272,7 +272,7 @@ export type MapPathResult<B> = B extends unknown ? B : never;
  *
  * ```ts
  * import { pipe } from "effect/Function";
- * import { Struct } from "@beep/utils"
+ * import * as Struct from "@beep/utils/Struct"
  *
  * const user = { profile: { name: "alice" } }
  *
@@ -350,7 +350,7 @@ export const mapPath: {
  * **Example** (Lazy uppercase path value)
  *
  * ```ts
- * import { Struct } from "@beep/utils"
+ * import * as Struct from "@beep/utils/Struct"
  *
  * const user = { profile: { name: "alice" } }
  *
@@ -425,7 +425,7 @@ export const mapPathLazy: {
  *
  * ```ts
  * import { pipe } from "effect/Function";
- * import { Struct } from "@beep/utils"
+ * import * as Struct from "@beep/utils/Struct"
  *
  * const config = { host: "localhost", port: 3000 }
  *
@@ -468,7 +468,7 @@ export const getLazy: {
  * **Example** (Collect nested struct paths)
  *
  * ```ts
- * import { Struct } from "@beep/utils"
+ * import * as Struct from "@beep/utils/Struct"
  *
  * const config = { db: { host: "localhost", port: 5432 }, debug: true }
  *
@@ -588,7 +588,7 @@ export const entries = <const R extends object>(obj: R): StringKeyEntries<R> =>
  * **Example** (Non-empty object entries)
  *
  * ```ts
- * import { Struct } from "@beep/utils"
+ * import * as Struct from "@beep/utils/Struct"
  *
  * const config = { host: "localhost", port: 3000 }
  *
@@ -619,7 +619,7 @@ export const entriesNonEmpty = <const R extends object>(
  * **Example** (Type-safe string keys)
  *
  * ```ts
- * import { Struct } from "@beep/utils"
+ * import * as Struct from "@beep/utils/Struct"
  *
  * const config = { host: "localhost", port: 3000 }
  *
@@ -645,7 +645,7 @@ export const keys = <const R extends object>(obj: R): Array<keyof R & string> =>
  * **Example** (Non-empty object keys)
  *
  * ```ts
- * import { Struct } from "@beep/utils"
+ * import * as Struct from "@beep/utils/Struct"
  *
  * const config = { host: "localhost", port: 3000 }
  *
@@ -677,7 +677,7 @@ export const keysNonEmpty = <const R extends object>(
  * **Example** (Object from typed entries)
  *
  * ```ts
- * import { Struct } from "@beep/utils"
+ * import * as Struct from "@beep/utils/Struct"
  *
  * const entries: ReadonlyArray<readonly ["host", "localhost"] | readonly ["port", 3000]> = [
  *   ["host", "localhost"],
@@ -786,7 +786,7 @@ export type ReverseStruct<T extends ReverseableStruct> = {
  * **Example** (Reverse error code mapping)
  *
  * ```ts
- * import { Struct } from "@beep/utils"
+ * import * as Struct from "@beep/utils/Struct"
  *
  * const errorCode = {
  *   successfulCompletion: "00000",
@@ -907,7 +907,7 @@ export type DeepMerged<T> = T extends unknown ? T : never;
  * **Example** (Merge nested server config)
  *
  * ```ts
- * import { Struct } from "@beep/utils"
+ * import * as Struct from "@beep/utils/Struct"
  *
  * const defaults = {
  *   server: { host: "localhost", port: 3000 },

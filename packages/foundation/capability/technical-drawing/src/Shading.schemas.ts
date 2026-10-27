@@ -197,7 +197,7 @@ export class FaceEdge extends S.Opaque<FaceEdge, { readonly brand: unique symbol
  * **Example** (A 40 × 20 face looking down -Y)
  *
  * ```ts
- * import { BoundingBox } from "@beep/technical-drawing"
+ * import { BoundingBox } from "@beep/technical-drawing/Geometry.schemas"
  * import { FaceEdge, FaceFacts } from "@beep/technical-drawing/Shading.schemas"
  *
  * const face = FaceFacts.make({
