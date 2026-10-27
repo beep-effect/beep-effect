@@ -42,5 +42,5 @@ Closed 2026-10-15. #1758 landed the codemod and its output; the closing PR arms 
 ## Notes
 
 - Re-run the codemod on `origin/main` to resolve conflicts (`bun run goals/schema-opaque-default/ops/codemod/run.ts`, then `--check`); never hand-merge its output.
-- `schemaClassMissingBrand` is armed in the standards/effect-diagnostics.profile.json profile (retired by goals/tsrs-gates), which the retired quality effect-diagnostics lane (`@effect/tsgo` 0.53, #1810) reads. It is not in `tsconfig.base.json`: tsc-rs 0.6.0 exits 2 on rule names it does not know.
+- `schemaClassMissingBrand` is an error in `tsconfig.base.json`, so the Effect-patched tsrs fails Check on it (goals/tsrs-gates). Historically, while the gate compiler was tsc-rs 0.6.0 (which exits 2 on rule names it does not know), the rule lived in the standalone Effect diagnostics profile read by that retired lane (`@effect/tsgo` 0.53, #1810).
 - `bun run beep lint opaque-roundtrips` fails a test that compares a raw `Arbitrary` sample of an `S.Opaque` value with a freshly built one using `toStrictEqual`; normalise the sample with `X.make` or compare encoded values.
