@@ -21,7 +21,7 @@ Run from the owning clone `~/YeeBois/projects/beep-effect2` (on `main`) with the
 
 Residue roots are `~/.cache/beep/worktree-residue/beep-effect2-ed013b4f7edc/<lane>-<stamp>/`. Each lane got a closing `done` row in the session ledger that names its archive ref.
 
-The `effect-vitest-inventory-next` directory was not a git worktree. It held one 394-byte `.beep/yeet/runs/.../attempts.ndjson` (sha256 `fb8cc820…e96e89fa`), which was moved to `~/.cache/beep/worktree-residue/beep-effect2-ed013b4f7edc/effect-vitest-inventory-next-20261027-stray/`. The empty directory was removed.
+The `effect-vitest-inventory-next` directory was not a git worktree. It held one 394-byte `.beep/yeet/runs/.../attempts.ndjson` (sha256 `fb8cc8204a552e980c857a2c011c2dae10185173f4ec8afe22fba114e96e89fa`), which was moved to `~/.cache/beep/worktree-residue/beep-effect2-ed013b4f7edc/effect-vitest-inventory-next-20261027-stray/`. The empty directory was removed.
 
 ## Local branches
 
@@ -38,3 +38,4 @@ Deviation: this was a raw REST deletion with a separate tip check run beforehand
 - Lane: `git -C ~/YeeBois/projects/beep-effect2 worktree add <path> <archive ref>`, then `git -C <path> apply <residue-root>/tracked.patch` where a patch exists, and `bun run beep worktree restore-material <residue-root> <path>` where `.beep` material was kept.
 - Local branch: `git -C ~/YeeBois/projects/beep-effect2 branch <branch> <archive ref>`.
 - Remote branch: `git push origin <archive ref>:refs/heads/<branch>` from `beep-effect2`.
+- `effect-vitest-inventory-next`: this move has no `manifest.json`, so `worktree restore-material` does not apply. The one file is `.beep/yeet/runs/codex_effect-vitest-inventory-next-e918e388c56d/attempts.ndjson` (sha256 `fb8cc8204a552e980c857a2c011c2dae10185173f4ec8afe22fba114e96e89fa`). Restore it with `mkdir -p ~/YeeBois/projects/beep-effect2-worktrees/effect-vitest-inventory-next && cp -a ~/.cache/beep/worktree-residue/beep-effect2-ed013b4f7edc/effect-vitest-inventory-next-20261027-stray/.beep ~/YeeBois/projects/beep-effect2-worktrees/effect-vitest-inventory-next/`, then check the hash with `sha256sum`.
