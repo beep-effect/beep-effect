@@ -178,7 +178,9 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("Yeet PR provenance v2", (it)
       expect(provenance.model).toBe("gpt-5.6-codex");
     })
   );
+});
 
+it.layer(PlatformLayer, { timeout: "30 seconds" })("Yeet PR provenance v2", (it) => {
   it.effect("preserves exact Codex identity when a delayed session store exceeds the detector bound", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -209,7 +211,9 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("Yeet PR provenance v2", (it)
       )
     )
   );
+});
 
+it.layer(PlatformLayer, { timeout: "30 seconds" })("Yeet PR provenance v2", (it) => {
   it.effect("publishes a distinct session workspace derived from the session clone", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

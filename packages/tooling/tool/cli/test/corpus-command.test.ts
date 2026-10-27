@@ -4892,7 +4892,9 @@ awk 'BEGIN { for (i = 0; i < 6000; i++) printf "é" }'
       expect(textChildren).toHaveLength(1);
     })
   );
+});
 
+it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })("corpus restoration mail", (it) => {
   it.effect(
     "resumes one durably started mail attempt and a pending summary without resetting the family clock",
     Effect.fnUntraced(function* () {
@@ -4969,7 +4971,9 @@ awk 'BEGIN { for (i = 0; i < 6000; i++) printf "é" }'
     }),
     { concurrent: false }
   );
+});
 
+it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })("corpus restoration mail", (it) => {
   it.effect(
     "finishes interrupted-output retention when the candidate was already moved before its ownership row",
     Effect.fnUntraced(function* () {
