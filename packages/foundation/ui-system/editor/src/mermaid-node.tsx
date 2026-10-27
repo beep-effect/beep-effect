@@ -1,6 +1,8 @@
 /**
  * Read-only Lexical decorator node for Mermaid diagrams.
  *
+ * **Details**
+ *
  * The wire profile carries a diagram as a `code` block with
  * `language="mermaid"` — there is no mermaid node on the wire, and there must
  * not be one: the composer edits diagrams as code. This node exists only for the

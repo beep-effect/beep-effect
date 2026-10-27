@@ -10,7 +10,7 @@
  * **Example** (Default bold green output)
  *
  * ```typescript
- * import colors from "@beep/colors"
+ * import colors from "@beep/colors/Colors"
  *
  * const message = colors.bold(colors.green("ready"))
  *
@@ -20,7 +20,7 @@
  * **Example** (Disabled color formatters)
  *
  * ```ts import.meta.vitest name="Disabled color formatters"
- * import { createColors } from "@beep/colors"
+ * import { createColors } from "@beep/colors/Colors"
  *
  * const plain = createColors(false)
  * const rendered = plain.red("warning")
@@ -51,7 +51,7 @@ const $I = $ColorsId.create("Domain");
  * **Example** (Create TTY stdout metadata)
  *
  * ```typescript
- * import { ProcessLikeStdout } from "@beep/colors"
+ * import { ProcessLikeStdout } from "@beep/colors/Colors"
  *
  * const stdout = ProcessLikeStdout.make({ isTTY: true })
  * console.log(stdout.isTTY)
@@ -80,7 +80,7 @@ export class ProcessLikeStdout extends S.Opaque<ProcessLikeStdout, { readonly br
  * **Example** (Force color via process env)
  *
  * ```typescript
- * import { ProcessLike, supportsColor } from "@beep/colors"
+ * import { ProcessLike, supportsColor } from "@beep/colors/Colors"
  *
  * const processLike = ProcessLike.make({ env: { FORCE_COLOR: "1" } })
  * console.log(supportsColor(processLike))
@@ -168,7 +168,7 @@ const replaceClose = (text: string, close: string, replace: string, index: numbe
  * **Example** (Format number with cyan)
  *
  * ```ts import.meta.vitest name="Format number with cyan"
- * import { createColors, type Formatter } from "@beep/colors"
+ * import { createColors, type Formatter } from "@beep/colors/Colors"
  *
  * const formatter: Formatter = createColors(true).cyan
  * const rendered = formatter(42)
@@ -187,7 +187,7 @@ export const Formatter = FormatterDefinition;
  * **Example** (Assign runtime Formatter function)
  *
  * ```typescript
- * import type { Formatter } from "@beep/colors"
+ * import type { Formatter } from "@beep/colors/Colors"
  *
  * const formatter: Formatter = (input) => `${input}`
  * console.log(formatter("ready"))
@@ -224,7 +224,7 @@ const formatter =
  * **Example** (Detect forced color support)
  *
  * ```ts import.meta.vitest name="Detect forced color support"
- * import { ProcessLike, supportsColor } from "@beep/colors"
+ * import { ProcessLike, supportsColor } from "@beep/colors/Colors"
  *
  * const enabled = supportsColor(ProcessLike.make({ env: { FORCE_COLOR: "1" } }))
  *
@@ -244,7 +244,7 @@ export const supportsColor = ProcessLike.supportsColor;
  * **Example** (Check runtime color support type)
  *
  * ```ts import.meta.vitest name="Check runtime color support type"
- * import { isColorSupported } from "@beep/colors"
+ * import { isColorSupported } from "@beep/colors/Colors"
  *
  * typeof isColorSupported // => "boolean"
  * ```
@@ -265,7 +265,7 @@ export const isColorSupported = supportsColor();
  * **Example** (Verify Colors instance type)
  *
  * ```ts import.meta.vitest name="Verify Colors instance type"
- * import { Colors, createColors } from "@beep/colors"
+ * import { Colors, createColors } from "@beep/colors/Colors"
  *
  * const colors = createColors(true)
  * const isColorsInstance = colors instanceof Colors
@@ -288,7 +288,7 @@ export class Colors extends S.Class<Colors, { readonly brand: unique symbol }>($
    * **Example** (Recreate enabled formatter set)
    *
    * ```typescript
-   * import { createColors } from "@beep/colors"
+   * import { createColors } from "@beep/colors/Colors"
    *
    * const colors = createColors(false)
    * const enabled = colors.createColors(true)
@@ -312,7 +312,7 @@ export class Colors extends S.Class<Colors, { readonly brand: unique symbol }>($
  * **Example** (Create disabled formatter set)
  *
  * ```ts import.meta.vitest name="Create disabled formatter set"
- * import { createColors } from "@beep/colors"
+ * import { createColors } from "@beep/colors/Colors"
  *
  * const colors = createColors(false)
  * const rendered = colors.bold(colors.red("offline"))
@@ -384,7 +384,7 @@ export const createColors = (enabled: boolean = isColorSupported): Colors => {
  * **Example** (Use default cyan formatter)
  *
  * ```ts import.meta.vitest name="Use default cyan formatter"
- * import colors from "@beep/colors"
+ * import colors from "@beep/colors/Colors"
  *
  * const rendered = colors.cyan("beep")
  * typeof rendered // => "string"

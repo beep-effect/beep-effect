@@ -155,7 +155,8 @@ const pageFindings = (facts: PdfFacts, options: ValidationOptions): ReadonlyArra
  * **Example** (An encrypted file)
  *
  * ```ts
- * import { PdfFacts, ValidationOptions, structuralFindings } from "@beep/technical-drawing"
+ * import { PdfFacts, ValidationOptions } from "@beep/technical-drawing/Validation.schemas"
+ * import { structuralFindings } from "@beep/technical-drawing/Validation.rules"
  * import * as O from "effect/Option"
  *
  * const facts = PdfFacts.make({ headerVersion: "1.6", pages: [], fonts: [], annotationCount: 0, hasOptionalContent: false, encrypted: true })
@@ -218,7 +219,8 @@ const carries = (text: string, label: string): boolean =>
  * **Example** (A page without its sheet number)
  *
  * ```ts
- * import { ValidationOptions, labelTextFindings } from "@beep/technical-drawing"
+ * import { ValidationOptions } from "@beep/technical-drawing/Validation.schemas"
+ * import { labelTextFindings } from "@beep/technical-drawing/Validation.rules"
  * import * as O from "effect/Option"
  *
  * const options = ValidationOptions.make({ expectedPages: O.none(), textLabels: ["figure", "sheet-number"] })
@@ -256,7 +258,8 @@ const cm = (pixels: number, dpi: number): number => (pixels / dpi) * 2.54;
  * **Example** (A blank page)
  *
  * ```ts
- * import { PageMetrics, marginFindings } from "@beep/technical-drawing"
+ * import { PageMetrics } from "@beep/technical-drawing/Validation.schemas"
+ * import { marginFindings } from "@beep/technical-drawing/Validation.rules"
  * import * as O from "effect/Option"
  *
  * const metrics = PageMetrics.make({ width: 2550, height: 3300, dpi: 300, antiAliased: true, inkBounds: O.none(), inkPixels: 0, impurePixels: 0, largestBlackSquare: 0 })
@@ -310,7 +313,8 @@ export const marginFindings = (input: {
  * **Example** (A page with gray)
  *
  * ```ts
- * import { PageMetrics, ValidationOptions, purityFindings } from "@beep/technical-drawing"
+ * import { PageMetrics, ValidationOptions } from "@beep/technical-drawing/Validation.schemas"
+ * import { purityFindings } from "@beep/technical-drawing/Validation.rules"
  * import * as O from "effect/Option"
  *
  * const metrics = PageMetrics.make({ width: 2550, height: 3300, dpi: 300, antiAliased: false, inkBounds: O.none(), inkPixels: 0, impurePixels: 12, largestBlackSquare: 0 })
@@ -363,7 +367,9 @@ export const purityFindings = (input: {
  * **Example** (Two lines 0.3 mm apart)
  *
  * ```ts
- * import { Segment2, ValidationOptions, shadingSpacingFindings } from "@beep/technical-drawing"
+ * import { Segment2 } from "@beep/technical-drawing/Geometry.schemas"
+ * import { ValidationOptions } from "@beep/technical-drawing/Validation.schemas"
+ * import { shadingSpacingFindings } from "@beep/technical-drawing/Validation.rules"
  * import * as O from "effect/Option"
  *
  * const segmentsMm = [Segment2.make([0, 0, 10, 0]), Segment2.make([0, 0.3, 10, 0.3])]
@@ -422,7 +428,8 @@ const flooredMm = (mm: number): string => `${Math.floor(mm * 1000 + 1e-9) / 1000
  * **Example** (A board edge drawn 0.34 mm apart)
  *
  * ```ts
- * import { Segment2, ValidationOptions } from "@beep/technical-drawing"
+ * import { Segment2 } from "@beep/technical-drawing/Geometry.schemas"
+ * import { ValidationOptions } from "@beep/technical-drawing/Validation.schemas"
  * import { outlineSpacingFindings } from "@beep/technical-drawing/Validation.rules"
  * import * as O from "effect/Option"
  *
@@ -496,7 +503,7 @@ const skippedStretchFindings = (page: number, coverage: ShadingCoverage): Readon
  * **Example** (One lost face on page 2)
  *
  * ```ts
- * import { ShadingCoverage } from "@beep/technical-drawing"
+ * import { ShadingCoverage } from "@beep/technical-drawing/Geometry.schemas"
  * import { shadingCoverageFindings } from "@beep/technical-drawing/Validation.rules"
  *
  * const coverage = ShadingCoverage.make({ shadedFaces: 3, skippedFaces: [], lostFaces: 1 })
@@ -556,7 +563,8 @@ export const shadingCoverageFindings = (input: {
  * **Example** (A stroke ending on the outline)
  *
  * ```ts
- * import { Segment2, ValidationOptions } from "@beep/technical-drawing"
+ * import { Segment2 } from "@beep/technical-drawing/Geometry.schemas"
+ * import { ValidationOptions } from "@beep/technical-drawing/Validation.schemas"
  * import { shadingOutlineClearanceFindings } from "@beep/technical-drawing/Validation.rules"
  * import * as O from "effect/Option"
  *
@@ -617,7 +625,8 @@ export const shadingOutlineClearanceFindings = (input: {
  * **Example** (One stroke 1.5 mm inside a wall edge, no companion)
  *
  * ```ts
- * import { Segment2, ValidationOptions } from "@beep/technical-drawing"
+ * import { Segment2 } from "@beep/technical-drawing/Geometry.schemas"
+ * import { ValidationOptions } from "@beep/technical-drawing/Validation.schemas"
  * import { shadingLoneLineFindings } from "@beep/technical-drawing/Validation.rules"
  * import * as O from "effect/Option"
  *
@@ -708,7 +717,8 @@ const shifted = (stroke: Segment2, distance: number): Segment2 => {
  * **Example** (A three-line band 1.5 mm inside a flap edge with a wall's two lines beyond it)
  *
  * ```ts
- * import { Segment2, ValidationOptions } from "@beep/technical-drawing"
+ * import { Segment2 } from "@beep/technical-drawing/Geometry.schemas"
+ * import { ValidationOptions } from "@beep/technical-drawing/Validation.schemas"
  * import { shadingBandLadderFindings } from "@beep/technical-drawing/Validation.rules"
  * import * as O from "effect/Option"
  *

@@ -1,6 +1,8 @@
 /**
  * Read-only Lexical decorator node for code blocks.
  *
+ * **Details**
+ *
  * The wire profile carries code as a `code` block, and the composer edits it as one.
  * This node exists only for the read-only viewer, which swaps code blocks for it
  * before mounting — the same trade the mermaid diagram makes, and for the same

@@ -2,6 +2,7 @@ import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   CHECK_CENSUS_BASELINE_PATH,
   CHECK_CENSUS_DEFAULT_TARGETS,
+  CHECK_CENSUS_INSTANTIATION_NOISE,
   CheckCensusBaseline,
   CheckCensusBaselineProvenance,
   CheckCensusBaselineRow,
@@ -173,11 +174,24 @@ describe("check-census gate parser", () => {
 describe("check-census gate comparison", () => {
   const baselineRow = row("@beep/schema", 1000, 1000);
 
-  it("fails an instantiation increase", () => {
-    const comparison = compareCheckCensusSample(sample(1001, 1000), baselineRow);
+  it("fails an instantiation increase beyond the noise floor", () => {
+    const comparison = compareCheckCensusSample(sample(1000 + CHECK_CENSUS_INSTANTIATION_NOISE + 1, 1000), baselineRow);
 
     expect(comparison.instantiations).toBe("increase");
     expect(comparison.checkTime).toBe("within-band");
+  });
+
+  // tsgo's single-checker count moves a few instantiations between runs of one tree.
+  it("keeps a difference within the noise floor unchanged in both directions", () => {
+    expect(
+      compareCheckCensusSample(sample(1000 + CHECK_CENSUS_INSTANTIATION_NOISE, 1000), baselineRow).instantiations
+    ).toBe("unchanged");
+    expect(
+      compareCheckCensusSample(sample(1000 - CHECK_CENSUS_INSTANTIATION_NOISE, 1000), baselineRow).instantiations
+    ).toBe("unchanged");
+    expect(
+      compareCheckCensusSample(sample(1000 - CHECK_CENSUS_INSTANTIATION_NOISE - 1, 1000), baselineRow).instantiations
+    ).toBe("decrease");
   });
 
   it("keeps an unchanged count and a check time inside the 5% band", () => {

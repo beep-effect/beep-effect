@@ -369,6 +369,29 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
     })
   );
 
+  it.effect("follows Context pipe chains and same-file Context factories into a Context provision", () =>
+    Effect.gen(function* () {
+      for (const body of [
+        'const ctx = Context.make(Source, {}).pipe(Context.add(Config, {})); it.effect("piped", () => Fx.provide(program, ctx));',
+        'const makeContext = (source: string) => Context.make(Source, source).pipe(Context.add(Config, {}), Context.merge(extra)); it.effect("factory", () => Fx.provide(program, makeContext("a")));',
+        'const makeContext = function () { return Context.make(Source, {}); }; it.effect("function", () => Fx.provide(program, makeContext()));',
+        'function makeContext() { return Context.add(Context.make(Source, {}), Config, {}); } it.effect("declaration", () => Fx.provide(program, makeContext()));',
+      ]) {
+        assertFalse(yield* hasRule(body, "EV002"));
+      }
+      for (const body of [
+        'const ctx = Context.make(Source, {}).pipe(mystery); it.effect("unknown stage", () => Fx.provide(program, ctx));',
+        'const ctx = mystery.pipe(Context.add(Config, {})); it.effect("unknown receiver", () => Fx.provide(program, ctx));',
+        'const makeLayer = () => L.effect(Service, Fx.succeed({})); it.effect("layer factory", () => Fx.provide(program, makeLayer()));',
+        'const makeContext = (flag: boolean) => { if (flag) return Context.make(Source, {}); return liveLayer; }; it.effect("mixed returns", () => Fx.provide(program, makeContext(true)));',
+        'const makeContext = () => Context.make(Source, {}); it.effect("shadowed", () => { const makeContext = () => liveLayer; return Fx.provide(program, makeContext()); });',
+        'const makeContext = (flag: boolean) => (flag ? Context.make(Source, {}) : liveLayer); it.effect("branch", () => Fx.provide(program, makeContext(true)));',
+      ]) {
+        assertTrue(yield* hasRule(body, "EV002"));
+      }
+    })
+  );
+
   it.effect("keeps property members when an unrelated import uses the same local name", () =>
     Effect.gen(function* () {
       assertTrue(
@@ -2384,6 +2407,35 @@ it.layer(NodeServices.layer)((it) => {
       ]) {
         assertTrue(yield* hasRule(body, "EV015"));
       }
+    })
+  );
+
+  it.effect("exempts a nested single-test block whose own layer is a fresh TestClock.layer() call", () =>
+    Effect.gen(function* () {
+      const adjust = 'Fx.gen(function* () { yield* TC.adjust("1 second"); })';
+      for (const body of [
+        `it.layer(resource)("parent", (it) => { it.layer(TC.layer())((it) => { it.effect("a", () => ${adjust}); }); });`,
+        `it.layer(resource)((it) => { it.layer(TC.layer(), { timeout: "5 seconds" })("own clock", (it) => { it.effect("a", () => ${adjust}); }); it.effect("b", () => Fx.void); });`,
+        `it.layer(resource)((it) => { it.layer(child)((it) => { it.layer(TC.layer({}))((it) => { it.effect("a", () => ${adjust}); }); }); });`,
+      ]) {
+        assertFalse(yield* hasRule(body, "EV015"));
+      }
+      for (const body of [
+        `it.layer(resource)((it) => { it.layer(TC.layer())((it) => { it.effect("a", () => ${adjust}); it.effect("b", () => Fx.void); }); });`,
+        `it.layer(resource)((it) => { it.layer(TC.layer())((it) => { it.effect.each([1, 2])("case %d", () => ${adjust}); }); });`,
+        `const clock = TC.layer(); it.layer(resource)((it) => { it.layer(clock)((it) => { it.effect("a", () => ${adjust}); }); });`,
+        `import * as Local from "./clock"; it.layer(resource)((it) => { it.layer(Local.layer())((it) => { it.effect("a", () => ${adjust}); }); });`,
+        `it.layer(resource)((it) => { it.layer(TC.layer())((it) => { it.effect("x", () => ${adjust}); it.layer(child)((it) => { it.effect("a", () => ${adjust}); }); }); });`,
+      ]) {
+        assertTrue(yield* hasRule(body, "EV015"));
+      }
+      const rows = A.filter(
+        yield* findings(
+          `it.layer(resource)((it) => { it.layer(TC.layer())((it) => { it.effect("x", () => ${adjust}); it.layer(child)((it) => { it.effect("a", () => ${adjust}); }); }); });`
+        ),
+        (row) => row.ruleId === "EV015"
+      );
+      deepStrictEqual(rows.length, 2);
     })
   );
 

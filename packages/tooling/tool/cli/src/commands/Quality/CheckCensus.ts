@@ -123,7 +123,10 @@ const censusProgramFields = {
  * The census measures in tsgo's default mode (several checkers), so
  * `instantiations` and `types` depend on how tsgo partitions files across
  * checkers and are advisory. The hard gate compares single-checker samples
- * (`@beep/repo-cli/commands/Quality/CheckCensusGate`).
+ * (`@beep/repo-cli/commands/Quality/CheckCensusGate`). Neither count is
+ * byte-deterministic: repeated runs of one tree differ by a few
+ * instantiations in either mode, so compare two censuses within
+ * `CHECK_CENSUS_INSTANTIATION_NOISE`, never byte for byte.
  *
  * **Example** (Build a measurement)
  *

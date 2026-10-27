@@ -1,6 +1,8 @@
 /**
  * Four-hint annotation helper.
  *
+ * **Details**
+ *
  * A terse combinator applying the four MCP tool-behavior hints —
  * `readOnlyHint`/`destructiveHint`/`idempotentHint`/`openWorldHint`, emitted
  * from `Tool.Readonly`/`Tool.Destructive`/`Tool.Idempotent`/`Tool.OpenWorld` —
@@ -24,7 +26,7 @@ const $I = $McpKitId.create("ToolAnnotations");
  * **Example** (Make four-hint annotations)
  *
  * ```ts
- * import { FourHintAnnotations } from "@beep/mcp-kit"
+ * import { FourHintAnnotations } from "@beep/mcp-kit/ToolAnnotations"
  *
  * const hints = FourHintAnnotations.make({
  *   destructive: false,
@@ -90,7 +92,7 @@ export class FourHintAnnotations extends S.Opaque<FourHintAnnotations, { readonl
  * **Example** (Reference the AnnotatedTool alias)
  *
  * ```ts
- * import type { AnnotatedTool } from "@beep/mcp-kit"
+ * import type { AnnotatedTool } from "@beep/mcp-kit/ToolAnnotations"
  * import type * as AiTool from "effect/ai/Tool"
  *
  * type Annotated = AnnotatedTool<AiTool.Any>
@@ -108,7 +110,7 @@ export type AnnotatedTool<T extends AiTool.Any> = T extends unknown ? T : never;
  *
  * ```ts
  * import * as Tool from "effect/ai/Tool";
- * import { annotateFourHints, readOnlyToolHints } from "@beep/mcp-kit"
+ * import { annotateFourHints, readOnlyToolHints } from "@beep/mcp-kit/ToolAnnotations"
  *
  * const searchTool = annotateFourHints(Tool.make("search_patents"), readOnlyToolHints)
  * console.log(searchTool.name)
@@ -142,7 +144,7 @@ export const annotateFourHints: {
  * **Example** (Log read-only tool hints)
  *
  * ```ts
- * import { readOnlyToolHints } from "@beep/mcp-kit"
+ * import { readOnlyToolHints } from "@beep/mcp-kit/ToolAnnotations"
  *
  * console.log(readOnlyToolHints)
  * // { readOnly: true, destructive: false, idempotent: true, openWorld: true }
@@ -160,7 +162,7 @@ export const readOnlyToolHints: FourHintAnnotations = FourHintAnnotations.readOn
  * **Example** (Log destructive write hints)
  *
  * ```ts
- * import { destructiveWriteToolHints } from "@beep/mcp-kit"
+ * import { destructiveWriteToolHints } from "@beep/mcp-kit/ToolAnnotations"
  *
  * console.log(destructiveWriteToolHints)
  * // { readOnly: false, destructive: true, idempotent: false, openWorld: true }

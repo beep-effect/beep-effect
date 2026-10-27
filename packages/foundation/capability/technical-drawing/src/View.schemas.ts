@@ -40,7 +40,7 @@ const ViewNameBase = LiteralKit([
  * **Example** (Read the view names)
  *
  * ```ts
- * import { ViewName } from "@beep/technical-drawing"
+ * import { ViewName } from "@beep/technical-drawing/View.schemas"
  *
  * console.log(ViewName.literals.length)
  * ```
@@ -61,7 +61,7 @@ export const ViewName = ViewNameBase.pipe(
  * **Example** (Annotate a view)
  *
  * ```ts
- * import type { ViewName } from "@beep/technical-drawing"
+ * import type { ViewName } from "@beep/technical-drawing/View.schemas"
  *
  * const view: ViewName = "front"
  * console.log(view)
@@ -249,7 +249,7 @@ const negate = (v: Vec3): Vec3 => [v[0] === 0 ? 0 : -v[0], v[1] === 0 ? 0 : -v[1
  * **Example** (Test a view)
  *
  * ```ts
- * import { isPerspectiveView } from "@beep/technical-drawing"
+ * import { isPerspectiveView } from "@beep/technical-drawing/View.schemas"
  *
  * console.log(isPerspectiveView("top-perspective"), isPerspectiveView("front"))
  * ```
@@ -284,7 +284,8 @@ const twoPointFieldInCone = (input: {
  * **Example** (Make an input)
  *
  * ```ts
- * import { BoundingBox, CameraForViewInput } from "@beep/technical-drawing"
+ * import { BoundingBox } from "@beep/technical-drawing/Geometry.schemas"
+ * import { CameraForViewInput } from "@beep/technical-drawing/View.schemas"
  *
  * console.log(CameraForViewInput.make({ view: "front", box: BoundingBox.make({ min: [0, 0, 0], max: [1, 1, 1] }) }).view)
  * ```
@@ -392,7 +393,8 @@ const CameraForView = Fn({ input: CameraForViewInput, output: Camera }).pipe(
  * **Example** (Front, top-perspective and two-point cameras)
  *
  * ```ts
- * import { BoundingBox, cameraForView } from "@beep/technical-drawing"
+ * import { BoundingBox } from "@beep/technical-drawing/Geometry.schemas"
+ * import { cameraForView } from "@beep/technical-drawing/View.schemas"
  * import * as O from "effect/Option"
  *
  * const box = BoundingBox.make({ min: [0, 0, 0], max: [40, 30, 20] })
@@ -500,7 +502,7 @@ const twoPoint = (input: CameraForViewInput, zSign: 1 | -1): Camera => {
  * **Example** (The front elevation)
  *
  * ```ts
- * import { FigureSpec } from "@beep/technical-drawing"
+ * import { FigureSpec } from "@beep/technical-drawing/View.schemas"
  *
  * const fig = FigureSpec.make({ view: "front", description: "is a front elevation view thereof" })
  * console.log(fig.view)
@@ -545,7 +547,7 @@ const OmissionRelationBase = LiteralKit(["identical", "mirror"]);
  * **Example** (Read the relations)
  *
  * ```ts
- * import { OmissionRelation } from "@beep/technical-drawing"
+ * import { OmissionRelation } from "@beep/technical-drawing/View.schemas"
  *
  * console.log(OmissionRelation.literals)
  * ```
@@ -566,7 +568,7 @@ export const OmissionRelation = OmissionRelationBase.pipe(
  * **Example** (Annotate a relation)
  *
  * ```ts
- * import type { OmissionRelation } from "@beep/technical-drawing"
+ * import type { OmissionRelation } from "@beep/technical-drawing/View.schemas"
  *
  * const relation: OmissionRelation = "mirror"
  * console.log(relation)
@@ -584,7 +586,7 @@ export type OmissionRelation = typeof OmissionRelation.Type;
  * **Example** (Rear identical to front)
  *
  * ```ts
- * import { OmissionClaim } from "@beep/technical-drawing"
+ * import { OmissionClaim } from "@beep/technical-drawing/View.schemas"
  *
  * console.log(OmissionClaim.make({ omitted: "rear", shown: "front", relation: "identical" }))
  * ```
@@ -670,7 +672,8 @@ const viewsAreUnique = (figures: ReadonlyArray<FigureSpec>): boolean =>
  * **Example** (A one-figure set)
  *
  * ```ts
- * import { Box, FigureSetSpec, FigureSpec, ModelSpec, Part } from "@beep/technical-drawing"
+ * import { Box, ModelSpec, Part } from "@beep/technical-drawing/Geometry.schemas"
+ * import { FigureSetSpec, FigureSpec } from "@beep/technical-drawing/View.schemas"
  *
  * const spec = FigureSetSpec.make({
  *   title: "Synthetic bracket",

@@ -2,6 +2,8 @@
  * Backend composition - combinators that treat {@link NLPBackend}s as composable
  * morphisms.
  *
+ * **Details**
+ *
  * - {@link withFallback}: try a primary backend, fall back to a secondary on
  *   failure (per operation); the composed capabilities are the union.
  * - {@link withCaching}: memoize each text-keyed operation behind an `effect/Cache`

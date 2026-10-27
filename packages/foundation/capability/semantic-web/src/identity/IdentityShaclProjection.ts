@@ -77,7 +77,7 @@ const addressPropertyShapes = (path: NamedNode, value: string): ReadonlyArray<Sh
  * **Example** (Require a label fiber)
  *
  * ```ts import.meta.vitest name="Require a label fiber"
- * import { IdentityShapePolicy } from "@beep/semantic-web"
+ * import { IdentityShapePolicy } from "@beep/semantic-web/identity/IdentityShaclProjection"
  *
  * const policy = IdentityShapePolicy.make({ requiredFibers: ["label"] })
  * policy.requiredFibers // => ["label"]
@@ -106,11 +106,8 @@ export class IdentityShapePolicy extends S.Opaque<IdentityShapePolicy, { readonl
  * **Example** (Project no identity entries)
  *
  * ```ts import.meta.vitest name="Project no identity entries"
- * import {
- *   DefaultIdentityRdfBinding,
- *   IdentityShapePolicy,
- *   projectShapes
- * } from "@beep/semantic-web"
+ * import { DefaultIdentityRdfBinding } from "@beep/semantic-web/identity/IdentityRdfBinding"
+ * import { IdentityShapePolicy, projectShapes } from "@beep/semantic-web/identity/IdentityShaclProjection"
  * import * as Effect from "effect/Effect";
  * const shapes = await Effect.runPromise(
  *   projectShapes(

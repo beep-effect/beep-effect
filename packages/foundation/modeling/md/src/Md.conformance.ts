@@ -388,7 +388,7 @@ const makeStrictMarkdownDocument = (document: Document, profile: MarkdownConform
  *
  * ```ts import.meta.vitest name="Reject a GFM table without a header"
  * import { MarkdownConformanceProfile, refineStrictMarkdownDocument } from "@beep/md/Md.conformance"
- * import { Md } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
  * import * as Result from "effect/Result";
  * const document = Md.make([Md.table([["cell"]])])
  * Result.isFailure(refineStrictMarkdownDocument(document, MarkdownConformanceProfile.Enum["gfm-0.29.0.gfm.13"])) // => true
@@ -470,7 +470,7 @@ const toSharedViolation = (issue: MarkdownConformanceIssue) =>
  *
  * ```ts import.meta.vitest name="Project a nested-link violation"
  * import { inspectMarkdownSpecificationConformance, MarkdownConformanceProfile } from "@beep/md/Md.conformance"
- * import { Md } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
  *
  * const document = Md.make([Md.p(Md.a("/outer", Md.a("/inner", "nested")))])
  * const report = inspectMarkdownSpecificationConformance(document, MarkdownConformanceProfile.Enum["commonmark-0.31.2"])

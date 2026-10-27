@@ -1,6 +1,8 @@
 /**
  * Pluggable NLP backend interface.
  *
+ * **Details**
+ *
  * Defines the abstract contract every NLP backend (wink-nlp, CoreNLP, spaCy, an
  * LLM adapter, ...) implements so the capability can swap engines while keeping a
  * stable API. Backends form a category: objects are backends, morphisms are
