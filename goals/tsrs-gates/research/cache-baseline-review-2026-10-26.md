@@ -34,6 +34,16 @@ typecheck and build commands changed, and the root manifest bytes with it.
 - `@beep/repo-configs` `EffectTsgoEffectFnPolicy.test.ts` and the nine
   `@beep/repo-cli` tests that name the compiler pass on the patched binary.
 
+## Main merge (2026-10-27)
+
+Merging `origin/main` 8b1da02360 brought #2258, which adds `!**/dist/**` to the
+root `//#effect-imports` task inputs and stamped its own review on the root
+subject, and #2259 (test-only). The merge took main's baseline and re-applied
+this review on top of it: the audit of the merged tree names the same 189
+subjects and 1621 tasks as before, all from this branch's root-manifest and
+compiler-word change. #2258's input change is already reviewed on main and is
+carried, not re-qualified.
+
 ## Drifted tasks
 
 | Subject | Tasks | Task names |

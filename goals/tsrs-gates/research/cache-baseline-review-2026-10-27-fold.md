@@ -28,3 +28,10 @@ No qualification is granted or widened.
   repo-cli test edits landed, 337/337 after (recorded in the PR body).
 - `@beep/repo-configs` `EffectTsgoEffectFnPolicy.test.ts` 5/5: an Effect-only
   finding now fails `tsrs`.
+
+## Stack merge (2026-10-27)
+
+Merging the updated `feat/tsrs-gates` (which had merged `origin/main` 8b1da02360)
+took that branch's baseline and re-applied this review on top: the audit names
+the same four tasks and two `turbo.json` source rows, and nothing else.
+

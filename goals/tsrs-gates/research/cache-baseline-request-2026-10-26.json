@@ -1,11 +1,11 @@
 {
-  "previous": "0814131e713a896a024831efbcfbeb8382ca944ef90dcf954126b107e902047d",
+  "previous": "e797b5f45b562ffca378551d7e1ca86b241527d5a2e12369101e4050c809c000",
   "review": {
     "reviewer": "Claude Fable 5.1 (tsrs-gates, feat/tsrs-gates)",
     "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
     "basis": {
       "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-      "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+      "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
     }
   },
   "subjects": [

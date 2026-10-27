@@ -816,6 +816,7 @@
         "packages/foundation/**/package.json",
         "packages/foundation/**/src/**",
         "!**/node_modules/**",
+        "!**/dist/**",
         "!packages/**/docs/**"
       ]
     },

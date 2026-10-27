@@ -14,7 +14,7 @@
       "reason": "Re-record the input lists of //#lint:policy-fingerprint, //#lint:tsgo-rules, @beep/repo-cli#test and @beep/repo-cli#test:property after standards/effect-diagnostics.profile.json was folded into tsconfig.base.json and deleted (goals/tsrs-gates PR 2). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-27-fold.md",
-        "sha256": "fc3c08ae78b61a29e62120df77b5406755e1c84521302e45b1c2751920f441fa"
+        "sha256": "47ac4273781785982a9357b011692b8c94c5bdb55ddf9a136c51cfe7e08d9adb"
       }
     },
     "@beep/acp": {
@@ -22,7 +22,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/agents-client": {
@@ -30,7 +30,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/agents-domain": {
@@ -38,7 +38,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/agents-server": {
@@ -46,7 +46,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/agents-tables": {
@@ -54,7 +54,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/agents-use-cases": {
@@ -62,7 +62,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/ai-provider-cli": {
@@ -70,7 +70,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/ai-sync": {
@@ -78,7 +78,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/anthropic": {
@@ -86,7 +86,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/api-docs": {
@@ -94,7 +94,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/api-transport": {
@@ -102,7 +102,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/architecture-lab-client": {
@@ -110,7 +110,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/architecture-lab-config": {
@@ -118,7 +118,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/architecture-lab-domain": {
@@ -126,7 +126,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/architecture-lab-proof": {
@@ -134,7 +134,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/architecture-lab-server": {
@@ -142,7 +142,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/architecture-lab-tables": {
@@ -150,7 +150,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/architecture-lab-ui": {
@@ -158,7 +158,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/architecture-lab-use-cases": {
@@ -166,7 +166,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/box": {
@@ -174,7 +174,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/box-provisioning": {
@@ -182,7 +182,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/brand": {
@@ -190,7 +190,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/chalk": {
@@ -198,7 +198,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/ciops": {
@@ -206,7 +206,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/cli-kit": {
@@ -214,7 +214,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/codegen-kit": {
@@ -222,7 +222,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/colors": {
@@ -230,7 +230,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/commands": {
@@ -238,7 +238,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/config-file": {
@@ -246,7 +246,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/cosmos": {
@@ -254,7 +254,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/data": {
@@ -262,7 +262,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/db-admin": {
@@ -270,7 +270,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/discord": {
@@ -278,7 +278,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/doc-text": {
@@ -286,7 +286,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/dock": {
@@ -294,7 +294,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/dock-react": {
@@ -302,7 +302,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/docket-intake": {
@@ -310,7 +310,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/documents-domain": {
@@ -318,7 +318,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/documents-server": {
@@ -326,7 +326,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/documents-tables": {
@@ -334,7 +334,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/documents-use-cases": {
@@ -342,7 +342,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/drizzle": {
@@ -350,7 +350,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/duckdb": {
@@ -358,7 +358,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/ecfr": {
@@ -366,7 +366,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/editor": {
@@ -374,7 +374,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/effect-drizzle": {
@@ -382,7 +382,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/epistemic-client": {
@@ -390,7 +390,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/epistemic-config": {
@@ -398,7 +398,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/epistemic-domain": {
@@ -406,7 +406,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/epistemic-server": {
@@ -414,7 +414,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/epistemic-tables": {
@@ -422,7 +422,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/epistemic-ui": {
@@ -430,7 +430,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/epistemic-use-cases": {
@@ -438,7 +438,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/epistemics": {
@@ -446,7 +446,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/exiftool": {
@@ -454,7 +454,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/fc-runs": {
@@ -462,7 +462,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/ffmpeg": {
@@ -470,7 +470,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/file-processing": {
@@ -478,7 +478,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/freshbooks": {
@@ -486,7 +486,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/git": {
@@ -494,7 +494,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/github": {
@@ -502,7 +502,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/github-actions": {
@@ -510,7 +510,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/github-commands": {
@@ -518,7 +518,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/github-references": {
@@ -526,7 +526,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/github-reporting": {
@@ -534,7 +534,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/glob": {
@@ -542,7 +542,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/gov-legal-mcp": {
@@ -550,7 +550,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/govinfo": {
@@ -558,7 +558,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/graph-3d": {
@@ -566,7 +566,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/html": {
@@ -574,7 +574,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/hubspot": {
@@ -582,7 +582,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/identity": {
@@ -590,7 +590,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/infra": {
@@ -598,7 +598,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/jsonc": {
@@ -606,7 +606,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/jsonl": {
@@ -614,7 +614,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/langextract": {
@@ -622,7 +622,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/law-practice-domain": {
@@ -630,7 +630,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/law-practice-server": {
@@ -638,7 +638,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/law-practice-tables": {
@@ -646,7 +646,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/law-practice-use-cases": {
@@ -654,7 +654,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/lejeune-bolt-workbench": {
@@ -662,7 +662,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/lexical-schema": {
@@ -670,7 +670,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/libpff": {
@@ -678,7 +678,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/lint-rules": {
@@ -686,7 +686,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/lockfiles": {
@@ -694,7 +694,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/m365": {
@@ -702,7 +702,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/m365-mcp": {
@@ -710,7 +710,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/managed-section": {
@@ -718,7 +718,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/markdown": {
@@ -726,7 +726,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/mcp-kit": {
@@ -734,7 +734,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/mcpb-kit": {
@@ -742,7 +742,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/md": {
@@ -750,7 +750,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/memfs": {
@@ -758,7 +758,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/n3": {
@@ -766,7 +766,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/nlp": {
@@ -774,7 +774,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/nlp-mcp": {
@@ -782,7 +782,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/nlp-processing": {
@@ -790,7 +790,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/npm-spec": {
@@ -798,7 +798,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/obs": {
@@ -806,7 +806,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/observability": {
@@ -814,7 +814,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/occt": {
@@ -822,7 +822,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/oip-web": {
@@ -830,7 +830,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/onepassword-cli": {
@@ -838,7 +838,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/ontology": {
@@ -846,7 +846,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/ontology-client": {
@@ -854,7 +854,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/ontology-config": {
@@ -862,7 +862,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/ontology-domain": {
@@ -870,7 +870,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/ontology-server": {
@@ -878,7 +878,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/ontology-ui": {
@@ -886,7 +886,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/ontology-use-cases": {
@@ -894,7 +894,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/openai": {
@@ -902,7 +902,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/openai-compat": {
@@ -910,7 +910,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/openclaw": {
@@ -918,7 +918,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/oxigraph": {
@@ -926,7 +926,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/pacer": {
@@ -934,7 +934,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/package-json": {
@@ -942,7 +942,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/palantiri": {
@@ -950,7 +950,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/pandoc-ast": {
@@ -958,7 +958,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/pdf-tools": {
@@ -966,7 +966,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/pglite": {
@@ -974,7 +974,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/phoenix": {
@@ -982,7 +982,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/poppler": {
@@ -990,7 +990,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/postgres": {
@@ -998,7 +998,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/practice-claude-mod": {
@@ -1006,7 +1006,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/practice-gateway": {
@@ -1014,7 +1014,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/practice-identify": {
@@ -1022,7 +1022,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/practice-kg-mcp": {
@@ -1030,7 +1030,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/practice-m365-contacts": {
@@ -1038,7 +1038,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/practice-mail-tagging": {
@@ -1046,7 +1046,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/practice-review-hub": {
@@ -1054,7 +1054,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/practice-setup": {
@@ -1062,7 +1062,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/pretext": {
@@ -1070,7 +1070,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/professional-desktop": {
@@ -1078,7 +1078,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/provenance": {
@@ -1086,7 +1086,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/public-site": {
@@ -1094,7 +1094,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/qa-capture": {
@@ -1102,7 +1102,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/rdf": {
@@ -1110,7 +1110,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/rdf-canonize": {
@@ -1118,7 +1118,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/repo-ai-metrics": {
@@ -1126,7 +1126,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/repo-cli": {
@@ -1134,7 +1134,7 @@
       "reason": "Re-record the input lists of //#lint:policy-fingerprint, //#lint:tsgo-rules, @beep/repo-cli#test and @beep/repo-cli#test:property after standards/effect-diagnostics.profile.json was folded into tsconfig.base.json and deleted (goals/tsrs-gates PR 2). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-27-fold.md",
-        "sha256": "fc3c08ae78b61a29e62120df77b5406755e1c84521302e45b1c2751920f441fa"
+        "sha256": "47ac4273781785982a9357b011692b8c94c5bdb55ddf9a136c51cfe7e08d9adb"
       }
     },
     "@beep/repo-configs": {
@@ -1142,7 +1142,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/repo-docgen": {
@@ -1150,7 +1150,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/repo-tsconfig": {
@@ -1158,7 +1158,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/repo-utils": {
@@ -1166,7 +1166,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/repo-workspaces": {
@@ -1174,7 +1174,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/runpod": {
@@ -1182,7 +1182,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/runtime-env": {
@@ -1190,7 +1190,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/sanity": {
@@ -1198,7 +1198,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/sbom": {
@@ -1206,7 +1206,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/schema": {
@@ -1214,7 +1214,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/schema-org": {
@@ -1222,7 +1222,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/scratchpad": {
@@ -1230,7 +1230,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/semantic-web": {
@@ -1238,7 +1238,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/semantica": {
@@ -1246,7 +1246,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/semver": {
@@ -1254,7 +1254,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/shacl": {
@@ -1262,7 +1262,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/shared-domain": {
@@ -1270,7 +1270,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/shared-tables": {
@@ -1278,7 +1278,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/shared-use-cases": {
@@ -1286,7 +1286,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/skill-contract": {
@@ -1294,7 +1294,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/spdx": {
@@ -1302,7 +1302,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/storybook": {
@@ -1310,7 +1310,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/t3-code": {
@@ -1318,7 +1318,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/tailscale": {
@@ -1326,7 +1326,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/technical-drawing": {
@@ -1334,7 +1334,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/tesseract": {
@@ -1342,7 +1342,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/test-runner": {
@@ -1350,7 +1350,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/test-utils": {
@@ -1358,7 +1358,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/tika": {
@@ -1366,7 +1366,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/todox": {
@@ -1374,7 +1374,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/toml": {
@@ -1382,7 +1382,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/trustgraph-workbench": {
@@ -1390,7 +1390,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/tsconfig": {
@@ -1398,7 +1398,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/types": {
@@ -1406,7 +1406,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/ui": {
@@ -1414,7 +1414,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/uspto": {
@@ -1422,7 +1422,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/uspto-mcp": {
@@ -1430,7 +1430,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/utils": {
@@ -1438,7 +1438,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/walker": {
@@ -1446,7 +1446,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/windows-secrets": {
@@ -1454,7 +1454,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/wink": {
@@ -1462,7 +1462,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/workspace-domain": {
@@ -1470,7 +1470,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/workspace-server": {
@@ -1478,7 +1478,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/workspace-tables": {
@@ -1486,7 +1486,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/workspace-use-cases": {
@@ -1494,7 +1494,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/xdg": {
@@ -1502,7 +1502,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/xstate": {
@@ -1510,7 +1510,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/yaml": {
@@ -1518,7 +1518,7 @@
       "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
         "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     }
   },
@@ -2415,6 +2415,7 @@
         "configuration": {
           "cache": true,
           "inputs": [
+            "!**/dist/**",
             "!**/node_modules/**",
             "!packages/**/docs/**",
             "./.bun-version",
@@ -129833,7 +129834,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "761861540ebfa93f512cb43e9adc98de3cd4b712f93b68642f2709a98b7f47da"
+        "sha256": "5efb4864484cc842608841da6b4a1898b75415d88a08f053ecc8ecddaa0ed253"
       }
     ]
   }
