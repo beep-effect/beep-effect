@@ -8,14 +8,6 @@
   ],
   "entries": [
     {
-      "file": "apps/labs/ciops/src/kpi/Sources.ts",
-      "symbol": "KpiAdmissionRow",
-      "kind": "plain-data-schema-class",
-      "status": "exception",
-      "owner": "@beep/ciops",
-      "reason": "Plain data with a non-literal _tag field (_tag: AdmissionEventTag) that the schema-opaque-default codemod cannot promote to S.TaggedStruct (keep reason tag-field), so it stays a branded S.Class. Follow-up: convert by hand to a branded S.Opaque over S.Struct/S.TaggedStruct."
-    },
-    {
       "file": "apps/oip-web/src/content/OipSeo.ts",
       "symbol": "oipTwitterHandle",
       "kind": "schema-policy-advisory",
@@ -320,14 +312,6 @@
       "line": 28,
       "owner": "@beep/professional-desktop",
       "reason": "Sidecar registration regression decodes fixed RPC payload/result envelopes to prove wiring; schema-derived arbitrary coverage belongs with the use-case schemas."
-    },
-    {
-      "file": "infra/src/CiRunners.ts",
-      "symbol": "CiRunnersNetworkConfig",
-      "kind": "plain-data-schema-class",
-      "status": "exception",
-      "owner": "@beep/infra",
-      "reason": "Plain data whose fields come from a checked struct const (ciRunnersNetworkConfigStruct.pipe(S.check(...))), which the schema-opaque-default codemod could not classify (keep reason fields-expression-unknown), so it stays a branded S.Class. Follow-up: convert by hand to a branded S.Opaque over that struct."
     },
     {
       "file": "infra/src/OipWeb.ts",
@@ -682,22 +666,6 @@
       "reason": "Native Arbitrary companion (Arbitrary.schema + combinators) for the RPC highlight protocol; it is a generator value, not an object schema."
     },
     {
-      "file": "packages/epistemic/use-cases/src/EdgeAuthority/EdgeAuthority.commands.ts",
-      "symbol": "RecordEdgeFact",
-      "kind": "plain-data-schema-class",
-      "status": "exception",
-      "owner": "@beep/epistemic-use-cases",
-      "reason": "Plain data whose fields come from a module-level struct const (RecordEdgeFactFields), which the schema-opaque-default codemod could not classify (keep reason fields-expression-unknown), so it stays a branded S.Class. Follow-up: convert by hand to a branded S.Opaque over that struct."
-    },
-    {
-      "file": "packages/epistemic/use-cases/src/EdgeAuthority/EdgeAuthority.commands.ts",
-      "symbol": "SupersedeEdgeFact",
-      "kind": "plain-data-schema-class",
-      "status": "exception",
-      "owner": "@beep/epistemic-use-cases",
-      "reason": "Plain data whose fields come from a module-level struct const (SupersedeEdgeFactFields), which the schema-opaque-default codemod could not classify (keep reason fields-expression-unknown), so it stays a branded S.Class. Follow-up: convert by hand to a branded S.Opaque over that struct."
-    },
-    {
       "file": "packages/foundation/capability/chalk/src/Chalk.browser.ts",
       "symbol": "ChalkInstance",
       "kind": "exported-interface",
@@ -784,14 +752,6 @@
       "status": "exception",
       "owner": "@beep/epistemics",
       "reason": "Native Arbitrary companion (Arbitrary.schema + combinators) colocated with its S.Class model for cross-field generation; it is a generator value, not an object schema."
-    },
-    {
-      "file": "packages/foundation/modeling/html/src/Html.policy.ts",
-      "symbol": "SafeHtmlAttributesStruct",
-      "kind": "plain-data-schema-class",
-      "status": "exception",
-      "owner": "@beep/html",
-      "reason": "Plain data whose fields come from a module-level struct const (SafeHtmlAttributes), which the schema-opaque-default codemod could not classify (keep reason fields-expression-unknown), so it stays a branded S.Class. Follow-up: convert by hand to a branded S.Opaque over that struct."
     },
     {
       "file": "packages/foundation/modeling/lexical/src/Lexical.model.ts",
@@ -1104,22 +1064,6 @@
       "status": "exception",
       "owner": "@beep/ontology",
       "reason": "Pure projection wire shape over open-keyed JSON-LD nodes (predicate-open facts compact to arbitrary term keys), emitted by a total catamorphism from the schema-first AssembledOntology, which is the modeled truth. Round-trip/inverse parsing stays bounded to beep's own dialect per the exploration No-Go."
-    },
-    {
-      "file": "packages/foundation/modeling/ontology/src/TaxonomyLoader.ts",
-      "symbol": "VendorAlignmentManifestEntry",
-      "kind": "plain-data-schema-class",
-      "status": "exception",
-      "owner": "@beep/ontology",
-      "reason": "Plain data with a non-literal _tag field (_tag: S.tagDefaultOmit(...)) that the schema-opaque-default codemod cannot promote to S.TaggedStruct (keep reason tag-field), so it stays a branded S.Class. Follow-up: convert by hand to a branded S.Opaque over S.Struct/S.TaggedStruct."
-    },
-    {
-      "file": "packages/foundation/modeling/ontology/src/TaxonomyLoader.ts",
-      "symbol": "VendorManifestEntry",
-      "kind": "plain-data-schema-class",
-      "status": "exception",
-      "owner": "@beep/ontology",
-      "reason": "Plain data with a non-literal _tag field (_tag: S.tagDefaultOmit(...)) that the schema-opaque-default codemod cannot promote to S.TaggedStruct (keep reason tag-field), so it stays a branded S.Class. Follow-up: convert by hand to a branded S.Opaque over S.Struct/S.TaggedStruct."
     },
     {
       "file": "packages/foundation/modeling/ontology/src/internal/ClassificationXml.ts",
@@ -1482,22 +1426,6 @@
       "line": 60,
       "owner": "@beep/schema-org",
       "reason": "External protocol: schema.org `email` is a Text property, and node values are copied verbatim from upstream metadata (package manifests, author records) that may carry `mailto:` URIs or non-strict addresses; a strict email schema would reject valid JSON-LD. Surfaced, not introduced, by the exact-optional-keys migration (the detector did not read the previous `S.optional` spelling)."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Conformance/Conformance.invariant.schema.ts",
-      "symbol": "InvariantDescriptor",
-      "kind": "plain-data-schema-class",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Plain data whose fields come from a module-level checked struct const (InvariantDescriptorValue), which the schema-opaque-default codemod could not classify (keep reason fields-expression-unknown), so it stays a branded S.Class. Follow-up: convert by hand to a branded S.Opaque over that struct."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Conformance/Conformance.profile.schema.ts",
-      "symbol": "ConformanceProfile",
-      "kind": "plain-data-schema-class",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Plain data whose fields come from a module-level checked struct const (ConformanceProfileValue), which the schema-opaque-default codemod could not classify (keep reason fields-expression-unknown), so it stays a branded S.Class. Follow-up: convert by hand to a branded S.Opaque over that struct."
     },
     {
       "file": "packages/foundation/modeling/schema/src/SemanticVersion.ts",

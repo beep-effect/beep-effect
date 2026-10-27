@@ -81,7 +81,7 @@ describe("test-typecheck coverage", () => {
         ]);
         expect(blindVerdict.covered).toBe(false);
         expect(blindVerdict.uncoveredSources).toEqual([blind.testFile]);
-      }, Effect.scoped)
+      })
     );
   });
 
@@ -196,7 +196,7 @@ describe("test-typecheck coverage", () => {
 
         expect(A.map(partition.covered, (entry) => entry.packageName)).toEqual(["@fixture/covered"]);
         expect(A.map(partition.uncovered, (entry) => entry.packageName)).toEqual(["@fixture/blind"]);
-      }, Effect.scoped)
+      })
     );
   });
 
@@ -224,7 +224,7 @@ describe("test-typecheck coverage", () => {
         expect(logText).toContain("[quality:test-tsgo] skipped 2 package(s) already covered by their check script");
         expect(logText).toContain("[quality:test-tsgo] every package's check script already typechecks its test files");
         expect(logText).not.toContain("checking");
-      }, Effect.scoped)
+      })
     );
   });
 });
