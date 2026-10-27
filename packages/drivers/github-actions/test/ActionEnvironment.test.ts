@@ -1,4 +1,4 @@
-import { env as processEnvironment } from "node:process";
+import * as NodeProcess from "node:process";
 import { ActionEnvironment } from "@beep/github-actions";
 import { MemoryFileSystem } from "@beep/memfs";
 import { assert, describe, it } from "@effect/vitest";
@@ -10,6 +10,8 @@ import * as Layer from "effect/Layer";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { ActionEnvironmentError } from "@beep/github-actions";
+
+const { env: processEnvironment } = NodeProcess;
 
 class BaseDebug extends Context.Service<BaseDebug, Effect.Effect<boolean>>()(
   "@beep/github-actions/test/ActionEnvironment.test/BaseDebug"

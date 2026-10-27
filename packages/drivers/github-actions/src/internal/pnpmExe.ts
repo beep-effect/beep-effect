@@ -111,6 +111,10 @@ export const pnpmExeTarget: {
  *
  * **Details**
  *
+ * `platform` is the host platform in Node's spelling; callers in Effect code
+ * pass the injected `HostProcessPlatform` from `@beep/utils/HostProcess`.
+ * The libc probe runs only when it is `"linux"`.
+ *
  * `process.report` is a global, not a `node:` import, so this stays inside
  * the package's closed `node:` list.
  *
@@ -119,7 +123,7 @@ export const pnpmExeTarget: {
  * ```ts
  * import { detectMusl } from "@beep/github-actions/internal/pnpmExe";
  *
- * const usesMusl = detectMusl();
+ * const usesMusl = detectMusl("linux");
  * console.log(typeof usesMusl) // boolean
  * ```
  *
@@ -127,8 +131,8 @@ export const pnpmExeTarget: {
  * @category predicates
  * @since 0.0.0
  */
-export const detectMusl = (): boolean => {
-  if (process.platform !== "linux") {
+export const detectMusl = (platform: string): boolean => {
+  if (platform !== "linux") {
     return false;
   }
   return Result.getOrElse(
