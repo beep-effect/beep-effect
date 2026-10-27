@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-27T15:12:31.402Z",
+  "generatedAt": "2026-10-27T16:13:30.352Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -634625,8 +634625,8 @@
           "exportKind": "class",
           "filePath": "src/intake/DocumentIntake.models.ts",
           "repoPath": "apps/professional-desktop/src/intake/DocumentIntake.models.ts",
-          "line": 66,
-          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-66-intakefilemetadata",
+          "line": 70,
+          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-70-intakefilemetadata",
           "currentTags": [
             "@category",
             "@since"
@@ -634647,8 +634647,8 @@
           "exportKind": "const",
           "filePath": "src/intake/DocumentIntake.models.ts",
           "repoPath": "apps/professional-desktop/src/intake/DocumentIntake.models.ts",
-          "line": 96,
-          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-96-intakerefusal",
+          "line": 103,
+          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-103-intakerefusal",
           "currentTags": [
             "@category",
             "@since"
@@ -634669,8 +634669,8 @@
           "exportKind": "const",
           "filePath": "src/intake/DocumentIntake.models.ts",
           "repoPath": "apps/professional-desktop/src/intake/DocumentIntake.models.ts",
-          "line": 152,
-          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-152-intakeresultentry",
+          "line": 165,
+          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-165-intakeresultentry",
           "currentTags": [
             "@category",
             "@since"
@@ -634691,8 +634691,8 @@
           "exportKind": "type",
           "filePath": "src/intake/DocumentIntake.models.ts",
           "repoPath": "apps/professional-desktop/src/intake/DocumentIntake.models.ts",
-          "line": 167,
-          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-167-intakeresultentry",
+          "line": 180,
+          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-180-intakeresultentry",
           "currentTags": [
             "@category",
             "@since"
@@ -634713,8 +634713,8 @@
           "exportKind": "const",
           "filePath": "src/intake/DocumentIntake.models.ts",
           "repoPath": "apps/professional-desktop/src/intake/DocumentIntake.models.ts",
-          "line": 240,
-          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-240-vaultselectionstate",
+          "line": 268,
+          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-268-vaultselectionstate",
           "currentTags": [
             "@category",
             "@since"
@@ -634735,8 +634735,8 @@
           "exportKind": "type",
           "filePath": "src/intake/DocumentIntake.models.ts",
           "repoPath": "apps/professional-desktop/src/intake/DocumentIntake.models.ts",
-          "line": 261,
-          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-261-vaultselectionstate",
+          "line": 289,
+          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-289-vaultselectionstate",
           "currentTags": [
             "@category",
             "@since"
@@ -634757,8 +634757,8 @@
           "exportKind": "const",
           "filePath": "src/intake/DocumentIntake.models.ts",
           "repoPath": "apps/professional-desktop/src/intake/DocumentIntake.models.ts",
-          "line": 283,
-          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-283-documentintakevaultstatus",
+          "line": 311,
+          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-311-documentintakevaultstatus",
           "currentTags": [
             "@category",
             "@since"
@@ -634779,8 +634779,8 @@
           "exportKind": "type",
           "filePath": "src/intake/DocumentIntake.models.ts",
           "repoPath": "apps/professional-desktop/src/intake/DocumentIntake.models.ts",
-          "line": 295,
-          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-295-documentintakevaultstatus",
+          "line": 323,
+          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-323-documentintakevaultstatus",
           "currentTags": [
             "@category",
             "@since"
@@ -634801,8 +634801,8 @@
           "exportKind": "class",
           "filePath": "src/intake/DocumentIntake.models.ts",
           "repoPath": "apps/professional-desktop/src/intake/DocumentIntake.models.ts",
-          "line": 312,
-          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-312-documentintakestate",
+          "line": 340,
+          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-340-documentintakestate",
           "currentTags": [
             "@category",
             "@since"
@@ -634823,8 +634823,8 @@
           "exportKind": "class",
           "filePath": "src/intake/DocumentIntake.models.ts",
           "repoPath": "apps/professional-desktop/src/intake/DocumentIntake.models.ts",
-          "line": 357,
-          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-357-droppeddocumentinput",
+          "line": 388,
+          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-388-droppeddocumentinput",
           "currentTags": [
             "@category",
             "@since"
@@ -634845,8 +634845,8 @@
           "exportKind": "const",
           "filePath": "src/intake/DocumentIntake.models.ts",
           "repoPath": "apps/professional-desktop/src/intake/DocumentIntake.models.ts",
-          "line": 394,
-          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-394-intakedroppedfilepayload",
+          "line": 428,
+          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-428-intakedroppedfilepayload",
           "currentTags": [
             "@category",
             "@since"
@@ -634867,8 +634867,8 @@
           "exportKind": "class",
           "filePath": "src/intake/DocumentIntake.models.ts",
           "repoPath": "apps/professional-desktop/src/intake/DocumentIntake.models.ts",
-          "line": 415,
-          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-415-vaultdirectorypickerinvocationerror",
+          "line": 449,
+          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-449-vaultdirectorypickerinvocationerror",
           "currentTags": [
             "@category",
             "@since"
@@ -634889,8 +634889,8 @@
           "exportKind": "class",
           "filePath": "src/intake/DocumentIntake.models.ts",
           "repoPath": "apps/professional-desktop/src/intake/DocumentIntake.models.ts",
-          "line": 443,
-          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-443-browserfilereaderror",
+          "line": 477,
+          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-477-browserfilereaderror",
           "currentTags": [
             "@category",
             "@since"
@@ -634911,8 +634911,8 @@
           "exportKind": "const",
           "filePath": "src/intake/DocumentIntake.models.ts",
           "repoPath": "apps/professional-desktop/src/intake/DocumentIntake.models.ts",
-          "line": 494,
-          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-494-batchidfor",
+          "line": 528,
+          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-528-batchidfor",
           "currentTags": [
             "@param",
             "@returns",
@@ -634935,8 +634935,8 @@
           "exportKind": "const",
           "filePath": "src/intake/DocumentIntake.models.ts",
           "repoPath": "apps/professional-desktop/src/intake/DocumentIntake.models.ts",
-          "line": 526,
-          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-526-nonemptyfilename",
+          "line": 560,
+          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-560-nonemptyfilename",
           "currentTags": [
             "@param",
             "@returns",
@@ -634959,8 +634959,8 @@
           "exportKind": "class",
           "filePath": "src/intake/DocumentIntake.models.ts",
           "repoPath": "apps/professional-desktop/src/intake/DocumentIntake.models.ts",
-          "line": 567,
-          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-567-intakebatchinput",
+          "line": 601,
+          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-601-intakebatchinput",
           "currentTags": [
             "@category",
             "@since"
@@ -634981,8 +634981,8 @@
           "exportKind": "class",
           "filePath": "src/intake/DocumentIntake.models.ts",
           "repoPath": "apps/professional-desktop/src/intake/DocumentIntake.models.ts",
-          "line": 603,
-          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-603-intakebatchcontext",
+          "line": 640,
+          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-640-intakebatchcontext",
           "currentTags": [
             "@category",
             "@since"
@@ -635003,8 +635003,8 @@
           "exportKind": "class",
           "filePath": "src/intake/DocumentIntake.models.ts",
           "repoPath": "apps/professional-desktop/src/intake/DocumentIntake.models.ts",
-          "line": 635,
-          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-635-intakebatchoutput",
+          "line": 675,
+          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-675-intakebatchoutput",
           "currentTags": [
             "@category",
             "@since"
@@ -635025,8 +635025,8 @@
           "exportKind": "class",
           "filePath": "src/intake/DocumentIntake.models.ts",
           "repoPath": "apps/professional-desktop/src/intake/DocumentIntake.models.ts",
-          "line": 661,
-          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-661-intakecurrentfilecontext",
+          "line": 704,
+          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-704-intakecurrentfilecontext",
           "currentTags": [
             "@category",
             "@since"
@@ -635047,8 +635047,8 @@
           "exportKind": "class",
           "filePath": "src/intake/DocumentIntake.models.ts",
           "repoPath": "apps/professional-desktop/src/intake/DocumentIntake.models.ts",
-          "line": 684,
-          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-684-readfileinput",
+          "line": 730,
+          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-730-readfileinput",
           "currentTags": [
             "@category",
             "@since"
@@ -635069,8 +635069,8 @@
           "exportKind": "class",
           "filePath": "src/intake/DocumentIntake.models.ts",
           "repoPath": "apps/professional-desktop/src/intake/DocumentIntake.models.ts",
-          "line": 707,
-          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-707-intakerefusedstateinput",
+          "line": 756,
+          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-756-intakerefusedstateinput",
           "currentTags": [
             "@category",
             "@since"
@@ -635091,8 +635091,8 @@
           "exportKind": "class",
           "filePath": "src/intake/DocumentIntake.models.ts",
           "repoPath": "apps/professional-desktop/src/intake/DocumentIntake.models.ts",
-          "line": 735,
-          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-735-intakesubmittingstateinput",
+          "line": 787,
+          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-787-intakesubmittingstateinput",
           "currentTags": [
             "@category",
             "@since"
@@ -635113,8 +635113,8 @@
           "exportKind": "const",
           "filePath": "src/intake/DocumentIntake.models.ts",
           "repoPath": "apps/professional-desktop/src/intake/DocumentIntake.models.ts",
-          "line": 759,
-          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-759-intakebatchemitted",
+          "line": 814,
+          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-814-intakebatchemitted",
           "currentTags": [
             "@category",
             "@since"
@@ -635135,8 +635135,8 @@
           "exportKind": "class",
           "filePath": "src/intake/DocumentIntake.models.ts",
           "repoPath": "apps/professional-desktop/src/intake/DocumentIntake.models.ts",
-          "line": 779,
-          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-779-documentintakeinput",
+          "line": 834,
+          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-834-documentintakeinput",
           "currentTags": [
             "@category",
             "@since"
@@ -635157,8 +635157,8 @@
           "exportKind": "class",
           "filePath": "src/intake/DocumentIntake.models.ts",
           "repoPath": "apps/professional-desktop/src/intake/DocumentIntake.models.ts",
-          "line": 823,
-          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-823-documentintakecontext",
+          "line": 881,
+          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-881-documentintakecontext",
           "currentTags": [
             "@category",
             "@since"
@@ -635179,8 +635179,8 @@
           "exportKind": "class",
           "filePath": "src/intake/DocumentIntake.models.ts",
           "repoPath": "apps/professional-desktop/src/intake/DocumentIntake.models.ts",
-          "line": 856,
-          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-856-vaultfailurecontext",
+          "line": 917,
+          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-917-vaultfailurecontext",
           "currentTags": [
             "@category",
             "@since"
@@ -635201,8 +635201,8 @@
           "exportKind": "class",
           "filePath": "src/intake/DocumentIntake.models.ts",
           "repoPath": "apps/professional-desktop/src/intake/DocumentIntake.models.ts",
-          "line": 879,
-          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-879-vaultsavingstateinput",
+          "line": 943,
+          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-943-vaultsavingstateinput",
           "currentTags": [
             "@category",
             "@since"
@@ -635223,8 +635223,8 @@
           "exportKind": "class",
           "filePath": "src/intake/DocumentIntake.models.ts",
           "repoPath": "apps/professional-desktop/src/intake/DocumentIntake.models.ts",
-          "line": 902,
-          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-902-vaultfailurestateinput",
+          "line": 969,
+          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-969-vaultfailurestateinput",
           "currentTags": [
             "@category",
             "@since"
@@ -635245,8 +635245,8 @@
           "exportKind": "const",
           "filePath": "src/intake/DocumentIntake.models.ts",
           "repoPath": "apps/professional-desktop/src/intake/DocumentIntake.models.ts",
-          "line": 969,
-          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-969-pickeroutcome",
+          "line": 1051,
+          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-1051-pickeroutcome",
           "currentTags": [
             "@category",
             "@since"
@@ -635267,8 +635267,8 @@
           "exportKind": "const",
           "filePath": "src/intake/DocumentIntake.models.ts",
           "repoPath": "apps/professional-desktop/src/intake/DocumentIntake.models.ts",
-          "line": 1019,
-          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-1019-manualoutcome",
+          "line": 1107,
+          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-1107-manualoutcome",
           "currentTags": [
             "@category",
             "@since"
@@ -635289,8 +635289,8 @@
           "exportKind": "class",
           "filePath": "src/intake/DocumentIntake.models.ts",
           "repoPath": "apps/professional-desktop/src/intake/DocumentIntake.models.ts",
-          "line": 1044,
-          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-1044-persistvaultrootinput",
+          "line": 1132,
+          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-1132-persistvaultrootinput",
           "currentTags": [
             "@category",
             "@since"
@@ -635311,8 +635311,8 @@
           "exportKind": "class",
           "filePath": "src/intake/DocumentIntake.models.ts",
           "repoPath": "apps/professional-desktop/src/intake/DocumentIntake.models.ts",
-          "line": 1071,
-          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-1071-vaultconfigfeedinput",
+          "line": 1162,
+          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-1162-vaultconfigfeedinput",
           "currentTags": [
             "@category",
             "@since"
@@ -635333,8 +635333,8 @@
           "exportKind": "const",
           "filePath": "src/intake/DocumentIntake.models.ts",
           "repoPath": "apps/professional-desktop/src/intake/DocumentIntake.models.ts",
-          "line": 1133,
-          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-1133-intakeeventpayloads",
+          "line": 1227,
+          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-1227-intakeeventpayloads",
           "currentTags": [
             "@category",
             "@since"
@@ -635355,8 +635355,8 @@
           "exportKind": "const",
           "filePath": "src/intake/DocumentIntake.models.ts",
           "repoPath": "apps/professional-desktop/src/intake/DocumentIntake.models.ts",
-          "line": 1167,
-          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-1167-intakeinternaleventpayloads",
+          "line": 1261,
+          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-1261-intakeinternaleventpayloads",
           "currentTags": [
             "@category",
             "@since"
@@ -635377,8 +635377,8 @@
           "exportKind": "const",
           "filePath": "src/intake/DocumentIntake.models.ts",
           "repoPath": "apps/professional-desktop/src/intake/DocumentIntake.models.ts",
-          "line": 1195,
-          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-1195-intakebatchrelaypayloads",
+          "line": 1289,
+          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-1289-intakebatchrelaypayloads",
           "currentTags": [
             "@category",
             "@since"
@@ -635399,8 +635399,8 @@
           "exportKind": "type",
           "filePath": "src/intake/DocumentIntake.models.ts",
           "repoPath": "apps/professional-desktop/src/intake/DocumentIntake.models.ts",
-          "line": 1226,
-          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-1226-vaultselectionoutcome",
+          "line": 1320,
+          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-1320-vaultselectionoutcome",
           "currentTags": [
             "@category",
             "@since"
@@ -635421,8 +635421,8 @@
           "exportKind": "const",
           "filePath": "src/intake/DocumentIntake.models.ts",
           "repoPath": "apps/professional-desktop/src/intake/DocumentIntake.models.ts",
-          "line": 1244,
-          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-1244-documentintakeemitted",
+          "line": 1338,
+          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-1338-documentintakeemitted",
           "currentTags": [
             "@category",
             "@since"
@@ -635443,8 +635443,8 @@
           "exportKind": "class",
           "filePath": "src/intake/DocumentIntake.models.ts",
           "repoPath": "apps/professional-desktop/src/intake/DocumentIntake.models.ts",
-          "line": 1285,
-          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-1285-intakelogrequest",
+          "line": 1379,
+          "anchor": "apps-professional-desktop-src-intake-documentintake-models-ts-1379-intakelogrequest",
           "currentTags": [
             "@category",
             "@since"
