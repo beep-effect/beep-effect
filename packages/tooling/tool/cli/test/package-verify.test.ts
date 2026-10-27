@@ -159,6 +159,31 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
       ]);
     });
 
+    // The quick check typechecks against built dependency declarations too; without the closure
+    // build a stale or missing dependency build reported errors hosted Check never sees.
+    it("builds upstream check dependencies through Turbo before the package script", () => {
+      const plan = packageVerifyStepPlanForTesting(
+        "/repo",
+        demoWorkspace,
+        PackageVerifyStepSpec.make({ step: "check", script: "beep:check" })
+      );
+
+      expect(A.map(plan, ({ args, command, cwd, label }) => ({ args, command, cwd, label }))).toEqual([
+        {
+          label: "check:build-closure",
+          command: "bun",
+          args: ["x", "turbo", "run", "build", "--filter=@beep/demo^..."],
+          cwd: "/repo",
+        },
+        {
+          label: "check",
+          command: "bun",
+          args: ["run", "beep:check"],
+          cwd: "/repo/packages/demo",
+        },
+      ]);
+    });
+
     it.effect("does not run the package audit when its closure build fails", () =>
       Effect.flatMap(temporaryDirectory, (tmpDir) =>
         Effect.gen(function* () {
@@ -300,6 +325,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
               const fs = yield* FileSystem.FileSystem;
               const path = yield* Path.Path;
               yield* seedWorkspaceRepository(tmpDir, { "beep:lint": "true", "beep:check": "true" });
+              // The quick check builds the upstream closure through the workspace's Turbo first.
+              const turbo = path.join(tmpDir, "node_modules/.bin/turbo");
+              yield* fs.makeDirectory(path.dirname(turbo), { recursive: true });
+              yield* fs.writeFileString(turbo, "#!/bin/sh\nexit 0\n");
+              yield* fs.chmod(turbo, 0o755);
 
               const report = yield* runPackageVerify({ packageName: O.some("@beep/demo"), quick: true });
 

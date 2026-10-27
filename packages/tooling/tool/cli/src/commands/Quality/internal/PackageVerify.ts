@@ -636,10 +636,13 @@ const packageVerifyStepPlan = (
     args: ["run", spec.script],
     cwd: workspace.dir,
   });
-  return PackageVerifyStepName.is.audit(spec.step)
+  // Both scripts typecheck against the dependencies' built declarations, which Turbo's own
+  // `check` and `audit` tasks build first (`^build`). Running the bare script against a stale
+  // or missing dependency build reports errors hosted Check never sees.
+  return PackageVerifyStepName.is.audit(spec.step) || PackageVerifyStepName.is.check(spec.step)
     ? [
         QualityTaskStep.make({
-          label: "audit:build-closure",
+          label: `${spec.step}:build-closure`,
           command: "bun",
           args: ["x", "turbo", "run", "build", `--filter=${workspace.name}^...`],
           cwd: repoRoot,
@@ -985,9 +988,10 @@ export const packageVerifyStepSpecsForTesting = packageVerifyStepSpecs;
  *
  * **Details**
  *
- * Audit plans refresh the selected package's upstream Turbo build closure
- * without rebuilding the package itself before invoking its package-local
- * audit. Other steps remain direct package script invocations.
+ * Audit and check plans refresh the selected package's upstream Turbo build
+ * closure without rebuilding the package itself before invoking its
+ * package-local script, as Turbo's own `audit` and `check` tasks do. Lint and
+ * docgen remain direct package script invocations.
  *
  * **Example** (Inspect an audit plan)
  *
