@@ -88,7 +88,6 @@ export const SafeHtmlAttributes = readonlyStruct({
  *
  * ```ts import.meta.vitest name="Make empty attributes object"
  * import { SafeHtmlAttributesStruct } from "@beep/html/Html.policy"
- *
  * import * as S from "effect/Schema"
  *
  * const attributes = SafeHtmlAttributesStruct.make({})
