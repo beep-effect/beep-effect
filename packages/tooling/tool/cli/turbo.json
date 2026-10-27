@@ -22,8 +22,7 @@
         "!$TURBO_ROOT$/packages/_internal/db-admin/**/dist/**",
         "!$TURBO_ROOT$/packages/_internal/db-admin/**/docs/**",
         "!$TURBO_ROOT$/packages/_internal/db-admin/**/.turbo/**",
-        "!$TURBO_ROOT$/packages/_internal/db-admin/**/node_modules/**",
-        "$TURBO_ROOT$/standards/effect-diagnostics.profile.json"
+        "!$TURBO_ROOT$/packages/_internal/db-admin/**/node_modules/**"
       ]
     },
     "test:property": {
@@ -31,8 +30,7 @@
         "$TURBO_EXTENDS$",
         "$TURBO_ROOT$/turbo.json",
         "$TURBO_ROOT$/goals/time-to-certainty/research/economics.json",
-        "$TURBO_ROOT$/goals/time-to-certainty/research/gate-order-handoff.json",
-        "$TURBO_ROOT$/standards/effect-diagnostics.profile.json"
+        "$TURBO_ROOT$/goals/time-to-certainty/research/gate-order-handoff.json"
       ]
     }
   }

@@ -185,7 +185,6 @@ export const planFinalCheckSteps: {
             ),
           ]),
       lane("repo-sanity", "Repo Sanity", "repo-sanity"),
-      lane("effect-diagnostics", "Heavy / Effect Diagnostics", "effect-diagnostics"),
       lane("check", "Heavy / Check", "check"),
       lane("docgen", "Heavy / Docgen", "docgen"),
       lane("fallow", "Fallow Advisory Envelopes", "fallow"),

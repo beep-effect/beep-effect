@@ -293,7 +293,6 @@ describe("planFinalCheckSteps", () => {
       BASE,
       "--summarize",
     ]);
-    expect(argv("final-check:effect-diagnostics")).toContain("effect-diagnostics");
     expect(argv("final-check:docgen")).toEqual([
       "run",
       "beep",

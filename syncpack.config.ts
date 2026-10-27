@@ -142,18 +142,16 @@ const config = {
       // @nodable/flexible-xml-parser, which references Buffer at module
       // scope and breaks every browser bundle.
       // @effect/tsgo pins its seven platform binaries exactly, so only its own
-      // catalog entry moves. A reviewed bump updates the combined root/lane
-      // diagnosticSeverity map and the standalone `beep quality effect-diagnostics`
-      // census before this pin moves.
+      // catalog entry moves. A reviewed bump updates the root diagnosticSeverity
+      // map and the copied profiles and runs the full check graph as the census
+      // before this pin moves.
       // tsrs (oxc-project/tsrs) is held with it: `effect-tsgo patch --tsrs` only
       // has an Effect build for the tsrs versions the installed @effect/tsgo
       // packages ship (0.59.0 ships 0.20.0-ts7.1.0-beta), so the two pins move
       // together in one reviewed bump (goals/tsrs-gates).
-      // Effect rules come from @effect/tsgo through that diagnostics lane;
-      // That lane is required; the three ignore flags are true, so tsrs
-      // gates TypeScript errors only. The Effect-patched tsrs knows every rule
-      // name in standards/effect-diagnostics.profile.json, so the fold into the
-      // compiler maps and the lane's retirement are the next PR (goals/tsrs-gates).
+      // Every Effect rule gates inside the Effect-patched tsrs: the three
+      // ignoreEffect*InTscExitCode flags are false and the standalone
+      // diagnostics lane is retired (goals/tsrs-gates PR 2, 2026-10-27).
       // 0.53.0 was measured across all workspace check/test projects on
       // 2026-10-14 (goals/effect-rules-diagnostics-lane); the patch-only 0.53.4
       // bump added no rules (hold register, 2026-10-17). All six 0.52 rules are

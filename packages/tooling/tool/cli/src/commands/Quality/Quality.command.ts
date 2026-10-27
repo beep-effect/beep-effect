@@ -64,7 +64,6 @@ import { CatalogUsageSourceLive, runCatalogUsageCheck } from "./CatalogUsage.ts"
 import { runChangesetGraphCheck } from "./ChangesetGraph.ts";
 import { changesetStatusCommand } from "./ChangesetStatus.ts";
 import { checkCensusCommand } from "./CheckCensus.ts";
-import { effectDiagnosticsCommand, readEffectDiagnosticsProfile } from "./EffectDiagnostics.ts";
 import { qualityFallowCommand } from "./FallowQuality.command.ts";
 import {
   githubCheckChangesetStatusLane,
@@ -2910,14 +2909,12 @@ export const runTsgoRulesCheck = Effect.fn("QualityScriptCommands.runTsgoRulesCh
     });
   }
 
-  const profile = yield* readEffectDiagnosticsProfile(repoRoot);
-  const combinedSeverity = { ...diagnosticSeverity.value, ...profile.diagnosticSeverity };
-  const configuredRuleNames = pipe(R.keys(combinedSeverity), A.sort(Order.String));
+  const configuredRuleNames = pipe(R.keys(diagnosticSeverity.value), A.sort(Order.String));
   const missingRuleNames = A.filter(installedRuleNames, (ruleName) => !A.contains(configuredRuleNames, ruleName));
   const extraRuleNames = A.filter(configuredRuleNames, (ruleName) => !A.contains(installedRuleNames, ruleName));
   const { nonErrorSeverities, disabledSeverityEntries } = collectTsgoSeverityDiagnostics({
-    plugin: { ...plugin.value, diagnosticSeverity: combinedSeverity },
-    diagnosticSeverity: combinedSeverity,
+    plugin: plugin.value,
+    diagnosticSeverity: diagnosticSeverity.value,
   });
   const pluginOptionDiagnostics = collectPluginOptionParityDiagnostics(documentedOptionNames, plugin.value);
   const { pluginProfileDiagnostics, disabledDirectives } = yield* collectTsgoWorkspaceScanDiagnostics({
@@ -4401,7 +4398,6 @@ export const qualityCommand = Command.make("quality", {}, () =>
     "- bun run beep quality bun-audit",
     "- bun run beep quality test-tsgo",
     "- bun run beep quality tsgo-smoke",
-    "- bun run beep quality effect-diagnostics [--base <ref>] [--concurrency <1..6>] [--filter <workspace>]",
     "- bun run beep quality check-census [--filter <name>] [--output-json <path>]",
     "- bun run beep quality tsgo-rules",
     "- bun run beep quality jsdoc-module-tags",
@@ -4429,7 +4425,6 @@ export const qualityCommand = Command.make("quality", {}, () =>
     testTsgoCommand,
     testTsgoPackageCommand,
     tsgoSmokeCommand,
-    effectDiagnosticsCommand,
     checkCensusCommand,
     tsgoRulesCommand,
     jsdocModuleTagsCommand,

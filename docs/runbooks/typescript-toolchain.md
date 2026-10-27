@@ -12,7 +12,7 @@ binary; the Effect-patched tsrs is the build/check gate.
 | `typescript` | `^7.0.2` | Native TypeScript 7 package; no classic `lib/typescript.js` API. |
 | `@typescript/native` | `npm:typescript@^7.0.2` | The same TypeScript 7 package under the retained alias, used by patching and unstable API consumers. Alias consolidation is a separate follow-up. |
 | `@typescript/typescript6` | `6.0.2` (exact) | Microsoft’s classic JS API bridge for the schema-opaque codemod/fixup, scratchpad JSDoc census; declared at root and in scratchpad. |
-| `@effect/tsgo` (pins its seven `@effect/tsgo-<platform>` packages exactly) | `0.59.0` | The Effect language service build of TypeScript 7. Editors and the independent Effect diagnostics lane use this reviewed pin. Since 0.59.0 the platform packages also ship the Effect build of one `tsrs` version each, so the `tsrs` pin moves with this one. |
+| `@effect/tsgo` (pins its seven `@effect/tsgo-<platform>` packages exactly) | `0.59.0` | The Effect language service build of TypeScript 7. Editors and the tsgo-only quality lanes use this reviewed pin. Since 0.59.0 the platform packages also ship the Effect build of one `tsrs` version each, so the `tsrs` pin moves with this one. |
 | `tsrs` + seven `@tsrs/<platform>` optional packages | `0.20.0-ts7.1.0-beta` | The Rust port of the TypeScript 7 compiler ([oxc-project/tsrs](https://github.com/oxc-project/tsrs)); the version tag names the TypeScript it ports (`7.1.0-beta`). `effect-tsgo patch --tsrs` replaces the installed `@tsrs/<platform>` binary with the Effect build of that exact tsrs version, which `@effect/tsgo` 0.59.0 ships for linux-x64, linux-arm64 and darwin-arm64 (Effect-TS/tsgo #901, the 1:1 Rust port of the language service). Runs generated library `beep:build`, `beep:check` and `beep:check:tests` gates, the root `check:configs`, and infra's `-b` check. Framework apps retain their own build commands. |
 
 The root `prepare` script (`effect-tsgo unpatch --tsrs && node scripts/prune-tsgo-backups.mjs && effect-tsgo patch --tsrs`)
@@ -27,9 +27,8 @@ node_modules/.bin/tsgo     -> tools/tsgo-shim/tsgo.js     (execs the Effect arti
 ```
 
 Docgen's example compile, `beep quality test-tsgo`, the Effect smoke canary,
-rule-parity tools and the editors use the Effect compiler. The independent
-`beep quality effect-diagnostics` command reports the reviewed Effect rule set.
-Required Check continues enforcing the embedded shared rules during promotion.
+rule-parity tools and the editors use the Go Effect compiler; the gates use the
+Effect-patched tsrs, and both enforce the same reviewed rule set (below).
 The shim bypasses the patch on purpose: a preserved
 `.original` backup can make a newer patcher mistake an older Effect compiler for
 the current one (`tools/tsgo-shim/tsgo.js`).
@@ -95,8 +94,9 @@ patches an installed `tsrs` of that version, so:
    them. `EffectTsgoEffectFnPolicy.test.ts` pins the exact `@effect/tsgo`
    version and the tsrs identity line, the root-map unknown-rule canary and the
    exit-code policy.
-5. A bump that adds rules follows the Effect diagnostics bump procedure below:
-   the root severity map, the disabled-rule ledger and the all-project census.
+5. A bump that adds rules follows the rule-map procedure under "Effect rules
+   gate through Check": the root severity map and copied profiles, the
+   declared-off ledger and the full check graph as the census.
 
 ## Binary paths (Linux x64)
 
@@ -116,112 +116,37 @@ Verified at 0.59.0. Substitute the platform triple on other machines.
   shipped with its `lib.*.d.ts` files beside it (the tsrs build loads them from
   disk, matching upstream's `noembed` packaging).
 
-## Independent Effect diagnostics
+## Effect rules gate through Check
 
-Effect rules come from the reviewed `@effect/tsgo` pin through:
+Every Effect rule gates inside the compiler: the three
+`ignoreEffect*InTscExitCode` options are **false** in `tsconfig.base.json` and
+every copied compiler profile, so `tsrs` in `beep:build`, `beep:check` and
+`beep:check:*` (and `tsgo` in the test-tsgo lanes) fails on an Effect error the
+same way it fails on a TypeScript error. `Heavy / Check` is the Effect-rule
+gate; there is no separate diagnostics job. A policy fixture in
+`@beep/repo-configs` proves an Effect-only finding fails `tsrs`, an empty-project
+canary proves the root map produces no unknown-rule warnings, and
+`beep quality tsgo-rules` checks that every installed rule is configured, that
+the copied profiles match the root map (effect-drizzle's documented
+`missedPipeableOpportunity` exception aside), and that the documented plugin
+options are explicit.
 
-```sh
-bun run beep quality effect-diagnostics
-# Bounded edit loop:
-bun run beep quality effect-diagnostics --filter @beep/observability
-```
+The root map in `tsconfig.base.json` holds all 130 rules of the installed
+`@effect/tsgo` (125 errors, five declared off: `apiStabilityLeak`,
+`experimentalApiUsage`, `unstableApiUsage`, `preferBarrelImport`,
+`preferNamespaceImport`). The import-style rules stay off because intentional
+named helper imports are pervasive and Effect barrel imports violate the
+module-path law.
 
-`Heavy / Effect Diagnostics` is an independent parallel matrix job, outside
-Heavy / Check and root `bun run check`. It is a required context and the only
-gate for Effect rules; tsrs in Heavy / Check reports them but no longer fails
-on them. PRs pass
-`--base origin/<base>`; trusted main pushes run the full inventory. The CLI reuses the coverage lane's workspace
-inventory and transitive dependent helper, including packages without coverage
-scripts and lab apps. Root compiler/lockfile/runner changes select all projects;
-repository prose selects none. Dirty paths join the base-to-HEAD diff locally.
-The hosted job uses a 19-GiB hard cgroup ceiling, with swap disabled, via the
-runner's existing user systemd manager, using the transient-service transport
-used by beep-heavy. A named unit is stopped on shell exit and has an 85-minute
-runtime ceiling. A missing manager fails visibly.
-
-Use `--concurrency 1..6` or `BEEP_EFFECT_DIAGNOSTICS_CONCURRENCY`; the flag
-wins over the environment. The default is **2 projects**: the eight-CPU full
-sweep took 717.407s with 11.89 GiB peak job cgroup memory, versus 1497.811s
-serially. Four workers reached 21.52 GiB and six exceeded 24 GiB, so neither
-fits the approximately 60%-of-32-GiB budget. The H2 packet records the complete
-measurements and final capped PR replay.
-For historical comparison, the 2026-10-14 serial spike took 1,423.881 seconds and peaked at
-8,109,752 KiB RSS. The compiler comparison took 132.424 seconds. Detailed
-coverage, project-profile corrections and the new-rule census live in
-`goals/effect-rules-diagnostics-lane/history/2026-10-14-spike.md`.
-
-Discovery uses declared workspace roots, including lab apps, and the repository
-root manifest. Candidates come from both `tsrs` and `tsgo` invocations in
-canonical `check` / `beep:check` entrypoints and the scripts they invoke, plus
-the root check scripts. `-p` / `--project` selects a program; `-b` / `--build`
-expands project references recursively. Optional workspace audits that these
-entrypoints never invoke are excluded. This covers check, test, scripts,
-stories, examples, drizzle and root configs programs without a parallel list of
-config kinds, including t3-code's Go compiler check and test programs.
-
-The lane also reuses `test-tsgo` and `test-tsgo-package`'s test-file discovery,
-package ownership, coverage partition and synthetic-config renderer. Tests
-already covered by canonical checks reuse those programs. Uncovered tests run
-with the same inherited config and exact file list as the Go test gate; this
-includes repo-cli's `test/tsconfig.json` overlay. `tsgo-smoke` compiles an
-intentional canary created entirely in a temporary directory, so it contributes
-no persistent repository program. Missing declared projects fail discovery.
-A real-repository parity test asserts equality with the union of compiler-script
-and fallback test programs, verifies every candidate exists on disk, and keeps
-every existing project from the former check/test fixed-name inventory.
-Nested test-fixture packages are excluded unless declared as workspaces.
-Root files select the root configs owner; workspace changes also select that
-owner because its configs program includes workspace Vitest configs.
-Each project runs the installed `effect-tsgo diagnostics --project <config>
---format json --strict` command with bounded Effect concurrency. Project settings are authoritative,
-including effect-drizzle's documented missedPipeableOpportunity exception.
-Malformed JSON, unexpected exits, zero coverage and files without a plugin fail
-the lane. Errors and warnings fail; the configured map promotes enabled rules
-to error. All six 0.52 rules are armed at error; the schema-opaque-default
-closing PR armed `schemaClassMissingBrand` on 2026-10-15 (the post-#1758 spike
-and a full lane run found zero sites). The public catalog payload rename landed
-in #1807; no catalog suppression exception remains. The two 0.53 import-style
-rules remain explicitly off. Intentional named helper imports are pervasive,
-and Effect barrel imports violate the code law.
-
-All three `ignoreEffect*InTscExitCode` options are **true** in the root and
-copied profiles. Compiler checks fail on TypeScript errors only; `tsrs` and `tsgo`
-still print their Effect findings, but every enabled Effect rule, shared or
-newer, gates through the required diagnostics lane across these programs. A policy fixture proves an
-Effect-only finding leaves tsrs at exit 0 while standalone diagnostics rejects
-it, and a TypeScript error still fails tsrs.
-
-The root and all copied compiler profiles contain only the rule names that
-gated through tsc-rs 0.8.0's embedded 0.51.1 rule set; the Effect-patched tsrs
-knows every rule of the installed `@effect/tsgo`. The eleven newer keys (nine from
-0.52–0.53, `schemaClassObjectLiteral` from 0.54 and `preferEffectString` from 0.55) live in
-`standards/effect-diagnostics.profile.json`, decoded by the CLI with a closed
-schema. Each project's `extends` chain is resolved with `TsconfigLoader` from `@beep/repo-tsconfig`.
-The lane validates that resolved plugin with Schema and keeps its settings and overrides, adds the eleven
-profile severities to its diagnosticSeverity map, and passes the complete plugin
-to `effect-tsgo diagnostics --lspconfig`. This replacement option must receive
-the full merged plugin; passing the eleven-key profile alone loses project policy.
-The profile participates in affected selection, so changing it selects all projects.
-The rule-parity checker validates the combined root and lane maps against the
-installed 0.59.0 catalog, while copied compiler profiles match the shared root map.
-
-Promotion followed the first green main run (job 116271099290 on ce5780ed67:
-291 projects, 73,884 file visits, zero findings, 14m17s). The descriptor and
-ruleset 10240248 both require `Heavy / Effect Diagnostics`, and the three
-ignore flags are true. The standalone profile stays: an empty-project canary
-with the nine keys folded into the root map exits 0 with the flags true, and
-tsc-rs 0.8.0 printed nine TS377134 unknown-rule warnings for every project.
-The Effect-patched tsrs prints none (measured 2026-10-26), so folding the
-profile into `tsconfig.base.json` and deleting it with its overlay loader, then
-retiring the lane, is the next PR of `goals/tsrs-gates`. The empty-project
-policy canary keeps proving that the root map produces no unknown-rule warnings.
-
-The eight Effect packages and `tsrs` move together in one reviewed bump (see
-Updating tsrs and @effect/tsgo): the compiler is the Effect build inside
-`@effect/tsgo`, so its rules never lag the editor's. A bump
-must update the complete root severity map and explicit disabled-rule ledger,
-remove retired plugin options, preserve package exceptions and repeat the
-all-project census. `beep quality tsgo-rules` checks that configuration contract.
+History: from 2026-10-14 to `goals/tsrs-gates` PR 2 (2026-10-27) the newest
+rules ran in a standalone `Heavy / Effect Diagnostics` job
+(`goals/effect-rules-diagnostics-lane`), because the gate compiler then was
+tsc-rs with an older rule set compiled in. That job needed an 8-vCPU runner, a
+19 GiB cgroup and 20 to 25 minutes per PR; the Effect-patched tsrs runs the same
+rules inside the four-minute `Heavy / Check`. A bump that adds rules must
+update the complete root severity map and the copied profiles, keep the
+declared-off ledger explicit, remove retired plugin options, and run the full
+check graph as the census.
 
 ## Programmatic access
 
