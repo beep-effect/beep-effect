@@ -186,7 +186,7 @@ describe("oxlint rules in process", () => {
 
     expect(reports).toHaveLength(1);
   });
-  it("ignores process and Bun only while a function scope binds them", () => {
+  it("ignores process while a parameter binding shadows it in nested functions", () => {
     const reports: Array<unknown> = [];
     const rule = createOnceRule("no-direct-process-io", "/repo/packages/example/src/fixture.ts", reports);
 
@@ -199,6 +199,14 @@ describe("oxlint rules in process", () => {
     rule.CallExpression?.(processExit());
     rule["FunctionExpression:exit"]?.(params());
     rule["ArrowFunctionExpression:exit"]?.(params());
+    rule.CallExpression?.(processExit());
+
+    expect(reports).toHaveLength(2);
+  });
+
+  it("ignores Bun only inside the function whose declarator binds it", () => {
+    const reports: Array<unknown> = [];
+    const rule = createOnceRule("no-direct-process-io", "/repo/packages/example/src/fixture.ts", reports);
 
     // A declarator shadows only the names the rule tracks, and only inside its function.
     rule.FunctionDeclaration?.(params());
@@ -208,12 +216,19 @@ describe("oxlint rules in process", () => {
     rule.CallExpression?.(call(member(identifier("Bun"), "exit")));
     rule.CallExpression?.(processExit());
     rule["FunctionDeclaration:exit"]?.(params());
+    rule.CallExpression?.(call(member(identifier("Bun"), "exit")));
 
-    // An unbalanced exit at module scope keeps the module scope.
+    expect(reports).toHaveLength(2);
+  });
+
+  it("keeps the module scope on an unbalanced function exit", () => {
+    const reports: Array<unknown> = [];
+    const rule = createOnceRule("no-direct-process-io", "/repo/packages/example/src/fixture.ts", reports);
+
     rule["FunctionDeclaration:exit"]?.(params());
     rule.CallExpression?.(call(member(identifier("Bun"), "exit")));
 
-    expect(reports).toHaveLength(3);
+    expect(reports).toHaveLength(1);
   });
 
   it("reports wrapped, computed, and assigned process io in production files", () => {
