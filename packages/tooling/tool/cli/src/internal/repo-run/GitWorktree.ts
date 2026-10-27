@@ -9,22 +9,15 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
 import * as O from "@beep/utils/Option";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
-import * as Str from "effect/String";
-import { runRepoCommandCapture, runRepoCommandCaptureRaw } from "./RepoRun.executor.ts";
+import { runRepoCommandCapture } from "./RepoRun.executor.ts";
 import type * as Crypto from "effect/Crypto";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-
-const WORKTREE_RECORD_PREFIX = "worktree ";
-
-const worktreeRecordPath = (record: string): O.Option<string> =>
-  Str.startsWith(WORKTREE_RECORD_PREFIX)(record)
-    ? O.some(Str.slice(Str.length(WORKTREE_RECORD_PREFIX))(record))
-    : O.none();
 
 const resolvedPath = Effect.fnUntraced(function* (
   candidate: string
@@ -39,11 +32,12 @@ const resolvedPath = Effect.fnUntraced(function* (
  *
  * **Details**
  *
- * Reads `git worktree list --porcelain -z` from `repoRoot` and compares every
- * listed path with `worktreePath` after resolving both through `realPath`, so a
- * symlinked checkout still matches. A failed, non-zero, or truncated listing is
- * `None`: callers must treat an unknown registration as a reason to keep the
- * directory rather than as "not registered".
+ * Reads the worktree list through `@beep/git`'s `Git.worktreeList` from
+ * `repoRoot` and compares every listed path with `worktreePath` after
+ * resolving both through `realPath`, so a symlinked checkout still matches. A
+ * listing that fails for any reason (spawn failure, non-zero exit, not a
+ * repository) is `None`: callers must treat an unknown registration as a
+ * reason to keep the directory rather than as "not registered".
  *
  * **Example** (Probe a preview worktree)
  *
@@ -61,27 +55,22 @@ const resolvedPath = Effect.fnUntraced(function* (
  * @category probes
  * @since 0.0.0
  */
-export const isRegisteredWorktree = Effect.fn("GitWorktree.isRegisteredWorktree")(function* (
-  repoRoot: string,
-  worktreePath: string
-): Effect.fn.Return<
-  O.Option<boolean>,
-  never,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
-> {
-  const capture = yield* runRepoCommandCaptureRaw("git", ["worktree", "list", "--porcelain", "-z"], repoRoot).pipe(
-    Effect.option
-  );
-  if (O.isNone(capture) || capture.value.exitCode !== 0 || capture.value.truncated) {
-    return O.none();
-  }
-  const target = yield* resolvedPath(worktreePath);
-  const listed = yield* Effect.forEach(
-    A.getSomes(A.map(Str.split(capture.value.output, "\0"), worktreeRecordPath)),
-    resolvedPath
-  );
-  return O.some(A.contains(listed, target));
-});
+export const isRegisteredWorktree = Effect.fn("GitWorktree.isRegisteredWorktree")(
+  function* (
+    repoRoot: string,
+    worktreePath: string
+  ): Effect.fn.Return<O.Option<boolean>, never, FileSystem.FileSystem | Path.Path | Git> {
+    const git = yield* Git;
+    const entries = yield* git.worktreeList(repoRoot).pipe(Effect.option);
+    if (O.isNone(entries)) {
+      return O.none();
+    }
+    const target = yield* resolvedPath(worktreePath);
+    const listed = yield* Effect.forEach(entries.value, (entry) => resolvedPath(entry.path));
+    return O.some(A.contains(listed, target));
+  },
+  Effect.provideServiceEffect(Git, Git.make)
+);
 
 /**
  * Remove a linked worktree with `git worktree remove --force`, then prune.
@@ -90,8 +79,11 @@ export const isRegisteredWorktree = Effect.fn("GitWorktree.isRegisteredWorktree"
  *
  * `--force` is the designed teardown for synthetic preview worktrees: their
  * commit exists only to be checked out, so local changes inside them are never
- * work to preserve. `worktree prune` always runs afterwards so a registration
- * whose directory already vanished is dropped too. Spawn failures are absorbed.
+ * work to preserve. The removal goes through `@beep/git`'s `Git.worktreeRemove`,
+ * which refuses an option-like path before spawning. `worktree prune` always
+ * runs afterwards so a registration whose directory already vanished is
+ * dropped too; it stays a single repo-run capture because `Git` has no prune
+ * member. Every failure, spawn failures included, is absorbed.
  *
  * **Example** (Tear down a preview worktree)
  *
@@ -109,13 +101,15 @@ export const isRegisteredWorktree = Effect.fn("GitWorktree.isRegisteredWorktree"
  * @category mutations
  * @since 0.0.0
  */
-export const removeGitWorktree = Effect.fn("GitWorktree.removeGitWorktree")(function* (
-  repoRoot: string,
-  worktreePath: string
-): Effect.fn.Return<boolean, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
-  const removed = yield* runRepoCommandCapture("git", ["worktree", "remove", "--force", worktreePath], repoRoot).pipe(
-    Effect.option
-  );
-  yield* runRepoCommandCapture("git", ["worktree", "prune"], repoRoot).pipe(Effect.ignore);
-  return O.exists(removed, (capture) => capture.exitCode === 0);
-});
+export const removeGitWorktree = Effect.fn("GitWorktree.removeGitWorktree")(
+  function* (
+    repoRoot: string,
+    worktreePath: string
+  ): Effect.fn.Return<boolean, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | Git> {
+    const git = yield* Git;
+    const removed = yield* git.worktreeRemove(repoRoot, worktreePath, { force: true }).pipe(Effect.isSuccess);
+    yield* runRepoCommandCapture("git", ["worktree", "prune"], repoRoot).pipe(Effect.ignore);
+    return removed;
+  },
+  Effect.provideServiceEffect(Git, Git.make)
+);

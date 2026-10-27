@@ -1,0 +1,273 @@
+{
+  "tool": "goals/effected-promotion/ops/git-adoption-differential.ts",
+  "commit": "b5d26d88aa4be4319a27784b187708d9dca63874",
+  "git": "git version 2.56.0",
+  "scenarios": 37,
+  "same": 34,
+  "classified": 3,
+  "unclassified": 0,
+  "gates": {
+    "unclassified": true
+  },
+  "rows": [
+    {
+      "site": "readAtMergeBase",
+      "scenario": "present file",
+      "verdict": "same",
+      "old": "{\"_tag\":\"ok\",\"base\":\"0f3b3d4135331e22176d2e3389990b23e3ad2dec\",\"text\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"* @base\\n\"}}",
+      "new": "{\"_tag\":\"ok\",\"base\":\"0f3b3d4135331e22176d2e3389990b23e3ad2dec\",\"text\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"* @base\\n\"}}"
+    },
+    {
+      "site": "readAtMergeBase",
+      "scenario": "absent file",
+      "verdict": "same",
+      "old": "{\"_tag\":\"ok\",\"base\":\"0f3b3d4135331e22176d2e3389990b23e3ad2dec\",\"text\":{\"_id\":\"Option\",\"_tag\":\"None\"}}",
+      "new": "{\"_tag\":\"ok\",\"base\":\"0f3b3d4135331e22176d2e3389990b23e3ad2dec\",\"text\":{\"_id\":\"Option\",\"_tag\":\"None\"}}"
+    },
+    {
+      "site": "readAtMergeBase",
+      "scenario": "directory path",
+      "verdict": "same",
+      "old": "{\"_tag\":\"ok\",\"base\":\"0f3b3d4135331e22176d2e3389990b23e3ad2dec\",\"text\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"tree 0f3b3d4135331e22176d2e3389990b23e3ad2dec:dir with space\\n\\nfile name.md\\n\"}}",
+      "new": "{\"_tag\":\"ok\",\"base\":\"0f3b3d4135331e22176d2e3389990b23e3ad2dec\",\"text\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"tree 0f3b3d4135331e22176d2e3389990b23e3ad2dec:dir with space\\n\\nfile name.md\\n\"}}"
+    },
+    {
+      "site": "readAtMergeBase",
+      "scenario": "path with spaces and unicode",
+      "verdict": "same",
+      "old": "{\"_tag\":\"ok\",\"base\":\"0f3b3d4135331e22176d2e3389990b23e3ad2dec\",\"text\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"unicode: ünïcödé ✓\\n\"}}",
+      "new": "{\"_tag\":\"ok\",\"base\":\"0f3b3d4135331e22176d2e3389990b23e3ad2dec\",\"text\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"unicode: ünïcödé ✓\\n\"}}"
+    },
+    {
+      "site": "readAtMergeBase",
+      "scenario": "untrimmed content without newline",
+      "verdict": "same",
+      "old": "{\"_tag\":\"ok\",\"base\":\"0f3b3d4135331e22176d2e3389990b23e3ad2dec\",\"text\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"  padded text without newline  \"}}",
+      "new": "{\"_tag\":\"ok\",\"base\":\"0f3b3d4135331e22176d2e3389990b23e3ad2dec\",\"text\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"  padded text without newline  \"}}"
+    },
+    {
+      "site": "readAtMergeBase",
+      "scenario": "1 MiB file",
+      "verdict": "same",
+      "old": "{\"_tag\":\"ok\",\"base\":\"0f3b3d4135331e22176d2e3389990b23e3ad2dec\",\"text\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"(self) => self.repeat(Count.normalize(count))\"}}",
+      "new": "{\"_tag\":\"ok\",\"base\":\"0f3b3d4135331e22176d2e3389990b23e3ad2dec\",\"text\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"(self) => self.repeat(Count.normalize(count))\"}}"
+    },
+    {
+      "site": "readAtMergeBase",
+      "scenario": "unknown base ref",
+      "verdict": "same",
+      "old": "{\"_tag\":\"error\"}",
+      "new": "{\"_tag\":\"error\"}"
+    },
+    {
+      "site": "readAtMergeBase",
+      "scenario": "not a repository",
+      "verdict": "same",
+      "old": "{\"_tag\":\"error\"}",
+      "new": "{\"_tag\":\"error\"}"
+    },
+    {
+      "site": "readAtMergeBase",
+      "scenario": "disjoint histories",
+      "verdict": "same",
+      "old": "{\"_tag\":\"error\"}",
+      "new": "{\"_tag\":\"error\"}"
+    },
+    {
+      "site": "readAtMergeBase",
+      "scenario": "unreadable object at the merge-base",
+      "verdict": "fail-closed: a show failure other than absent-at-ref is a typed SkillsCommandError (old answered None)",
+      "old": "{\"_tag\":\"ok\",\"base\":\"0f3b3d4135331e22176d2e3389990b23e3ad2dec\",\"text\":{\"_id\":\"Option\",\"_tag\":\"None\"}}",
+      "new": "{\"_tag\":\"error\"}"
+    },
+    {
+      "site": "isRegisteredWorktree",
+      "scenario": "main worktree",
+      "verdict": "same",
+      "old": "{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":true}",
+      "new": "{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":true}"
+    },
+    {
+      "site": "isRegisteredWorktree",
+      "scenario": "linked with space",
+      "verdict": "same",
+      "old": "{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":true}",
+      "new": "{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":true}"
+    },
+    {
+      "site": "isRegisteredWorktree",
+      "scenario": "path with newline",
+      "verdict": "same",
+      "old": "{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":true}",
+      "new": "{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":true}"
+    },
+    {
+      "site": "isRegisteredWorktree",
+      "scenario": "locked worktree",
+      "verdict": "same",
+      "old": "{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":true}",
+      "new": "{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":true}"
+    },
+    {
+      "site": "isRegisteredWorktree",
+      "scenario": "prunable worktree",
+      "verdict": "same",
+      "old": "{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":true}",
+      "new": "{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":true}"
+    },
+    {
+      "site": "isRegisteredWorktree",
+      "scenario": "symlinked alias",
+      "verdict": "same",
+      "old": "{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":true}",
+      "new": "{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":true}"
+    },
+    {
+      "site": "isRegisteredWorktree",
+      "scenario": "plain directory",
+      "verdict": "same",
+      "old": "{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":false}",
+      "new": "{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":false}"
+    },
+    {
+      "site": "isRegisteredWorktree",
+      "scenario": "missing directory",
+      "verdict": "same",
+      "old": "{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":false}",
+      "new": "{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":false}"
+    },
+    {
+      "site": "isRegisteredWorktree",
+      "scenario": "not a repository",
+      "verdict": "same",
+      "old": "{\"_id\":\"Option\",\"_tag\":\"None\"}",
+      "new": "{\"_id\":\"Option\",\"_tag\":\"None\"}"
+    },
+    {
+      "site": "removeGitWorktree",
+      "scenario": "dirty linked worktree",
+      "verdict": "same",
+      "old": "{\"removed\":true,\"exists\":false}",
+      "new": "{\"removed\":true,\"exists\":false}"
+    },
+    {
+      "site": "removeGitWorktree",
+      "scenario": "locked linked worktree",
+      "verdict": "same",
+      "old": "{\"removed\":false,\"exists\":true}",
+      "new": "{\"removed\":false,\"exists\":true}"
+    },
+    {
+      "site": "removeGitWorktree",
+      "scenario": "unregistered directory",
+      "verdict": "same",
+      "old": "{\"removed\":false,\"exists\":true}",
+      "new": "{\"removed\":false,\"exists\":true}"
+    },
+    {
+      "site": "removeGitWorktree",
+      "scenario": "option-like path",
+      "verdict": "option-refused: Git.worktreeRemove refuses an option-like path before spawning (old handed it to git)",
+      "old": "\"not run: the old body hands --help to git worktree remove as an option, which opens git's help\"",
+      "new": "{\"removed\":false}"
+    },
+    {
+      "site": "detectPrRepository",
+      "scenario": "no origin",
+      "verdict": "message-only: an unset remote.origin.url is the github-origin refusal, not a git exit-1 failure",
+      "old": "\"error: git config failed (exit 1)\"",
+      "new": "\"error: Expected a github.com origin URL.\""
+    },
+    {
+      "site": "detectPrRepository",
+      "scenario": "https origin with .git",
+      "verdict": "same",
+      "old": "\"github.com/beep-effect/beep-effect\"",
+      "new": "\"github.com/beep-effect/beep-effect\""
+    },
+    {
+      "site": "detectPrRepository",
+      "scenario": "ssh origin",
+      "verdict": "same",
+      "old": "\"github.com/owner/repo\"",
+      "new": "\"github.com/owner/repo\""
+    },
+    {
+      "site": "detectPrRepository",
+      "scenario": "origin without .git",
+      "verdict": "same",
+      "old": "\"github.com/owner/repo\"",
+      "new": "\"github.com/owner/repo\""
+    },
+    {
+      "site": "detectPrRepository",
+      "scenario": "non-GitHub origin",
+      "verdict": "same",
+      "old": "\"error: Expected a github.com origin URL.\"",
+      "new": "\"error: Expected a github.com origin URL.\""
+    },
+    {
+      "site": "detectPrRepository",
+      "scenario": "insteadOf rewrite configured",
+      "verdict": "same",
+      "old": "\"github.com/owner/repo\"",
+      "new": "\"github.com/owner/repo\""
+    },
+    {
+      "site": "detectPrRepository",
+      "scenario": "value with surrounding whitespace",
+      "verdict": "same",
+      "old": "\"github.com/owner/repo\"",
+      "new": "\"github.com/owner/repo\""
+    },
+    {
+      "site": "detectPrRepository",
+      "scenario": "vanished directory",
+      "verdict": "same",
+      "old": "\"error: git config failed\"",
+      "new": "\"error: git config failed\""
+    },
+    {
+      "site": "provenanceLabels",
+      "scenario": "unset",
+      "verdict": "same",
+      "old": "true",
+      "new": "true"
+    },
+    {
+      "site": "provenanceLabels",
+      "scenario": "off",
+      "verdict": "same",
+      "old": "false",
+      "new": "false"
+    },
+    {
+      "site": "provenanceLabels",
+      "scenario": "on",
+      "verdict": "same",
+      "old": "true",
+      "new": "true"
+    },
+    {
+      "site": "provenanceLabels",
+      "scenario": "OFF uppercase",
+      "verdict": "same",
+      "old": "true",
+      "new": "true"
+    },
+    {
+      "site": "provenanceLabels",
+      "scenario": "padded off",
+      "verdict": "same",
+      "old": "false",
+      "new": "false"
+    },
+    {
+      "site": "provenanceLabels",
+      "scenario": "multi-valued, last off",
+      "verdict": "same",
+      "old": "false",
+      "new": "false"
+    }
+  ]
+}

@@ -89,7 +89,7 @@ subpath", because the knowledge doctor reads a dot-slash span as a packet-relati
 | R2b | repo-cli `internal/GlobPattern.ts` onto `@beep/glob`; `tinyglobby` out of `EffectImports.ts`; closes "Duplicate glob matching" | main (after 4-CI on `Tasks.ts`) |
 | R5b | slugger/TOC in `@beep/markdown`; `@effect/markdown-toc` out of docgen, repo-cli and root; effect-drizzle README script | main |
 | R9 | exiftool, pdf-tools, obs, tailscale onto `@beep/commands` `Run.collect`; retire the D-03 "Driver-local output folds" row | main (after #2145 if it is close to merging) |
-| R10 | `@beep/git` for `Skills/internal/MergeBase.ts`, `repo-run/GitWorktree.ts`, `Yeet/internal/ProvenanceFooter.ts`, dead `GitExec.ts` collectors | main |
+| R10 (in review, this PR) | `@beep/git` for `Skills/internal/MergeBase.ts`, `repo-run/GitWorktree.ts`, `Yeet/internal/ProvenanceFooter.ts`, dead `GitExec.ts` collectors | main |
 | 4-S (merged, #2183) | `@beep/sbom` (W4-b); lab signer, github-actions, PROMOTED maps | main |
 | 4-X (merged, #2184) | `@beep/xdg` (W4-c); m365-mcp `OutboxConfig`, repo-cli `WorkstationState` | 3-3 |
 | 4-C (merged, #2200) | `@beep/cli-kit` (W4-d); repo-cli MonitorComments + Accounts.view, ai-metrics agent-effectiveness; lab ui retargets | 3-3 |

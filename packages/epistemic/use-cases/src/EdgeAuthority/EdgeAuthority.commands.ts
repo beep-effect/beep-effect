@@ -159,11 +159,12 @@ const RecordEdgeFactFields = S.Struct({
  * @category commands
  * @since 0.0.0
  */
-export class RecordEdgeFact extends S.Class<RecordEdgeFact, { readonly brand: unique symbol }>($I`RecordEdgeFact`)(
-  RecordEdgeFactFields,
-  $I.annote("RecordEdgeFact", {
-    description: "Command asserting one fact about a logical epistemic edge over a known valid-time interval.",
-  })
+export class RecordEdgeFact extends S.Opaque<RecordEdgeFact, { readonly brand: unique symbol }>()(
+  RecordEdgeFactFields.pipe(
+    $I.annoteSchema("RecordEdgeFact", {
+      description: "Command asserting one fact about a logical epistemic edge over a known valid-time interval.",
+    })
+  )
 ) {}
 
 const SupersedeEdgeFactFields = S.Struct({
@@ -238,13 +239,12 @@ const SupersedeEdgeFactFields = S.Struct({
  * @category commands
  * @since 0.0.0
  */
-export class SupersedeEdgeFact extends S.Class<SupersedeEdgeFact, { readonly brand: unique symbol }>(
-  $I`SupersedeEdgeFact`
-)(
-  SupersedeEdgeFactFields,
-  $I.annote("SupersedeEdgeFact", {
-    description: "Command replacing the open head of a logical epistemic edge with a new version.",
-  })
+export class SupersedeEdgeFact extends S.Opaque<SupersedeEdgeFact, { readonly brand: unique symbol }>()(
+  SupersedeEdgeFactFields.pipe(
+    $I.annoteSchema("SupersedeEdgeFact", {
+      description: "Command replacing the open head of a logical epistemic edge with a new version.",
+    })
+  )
 ) {}
 
 /**
