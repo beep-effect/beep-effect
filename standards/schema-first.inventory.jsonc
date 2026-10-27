@@ -8,14 +8,6 @@
   ],
   "entries": [
     {
-      "file": "apps/labs/ciops/src/kpi/Sources.ts",
-      "symbol": "KpiAdmissionRow",
-      "kind": "plain-data-schema-class",
-      "status": "exception",
-      "owner": "@beep/ciops",
-      "reason": "Plain data with a non-literal _tag field (_tag: AdmissionEventTag) that the schema-opaque-default codemod cannot promote to S.TaggedStruct (keep reason tag-field), so it stays a branded S.Class. Follow-up: convert by hand to a branded S.Opaque over S.Struct/S.TaggedStruct."
-    },
-    {
       "file": "apps/oip-web/src/content/OipSeo.ts",
       "symbol": "oipTwitterHandle",
       "kind": "schema-policy-advisory",
@@ -320,14 +312,6 @@
       "line": 28,
       "owner": "@beep/professional-desktop",
       "reason": "Sidecar registration regression decodes fixed RPC payload/result envelopes to prove wiring; schema-derived arbitrary coverage belongs with the use-case schemas."
-    },
-    {
-      "file": "infra/src/CiRunners.ts",
-      "symbol": "CiRunnersNetworkConfig",
-      "kind": "plain-data-schema-class",
-      "status": "exception",
-      "owner": "@beep/infra",
-      "reason": "Plain data whose fields come from a checked struct const (ciRunnersNetworkConfigStruct.pipe(S.check(...))), which the schema-opaque-default codemod could not classify (keep reason fields-expression-unknown), so it stays a branded S.Class. Follow-up: convert by hand to a branded S.Opaque over that struct."
     },
     {
       "file": "infra/src/OipWeb.ts",
@@ -680,22 +664,6 @@
       "status": "exception",
       "owner": "@beep/epistemic-use-cases",
       "reason": "Native Arbitrary companion (Arbitrary.schema + combinators) for the RPC highlight protocol; it is a generator value, not an object schema."
-    },
-    {
-      "file": "packages/epistemic/use-cases/src/EdgeAuthority/EdgeAuthority.commands.ts",
-      "symbol": "RecordEdgeFact",
-      "kind": "plain-data-schema-class",
-      "status": "exception",
-      "owner": "@beep/epistemic-use-cases",
-      "reason": "Plain data whose fields come from a module-level struct const (RecordEdgeFactFields), which the schema-opaque-default codemod could not classify (keep reason fields-expression-unknown), so it stays a branded S.Class. Follow-up: convert by hand to a branded S.Opaque over that struct."
-    },
-    {
-      "file": "packages/epistemic/use-cases/src/EdgeAuthority/EdgeAuthority.commands.ts",
-      "symbol": "SupersedeEdgeFact",
-      "kind": "plain-data-schema-class",
-      "status": "exception",
-      "owner": "@beep/epistemic-use-cases",
-      "reason": "Plain data whose fields come from a module-level struct const (SupersedeEdgeFactFields), which the schema-opaque-default codemod could not classify (keep reason fields-expression-unknown), so it stays a branded S.Class. Follow-up: convert by hand to a branded S.Opaque over that struct."
     },
     {
       "file": "packages/foundation/capability/chalk/src/Chalk.browser.ts",

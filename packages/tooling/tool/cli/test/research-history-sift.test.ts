@@ -3,7 +3,7 @@ import { ResearchHistorySiftOptions } from "@beep/repo-cli/commands/Research";
 import { discoverProfiles, historySiftImpl, VAULT_DIRS } from "@beep/repo-cli/test/Research";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
@@ -14,7 +14,7 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
-const provideTestLayer = provideScopedLayer(Layer.mergeAll(NodeServices.layer, FetchHttpClient.layer));
+const TestLayer = Layer.mergeAll(NodeServices.layer, FetchHttpClient.layer);
 
 // Per-test configuration is a pure provider value, so HOME is provided as a
 // service instead of touching the real one: nothing here may read the
@@ -107,112 +107,100 @@ const makeHome = Effect.fn("ResearchHistorySiftTest.makeHome")(function* (
   return home;
 });
 
-describe("discoverProfiles", () => {
+it.layer(TestLayer, { timeout: "30 seconds" })("discoverProfiles", (it) => {
   it.effect("fails when HOME is not configured", () =>
-    provideTestLayer(
-      Effect.gen(function* () {
-        const error = yield* Effect.flip(discoverProfiles("all").pipe(withHome({})));
-        expect(error.message).toContain("HOME is not set");
-      })
-    )
+    Effect.gen(function* () {
+      const error = yield* Effect.flip(discoverProfiles("all").pipe(withHome({})));
+      expect(error.message).toContain("HOME is not set");
+    })
   );
 
   it.effect("keeps only profile directories that carry a History database", () =>
-    provideTestLayer(
-      Effect.gen(function* () {
-        const home = yield* makeHome([CHROME_CONFIG_DIR]);
-        const profiles = yield* discoverProfiles("chrome").pipe(withHome({ HOME: home }));
+    Effect.gen(function* () {
+      const home = yield* makeHome([CHROME_CONFIG_DIR]);
+      const profiles = yield* discoverProfiles("chrome").pipe(withHome({ HOME: home }));
 
-        expect(profiles).toMatchObject([{ browser: "chrome", profile: "Profile 1" }]);
-      })
-    )
+      expect(profiles).toMatchObject([{ browser: "chrome", profile: "Profile 1" }]);
+    })
   );
 
   // "all" walks both families; a browser that was never installed is skipped
   // rather than failing the scan.
   it.effect("skips a browser family whose config root does not exist", () =>
-    provideTestLayer(
-      Effect.gen(function* () {
-        const home = yield* makeHome([BRAVE_CONFIG_DIR]);
-        const profiles = yield* discoverProfiles("all").pipe(withHome({ HOME: home }));
+    Effect.gen(function* () {
+      const home = yield* makeHome([BRAVE_CONFIG_DIR]);
+      const profiles = yield* discoverProfiles("all").pipe(withHome({ HOME: home }));
 
-        expect(profiles).toMatchObject([{ browser: "brave" }]);
-      })
-    )
+      expect(profiles).toMatchObject([{ browser: "brave" }]);
+    })
   );
 
   it.effect("finds nothing when no Chromium family is installed", () =>
-    provideTestLayer(
-      Effect.gen(function* () {
-        const home = yield* makeHome([]);
-        expect(A.length(yield* discoverProfiles("all").pipe(withHome({ HOME: home })))).toBe(0);
-      })
-    )
+    Effect.gen(function* () {
+      const home = yield* makeHome([]);
+      expect(A.length(yield* discoverProfiles("all").pipe(withHome({ HOME: home })))).toBe(0);
+    })
   );
 });
 
-describe("historySiftImpl", () => {
+it.layer(TestLayer, { timeout: "30 seconds" })("historySiftImpl", (it) => {
   it.effect("reports an empty sift and writes no stubs when no profile exists", () =>
-    provideTestLayer(
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const home = yield* makeHome([]);
-        const vaultRoot = yield* fs.makeTempDirectoryScoped({ prefix: "research-vault-" });
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const home = yield* makeHome([]);
+      const vaultRoot = yield* fs.makeTempDirectoryScoped({ prefix: "research-vault-" });
 
-        const summary = yield* historySiftImpl(
-          ResearchHistorySiftOptions.make({ browser: "all", sinceDays: S.Natural.make(7), vaultRoot })
-        ).pipe(withHome({ HOME: home }));
+      const summary = yield* historySiftImpl(
+        ResearchHistorySiftOptions.make({ browser: "all", sinceDays: S.Natural.make(7), vaultRoot })
+      ).pipe(withHome({ HOME: home }));
 
-        expect(summary.profilesScanned).toBe(0);
-        expect(summary.urlsScanned).toBe(0);
-        expect(summary.stubsWritten).toBe(0);
-        expect(summary.skippedSeen).toBe(0);
-        expect(summary.skippedFiltered).toBe(0);
-        // The catalog is still created, so the next run reads a real seen-URL set.
-        expect(yield* fs.exists(path.join(vaultRoot, VAULT_DIRS.state))).toBe(true);
-      })
-    )
+      expect(summary.profilesScanned).toBe(0);
+      expect(summary.urlsScanned).toBe(0);
+      expect(summary.stubsWritten).toBe(0);
+      expect(summary.skippedSeen).toBe(0);
+      expect(summary.skippedFiltered).toBe(0);
+      // The catalog is still created, so the next run reads a real seen-URL set.
+      expect(yield* fs.exists(path.join(vaultRoot, VAULT_DIRS.state))).toBe(true);
+    })
   );
 
   it.effect("collapses repository subpages into one stub and drops denylisted noise", () =>
-    provideTestLayer(
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const home = yield* makeHome([CHROME_CONFIG_DIR], ROWS);
-        const vaultRoot = yield* fs.makeTempDirectoryScoped({ prefix: "research-vault-" });
-        const options = ResearchHistorySiftOptions.make({
-          browser: "chrome",
-          sinceDays: S.Natural.make(7),
-          vaultRoot,
-        });
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const home = yield* makeHome([CHROME_CONFIG_DIR], ROWS);
+      const vaultRoot = yield* fs.makeTempDirectoryScoped({ prefix: "research-vault-" });
+      const options = ResearchHistorySiftOptions.make({
+        browser: "chrome",
+        sinceDays: S.Natural.make(7),
+        vaultRoot,
+      });
 
-        const summary = yield* historySiftImpl(options).pipe(withHome({ HOME: home }));
+      const summary = yield* historySiftImpl(options).pipe(withHome({ HOME: home }));
 
-        expect(summary.profilesScanned).toBe(1);
-        expect(summary.urlsScanned).toBe(4);
-        expect(summary.skippedFiltered).toBe(1);
-        expect(summary.stubsWritten).toBe(2);
-        expect(summary.skippedSeen).toBe(0);
+      expect(summary.profilesScanned).toBe(1);
+      expect(summary.urlsScanned).toBe(4);
+      expect(summary.skippedFiltered).toBe(1);
+      expect(summary.stubsWritten).toBe(2);
+      expect(summary.skippedSeen).toBe(0);
 
-        const inbox = path.join(vaultRoot, VAULT_DIRS.inbox);
-        const stubs = yield* Effect.forEach(yield* fs.readDirectory(inbox), (name) =>
-          fs.readFileString(path.join(inbox, name))
-        );
-        expect(A.length(stubs)).toBe(2);
-        // The later visit of the same repository supplies the surviving title.
-        expect(A.some(stubs, (stub) => Str.includes("title: Effect packages")(stub))).toBe(true);
-        expect(A.some(stubs, (stub) => Str.includes("url: https://github.com/effect-ts/effect\n")(stub))).toBe(true);
-        // The blank-titled row falls back to its own normalized URL.
-        expect(A.some(stubs, (stub) => Str.includes("title: https://arxiv.org/abs/2401.00001")(stub))).toBe(true);
-        expect(A.every(stubs, (stub) => Str.includes("via: history-sift")(stub))).toBe(true);
+      const inbox = path.join(vaultRoot, VAULT_DIRS.inbox);
+      const stubs = yield* Effect.forEach(yield* fs.readDirectory(inbox), (name) =>
+        fs.readFileString(path.join(inbox, name))
+      );
+      expect(A.length(stubs)).toBe(2);
+      // The later visit of the same repository supplies the surviving title.
+      expect(A.some(stubs, (stub) => Str.includes("title: Effect packages")(stub))).toBe(true);
+      expect(A.some(stubs, (stub) => Str.includes("url: https://github.com/effect-ts/effect\n")(stub))).toBe(true);
+      // The blank-titled row falls back to its own normalized URL.
+      expect(A.some(stubs, (stub) => Str.includes("title: https://arxiv.org/abs/2401.00001")(stub))).toBe(true);
+      expect(A.every(stubs, (stub) => Str.includes("via: history-sift")(stub))).toBe(true);
 
-        // A second pass sees every stub URL in the catalog and writes nothing.
-        const repeated = yield* historySiftImpl(options).pipe(withHome({ HOME: home }));
-        expect(repeated.stubsWritten).toBe(0);
-        expect(repeated.skippedSeen).toBe(3);
-      })
-    )
+      // A second pass sees every stub URL in the catalog and writes nothing.
+      const repeated = yield* historySiftImpl(options).pipe(withHome({ HOME: home }));
+      expect(repeated.stubsWritten).toBe(0);
+      expect(repeated.skippedSeen).toBe(3);
+    })
   );
 });
