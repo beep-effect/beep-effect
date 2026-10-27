@@ -11,6 +11,7 @@
  */
 import { $GithubId } from "@beep/identity/packages";
 import * as O from "@beep/utils/Option";
+import { unstubbedFor } from "@beep/utils/TestDouble";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -18,7 +19,6 @@ import * as Layer from "effect/Layer";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { GitHubClient } from "./GitHubClient.ts";
-import { unstubbedFor } from "./internal/unstubbed.ts";
 import { Repo } from "./Repo.ts";
 import type { GitHubError } from "./GitHubError.ts";
 

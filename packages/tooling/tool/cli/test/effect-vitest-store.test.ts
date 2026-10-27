@@ -1,3 +1,4 @@
+import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   decodeEffectVitestFindingJson,
   EffectVitestFinding,
@@ -6,13 +7,15 @@ import {
   writeEffectVitestRows,
 } from "@beep/repo-cli/commands/Lint";
 import { A, Str } from "@beep/utils";
-import { NodeServices } from "@effect/platform-node";
 import { it } from "@effect/vitest";
 import { assertFalse, assertSome, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+
+const PlatformLayer = Layer.mergeAll(MemoryFileSystem.layer, Path.layer);
 
 const row = EffectVitestFinding.make({
   id: "EV001:packages/example/test/a.test.ts:1:runSync@0#1",
@@ -35,7 +38,7 @@ const row = EffectVitestFinding.make({
   fixSha: O.none(),
 });
 
-it.layer(NodeServices.layer, { timeout: "30 seconds" })("rows filesystem", (it) => {
+it.layer(PlatformLayer, { timeout: "30 seconds" })("rows filesystem", (it) => {
   it.effect(
     "distinguishes a missing inventory from corrupt inventory bytes",
     Effect.fnUntraced(function* () {

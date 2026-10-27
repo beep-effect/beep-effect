@@ -1,0 +1,20 @@
+{
+  "previous": "a206266c02ebe45c7367e6f82381284742bc8f5c1ba7916dfbc4017ebcca5489",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (effected-promotion wave 5, feat/effected-promotion-w5-github-actions)",
+    "reason": "Record the new wave-5 workspace @beep/github-actions scaffolded by create-package with the generated task set and its exact root catalog pins (re-recorded after the review fix dropped its @beep/github-reporting dependency for the @beep/utils/TestDouble leaf), the dependency-only drift of @beep/repo-cli for the runner-file adoptions, and the input-only growth of the root policy-fingerprint task, as measured in the review; no qualification is granted.",
+    "basis": {
+      "path": "goals/effected-promotion/research/cache-baseline-review-w5.md",
+      "sha256": "82cc35a850e16864a9f147487e08a7c26d13601ec2f1a75a0a134299fb938c91"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2",
+  "subjects": ["@beep/github-actions", "@beep/repo-cli", "//"]
+}

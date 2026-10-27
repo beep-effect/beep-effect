@@ -106,7 +106,6 @@ describe("Effect diagnostics affected selection", () => {
   it("treats compiler policy and lockfile changes as global", () => {
     for (const file of [
       "tsconfig.base.json",
-      "standards/effect-diagnostics.profile.json",
       "bun.lock",
       "package.json",
       "packages/tooling/tool/cli/src/commands/Quality/EffectDiagnostics.ts",

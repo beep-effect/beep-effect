@@ -340,8 +340,8 @@ verify` (full tier) dispatches the hosted lane bodies locally and is on-demand:
 run it to reproduce a hosted red, never to unblock a publish. Package-scoped
 `turbo run check`, `docgen:local --reuse-proof-manifest`, and the cheap tier
 alone are inner-loop tools, not proof. `yeet final-check` is the content-final
-gate: the affected replay of Lint Policy, Lint, Effect Diagnostics, Check,
-Docgen, Repo Sanity, Fallow, Coverage, and rewritten test expectations.
+gate: the affected replay of Lint Policy, Lint, Check, Docgen, Repo Sanity,
+Fallow, Coverage, and rewritten test expectations.
 Details, the gate table, what the full proof does not replay, and plan mode:
 [`references/gates-and-proof.md`](references/gates-and-proof.md).
 

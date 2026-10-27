@@ -469,11 +469,10 @@ const InvariantDescriptorValue = InvariantDescriptorFields.check(InvariantDescri
  * @category models
  * @since 0.0.0
  */
-export class InvariantDescriptor extends S.Class<InvariantDescriptor, { readonly brand: unique symbol }>(
-  $I`InvariantDescriptor`
-)(
-  InvariantDescriptorValue,
-  $I.annote("InvariantDescriptor", {
-    description: "Specification-backed statement of one semantic or structural invariant.",
-  })
+export class InvariantDescriptor extends S.Opaque<InvariantDescriptor, { readonly brand: unique symbol }>()(
+  InvariantDescriptorValue.pipe(
+    $I.annoteSchema("InvariantDescriptor", {
+      description: "Specification-backed statement of one semantic or structural invariant.",
+    })
+  )
 ) {}

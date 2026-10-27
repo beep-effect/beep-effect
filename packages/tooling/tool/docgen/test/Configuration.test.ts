@@ -3,6 +3,7 @@ import * as Domain from "@beep/repo-docgen/Domain";
 import { it } from "@beep/test-runner";
 import { Str } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { flow } from "effect/Function";
@@ -39,7 +40,9 @@ interface DocgenConfigFile {
   readonly text: O.Option<string>;
 }
 
-const makeDocgenFileLayer = (configFile: string, file: DocgenConfigFile) =>
+const defaultPackageJson = encodeJson({ name: "name", homepage: "homepage" });
+
+const makeDocgenFileLayer = (configFile: string, file: DocgenConfigFile, packageJson = defaultPackageJson) =>
   Layer.effect(
     FileSystem.FileSystem,
     Effect.gen(function* () {
@@ -48,7 +51,7 @@ const makeDocgenFileLayer = (configFile: string, file: DocgenConfigFile) =>
       const readFileString: FileSystem.FileSystem["readFileString"] = (filePath, _encoding) => {
         const fileName = path.basename(filePath);
         if (fileName === "package.json") {
-          return Effect.succeed(encodeJson({ name: "name", homepage: "homepage" }));
+          return Effect.succeed(packageJson);
         }
         if (fileName === configFile && O.isSome(file.text)) {
           return Effect.succeed(file.text.value);
@@ -79,11 +82,31 @@ const makeDocgenJsonLayer = (config: unknown | undefined, configFile = "docgen.j
     text: O.map(O.fromUndefinedOr(config), encodeJson),
   });
 
-const makeTextLayer = (file: DocgenConfigFile) =>
-  Layer.mergeAll(Path.layer, Domain.Process.layer, makeDocgenFileLayer("docgen.json", file));
+const makeTextLayer = (file: DocgenConfigFile, packageJson?: string) =>
+  Layer.mergeAll(Path.layer, Domain.Process.layer, makeDocgenFileLayer("docgen.json", file, packageJson));
 
 const makeTestLayer = (config?: unknown, configFile?: string) =>
   Layer.mergeAll(Path.layer, Domain.Process.layer, makeDocgenJsonLayer(config, configFile));
+
+// package.json reads that fail at the file system: `NotFound` reaches the
+// `PackageJsonNotFoundError` branch, any other system error the read branch.
+const makePackageJsonFailureLayer = (reason: "NotFound" | "PermissionDenied") =>
+  Layer.mergeAll(
+    Path.layer,
+    Domain.Process.layer,
+    FileSystem.layerNoop({
+      exists: () => Effect.succeed(false),
+      readFileString: (filePath) =>
+        Effect.fail(
+          PlatformError.systemError({
+            _tag: reason,
+            module: "ConfigurationTest",
+            method: "readFileString",
+            pathOrDescriptor: filePath,
+          })
+        ),
+    })
+  );
 
 const expectConfig = (actual: Configuration.ConfigurationShape, expected: Configuration.ConfigurationShape) =>
   Effect.sync(() => expect(actual).toEqual(expected));
@@ -224,6 +247,77 @@ describe("Configuration", () => {
       Effect.fnUntraced(function* () {
         const config = yield* Configuration.load(makeLoadArgs());
         expect(config.srcDir).toBe("lib");
+      })
+    )
+  );
+
+  // package.json is JSON, not JSONC: npm and Node read it with JSON.parse. The
+  // retired reader shared docgen.json's JSONC codec and accepted comments; the
+  // `PackageJsonFile` read (3-A4) rejects them.
+  it.layer(
+    makeTextLayer(
+      { exists: false, text: O.none() },
+      '{\n  // a comment\n  "name": "name",\n  "homepage": "homepage",\n}\n'
+    ),
+    { timeout: "30 seconds" }
+  )((it) =>
+    it.effect(
+      "rejects comments and trailing commas in package.json",
+      Effect.fnUntraced(function* () {
+        const error = yield* Configuration.load(makeLoadArgs()).pipe(Effect.flip);
+        expect(isDomainDocgenError(error)).toBe(true);
+        assertTrue(Str.includes("[Configuration.readPackageJson] Failed to parse")(error.message));
+        expect(error.cause).toMatchObject({ _tag: "PackageJsonParseError" });
+      })
+    )
+  );
+
+  it.layer(makeTextLayer({ exists: false, text: O.none() }, encodeJson({ name: "name" })), {
+    timeout: "30 seconds",
+  })((it) =>
+    it.effect(
+      "requires a homepage in package.json",
+      Effect.fnUntraced(function* () {
+        const error = yield* Configuration.load(makeLoadArgs()).pipe(Effect.flip);
+        expect(isDomainDocgenError(error)).toBe(true);
+        assertTrue(Str.includes("[Configuration.readPackageJson] Failed to decode")(error.message));
+        assertTrue(Str.includes("`homepage`")(error.message));
+      })
+    )
+  );
+
+  it.layer(makeTextLayer({ exists: false, text: O.none() }, encodeJson({ name: 1, homepage: "homepage" })), {
+    timeout: "30 seconds",
+  })((it) =>
+    it.effect(
+      "rejects a package.json field of the wrong type",
+      Effect.fnUntraced(function* () {
+        const error = yield* Configuration.load(makeLoadArgs()).pipe(Effect.flip);
+        expect(isDomainDocgenError(error)).toBe(true);
+        assertTrue(Str.includes("[Configuration.readPackageJson] Failed to decode")(error.message));
+      })
+    )
+  );
+
+  it.layer(makePackageJsonFailureLayer("NotFound"), { timeout: "30 seconds" })((it) =>
+    it.effect(
+      "raises a typed read error when package.json is missing",
+      Effect.fnUntraced(function* () {
+        const error = yield* Configuration.load(makeLoadArgs()).pipe(Effect.flip);
+        expect(isDomainDocgenError(error)).toBe(true);
+        assertTrue(Str.includes("[Configuration.readPackageJson] Failed to read")(error.message));
+        assertTrue(Str.includes("The file does not exist.")(error.message));
+      })
+    )
+  );
+
+  it.layer(makePackageJsonFailureLayer("PermissionDenied"), { timeout: "30 seconds" })((it) =>
+    it.effect(
+      "raises a typed read error when package.json cannot be read",
+      Effect.fnUntraced(function* () {
+        const error = yield* Configuration.load(makeLoadArgs()).pipe(Effect.flip);
+        expect(isDomainDocgenError(error)).toBe(true);
+        assertTrue(Str.includes("[Configuration.readPackageJson] Failed to read")(error.message));
       })
     )
   );

@@ -123,7 +123,7 @@ The engine runs the [toml-test](https://github.com/toml-lang/toml-test) complian
 ## Development
 
 ```bash
-bun run check                                   # tsc-rs over src and test
+bun run check                                   # tsrs over src and test
 bun run test                                    # unit, property, coverage and toml-test e2e suites
 bun run beep quality package-verify @beep/toml  # full package gate, from the repository root
 ```

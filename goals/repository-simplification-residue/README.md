@@ -24,6 +24,7 @@ train (#1851/#1860) plus detector repairs (#1855), starting with F-S31-EV010.
 Issue #1860 is complete: the third A-train PR landed the catalog removals and the
 `beep quality catalog-usage` detector
 ([record](./history/receipts/catalog-removals-record.md)).
+Issue #1851 is complete: the closeout census finds zero live consumers of any retired A-train surface, with every remaining hit classified as immutable evidence or a name collision ([record](./history/receipts/a-retire-consumer-census.md)).
 Issue #1853 is complete: all five retained patches have a focused test and a
 fail-unpatched/pass-patched pair at the installed version, and none has a published
 upstream exit yet ([record](./history/receipts/patch-proofs-record.md)).
@@ -49,6 +50,7 @@ retiring 192 rows and adding no row or allowlist entry
 ([record](./history/receipts/detectors-wave-3.md)); wave 4 takes the EV014 named test layers.
 Wave 4 repaired the EV015 single-test-block, EV006 browser-project and EV002 repeated-lifecycle classes, retiring 79 rows and converting 7 to owner/exit exceptions ([record](./history/receipts/detectors-wave-4.md)); waves 5-9 take the EV003 process-state ruling, the EV014 named test layers and the owner/exit register.
 Wave 5 ruled EV003 process-state wrappers a judgment class and repaired the EV003 layer-factory and two EV008 classes, retiring 22 rows and converting 13 to owner/exit exceptions ([record](./history/receipts/detectors-wave-5.md)); wave 6 takes the EV014 named test layers.
+Wave 6 closed EV014: imported test layers resolve across files, hermetic in-memory acquisitions are acquisition-free, and 39 real acquisitions take an explicit hook timeout, retiring all 233 exceptions with none added ([record](./history/receipts/detectors-wave-6.md)); wave 7 takes the EV010 owner/exit register.
 Issue #1875 is in progress: wave 1 completed the `@beep/editor`, `@beep/libpff` and
 `@beep/test-runner` cohorts and left 689 open rows
 ([record](./history/receipts/vitest-canon-wave-1.md)).
@@ -62,6 +64,9 @@ The EV012 seams lane gave the Anthropic turn kernel, the bounded SHACL validator
 ([record](./history/receipts/vitest-canon-ev012-seams.md)).
 Wave 6 retired 116 repo-cli EV002 rows and handed 19 to #1855
 ([record](./history/receipts/vitest-canon-wave-6.md)); waves 5 and 7 take EV004/EV003 and EV010.
+Wave 7 moved portable-filesystem EV010 tests in 17 files to the memory filesystem, retiring 16 rows, and handed 127 live-resource rows to #1855 ([record](./history/receipts/vitest-canon-wave-7.md)); wave 8 takes the deferred `step-capture-lifecycle` rows and the wave 5 families.
+Wave 9 dropped 32 redundant `Effect.scoped` wrappers in 12 repo-cli tests and kept 9 whose close is observed, with the 12 lane EV010 rows confirmed live-resource ([record](./history/receipts/vitest-canon-wave-9.md)).
+Wave 8 lane A retired 77 of the 84 open EV002, EV004, EV010 and EV015 rows in 11 repo-cli files and left 7 live-resource or cwd-seam rows open ([record](./history/receipts/vitest-canon-wave-8.md)).
 Issue #1876 is complete: the RDF failure assertions and the Pacer logout teardown
 witness are ported, with a per-hunk disposition of the preserved exports
 ([record](./history/receipts/rdf-pacer-ports.md)).

@@ -1,4 +1,5 @@
 import { fcRuns } from "@beep/fc-runs";
+import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { HEAVY_ADMISSION_LABEL, HeavyAdmission } from "@beep/repo-cli/commands/Ci";
 import {
   collectYeetStatus,
@@ -55,7 +56,6 @@ import {
   yeetSettleVerdictIsTerminal,
 } from "@beep/repo-cli/test/Yeet";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
 import { assertInclude, assertNone, assertSome } from "@effect/vitest/utils";
@@ -181,7 +181,7 @@ const spawner = (exitCode: number, output: string) =>
   });
 const platform = Layer.mergeAll(
   BunCrypto.layer,
-  NodeFileSystem.layer,
+  MemoryFileSystem.layer,
   NodePath.layer,
   Layer.succeed(
     ChildProcessSpawner.ChildProcessSpawner,
@@ -713,7 +713,9 @@ it.layer(platform, { timeout: "30 seconds" })("B7 merge-loop timing", (layerIt) 
         })
       )
   );
+});
 
+it.layer(platform, { timeout: "30 seconds" })("B7 merge-loop timing", (layerIt) => {
   layerIt.effect(
     "holds an unlabelled head past the budget, admits on the label within one poll, and reaches ready",
     () =>
@@ -833,7 +835,9 @@ it.layer(platform, { timeout: "30 seconds" })("B7 merge-loop timing", (layerIt) 
         })
       )
   );
+});
 
+it.layer(platform, { timeout: "30 seconds" })("B7 merge-loop timing", (layerIt) => {
   layerIt.effect("re-reads once for a new head, stamps settled/closeout/ready once, and sweeps only on merge", () =>
     temporary((root) =>
       Effect.gen(function* () {
@@ -895,7 +899,9 @@ it.layer(platform, { timeout: "30 seconds" })("B7 merge-loop timing", (layerIt) 
       })
     )
   );
+});
 
+describe("B7 merge-loop timing", () => {
   it("keeps first timeline stamps and renders missing or invalid push times", () => {
     const timeline = YeetHeadTimeline.make({ headSha: "abc", firstObservedAt: at, pushedAt: O.some(at) });
     const stamped = yeetHeadTimelineStamp(timeline, "readyAt", "2026-09-16T00:01:00.000Z");
@@ -981,7 +987,7 @@ describe("settle policy boundaries", () => {
     expect(HashSet.has(yeetMonitorPolicyTerminals(YeetUntilMergedPolicy.make({})), "settle-timeout")).toBe(true);
     expect(HashSet.has(yeetMonitorPolicyTerminals(YeetUntilReadyPolicy.make({})), "settle-timeout")).toBe(true);
   });
-  it.layer(platform)((it) => {
+  it.layer(platform, { timeout: "30 seconds" })((it) => {
     it.effect("closes without a head or a ruleset read", () =>
       temporary((root) =>
         Effect.gen(function* () {
@@ -1161,7 +1167,7 @@ const selfLoopRunner = (restRecoveryAvailable: boolean, pageReads: Ref.Ref<numbe
     });
   });
 
-it.layer(platform)((it) => {
+it.layer(platform, { timeout: "30 seconds" })((it) => {
   for (const restRecoveryAvailable of [false, true]) {
     it.effect(
       `status refuses a review-thread page that names itself as its own successor (REST recovery: ${restRecoveryAvailable})`,
@@ -1185,7 +1191,7 @@ it.layer(platform)((it) => {
   }
 });
 
-it.layer(platform)((it) => {
+it.layer(platform, { timeout: "30 seconds" })((it) => {
   it.effect("keeps following settled red heads, preserving the one-rerun budget", () =>
     temporary((root) =>
       Effect.gen(function* () {
@@ -1252,7 +1258,7 @@ it.layer(platform)((it) => {
   );
 });
 
-it.layer(platform)("B7 sleep after a spent registration budget (ruling 49)", (layerIt) => {
+it.layer(platform, { timeout: "30 seconds" })("B7 sleep after a spent registration budget (ruling 49)", (layerIt) => {
   layerIt.effect("keeps the full poll interval while registered required checks are merely queued", () =>
     temporary((root) =>
       Effect.gen(function* () {
@@ -1279,6 +1285,9 @@ it.layer(platform)("B7 sleep after a spent registration budget (ruling 49)", (la
       })
     )
   );
+});
+
+it.layer(platform, { timeout: "30 seconds" })("B7 sleep after a spent registration budget (ruling 49)", (layerIt) => {
   layerIt.effect("still clamps the sleep to the remaining budget while a context is missing", () =>
     temporary((root) =>
       Effect.gen(function* () {

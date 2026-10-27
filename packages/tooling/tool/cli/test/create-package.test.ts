@@ -223,9 +223,9 @@ const ExpectedGeneratedQualityScripts = {
   babel: "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
   "beep:audit":
     "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run lint:laws && bun run beep:docgen && bun run beep:lint",
-  "beep:build": "tsc-rs -p tsconfig.json && bun run babel",
-  "beep:check": "tsc-rs -p tsconfig.check.json && bun run beep:check:tests",
-  "beep:check:tests": "tsc-rs -p tsconfig.test.json --noEmit",
+  "beep:build": "tsrs -p tsconfig.json && bun run babel",
+  "beep:check": "tsrs -p tsconfig.check.json && bun run beep:check:tests",
+  "beep:check:tests": "tsrs -p tsconfig.test.json --noEmit",
   "beep:docgen": "bunx --bun --no-install docgen",
   docgen: "bun run beep:docgen",
   "beep:lint": "biome check .",
@@ -246,15 +246,15 @@ const ExpectedGeneratedQualityScripts = {
 } as const;
 const ExpectedGeneratedStoriesQualityScripts = {
   ...ExpectedGeneratedQualityScripts,
-  "beep:check": "tsc-rs -p tsconfig.check.json && bun run beep:check:tests && bun run beep:check:stories",
-  "beep:check:stories": "tsc-rs -p tsconfig.stories.json --noEmit",
+  "beep:check": "tsrs -p tsconfig.check.json && bun run beep:check:tests && bun run beep:check:stories",
+  "beep:check:stories": "tsrs -p tsconfig.stories.json --noEmit",
 } as const;
 const ExpectedNextjsAppScripts = {
   audit: "bun run --if-present beep:audit",
   dev: "portless marketing-web.beep next dev --turbopack",
   "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
   "beep:build": "next build --turbopack",
-  "beep:check": "tsc-rs -p tsconfig.check.json",
+  "beep:check": "tsrs -p tsconfig.check.json",
   "beep:lint": "biome check .",
   "beep:lint:fix": "biome check . --write",
   "beep:test": "bunx --bun vitest run",
@@ -276,7 +276,7 @@ const ExpectedTauriAppScripts = {
   "dev:tauri": "tauri dev",
   "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
   "beep:build": "vite build",
-  "beep:check": "tsc-rs -p tsconfig.check.json",
+  "beep:check": "tsrs -p tsconfig.check.json",
   "beep:lint": "biome check .",
   "beep:lint:fix": "biome check . --write",
   "beep:test": "bunx --bun vitest run",
@@ -321,13 +321,13 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "30 seconds" })((it) =>
         "dev:tauri": "tauri dev",
       }).toEqual(ExpectedTauriAppScripts);
       expect(
-        CreatePackageScripts.app("portless example.labs.beep bun src/main.ts", "tsc-rs -p tsconfig.check.json", true)
+        CreatePackageScripts.app("portless example.labs.beep bun src/main.ts", "tsrs -p tsconfig.check.json", true)
       ).toEqual({
         audit: "bun run --if-present beep:audit",
         dev: "portless example.labs.beep bun src/main.ts",
         "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
-        "beep:build": "tsc-rs -p tsconfig.check.json",
-        "beep:check": "tsc-rs -p tsconfig.check.json",
+        "beep:build": "tsrs -p tsconfig.check.json",
+        "beep:check": "tsrs -p tsconfig.check.json",
         "beep:coverage": "bunx vitest run --coverage --exclude=test/integration/**",
         "beep:lint": "biome check .",
         "beep:lint:fix": "biome check . --write",
@@ -343,11 +343,11 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "30 seconds" })((it) =>
         test: "bun run beep:test",
       });
       expect(
-        CreatePackageScripts.app("portless api.beep bun src/main.ts", "tsc-rs -p tsconfig.check.json", false)
+        CreatePackageScripts.app("portless api.beep bun src/main.ts", "tsrs -p tsconfig.check.json", false)
       ).toEqual({
         ...R.remove(ExpectedNextjsAppScripts, "start"),
         dev: "portless api.beep bun src/main.ts",
-        "beep:build": "tsc-rs -p tsconfig.check.json",
+        "beep:build": "tsrs -p tsconfig.check.json",
       });
     });
   });
@@ -1001,7 +1001,7 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
                 yield* readJsonFile(path.join(packageDir, "package.json"))
               );
 
-              expect(generatedPackage.scripts["beep:check"]).toBe("tsc-rs -p tsconfig.check.json");
+              expect(generatedPackage.scripts["beep:check"]).toBe("tsrs -p tsconfig.check.json");
               expect(generatedPackage.scripts.dev).toBe(
                 "portless vite-shell.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-5173}\" --strictPort'"
               );
@@ -1056,7 +1056,7 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
             const generatedPackage = yield* decodeGeneratedPackageManifest(
               yield* readJsonFile(path.join(packageDir, "package.json"))
             );
-            expect(generatedPackage.scripts["beep:check"]).toBe("tsc-rs -p tsconfig.check.json");
+            expect(generatedPackage.scripts["beep:check"]).toBe("tsrs -p tsconfig.check.json");
 
             const appTsconfig = yield* readJsoncFile(path.join(packageDir, "tsconfig.json"));
             expect((yield* decodeTsconfigIncludes(appTsconfig)).include).toContain(
@@ -1110,8 +1110,8 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
             expect(generatedPackage.scripts).toMatchObject({
               ...ExpectedGeneratedQualityScripts,
               "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
-              "beep:build": "tsc-rs -p tsconfig.check.json",
-              "beep:check": "tsc-rs -p tsconfig.check.json",
+              "beep:build": "tsrs -p tsconfig.check.json",
+              "beep:check": "tsrs -p tsconfig.check.json",
               "beep:test": "bunx --bun vitest run",
             });
             expect(generatedPackage.scripts.docgen).toBe("bun run beep:docgen");

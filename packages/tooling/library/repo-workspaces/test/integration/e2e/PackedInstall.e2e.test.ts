@@ -23,6 +23,7 @@ import { Run } from "@beep/commands";
 import { Workspaces } from "@beep/repo-workspaces";
 import { PackedInstall } from "@beep/repo-workspaces/testing";
 import { SemVer } from "@beep/semver";
+import { HostProcessPlatform } from "@beep/utils/HostProcess";
 import { afterAll, assert, describe, layer } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
@@ -58,10 +59,9 @@ const SHARED_BIN = "fixture-shared";
 /** The effected bundler's prod npm output, and PackedInstall's default pack source. */
 const PROD = "dist/prod/npm/pkg";
 
-// The host edge, read once at module scope: the runner's environment, its
-// platform and the runtime binary that spawns the consumer-side imports.
+// The host edge, read once at module scope: the runner's environment and the
+// runtime binary that spawns the consumer-side imports.
 const HOST_ENV: Readonly<Record<string, string | undefined>> = process.env;
-const IS_DARWIN = process.platform === "darwin";
 const NODE = process.execPath;
 // `NODE` is this process's own binary: Bun under `bunx --bun`, Node otherwise. Each runtime words a
 // missing module its own way, so the expected wording is keyed by the runtime that spawns it.
@@ -371,7 +371,8 @@ const assertConsumer = Effect.fn("assertConsumer")(function* (
   const scratch = path.dirname(consumer.directory);
   // The realpath'd scratch: file: specs and the install cwd agree.
   assert.strictEqual(consumer.directory, yield* fs.realPath(consumer.directory), consumer.manager);
-  if (IS_DARWIN) assert.match(consumer.directory, /^\/private\//, consumer.manager);
+  // The host platform comes from the HostProcessPlatform reference, which defaults to this runner's.
+  if ((yield* HostProcessPlatform) === "darwin") assert.match(consumer.directory, /^\/private\//, consumer.manager);
   for (const tarball of R.values(tarballs)) assert.isTrue(Str.startsWith(`${scratch}/`)(tarball), tarball);
   const manifest = yield* readJson(path.join(consumer.directory, "package.json"));
   if (consumer.manager === "pnpm") {

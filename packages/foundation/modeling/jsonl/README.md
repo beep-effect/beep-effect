@@ -131,7 +131,7 @@ bun run beep quality package-verify @beep/jsonl
 Each gate also runs on its own from `packages/foundation/modeling/jsonl`:
 
 ```sh
-bun run check              # tsc-rs over src and test
+bun run check              # tsrs over src and test
 bun run lint               # biome
 bun run lint:laws          # repository Effect laws
 bun run lint:jsdoc         # JSDoc law

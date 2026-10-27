@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { ActionOutputs } from "@beep/github-actions/ActionOutputs";
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { A, Str, thunkFalse } from "@beep/utils";
@@ -23,13 +24,14 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { formatDurationSeconds, makeTaggedLogger, printLines } from "../../internal/cli/Printer.ts";
-import { CiCommandError } from "./Ci.errors.ts";
+import { CiCommandError, reportCiCommandError } from "./Ci.errors.ts";
 import { ciAdmissionCommand } from "./CiAdmission.ts";
 import { ciGovernanceCommands } from "./CiGovernance.ts";
 import { ciLaneCommand, ciLocalCommand } from "./CiLane.ts";
 import { CiResourceLane } from "./CiOperational.schemas.ts";
 import { CiOperational, CiOperationalLive } from "./CiOperational.service.ts";
 import { ciRerunRunnerLossCommand } from "./CiRerunRunnerLoss.ts";
+import { CiRunnerOutputsLive } from "./CiRunnerOutputs.ts";
 import { ciDependencyReviewCommand } from "./DependencyReviewCommand.ts";
 import { ciLaneTimingsCommand } from "./LaneTimings.ts";
 
@@ -151,10 +153,10 @@ const turboSummaryTasks = (tasks: TurboSummary["tasks"]): ReadonlyArray<TurboSum
   return R.values((tasks ?? {}) as Readonly<Record<string, TurboSummaryTask>>);
 };
 
+// Off a runner (no `GITHUB_STEP_SUMMARY`) the summary goes to stdout instead.
 const appendToSummary = Effect.fn("Ci.appendToSummary")(function* (
   renderedSummary: string
-): Effect.fn.Return<void, CiCommandError, FileSystem.FileSystem> {
-  const fs = yield* FileSystem.FileSystem;
+): Effect.fn.Return<void, CiCommandError, ActionOutputs> {
   const summaryPath = pipe(
     yield* Config.option(Config.String("GITHUB_STEP_SUMMARY")).pipe(Effect.orElseSucceed(O.none<string>)),
     O.getOrUndefined
@@ -165,13 +167,9 @@ const appendToSummary = Effect.fn("Ci.appendToSummary")(function* (
     return;
   }
 
-  const exists = yield* fs.exists(summaryPath).pipe(Effect.orElseSucceed(thunkFalse));
-  const previous = exists
-    ? yield* fs.readFileString(summaryPath).pipe(CiCommandError.mapError(`Failed to read ${summaryPath}.`))
-    : "";
-
-  yield* fs
-    .writeFileString(summaryPath, `${previous}${renderedSummary}`)
+  const outputs = yield* ActionOutputs;
+  yield* outputs
+    .summary(renderedSummary)
     .pipe(CiCommandError.mapError(`Failed to append Turbo summary to ${summaryPath}.`));
 });
 
@@ -275,26 +273,29 @@ const renderTurboSummary = (repoRoot: string, summaryPath: string, run: TurboSum
  * **Example** (Append Turbo summary program)
  *
  * ```ts
- * import { appendTurboSummary } from "@beep/repo-cli/commands/Ci"
+ * import { appendTurboSummary, CiRunnerOutputsLive } from "@beep/repo-cli/commands/Ci"
  * import { NodeServices } from "@effect/platform-node"
  * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import * as O from "effect/Option"
  *
- * const program = appendTurboSummary(O.some(".turbo/runs/latest.json")).pipe(Effect.provide(NodeServices.layer))
+ * const program = appendTurboSummary(O.some(".turbo/runs/latest.json")).pipe(
+ *   Effect.provide(CiRunnerOutputsLive.pipe(Layer.provideMerge(NodeServices.layer)))
+ * )
  * Effect.runPromise(program).then(() => console.log("summary appended"))
  * ```
  *
  * @param explicitPath - Optional explicit Turbo summary path.
  * @param includeAll - Whether to append every summary in `.turbo/runs` instead of only the newest.
  * @returns Effect that renders the summary.
- * @effects Locates the repository root, reads Turbo summary JSON, reads `GITHUB_STEP_SUMMARY`, then appends Markdown to that file or logs it to stdout.
+ * @effects Locates the repository root, reads Turbo summary JSON, reads `GITHUB_STEP_SUMMARY`, then appends Markdown to that file through `ActionOutputs.summary` or logs it to stdout.
  * @category use-cases
  * @since 0.0.0
  */
 export const appendTurboSummary = Effect.fn("Ci.appendTurboSummary")(function* (
   explicitPath: O.Option<string>,
   includeAll = false
-): Effect.fn.Return<void, CiCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, CiCommandError, FileSystem.FileSystem | Path.Path | ActionOutputs> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const repoRoot = yield* findRepoRoot().pipe(CiCommandError.mapError("Failed to locate repository root."));
@@ -339,13 +340,11 @@ const appendTurboSummaryCommand = Command.make(
     summaryPath: Argument.String("summary-path").pipe(Argument.optional),
   },
   ({ all, summaryPath }) =>
-    pipe(
-      appendTurboSummary(summaryPath, all),
-      Effect.catchTag("CiCommandError", (error) =>
-        Console.error(`[ci] ${error.message}`).pipe(Effect.andThen(failWithReportedExit(`[ci] ${error.message}`)))
-      )
-    )
-).pipe(Command.withDescription("Append a Turbo run summary to GitHub step summary or stdout"));
+    pipe(appendTurboSummary(summaryPath, all), Effect.catchTag("CiCommandError", reportCiCommandError))
+).pipe(
+  Command.withDescription("Append a Turbo run summary to GitHub step summary or stdout"),
+  Command.provide(CiRunnerOutputsLive)
+);
 
 const operationalFailure = <A, R>(effect: Effect.Effect<A, CiCommandError, R>) =>
   effect.pipe(

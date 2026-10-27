@@ -7,20 +7,15 @@
  */
 
 import {
-  agentEvidenceRoot,
-  aiMetricsStateHome,
   BehavioralClaim,
   ContextSurfaceKind,
   HarnessLedgerDelta,
   HookPulseAgentKind,
-  hookPulseLedgerDir,
   LedgerDisposition,
   MechanismClass,
 } from "@beep/repo-ai-metrics";
-import { AiMetricsStateHomeInput } from "@beep/repo-ai-metrics/data-root";
 import { findRepoRoot } from "@beep/repo-utils";
 import { A, O, pipe, Str } from "@beep/utils";
-import * as Config from "effect/Config";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
@@ -48,6 +43,7 @@ import {
   parseHarnessSurfaceSpec,
 } from "./HarnessLedger.schemas.ts";
 import { HarnessLedgerService, HarnessLedgerServiceLive } from "./HarnessLedger.service.ts";
+import { resolveHookPulseDir } from "./internal/HookPulseDir.ts";
 import { encodeLedgerRowValue } from "./internal/LedgerFiles.ts";
 import type { HarnessLedgerRow } from "@beep/repo-ai-metrics";
 import type { HarnessLedgerCommandError } from "./HarnessLedger.errors.ts";
@@ -395,26 +391,6 @@ export const harnessLedgerListCommand = Command.make(
 // ---------------------------------------------------------------------------
 // prune-proposals
 // ---------------------------------------------------------------------------
-
-const resolveHookPulseDir = Effect.gen(function* () {
-  const configuredRoot = optionalNonEmpty(yield* Config.option(Config.String("BEEP_AGENT_EVIDENCE_ROOT")));
-  if (O.isSome(configuredRoot)) {
-    return hookPulseLedgerDir(configuredRoot.value);
-  }
-  const stateHome = aiMetricsStateHome(
-    AiMetricsStateHomeInput.make({
-      homeDir: yield* Config.option(Config.String("HOME")),
-      stateHome: yield* Config.option(Config.String("XDG_STATE_HOME")),
-    })
-  );
-  return yield* O.match(stateHome, {
-    onNone: () =>
-      HarnessLedgerInputError.new("Neither XDG_STATE_HOME nor HOME is set; pass --state-dir <hook-events dir>."),
-    onSome: (home) => Effect.succeed(hookPulseLedgerDir(agentEvidenceRoot(home))),
-  });
-}).pipe(
-  Effect.catchTag("ConfigError", () => HarnessLedgerInputError.new("Failed to read the state-home environment."))
-);
 
 const windowCount = (report: HarnessLedgerPruneReport): string =>
   `${report.sessionsObserved} of ${report.windowSessions} sessions under the current harness hash`;

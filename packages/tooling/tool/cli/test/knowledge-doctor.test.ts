@@ -848,13 +848,18 @@ describe("knowledge doctor command boundary", () => {
       "refuses the unavailable gating form and emits human and JSON reports without gating findings",
       Effect.fnUntraced(
         function* () {
-          yield* temporaryWorkingDirectory;
+          // The doctor resolves the repository from the working directory, so the
+          // fixture still changes it; every write and git call below names that
+          // directory explicitly, because under a shared worker another file's
+          // chdir can land between two relative operations (git exit 128).
+          const root = yield* temporaryWorkingDirectory;
           const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
           const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
           const rootModule = "packages/tooling/tool/cli/src/commands/Root.ts";
-          yield* fs.makeDirectory("packages/tooling/tool/cli/src/commands", { recursive: true });
+          yield* fs.makeDirectory(path.join(root, "packages/tooling/tool/cli/src/commands"), { recursive: true });
           yield* fs.writeFileString(
-            rootModule,
+            path.join(root, rootModule),
             doc(
               'import { Command, Flag } from "effect/cli"',
               'const doctor = Command.make("doctor", { report: Flag.Boolean("report"), tree: Flag.String("tree"), json: Flag.Boolean("json") })',
@@ -863,17 +868,20 @@ describe("knowledge doctor command boundary", () => {
             )
           );
           yield* fs.writeFileString(
-            "AGENTS.md",
+            path.join(root, "AGENTS.md"),
             `Read \`${rootModule}\` or run \`bun run beep knowledge doctor --report\`. Missing: \`goals/missing.md\`.\n`
           );
-          yield* fs.makeDirectory("goals/demo/reviews", { recursive: true });
-          yield* fs.writeFileString("goals/demo/reviews/plain.md", "Old `goals/archived.md` reference.\n");
+          yield* fs.makeDirectory(path.join(root, "goals/demo/reviews"), { recursive: true });
+          yield* fs.writeFileString(
+            path.join(root, "goals/demo/reviews/plain.md"),
+            "Old `goals/archived.md` reference.\n"
+          );
           for (const args of [
             ["init", "--initial-branch=main"],
             ["add", "."],
             ["-c", "user.name=Fixture", "-c", "user.email=fixture@example.test", "commit", "-m", "fixture"],
           ]) {
-            const code = yield* spawner.exitCode(ChildProcess.make("git", args, { extendEnv: true }));
+            const code = yield* spawner.exitCode(ChildProcess.make("git", args, { cwd: root, extendEnv: true }));
             assert.strictEqual(code, 0);
           }
           const run = Command.runWith(knowledgeDoctorCommand, { version: "0.0.0" });

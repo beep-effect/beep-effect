@@ -564,11 +564,9 @@ export const makeConnection = Effect.fnUntraced(function* (options: ConnectionOp
     appendRows: (request) =>
       gate.withLock(
         Effect.acquireUseRelease(
-          gate.runUnlocked(
-            "appendRows",
-            () => native.createAppender(request.table, request.schema),
-            (late) => late.closeSync()
-          ),
+          // `acquireUseRelease` runs this acquire uninterruptibly, so it never
+          // resolves after a cancelled caller and needs no late-success close.
+          gate.runUnlocked("appendRows", () => native.createAppender(request.table, request.schema)),
           Effect.fnUntraced(function* (appender) {
             const types = yield* gate.runUnlocked("appendRows", () =>
               Promise.resolve(A.makeBy(appender.columnCount, (i) => appender.columnType(i)))

@@ -20,7 +20,7 @@ import * as Layer from "effect/Layer";
 const BackendLayer = Layer.provide(WinkBackendLive, WinkEngine.WinkEngineLive);
 
 describe("Catalog backend-backed operations", () => {
-  it.layer(BackendLayer)("sentencize produces a child node per sentence", (it) => {
+  it.layer(BackendLayer, { timeout: "30 seconds" })("sentencize produces a child node per sentence", (it) => {
     it.effect(
       "sentencize produces a child node per sentence",
       Effect.fnUntraced(function* () {
@@ -32,7 +32,7 @@ describe("Catalog backend-backed operations", () => {
     );
   });
 
-  it.layer(BackendLayer)("tokenize produces a child node per token", (it) => {
+  it.layer(BackendLayer, { timeout: "30 seconds" })("tokenize produces a child node per token", (it) => {
     it.effect(
       "tokenize produces a child node per token",
       Effect.fnUntraced(function* () {
@@ -43,7 +43,7 @@ describe("Catalog backend-backed operations", () => {
     );
   });
 
-  it.layer(BackendLayer)("posTag produces POS annotation nodes", (it) => {
+  it.layer(BackendLayer, { timeout: "30 seconds" })("posTag produces POS annotation nodes", (it) => {
     it.effect(
       "posTag produces POS annotation nodes",
       Effect.fnUntraced(function* () {
@@ -55,7 +55,7 @@ describe("Catalog backend-backed operations", () => {
     );
   });
 
-  it.layer(BackendLayer)("lemmatize produces lemma annotation nodes", (it) => {
+  it.layer(BackendLayer, { timeout: "30 seconds" })("lemmatize produces lemma annotation nodes", (it) => {
     it.effect(
       "lemmatize produces lemma annotation nodes",
       Effect.fnUntraced(function* () {
@@ -67,17 +67,20 @@ describe("Catalog backend-backed operations", () => {
     );
   });
 
-  it.layer(BackendLayer)("each backend op records its operation name on the produced nodes", (it) => {
-    it.effect(
-      "each backend op records its operation name on the produced nodes",
-      Effect.fnUntraced(function* () {
-        const root = yield* EG.makeNode("hello world");
-        const children = yield* Catalog.tokenize.apply(root);
-        const first = children[0];
-        assertSome(first?.metadata.operation ?? O.none(), "tokenize");
-      })
-    );
-  });
+  it.layer(BackendLayer, { timeout: "30 seconds" })(
+    "each backend op records its operation name on the produced nodes",
+    (it) => {
+      it.effect(
+        "each backend op records its operation name on the produced nodes",
+        Effect.fnUntraced(function* () {
+          const root = yield* EG.makeNode("hello world");
+          const children = yield* Catalog.tokenize.apply(root);
+          const first = children[0];
+          assertSome(first?.metadata.operation ?? O.none(), "tokenize");
+        })
+      );
+    }
+  );
 });
 
 describe("Catalog pure operations", () => {

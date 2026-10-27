@@ -1,4 +1,6 @@
 import { fcRuns } from "@beep/fc-runs";
+import { ActionEnvironment } from "@beep/github-actions/ActionEnvironment";
+import { ActionOutputs } from "@beep/github-actions/ActionOutputs";
 import {
   CiAdmissionInput,
   ciAdmissionCommand,
@@ -8,14 +10,15 @@ import {
   HeavyAdmissionEvent,
   HeavyAdmissionJson,
   HeavyAdmissionReadInput,
+  heavyAdmissionGithubOutputs,
   heavyAdmissionSchemasForTesting,
   heavyDocsOnlyPattern,
   isHeavyDocsOnlyPath,
   readHeavyAdmissionEvent,
-  renderHeavyAdmissionGithubOutput,
   renderHeavyAdmissionSummary,
   runCiAdmission,
 } from "@beep/repo-cli/commands/Ci";
+import { provideScopedLayer } from "@beep/test-utils/Layer";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
@@ -34,6 +37,7 @@ import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as TestConsole from "effect/testing/TestConsole";
+import { parseRunnerFile } from "./support/runnerFile.ts";
 
 const code = ["packages/a/src/index.ts"];
 const docs = ["docs/runbooks/ci.md", "goals/x/PLAN.md"];
@@ -211,11 +215,17 @@ describe("B8 heavy admission contracts", () => {
     expect(heavyDocsOnlyPattern.global).toBe(false);
   });
 
-  it("renders the github output lines and the summary line", () => {
+  it("projects the github outputs the old key=value lines carried, and renders the summary line", () => {
     const run = decideHeavyAdmission(event({ labels: [HEAVY_ADMISSION_LABEL] }));
     const hold = decideHeavyAdmission(event());
-    expect(renderHeavyAdmissionGithubOutput(run)).toBe("verdict=run\nadmitted=true\ndocs_only=false\nsources=label\n");
-    expect(renderHeavyAdmissionGithubOutput(hold)).toBe("verdict=hold\nadmitted=false\ndocs_only=false\nsources=\n");
+    // Parity with the lines `ci admission` appended before the write moved to
+    // `ActionOutputs.set`: the same names, values and order the runner reads.
+    expect(heavyAdmissionGithubOutputs(run)).toEqual(
+      parseRunnerFile("verdict=run\nadmitted=true\ndocs_only=false\nsources=label\n")
+    );
+    expect(heavyAdmissionGithubOutputs(hold)).toEqual(
+      parseRunnerFile("verdict=hold\nadmitted=false\ndocs_only=false\nsources=\n")
+    );
     expect(renderHeavyAdmissionSummary(hold)).toBe(
       "heavy admission: hold; sources: none; docs-only: no; changed paths: 1; admit: gh pr edit --add-label ready-for-heavy"
     );
@@ -349,53 +359,61 @@ it.layer(platform, { timeout: "30 seconds" })("B8 ci admission command", (layerI
         yield* fs.writeFileString(output, "prior=1\n");
         const docsCapture = () =>
           Effect.succeed({ exitCode: 0, output: "docs/a.md\ngoals/x/PLAN.md\n", truncated: false });
+        const outputs = ActionOutputs.layer.pipe(Layer.provide(ActionEnvironment.layerTest({ GITHUB_OUTPUT: output })));
         const held = yield* runCiAdmission(
           CiAdmissionInput.make({
             eventName: O.some("pull_request"),
             eventPath: O.some(path),
-            githubOutputPath: O.some(output),
+            githubOutput: true,
             cwd: root,
           }),
           () => Effect.succeed({ exitCode: 0, output: "packages/a/src/index.ts\n", truncated: false })
-        );
+        ).pipe(provideScopedLayer(outputs));
         expect(held.verdict).toBe("hold");
         const skipped = yield* runCiAdmission(
           CiAdmissionInput.make({
             eventName: O.some("pull_request"),
             eventPath: O.some(path),
-            githubOutputPath: O.some(output),
+            githubOutput: true,
             json: false,
             cwd: root,
           }),
           docsCapture
-        );
+        ).pipe(provideScopedLayer(outputs));
         expect(skipped.verdict).toBe("skip-satisfied");
         const printed = A.drop(yield* logs, priorLines);
         expect(yield* HeavyAdmissionJson.decode(printed[0] ?? "")).toEqual(held);
         expect(printed[1]).toContain("heavy admission: skip-satisfied");
-        expect(yield* fs.readFileString(output)).toBe(
-          A.join(
-            [
-              "prior=1",
-              "verdict=hold",
-              "admitted=false",
-              "docs_only=false",
-              "sources=",
-              "verdict=skip-satisfied",
-              "admitted=false",
-              "docs_only=true",
-              "sources=",
-              "",
-            ],
-            "\n"
+        // Parity: the entries the runner reads equal the key=value lines the
+        // command appended before the write moved to `ActionOutputs.set`.
+        expect(parseRunnerFile(yield* fs.readFileString(output))).toEqual(
+          parseRunnerFile(
+            A.join(
+              [
+                "prior=1",
+                "verdict=hold",
+                "admitted=false",
+                "docs_only=false",
+                "sources=",
+                "verdict=skip-satisfied",
+                "admitted=false",
+                "docs_only=true",
+                "sources=",
+                "",
+              ],
+              "\n"
+            )
           )
         );
         const unknown = yield* runCiAdmission(
           CiAdmissionInput.make({ eventName: O.some("workflow_dispatch"), cwd: root }),
           docsCapture
-        ).pipe(Effect.flip);
+        ).pipe(provideScopedLayer(outputs), Effect.flip);
         expect(unknown.message).toContain("workflow_dispatch");
-        const unnamed = yield* runCiAdmission(CiAdmissionInput.make({ cwd: root }), docsCapture).pipe(Effect.flip);
+        const unnamed = yield* runCiAdmission(CiAdmissionInput.make({ cwd: root }), docsCapture).pipe(
+          provideScopedLayer(outputs),
+          Effect.flip
+        );
         expect(unnamed.message).toContain("GITHUB_EVENT_NAME");
       })
     )
@@ -439,7 +457,9 @@ it.layer(platform, { timeout: "30 seconds" })("B8 ci admission command", (layerI
             changedPathCount: 1,
           })
         );
-        expect(yield* fs.readFileString(output)).toBe("verdict=run\nadmitted=true\ndocs_only=false\nsources=label\n");
+        expect(parseRunnerFile(yield* fs.readFileString(output))).toEqual(
+          parseRunnerFile("verdict=run\nadmitted=true\ndocs_only=false\nsources=label\n")
+        );
         expect(A.map(yield* Ref.get(commands), (command) => command[1])).toEqual(["fetch", "diff"]);
         // The environment alone drives a push: no payload, no git, exit 0.
         yield* Ref.set(commands, []);
@@ -448,7 +468,9 @@ it.layer(platform, { timeout: "30 seconds" })("B8 ci admission command", (layerI
           Effect.provideService(ConfigProvider.ConfigProvider, env)
         );
         expect(yield* Ref.get(commands)).toEqual([]);
-        expect(yield* fs.readFileString(output)).toBe("verdict=run\nadmitted=true\ndocs_only=false\nsources=label\n");
+        expect(parseRunnerFile(yield* fs.readFileString(output))).toEqual(
+          parseRunnerFile("verdict=run\nadmitted=true\ndocs_only=false\nsources=label\n")
+        );
         const again = yield* logs;
         expect(yield* HeavyAdmissionJson.decode(lastLine(again))).toMatchObject({
           verdict: "run",

@@ -224,7 +224,7 @@ Effect service requirements continue to flow from actions into actors. Regenerat
 bun install --frozen-lockfile --ignore-scripts
 (cd packages/drivers/xstate && bun run beep:test)
 bun run beep quality package-verify @beep/xstate
-bun run beep quality effect-diagnostics --filter @beep/xstate --concurrency 1
+(cd packages/drivers/xstate && bun run beep:check)
 ```
 
 Remove the old version's patch once active references have migrated. When upstream fixes the

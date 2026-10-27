@@ -118,6 +118,7 @@ export const errnoMessages: { readonly [Code in ErrnoCode]: string } = {
  * import { errnoTag } from "@beep/memfs/internal/errno";
  *
  * console.log(errnoTag("ENOENT")); // NotFound
+ * console.log(errnoTag("EPERM")); // PermissionDenied
  * console.log(errnoTag("EINVAL")); // Unknown
  * ```
  *
@@ -126,7 +127,7 @@ export const errnoMessages: { readonly [Code in ErrnoCode]: string } = {
  */
 export const errnoTag = Match.type<string | undefined>().pipe(
   Match.when("ENOENT", (): SystemErrorTag => "NotFound"),
-  Match.when("EACCES", (): SystemErrorTag => "PermissionDenied"),
+  Match.whenOr("EACCES", "EPERM", (): SystemErrorTag => "PermissionDenied"),
   Match.when("EEXIST", (): SystemErrorTag => "AlreadyExists"),
   Match.whenOr("EISDIR", "ENOTDIR", "ELOOP", (): SystemErrorTag => "BadResource"),
   Match.when("EBUSY", (): SystemErrorTag => "Busy"),

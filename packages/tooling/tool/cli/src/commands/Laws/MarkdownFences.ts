@@ -5,7 +5,7 @@
  *
  * Every TypeScript fence (`ts`, `tsx`, `typescript`, `mts`, `cts`) on the
  * guidance surface is written to its own module under `.beep/` and compiled
- * once with the repository's `tsc-rs` against the root `tsconfig.json`, so
+ * once with the repository's `tsrs` against the root `tsconfig.json`, so
  * `@beep/*` and `effect/*` imports resolve to the workspace's real packages.
  * Each compiler diagnostic is mapped back to its Markdown path and line.
  *
@@ -443,7 +443,7 @@ export class MarkdownFenceTypechecker extends Context.Service<
   });
 
   /**
-   * Live typechecker over the repository's `tsc-rs`, the file system and the process spawner.
+   * Live typechecker over the repository's `tsrs`, the file system and the process spawner.
    *
    * **Example** (Provide the live typechecker)
    *
@@ -515,7 +515,7 @@ const typecheckStaged = Effect.fnUntraced(function* (
       yield* fs
         .writeFileString(path.join(directory, "tsconfig.json"), config)
         .pipe(MarkdownFencesExecutionError.mapError("Failed to write the fence tsconfig"));
-      const compiler = path.join(repoRoot, "node_modules", ".bin", "tsc-rs");
+      const compiler = path.join(repoRoot, "node_modules", ".bin", "tsrs");
       const step = yield* runCaptured({
         command: compiler,
         args: ["--noEmit", "--pretty", "false", "-p", "tsconfig.json"],

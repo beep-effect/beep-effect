@@ -313,11 +313,12 @@ A test that passes against the volume should pass against `NodeFileSystem.layer`
 | `cause.code` | `_tag` |
 | --- | --- |
 | `ENOENT` | `NotFound` |
+| `EACCES`, `EPERM` | `PermissionDenied` |
 | `EEXIST` | `AlreadyExists` |
 | `EISDIR`, `ENOTDIR`, `ELOOP` | `BadResource` |
-| anything else — `EINVAL`, `ENOTEMPTY`, `EBADF`, `EPERM`, `ERR_FS_EISDIR`, `ERR_FS_CP_*` | `Unknown` |
+| anything else — `EINVAL`, `ENOTEMPTY`, `EBADF`, `ERR_FS_EISDIR`, `ERR_FS_CP_*` | `Unknown` |
 
-So `readLink` on a regular file fails `Unknown` with `EINVAL`, not `BadResource`; renaming onto a non-empty directory is `Unknown`/`ENOTEMPTY`; removing a directory without `recursive` — even an empty one — is `Unknown`/`ERR_FS_EISDIR`; hard-linking a directory is `Unknown`/`EPERM`; a closed or wrong-mode file handle is `Unknown`/`EBADF`. A NUL byte in a path is a `BadArgument`, and `glob` from a missing or non-directory root matches nothing rather than failing.
+So `readLink` on a regular file fails `Unknown` with `EINVAL`, not `BadResource`; renaming onto a non-empty directory is `Unknown`/`ENOTEMPTY`; removing a directory without `recursive` — even an empty one — is `Unknown`/`ERR_FS_EISDIR`; hard-linking a directory is `PermissionDenied`/`EPERM` (effect 4.0.6 added `EPERM` beside `EACCES`); a closed or wrong-mode file handle is `Unknown`/`EBADF`. A NUL byte in a path is a `BadArgument`, and `glob` from a missing or non-directory root matches nothing rather than failing.
 
 Where Linux and macOS disagree, the Linux errno is modelled: `copyFile` from a directory and creating a file at a new `path/` both fail `BadResource`/`EISDIR` (macOS: `Unknown`/`ENOTSUP` and `NotFound`/`ENOENT`). Unlike node's `ErrnoException`, the `cause` carries only `code` (and `path` for a path operation) — no `errno` number, no `syscall` and no `dest` — and `reason.syscall` is never set on an Effect failure; only the ports' and the handle's thrown errors carry `syscall`. A limit of the in-memory model itself (nesting depth, allocation) fails `BadResource` with no `cause`.
 

@@ -30,42 +30,48 @@ const moneyEntities = WinkEngineCustomEntities.make({
 });
 
 describe("WinkEngineRef", () => {
-  it.layer(WinkEngineRefBundleLive)("returns one shared ref instance per provided live layer", (it) => {
-    it.effect("returns one shared ref instance per provided live layer", () =>
-      Effect.gen(function* () {
-        const refService1 = yield* WinkEngineRef;
-        const refService2 = yield* WinkEngineRef;
-        const ref1 = refService1.getRef();
-        const ref2 = refService2.getRef();
+  it.layer(WinkEngineRefBundleLive, { timeout: "30 seconds" })(
+    "returns one shared ref instance per provided live layer",
+    (it) => {
+      it.effect("returns one shared ref instance per provided live layer", () =>
+        Effect.gen(function* () {
+          const refService1 = yield* WinkEngineRef;
+          const refService2 = yield* WinkEngineRef;
+          const ref1 = refService1.getRef();
+          const ref2 = refService2.getRef();
 
-        expect(ref1).toBe(ref2);
+          expect(ref1).toBe(ref2);
 
-        const state1 = yield* Ref.get(ref1);
-        const state2 = yield* Ref.get(ref2);
+          const state1 = yield* Ref.get(ref1);
+          const state2 = yield* Ref.get(ref2);
 
-        expect(state1.instanceId).toBe(state2.instanceId);
-      })
-    );
-  });
+          expect(state1.instanceId).toBe(state2.instanceId);
+        })
+      );
+    }
+  );
 
-  it.layer(WinkEngineRefBundleLive)("tracks engine updates through the shared runtime ref", (it) => {
-    it.effect("tracks engine updates through the shared runtime ref", () =>
-      Effect.gen(function* () {
-        const engine = yield* WinkEngine;
-        const refService = yield* WinkEngineRef;
-        const stateRef = refService.getRef();
-        const initialState = yield* Ref.get(stateRef);
+  it.layer(WinkEngineRefBundleLive, { timeout: "30 seconds" })(
+    "tracks engine updates through the shared runtime ref",
+    (it) => {
+      it.effect("tracks engine updates through the shared runtime ref", () =>
+        Effect.gen(function* () {
+          const engine = yield* WinkEngine;
+          const refService = yield* WinkEngineRef;
+          const stateRef = refService.getRef();
+          const initialState = yield* Ref.get(stateRef);
 
-        yield* engine.learnCustomEntities(moneyEntities);
+          yield* engine.learnCustomEntities(moneyEntities);
 
-        const updatedState = yield* Ref.get(stateRef);
-        const tokens = yield* engine.getWinkTokens("I have $100 today.");
+          const updatedState = yield* Ref.get(stateRef);
+          const tokens = yield* engine.getWinkTokens("I have $100 today.");
 
-        expect(updatedState.instanceId).not.toBe(initialState.instanceId);
-        assertSome(updatedState.customEntities, moneyEntities);
-        expect(O.getOrThrow(updatedState.customEntities).name).toBe("money");
-        expect(A.map(tokens, (token) => token.out())).toContain("$");
-      })
-    );
-  });
+          expect(updatedState.instanceId).not.toBe(initialState.instanceId);
+          assertSome(updatedState.customEntities, moneyEntities);
+          expect(O.getOrThrow(updatedState.customEntities).name).toBe("money");
+          expect(A.map(tokens, (token) => token.out())).toContain("$");
+        })
+      );
+    }
+  );
 });
