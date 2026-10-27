@@ -21,7 +21,7 @@ import { Email as InternalEmail, EmailString as InternalEmailString } from "./in
  *
  * ```ts import.meta.vitest name="Normalize email address strings"
  * import * as S from "effect/Schema"
- * import { EmailString } from "@beep/schema"
+ * import { EmailString } from "@beep/schema/Email"
  *
  * const email = S.decodeUnknownSync(EmailString)("Admin@Example.COM")
  * email // => "admin@example.com"
@@ -39,8 +39,8 @@ export const EmailString = InternalEmailString;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import type { EmailString } from "@beep/schema"
- * import { EmailString as EmailStringSchema } from "@beep/schema"
+ * import type { EmailString } from "@beep/schema/Email"
+ * import { EmailString as EmailStringSchema } from "@beep/schema/Email"
  *
  * const email: EmailString = S.decodeUnknownSync(EmailStringSchema)("admin@example.com")
  * console.log(email)
@@ -63,7 +63,7 @@ export type EmailString = typeof EmailString.Type;
  *
  * ```ts import.meta.vitest name="Decode redacted email addresses"
  * import * as S from "effect/Schema"
- * import { Email } from "@beep/schema"
+ * import { Email } from "@beep/schema/Email"
  *
  * const decode = S.decodeUnknownSync(Email)
  *
@@ -82,7 +82,7 @@ export const Email = InternalEmail;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { Email, type Email as EmailValue } from "@beep/schema"
+ * import { Email, type Email as EmailValue } from "@beep/schema/Email"
  *
  * const decode = S.decodeUnknownSync(Email)
  * const email: EmailValue = decode("admin@example.com")

@@ -2,6 +2,8 @@
  * Runtime builders shared by `LiteralKit` and `MappedLiteralKit`: helper-key
  * derivation, keyed record construction, dispatch, and static attachment.
  *
+ * **Details**
+ *
  * Every builder takes the literal tuple and the keys derived from it once, so a
  * kit computes each key one time at construction instead of once per helper.
  *

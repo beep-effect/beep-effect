@@ -1,6 +1,8 @@
 /**
  * Branded schema for canonical mainnet blockchain wallet addresses.
  *
+ * **Details**
+ *
  * Supports EVM, Bitcoin, and Solana families.
  *
  * @since 0.0.0
