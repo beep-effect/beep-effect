@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-10-27T11:26:05.430Z
+Generated: 2026-10-27T13:57:04.900Z
 
 ## Scope
 
@@ -11,23 +11,23 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | Metric | Count |
 |---|---:|
 | packages | 183 |
-| cleanPackages | 103 |
+| cleanPackages | 108 |
 | packagesWithoutPublicSrcSurface | 2 |
-| packagesNeedingRemediation | 78 |
+| packagesNeedingRemediation | 73 |
 | publicModules | 3547 |
-| publicExports | 25292 |
-| openModules | 403 |
-| openExports | 1193 |
+| publicExports | 25293 |
+| openModules | 388 |
+| openExports | 1167 |
 | missingExportExamples | 7 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
 | forbiddenTagFindings | 0 |
 | malformedConditionalTagFindings | 0 |
-| exampleImportFindings | 1158 |
+| exampleImportFindings | 1137 |
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
-| undescribed-see | 11 |
-| multiple-description-paragraphs | 425 |
+| undescribed-see | 10 |
+| multiple-description-paragraphs | 406 |
 | leading-blank | 0 |
 | trailing-blank | 0 |
 | invalid-heading | 1 |
@@ -40,7 +40,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | duplicate-example | 0 |
 | loose-ts-fence | 0 |
 | forbidden-remarks | 0 |
-| no-root-package-import | 1137 |
+| no-root-package-import | 1116 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -77,11 +77,11 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 19 | `@beep/semver` | `packages/foundation/modeling/semver` | clean | 6 | 23 | 0 | 0 |
 | 20 | `@beep/md` | `packages/foundation/modeling/md` | needs-remediation | 11 | 311 | 4 | 87 |
 | 21 | `@beep/shared-domain` | `packages/shared/domain` | needs-remediation | 106 | 374 | 3 | 5 |
-| 22 | `@beep/provenance` | `packages/foundation/modeling/provenance` | needs-remediation | 4 | 28 | 1 | 0 |
+| 22 | `@beep/provenance` | `packages/foundation/modeling/provenance` | clean | 4 | 28 | 0 | 0 |
 | 23 | `@beep/spdx` | `packages/foundation/modeling/spdx` | clean | 4 | 16 | 0 | 0 |
 | 24 | `@beep/npm-spec` | `packages/foundation/modeling/npm-spec` | clean | 13 | 72 | 0 | 0 |
 | 25 | `@beep/runtime-env` | `packages/foundation/capability/runtime-env` | clean | 6 | 31 | 0 | 0 |
-| 26 | `@beep/rdf` | `packages/foundation/modeling/rdf` | needs-remediation | 38 | 303 | 1 | 5 |
+| 26 | `@beep/rdf` | `packages/foundation/modeling/rdf` | clean | 38 | 303 | 0 | 0 |
 | 27 | `@beep/workspace-domain` | `packages/workspace/domain` | clean | 30 | 58 | 0 | 0 |
 | 28 | `@beep/epistemics` | `packages/foundation/modeling/epistemics` | clean | 35 | 131 | 0 | 0 |
 | 29 | `@beep/package-json` | `packages/foundation/modeling/package-json` | clean | 18 | 121 | 0 | 0 |
@@ -92,7 +92,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 34 | `@beep/agents-domain` | `packages/agents/domain` | clean | 16 | 75 | 0 | 0 |
 | 35 | `@beep/workspace-use-cases` | `packages/workspace/use-cases` | needs-remediation | 12 | 45 | 1 | 0 |
 | 36 | `@beep/shared-use-cases` | `packages/shared/use-cases` | clean | 6 | 14 | 0 | 0 |
-| 37 | `@beep/nlp` | `packages/foundation/modeling/nlp` | needs-remediation | 28 | 313 | 9 | 9 |
+| 37 | `@beep/nlp` | `packages/foundation/modeling/nlp` | clean | 28 | 313 | 0 | 0 |
 | 38 | `@beep/file-processing` | `packages/foundation/capability/file-processing` | needs-remediation | 34 | 183 | 0 | 19 |
 | 39 | `@beep/epistemic-domain` | `packages/epistemic/domain` | needs-remediation | 51 | 241 | 7 | 2 |
 | 40 | `@beep/codegen-kit` | `packages/tooling/library/codegen-kit` | clean | 6 | 45 | 0 | 0 |
@@ -162,7 +162,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 104 | `@beep/git` | `packages/drivers/git` | clean | 5 | 44 | 0 | 0 |
 | 105 | `@beep/agents-tables` | `packages/agents/tables` | clean | 7 | 15 | 0 | 0 |
 | 106 | `@beep/anthropic` | `packages/drivers/anthropic` | clean | 6 | 31 | 0 | 0 |
-| 107 | `@beep/lexical-schema` | `packages/foundation/modeling/lexical` | needs-remediation | 6 | 124 | 4 | 7 |
+| 107 | `@beep/lexical-schema` | `packages/foundation/modeling/lexical` | clean | 6 | 124 | 0 | 0 |
 | 108 | `@beep/rdf-canonize` | `packages/drivers/rdf-canonize` | clean | 2 | 2 | 0 | 0 |
 | 109 | `@beep/ontology-config` | `packages/ontology/config` | needs-remediation | 7 | 18 | 1 | 0 |
 | 110 | `@beep/oxigraph` | `packages/drivers/oxigraph` | clean | 3 | 6 | 0 | 0 |
@@ -229,7 +229,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 171 | `@beep/professional-desktop` | `apps/professional-desktop` | needs-remediation | 65 | 241 | 25 | 0 |
 | 172 | `@beep/jsonl` | `packages/foundation/modeling/jsonl` | clean | 8 | 60 | 0 | 0 |
 | 173 | `@beep/practice-identify` | `apps/practice-identify` | clean | 3 | 10 | 0 | 0 |
-| 174 | `@beep/infra` | `infra` | needs-remediation | 11 | 108 | 3 | 22 |
+| 174 | `@beep/infra` | `infra` | needs-remediation | 11 | 109 | 3 | 22 |
 | 175 | `@beep/practice-setup` | `apps/practice-setup` | clean | 6 | 38 | 0 | 0 |
 | 176 | `@beep/box-provisioning` | `packages/drivers/box-provisioning` | needs-remediation | 15 | 184 | 0 | 21 |
 | 177 | `@beep/freshbooks` | `packages/drivers/freshbooks` | needs-remediation | 6 | 49 | 5 | 3 |
@@ -238,7 +238,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 180 | `@beep/uspto-mcp` | `packages/drivers/uspto-mcp` | needs-remediation | 7 | 31 | 7 | 0 |
 | 181 | `@beep/architecture-lab-proof` | `apps/architecture-lab-proof` | clean | 1 | 2 | 0 | 0 |
 | 182 | `@beep/tsgo-shim` | `tools/tsgo-shim` | no-public-src-surface | 0 | 0 | 0 | 0 |
-| 183 | `@beep/pandoc-ast` | `packages/foundation/modeling/pandoc-ast` | needs-remediation | 6 | 202 | 0 | 5 |
+| 183 | `@beep/pandoc-ast` | `packages/foundation/modeling/pandoc-ast` | clean | 6 | 202 | 0 | 0 |
 
 ## Open Findings
 
@@ -745,13 +745,13 @@ Export findings:
 - `src/Html.form-control.ts:231` `ButtonState` (const) - 1 example import violation(s)
 - `src/Html.form-control.ts:303` `resolveButtonState` (const) - 1 example import violation(s)
 - `src/Html.meta.ts:607` `HTML_GLOBAL_ATTRIBUTE_NAMES` (const) - 1 documentation section/link violation(s)
-- `src/Html.policy.ts:511` `SafeHtmlAst` (const) - 1 example import violation(s)
-- `src/Html.policy.ts:536` `SafeHtmlAst` (type) - 1 example import violation(s)
-- `src/Html.policy.ts:558` `SafeHtmlNode` (const) - 1 example import violation(s)
-- `src/Html.policy.ts:813` `inspectSafeHtml` (const) - 1 example import violation(s)
-- `src/Html.policy.ts:842` `enforceSafeHtml` (const) - 1 example import violation(s)
-- `src/Html.policy.ts:868` `safeHtmlAstConformant` (const) - 1 example import violation(s)
-- `src/Html.policy.ts:896` `safeHtmlAstRoot` (const) - 1 example import violation(s)
+- `src/Html.policy.ts:512` `SafeHtmlAst` (const) - 1 example import violation(s)
+- `src/Html.policy.ts:537` `SafeHtmlAst` (type) - 1 example import violation(s)
+- `src/Html.policy.ts:559` `SafeHtmlNode` (const) - 1 example import violation(s)
+- `src/Html.policy.ts:814` `inspectSafeHtml` (const) - 1 example import violation(s)
+- `src/Html.policy.ts:843` `enforceSafeHtml` (const) - 1 example import violation(s)
+- `src/Html.policy.ts:869` `safeHtmlAstConformant` (const) - 1 example import violation(s)
+- `src/Html.policy.ts:897` `safeHtmlAstRoot` (const) - 1 example import violation(s)
 - `src/Html.script.ts:44` `HtmlMimeType` (const) - 1 example import violation(s)
 - `src/Html.script.ts:86` `JavaScriptMimeTypeEssence` (const) - 1 example import violation(s)
 - `src/Html.script.ts:140` `ScriptDataBlockMimeType` (const) - 1 example import violation(s)
@@ -882,27 +882,6 @@ Export findings:
 - `src/identity/index.ts:82` `isIdentityComposer` (const) - 1 example import violation(s)
 - `src/identity/index.ts:117` `AnyIdentityComposer` (const) - 1 example import violation(s)
 
-### @beep/provenance
-
-Path: `packages/foundation/modeling/provenance`
-
-Module findings:
-- `src/TextAnchor.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-
-### @beep/rdf
-
-Path: `packages/foundation/modeling/rdf`
-
-Module findings:
-- `src/Vocab/Dcterms.ts:1` (jsdoc) - 1 documentation section/link violation(s)
-
-Export findings:
-- `src/Iri.ts:873` `IRIReference` (const) - 1 example import violation(s)
-- `src/Iri.ts:914` `RelativeIRIReference` (const) - 1 example import violation(s)
-- `src/Iri.ts:954` `AbsoluteIRI` (const) - 1 example import violation(s)
-- `src/Iri.ts:995` `IRI` (const) - 1 example import violation(s)
-- `src/Vocab/Xsd.ts:27` `XSD_NAMESPACE` (const) - 1 documentation section/link violation(s)
-
 ### @beep/colors
 
 Path: `packages/foundation/capability/colors`
@@ -944,32 +923,6 @@ Path: `packages/workspace/use-cases`
 
 Module findings:
 - `src/aggregates/Thread/ThreadStore.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-
-### @beep/nlp
-
-Path: `packages/foundation/modeling/nlp`
-
-Module findings:
-- `src/Algebra/NLPMonoid.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/Graph/GraphOps.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/Graph/Schema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/Handoff/Contract.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/Handoff/index.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/Ontology/Kind.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/Operations/Composable.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/Operations/Definition.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/Operations/index.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-
-Export findings:
-- `src/index.ts:23` `export * as Algebra from "./Algebra/index.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:38` `export * as Core from "./Core/index.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:53` `export * as Graph from "./Graph/index.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:69` `export * as Handoff from "./Handoff/index.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:85` `export * as IdentifierText from "./IdentifierText.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:100` `export * as Ontology from "./Ontology/index.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:116` `export * as PathText from "./PathText.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:132` `export * as QueryText from "./QueryText.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:148` `export * as VariantText from "./VariantText.ts";` (re-export) - 1 example import violation(s)
 
 ### @beep/file-processing
 
@@ -1757,90 +1710,6 @@ Module findings:
 - `src/Witness.service.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/index.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
-### @beep/lexical-schema
-
-Path: `packages/foundation/modeling/lexical`
-
-Module findings:
-- `src/Lexical.behavior.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/Lexical.codec.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/Lexical.model.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/Lexical.normalize.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-
-Export findings:
-- `src/Lexical.model.ts:1162` `ElementNode` (class) - 1 documentation section/link violation(s)
-- `src/Lexical.model.ts:2375` `YouTubeNode` (class) - 1 documentation section/link violation(s)
-- `src/Lexical.model.ts:3349` `decodeEditorStateStrictResult` (const) - 1 documentation section/link violation(s)
-- `src/Lexical.model.ts:3432` `analyzeEditorStateCompatibilityResult` (const) - 1 documentation section/link violation(s)
-- `src/index.ts:26` `export { editorStateToPlainText, nodeToPlainText } from "./Lexical.behavior.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:41` `export {
-  ARTIFACT_URI_PREFIX,
-  ArtifactUri,
-  blockToLexical,
-  documentToEditorState,
-  editorStateToDocument,
-  nodeToBlocks,
-} from "./Lexical.codec.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:73` `export {
-  ArtifactRefId,
-  ArtifactRefNode,
-  analyzeEditorStateCompatibility,
-  BaseNode,
-  CodeNode,
-  Direction,
-  decodeEditorStateLossless,
-  decodeEditorStateStrict,
-  EditorStateFromJson,
-  EditorStateWireFromJson,
-  ElementFormat,
-  ElementNode,
-  HeadingNode,
-  HeadingTag,
-  hasTextFormat,
-  LexicalCompatibilityIssue,
-  LexicalCompatibilityResult,
-  LexicalDecodeError,
-  LexicalIndentDepth,
-  LexicalNode,
-  LexicalNodeVersion,
-  LexicalNodeWire,
-  LineBreakNode,
-  LinkNode,
-  ListItemNode,
-  ListNode,
-  ListNodeValue,
-  ListTag,
-  ListType,
-  ParagraphNode,
-  QuoteNode,
-  RootNode,
-  SafeInlineStyle,
-  SafeStyleValue,
-  SafeUrl,
-  SerializedEditorState,
-  SerializedEditorStateWire,
-  TableCellHeaderState,
-  TableCellNode,
-  TableCellSpan,
-  TableDimension,
-  TableNode,
-  TableRowNode,
-  TabNode,
-  TEXT_DETAIL_MASK_ALL,
-  TEXT_FORMAT_MASK_ALL,
-  TextBase,
-  TextDetailBit,
-  TextDetailBits,
-  TextDetailMask,
-  TextFormatBit,
-  TextFormatBits,
-  TextFormatMask,
-  TextMode,
-  TextNode,
-  withTextFormat,
-  YouTubeNode,
-} from "./Lexical.model.ts";` (re-export) - 1 example import violation(s)
-
 ### @beep/ontology-config
 
 Path: `packages/ontology/config`
@@ -1978,10 +1847,10 @@ Export findings:
 - `src/SemanticFoundation.models.ts:191` `ConceptAlignment` (class) - 1 example import violation(s)
 - `src/SemanticFoundation.models.ts:224` `TaxonomyConcept` (class) - 1 example import violation(s)
 - `src/SemanticFoundation.models.ts:293` `FilingRoot` (class) - 1 example import violation(s)
-- `src/TaxonomyLoader.ts:224` `VendorAlignmentManifestEntry` (class) - 1 example import violation(s)
-- `src/TaxonomyLoader.ts:283` `VendorConceptSlice` (class) - 1 example import violation(s)
-- `src/TaxonomyLoader.ts:493` `VendorSliceConceptMismatch` (class) - 1 example import violation(s)
-- `src/TaxonomyLoader.ts:529` `VendorAlignmentTargetNotFound` (class) - 1 example import violation(s)
+- `src/TaxonomyLoader.ts:223` `VendorAlignmentManifestEntry` (class) - 1 example import violation(s)
+- `src/TaxonomyLoader.ts:282` `VendorConceptSlice` (class) - 1 example import violation(s)
+- `src/TaxonomyLoader.ts:492` `VendorSliceConceptMismatch` (class) - 1 example import violation(s)
+- `src/TaxonomyLoader.ts:528` `VendorAlignmentTargetNotFound` (class) - 1 example import violation(s)
 - `src/TaxonomyRegistry.ts:36` `LibrarianInput` (class) - 1 example import violation(s)
 - `src/TaxonomyRegistry.ts:110` `TaxonomyConceptNotFound` (class) - 1 example import violation(s)
 - `src/TaxonomyRegistry.ts:134` `UnsupportedDocumentClass` (class) - 1 example import violation(s)
@@ -2198,14 +2067,14 @@ Module findings:
 Export findings:
 - `src/Openclaw.models.ts:123` `OpenclawDiagnosticText` (const) - 1 documentation section/link violation(s)
 - `src/Openclaw.models.ts:177` `OpenclawProcessRequest` (class) - 1 documentation section/link violation(s)
-- `src/Openclaw.models.ts:354` `OpenclawConfigInvalid` (class) - 1 documentation section/link violation(s)
-- `src/Openclaw.models.ts:427` `OpenclawDoctorReport` (class) - 1 documentation section/link violation(s)
-- `src/Openclaw.models.ts:463` `OpenclawSecretsReloadOutput` (class) - 1 documentation section/link violation(s)
-- `src/Openclaw.models.ts:532` `OpenclawSecretsReloadDegraded` (class) - 1 documentation section/link violation(s)
-- `src/Openclaw.models.ts:1233` `OpenclawInvocationContext` (class) - 1 documentation section/link violation(s)
-- `src/Openclaw.models.ts:1337` `OpenclawSystemdUnitState` (class) - 1 documentation section/link violation(s)
-- `src/Openclaw.models.ts:1426` `OpenclawHttpProbe` (class) - 1 documentation section/link violation(s)
-- `src/Openclaw.models.ts:1498` `OpenclawSchemaPlaceholderFinding` (class) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:352` `OpenclawConfigInvalid` (class) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:423` `OpenclawDoctorReport` (class) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:459` `OpenclawSecretsReloadOutput` (class) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:526` `OpenclawSecretsReloadDegraded` (class) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:1227` `OpenclawInvocationContext` (class) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:1331` `OpenclawSystemdUnitState` (class) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:1420` `OpenclawHttpProbe` (class) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:1492` `OpenclawSchemaPlaceholderFinding` (class) - 1 documentation section/link violation(s)
 - `src/OpenclawCli.service.ts:457` `OpenclawCliRunner` (type) - 1 documentation section/link violation(s)
 - `src/OpenclawIntent.models.ts:54` `OpenclawSecretReference` (const) - 1 documentation section/link violation(s)
 - `src/OpenclawIntent.models.ts:101` `OpenclawTargetVersion` (const) - 1 documentation section/link violation(s)
@@ -2427,14 +2296,3 @@ Module findings:
 - `src/UsptoTools.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/bin.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/index.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-
-### @beep/pandoc-ast
-
-Path: `packages/foundation/modeling/pandoc-ast`
-
-Export findings:
-- `src/index.ts:22` `export * from "./Pandoc.codec.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:43` `export * from "./Pandoc.conformance.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:58` `export * from "./Pandoc.mapping.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:73` `export * from "./Pandoc.model.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:88` `export * from "./Pandoc.report.ts";` (re-export) - 1 example import violation(s)

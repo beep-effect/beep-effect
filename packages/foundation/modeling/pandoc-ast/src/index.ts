@@ -11,7 +11,7 @@
  * **Example** (Import decodePandocJsonString codec)
  *
  * ```ts
- * import { decodePandocJsonString } from "@beep/pandoc-ast"
+ * import { decodePandocJsonString } from "@beep/pandoc-ast/Pandoc.codec"
  *
  * console.log(decodePandocJsonString)
  * ```
@@ -27,7 +27,7 @@ export * from "./Pandoc.codec.ts";
  *
  * ```ts import.meta.vitest name="Inspect an empty Pandoc document"
  * import * as Effect from "effect/Effect";
- * import { inspectPandocConformance } from "@beep/pandoc-ast"
+ * import { inspectPandocConformance } from "@beep/pandoc-ast/Pandoc.conformance"
  *
  * const result = Effect.runSync(inspectPandocConformance({
  *   "pandoc-api-version": [1, 23, 1],
@@ -47,7 +47,7 @@ export * from "./Pandoc.conformance.ts";
  * **Example** (Import pandocToDocument mapper)
  *
  * ```ts
- * import { pandocToDocument } from "@beep/pandoc-ast"
+ * import { pandocToDocument } from "@beep/pandoc-ast/Pandoc.mapping"
  *
  * console.log(pandocToDocument)
  * ```
@@ -62,7 +62,7 @@ export * from "./Pandoc.mapping.ts";
  * **Example** (Make empty PandocDocument)
  *
  * ```ts
- * import { PandocDocument } from "@beep/pandoc-ast"
+ * import { PandocDocument } from "@beep/pandoc-ast/Pandoc.model"
  *
  * console.log(PandocDocument.make({ apiVersion: [1, 23, 1], blocks: [], meta: {} })._tag)
  * ```
@@ -77,7 +77,7 @@ export * from "./Pandoc.model.ts";
  * **Example** (Create empty compatibility report)
  *
  * ```ts
- * import { PandocCompatibilityReport } from "@beep/pandoc-ast"
+ * import { PandocCompatibilityReport } from "@beep/pandoc-ast/Pandoc.report"
  *
  * console.log(PandocCompatibilityReport.fromIssues([]).profile)
  * ```

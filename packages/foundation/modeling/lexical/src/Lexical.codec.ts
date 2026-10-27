@@ -1,6 +1,8 @@
 /**
  * Md ↔ Lexical codecs over the canonical `@beep/md` AST.
  *
+ * **Details**
+ *
  * The supported round-trip profile and its documented degradations live in
  * the package README ("Lossiness profile"). In short: md-core blocks
  * (paragraph, heading, code, list, quote with a single paragraph, inline

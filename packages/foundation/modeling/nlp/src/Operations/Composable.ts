@@ -1,6 +1,8 @@
 /**
  * Operations/Composable - composable NLP operations as Kleisli arrows.
  *
+ * **Details**
+ *
  * An {@link OperationBuilder} wraps an effectful arrow `A -> Effect<B, E, R>` with
  * its input/output schemas, exposing the categorical combinators: `map` (Functor),
  * `flatMap` (Monad), `product`/`zipWith` (Applicative), plus traversal helpers.

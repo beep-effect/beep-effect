@@ -1,6 +1,8 @@
 /**
  * Leaf normalization helpers for the Lexical schema boundary.
  *
+ * **Details**
+ *
  * These pure functions sanitize untrusted serialized presentation state (inline
  * CSS) and fold legacy decorator inputs (YouTube URLs) into their canonical
  * form. They import `@beep/md` and `@beep/schema` only — never the Lexical model
