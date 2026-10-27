@@ -65,6 +65,7 @@ The EV012 seams lane gave the Anthropic turn kernel, the bounded SHACL validator
 Wave 6 retired 116 repo-cli EV002 rows and handed 19 to #1855
 ([record](./history/receipts/vitest-canon-wave-6.md)); waves 5 and 7 take EV004/EV003 and EV010.
 Wave 7 moved portable-filesystem EV010 tests in 17 files to the memory filesystem, retiring 16 rows, and handed 127 live-resource rows to #1855 ([record](./history/receipts/vitest-canon-wave-7.md)); wave 8 takes the deferred `step-capture-lifecycle` rows and the wave 5 families.
+Wave 9 dropped 32 redundant `Effect.scoped` wrappers in 12 repo-cli tests and kept 9 whose close is observed, with the 12 lane EV010 rows confirmed live-resource ([record](./history/receipts/vitest-canon-wave-9.md)).
 Issue #1876 is complete: the RDF failure assertions and the Pacer logout teardown
 witness are ported, with a per-hunk disposition of the preserved exports
 ([record](./history/receipts/rdf-pacer-ports.md)).
