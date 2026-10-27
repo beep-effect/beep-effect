@@ -1701,7 +1701,7 @@
       "ruleId": "SFV4-arbitrary-tests",
       "line": 42,
       "owner": "@beep/law-practice-server",
-      "reason": "Schema-heavy test file has 4 Schema codec assertions but no schema-derived property coverage."
+      "reason": "In-memory repository proof decodes fixed fixture wires to assert append/read-back, filing scope isolation and id ordering; schema-derived Arbitrary round-trips for PatentCitationEvent, CandorDisposition and IdsSubmissionFact live in packages/law-practice/domain/test/LawPracticeDomain.test.ts."
     },
     {
       "file": "packages/law-practice/server/test/CompetencyQuestions.test.ts",
