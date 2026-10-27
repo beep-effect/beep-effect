@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-27T16:13:30.352Z",
+  "generatedAt": "2026-10-27T16:31:29.591Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -62,19 +62,19 @@
   },
   "totals": {
     "packages": 183,
-    "cleanPackages": 103,
+    "cleanPackages": 104,
     "packagesWithoutPublicSrcSurface": 2,
-    "packagesNeedingRemediation": 78,
+    "packagesNeedingRemediation": 77,
     "publicModules": 3546,
     "publicExports": 25241,
-    "openModules": 402,
-    "openExports": 1193,
+    "openModules": 400,
+    "openExports": 995,
     "missingExportExamples": 7,
     "missingExportCategories": 0,
     "missingExportSince": 0,
     "forbiddenTagFindings": 0,
     "malformedConditionalTagFindings": 0,
-    "exampleImportFindings": 1158,
+    "exampleImportFindings": 955,
     "unsafeExampleFindings": 0,
     "schemaAnnotationFindings": 0,
     "undescribed-see": 11,
@@ -91,7 +91,7 @@
     "duplicate-example": 0,
     "loose-ts-fence": 0,
     "forbidden-remarks": 0,
-    "no-root-package-import": 1137,
+    "no-root-package-import": 934,
     "rootPolicyOpen": 0
   },
   "packages": [
@@ -1120,7 +1120,7 @@
       "packageName": "@beep/identity",
       "packagePath": "packages/foundation/modeling/identity",
       "topoOrder": 4,
-      "status": "needs-remediation",
+      "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
         "sourceFileCount": 8,
@@ -1134,15 +1134,15 @@
         "enforceVersion": true
       },
       "counts": {
-        "openModules": 2,
-        "openExports": 198,
+        "openModules": 0,
+        "openExports": 0,
         "missingExportExamples": 0,
         "missingExportCategories": 0,
         "missingExportSince": 0,
         "missingExportSummaries": 0,
         "forbiddenTagFindings": 0,
         "malformedConditionalTagFindings": 0,
-        "exampleImportFindings": 203,
+        "exampleImportFindings": 0,
         "unsafeExampleFindings": 0,
         "schemaAnnotationFindings": 0,
         "documentationRuleFindings": {
@@ -1160,7 +1160,7 @@
           "duplicate-example": 0,
           "loose-ts-fence": 0,
           "forbidden-remarks": 0,
-          "no-root-package-import": 203
+          "no-root-package-import": 0
         }
       },
       "modules": [
@@ -1222,19 +1222,13 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
           "exportCount": 30,
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "packageDocumentation",
@@ -1316,19 +1310,13 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
           "exportCount": 7,
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "packageDocumentation",
@@ -1359,8 +1347,8 @@
           "exportKind": "const",
           "filePath": "src/Curie.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Curie.ts",
-          "line": 112,
-          "anchor": "packages-foundation-modeling-identity-src-curie-ts-112-expandoption",
+          "line": 113,
+          "anchor": "packages-foundation-modeling-identity-src-curie-ts-113-expandoption",
           "currentTags": [
             "@category",
             "@since"
@@ -1369,26 +1357,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "contractOption",
           "exportKind": "const",
           "filePath": "src/Curie.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Curie.ts",
-          "line": 165,
-          "anchor": "packages-foundation-modeling-identity-src-curie-ts-165-contractoption",
+          "line": 167,
+          "anchor": "packages-foundation-modeling-identity-src-curie-ts-167-contractoption",
           "currentTags": [
             "@category",
             "@since"
@@ -1397,26 +1379,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "expand",
           "exportKind": "const",
           "filePath": "src/Curie.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Curie.ts",
-          "line": 264,
-          "anchor": "packages-foundation-modeling-identity-src-curie-ts-264-expand",
+          "line": 266,
+          "anchor": "packages-foundation-modeling-identity-src-curie-ts-266-expand",
           "currentTags": [
             "@category",
             "@since"
@@ -1425,26 +1401,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "contract",
           "exportKind": "const",
           "filePath": "src/Curie.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Curie.ts",
-          "line": 312,
-          "anchor": "packages-foundation-modeling-identity-src-curie-ts-312-contract",
+          "line": 314,
+          "anchor": "packages-foundation-modeling-identity-src-curie-ts-314-contract",
           "currentTags": [
             "@category",
             "@since"
@@ -1453,26 +1423,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "expandPredicate",
           "exportKind": "const",
           "filePath": "src/Curie.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Curie.ts",
-          "line": 368,
-          "anchor": "packages-foundation-modeling-identity-src-curie-ts-368-expandpredicate",
+          "line": 370,
+          "anchor": "packages-foundation-modeling-identity-src-curie-ts-370-expandpredicate",
           "currentTags": [
             "@category",
             "@since"
@@ -1481,26 +1445,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "makeCurieCodec",
           "exportKind": "const",
           "filePath": "src/Curie.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Curie.ts",
-          "line": 388,
-          "anchor": "packages-foundation-modeling-identity-src-curie-ts-388-makecuriecodec",
+          "line": 391,
+          "anchor": "packages-foundation-modeling-identity-src-curie-ts-391-makecuriecodec",
           "currentTags": [
             "@category",
             "@since"
@@ -1509,26 +1467,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "CoreCurieCodec",
           "exportKind": "const",
           "filePath": "src/Curie.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Curie.ts",
-          "line": 408,
-          "anchor": "packages-foundation-modeling-identity-src-curie-ts-408-corecuriecodec",
+          "line": 411,
+          "anchor": "packages-foundation-modeling-identity-src-curie-ts-411-corecuriecodec",
           "currentTags": [
             "@category",
             "@since"
@@ -1537,26 +1489,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "makeCurieFromIri",
           "exportKind": "const",
           "filePath": "src/Curie.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Curie.ts",
-          "line": 426,
-          "anchor": "packages-foundation-modeling-identity-src-curie-ts-426-makecuriefromiri",
+          "line": 430,
+          "anchor": "packages-foundation-modeling-identity-src-curie-ts-430-makecuriefromiri",
           "currentTags": [
             "@category",
             "@since"
@@ -1565,26 +1511,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "CurieFromIri",
           "exportKind": "const",
           "filePath": "src/Curie.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Curie.ts",
-          "line": 450,
-          "anchor": "packages-foundation-modeling-identity-src-curie-ts-450-curiefromiri",
+          "line": 454,
+          "anchor": "packages-foundation-modeling-identity-src-curie-ts-454-curiefromiri",
           "currentTags": [
             "@category",
             "@since"
@@ -1593,26 +1533,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "CurieFromIri",
           "exportKind": "type",
           "filePath": "src/Curie.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Curie.ts",
-          "line": 462,
-          "anchor": "packages-foundation-modeling-identity-src-curie-ts-462-curiefromiri",
+          "line": 466,
+          "anchor": "packages-foundation-modeling-identity-src-curie-ts-466-curiefromiri",
           "currentTags": [
             "@category",
             "@since"
@@ -1687,18 +1621,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "IdentityAuthority",
@@ -1737,18 +1665,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "IdentitySegmentCountError",
@@ -1765,18 +1687,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "SegmentValue",
@@ -1793,18 +1709,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "TitleFromIdentifier",
@@ -1821,18 +1731,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "IriFromIdentity",
@@ -1849,18 +1753,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "CurieFromIdentity",
@@ -1877,18 +1775,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "SlugFromIdentifier",
@@ -1905,18 +1797,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "ModuleSegmentValue",
@@ -1933,18 +1819,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "ModuleAccessor",
@@ -1961,18 +1841,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "TaggedAccessor",
@@ -1989,18 +1863,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "IdentityString",
@@ -2017,23 +1885,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            },
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "IdentitySymbol",
@@ -2050,23 +1907,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            },
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "SchemaAnnotationExtras",
@@ -2083,18 +1929,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "DeclarationAnnotationExtras",
@@ -2111,18 +1951,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "ErrorAnnotationRecord",
@@ -2139,18 +1973,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "KeyAnnotationExtras",
@@ -2167,18 +1995,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "SkosClassification",
@@ -2195,18 +2017,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "OntologyKeyOptions",
@@ -2223,18 +2039,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "OntologyClassExtras",
@@ -2251,18 +2061,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "HttpAnnotationExtras",
@@ -2279,18 +2083,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "IdentityAnyAnnotationExtras",
@@ -2307,18 +2105,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "IdentityAnnotation",
@@ -2335,18 +2127,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "IdentityAnnotationResult",
@@ -2363,18 +2149,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "AnnotatedSchema",
@@ -2391,18 +2171,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "TaggedModuleRecord",
@@ -2419,18 +2193,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "IdentityComposer",
@@ -2447,26 +2215,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "BaseIdentityInput",
           "exportKind": "const",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 1655,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-1655-baseidentityinput",
+          "line": 1656,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-1656-baseidentityinput",
           "currentTags": [
             "@category",
             "@since"
@@ -2475,26 +2237,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "BaseIdentityInput",
           "exportKind": "type",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 1684,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-1684-baseidentityinput",
+          "line": 1685,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-1685-baseidentityinput",
           "currentTags": [
             "@category",
             "@since"
@@ -2503,26 +2259,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "make",
           "exportKind": "const",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 2200,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-2200-make",
+          "line": 2201,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-2201-make",
           "currentTags": [
             "@since",
             "@category"
@@ -2531,23 +2281,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            },
-            {
-              "example": 2,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "IdentityEncoding",
@@ -2564,18 +2303,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "IdentityEncoding",
@@ -2614,18 +2347,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "IdentityRef",
@@ -2665,26 +2392,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "IdentityEntry",
           "exportKind": "namespace",
           "filePath": "src/IdentityRegistry.ts",
           "repoPath": "packages/foundation/modeling/identity/src/IdentityRegistry.ts",
-          "line": 155,
-          "anchor": "packages-foundation-modeling-identity-src-identityregistry-ts-155-identityentry",
+          "line": 156,
+          "anchor": "packages-foundation-modeling-identity-src-identityregistry-ts-156-identityentry",
           "currentTags": [
             "@category",
             "@since"
@@ -2705,8 +2426,8 @@
           "exportKind": "class",
           "filePath": "src/IdentityRegistry.ts",
           "repoPath": "packages/foundation/modeling/identity/src/IdentityRegistry.ts",
-          "line": 182,
-          "anchor": "packages-foundation-modeling-identity-src-identityregistry-ts-182-identitynotfounderror",
+          "line": 183,
+          "anchor": "packages-foundation-modeling-identity-src-identityregistry-ts-183-identitynotfounderror",
           "currentTags": [
             "@category",
             "@since"
@@ -2715,26 +2436,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "IdentityRegistryConflictError",
           "exportKind": "class",
           "filePath": "src/IdentityRegistry.ts",
           "repoPath": "packages/foundation/modeling/identity/src/IdentityRegistry.ts",
-          "line": 210,
-          "anchor": "packages-foundation-modeling-identity-src-identityregistry-ts-210-identityregistryconflicterror",
+          "line": 211,
+          "anchor": "packages-foundation-modeling-identity-src-identityregistry-ts-211-identityregistryconflicterror",
           "currentTags": [
             "@category",
             "@since"
@@ -2743,26 +2458,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "IdentityRegistryShape",
           "exportKind": "interface",
           "filePath": "src/IdentityRegistry.ts",
           "repoPath": "packages/foundation/modeling/identity/src/IdentityRegistry.ts",
-          "line": 230,
-          "anchor": "packages-foundation-modeling-identity-src-identityregistry-ts-230-identityregistryshape",
+          "line": 231,
+          "anchor": "packages-foundation-modeling-identity-src-identityregistry-ts-231-identityregistryshape",
           "currentTags": [
             "@category",
             "@since"
@@ -2783,8 +2492,8 @@
           "exportKind": "class",
           "filePath": "src/IdentityRegistry.ts",
           "repoPath": "packages/foundation/modeling/identity/src/IdentityRegistry.ts",
-          "line": 252,
-          "anchor": "packages-foundation-modeling-identity-src-identityregistry-ts-252-identityregistry",
+          "line": 253,
+          "anchor": "packages-foundation-modeling-identity-src-identityregistry-ts-253-identityregistry",
           "currentTags": [
             "@category",
             "@since"
@@ -2793,18 +2502,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "SafePnLocal",
@@ -2821,18 +2524,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "SafePnLocal",
@@ -2849,18 +2546,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "SafePnPrefix",
@@ -2877,18 +2568,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "SafePnPrefix",
@@ -2905,18 +2590,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "isSafeLocal",
@@ -2933,18 +2612,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "isSafePrefix",
@@ -2961,18 +2634,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "EscapedPnLocal",
@@ -2989,18 +2656,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "EscapedPnLocal",
@@ -3017,18 +2678,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "acceptsEscapedLocal",
@@ -3045,18 +2700,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "unescapeLocal",
@@ -3073,18 +2722,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "escapeLocal",
@@ -3101,18 +2744,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "prefixedNameOrIri",
@@ -3129,18 +2766,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "VocabShape",
@@ -3157,18 +2788,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "VocabEntry",
@@ -3185,18 +2810,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "VocabRegistry",
@@ -3213,18 +2832,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "VocabRegistry",
@@ -3241,18 +2854,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "CoreVocab",
@@ -3269,18 +2876,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "CoreVocab",
@@ -3297,18 +2898,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "Curie",
@@ -3325,18 +2920,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "Predicate",
@@ -3353,18 +2942,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "Expand",
@@ -3381,18 +2964,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "mergeVocab",
@@ -3409,18 +2986,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "SemanticFoundationVocab",
@@ -3437,18 +3008,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "SemanticFoundationVocab",
@@ -3465,18 +3030,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "SparVocab",
@@ -3493,18 +3052,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "SparVocab",
@@ -3543,18 +3096,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * from \"./Fibered.ts\";",
@@ -3571,18 +3118,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * from \"./Id.ts\";",
@@ -3599,18 +3140,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * from \"./IdentityRegistry.ts\";",
@@ -3627,18 +3162,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * from \"./PnLocal.ts\";",
@@ -3655,18 +3184,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * from \"./packages.ts\";",
@@ -3683,18 +3206,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * from \"./Vocab.ts\";",
@@ -3711,18 +3228,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$I",
@@ -3871,18 +3382,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$IdentityId",
@@ -3899,18 +3404,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$SchemaId",
@@ -3927,18 +3426,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$ProvenanceId",
@@ -3955,18 +3448,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$RdfId",
@@ -3983,18 +3470,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$OntologyId",
@@ -4099,18 +3580,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$UtilsId",
@@ -4127,18 +3602,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$UiId",
@@ -4155,18 +3624,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$RepoAiMetricsId",
@@ -4183,18 +3646,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$RepoCliId",
@@ -4211,18 +3668,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$RepoConfigsId",
@@ -4239,18 +3690,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$RepoUtilsId",
@@ -4267,18 +3712,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$TestUtilsId",
@@ -4295,18 +3734,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$SharedDomainId",
@@ -4323,18 +3756,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$SharedUseCasesId",
@@ -4373,18 +3800,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$SemanticWebId",
@@ -4401,18 +3822,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$NlpId",
@@ -4429,18 +3844,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$NlpProcessingId",
@@ -4479,18 +3888,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$ObservabilityId",
@@ -4507,18 +3910,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$ColorsId",
@@ -4535,18 +3932,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$ChalkId",
@@ -4563,18 +3954,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$RepoDocgenId",
@@ -4591,18 +3976,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$InfraId",
@@ -4619,18 +3998,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$WorkspaceDomainId",
@@ -4647,18 +4020,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$EpistemicDomainId",
@@ -4675,18 +4042,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$EpistemicUseCasesId",
@@ -4703,18 +4064,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$AgentsDomainId",
@@ -4731,18 +4086,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$AgentsServerId",
@@ -4759,18 +4108,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$AgentsUseCasesId",
@@ -4787,18 +4130,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$AgentsClientId",
@@ -4815,18 +4152,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$LawPracticeDomainId",
@@ -4843,18 +4174,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$LawPracticeUseCasesId",
@@ -4871,18 +4196,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$LawPracticeServerId",
@@ -4899,18 +4218,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$ProfessionalDesktopId",
@@ -4927,18 +4240,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "RepoPkgs",
@@ -5109,18 +4416,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$AcpId",
@@ -5137,18 +4438,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$OpenaiCompatId",
@@ -5165,18 +4460,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$WorkspaceTablesId",
@@ -5193,18 +4482,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$WorkspaceUseCasesId",
@@ -5221,18 +4504,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$WorkspaceServerId",
@@ -5249,18 +4526,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$DocumentsDomainId",
@@ -5277,18 +4548,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$DocumentsUseCasesId",
@@ -5305,18 +4570,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$DocumentsServerId",
@@ -5333,18 +4592,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$ArchitectureLabDomainId",
@@ -5361,18 +4614,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$ArchitectureLabUseCasesId",
@@ -5389,18 +4636,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$ArchitectureLabConfigId",
@@ -5417,18 +4658,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$ArchitectureLabServerId",
@@ -5445,18 +4680,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$ArchitectureLabTablesId",
@@ -5473,18 +4702,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$ArchitectureLabClientId",
@@ -5501,18 +4724,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$ArchitectureLabUiId",
@@ -5529,18 +4746,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$ArchitectureLabProofId",
@@ -5557,18 +4768,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$RunpodId",
@@ -5585,18 +4790,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$OnepasswordCliId",
@@ -5613,18 +4812,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$DiscordId",
@@ -5641,18 +4834,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$AiProviderCliId",
@@ -5669,18 +4856,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$SanityId",
@@ -5697,18 +4878,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$HubspotId",
@@ -5725,18 +4900,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$PhoenixId",
@@ -5753,18 +4922,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$AiSyncId",
@@ -5781,18 +4944,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$BoxId",
@@ -5809,18 +4966,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$NlpMcpId",
@@ -5837,18 +4988,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$RdfCanonizeId",
@@ -5887,18 +5032,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$FileProcessingId",
@@ -5915,18 +5054,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$TikaId",
@@ -5943,18 +5076,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$LibpffId",
@@ -5971,18 +5098,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$UsptoId",
@@ -5999,18 +5120,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$LexicalSchemaId",
@@ -6027,18 +5142,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$EditorId",
@@ -6055,18 +5164,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$ScratchpadId",
@@ -6083,18 +5186,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$HtmlId",
@@ -6111,18 +5208,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$PandocAstId",
@@ -6139,18 +5230,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$PgliteId",
@@ -6167,18 +5252,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$M365Id",
@@ -6195,18 +5274,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$M365McpId",
@@ -6223,18 +5296,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$GovinfoId",
@@ -6251,18 +5318,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$EcfrId",
@@ -6279,18 +5340,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$ApiTransportId",
@@ -6307,18 +5362,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$McpKitId",
@@ -6335,18 +5384,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$UsptoMcpId",
@@ -6363,18 +5406,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$PacerId",
@@ -6391,18 +5428,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$FcRunsId",
@@ -6419,18 +5450,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$CosmosId",
@@ -6447,18 +5472,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$DbAdminId",
@@ -6475,18 +5494,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$EpistemicServerId",
@@ -6503,18 +5516,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$EpistemicTablesId",
@@ -6531,18 +5538,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$LintRulesId",
@@ -6559,18 +5560,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$N3Id",
@@ -6587,18 +5582,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$PretextId",
@@ -6615,18 +5604,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$Graph3dId",
@@ -6643,18 +5626,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$DockId",
@@ -6671,18 +5648,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$DockReactId",
@@ -6699,18 +5670,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$OntologyClientId",
@@ -6727,18 +5692,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$OntologyConfigId",
@@ -6755,18 +5714,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$OntologyDomainId",
@@ -6783,18 +5736,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$OntologyServerId",
@@ -6811,18 +5758,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$OntologyUiId",
@@ -6839,18 +5780,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$OntologyUseCasesId",
@@ -6867,18 +5802,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$OxigraphId",
@@ -6895,18 +5824,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$ShaclId",
@@ -6923,18 +5846,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$StorybookId",
@@ -6951,18 +5868,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$TsgoShimId",
@@ -6979,18 +5890,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$DocTextId",
@@ -7007,18 +5912,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$DocumentsTablesId",
@@ -7035,18 +5934,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$TailscaleId",
@@ -7063,18 +5956,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$AgentsTablesId",
@@ -7091,18 +5978,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$EpistemicConfigId",
@@ -7119,18 +6000,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$LawPracticeTablesId",
@@ -7147,18 +6022,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$PracticeKgMcpId",
@@ -7175,18 +6044,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$OpenclawId",
@@ -7203,18 +6066,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$ObsId",
@@ -7231,18 +6088,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$ExiftoolId",
@@ -7259,18 +6110,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$QaCaptureId",
@@ -7287,18 +6132,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$GovLegalMcpId",
@@ -7315,18 +6154,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$EpistemicClientId",
@@ -7343,18 +6176,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$EpistemicUiId",
@@ -7371,18 +6198,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$EffectDrizzleId",
@@ -7421,18 +6242,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$CodegenKitId",
@@ -7449,18 +6264,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$BrandId",
@@ -7477,18 +6286,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$OpenaiId",
@@ -7505,18 +6308,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$TodoxId",
@@ -7533,18 +6330,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$BoxProvisioningId",
@@ -7561,18 +6352,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/identity package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "$FreshbooksId",
