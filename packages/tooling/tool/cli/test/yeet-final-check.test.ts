@@ -1,4 +1,5 @@
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
+import { LenientManifest } from "@beep/package-json/LenientManifest";
 import { configStringOption } from "@beep/repo-cli/test/SharedInternals";
 import {
   collectExpectationRewrites,
@@ -16,6 +17,7 @@ import {
   readFinalCheckReceipt,
   rewrittenTestFiles,
   verifyExpectationRewrites,
+  vitestReplayArgs,
 } from "@beep/repo-cli/test/Yeet";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it } from "@effect/vitest";
@@ -29,6 +31,7 @@ import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
@@ -175,6 +178,48 @@ describe("findExpectationRewrites", () => {
     ]);
   });
 
+  // #2247: Biome reflowed a block and re-indented its unchanged expectations.
+  it("treats a whitespace-only reflow of assertion lines as no rewrite", () => {
+    const diff = A.join(
+      [
+        "diff --git a/p/test/w.test.ts b/p/test/w.test.ts",
+        "+++ b/p/test/w.test.ts",
+        "@@ -10,3 +10,3 @@",
+        "-    expect(a).toBe(1)",
+        "-    expect(b).toEqual([1,  2])",
+        "-    const c = 3",
+        "+      expect(b).toEqual([1, 2])",
+        "+      expect(a).toBe(1)",
+        "+      const c = 4",
+      ],
+      "\n"
+    );
+    expect(findExpectationRewrites(diff)).toEqual([]);
+  });
+
+  it("still flags a one-token change inside a reflowed block", () => {
+    const diff = A.join(
+      [
+        "diff --git a/p/test/w.test.ts b/p/test/w.test.ts",
+        "+++ b/p/test/w.test.ts",
+        "@@ -10,2 +10,2 @@",
+        "-    expect(a).toBe(1)",
+        "-    expect(b).toEqual([1, 2])",
+        "+      expect(a).toBe(1)",
+        "+      expect(b).toEqual([1, 3])",
+      ],
+      "\n"
+    );
+    expect(findExpectationRewrites(diff)).toEqual([
+      ExpectationRewrite.make({
+        testFile: "p/test/w.test.ts",
+        line: 11,
+        removed: "expect(b).toEqual([1, 2])",
+        added: "expect(b).toEqual([1, 3])",
+      }),
+    ]);
+  });
+
   it("treats a deleted test file as no rewrite", () => {
     const diff = A.join(
       [
@@ -187,6 +232,47 @@ describe("findExpectationRewrites", () => {
       "\n"
     );
     expect(findExpectationRewrites(diff)).toEqual([]);
+  });
+});
+
+describe("vitestReplayArgs", () => {
+  const file = "test/a.test.ts";
+  const manifestWith = (scripts: Record<string, string>) => LenientManifest.make({ scripts, rest: {}, issues: [] });
+
+  it("replays under Bun when the package's beep:test runs vitest with --bun", () => {
+    const manifest = manifestWith({ "beep:test": "bunx --bun vitest run --passWithNoTests" });
+    expect(vitestReplayArgs(manifest, file)).toEqual(["--bun", "vitest", "run", file]);
+  });
+
+  it("replays plain when beep:test runs vitest without --bun", () => {
+    const manifest = manifestWith({ "beep:test": "bunx vitest run", test: "bunx --bun vitest" });
+    expect(vitestReplayArgs(manifest, file)).toEqual(["vitest", "run", file]);
+  });
+
+  // Both real mixed shapes: most files run on Bun, one named file runs plain.
+  it.each([
+    [
+      "bunx --bun vitest run --passWithNoTests --exclude=test/integration/** --exclude=test/import-boundary.test.ts && bunx vitest run test/import-boundary.test.ts",
+      "test/import-boundary.test.ts",
+    ],
+    [
+      "bunx --bun vitest run --exclude=test/TsNativeApi.test.ts && bunx vitest run test/TsNativeApi.test.ts",
+      "test/TsNativeApi.test.ts",
+    ],
+  ])("uses the runtime of the segment that names the file in %s", (script, named) => {
+    const manifest = manifestWith({ "beep:test": script });
+    expect(vitestReplayArgs(manifest, named)).toEqual(["vitest", "run", named]);
+    expect(vitestReplayArgs(manifest, "test/other.test.ts")).toEqual(["--bun", "vitest", "run", "test/other.test.ts"]);
+  });
+
+  it("falls back to the test script, then to a plain replay", () => {
+    expect(vitestReplayArgs(manifestWith({ test: "bun --bun vitest run" }), file)).toEqual([
+      "--bun",
+      "vitest",
+      "run",
+      file,
+    ]);
+    expect(vitestReplayArgs(manifestWith({}), file)).toEqual(["vitest", "run", file]);
   });
 });
 
@@ -207,7 +293,6 @@ describe("planFinalCheckSteps", () => {
       BASE,
       "--summarize",
     ]);
-    expect(argv("final-check:effect-diagnostics")).toContain("effect-diagnostics");
     expect(argv("final-check:docgen")).toEqual([
       "run",
       "beep",
@@ -327,13 +412,17 @@ const handle = (exitCode: number, output = "") =>
   });
 
 // git and bun install succeed unless their command names a failing step; the
-// merge-base vitest run fails for test files whose path says `masked`.
+// merge-base vitest run fails for test files whose path says `masked`, and for
+// `bun-only` files (they call a Bun API) replayed without `--bun`.
 const scriptedSpawner = (failing: ReadonlyArray<string> = []) =>
   ChildProcessSpawner.make((command) => {
     if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
     const line = A.join([command.command, ...command.args], " ");
     if (A.some(failing, (fragment) => Str.includes(fragment)(line))) return Effect.succeed(handle(1));
-    return Effect.succeed(handle(command.command === "bunx" && Str.includes("masked")(line) ? 1 : 0));
+    const bunOnlyOnNode = Str.includes("bun-only")(line) && !A.contains(command.args, "--bun");
+    return Effect.succeed(
+      handle(command.command === "bunx" && (Str.includes("masked")(line) || bunOnlyOnNode) ? 1 : 0)
+    );
   });
 
 const platformWith = (failing: ReadonlyArray<string> = []) =>
@@ -505,7 +594,10 @@ it.layer(Layer.mergeAll(BunCrypto.layer, Path.layer), { timeout: "30 seconds" })
 const rewriteIn = (testFile: string) => ExpectationRewrite.make({ testFile, line: 3, removed: "a", added: "b" });
 
 // TestClock pins the worktree suffix to 0; HOME comes from the ambient config.
-const seedBaseWorktree = Effect.fnUntraced(function* (files: ReadonlyArray<string>) {
+const seedBaseWorktree = Effect.fnUntraced(function* (
+  files: ReadonlyArray<string>,
+  contents: Readonly<Record<string, string>> = {}
+) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const home = O.getOrElse(yield* configStringOption("HOME"), () => "/repo");
@@ -513,9 +605,14 @@ const seedBaseWorktree = Effect.fnUntraced(function* (files: ReadonlyArray<strin
   yield* Effect.forEach(
     files,
     (file) =>
-      fs
-        .makeDirectory(path.dirname(path.join(baseRoot, file)), { recursive: true })
-        .pipe(Effect.andThen(fs.writeFileString(path.join(baseRoot, file), "{}"))),
+      fs.makeDirectory(path.dirname(path.join(baseRoot, file)), { recursive: true }).pipe(
+        Effect.andThen(
+          fs.writeFileString(
+            path.join(baseRoot, file),
+            O.getOrElse(R.get(contents, file), () => "{}")
+          )
+        )
+      ),
     { discard: true }
   );
 });
@@ -553,6 +650,39 @@ it.layer(platformWith(), { timeout: "30 seconds" })("expectation rewrites replay
         ["loose/orphan.test.ts", "unverified", 1],
       ]);
       expect(verdicts[0]?.detail).toContain("vitest exit 1");
+    })
+  );
+});
+
+it.layer(platformWith(), { timeout: "30 seconds" })("merge-base replay runtime", (it) => {
+  it.effect("replays each test file under its owning package's declared test runtime", () =>
+    Effect.gen(function* () {
+      yield* seedBaseWorktree(
+        [
+          "bunpkg/package.json",
+          "bunpkg/test/bun-only.test.ts",
+          "nodepkg/package.json",
+          "nodepkg/test/bun-only.test.ts",
+          "badpkg/package.json",
+          "badpkg/test/a.test.ts",
+        ],
+        {
+          "bunpkg/package.json": '{"scripts":{"beep:test":"bunx --bun vitest run"}}',
+          "nodepkg/package.json": '{"scripts":{"beep:test":"bunx vitest run"}}',
+          "badpkg/package.json": "{not json",
+        }
+      );
+      const verdicts = yield* verifyExpectationRewrites("/repo", BASE, [
+        rewriteIn("bunpkg/test/bun-only.test.ts"),
+        rewriteIn("nodepkg/test/bun-only.test.ts"),
+        rewriteIn("badpkg/test/a.test.ts"),
+      ]);
+      expect(A.map(verdicts, (verdict) => [verdict.testFile, verdict.classification])).toEqual([
+        ["bunpkg/test/bun-only.test.ts", "follows-diff"],
+        ["nodepkg/test/bun-only.test.ts", "masks-base-red"],
+        ["badpkg/test/a.test.ts", "unverified"],
+      ]);
+      expect(verdicts[2]?.detail).toContain("package.json");
     })
   );
 });

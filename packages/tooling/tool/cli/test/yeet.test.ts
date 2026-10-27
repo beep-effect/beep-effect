@@ -853,7 +853,6 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         "quality:test-unit",
         "quality:storybook",
         "quality:coverage",
-        "quality:effect-diagnostics",
       ]);
       // Plan half of the gate-order handoff fixture 5 (TTC ruling 78): the rendered plan and
       // the committed handoff both come from the same pure orderWaveLanes over the same lanes.

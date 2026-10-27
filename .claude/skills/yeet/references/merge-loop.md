@@ -77,6 +77,14 @@ is `review window unknown`, which blocks exactly like an open window.
 (`"30 minutes"`); the default is `YEET_REVIEW_WINDOW_DEFAULT` in
 `internal/ReviewWindow.ts`. No reviewer has to post for the window to elapse.
 
+The `beep-reviewer` check gates a merge only while `main`'s ruleset lists it as a
+required check: `yeet merge` and `yeet merge-gate` run `enforceReviewerGate`, which
+reads the ruleset and passes through when the entry is absent. When the reviewer
+cannot run (model quota exhausted), drop the requirement with
+`bun run beep reviewer ruleset release --apply` and restore it with
+`BEEP_REVIEWER_APP_ID=5321138 bun run beep reviewer ruleset require --apply`
+(both need `kriegcloud`'s gh login). Runbook: `docs/ops/beep-reviewer-app.md`.
+
 `monitor --until-ready` still ends `ready-pending-flip` (exit 0) when the PR
 is a draft and nothing but the draft flag blocks it. That now means the owner
 flipped late: the window starts at the flip, so submit a new monitor after

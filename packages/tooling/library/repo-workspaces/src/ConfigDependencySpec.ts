@@ -116,10 +116,12 @@ export class InvalidConfigDependencySpecError extends S.TaggedError<
 // sound — the same rule `@beep/npm-spec`'s `PackageManagerPin` applies.
 const specVersion = SemVer.pipe(
   S.check(
+    // The `message` annotation is the issue message under effect 4.0.6; the label is the title.
     S.makeFilter(
-      (version: SemVer) => (version.build.length === 0 ? undefined : "Expected a version without build metadata"),
+      (version: SemVer) => version.build.length === 0,
       $I.annote("VersionWithoutBuildMetadata", {
-        message: "Version without build metadata",
+        title: "Version without build metadata",
+        message: "Expected a version without build metadata",
         description:
           "Config dependency versions cannot carry build metadata because the first plus sign begins integrity.",
       })

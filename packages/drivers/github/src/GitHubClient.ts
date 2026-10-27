@@ -17,6 +17,7 @@
 import { $GithubId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { getSomesStruct } from "@beep/utils/Option";
+import { unstubbedFor } from "@beep/utils/TestDouble";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
@@ -33,7 +34,6 @@ import { GitHubError } from "./GitHubError.ts";
 import { GitHubGraphQLError } from "./GraphQL.ts";
 import { FetchFunction, makeTransport, RetryPolicySchema } from "./internal/octokit.ts";
 import { fromArray, paginate } from "./internal/paginate.ts";
-import { unstubbedFor } from "./internal/unstubbed.ts";
 import { RateLimitSnapshot, RetryPolicy } from "./Resilience.ts";
 import type * as Redacted from "effect/Redacted";
 import type { GraphQLDocument } from "./GraphQL.ts";

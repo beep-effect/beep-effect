@@ -42,28 +42,33 @@ const $I = $LintRulesId.create("rules/utils");
  */
 export const makeIdentifierShadowTracker = (names: ReadonlyArray<string>) => {
   const tracked = HashSet.fromIterable(names);
-  const scopes = [MutableHashSet.empty<string>()];
-  const currentScope = () => scopes[scopes.length - 1] ?? MutableHashSet.empty<string>();
+  // `current` is the innermost scope; `enclosing` holds its ancestors, outermost first.
+  // Keeping the innermost scope outside the stack means it always exists, so no lookup
+  // needs an empty-stack fallback.
+  const enclosing: Array<MutableHashSet.MutableHashSet<string>> = [];
+  let current = MutableHashSet.empty<string>();
   const reset = () => {
-    scopes.length = 0;
-    scopes.push(MutableHashSet.empty<string>());
+    enclosing.length = 0;
+    current = MutableHashSet.empty<string>();
   };
   const pushScope = (params: ReadonlyArray<ESTree.ParamPattern>) => {
-    const scope = MutableHashSet.empty<string>();
+    enclosing.push(current);
+    current = MutableHashSet.empty<string>();
     for (const param of params) {
-      if (param.type === "Identifier" && HashSet.has(tracked, param.name)) MutableHashSet.add(scope, param.name);
+      if (param.type === "Identifier" && HashSet.has(tracked, param.name)) MutableHashSet.add(current, param.name);
     }
-    scopes.push(scope);
   };
   const popScope = () => {
-    if (scopes.length > 1) scopes.pop();
+    const parent = enclosing.pop();
+    if (parent !== undefined) current = parent;
   };
   const recordDeclarator = (node: ESTree.VariableDeclarator) => {
     if (node.id.type === "Identifier" && HashSet.has(tracked, node.id.name)) {
-      MutableHashSet.add(currentScope(), node.id.name);
+      MutableHashSet.add(current, node.id.name);
     }
   };
-  const isShadowed = (name: string): boolean => A.some(scopes, (scope) => MutableHashSet.has(scope, name));
+  const isShadowed = (name: string): boolean =>
+    MutableHashSet.has(current, name) || A.some(enclosing, (scope) => MutableHashSet.has(scope, name));
   const visitors = {
     FunctionDeclaration: (node: ESTree.Function) => pushScope(node.params),
     "FunctionDeclaration:exit": popScope,

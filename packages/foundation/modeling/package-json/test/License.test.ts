@@ -30,7 +30,8 @@ describe("SpdxLicense schema", () => {
     assert.deepStrictEqual(
       group.checks[0].annotations,
       $I.annote("SpdxLicenseCheck", {
-        message: "Manifest SPDX License",
+        title: "Manifest SPDX License",
+        message: "Expected a valid SPDX license expression",
         description:
           "A valid SPDX license identifier or expression, UNLICENSED, or SEE LICENSE IN followed by a filename.",
       })

@@ -12,6 +12,7 @@
  */
 import { $GithubId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
+import { unstubbedShapeFor } from "@beep/utils/TestDouble";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
@@ -23,7 +24,7 @@ import * as S from "effect/Schema";
 import { GitHubClient } from "./GitHubClient.ts";
 import { GitHubError } from "./GitHubError.ts";
 import { encryptSecret } from "./internal/crypto.ts";
-import { scopedStoreMembers, unstubbedShapeFor } from "./internal/unstubbed.ts";
+import { scopedStoreMembers } from "./internal/scopedStoreMembers.ts";
 import { Repo } from "./Repo.ts";
 
 const $I = $GithubId.create("RepositorySecret");

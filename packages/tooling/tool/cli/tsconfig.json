@@ -24,6 +24,9 @@
       "path": "../../../drivers/git/tsconfig.json"
     },
     {
+      "path": "../../../drivers/github-actions/tsconfig.json"
+    },
+    {
       "path": "../../../drivers/github/tsconfig.json"
     },
     {
@@ -96,6 +99,9 @@
       "path": "../../../foundation/capability/xdg/tsconfig.json"
     },
     {
+      "path": "../../../foundation/modeling/github-commands/tsconfig.json"
+    },
+    {
       "path": "../../../foundation/modeling/github-reporting/tsconfig.json"
     },
     {
@@ -112,6 +118,9 @@
     },
     {
       "path": "../../../foundation/modeling/md/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/package-json/tsconfig.json"
     },
     {
       "path": "../../../foundation/modeling/schema/tsconfig.json"

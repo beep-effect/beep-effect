@@ -12,9 +12,8 @@ import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import { constant, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { isAbsolutePosix } from "./internal/absolute.ts";
+import { AbsolutePosixPath, isAbsolutePosix } from "./Absolute.ts";
 
 const $I = $XdgId.create("XdgBase");
 
@@ -48,16 +47,6 @@ export const XdgBaseKind = LiteralKit(["config", "data", "cache", "state", "runt
  * @since 0.0.0
  */
 export type XdgBaseKind = typeof XdgBaseKind.Type;
-
-const AbsolutePath = S.String.check(
-  S.makeFilter(
-    isAbsolutePosix,
-    $I.annote("AbsolutePathCheck", {
-      description: "An XDG base directory value is an absolute POSIX path.",
-      message: "Expected an absolute path",
-    })
-  )
-).pipe($I.annoteSchema("AbsolutePath", { description: "An absolute POSIX path." }));
 
 const variableOf = XdgBaseKind.match({
   config: constant("XDG_CONFIG_HOME"),
@@ -117,7 +106,7 @@ const requireUnderHome = (kind: XdgBaseKind, suffix: string): Config.Config<stri
     Config.map(absolute),
     Config.flatMap(
       O.match({
-        onNone: () => Config.schema(AbsolutePath, "HOME").pipe(Config.map((home) => underHome(home, suffix))),
+        onNone: () => Config.schema(AbsolutePosixPath, "HOME").pipe(Config.map((home) => underHome(home, suffix))),
         onSome: Config.succeed,
       })
     )
@@ -131,7 +120,7 @@ const requireUnderHome = (kind: XdgBaseKind, suffix: string): Config.Config<stri
  */
 const require = (kind: XdgBaseKind): Config.Config<string> =>
   O.match(defaultUnderHome(kind), {
-    onNone: () => Config.schema(AbsolutePath, variableOf(kind)),
+    onNone: () => Config.schema(AbsolutePosixPath, variableOf(kind)),
     onSome: (suffix) => requireUnderHome(kind, suffix),
   });
 

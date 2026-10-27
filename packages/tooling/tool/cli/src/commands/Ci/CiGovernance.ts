@@ -541,23 +541,27 @@ const requiredContexts = (ruleset: Ruleset): ReadonlyArray<string> =>
     A.dedupe,
     A.sort(Order.String)
   );
-// The dedicated reviewer App publishes this check outside the CI workflow lane inventory.
+// The dedicated reviewer App publishes this check outside the CI workflow lane inventory. It is
+// optional: `beep reviewer ruleset require|release` switches it on and off (D41).
 const REVIEWER_APP = { context: "beep-reviewer", integrationId: 5321138 } as const;
-const EXTERNAL_REQUIRED_CONTEXTS = [REVIEWER_APP.context] as const;
 /**
- * Verify that the required reviewer context is pinned to its GitHub App producer.
+ * Verify that an optional reviewer context, when required, is pinned to its GitHub App producer.
  *
- * **Example** (Accept the reviewer App and reject an unpinned context)
+ * **Details**
+ * The reviewer is advisory while the ruleset omits it, so an absent context passes.
+ *
+ * **Example** (Accept the reviewer App or its absence and reject an unpinned context)
  *
  * ```ts
  * import { reviewerAppIntegrationMatches } from "@beep/repo-cli/commands/Ci"
  *
  * reviewerAppIntegrationMatches([{ context: "beep-reviewer", integration_id: 5321138 }]) // => true
+ * reviewerAppIntegrationMatches([]) // => true
  * reviewerAppIntegrationMatches([{ context: "beep-reviewer" }]) // => false
  * ```
  *
  * @param entries - Required status checks returned by the live GitHub ruleset.
- * @returns Whether exactly one reviewer context is pinned to the expected App integration.
+ * @returns Whether the reviewer context is absent or required exactly once by the expected App integration.
  * @category predicates
  * @since 0.0.0
  */
@@ -566,8 +570,9 @@ export const reviewerAppIntegrationMatches = (
 ): boolean => {
   const reviewerEntries = A.filter(entries, (entry) => entry.context === REVIEWER_APP.context);
   return (
-    A.length(reviewerEntries) === 1 &&
-    O.exists(A.head(reviewerEntries), (entry) => entry.integration_id === REVIEWER_APP.integrationId)
+    A.isReadonlyArrayEmpty(reviewerEntries) ||
+    (A.length(reviewerEntries) === 1 &&
+      O.exists(A.head(reviewerEntries), (entry) => entry.integration_id === REVIEWER_APP.integrationId))
   );
 };
 const expectedContexts = () =>
@@ -575,10 +580,11 @@ const expectedContexts = () =>
     CI_LANE_DESCRIPTORS,
     A.filter((lane) => lane.required),
     A.map((lane) => lane.contextName),
-    A.appendAll(EXTERNAL_REQUIRED_CONTEXTS),
     A.dedupe,
     A.sort(Order.String)
   );
+const withoutReviewer = (contexts: ReadonlyArray<string>) =>
+  A.filter(contexts, (context) => context !== REVIEWER_APP.context);
 const checkEqual = Effect.fn("CiGovernance.checkEqual")(function* (
   actual: ReadonlyArray<string>,
   expected: ReadonlyArray<string>
@@ -610,7 +616,7 @@ const ciRulesetCommand = Command.make(
         const ruleset = yield* client
           .read("repos/{owner}/{repo}/rulesets/10240248")
           .pipe(Effect.flatMap(decodeRulesetJson));
-        yield* checkEqual(requiredContexts(ruleset), expectedContexts());
+        yield* checkEqual(withoutReviewer(requiredContexts(ruleset)), expectedContexts());
         if (!reviewerAppIntegrationMatches(requiredContextEntries(ruleset)))
           return yield* CiCommandError.make({
             message: `Ruleset drift: ${REVIEWER_APP.context} must be pinned to GitHub App integration ${REVIEWER_APP.integrationId}.`,

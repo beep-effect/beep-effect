@@ -88,14 +88,29 @@ describe("Xdg", () => {
       })
     );
 
-    // Known gap, carried from the lab: absolute-only does not reach HOME here,
-    // unlike XdgBase. A relative HOME is kept verbatim (README Port notes).
-    it.effect("keeps a relative HOME verbatim, unlike XdgBase", () =>
-      Effect.gen(function* () {
-        const paths = yield* Xdg;
-        assert.strictEqual(paths.home, "relative/home");
-      }).pipe(provideLayer(env({ HOME: "relative/home" })))
-    );
+    // Inverted in 4-X-A: the lab kept any non-empty HOME verbatim, so a relative
+    // one resolved every AppDirs fallback against the working directory. HOME now
+    // takes the absolute-only rule of the other variables, POSIX or Windows.
+    for (const home of ["relative/home", "./home", " /home/ada", "~/ada", "C:relative"]) {
+      it.effect(`rejects a relative HOME ${JSON.stringify(home)} with XdgEnvError`, () =>
+        Effect.gen(function* () {
+          const error = yield* Effect.flip(Effect.void.pipe(provideLayer(env({ HOME: home }))));
+          assert.instanceOf(error, XdgEnvError);
+          assert.strictEqual(error.variable, "HOME");
+          assert.strictEqual(error.message, "The HOME environment variable is not set to an absolute path");
+          assert(P.isTagged("ConfigError")(error.cause));
+        })
+      );
+    }
+
+    for (const home of ["/home/ada", "C:\\Users\\ada", "D:/Users/ada", "\\\\server\\home"]) {
+      it.effect(`keeps an absolute HOME ${JSON.stringify(home)} verbatim`, () =>
+        Effect.gen(function* () {
+          const paths = yield* Xdg;
+          assert.strictEqual(paths.home, home);
+        }).pipe(provideLayer(env({ HOME: home })))
+      );
+    }
 
     it.effect("HOME being unset is a typed failure, never a defect", () =>
       Effect.gen(function* () {
@@ -186,7 +201,7 @@ describe("Xdg", () => {
         const failure = A.findFirst(cause.reasons, Cause.isFailReason).pipe(O.getOrThrow);
         assert.instanceOf(failure.error, XdgEnvError);
         assert.strictEqual(failure.error.variable, "HOME");
-        assert.strictEqual(failure.error.message, "The HOME environment variable is not set");
+        assert.strictEqual(failure.error.message, "The HOME environment variable is not set to an absolute path");
         assert(P.isTagged("ConfigError")(failure.error.cause));
       })
     );

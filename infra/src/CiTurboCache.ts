@@ -18,6 +18,7 @@
 import { $InfraId } from "@beep/identity/packages";
 import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { resolveInfraArtifactPath } from "./internal/InfraArtifactPath.ts";
@@ -178,6 +179,7 @@ export const loadCiTurboCacheConfig = (env: InfraPathEnv = process.env): CiTurbo
 type CiTurboCacheArgs = {
   readonly config: CiTurboCachePulumiConfigValues;
   readonly remediation?: CiTurboCacheRemediation;
+  readonly throttleAlarmRecipients?: ReadonlyArray<pulumi.Input<string>>;
 };
 
 const TurboCacheLabEpoch = S.String.check(
@@ -242,13 +244,13 @@ const ReservedConcurrency = S.Int.check(S.isBetween({ minimum: 1, maximum: 1000 
 );
 
 /**
- * Optional evolved-incumbent settings, used by the disposable conformance lab.
+ * Optional evolved-incumbent settings for the conformance lab and production.
  *
  * **Details**
  *
- * Omitted fields keep the deployed values (no tag passthrough, reserved
- * concurrency 20 read, 10 write, 20 authorizer), so the production stack is
- * unchanged when it passes none. `tagPassthrough` sets the shim's
+ * Omitted fields keep the original values (no tag passthrough, reserved
+ * concurrency 20 read, 10 write, 20 authorizer). Production passes only the
+ * concurrency fields, sized from the lab's 1.5x load envelope. `tagPassthrough` sets the shim's
  * `TURBO_REMOTE_CACHE_SIGNATURE_KEY` to a fixed non-secret mode switch: the
  * pinned shim then stores and returns `x-artifact-tag` without ever verifying
  * with that value.
@@ -813,6 +815,52 @@ export class CiTurboCache extends pulumi.ComponentResource {
       },
       { parent: this }
     );
+
+    // Each throttled read is a silent Turbo cache miss and each throttled write
+    // a lost upload, so any throttle in a five-minute window alarms.
+    const throttleAlarmRecipients = args.throttleAlarmRecipients ?? [];
+    if (A.isReadonlyArrayNonEmpty(throttleAlarmRecipients)) {
+      const throttleTopic = new aws.sns.Topic(
+        `${name}-throttles`,
+        { name: `${name}-throttles`, tags: defaultTags },
+        { parent: this }
+      );
+      A.forEach(throttleAlarmRecipients, (endpoint, index) => {
+        new aws.sns.TopicSubscription(
+          `${name}-throttles-recipient-${index}`,
+          { endpoint, protocol: "email", topic: throttleTopic.arn },
+          { additionalSecretOutputs: ["endpoint"], parent: this }
+        );
+      });
+      A.forEach(
+        [
+          ["read", readFunction],
+          ["write", writeFunction],
+          ["authorizer", authorizerFunction],
+        ] as const,
+        ([role, fn]) => {
+          new aws.cloudwatch.MetricAlarm(
+            `${name}-${role}-throttles`,
+            {
+              alarmActions: [throttleTopic.arn],
+              alarmDescription: `The ${role} Lambda was throttled at its reserved concurrency.`,
+              comparisonOperator: "GreaterThanThreshold",
+              dimensions: { FunctionName: fn.name },
+              evaluationPeriods: 1,
+              metricName: "Throttles",
+              name: `${name}-${role}-throttles`,
+              namespace: "AWS/Lambda",
+              period: 300,
+              statistic: "Sum",
+              tags: defaultTags,
+              threshold: 0,
+              treatMissingData: "notBreaching",
+            },
+            { parent: this }
+          );
+        }
+      );
+    }
 
     this.apiEndpoint = api.apiEndpoint;
     this.bucketName = bucket.bucket;

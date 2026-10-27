@@ -372,6 +372,12 @@
         ]
       },
       {
+        "name": "@beep/github-actions",
+        "patterns": [
+          "packages/drivers/github-actions/src/**"
+        ]
+      },
+      {
         "name": "@beep/github-commands",
         "patterns": [
           "packages/foundation/modeling/github-commands/src/**"
@@ -1934,7 +1940,8 @@
           "@beep/memfs",
           "@beep/schema",
           "@beep/test-runner",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/xdg"
         ],
         "allowTypeOnly": [
           "@beep/anthropic",
@@ -1947,7 +1954,8 @@
           "@beep/memfs",
           "@beep/schema",
           "@beep/test-runner",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/xdg"
         ]
       },
       {
@@ -2496,6 +2504,39 @@
           "@beep/schema",
           "@beep/semver",
           "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/github-actions",
+        "allow": [
+          "@beep/fc-runs",
+          "@beep/github",
+          "@beep/github-actions",
+          "@beep/github-commands",
+          "@beep/glob",
+          "@beep/identity",
+          "@beep/memfs",
+          "@beep/npm-spec",
+          "@beep/sbom",
+          "@beep/schema",
+          "@beep/test-utils",
+          "@beep/utils",
+          "@beep/walker"
+        ],
+        "allowTypeOnly": [
+          "@beep/fc-runs",
+          "@beep/github",
+          "@beep/github-actions",
+          "@beep/github-commands",
+          "@beep/glob",
+          "@beep/identity",
+          "@beep/memfs",
+          "@beep/npm-spec",
+          "@beep/sbom",
+          "@beep/schema",
+          "@beep/test-utils",
+          "@beep/utils",
+          "@beep/walker"
         ]
       },
       {
@@ -3982,7 +4023,8 @@
           "@beep/m365",
           "@beep/practice-m365-contacts",
           "@beep/schema",
-          "@beep/test-runner"
+          "@beep/test-runner",
+          "@beep/xdg"
         ],
         "allowTypeOnly": [
           "@beep/identity",
@@ -3991,7 +4033,8 @@
           "@beep/m365",
           "@beep/practice-m365-contacts",
           "@beep/schema",
-          "@beep/test-runner"
+          "@beep/test-runner",
+          "@beep/xdg"
         ]
       },
       {
@@ -4305,7 +4348,8 @@
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
-          "@beep/utils"
+          "@beep/utils",
+          "@beep/xdg"
         ],
         "allowTypeOnly": [
           "@beep/cli-kit",
@@ -4320,7 +4364,8 @@
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
-          "@beep/utils"
+          "@beep/utils",
+          "@beep/xdg"
         ]
       },
       {
@@ -4339,6 +4384,8 @@
           "@beep/file-processing",
           "@beep/git",
           "@beep/github",
+          "@beep/github-actions",
+          "@beep/github-commands",
           "@beep/github-reporting",
           "@beep/glob",
           "@beep/identity",
@@ -4352,6 +4399,7 @@
           "@beep/obs",
           "@beep/observability",
           "@beep/occt",
+          "@beep/package-json",
           "@beep/palantiri",
           "@beep/pdf-tools",
           "@beep/phoenix",
@@ -4394,6 +4442,8 @@
           "@beep/file-processing",
           "@beep/git",
           "@beep/github",
+          "@beep/github-actions",
+          "@beep/github-commands",
           "@beep/github-reporting",
           "@beep/glob",
           "@beep/identity",
@@ -4407,6 +4457,7 @@
           "@beep/obs",
           "@beep/observability",
           "@beep/occt",
+          "@beep/package-json",
           "@beep/palantiri",
           "@beep/pdf-tools",
           "@beep/phoenix",
@@ -4464,6 +4515,7 @@
           "@beep/config-file",
           "@beep/identity",
           "@beep/md",
+          "@beep/package-json",
           "@beep/repo-docgen",
           "@beep/repo-utils",
           "@beep/schema",
@@ -4476,6 +4528,7 @@
           "@beep/config-file",
           "@beep/identity",
           "@beep/md",
+          "@beep/package-json",
           "@beep/repo-docgen",
           "@beep/repo-utils",
           "@beep/schema",

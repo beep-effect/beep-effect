@@ -277,7 +277,7 @@ const checkInvocations = (scripts: Readonly<Record<string, string>>, root: boole
     invocations = A.appendAll(
       invocations,
       A.filter(Str.split(command, /&&|\|\||[;|]/u), (invocation) =>
-        O.isSome(Str.match(/(?:^|\s)(?:tsc-rs|tsgo)\s/u)(invocation))
+        O.isSome(Str.match(/(?:^|\s)(?:tsrs|tsgo)\s/u)(invocation))
       )
     );
     const words = Str.split(command, /\s+/u);

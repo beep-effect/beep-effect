@@ -1,5 +1,6 @@
 import { Exiftool } from "@beep/exiftool";
 import { FFmpeg } from "@beep/ffmpeg";
+import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   ArtifactBudget,
   BeaconEvent,
@@ -81,7 +82,6 @@ import {
 import { thunk } from "@beep/utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
-import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
@@ -99,7 +99,7 @@ import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import type { ActionEvent } from "@beep/qa-capture";
 
-const PlatformLayer = Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer);
+const PlatformLayer = Layer.mergeAll(BunCrypto.layer, MemoryFileSystem.layer, NodePath.layer);
 const SpawnerLayer = NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(PlatformLayer));
 
 const temporaryDirectory = Effect.gen(function* () {

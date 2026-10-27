@@ -1,5 +1,5 @@
 {
-  "previous": "077bf9c7ed840454d0b847ac2cb0c0f30105b0b7e462fad434690fceda91d7f2",
+  "previous": "63b3e44ab5626006919528ea472f62737e4a038c08327792a141ec1936d492d7",
   "review": {
     "reviewer": "Claude Opus 5.5 (effected-promotion roadmap R10, refactor/repo-cli-git-helpers)",
     "reason": "Record the @beep/repo-cli manifest edit that adds the @beep/git workspace dependency for the R10 git adoptions; the task graphs gain only git build/transit, and the policy-tool fingerprint closure gains that one package, as measured in the review; no qualification is granted.",

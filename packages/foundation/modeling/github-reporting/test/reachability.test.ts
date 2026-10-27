@@ -52,7 +52,7 @@ const SOURCES = HashMap.union(
   )
 );
 
-/** Every module under `src`, relative to `src/` (for example `"internal/unstubbed.ts"`). */
+/** Every module under `src`, relative to `src/` (for example `"internal/admission.ts"`). */
 const sourceModules: ReadonlyArray<string> = PACKAGE_SOURCES.pipe(HashMap.keys, A.fromIterable, A.sort(Str.Order));
 
 /**
@@ -195,6 +195,7 @@ describe("bundle reachability", () => {
         ...MANAGED_SECTION_LEAVES,
         "@beep/schema/LiteralKit",
         "@beep/utils/Option",
+        "@beep/utils/TestDouble",
         "effect/Array",
         "effect/BigInt",
         "effect/Boolean",

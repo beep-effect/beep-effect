@@ -16,6 +16,7 @@
 
 import { $GithubId } from "@beep/identity/packages";
 import * as O from "@beep/utils/Option";
+import { unstubbedFor } from "@beep/utils/TestDouble";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
@@ -39,7 +40,6 @@ import { GitHubError } from "./GitHubError.ts";
 import { GitHubGraphQLError } from "./GraphQL.ts";
 import { numericId } from "./internal/ids.ts";
 import { FetchFunction, RetryPolicySchema } from "./internal/octokit.ts";
-import { unstubbedFor } from "./internal/unstubbed.ts";
 import type * as Scope from "effect/Scope";
 import type { GitHubClientShape } from "./GitHubClient.ts";
 import type { GraphQLDocument } from "./GraphQL.ts";

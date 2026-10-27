@@ -352,15 +352,11 @@ describe("CI lane descriptors", () => {
   it("enumerates every check.yml lane exactly once", () => {
     const ids = A.map(CI_LANE_DESCRIPTORS, (descriptor) => descriptor.id);
     expect(A.length(A.dedupe(ids))).toBe(A.length(ids));
-    expect(A.length(CI_LANE_DESCRIPTORS)).toBe(27);
+    expect(A.length(CI_LANE_DESCRIPTORS)).toBe(26);
   });
 
-  it("dispatches independent diagnostics with affected PR and full main shapes", () => {
-    const pr = ciLaneStepsForTesting(REPO_ROOT, "effect-diagnostics", prShapeOptions);
-    const full = ciLaneStepsForTesting(REPO_ROOT, "effect-diagnostics", baseOptions);
-    expect(pr).toHaveLength(1);
-    expect(pr[0]?.args).toEqual(["run", "beep", "quality", "effect-diagnostics", "--base", prShapeOptions.base]);
-    expect(full[0]?.args).toEqual(["run", "beep", "quality", "effect-diagnostics"]);
+  it("retires the standalone Effect diagnostics lane", () => {
+    expect(A.map(CI_LANE_DESCRIPTORS, (descriptor) => descriptor.id)).not.toContain("effect-diagnostics");
   });
 
   it("covers every runnable lane id", () => {
@@ -369,7 +365,7 @@ describe("CI lane descriptors", () => {
     expect(missing).toEqual([]);
   });
 
-  it.effect("matches captured workflow checks while retaining the external reviewer App check", () =>
+  it.effect("matches captured workflow checks apart from the optional external reviewer App check", () =>
     Effect.gen(function* () {
       const snapshot = yield* Effect.tryPromise(() => Bun.file(branchProtectionContextSnapshotUrl).text()).pipe(
         Effect.flatMap(decodeBranchProtectionContextSnapshot)
@@ -381,8 +377,7 @@ describe("CI lane descriptors", () => {
         A.dedupe,
         A.sort(Order.String)
       );
-      expect(A.contains(snapshot.requiredStatusChecks, "beep-reviewer")).toBe(true);
-      // The reviewer App owns this required context outside the workflow lane inventory.
+      // The reviewer App owns this optional context outside the workflow lane inventory (D41).
       expect(requiredContexts).toEqual(
         pipe(
           snapshot.requiredStatusChecks,

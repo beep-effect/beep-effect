@@ -144,10 +144,13 @@ export const isValidSpdx = (value: string): boolean => {
 export const SpdxLicense = S.String.pipe(
   S.check(
     S.makeFilterGroup([
+      // effect 4.0.6 renders a check's `message` annotation as the issue message,
+      // ahead of any string the predicate returns, so the label lives in `title`.
       S.makeFilter(
-        (value) => (isValidSpdx(value) ? undefined : "Expected a valid SPDX license expression"),
+        isValidSpdx,
         $I.annote("SpdxLicenseCheck", {
-          message: "Manifest SPDX License",
+          title: "Manifest SPDX License",
+          message: "Expected a valid SPDX license expression",
           description:
             "A valid SPDX license identifier or expression, UNLICENSED, or SEE LICENSE IN followed by a filename.",
         })

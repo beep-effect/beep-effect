@@ -5,10 +5,11 @@
   "owner": "@beep/xdg",
   "entries": [
     {"file":"packages/foundation/capability/xdg/src/AppDirs.ts","symbol":"AppDirKind","kind":"literal-kit","owner":"@beep/xdg","identity":"AppDirKind","description":"The four directory kinds XDG separates, plus the runtime directory."},
-    {"file":"packages/foundation/capability/xdg/src/AppDirs.ts","symbol":"AppDirOverrides","kind":"struct-const","owner":"@beep/xdg","identity":"AppDirOverrides","description":"Per-kind directory overrides, used as given. Each wins outright over every other rung."},
+    {"file":"packages/foundation/capability/xdg/src/AppDirs.ts","symbol":"AppDirOverrides","kind":"struct-const","owner":"@beep/xdg","identity":"AppDirOverrides","description":"Per-kind absolute directory overrides. Each wins outright over every other rung."},
     {"file":"packages/foundation/capability/xdg/src/AppDirs.ts","symbol":"AppDirsError","kind":"tagged-error","owner":"@beep/xdg","identity":"AppDirsError"},
     {"file":"packages/foundation/capability/xdg/src/AppDirs.ts","symbol":"AppDirsNamespaceError","kind":"tagged-error","owner":"@beep/xdg","identity":"AppDirsNamespaceError"},
     {"file":"packages/foundation/capability/xdg/src/AppDirs.ts","symbol":"AppDirsOptions","kind":"struct-const","owner":"@beep/xdg","identity":"AppDirsOptions","description":"Options for resolving application directories through the five-level precedence."},
+    {"file":"packages/foundation/capability/xdg/src/AppDirs.ts","symbol":"AppDirsOverrideError","kind":"tagged-error","owner":"@beep/xdg","identity":"AppDirsOverrideError"},
     {"file":"packages/foundation/capability/xdg/src/AppDirs.ts","symbol":"ResolvedAppDirs","kind":"struct-const","owner":"@beep/xdg","identity":"ResolvedAppDirs","description":"The fully resolved, app-namespaced directories."},
     {"file":"packages/foundation/capability/xdg/src/NativeDirs.ts","symbol":"NativeDirs","kind":"struct-const","owner":"@beep/xdg","identity":"NativeDirs","description":"The OS-native application directories for one namespace."},
     {"file":"packages/foundation/capability/xdg/src/Xdg.ts","symbol":"XdgEnvError","kind":"tagged-error","owner":"@beep/xdg","identity":"XdgEnvError"},
