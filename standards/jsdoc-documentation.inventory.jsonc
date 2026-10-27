@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-27T19:07:39.502Z",
+  "generatedAt": "2026-10-27T20:19:00.168Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -66,7 +66,7 @@
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 64,
     "publicModules": 3546,
-    "publicExports": 25241,
+    "publicExports": 25242,
     "openModules": 344,
     "openExports": 379,
     "missingExportExamples": 7,
@@ -246300,9 +246300,1529 @@
       ]
     },
     {
+      "packageName": "@beep/commands",
+      "packagePath": "packages/drivers/commands",
+      "topoOrder": 62,
+      "status": "clean",
+      "sourceCoverage": {
+        "srcDir": "src",
+        "sourceFileCount": 8,
+        "publicModuleCount": 8,
+        "publicExportCount": 58
+      },
+      "docgenCoverage": {
+        "hasDocgenConfig": true,
+        "enforceDescriptions": false,
+        "enforceExamples": false,
+        "enforceVersion": true
+      },
+      "counts": {
+        "openModules": 0,
+        "openExports": 0,
+        "missingExportExamples": 0,
+        "missingExportCategories": 0,
+        "missingExportSince": 0,
+        "missingExportSummaries": 0,
+        "forbiddenTagFindings": 0,
+        "malformedConditionalTagFindings": 0,
+        "exampleImportFindings": 0,
+        "unsafeExampleFindings": 0,
+        "schemaAnnotationFindings": 0,
+        "documentationRuleFindings": {
+          "undescribed-see": 0,
+          "multiple-description-paragraphs": 0,
+          "leading-blank": 0,
+          "trailing-blank": 0,
+          "invalid-heading": 0,
+          "section-out-of-order": 0,
+          "duplicate-section": 0,
+          "empty-section": 0,
+          "section-after-example": 0,
+          "invalid-when-to-use-prefix": 0,
+          "malformed-example": 0,
+          "duplicate-example": 0,
+          "loose-ts-fence": 0,
+          "forbidden-remarks": 0,
+          "no-root-package-import": 0
+        }
+      },
+      "modules": [
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/LocalExec.ts",
+          "repoPath": "packages/drivers/commands/src/LocalExec.ts",
+          "line": 1,
+          "anchor": "packages-drivers-commands-src-localexec-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 7,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/Redaction.ts",
+          "repoPath": "packages/drivers/commands/src/Redaction.ts",
+          "line": 1,
+          "anchor": "packages-drivers-commands-src-redaction-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 3,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/Retry.ts",
+          "repoPath": "packages/drivers/commands/src/Retry.ts",
+          "line": 1,
+          "anchor": "packages-drivers-commands-src-retry-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 2,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/Run.ts",
+          "repoPath": "packages/drivers/commands/src/Run.ts",
+          "line": 1,
+          "anchor": "packages-drivers-commands-src-run-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 9,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/ScriptedSpawner.ts",
+          "repoPath": "packages/drivers/commands/src/ScriptedSpawner.ts",
+          "line": 1,
+          "anchor": "packages-drivers-commands-src-scriptedspawner-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 7,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/Tool.ts",
+          "repoPath": "packages/drivers/commands/src/Tool.ts",
+          "line": 1,
+          "anchor": "packages-drivers-commands-src-tool-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 10,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/ToolDiscovery.ts",
+          "repoPath": "packages/drivers/commands/src/ToolDiscovery.ts",
+          "line": 1,
+          "anchor": "packages-drivers-commands-src-tooldiscovery-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 10,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/drivers/commands/src/index.ts",
+          "line": 1,
+          "anchor": "packages-drivers-commands-src-index-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 10,
+          "remediationStatus": "resolved"
+        }
+      ],
+      "exports": [
+        {
+          "symbolName": "Launcher",
+          "exportKind": "const",
+          "filePath": "src/LocalExec.ts",
+          "repoPath": "packages/drivers/commands/src/LocalExec.ts",
+          "line": 47,
+          "anchor": "packages-drivers-commands-src-localexec-ts-47-launcher",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "Launcher",
+          "exportKind": "type",
+          "filePath": "src/LocalExec.ts",
+          "repoPath": "packages/drivers/commands/src/LocalExec.ts",
+          "line": 58,
+          "anchor": "packages-drivers-commands-src-localexec-ts-58-launcher",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "LauncherPrefixes",
+          "exportKind": "class",
+          "filePath": "src/LocalExec.ts",
+          "repoPath": "packages/drivers/commands/src/LocalExec.ts",
+          "line": 82,
+          "anchor": "packages-drivers-commands-src-localexec-ts-82-launcherprefixes",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ExecContext",
+          "exportKind": "class",
+          "filePath": "src/LocalExec.ts",
+          "repoPath": "packages/drivers/commands/src/LocalExec.ts",
+          "line": 141,
+          "anchor": "packages-drivers-commands-src-localexec-ts-141-execcontext",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "LocalExecError",
+          "exportKind": "class",
+          "filePath": "src/LocalExec.ts",
+          "repoPath": "packages/drivers/commands/src/LocalExec.ts",
+          "line": 289,
+          "anchor": "packages-drivers-commands-src-localexec-ts-289-localexecerror",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "LocalExecShape",
+          "exportKind": "interface",
+          "filePath": "src/LocalExec.ts",
+          "repoPath": "packages/drivers/commands/src/LocalExec.ts",
+          "line": 341,
+          "anchor": "packages-drivers-commands-src-localexec-ts-341-localexecshape",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "LocalExec",
+          "exportKind": "class",
+          "filePath": "src/LocalExec.ts",
+          "repoPath": "packages/drivers/commands/src/LocalExec.ts",
+          "line": 388,
+          "anchor": "packages-drivers-commands-src-localexec-ts-388-localexec",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "REDACTED",
+          "exportKind": "const",
+          "filePath": "src/Redaction.ts",
+          "repoPath": "packages/drivers/commands/src/Redaction.ts",
+          "line": 32,
+          "anchor": "packages-drivers-commands-src-redaction-ts-32-redacted",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SECRET_FLAGS",
+          "exportKind": "const",
+          "filePath": "src/Redaction.ts",
+          "repoPath": "packages/drivers/commands/src/Redaction.ts",
+          "line": 58,
+          "anchor": "packages-drivers-commands-src-redaction-ts-58-secret-flags",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "Redaction",
+          "exportKind": "class",
+          "filePath": "src/Redaction.ts",
+          "repoPath": "packages/drivers/commands/src/Redaction.ts",
+          "line": 204,
+          "anchor": "packages-drivers-commands-src-redaction-ts-204-redaction",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "TRANSIENT_PATTERNS",
+          "exportKind": "const",
+          "filePath": "src/Retry.ts",
+          "repoPath": "packages/drivers/commands/src/Retry.ts",
+          "line": 40,
+          "anchor": "packages-drivers-commands-src-retry-ts-40-transient-patterns",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "Retry",
+          "exportKind": "class",
+          "filePath": "src/Retry.ts",
+          "repoPath": "packages/drivers/commands/src/Retry.ts",
+          "line": 119,
+          "anchor": "packages-drivers-commands-src-retry-ts-119-retry",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DEFAULT_MAX_OUTPUT_BYTES",
+          "exportKind": "const",
+          "filePath": "src/Run.ts",
+          "repoPath": "packages/drivers/commands/src/Run.ts",
+          "line": 62,
+          "anchor": "packages-drivers-commands-src-run-ts-62-default-max-output-bytes",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ExitCode",
+          "exportKind": "const",
+          "filePath": "src/Run.ts",
+          "repoPath": "packages/drivers/commands/src/Run.ts",
+          "line": 152,
+          "anchor": "packages-drivers-commands-src-run-ts-152-exitcode",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ExitCode",
+          "exportKind": "type",
+          "filePath": "src/Run.ts",
+          "repoPath": "packages/drivers/commands/src/Run.ts",
+          "line": 159,
+          "anchor": "packages-drivers-commands-src-run-ts-159-exitcode",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "RunOptions",
+          "exportKind": "class",
+          "filePath": "src/Run.ts",
+          "repoPath": "packages/drivers/commands/src/Run.ts",
+          "line": 189,
+          "anchor": "packages-drivers-commands-src-run-ts-189-runoptions",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "RunOptions",
+          "exportKind": "namespace",
+          "filePath": "src/Run.ts",
+          "repoPath": "packages/drivers/commands/src/Run.ts",
+          "line": 233,
+          "anchor": "packages-drivers-commands-src-run-ts-233-runoptions",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CommandOutput",
+          "exportKind": "class",
+          "filePath": "src/Run.ts",
+          "repoPath": "packages/drivers/commands/src/Run.ts",
+          "line": 284,
+          "anchor": "packages-drivers-commands-src-run-ts-284-commandoutput",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CommandFailedError",
+          "exportKind": "class",
+          "filePath": "src/Run.ts",
+          "repoPath": "packages/drivers/commands/src/Run.ts",
+          "line": 400,
+          "anchor": "packages-drivers-commands-src-run-ts-400-commandfailederror",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CommandOutputError",
+          "exportKind": "class",
+          "filePath": "src/Run.ts",
+          "repoPath": "packages/drivers/commands/src/Run.ts",
+          "line": 652,
+          "anchor": "packages-drivers-commands-src-run-ts-652-commandoutputerror",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "Run",
+          "exportKind": "class",
+          "filePath": "src/Run.ts",
+          "repoPath": "packages/drivers/commands/src/Run.ts",
+          "line": 1186,
+          "anchor": "packages-drivers-commands-src-run-ts-1186-run",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ScriptCompletion",
+          "exportKind": "class",
+          "filePath": "src/ScriptedSpawner.ts",
+          "repoPath": "packages/drivers/commands/src/ScriptedSpawner.ts",
+          "line": 57,
+          "anchor": "packages-drivers-commands-src-scriptedspawner-ts-57-scriptcompletion",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ScriptResult",
+          "exportKind": "const",
+          "filePath": "src/ScriptedSpawner.ts",
+          "repoPath": "packages/drivers/commands/src/ScriptedSpawner.ts",
+          "line": 104,
+          "anchor": "packages-drivers-commands-src-scriptedspawner-ts-104-scriptresult",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ScriptResult",
+          "exportKind": "type",
+          "filePath": "src/ScriptedSpawner.ts",
+          "repoPath": "packages/drivers/commands/src/ScriptedSpawner.ts",
+          "line": 113,
+          "anchor": "packages-drivers-commands-src-scriptedspawner-ts-113-scriptresult",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ScriptResult",
+          "exportKind": "namespace",
+          "filePath": "src/ScriptedSpawner.ts",
+          "repoPath": "packages/drivers/commands/src/ScriptedSpawner.ts",
+          "line": 121,
+          "anchor": "packages-drivers-commands-src-scriptedspawner-ts-121-scriptresult",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SpawnScript",
+          "exportKind": "type",
+          "filePath": "src/ScriptedSpawner.ts",
+          "repoPath": "packages/drivers/commands/src/ScriptedSpawner.ts",
+          "line": 146,
+          "anchor": "packages-drivers-commands-src-scriptedspawner-ts-146-spawnscript",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SpawnRecord",
+          "exportKind": "class",
+          "filePath": "src/ScriptedSpawner.ts",
+          "repoPath": "packages/drivers/commands/src/ScriptedSpawner.ts",
+          "line": 300,
+          "anchor": "packages-drivers-commands-src-scriptedspawner-ts-300-spawnrecord",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ScriptedSpawner",
+          "exportKind": "class",
+          "filePath": "src/ScriptedSpawner.ts",
+          "repoPath": "packages/drivers/commands/src/ScriptedSpawner.ts",
+          "line": 392,
+          "anchor": "packages-drivers-commands-src-scriptedspawner-ts-392-scriptedspawner",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ToolSource",
+          "exportKind": "const",
+          "filePath": "src/Tool.ts",
+          "repoPath": "packages/drivers/commands/src/Tool.ts",
+          "line": 41,
+          "anchor": "packages-drivers-commands-src-tool-ts-41-toolsource",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ToolSource",
+          "exportKind": "type",
+          "filePath": "src/Tool.ts",
+          "repoPath": "packages/drivers/commands/src/Tool.ts",
+          "line": 52,
+          "anchor": "packages-drivers-commands-src-tool-ts-52-toolsource",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "MismatchPolicy",
+          "exportKind": "const",
+          "filePath": "src/Tool.ts",
+          "repoPath": "packages/drivers/commands/src/Tool.ts",
+          "line": 77,
+          "anchor": "packages-drivers-commands-src-tool-ts-77-mismatchpolicy",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "MismatchPolicy",
+          "exportKind": "type",
+          "filePath": "src/Tool.ts",
+          "repoPath": "packages/drivers/commands/src/Tool.ts",
+          "line": 90,
+          "anchor": "packages-drivers-commands-src-tool-ts-90-mismatchpolicy",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "VersionFlag",
+          "exportKind": "class",
+          "filePath": "src/Tool.ts",
+          "repoPath": "packages/drivers/commands/src/Tool.ts",
+          "line": 109,
+          "anchor": "packages-drivers-commands-src-tool-ts-109-versionflag",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "VersionJson",
+          "exportKind": "class",
+          "filePath": "src/Tool.ts",
+          "repoPath": "packages/drivers/commands/src/Tool.ts",
+          "line": 156,
+          "anchor": "packages-drivers-commands-src-tool-ts-156-versionjson",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "VersionNone",
+          "exportKind": "class",
+          "filePath": "src/Tool.ts",
+          "repoPath": "packages/drivers/commands/src/Tool.ts",
+          "line": 192,
+          "anchor": "packages-drivers-commands-src-tool-ts-192-versionnone",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "VersionProbe",
+          "exportKind": "const",
+          "filePath": "src/Tool.ts",
+          "repoPath": "packages/drivers/commands/src/Tool.ts",
+          "line": 222,
+          "anchor": "packages-drivers-commands-src-tool-ts-222-versionprobe",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "VersionProbe",
+          "exportKind": "type",
+          "filePath": "src/Tool.ts",
+          "repoPath": "packages/drivers/commands/src/Tool.ts",
+          "line": 233,
+          "anchor": "packages-drivers-commands-src-tool-ts-233-versionprobe",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "Tool",
+          "exportKind": "class",
+          "filePath": "src/Tool.ts",
+          "repoPath": "packages/drivers/commands/src/Tool.ts",
+          "line": 257,
+          "anchor": "packages-drivers-commands-src-tool-ts-257-tool",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ResolvedSource",
+          "exportKind": "const",
+          "filePath": "src/ToolDiscovery.ts",
+          "repoPath": "packages/drivers/commands/src/ToolDiscovery.ts",
+          "line": 65,
+          "anchor": "packages-drivers-commands-src-tooldiscovery-ts-65-resolvedsource",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ResolvedSource",
+          "exportKind": "type",
+          "filePath": "src/ToolDiscovery.ts",
+          "repoPath": "packages/drivers/commands/src/ToolDiscovery.ts",
+          "line": 76,
+          "anchor": "packages-drivers-commands-src-tooldiscovery-ts-76-resolvedsource",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ResolvedTool",
+          "exportKind": "class",
+          "filePath": "src/ToolDiscovery.ts",
+          "repoPath": "packages/drivers/commands/src/ToolDiscovery.ts",
+          "line": 98,
+          "anchor": "packages-drivers-commands-src-tooldiscovery-ts-98-resolvedtool",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ToolNotFoundError",
+          "exportKind": "class",
+          "filePath": "src/ToolDiscovery.ts",
+          "repoPath": "packages/drivers/commands/src/ToolDiscovery.ts",
+          "line": 186,
+          "anchor": "packages-drivers-commands-src-tooldiscovery-ts-186-toolnotfounderror",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ToolVersionMismatchError",
+          "exportKind": "class",
+          "filePath": "src/ToolDiscovery.ts",
+          "repoPath": "packages/drivers/commands/src/ToolDiscovery.ts",
+          "line": 239,
+          "anchor": "packages-drivers-commands-src-tooldiscovery-ts-239-toolversionmismatcherror",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ToolRefusedError",
+          "exportKind": "class",
+          "filePath": "src/ToolDiscovery.ts",
+          "repoPath": "packages/drivers/commands/src/ToolDiscovery.ts",
+          "line": 304,
+          "anchor": "packages-drivers-commands-src-tooldiscovery-ts-304-toolrefusederror",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ToolResolutionFailure",
+          "exportKind": "const",
+          "filePath": "src/ToolDiscovery.ts",
+          "repoPath": "packages/drivers/commands/src/ToolDiscovery.ts",
+          "line": 354,
+          "anchor": "packages-drivers-commands-src-tooldiscovery-ts-354-toolresolutionfailure",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ToolResolutionFailure",
+          "exportKind": "type",
+          "filePath": "src/ToolDiscovery.ts",
+          "repoPath": "packages/drivers/commands/src/ToolDiscovery.ts",
+          "line": 367,
+          "anchor": "packages-drivers-commands-src-tooldiscovery-ts-367-toolresolutionfailure",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ToolDiscoveryShape",
+          "exportKind": "interface",
+          "filePath": "src/ToolDiscovery.ts",
+          "repoPath": "packages/drivers/commands/src/ToolDiscovery.ts",
+          "line": 485,
+          "anchor": "packages-drivers-commands-src-tooldiscovery-ts-485-tooldiscoveryshape",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ToolDiscovery",
+          "exportKind": "class",
+          "filePath": "src/ToolDiscovery.ts",
+          "repoPath": "packages/drivers/commands/src/ToolDiscovery.ts",
+          "line": 689,
+          "anchor": "packages-drivers-commands-src-tooldiscovery-ts-689-tooldiscovery",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export { ExecContext, Launcher, LocalExec, LocalExecError } from \"./LocalExec.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/drivers/commands/src/index.ts",
+          "line": 43,
+          "anchor": "packages-drivers-commands-src-index-ts-43-export-execcontext-launcher-localexec-localexecerror-from-localexec-ts",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export { REDACTED, Redaction, SECRET_FLAGS } from \"./Redaction.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/drivers/commands/src/index.ts",
+          "line": 44,
+          "anchor": "packages-drivers-commands-src-index-ts-44-export-redacted-redaction-secret-flags-from-redaction-ts",
+          "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export { Retry, TRANSIENT_PATTERNS } from \"./Retry.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/drivers/commands/src/index.ts",
+          "line": 45,
+          "anchor": "packages-drivers-commands-src-index-ts-45-export-retry-transient-patterns-from-retry-ts",
+          "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export {\n  CommandFailedError,\n  CommandOutput,\n  CommandOutputError,\n  DEFAULT_MAX_OUTPUT_BYTES,\n  Run,\n  RunOptions,\n} from \"./Run.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/drivers/commands/src/index.ts",
+          "line": 46,
+          "anchor": "packages-drivers-commands-src-index-ts-46-export-commandfailederror-commandoutput-commandoutputerror-default-max-output-bytes-run-runoptions-from-run-ts",
+          "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export { ScriptedSpawner } from \"./ScriptedSpawner.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/drivers/commands/src/index.ts",
+          "line": 54,
+          "anchor": "packages-drivers-commands-src-index-ts-54-export-scriptedspawner-from-scriptedspawner-ts",
+          "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export { MismatchPolicy, Tool, ToolSource, VersionFlag, VersionJson, VersionNone, VersionProbe } from \"./Tool.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/drivers/commands/src/index.ts",
+          "line": 55,
+          "anchor": "packages-drivers-commands-src-index-ts-55-export-mismatchpolicy-tool-toolsource-versionflag-versionjson-versionnone-versionprobe-from-tool-ts",
+          "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export {\n  ResolvedSource,\n  ResolvedTool,\n  ToolDiscovery,\n  ToolNotFoundError,\n  ToolRefusedError,\n  ToolVersionMismatchError,\n} from \"./ToolDiscovery.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/drivers/commands/src/index.ts",
+          "line": 56,
+          "anchor": "packages-drivers-commands-src-index-ts-56-export-resolvedsource-resolvedtool-tooldiscovery-toolnotfounderror-toolrefusederror-toolversionmismatcherror-from-tooldiscovery-ts",
+          "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export type { LauncherPrefixes, LocalExecShape } from \"./LocalExec.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/drivers/commands/src/index.ts",
+          "line": 64,
+          "anchor": "packages-drivers-commands-src-index-ts-64-export-type-launcherprefixes-localexecshape-from-localexec-ts",
+          "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export type { ScriptResult, SpawnRecord, SpawnScript } from \"./ScriptedSpawner.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/drivers/commands/src/index.ts",
+          "line": 65,
+          "anchor": "packages-drivers-commands-src-index-ts-65-export-type-scriptresult-spawnrecord-spawnscript-from-scriptedspawner-ts",
+          "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export type { ToolDiscoveryShape, ToolResolutionFailure } from \"./ToolDiscovery.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/drivers/commands/src/index.ts",
+          "line": 66,
+          "anchor": "packages-drivers-commands-src-index-ts-66-export-type-tooldiscoveryshape-toolresolutionfailure-from-tooldiscovery-ts",
+          "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        }
+      ]
+    },
+    {
       "packageName": "@beep/tsconfig",
       "packagePath": "packages/foundation/modeling/tsconfig",
-      "topoOrder": 62,
+      "topoOrder": 63,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -247889,7 +249409,7 @@
     {
       "packageName": "@beep/repo-ai-metrics",
       "packagePath": "packages/tooling/library/ai-metrics",
-      "topoOrder": 63,
+      "topoOrder": 64,
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
@@ -261812,7 +263332,7 @@
     {
       "packageName": "@beep/technical-drawing",
       "packagePath": "packages/foundation/capability/technical-drawing",
-      "topoOrder": 64,
+      "topoOrder": 65,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -267230,7 +268750,7 @@
     {
       "packageName": "@beep/ffmpeg",
       "packagePath": "packages/drivers/ffmpeg",
-      "topoOrder": 65,
+      "topoOrder": 66,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -269834,7 +271354,7 @@
     {
       "packageName": "@beep/pretext",
       "packagePath": "packages/drivers/pretext",
-      "topoOrder": 66,
+      "topoOrder": 67,
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
@@ -270834,7 +272354,7 @@
     {
       "packageName": "@beep/ontology-use-cases",
       "packagePath": "packages/ontology/use-cases",
-      "topoOrder": 67,
+      "topoOrder": 68,
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
@@ -276189,7 +277709,7 @@
     {
       "packageName": "@beep/cosmos",
       "packagePath": "packages/drivers/cosmos",
-      "topoOrder": 68,
+      "topoOrder": 69,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -276858,7 +278378,7 @@
     {
       "packageName": "@beep/agents-client",
       "packagePath": "packages/agents/client",
-      "topoOrder": 69,
+      "topoOrder": 70,
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
@@ -277947,7 +279467,7 @@
     {
       "packageName": "@beep/documents-domain",
       "packagePath": "packages/documents/domain",
-      "topoOrder": 70,
+      "topoOrder": 71,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -280357,7 +281877,7 @@
     {
       "packageName": "@beep/architecture-lab-domain",
       "packagePath": "packages/architecture-lab/domain",
-      "topoOrder": 71,
+      "topoOrder": 72,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -281788,7 +283308,7 @@
     {
       "packageName": "@beep/uspto",
       "packagePath": "packages/drivers/uspto",
-      "topoOrder": 72,
+      "topoOrder": 73,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -282504,7 +284024,7 @@
     {
       "packageName": "@beep/law-practice-tables",
       "packagePath": "packages/law-practice/tables",
-      "topoOrder": 73,
+      "topoOrder": 74,
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
@@ -285245,7 +286765,7 @@
     {
       "packageName": "@beep/law-practice-use-cases",
       "packagePath": "packages/law-practice/use-cases",
-      "topoOrder": 74,
+      "topoOrder": 75,
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
@@ -301955,7 +303475,7 @@
     {
       "packageName": "@beep/tika",
       "packagePath": "packages/drivers/tika",
-      "topoOrder": 75,
+      "topoOrder": 76,
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
@@ -302948,7 +304468,7 @@
     {
       "packageName": "@beep/libpff",
       "packagePath": "packages/drivers/libpff",
-      "topoOrder": 76,
+      "topoOrder": 77,
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
@@ -304113,7 +305633,7 @@
     {
       "packageName": "@beep/box",
       "packagePath": "packages/drivers/box",
-      "topoOrder": 77,
+      "topoOrder": 78,
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
@@ -323648,7 +325168,7 @@
     {
       "packageName": "@beep/epistemic-server",
       "packagePath": "packages/epistemic/server",
-      "topoOrder": 78,
+      "topoOrder": 79,
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
@@ -325525,7 +327045,7 @@
     {
       "packageName": "@beep/m365",
       "packagePath": "packages/drivers/m365",
-      "topoOrder": 79,
+      "topoOrder": 80,
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
@@ -329414,7 +330934,7 @@
     {
       "packageName": "@beep/nlp-processing",
       "packagePath": "packages/foundation/capability/nlp-processing",
-      "topoOrder": 80,
+      "topoOrder": 81,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -337408,7 +338928,7 @@
     {
       "packageName": "@beep/epistemic-client",
       "packagePath": "packages/epistemic/client",
-      "topoOrder": 81,
+      "topoOrder": 82,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -338078,7 +339598,7 @@
     {
       "packageName": "@beep/ui",
       "packagePath": "packages/foundation/ui-system/ui",
-      "topoOrder": 82,
+      "topoOrder": 83,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -353310,7 +354830,7 @@
     {
       "packageName": "@beep/t3-code",
       "packagePath": "packages/drivers/t3-code",
-      "topoOrder": 83,
+      "topoOrder": 84,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -353818,7 +355338,7 @@
     {
       "packageName": "@beep/github-reporting",
       "packagePath": "packages/foundation/modeling/github-reporting",
-      "topoOrder": 84,
+      "topoOrder": 85,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -354886,7 +356406,7 @@
     {
       "packageName": "@beep/github-actions",
       "packagePath": "packages/drivers/github-actions",
-      "topoOrder": 85,
+      "topoOrder": 86,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -359075,7 +360595,7 @@
     {
       "packageName": "@beep/poppler",
       "packagePath": "packages/drivers/poppler",
-      "topoOrder": 86,
+      "topoOrder": 87,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -359395,7 +360915,7 @@
     {
       "packageName": "@beep/ai-sync",
       "packagePath": "packages/tooling/library/ai-sync",
-      "topoOrder": 87,
+      "topoOrder": 88,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -361968,7 +363488,7 @@
     {
       "packageName": "@beep/repo-docgen",
       "packagePath": "packages/tooling/tool/docgen",
-      "topoOrder": 88,
+      "topoOrder": 89,
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
@@ -364411,7 +365931,7 @@
     {
       "packageName": "@beep/ai-provider-cli",
       "packagePath": "packages/drivers/ai-provider-cli",
-      "topoOrder": 89,
+      "topoOrder": 90,
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
@@ -366874,7 +368394,7 @@
     {
       "packageName": "@beep/skill-contract",
       "packagePath": "packages/foundation/modeling/skill-contract",
-      "topoOrder": 90,
+      "topoOrder": 91,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -369641,7 +371161,7 @@
     {
       "packageName": "@beep/exiftool",
       "packagePath": "packages/drivers/exiftool",
-      "topoOrder": 91,
+      "topoOrder": 92,
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
@@ -370423,8 +371943,8 @@
           "exportKind": "interface",
           "filePath": "src/Exiftool.service.ts",
           "repoPath": "packages/drivers/exiftool/src/Exiftool.service.ts",
-          "line": 72,
-          "anchor": "packages-drivers-exiftool-src-exiftool-service-ts-72-exiftoolshape",
+          "line": 73,
+          "anchor": "packages-drivers-exiftool-src-exiftool-service-ts-73-exiftoolshape",
           "currentTags": [
             "@category",
             "@since"
@@ -370445,8 +371965,8 @@
           "exportKind": "class",
           "filePath": "src/Exiftool.service.ts",
           "repoPath": "packages/drivers/exiftool/src/Exiftool.service.ts",
-          "line": 193,
-          "anchor": "packages-drivers-exiftool-src-exiftool-service-ts-193-buildreadtagsargsoptions",
+          "line": 174,
+          "anchor": "packages-drivers-exiftool-src-exiftool-service-ts-174-buildreadtagsargsoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -370467,8 +371987,8 @@
           "exportKind": "const",
           "filePath": "src/Exiftool.service.ts",
           "repoPath": "packages/drivers/exiftool/src/Exiftool.service.ts",
-          "line": 247,
-          "anchor": "packages-drivers-exiftool-src-exiftool-service-ts-247-buildreadtagsargs",
+          "line": 228,
+          "anchor": "packages-drivers-exiftool-src-exiftool-service-ts-228-buildreadtagsargs",
           "currentTags": [
             "@category",
             "@since"
@@ -370489,8 +372009,8 @@
           "exportKind": "class",
           "filePath": "src/Exiftool.service.ts",
           "repoPath": "packages/drivers/exiftool/src/Exiftool.service.ts",
-          "line": 277,
-          "anchor": "packages-drivers-exiftool-src-exiftool-service-ts-277-buildwritetagsargsoptions",
+          "line": 258,
+          "anchor": "packages-drivers-exiftool-src-exiftool-service-ts-258-buildwritetagsargsoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -370511,8 +372031,8 @@
           "exportKind": "const",
           "filePath": "src/Exiftool.service.ts",
           "repoPath": "packages/drivers/exiftool/src/Exiftool.service.ts",
-          "line": 337,
-          "anchor": "packages-drivers-exiftool-src-exiftool-service-ts-337-buildwritetagsargs",
+          "line": 318,
+          "anchor": "packages-drivers-exiftool-src-exiftool-service-ts-318-buildwritetagsargs",
           "currentTags": [
             "@category",
             "@since"
@@ -370533,8 +372053,8 @@
           "exportKind": "const",
           "filePath": "src/Exiftool.service.ts",
           "repoPath": "packages/drivers/exiftool/src/Exiftool.service.ts",
-          "line": 361,
-          "anchor": "packages-drivers-exiftool-src-exiftool-service-ts-361-exiftoolversionargs",
+          "line": 342,
+          "anchor": "packages-drivers-exiftool-src-exiftool-service-ts-342-exiftoolversionargs",
           "currentTags": [
             "@category",
             "@since"
@@ -370555,8 +372075,8 @@
           "exportKind": "class",
           "filePath": "src/Exiftool.service.ts",
           "repoPath": "packages/drivers/exiftool/src/Exiftool.service.ts",
-          "line": 594,
-          "anchor": "packages-drivers-exiftool-src-exiftool-service-ts-594-exiftool",
+          "line": 581,
+          "anchor": "packages-drivers-exiftool-src-exiftool-service-ts-581-exiftool",
           "currentTags": [
             "@category",
             "@since"
@@ -371017,7 +372537,7 @@
     {
       "packageName": "@beep/repo-tsconfig",
       "packagePath": "packages/tooling/library/repo-tsconfig",
-      "topoOrder": 92,
+      "topoOrder": 93,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -371488,7 +373008,7 @@
     {
       "packageName": "@beep/palantiri",
       "packagePath": "packages/tooling/library/palantiri",
-      "topoOrder": 93,
+      "topoOrder": 94,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -375460,7 +376980,7 @@
     {
       "packageName": "@beep/pdf-tools",
       "packagePath": "packages/drivers/pdf-tools",
-      "topoOrder": 94,
+      "topoOrder": 95,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -376282,8 +377802,8 @@
           "exportKind": "const",
           "filePath": "src/PdfTools.service.ts",
           "repoPath": "packages/drivers/pdf-tools/src/PdfTools.service.ts",
-          "line": 105,
-          "anchor": "packages-drivers-pdf-tools-src-pdftools-service-ts-105-pinnedfontconfig",
+          "line": 107,
+          "anchor": "packages-drivers-pdf-tools-src-pdftools-service-ts-107-pinnedfontconfig",
           "currentTags": [
             "@category",
             "@since"
@@ -376304,8 +377824,8 @@
           "exportKind": "class",
           "filePath": "src/PdfTools.service.ts",
           "repoPath": "packages/drivers/pdf-tools/src/PdfTools.service.ts",
-          "line": 139,
-          "anchor": "packages-drivers-pdf-tools-src-pdftools-service-ts-139-pdftoolsconfig",
+          "line": 141,
+          "anchor": "packages-drivers-pdf-tools-src-pdftools-service-ts-141-pdftoolsconfig",
           "currentTags": [
             "@category",
             "@since"
@@ -376326,8 +377846,8 @@
           "exportKind": "interface",
           "filePath": "src/PdfTools.service.ts",
           "repoPath": "packages/drivers/pdf-tools/src/PdfTools.service.ts",
-          "line": 205,
-          "anchor": "packages-drivers-pdf-tools-src-pdftools-service-ts-205-pdftoolsshape",
+          "line": 207,
+          "anchor": "packages-drivers-pdf-tools-src-pdftools-service-ts-207-pdftoolsshape",
           "currentTags": [
             "@category",
             "@since"
@@ -376348,8 +377868,8 @@
           "exportKind": "class",
           "filePath": "src/PdfTools.service.ts",
           "repoPath": "packages/drivers/pdf-tools/src/PdfTools.service.ts",
-          "line": 519,
-          "anchor": "packages-drivers-pdf-tools-src-pdftools-service-ts-519-pdftools",
+          "line": 534,
+          "anchor": "packages-drivers-pdf-tools-src-pdftools-service-ts-534-pdftools",
           "currentTags": [
             "@category",
             "@since"
@@ -376436,7 +377956,7 @@
     {
       "packageName": "@beep/runpod",
       "packagePath": "packages/drivers/runpod",
-      "topoOrder": 95,
+      "topoOrder": 96,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -381131,7 +382651,7 @@
     {
       "packageName": "@beep/tesseract",
       "packagePath": "packages/drivers/tesseract",
-      "topoOrder": 96,
+      "topoOrder": 97,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -381591,7 +383111,7 @@
     {
       "packageName": "@beep/obs",
       "packagePath": "packages/drivers/obs",
-      "topoOrder": 97,
+      "topoOrder": 98,
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
@@ -382227,8 +383747,8 @@
           "exportKind": "interface",
           "filePath": "src/Obs.service.ts",
           "repoPath": "packages/drivers/obs/src/Obs.service.ts",
-          "line": 123,
-          "anchor": "packages-drivers-obs-src-obs-service-ts-123-obsshape",
+          "line": 124,
+          "anchor": "packages-drivers-obs-src-obs-service-ts-124-obsshape",
           "currentTags": [
             "@category",
             "@since"
@@ -382249,8 +383769,8 @@
           "exportKind": "class",
           "filePath": "src/Obs.service.ts",
           "repoPath": "packages/drivers/obs/src/Obs.service.ts",
-          "line": 370,
-          "anchor": "packages-drivers-obs-src-obs-service-ts-370-obs",
+          "line": 366,
+          "anchor": "packages-drivers-obs-src-obs-service-ts-366-obs",
           "currentTags": [
             "@category",
             "@since"
@@ -383393,7 +384913,7 @@
     {
       "packageName": "@beep/lockfiles",
       "packagePath": "packages/foundation/modeling/lockfiles",
-      "topoOrder": 98,
+      "topoOrder": 99,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -384780,7 +386300,7 @@
     {
       "packageName": "@beep/repo-configs",
       "packagePath": "packages/tooling/policy-pack/repo-configs",
-      "topoOrder": 99,
+      "topoOrder": 100,
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
@@ -389741,7 +391261,7 @@
     {
       "packageName": "@beep/occt",
       "packagePath": "packages/drivers/occt",
-      "topoOrder": 100,
+      "topoOrder": 101,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -390167,7 +391687,7 @@
     {
       "packageName": "@beep/git",
       "packagePath": "packages/drivers/git",
-      "topoOrder": 101,
+      "topoOrder": 102,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -391327,7 +392847,7 @@
     {
       "packageName": "@beep/qa-capture",
       "packagePath": "packages/tooling/library/qa-capture",
-      "topoOrder": 102,
+      "topoOrder": 103,
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
@@ -395081,7 +396601,7 @@
     {
       "packageName": "@beep/dock",
       "packagePath": "packages/foundation/ui-system/dock",
-      "topoOrder": 103,
+      "topoOrder": 104,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -400226,1526 +401746,6 @@
             "@category",
             "@since"
           ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        }
-      ]
-    },
-    {
-      "packageName": "@beep/commands",
-      "packagePath": "packages/drivers/commands",
-      "topoOrder": 104,
-      "status": "clean",
-      "sourceCoverage": {
-        "srcDir": "src",
-        "sourceFileCount": 8,
-        "publicModuleCount": 8,
-        "publicExportCount": 58
-      },
-      "docgenCoverage": {
-        "hasDocgenConfig": true,
-        "enforceDescriptions": false,
-        "enforceExamples": false,
-        "enforceVersion": true
-      },
-      "counts": {
-        "openModules": 0,
-        "openExports": 0,
-        "missingExportExamples": 0,
-        "missingExportCategories": 0,
-        "missingExportSince": 0,
-        "missingExportSummaries": 0,
-        "forbiddenTagFindings": 0,
-        "malformedConditionalTagFindings": 0,
-        "exampleImportFindings": 0,
-        "unsafeExampleFindings": 0,
-        "schemaAnnotationFindings": 0,
-        "documentationRuleFindings": {
-          "undescribed-see": 0,
-          "multiple-description-paragraphs": 0,
-          "leading-blank": 0,
-          "trailing-blank": 0,
-          "invalid-heading": 0,
-          "section-out-of-order": 0,
-          "duplicate-section": 0,
-          "empty-section": 0,
-          "section-after-example": 0,
-          "invalid-when-to-use-prefix": 0,
-          "malformed-example": 0,
-          "duplicate-example": 0,
-          "loose-ts-fence": 0,
-          "forbidden-remarks": 0,
-          "no-root-package-import": 0
-        }
-      },
-      "modules": [
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/LocalExec.ts",
-          "repoPath": "packages/drivers/commands/src/LocalExec.ts",
-          "line": 1,
-          "anchor": "packages-drivers-commands-src-localexec-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 7,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/Redaction.ts",
-          "repoPath": "packages/drivers/commands/src/Redaction.ts",
-          "line": 1,
-          "anchor": "packages-drivers-commands-src-redaction-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 3,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/Retry.ts",
-          "repoPath": "packages/drivers/commands/src/Retry.ts",
-          "line": 1,
-          "anchor": "packages-drivers-commands-src-retry-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 2,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/Run.ts",
-          "repoPath": "packages/drivers/commands/src/Run.ts",
-          "line": 1,
-          "anchor": "packages-drivers-commands-src-run-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 9,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/ScriptedSpawner.ts",
-          "repoPath": "packages/drivers/commands/src/ScriptedSpawner.ts",
-          "line": 1,
-          "anchor": "packages-drivers-commands-src-scriptedspawner-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 7,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/Tool.ts",
-          "repoPath": "packages/drivers/commands/src/Tool.ts",
-          "line": 1,
-          "anchor": "packages-drivers-commands-src-tool-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 10,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/ToolDiscovery.ts",
-          "repoPath": "packages/drivers/commands/src/ToolDiscovery.ts",
-          "line": 1,
-          "anchor": "packages-drivers-commands-src-tooldiscovery-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 10,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/drivers/commands/src/index.ts",
-          "line": 1,
-          "anchor": "packages-drivers-commands-src-index-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 10,
-          "remediationStatus": "resolved"
-        }
-      ],
-      "exports": [
-        {
-          "symbolName": "Launcher",
-          "exportKind": "const",
-          "filePath": "src/LocalExec.ts",
-          "repoPath": "packages/drivers/commands/src/LocalExec.ts",
-          "line": 47,
-          "anchor": "packages-drivers-commands-src-localexec-ts-47-launcher",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "Launcher",
-          "exportKind": "type",
-          "filePath": "src/LocalExec.ts",
-          "repoPath": "packages/drivers/commands/src/LocalExec.ts",
-          "line": 58,
-          "anchor": "packages-drivers-commands-src-localexec-ts-58-launcher",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "LauncherPrefixes",
-          "exportKind": "class",
-          "filePath": "src/LocalExec.ts",
-          "repoPath": "packages/drivers/commands/src/LocalExec.ts",
-          "line": 82,
-          "anchor": "packages-drivers-commands-src-localexec-ts-82-launcherprefixes",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "ExecContext",
-          "exportKind": "class",
-          "filePath": "src/LocalExec.ts",
-          "repoPath": "packages/drivers/commands/src/LocalExec.ts",
-          "line": 141,
-          "anchor": "packages-drivers-commands-src-localexec-ts-141-execcontext",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "LocalExecError",
-          "exportKind": "class",
-          "filePath": "src/LocalExec.ts",
-          "repoPath": "packages/drivers/commands/src/LocalExec.ts",
-          "line": 289,
-          "anchor": "packages-drivers-commands-src-localexec-ts-289-localexecerror",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "LocalExecShape",
-          "exportKind": "interface",
-          "filePath": "src/LocalExec.ts",
-          "repoPath": "packages/drivers/commands/src/LocalExec.ts",
-          "line": 341,
-          "anchor": "packages-drivers-commands-src-localexec-ts-341-localexecshape",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "LocalExec",
-          "exportKind": "class",
-          "filePath": "src/LocalExec.ts",
-          "repoPath": "packages/drivers/commands/src/LocalExec.ts",
-          "line": 388,
-          "anchor": "packages-drivers-commands-src-localexec-ts-388-localexec",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "REDACTED",
-          "exportKind": "const",
-          "filePath": "src/Redaction.ts",
-          "repoPath": "packages/drivers/commands/src/Redaction.ts",
-          "line": 32,
-          "anchor": "packages-drivers-commands-src-redaction-ts-32-redacted",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "SECRET_FLAGS",
-          "exportKind": "const",
-          "filePath": "src/Redaction.ts",
-          "repoPath": "packages/drivers/commands/src/Redaction.ts",
-          "line": 58,
-          "anchor": "packages-drivers-commands-src-redaction-ts-58-secret-flags",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "Redaction",
-          "exportKind": "class",
-          "filePath": "src/Redaction.ts",
-          "repoPath": "packages/drivers/commands/src/Redaction.ts",
-          "line": 204,
-          "anchor": "packages-drivers-commands-src-redaction-ts-204-redaction",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "TRANSIENT_PATTERNS",
-          "exportKind": "const",
-          "filePath": "src/Retry.ts",
-          "repoPath": "packages/drivers/commands/src/Retry.ts",
-          "line": 40,
-          "anchor": "packages-drivers-commands-src-retry-ts-40-transient-patterns",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "Retry",
-          "exportKind": "class",
-          "filePath": "src/Retry.ts",
-          "repoPath": "packages/drivers/commands/src/Retry.ts",
-          "line": 119,
-          "anchor": "packages-drivers-commands-src-retry-ts-119-retry",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "DEFAULT_MAX_OUTPUT_BYTES",
-          "exportKind": "const",
-          "filePath": "src/Run.ts",
-          "repoPath": "packages/drivers/commands/src/Run.ts",
-          "line": 62,
-          "anchor": "packages-drivers-commands-src-run-ts-62-default-max-output-bytes",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "ExitCode",
-          "exportKind": "const",
-          "filePath": "src/Run.ts",
-          "repoPath": "packages/drivers/commands/src/Run.ts",
-          "line": 152,
-          "anchor": "packages-drivers-commands-src-run-ts-152-exitcode",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "ExitCode",
-          "exportKind": "type",
-          "filePath": "src/Run.ts",
-          "repoPath": "packages/drivers/commands/src/Run.ts",
-          "line": 159,
-          "anchor": "packages-drivers-commands-src-run-ts-159-exitcode",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "RunOptions",
-          "exportKind": "class",
-          "filePath": "src/Run.ts",
-          "repoPath": "packages/drivers/commands/src/Run.ts",
-          "line": 189,
-          "anchor": "packages-drivers-commands-src-run-ts-189-runoptions",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "RunOptions",
-          "exportKind": "namespace",
-          "filePath": "src/Run.ts",
-          "repoPath": "packages/drivers/commands/src/Run.ts",
-          "line": 233,
-          "anchor": "packages-drivers-commands-src-run-ts-233-runoptions",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "CommandOutput",
-          "exportKind": "class",
-          "filePath": "src/Run.ts",
-          "repoPath": "packages/drivers/commands/src/Run.ts",
-          "line": 284,
-          "anchor": "packages-drivers-commands-src-run-ts-284-commandoutput",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "CommandFailedError",
-          "exportKind": "class",
-          "filePath": "src/Run.ts",
-          "repoPath": "packages/drivers/commands/src/Run.ts",
-          "line": 400,
-          "anchor": "packages-drivers-commands-src-run-ts-400-commandfailederror",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "CommandOutputError",
-          "exportKind": "class",
-          "filePath": "src/Run.ts",
-          "repoPath": "packages/drivers/commands/src/Run.ts",
-          "line": 652,
-          "anchor": "packages-drivers-commands-src-run-ts-652-commandoutputerror",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "Run",
-          "exportKind": "class",
-          "filePath": "src/Run.ts",
-          "repoPath": "packages/drivers/commands/src/Run.ts",
-          "line": 1186,
-          "anchor": "packages-drivers-commands-src-run-ts-1186-run",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "ScriptCompletion",
-          "exportKind": "class",
-          "filePath": "src/ScriptedSpawner.ts",
-          "repoPath": "packages/drivers/commands/src/ScriptedSpawner.ts",
-          "line": 57,
-          "anchor": "packages-drivers-commands-src-scriptedspawner-ts-57-scriptcompletion",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "ScriptResult",
-          "exportKind": "const",
-          "filePath": "src/ScriptedSpawner.ts",
-          "repoPath": "packages/drivers/commands/src/ScriptedSpawner.ts",
-          "line": 104,
-          "anchor": "packages-drivers-commands-src-scriptedspawner-ts-104-scriptresult",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "ScriptResult",
-          "exportKind": "type",
-          "filePath": "src/ScriptedSpawner.ts",
-          "repoPath": "packages/drivers/commands/src/ScriptedSpawner.ts",
-          "line": 113,
-          "anchor": "packages-drivers-commands-src-scriptedspawner-ts-113-scriptresult",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "ScriptResult",
-          "exportKind": "namespace",
-          "filePath": "src/ScriptedSpawner.ts",
-          "repoPath": "packages/drivers/commands/src/ScriptedSpawner.ts",
-          "line": 121,
-          "anchor": "packages-drivers-commands-src-scriptedspawner-ts-121-scriptresult",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "SpawnScript",
-          "exportKind": "type",
-          "filePath": "src/ScriptedSpawner.ts",
-          "repoPath": "packages/drivers/commands/src/ScriptedSpawner.ts",
-          "line": 146,
-          "anchor": "packages-drivers-commands-src-scriptedspawner-ts-146-spawnscript",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "SpawnRecord",
-          "exportKind": "class",
-          "filePath": "src/ScriptedSpawner.ts",
-          "repoPath": "packages/drivers/commands/src/ScriptedSpawner.ts",
-          "line": 300,
-          "anchor": "packages-drivers-commands-src-scriptedspawner-ts-300-spawnrecord",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "ScriptedSpawner",
-          "exportKind": "class",
-          "filePath": "src/ScriptedSpawner.ts",
-          "repoPath": "packages/drivers/commands/src/ScriptedSpawner.ts",
-          "line": 392,
-          "anchor": "packages-drivers-commands-src-scriptedspawner-ts-392-scriptedspawner",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "ToolSource",
-          "exportKind": "const",
-          "filePath": "src/Tool.ts",
-          "repoPath": "packages/drivers/commands/src/Tool.ts",
-          "line": 41,
-          "anchor": "packages-drivers-commands-src-tool-ts-41-toolsource",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "ToolSource",
-          "exportKind": "type",
-          "filePath": "src/Tool.ts",
-          "repoPath": "packages/drivers/commands/src/Tool.ts",
-          "line": 52,
-          "anchor": "packages-drivers-commands-src-tool-ts-52-toolsource",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "MismatchPolicy",
-          "exportKind": "const",
-          "filePath": "src/Tool.ts",
-          "repoPath": "packages/drivers/commands/src/Tool.ts",
-          "line": 77,
-          "anchor": "packages-drivers-commands-src-tool-ts-77-mismatchpolicy",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "MismatchPolicy",
-          "exportKind": "type",
-          "filePath": "src/Tool.ts",
-          "repoPath": "packages/drivers/commands/src/Tool.ts",
-          "line": 90,
-          "anchor": "packages-drivers-commands-src-tool-ts-90-mismatchpolicy",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "VersionFlag",
-          "exportKind": "class",
-          "filePath": "src/Tool.ts",
-          "repoPath": "packages/drivers/commands/src/Tool.ts",
-          "line": 109,
-          "anchor": "packages-drivers-commands-src-tool-ts-109-versionflag",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "VersionJson",
-          "exportKind": "class",
-          "filePath": "src/Tool.ts",
-          "repoPath": "packages/drivers/commands/src/Tool.ts",
-          "line": 156,
-          "anchor": "packages-drivers-commands-src-tool-ts-156-versionjson",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "VersionNone",
-          "exportKind": "class",
-          "filePath": "src/Tool.ts",
-          "repoPath": "packages/drivers/commands/src/Tool.ts",
-          "line": 192,
-          "anchor": "packages-drivers-commands-src-tool-ts-192-versionnone",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "VersionProbe",
-          "exportKind": "const",
-          "filePath": "src/Tool.ts",
-          "repoPath": "packages/drivers/commands/src/Tool.ts",
-          "line": 222,
-          "anchor": "packages-drivers-commands-src-tool-ts-222-versionprobe",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "VersionProbe",
-          "exportKind": "type",
-          "filePath": "src/Tool.ts",
-          "repoPath": "packages/drivers/commands/src/Tool.ts",
-          "line": 233,
-          "anchor": "packages-drivers-commands-src-tool-ts-233-versionprobe",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "Tool",
-          "exportKind": "class",
-          "filePath": "src/Tool.ts",
-          "repoPath": "packages/drivers/commands/src/Tool.ts",
-          "line": 257,
-          "anchor": "packages-drivers-commands-src-tool-ts-257-tool",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "ResolvedSource",
-          "exportKind": "const",
-          "filePath": "src/ToolDiscovery.ts",
-          "repoPath": "packages/drivers/commands/src/ToolDiscovery.ts",
-          "line": 65,
-          "anchor": "packages-drivers-commands-src-tooldiscovery-ts-65-resolvedsource",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "ResolvedSource",
-          "exportKind": "type",
-          "filePath": "src/ToolDiscovery.ts",
-          "repoPath": "packages/drivers/commands/src/ToolDiscovery.ts",
-          "line": 76,
-          "anchor": "packages-drivers-commands-src-tooldiscovery-ts-76-resolvedsource",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "ResolvedTool",
-          "exportKind": "class",
-          "filePath": "src/ToolDiscovery.ts",
-          "repoPath": "packages/drivers/commands/src/ToolDiscovery.ts",
-          "line": 98,
-          "anchor": "packages-drivers-commands-src-tooldiscovery-ts-98-resolvedtool",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "ToolNotFoundError",
-          "exportKind": "class",
-          "filePath": "src/ToolDiscovery.ts",
-          "repoPath": "packages/drivers/commands/src/ToolDiscovery.ts",
-          "line": 186,
-          "anchor": "packages-drivers-commands-src-tooldiscovery-ts-186-toolnotfounderror",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "ToolVersionMismatchError",
-          "exportKind": "class",
-          "filePath": "src/ToolDiscovery.ts",
-          "repoPath": "packages/drivers/commands/src/ToolDiscovery.ts",
-          "line": 239,
-          "anchor": "packages-drivers-commands-src-tooldiscovery-ts-239-toolversionmismatcherror",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "ToolRefusedError",
-          "exportKind": "class",
-          "filePath": "src/ToolDiscovery.ts",
-          "repoPath": "packages/drivers/commands/src/ToolDiscovery.ts",
-          "line": 304,
-          "anchor": "packages-drivers-commands-src-tooldiscovery-ts-304-toolrefusederror",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "ToolResolutionFailure",
-          "exportKind": "const",
-          "filePath": "src/ToolDiscovery.ts",
-          "repoPath": "packages/drivers/commands/src/ToolDiscovery.ts",
-          "line": 354,
-          "anchor": "packages-drivers-commands-src-tooldiscovery-ts-354-toolresolutionfailure",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "ToolResolutionFailure",
-          "exportKind": "type",
-          "filePath": "src/ToolDiscovery.ts",
-          "repoPath": "packages/drivers/commands/src/ToolDiscovery.ts",
-          "line": 367,
-          "anchor": "packages-drivers-commands-src-tooldiscovery-ts-367-toolresolutionfailure",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "ToolDiscoveryShape",
-          "exportKind": "interface",
-          "filePath": "src/ToolDiscovery.ts",
-          "repoPath": "packages/drivers/commands/src/ToolDiscovery.ts",
-          "line": 485,
-          "anchor": "packages-drivers-commands-src-tooldiscovery-ts-485-tooldiscoveryshape",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "ToolDiscovery",
-          "exportKind": "class",
-          "filePath": "src/ToolDiscovery.ts",
-          "repoPath": "packages/drivers/commands/src/ToolDiscovery.ts",
-          "line": 689,
-          "anchor": "packages-drivers-commands-src-tooldiscovery-ts-689-tooldiscovery",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export { ExecContext, Launcher, LocalExec, LocalExecError } from \"./LocalExec.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/drivers/commands/src/index.ts",
-          "line": 43,
-          "anchor": "packages-drivers-commands-src-index-ts-43-export-execcontext-launcher-localexec-localexecerror-from-localexec-ts",
-          "currentTags": [
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export { REDACTED, Redaction, SECRET_FLAGS } from \"./Redaction.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/drivers/commands/src/index.ts",
-          "line": 44,
-          "anchor": "packages-drivers-commands-src-index-ts-44-export-redacted-redaction-secret-flags-from-redaction-ts",
-          "currentTags": [],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export { Retry, TRANSIENT_PATTERNS } from \"./Retry.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/drivers/commands/src/index.ts",
-          "line": 45,
-          "anchor": "packages-drivers-commands-src-index-ts-45-export-retry-transient-patterns-from-retry-ts",
-          "currentTags": [],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export {\n  CommandFailedError,\n  CommandOutput,\n  CommandOutputError,\n  DEFAULT_MAX_OUTPUT_BYTES,\n  Run,\n  RunOptions,\n} from \"./Run.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/drivers/commands/src/index.ts",
-          "line": 46,
-          "anchor": "packages-drivers-commands-src-index-ts-46-export-commandfailederror-commandoutput-commandoutputerror-default-max-output-bytes-run-runoptions-from-run-ts",
-          "currentTags": [],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export { ScriptedSpawner } from \"./ScriptedSpawner.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/drivers/commands/src/index.ts",
-          "line": 54,
-          "anchor": "packages-drivers-commands-src-index-ts-54-export-scriptedspawner-from-scriptedspawner-ts",
-          "currentTags": [],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export { MismatchPolicy, Tool, ToolSource, VersionFlag, VersionJson, VersionNone, VersionProbe } from \"./Tool.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/drivers/commands/src/index.ts",
-          "line": 55,
-          "anchor": "packages-drivers-commands-src-index-ts-55-export-mismatchpolicy-tool-toolsource-versionflag-versionjson-versionnone-versionprobe-from-tool-ts",
-          "currentTags": [],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export {\n  ResolvedSource,\n  ResolvedTool,\n  ToolDiscovery,\n  ToolNotFoundError,\n  ToolRefusedError,\n  ToolVersionMismatchError,\n} from \"./ToolDiscovery.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/drivers/commands/src/index.ts",
-          "line": 56,
-          "anchor": "packages-drivers-commands-src-index-ts-56-export-resolvedsource-resolvedtool-tooldiscovery-toolnotfounderror-toolrefusederror-toolversionmismatcherror-from-tooldiscovery-ts",
-          "currentTags": [],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export type { LauncherPrefixes, LocalExecShape } from \"./LocalExec.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/drivers/commands/src/index.ts",
-          "line": 64,
-          "anchor": "packages-drivers-commands-src-index-ts-64-export-type-launcherprefixes-localexecshape-from-localexec-ts",
-          "currentTags": [],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export type { ScriptResult, SpawnRecord, SpawnScript } from \"./ScriptedSpawner.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/drivers/commands/src/index.ts",
-          "line": 65,
-          "anchor": "packages-drivers-commands-src-index-ts-65-export-type-scriptresult-spawnrecord-spawnscript-from-scriptedspawner-ts",
-          "currentTags": [],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export type { ToolDiscoveryShape, ToolResolutionFailure } from \"./ToolDiscovery.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/drivers/commands/src/index.ts",
-          "line": 66,
-          "anchor": "packages-drivers-commands-src-index-ts-66-export-type-tooldiscoveryshape-toolresolutionfailure-from-tooldiscovery-ts",
-          "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
@@ -450926,7 +450926,7 @@
         "srcDir": "src",
         "sourceFileCount": 475,
         "publicModuleCount": 473,
-        "publicExportCount": 4453
+        "publicExportCount": 4454
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -458701,7 +458701,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 37,
+          "exportCount": 38,
           "remediationStatus": "resolved"
         },
         {
@@ -534738,8 +534738,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/CheckCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts",
-          "line": 147,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-147-checkcensusprogram",
+          "line": 150,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-150-checkcensusprogram",
           "currentTags": [
             "@category",
             "@since"
@@ -534760,8 +534760,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/CheckCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts",
-          "line": 181,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-181-checkcensusdelta",
+          "line": 184,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-184-checkcensusdelta",
           "currentTags": [
             "@category",
             "@since"
@@ -534782,8 +534782,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/CheckCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts",
-          "line": 221,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-221-checkcensusrow",
+          "line": 224,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-224-checkcensusrow",
           "currentTags": [
             "@category",
             "@since"
@@ -534804,8 +534804,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/CheckCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts",
-          "line": 256,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-256-checkcensusreport",
+          "line": 259,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-259-checkcensusreport",
           "currentTags": [
             "@category",
             "@since"
@@ -534826,8 +534826,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/CheckCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts",
-          "line": 286,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-286-checkcensuspackage",
+          "line": 289,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-289-checkcensuspackage",
           "currentTags": [
             "@category",
             "@since"
@@ -534848,8 +534848,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/CheckCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts",
-          "line": 317,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-317-checkcensusoptions",
+          "line": 320,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-320-checkcensusoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -534870,8 +534870,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/CheckCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts",
-          "line": 350,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-350-checkcensusmissingoutput",
+          "line": 353,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-353-checkcensusmissingoutput",
           "currentTags": [
             "@category",
             "@since"
@@ -534892,8 +534892,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/CheckCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts",
-          "line": 607,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-607-assertcheckcensustreebuilt",
+          "line": 610,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-610-assertcheckcensustreebuilt",
           "currentTags": [
             "@param",
             "@returns",
@@ -534916,8 +534916,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/CheckCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts",
-          "line": 769,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-769-runcheckcensus",
+          "line": 772,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-772-runcheckcensus",
           "currentTags": [
             "@param",
             "@returns",
@@ -534940,8 +534940,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/CheckCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts",
-          "line": 820,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-820-rendercheckcensuslines",
+          "line": 823,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-823-rendercheckcensuslines",
           "currentTags": [
             "@param",
             "@returns",
@@ -534964,8 +534964,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/CheckCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts",
-          "line": 877,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-877-selectcheckcensuspackages",
+          "line": 880,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-880-selectcheckcensuspackages",
           "currentTags": [
             "@param",
             "@returns",
@@ -534988,8 +534988,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/CheckCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts",
-          "line": 1046,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-1046-checkcensuscommand",
+          "line": 1049,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-1049-checkcensuscommand",
           "currentTags": [
             "@category",
             "@since"
@@ -535010,8 +535010,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/CheckCensusGate.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts",
-          "line": 49,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-49-check-census-baseline-path",
+          "line": 47,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-47-check-census-baseline-path",
           "currentTags": [
             "@category",
             "@since"
@@ -535032,8 +535032,30 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/CheckCensusGate.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts",
-          "line": 71,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-71-check-census-check-time-band-percent",
+          "line": 69,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-69-check-census-check-time-band-percent",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CHECK_CENSUS_INSTANTIATION_NOISE",
+          "exportKind": "const",
+          "filePath": "src/commands/Quality/CheckCensusGate.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts",
+          "line": 97,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-97-check-census-instantiation-noise",
           "currentTags": [
             "@category",
             "@since"
@@ -535054,8 +535076,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/CheckCensusGate.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts",
-          "line": 87,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-87-check-census-baseline-write-command",
+          "line": 113,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-113-check-census-baseline-write-command",
           "currentTags": [
             "@category",
             "@since"
@@ -535076,8 +535098,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/CheckCensusGate.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts",
-          "line": 139,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-139-checkcensustarget",
+          "line": 165,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-165-checkcensustarget",
           "currentTags": [
             "@category",
             "@since"
@@ -535098,8 +535120,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/CheckCensusGate.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts",
-          "line": 175,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-175-checkcensustargets",
+          "line": 201,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-201-checkcensustargets",
           "currentTags": [
             "@category",
             "@since"
@@ -535120,8 +535142,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/CheckCensusGate.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts",
-          "line": 202,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-202-checkcensussample",
+          "line": 228,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-228-checkcensussample",
           "currentTags": [
             "@category",
             "@since"
@@ -535142,8 +535164,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/CheckCensusGate.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts",
-          "line": 231,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-231-checkcensusbaselinerow",
+          "line": 257,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-257-checkcensusbaselinerow",
           "currentTags": [
             "@category",
             "@since"
@@ -535164,8 +535186,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/CheckCensusGate.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts",
-          "line": 273,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-273-checkcensusbaseline",
+          "line": 299,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-299-checkcensusbaseline",
           "currentTags": [
             "@category",
             "@since"
@@ -535186,8 +535208,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/CheckCensusGate.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts",
-          "line": 305,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-305-checkcensusmetriclabel",
+          "line": 331,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-331-checkcensusmetriclabel",
           "currentTags": [
             "@category",
             "@since"
@@ -535208,8 +535230,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Quality/CheckCensusGate.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts",
-          "line": 317,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-317-checkcensusmetriclabel",
+          "line": 343,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-343-checkcensusmetriclabel",
           "currentTags": [
             "@category",
             "@since"
@@ -535230,8 +535252,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/CheckCensusGate.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts",
-          "line": 333,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-333-checkcensusinstantiationverdict",
+          "line": 359,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-359-checkcensusinstantiationverdict",
           "currentTags": [
             "@category",
             "@since"
@@ -535252,8 +535274,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Quality/CheckCensusGate.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts",
-          "line": 345,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-345-checkcensusinstantiationverdict",
+          "line": 371,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-371-checkcensusinstantiationverdict",
           "currentTags": [
             "@category",
             "@since"
@@ -535274,8 +535296,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/CheckCensusGate.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts",
-          "line": 361,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-361-checkcensuschecktimeverdict",
+          "line": 387,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-387-checkcensuschecktimeverdict",
           "currentTags": [
             "@category",
             "@since"
@@ -535296,8 +535318,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Quality/CheckCensusGate.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts",
-          "line": 373,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-373-checkcensuschecktimeverdict",
+          "line": 399,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-399-checkcensuschecktimeverdict",
           "currentTags": [
             "@category",
             "@since"
@@ -535318,8 +535340,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/CheckCensusGate.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts",
-          "line": 390,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-390-checkcensuscomparison",
+          "line": 416,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-416-checkcensuscomparison",
           "currentTags": [
             "@category",
             "@since"
@@ -535340,8 +535362,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/CheckCensusGate.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts",
-          "line": 434,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-434-checkcensusgatereport",
+          "line": 460,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-460-checkcensusgatereport",
           "currentTags": [
             "@category",
             "@since"
@@ -535362,8 +535384,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/CheckCensusGate.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts",
-          "line": 470,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-470-checkcensussamplerefused",
+          "line": 496,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-496-checkcensussamplerefused",
           "currentTags": [
             "@category",
             "@since"
@@ -535384,8 +535406,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/CheckCensusGate.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts",
-          "line": 505,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-505-checkcensusmetricmissing",
+          "line": 531,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-531-checkcensusmetricmissing",
           "currentTags": [
             "@category",
             "@since"
@@ -535406,8 +535428,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Quality/CheckCensusGate.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts",
-          "line": 526,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-526-checkcensussampleerror",
+          "line": 552,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-552-checkcensussampleerror",
           "currentTags": [
             "@category",
             "@since"
@@ -535428,8 +535450,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/CheckCensusGate.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts",
-          "line": 590,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-590-readcheckcensusmetrics",
+          "line": 616,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-616-readcheckcensusmetrics",
           "currentTags": [
             "@param",
             "@returns",
@@ -535452,8 +535474,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/CheckCensusGate.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts",
-          "line": 654,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-654-parsecheckcensussample",
+          "line": 680,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-680-parsecheckcensussample",
           "currentTags": [
             "@param",
             "@returns",
@@ -535476,8 +535498,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/CheckCensusGate.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts",
-          "line": 734,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-734-comparecheckcensussample",
+          "line": 769,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-769-comparecheckcensussample",
           "currentTags": [
             "@param",
             "@returns",
@@ -535500,8 +535522,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/CheckCensusGate.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts",
-          "line": 788,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-788-checkcensusgatefailed",
+          "line": 823,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-823-checkcensusgatefailed",
           "currentTags": [
             "@param",
             "@returns",
@@ -535524,8 +535546,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/CheckCensusGate.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts",
-          "line": 827,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-827-checkcensusgatefailuremessage",
+          "line": 862,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-862-checkcensusgatefailuremessage",
           "currentTags": [
             "@param",
             "@returns",
@@ -535548,8 +535570,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/CheckCensusGate.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts",
-          "line": 898,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-898-rendercheckcensusgatelines",
+          "line": 933,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-933-rendercheckcensusgatelines",
           "currentTags": [
             "@param",
             "@returns",
@@ -535572,8 +535594,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/CheckCensusGate.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts",
-          "line": 937,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-937-checkcensusbaselinerows",
+          "line": 972,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-972-checkcensusbaselinerows",
           "currentTags": [
             "@param",
             "@returns",
@@ -535596,8 +535618,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/CheckCensusGate.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts",
-          "line": 968,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-968-rendercheckcensusbaselinelines",
+          "line": 1003,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-1003-rendercheckcensusbaselinelines",
           "currentTags": [
             "@param",
             "@returns",
@@ -535620,8 +535642,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/CheckCensusGate.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts",
-          "line": 999,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-999-check-census-default-targets",
+          "line": 1034,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-1034-check-census-default-targets",
           "currentTags": [
             "@category",
             "@since"
@@ -535642,8 +535664,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/CheckCensusGate.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts",
-          "line": 1045,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-1045-checkcensussampleroptions",
+          "line": 1080,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-1080-checkcensussampleroptions",
           "currentTags": [
             "@category",
             "@since"
@@ -535664,8 +535686,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Quality/CheckCensusGate.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts",
-          "line": 1062,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-1062-checkcensussamplershape",
+          "line": 1097,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-1097-checkcensussamplershape",
           "currentTags": [
             "@category",
             "@since"
@@ -535686,8 +535708,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/CheckCensusGate.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts",
-          "line": 1167,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-1167-checkcensussampler",
+          "line": 1202,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-1202-checkcensussampler",
           "currentTags": [
             "@category",
             "@since"
@@ -535708,8 +535730,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/CheckCensusGate.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts",
-          "line": 1208,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-1208-runcheckcensusgate",
+          "line": 1243,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-1243-runcheckcensusgate",
           "currentTags": [
             "@param",
             "@returns",
@@ -535732,8 +535754,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/CheckCensusGate.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts",
-          "line": 1248,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-1248-checkcensusbaselineprovenance",
+          "line": 1283,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-1283-checkcensusbaselineprovenance",
           "currentTags": [
             "@category",
             "@since"
@@ -535754,8 +535776,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/CheckCensusGate.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts",
-          "line": 1293,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-1293-measurecheckcensusbaseline",
+          "line": 1328,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-1328-measurecheckcensusbaseline",
           "currentTags": [
             "@param",
             "@returns",
@@ -535778,8 +535800,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/CheckCensusGate.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts",
-          "line": 1349,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-1349-readcheckcensusbaseline",
+          "line": 1384,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-1384-readcheckcensusbaseline",
           "currentTags": [
             "@param",
             "@returns",
@@ -535802,8 +535824,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/CheckCensusGate.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts",
-          "line": 1392,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-1392-writecheckcensusbaseline",
+          "line": 1427,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-1427-writecheckcensusbaseline",
           "currentTags": [
             "@param",
             "@returns",
@@ -535826,8 +535848,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/CheckCensusGate.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts",
-          "line": 1429,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-1429-resolvecheckcensustargets",
+          "line": 1464,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensusgate-ts-1464-resolvecheckcensustargets",
           "currentTags": [
             "@param",
             "@returns",
@@ -621590,8 +621612,8 @@
           "exportKind": "function",
           "filePath": "src/Tailscale.service.ts",
           "repoPath": "packages/drivers/tailscale/src/Tailscale.service.ts",
-          "line": 400,
-          "anchor": "packages-drivers-tailscale-src-tailscale-service-ts-400-buildtailscalehttpsbaseurl",
+          "line": 392,
+          "anchor": "packages-drivers-tailscale-src-tailscale-service-ts-392-buildtailscalehttpsbaseurl",
           "currentTags": [
             "@category",
             "@since"
@@ -621612,8 +621634,8 @@
           "exportKind": "const",
           "filePath": "src/Tailscale.service.ts",
           "repoPath": "packages/drivers/tailscale/src/Tailscale.service.ts",
-          "line": 77,
-          "anchor": "packages-drivers-tailscale-src-tailscale-service-ts-77-parsetailscalemagicdnsname",
+          "line": 111,
+          "anchor": "packages-drivers-tailscale-src-tailscale-service-ts-111-parsetailscalemagicdnsname",
           "currentTags": [
             "@effects",
             "@category",
@@ -621635,8 +621657,8 @@
           "exportKind": "const",
           "filePath": "src/Tailscale.service.ts",
           "repoPath": "packages/drivers/tailscale/src/Tailscale.service.ts",
-          "line": 99,
-          "anchor": "packages-drivers-tailscale-src-tailscale-service-ts-99-istailscaleipv4address",
+          "line": 133,
+          "anchor": "packages-drivers-tailscale-src-tailscale-service-ts-133-istailscaleipv4address",
           "currentTags": [
             "@category",
             "@since"
@@ -621657,8 +621679,8 @@
           "exportKind": "const",
           "filePath": "src/Tailscale.service.ts",
           "repoPath": "packages/drivers/tailscale/src/Tailscale.service.ts",
-          "line": 117,
-          "anchor": "packages-drivers-tailscale-src-tailscale-service-ts-117-parsetailscalestatus",
+          "line": 151,
+          "anchor": "packages-drivers-tailscale-src-tailscale-service-ts-151-parsetailscalestatus",
           "currentTags": [
             "@effects",
             "@category",
@@ -621680,8 +621702,8 @@
           "exportKind": "const",
           "filePath": "src/Tailscale.service.ts",
           "repoPath": "packages/drivers/tailscale/src/Tailscale.service.ts",
-          "line": 154,
-          "anchor": "packages-drivers-tailscale-src-tailscale-service-ts-154-readtailscalestatus",
+          "line": 188,
+          "anchor": "packages-drivers-tailscale-src-tailscale-service-ts-188-readtailscalestatus",
           "currentTags": [
             "@effects",
             "@category",
@@ -621703,8 +621725,8 @@
           "exportKind": "const",
           "filePath": "src/Tailscale.service.ts",
           "repoPath": "packages/drivers/tailscale/src/Tailscale.service.ts",
-          "line": 314,
-          "anchor": "packages-drivers-tailscale-src-tailscale-service-ts-314-ensuretailscaleserve",
+          "line": 306,
+          "anchor": "packages-drivers-tailscale-src-tailscale-service-ts-306-ensuretailscaleserve",
           "currentTags": [
             "@effects",
             "@category",
@@ -621726,8 +621748,8 @@
           "exportKind": "const",
           "filePath": "src/Tailscale.service.ts",
           "repoPath": "packages/drivers/tailscale/src/Tailscale.service.ts",
-          "line": 341,
-          "anchor": "packages-drivers-tailscale-src-tailscale-service-ts-341-disabletailscaleserve",
+          "line": 333,
+          "anchor": "packages-drivers-tailscale-src-tailscale-service-ts-333-disabletailscaleserve",
           "currentTags": [
             "@effects",
             "@category",
@@ -621749,8 +621771,8 @@
           "exportKind": "const",
           "filePath": "src/Tailscale.service.ts",
           "repoPath": "packages/drivers/tailscale/src/Tailscale.service.ts",
-          "line": 364,
-          "anchor": "packages-drivers-tailscale-src-tailscale-service-ts-364-probetailscalehttpsendpoint",
+          "line": 356,
+          "anchor": "packages-drivers-tailscale-src-tailscale-service-ts-356-probetailscalehttpsendpoint",
           "currentTags": [
             "@effects",
             "@category",
@@ -621772,8 +621794,8 @@
           "exportKind": "const",
           "filePath": "src/Tailscale.service.ts",
           "repoPath": "packages/drivers/tailscale/src/Tailscale.service.ts",
-          "line": 429,
-          "anchor": "packages-drivers-tailscale-src-tailscale-service-ts-429-resolvetailscalehttpsbaseurl",
+          "line": 421,
+          "anchor": "packages-drivers-tailscale-src-tailscale-service-ts-421-resolvetailscalehttpsbaseurl",
           "currentTags": [
             "@effects",
             "@category",
