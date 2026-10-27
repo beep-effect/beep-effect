@@ -20,7 +20,7 @@ const $I = $BrandId.create("Brand.assets");
  * **Example** (Construct a rendered asset)
  *
  * ```ts
- * import { RenderedAsset } from "@beep/brand"
+ * import { RenderedAsset } from "@beep/brand/Brand.assets"
  *
  * console.log(RenderedAsset.make({ path: "styles/brand.css", content: "" }).path)
  * ```
@@ -72,7 +72,8 @@ const favicon = (identity: BrandIdentity): MarkPaint =>
  * **Example** (List generated paths)
  *
  * ```ts
- * import { beep, renderBrandAssets } from "@beep/brand"
+ * import { beep } from "@beep/brand/Brand.tokens"
+ * import { renderBrandAssets } from "@beep/brand/Brand.assets"
  *
  * console.log(renderBrandAssets(beep).map((asset) => asset.path))
  * ```
