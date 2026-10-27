@@ -107,7 +107,7 @@ export const getOrElseEmptyStr = <A>(self: O.Option<A>): A | "" => O.getOrElse(s
  *
  * ```ts
  * import { pipe } from "effect/Function";
- * import { O } from "@beep/utils"
+ * import * as O from "@beep/utils/Option"
  *
  * const user: { readonly name: string; readonly age: number | null } = {
  *   name: "Alice",
@@ -164,7 +164,7 @@ export const propFromNullishOr: {
  * **Example** (Compact Option struct fields)
  *
  * ```ts
- * import { O } from "@beep/utils"
+ * import * as O from "@beep/utils/Option"
  *
  * const props = O.getSomesStruct({
  *   id: O.some(1),

@@ -352,7 +352,9 @@ export const thunkEmptyRecord = <K extends string | symbol = never, V = never>()
  * **Example** (Empty readonly record fallback)
  *
  * ```ts
- * import { O, R, thunkEmptyReadonlyRecord } from "@beep/utils"
+ * import * as O from "@beep/utils/Option"
+ * import * as R from "@beep/utils/Record"
+ * import { thunkEmptyReadonlyRecord } from "@beep/utils/thunk"
  *
  * const value = O.getOrElse(
  *   O.none<R.ReadonlyRecord<string, number>>(),

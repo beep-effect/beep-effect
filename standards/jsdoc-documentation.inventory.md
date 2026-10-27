@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-10-27T16:31:29.591Z
+Generated: 2026-10-27T18:09:29.574Z
 
 ## Scope
 
@@ -11,23 +11,23 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | Metric | Count |
 |---|---:|
 | packages | 183 |
-| cleanPackages | 104 |
+| cleanPackages | 105 |
 | packagesWithoutPublicSrcSurface | 2 |
-| packagesNeedingRemediation | 77 |
+| packagesNeedingRemediation | 76 |
 | publicModules | 3546 |
 | publicExports | 25241 |
-| openModules | 400 |
-| openExports | 995 |
+| openModules | 394 |
+| openExports | 894 |
 | missingExportExamples | 7 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
 | forbiddenTagFindings | 0 |
 | malformedConditionalTagFindings | 0 |
-| exampleImportFindings | 955 |
+| exampleImportFindings | 854 |
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
-| undescribed-see | 11 |
-| multiple-description-paragraphs | 424 |
+| undescribed-see | 10 |
+| multiple-description-paragraphs | 419 |
 | leading-blank | 0 |
 | trailing-blank | 0 |
 | invalid-heading | 1 |
@@ -40,7 +40,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | duplicate-example | 0 |
 | loose-ts-fence | 0 |
 | forbidden-remarks | 0 |
-| no-root-package-import | 934 |
+| no-root-package-import | 833 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -60,7 +60,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 2 | `@beep/test-runner` | `packages/tooling/test-kit/test-runner` | clean | 4 | 6 | 0 | 0 |
 | 3 | `@beep/types` | `packages/foundation/primitive/types` | needs-remediation | 5 | 12 | 1 | 12 |
 | 4 | `@beep/identity` | `packages/foundation/modeling/identity` | clean | 8 | 280 | 0 | 0 |
-| 5 | `@beep/utils` | `packages/foundation/modeling/utils` | needs-remediation | 29 | 228 | 6 | 101 |
+| 5 | `@beep/utils` | `packages/foundation/modeling/utils` | clean | 29 | 228 | 0 | 0 |
 | 6 | `@beep/data` | `packages/foundation/primitive/data` | needs-remediation | 12 | 162 | 10 | 16 |
 | 7 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 169 | 974 | 14 | 33 |
 | 8 | `@beep/semver` | `packages/foundation/modeling/semver` | clean | 6 | 23 | 0 | 0 |
@@ -269,121 +269,6 @@ Export findings:
 - `src/index.ts:61` `export type * as TString from "./TString.types.ts";` (re-export) - 1 example import violation(s)
 - `src/index.ts:77` `export type * as TUnsafe from "./TUnsafe.types.ts";` (re-export) - 1 example import violation(s)
 - `src/index.ts:95` `export type * as TUtils from "./TUtils.types.ts";` (re-export) - 1 example import violation(s)
-
-### @beep/utils
-
-Path: `packages/foundation/modeling/utils`
-
-Module findings:
-- `src/Bool.ts:1` (jsdoc) - 1 example import violation(s)
-- `src/Data.ts:1` (jsdoc) - 1 documentation section/link violation(s)
-- `src/FileSystem.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/GlobalValue.ts:1` (jsdoc) - 1 documentation section/link violation(s)
-- `src/NodeUrl.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/Path.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-
-Export findings:
-- `src/Array.ts:614` `export * from "effect/Array";` (re-export) - 1 example import violation(s)
-- `src/Array.ts:43` `matchToBoolean` (const) - 1 example import violation(s)
-- `src/Array.ts:73` `assertNonEmptyArray` (const) - 1 example import violation(s)
-- `src/Array.ts:96` `assertNonEmptyReadonlyArray` (const) - 1 example import violation(s)
-- `src/Array.ts:138` `mapNonEmpty` (const) - 1 example import violation(s)
-- `src/Array.ts:177` `flatMapNonEmpty` (const) - 1 example import violation(s)
-- `src/Array.ts:218` `mapNonEmptyReadonly` (const) - 1 example import violation(s)
-- `src/Array.ts:263` `flatMapNonEmptyReadonly` (const) - 1 example import violation(s)
-- `src/Array.ts:324` `indexOf` (const) - 1 example import violation(s)
-- `src/Array.ts:356` `lastIndexOf` (const) - 1 example import violation(s)
-- `src/Array.ts:386` `slice` (const) - 1 example import violation(s)
-- `src/Array.ts:412` `entries` (const) - 1 example import violation(s)
-- `src/Array.ts:430` `keys` (const) - 1 example import violation(s)
-- `src/Array.ts:450` `values` (const) - 1 example import violation(s)
-- `src/Array.ts:476` `appendInPlace` (const) - 1 example import violation(s)
-- `src/Array.ts:506` `appendAllInPlace` (const) - 1 example import violation(s)
-- `src/Array.ts:540` `sortInPlace` (const) - 1 example import violation(s)
-- `src/Array.ts:575` `spliceInPlace` (const) - 1 example import violation(s)
-- `src/Array.ts:642` `makeReadonly` (const) - 1 example import violation(s)
-- `src/Array.ts:665` `fromIterableNonEmpty` (const) - 1 example import violation(s)
-- `src/Array.ts:689` `emptyReadonly` (const) - 1 example import violation(s)
-- `src/Bool.ts:18` `export * from "effect/Boolean";` (re-export) - 1 example import violation(s)
-- `src/Equal.ts:22` `export * from "effect/Equal";` (re-export) - 1 example import violation(s)
-- `src/Errors.ts:166` `mapToError` (function) - 1 example import violation(s)
-- `src/Errors.ts:45` `ErrorMapper` (type) - 1 example import violation(s)
-- `src/Errors.ts:99` `mapCauseError` (const) - 1 example import violation(s)
-- `src/GlobalValue.ts:73` `globalValue` (const) - 1 example import violation(s)
-- `src/Number.ts:44` `isPositive` (const) - 1 documentation section/link violation(s)
-- `src/Number.ts:88` `isInteger` (const) - 1 example import violation(s)
-- `src/Option.ts:132` `propFromNullishOr` (const) - 1 example import violation(s)
-- `src/Option.ts:181` `getSomesStruct` (const) - 1 example import violation(s)
-- `src/Predicate.ts:207` `chainRefinements` (function) - 1 example import violation(s)
-- `src/Predicate.ts:156` `hasInspectableObjectShape` (const) - 1 example import violation(s)
-- `src/Str.ts:846` `export * from "effect/String";` (re-export) - 1 example import violation(s)
-- `src/Str.ts:43` `equivalence` (const) - 1 example import violation(s)
-- `src/Str.ts:73` `orderAsc` (const) - 1 example import violation(s)
-- `src/Str.ts:120` `prefix` (const) - 1 example import violation(s)
-- `src/Str.ts:161` `prefixThunk` (const) - 1 example import violation(s)
-- `src/Str.ts:214` `postfix` (const) - 1 example import violation(s)
-- `src/Str.ts:255` `postfixThunk` (const) - 1 example import violation(s)
-- `src/Str.ts:296` `mapPrefix` (const) - 1 example import violation(s)
-- `src/Str.ts:336` `mapPostfix` (const) - 1 example import violation(s)
-- `src/Str.ts:362` `camelCase` (const) - 1 example import violation(s)
-- `src/Str.ts:380` `snakeCase` (const) - 1 example import violation(s)
-- `src/Str.ts:398` `kebabCase` (const) - 1 example import violation(s)
-- `src/Str.ts:417` `screamingSnake` (const) - 1 example import violation(s)
-- `src/Str.ts:436` `pascalCase` (const) - 1 example import violation(s)
-- `src/Str.ts:454` `pascalToSnake` (const) - 1 example import violation(s)
-- `src/Str.ts:473` `snakeToCamel` (const) - 1 example import violation(s)
-- `src/Str.ts:492` `snakeToKebab` (const) - 1 example import violation(s)
-- `src/Str.ts:511` `camelToSnake` (const) - 1 example import violation(s)
-- `src/Str.ts:530` `snakeToPascal` (const) - 1 example import violation(s)
-- `src/Str.ts:549` `kebabToSnake` (const) - 1 example import violation(s)
-- `src/Str.ts:576` `startsWith` (const) - 1 example import violation(s)
-- `src/Str.ts:616` `endsWith` (const) - 1 example import violation(s)
-- `src/Str.ts:661` `contains` (const) - 1 example import violation(s)
-- `src/Str.ts:705` `repeat` (const) - 1 example import violation(s)
-- `src/Str.ts:759` `replaceWith` (const) - 1 example import violation(s)
-- `src/Str.ts:813` `replaceAllWith` (const) - 1 example import violation(s)
-- `src/Str.ts:866` `trimThunk` (const) - 1 example import violation(s)
-- `src/Str.ts:886` `fromNumber` (const) - 1 example import violation(s)
-- `src/Str.ts:903` `toSlug` (const) - 1 example import violation(s)
-- `src/Str.ts:941` `truncate` (const) - 1 example import violation(s)
-- `src/Str.ts:967` `orEmpty` (const) - 1 example import violation(s)
-- `src/Str.ts:1015` `matchEmpty` (const) - 1 example import violation(s)
-- `src/Struct.ts:175` `dotGet` (const) - 1 example import violation(s)
-- `src/Struct.ts:222` `dotGetOption` (const) - 1 example import violation(s)
-- `src/Struct.ts:289` `mapPath` (const) - 1 example import violation(s)
-- `src/Struct.ts:367` `mapPathLazy` (const) - 1 example import violation(s)
-- `src/Struct.ts:449` `getLazy` (const) - 1 example import violation(s)
-- `src/Struct.ts:484` `pathsOf` (const) - 1 example import violation(s)
-- `src/Struct.ts:604` `entriesNonEmpty` (const) - 1 example import violation(s)
-- `src/Struct.ts:635` `keys` (const) - 1 example import violation(s)
-- `src/Struct.ts:661` `keysNonEmpty` (const) - 1 example import violation(s)
-- `src/Struct.ts:696` `fromEntries` (const) - 1 example import violation(s)
-- `src/Struct.ts:804` `reverse` (const) - 1 example import violation(s)
-- `src/Struct.ts:926` `deepMerge` (const) - 1 example import violation(s)
-- `src/Text.ts:33` `splitCommaSeparatedTrimmed` (const) - 1 example import violation(s)
-- `src/Text.ts:61` `formatNameWithAliases` (const) - 1 example import violation(s)
-- `src/Text.ts:93` `joinLines` (const) - 1 example import violation(s)
-- `src/index.ts:30` `export * as A from "./Array.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:45` `export * as Bool from "./Bool.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:63` `export * as Data from "./Data.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:78` `export * as DateTime from "./DateTime.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:106` `export * as Eq from "./Equal.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:133` `export * as Err from "./Errors.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:151` `export * as FileSystem from "./FileSystem.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:173` `export * from "./HostProcess.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:189` `export * as Html from "./Html.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:205` `export * as N from "./Number.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:221` `export * as O from "./Option.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:236` `export * as Path from "./Path.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:252` `export * as P from "./Predicate.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:267` `export * from "./Random.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:283` `export * as R from "./Record.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:299` `export * as Str from "./Str.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:314` `export * as Stream from "./Stream.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:330` `export * as Struct from "./Struct.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:346` `export * as Text from "./Text.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:362` `export * from "./thunk.ts";` (re-export) - 1 example import violation(s)
-- `src/thunk.ts:367` `thunkEmptyReadonlyRecord` (const) - 1 example import violation(s)
 
 ### @beep/data
 

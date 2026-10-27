@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-27T16:31:29.591Z",
+  "generatedAt": "2026-10-27T18:09:29.574Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -62,23 +62,23 @@
   },
   "totals": {
     "packages": 183,
-    "cleanPackages": 104,
+    "cleanPackages": 105,
     "packagesWithoutPublicSrcSurface": 2,
-    "packagesNeedingRemediation": 77,
+    "packagesNeedingRemediation": 76,
     "publicModules": 3546,
     "publicExports": 25241,
-    "openModules": 400,
-    "openExports": 995,
+    "openModules": 394,
+    "openExports": 894,
     "missingExportExamples": 7,
     "missingExportCategories": 0,
     "missingExportSince": 0,
     "forbiddenTagFindings": 0,
     "malformedConditionalTagFindings": 0,
-    "exampleImportFindings": 955,
+    "exampleImportFindings": 854,
     "unsafeExampleFindings": 0,
     "schemaAnnotationFindings": 0,
-    "undescribed-see": 11,
-    "multiple-description-paragraphs": 424,
+    "undescribed-see": 10,
+    "multiple-description-paragraphs": 419,
     "leading-blank": 0,
     "trailing-blank": 0,
     "invalid-heading": 1,
@@ -91,7 +91,7 @@
     "duplicate-example": 0,
     "loose-ts-fence": 0,
     "forbidden-remarks": 0,
-    "no-root-package-import": 934,
+    "no-root-package-import": 833,
     "rootPolicyOpen": 0
   },
   "packages": [
@@ -7509,7 +7509,7 @@
       "packageName": "@beep/utils",
       "packagePath": "packages/foundation/modeling/utils",
       "topoOrder": 5,
-      "status": "needs-remediation",
+      "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
         "sourceFileCount": 29,
@@ -7523,20 +7523,20 @@
         "enforceVersion": true
       },
       "counts": {
-        "openModules": 6,
-        "openExports": 101,
+        "openModules": 0,
+        "openExports": 0,
         "missingExportExamples": 0,
         "missingExportCategories": 0,
         "missingExportSince": 0,
         "missingExportSummaries": 0,
         "forbiddenTagFindings": 0,
         "malformedConditionalTagFindings": 0,
-        "exampleImportFindings": 101,
+        "exampleImportFindings": 0,
         "unsafeExampleFindings": 0,
         "schemaAnnotationFindings": 0,
         "documentationRuleFindings": {
-          "undescribed-see": 1,
-          "multiple-description-paragraphs": 5,
+          "undescribed-see": 0,
+          "multiple-description-paragraphs": 0,
           "leading-blank": 0,
           "trailing-blank": 0,
           "invalid-heading": 0,
@@ -7549,7 +7549,7 @@
           "duplicate-example": 0,
           "loose-ts-fence": 0,
           "forbidden-remarks": 0,
-          "no-root-package-import": 101
+          "no-root-package-import": 0
         }
       },
       "modules": [
@@ -7589,19 +7589,13 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
           "exportCount": 1,
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "jsdoc",
@@ -7620,13 +7614,9 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
+          "documentationShapeViolations": [],
           "exportCount": 1,
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "packageDocumentation",
@@ -7756,13 +7746,9 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
+          "documentationShapeViolations": [],
           "exportCount": 10,
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "packageDocumentation",
@@ -7803,13 +7789,9 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
+          "documentationShapeViolations": [],
           "exportCount": 2,
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "packageDocumentation",
@@ -7873,13 +7855,9 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
+          "documentationShapeViolations": [],
           "exportCount": 3,
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "packageDocumentation",
@@ -7943,13 +7921,9 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
+          "documentationShapeViolations": [],
           "exportCount": 14,
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "packageDocumentation",
@@ -8222,8 +8196,8 @@
           "exportKind": "re-export",
           "filePath": "src/Array.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Array.ts",
-          "line": 614,
-          "anchor": "packages-foundation-modeling-utils-src-array-ts-614-export-from-effect-array",
+          "line": 616,
+          "anchor": "packages-foundation-modeling-utils-src-array-ts-616-export-from-effect-array",
           "currentTags": [
             "@category",
             "@since"
@@ -8232,18 +8206,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "matchToBoolean",
@@ -8260,18 +8228,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "assertNonEmptyArray",
@@ -8288,18 +8250,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "assertNonEmptyReadonlyArray",
@@ -8316,18 +8272,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "mapNonEmpty",
@@ -8344,18 +8294,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "flatMapNonEmpty",
@@ -8372,18 +8316,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "mapNonEmptyReadonly",
@@ -8400,18 +8338,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "flatMapNonEmptyReadonly",
@@ -8428,26 +8360,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "indexOf",
           "exportKind": "const",
           "filePath": "src/Array.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Array.ts",
-          "line": 324,
-          "anchor": "packages-foundation-modeling-utils-src-array-ts-324-indexof",
+          "line": 325,
+          "anchor": "packages-foundation-modeling-utils-src-array-ts-325-indexof",
           "currentTags": [
             "@category",
             "@since"
@@ -8456,26 +8382,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "lastIndexOf",
           "exportKind": "const",
           "filePath": "src/Array.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Array.ts",
-          "line": 356,
-          "anchor": "packages-foundation-modeling-utils-src-array-ts-356-lastindexof",
+          "line": 358,
+          "anchor": "packages-foundation-modeling-utils-src-array-ts-358-lastindexof",
           "currentTags": [
             "@category",
             "@since"
@@ -8484,26 +8404,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "slice",
           "exportKind": "const",
           "filePath": "src/Array.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Array.ts",
-          "line": 386,
-          "anchor": "packages-foundation-modeling-utils-src-array-ts-386-slice",
+          "line": 388,
+          "anchor": "packages-foundation-modeling-utils-src-array-ts-388-slice",
           "currentTags": [
             "@category",
             "@since"
@@ -8512,26 +8426,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "entries",
           "exportKind": "const",
           "filePath": "src/Array.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Array.ts",
-          "line": 412,
-          "anchor": "packages-foundation-modeling-utils-src-array-ts-412-entries",
+          "line": 414,
+          "anchor": "packages-foundation-modeling-utils-src-array-ts-414-entries",
           "currentTags": [
             "@category",
             "@since"
@@ -8540,26 +8448,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "keys",
           "exportKind": "const",
           "filePath": "src/Array.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Array.ts",
-          "line": 430,
-          "anchor": "packages-foundation-modeling-utils-src-array-ts-430-keys",
+          "line": 432,
+          "anchor": "packages-foundation-modeling-utils-src-array-ts-432-keys",
           "currentTags": [
             "@category",
             "@since"
@@ -8568,26 +8470,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "values",
           "exportKind": "const",
           "filePath": "src/Array.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Array.ts",
-          "line": 450,
-          "anchor": "packages-foundation-modeling-utils-src-array-ts-450-values",
+          "line": 452,
+          "anchor": "packages-foundation-modeling-utils-src-array-ts-452-values",
           "currentTags": [
             "@category",
             "@since"
@@ -8596,26 +8492,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "appendInPlace",
           "exportKind": "const",
           "filePath": "src/Array.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Array.ts",
-          "line": 476,
-          "anchor": "packages-foundation-modeling-utils-src-array-ts-476-appendinplace",
+          "line": 478,
+          "anchor": "packages-foundation-modeling-utils-src-array-ts-478-appendinplace",
           "currentTags": [
             "@category",
             "@since"
@@ -8624,26 +8514,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "appendAllInPlace",
           "exportKind": "const",
           "filePath": "src/Array.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Array.ts",
-          "line": 506,
-          "anchor": "packages-foundation-modeling-utils-src-array-ts-506-appendallinplace",
+          "line": 508,
+          "anchor": "packages-foundation-modeling-utils-src-array-ts-508-appendallinplace",
           "currentTags": [
             "@category",
             "@since"
@@ -8652,26 +8536,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "sortInPlace",
           "exportKind": "const",
           "filePath": "src/Array.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Array.ts",
-          "line": 540,
-          "anchor": "packages-foundation-modeling-utils-src-array-ts-540-sortinplace",
+          "line": 542,
+          "anchor": "packages-foundation-modeling-utils-src-array-ts-542-sortinplace",
           "currentTags": [
             "@category",
             "@since"
@@ -8680,26 +8558,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "spliceInPlace",
           "exportKind": "const",
           "filePath": "src/Array.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Array.ts",
-          "line": 575,
-          "anchor": "packages-foundation-modeling-utils-src-array-ts-575-spliceinplace",
+          "line": 577,
+          "anchor": "packages-foundation-modeling-utils-src-array-ts-577-spliceinplace",
           "currentTags": [
             "@category",
             "@since"
@@ -8708,26 +8580,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "makeReadonly",
           "exportKind": "const",
           "filePath": "src/Array.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Array.ts",
-          "line": 642,
-          "anchor": "packages-foundation-modeling-utils-src-array-ts-642-makereadonly",
+          "line": 644,
+          "anchor": "packages-foundation-modeling-utils-src-array-ts-644-makereadonly",
           "currentTags": [
             "@category",
             "@since"
@@ -8736,26 +8602,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "fromIterableNonEmpty",
           "exportKind": "const",
           "filePath": "src/Array.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Array.ts",
-          "line": 665,
-          "anchor": "packages-foundation-modeling-utils-src-array-ts-665-fromiterablenonempty",
+          "line": 667,
+          "anchor": "packages-foundation-modeling-utils-src-array-ts-667-fromiterablenonempty",
           "currentTags": [
             "@category",
             "@since"
@@ -8764,26 +8624,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "emptyReadonly",
           "exportKind": "const",
           "filePath": "src/Array.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Array.ts",
-          "line": 689,
-          "anchor": "packages-foundation-modeling-utils-src-array-ts-689-emptyreadonly",
+          "line": 691,
+          "anchor": "packages-foundation-modeling-utils-src-array-ts-691-emptyreadonly",
           "currentTags": [
             "@see",
             "@category",
@@ -8793,18 +8647,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * from \"effect/Boolean\";",
@@ -8821,26 +8669,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * from \"effect/Data\";",
           "exportKind": "re-export",
           "filePath": "src/Data.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Data.ts",
-          "line": 18,
-          "anchor": "packages-foundation-modeling-utils-src-data-ts-18-export-from-effect-data",
+          "line": 20,
+          "anchor": "packages-foundation-modeling-utils-src-data-ts-20-export-from-effect-data",
           "currentTags": [
             "@category",
             "@since"
@@ -8982,18 +8824,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "mapToError",
@@ -9012,18 +8848,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "ErrorMapper",
@@ -9041,18 +8871,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "mapCauseError",
@@ -9071,18 +8895,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * from \"effect/encoding/Sse\";",
@@ -9133,8 +8951,8 @@
           "exportKind": "class",
           "filePath": "src/FileSystem.ts",
           "repoPath": "packages/foundation/modeling/utils/src/FileSystem.ts",
-          "line": 96,
-          "anchor": "packages-foundation-modeling-utils-src-filesystem-ts-96-appendfilesyncoptions",
+          "line": 98,
+          "anchor": "packages-foundation-modeling-utils-src-filesystem-ts-98-appendfilesyncoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -9155,8 +8973,8 @@
           "exportKind": "class",
           "filePath": "src/FileSystem.ts",
           "repoPath": "packages/foundation/modeling/utils/src/FileSystem.ts",
-          "line": 130,
-          "anchor": "packages-foundation-modeling-utils-src-filesystem-ts-130-rmsyncoptions",
+          "line": 132,
+          "anchor": "packages-foundation-modeling-utils-src-filesystem-ts-132-rmsyncoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -9177,8 +8995,8 @@
           "exportKind": "class",
           "filePath": "src/FileSystem.ts",
           "repoPath": "packages/foundation/modeling/utils/src/FileSystem.ts",
-          "line": 161,
-          "anchor": "packages-foundation-modeling-utils-src-filesystem-ts-161-readdirsyncoptions",
+          "line": 163,
+          "anchor": "packages-foundation-modeling-utils-src-filesystem-ts-163-readdirsyncoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -9199,8 +9017,8 @@
           "exportKind": "const",
           "filePath": "src/FileSystem.ts",
           "repoPath": "packages/foundation/modeling/utils/src/FileSystem.ts",
-          "line": 277,
-          "anchor": "packages-foundation-modeling-utils-src-filesystem-ts-277-appendfilesync",
+          "line": 279,
+          "anchor": "packages-foundation-modeling-utils-src-filesystem-ts-279-appendfilesync",
           "currentTags": [
             "@effects",
             "@category",
@@ -9222,8 +9040,8 @@
           "exportKind": "const",
           "filePath": "src/FileSystem.ts",
           "repoPath": "packages/foundation/modeling/utils/src/FileSystem.ts",
-          "line": 323,
-          "anchor": "packages-foundation-modeling-utils-src-filesystem-ts-323-existssync",
+          "line": 325,
+          "anchor": "packages-foundation-modeling-utils-src-filesystem-ts-325-existssync",
           "currentTags": [
             "@effects",
             "@category",
@@ -9245,8 +9063,8 @@
           "exportKind": "const",
           "filePath": "src/FileSystem.ts",
           "repoPath": "packages/foundation/modeling/utils/src/FileSystem.ts",
-          "line": 347,
-          "anchor": "packages-foundation-modeling-utils-src-filesystem-ts-347-rmsync",
+          "line": 349,
+          "anchor": "packages-foundation-modeling-utils-src-filesystem-ts-349-rmsync",
           "currentTags": [
             "@effects",
             "@category",
@@ -9268,8 +9086,8 @@
           "exportKind": "const",
           "filePath": "src/FileSystem.ts",
           "repoPath": "packages/foundation/modeling/utils/src/FileSystem.ts",
-          "line": 381,
-          "anchor": "packages-foundation-modeling-utils-src-filesystem-ts-381-renamesync",
+          "line": 383,
+          "anchor": "packages-foundation-modeling-utils-src-filesystem-ts-383-renamesync",
           "currentTags": [
             "@effects",
             "@category",
@@ -9291,8 +9109,8 @@
           "exportKind": "const",
           "filePath": "src/FileSystem.ts",
           "repoPath": "packages/foundation/modeling/utils/src/FileSystem.ts",
-          "line": 447,
-          "anchor": "packages-foundation-modeling-utils-src-filesystem-ts-447-readdirsync",
+          "line": 449,
+          "anchor": "packages-foundation-modeling-utils-src-filesystem-ts-449-readdirsync",
           "currentTags": [
             "@effects",
             "@category",
@@ -9314,8 +9132,8 @@
           "exportKind": "const",
           "filePath": "src/FileSystem.ts",
           "repoPath": "packages/foundation/modeling/utils/src/FileSystem.ts",
-          "line": 477,
-          "anchor": "packages-foundation-modeling-utils-src-filesystem-ts-477-statsync",
+          "line": 479,
+          "anchor": "packages-foundation-modeling-utils-src-filesystem-ts-479-statsync",
           "currentTags": [
             "@effects",
             "@category",
@@ -9337,8 +9155,8 @@
           "exportKind": "const",
           "filePath": "src/FileSystem.ts",
           "repoPath": "packages/foundation/modeling/utils/src/FileSystem.ts",
-          "line": 517,
-          "anchor": "packages-foundation-modeling-utils-src-filesystem-ts-517-makewaitforfile",
+          "line": 519,
+          "anchor": "packages-foundation-modeling-utils-src-filesystem-ts-519-makewaitforfile",
           "currentTags": [
             "@effects",
             "@category",
@@ -9532,8 +9350,8 @@
           "exportKind": "type",
           "filePath": "src/GlobalValue.ts",
           "repoPath": "packages/foundation/modeling/utils/src/GlobalValue.ts",
-          "line": 36,
-          "anchor": "packages-foundation-modeling-utils-src-globalvalue-ts-36-globalvalueof",
+          "line": 38,
+          "anchor": "packages-foundation-modeling-utils-src-globalvalue-ts-38-globalvalueof",
           "currentTags": [
             "@category",
             "@since"
@@ -9554,8 +9372,8 @@
           "exportKind": "const",
           "filePath": "src/GlobalValue.ts",
           "repoPath": "packages/foundation/modeling/utils/src/GlobalValue.ts",
-          "line": 73,
-          "anchor": "packages-foundation-modeling-utils-src-globalvalue-ts-73-globalvalue",
+          "line": 75,
+          "anchor": "packages-foundation-modeling-utils-src-globalvalue-ts-75-globalvalue",
           "currentTags": [
             "@category",
             "@since"
@@ -9564,18 +9382,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "currentHostPlatform",
@@ -9714,8 +9526,8 @@
           "exportKind": "const",
           "filePath": "src/NodeUrl.ts",
           "repoPath": "packages/foundation/modeling/utils/src/NodeUrl.ts",
-          "line": 91,
-          "anchor": "packages-foundation-modeling-utils-src-nodeurl-ts-91-fromfileurl",
+          "line": 93,
+          "anchor": "packages-foundation-modeling-utils-src-nodeurl-ts-93-fromfileurl",
           "currentTags": [
             "@param",
             "@returns",
@@ -9739,8 +9551,8 @@
           "exportKind": "const",
           "filePath": "src/NodeUrl.ts",
           "repoPath": "packages/foundation/modeling/utils/src/NodeUrl.ts",
-          "line": 144,
-          "anchor": "packages-foundation-modeling-utils-src-nodeurl-ts-144-tofileurl",
+          "line": 146,
+          "anchor": "packages-foundation-modeling-utils-src-nodeurl-ts-146-tofileurl",
           "currentTags": [
             "@param",
             "@returns",
@@ -9764,8 +9576,8 @@
           "exportKind": "const",
           "filePath": "src/NodeUrl.ts",
           "repoPath": "packages/foundation/modeling/utils/src/NodeUrl.ts",
-          "line": 170,
-          "anchor": "packages-foundation-modeling-utils-src-nodeurl-ts-170-fileurltopath",
+          "line": 172,
+          "anchor": "packages-foundation-modeling-utils-src-nodeurl-ts-172-fileurltopath",
           "currentTags": [
             "@category",
             "@since"
@@ -9825,13 +9637,8 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "undescribed-see",
-              "detail": "N.isGreaterThanOrEqualTo for comparison implementation details."
-            }
-          ],
-          "remediationStatus": "open"
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "isInteger",
@@ -9848,18 +9655,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "CapAssertion",
@@ -10032,18 +9833,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "getSomesStruct",
@@ -10060,26 +9855,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export { fromFileUrl, toFileUrl } from \"./NodeUrl.ts\";",
           "exportKind": "re-export",
           "filePath": "src/Path.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Path.ts",
-          "line": 71,
-          "anchor": "packages-foundation-modeling-utils-src-path-ts-71-export-fromfileurl-tofileurl-from-nodeurl-ts",
+          "line": 73,
+          "anchor": "packages-foundation-modeling-utils-src-path-ts-73-export-fromfileurl-tofileurl-from-nodeurl-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -10100,8 +9889,8 @@
           "exportKind": "type",
           "filePath": "src/Path.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Path.ts",
-          "line": 88,
-          "anchor": "packages-foundation-modeling-utils-src-path-ts-88-parsed",
+          "line": 90,
+          "anchor": "packages-foundation-modeling-utils-src-path-ts-90-parsed",
           "currentTags": [
             "@category",
             "@since"
@@ -10122,8 +9911,8 @@
           "exportKind": "const",
           "filePath": "src/Path.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Path.ts",
-          "line": 105,
-          "anchor": "packages-foundation-modeling-utils-src-path-ts-105-sep",
+          "line": 107,
+          "anchor": "packages-foundation-modeling-utils-src-path-ts-107-sep",
           "currentTags": [
             "@category",
             "@since"
@@ -10144,8 +9933,8 @@
           "exportKind": "const",
           "filePath": "src/Path.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Path.ts",
-          "line": 121,
-          "anchor": "packages-foundation-modeling-utils-src-path-ts-121-join",
+          "line": 123,
+          "anchor": "packages-foundation-modeling-utils-src-path-ts-123-join",
           "currentTags": [
             "@category",
             "@since"
@@ -10166,8 +9955,8 @@
           "exportKind": "const",
           "filePath": "src/Path.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Path.ts",
-          "line": 137,
-          "anchor": "packages-foundation-modeling-utils-src-path-ts-137-resolve",
+          "line": 139,
+          "anchor": "packages-foundation-modeling-utils-src-path-ts-139-resolve",
           "currentTags": [
             "@category",
             "@since"
@@ -10188,8 +9977,8 @@
           "exportKind": "const",
           "filePath": "src/Path.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Path.ts",
-          "line": 153,
-          "anchor": "packages-foundation-modeling-utils-src-path-ts-153-normalize",
+          "line": 155,
+          "anchor": "packages-foundation-modeling-utils-src-path-ts-155-normalize",
           "currentTags": [
             "@category",
             "@since"
@@ -10210,8 +9999,8 @@
           "exportKind": "const",
           "filePath": "src/Path.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Path.ts",
-          "line": 169,
-          "anchor": "packages-foundation-modeling-utils-src-path-ts-169-relative",
+          "line": 171,
+          "anchor": "packages-foundation-modeling-utils-src-path-ts-171-relative",
           "currentTags": [
             "@category",
             "@since"
@@ -10232,8 +10021,8 @@
           "exportKind": "const",
           "filePath": "src/Path.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Path.ts",
-          "line": 188,
-          "anchor": "packages-foundation-modeling-utils-src-path-ts-188-basename",
+          "line": 190,
+          "anchor": "packages-foundation-modeling-utils-src-path-ts-190-basename",
           "currentTags": [
             "@category",
             "@since"
@@ -10254,8 +10043,8 @@
           "exportKind": "const",
           "filePath": "src/Path.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Path.ts",
-          "line": 207,
-          "anchor": "packages-foundation-modeling-utils-src-path-ts-207-dirname",
+          "line": 209,
+          "anchor": "packages-foundation-modeling-utils-src-path-ts-209-dirname",
           "currentTags": [
             "@category",
             "@since"
@@ -10276,8 +10065,8 @@
           "exportKind": "const",
           "filePath": "src/Path.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Path.ts",
-          "line": 223,
-          "anchor": "packages-foundation-modeling-utils-src-path-ts-223-extname",
+          "line": 225,
+          "anchor": "packages-foundation-modeling-utils-src-path-ts-225-extname",
           "currentTags": [
             "@category",
             "@since"
@@ -10298,8 +10087,8 @@
           "exportKind": "const",
           "filePath": "src/Path.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Path.ts",
-          "line": 239,
-          "anchor": "packages-foundation-modeling-utils-src-path-ts-239-isabsolute",
+          "line": 241,
+          "anchor": "packages-foundation-modeling-utils-src-path-ts-241-isabsolute",
           "currentTags": [
             "@category",
             "@since"
@@ -10320,8 +10109,8 @@
           "exportKind": "const",
           "filePath": "src/Path.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Path.ts",
-          "line": 255,
-          "anchor": "packages-foundation-modeling-utils-src-path-ts-255-parse",
+          "line": 257,
+          "anchor": "packages-foundation-modeling-utils-src-path-ts-257-parse",
           "currentTags": [
             "@category",
             "@since"
@@ -10342,8 +10131,8 @@
           "exportKind": "const",
           "filePath": "src/Path.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Path.ts",
-          "line": 271,
-          "anchor": "packages-foundation-modeling-utils-src-path-ts-271-format",
+          "line": 273,
+          "anchor": "packages-foundation-modeling-utils-src-path-ts-273-format",
           "currentTags": [
             "@category",
             "@since"
@@ -10364,8 +10153,8 @@
           "exportKind": "const",
           "filePath": "src/Path.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Path.ts",
-          "line": 287,
-          "anchor": "packages-foundation-modeling-utils-src-path-ts-287-tonamespacedpath",
+          "line": 289,
+          "anchor": "packages-foundation-modeling-utils-src-path-ts-289-tonamespacedpath",
           "currentTags": [
             "@category",
             "@since"
@@ -10418,18 +10207,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "hasInspectableObjectShape",
@@ -10446,18 +10229,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "hasProperties",
@@ -10669,8 +10446,8 @@
           "exportKind": "re-export",
           "filePath": "src/Str.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
-          "line": 846,
-          "anchor": "packages-foundation-modeling-utils-src-str-ts-846-export-from-effect-string",
+          "line": 847,
+          "anchor": "packages-foundation-modeling-utils-src-str-ts-847-export-from-effect-string",
           "currentTags": [
             "@category",
             "@since"
@@ -10679,18 +10456,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "equivalence",
@@ -10707,26 +10478,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "orderAsc",
           "exportKind": "const",
           "filePath": "src/Str.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
-          "line": 73,
-          "anchor": "packages-foundation-modeling-utils-src-str-ts-73-orderasc",
+          "line": 74,
+          "anchor": "packages-foundation-modeling-utils-src-str-ts-74-orderasc",
           "currentTags": [
             "@category",
             "@since"
@@ -10735,26 +10500,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "Prefixed",
           "exportKind": "type",
           "filePath": "src/Str.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
-          "line": 90,
-          "anchor": "packages-foundation-modeling-utils-src-str-ts-90-prefixed",
+          "line": 91,
+          "anchor": "packages-foundation-modeling-utils-src-str-ts-91-prefixed",
           "currentTags": [
             "@category",
             "@since"
@@ -10775,8 +10534,8 @@
           "exportKind": "const",
           "filePath": "src/Str.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
-          "line": 120,
-          "anchor": "packages-foundation-modeling-utils-src-str-ts-120-prefix",
+          "line": 121,
+          "anchor": "packages-foundation-modeling-utils-src-str-ts-121-prefix",
           "currentTags": [
             "@category",
             "@since"
@@ -10785,26 +10544,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "prefixThunk",
           "exportKind": "const",
           "filePath": "src/Str.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
-          "line": 161,
-          "anchor": "packages-foundation-modeling-utils-src-str-ts-161-prefixthunk",
+          "line": 162,
+          "anchor": "packages-foundation-modeling-utils-src-str-ts-162-prefixthunk",
           "currentTags": [
             "@category",
             "@since"
@@ -10813,26 +10566,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "Postfixed",
           "exportKind": "type",
           "filePath": "src/Str.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
-          "line": 184,
-          "anchor": "packages-foundation-modeling-utils-src-str-ts-184-postfixed",
+          "line": 185,
+          "anchor": "packages-foundation-modeling-utils-src-str-ts-185-postfixed",
           "currentTags": [
             "@category",
             "@since"
@@ -10853,8 +10600,8 @@
           "exportKind": "const",
           "filePath": "src/Str.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
-          "line": 214,
-          "anchor": "packages-foundation-modeling-utils-src-str-ts-214-postfix",
+          "line": 215,
+          "anchor": "packages-foundation-modeling-utils-src-str-ts-215-postfix",
           "currentTags": [
             "@category",
             "@since"
@@ -10863,26 +10610,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "postfixThunk",
           "exportKind": "const",
           "filePath": "src/Str.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
-          "line": 255,
-          "anchor": "packages-foundation-modeling-utils-src-str-ts-255-postfixthunk",
+          "line": 256,
+          "anchor": "packages-foundation-modeling-utils-src-str-ts-256-postfixthunk",
           "currentTags": [
             "@category",
             "@since"
@@ -10891,26 +10632,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "mapPrefix",
           "exportKind": "const",
           "filePath": "src/Str.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
-          "line": 296,
-          "anchor": "packages-foundation-modeling-utils-src-str-ts-296-mapprefix",
+          "line": 297,
+          "anchor": "packages-foundation-modeling-utils-src-str-ts-297-mapprefix",
           "currentTags": [
             "@category",
             "@since"
@@ -10919,26 +10654,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "mapPostfix",
           "exportKind": "const",
           "filePath": "src/Str.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
-          "line": 336,
-          "anchor": "packages-foundation-modeling-utils-src-str-ts-336-mappostfix",
+          "line": 337,
+          "anchor": "packages-foundation-modeling-utils-src-str-ts-337-mappostfix",
           "currentTags": [
             "@category",
             "@since"
@@ -10947,26 +10676,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "camelCase",
           "exportKind": "const",
           "filePath": "src/Str.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
-          "line": 362,
-          "anchor": "packages-foundation-modeling-utils-src-str-ts-362-camelcase",
+          "line": 363,
+          "anchor": "packages-foundation-modeling-utils-src-str-ts-363-camelcase",
           "currentTags": [
             "@category",
             "@since"
@@ -10975,26 +10698,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "snakeCase",
           "exportKind": "const",
           "filePath": "src/Str.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
-          "line": 380,
-          "anchor": "packages-foundation-modeling-utils-src-str-ts-380-snakecase",
+          "line": 381,
+          "anchor": "packages-foundation-modeling-utils-src-str-ts-381-snakecase",
           "currentTags": [
             "@category",
             "@since"
@@ -11003,26 +10720,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "kebabCase",
           "exportKind": "const",
           "filePath": "src/Str.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
-          "line": 398,
-          "anchor": "packages-foundation-modeling-utils-src-str-ts-398-kebabcase",
+          "line": 399,
+          "anchor": "packages-foundation-modeling-utils-src-str-ts-399-kebabcase",
           "currentTags": [
             "@category",
             "@since"
@@ -11031,26 +10742,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "screamingSnake",
           "exportKind": "const",
           "filePath": "src/Str.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
-          "line": 417,
-          "anchor": "packages-foundation-modeling-utils-src-str-ts-417-screamingsnake",
+          "line": 418,
+          "anchor": "packages-foundation-modeling-utils-src-str-ts-418-screamingsnake",
           "currentTags": [
             "@category",
             "@since"
@@ -11059,26 +10764,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "pascalCase",
           "exportKind": "const",
           "filePath": "src/Str.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
-          "line": 436,
-          "anchor": "packages-foundation-modeling-utils-src-str-ts-436-pascalcase",
+          "line": 437,
+          "anchor": "packages-foundation-modeling-utils-src-str-ts-437-pascalcase",
           "currentTags": [
             "@category",
             "@since"
@@ -11087,26 +10786,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "pascalToSnake",
           "exportKind": "const",
           "filePath": "src/Str.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
-          "line": 454,
-          "anchor": "packages-foundation-modeling-utils-src-str-ts-454-pascaltosnake",
+          "line": 455,
+          "anchor": "packages-foundation-modeling-utils-src-str-ts-455-pascaltosnake",
           "currentTags": [
             "@category",
             "@since"
@@ -11115,26 +10808,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "snakeToCamel",
           "exportKind": "const",
           "filePath": "src/Str.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
-          "line": 473,
-          "anchor": "packages-foundation-modeling-utils-src-str-ts-473-snaketocamel",
+          "line": 474,
+          "anchor": "packages-foundation-modeling-utils-src-str-ts-474-snaketocamel",
           "currentTags": [
             "@category",
             "@since"
@@ -11143,26 +10830,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "snakeToKebab",
           "exportKind": "const",
           "filePath": "src/Str.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
-          "line": 492,
-          "anchor": "packages-foundation-modeling-utils-src-str-ts-492-snaketokebab",
+          "line": 493,
+          "anchor": "packages-foundation-modeling-utils-src-str-ts-493-snaketokebab",
           "currentTags": [
             "@category",
             "@since"
@@ -11171,26 +10852,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "camelToSnake",
           "exportKind": "const",
           "filePath": "src/Str.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
-          "line": 511,
-          "anchor": "packages-foundation-modeling-utils-src-str-ts-511-cameltosnake",
+          "line": 512,
+          "anchor": "packages-foundation-modeling-utils-src-str-ts-512-cameltosnake",
           "currentTags": [
             "@category",
             "@since"
@@ -11199,26 +10874,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "snakeToPascal",
           "exportKind": "const",
           "filePath": "src/Str.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
-          "line": 530,
-          "anchor": "packages-foundation-modeling-utils-src-str-ts-530-snaketopascal",
+          "line": 531,
+          "anchor": "packages-foundation-modeling-utils-src-str-ts-531-snaketopascal",
           "currentTags": [
             "@category",
             "@since"
@@ -11227,26 +10896,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "kebabToSnake",
           "exportKind": "const",
           "filePath": "src/Str.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
-          "line": 549,
-          "anchor": "packages-foundation-modeling-utils-src-str-ts-549-kebabtosnake",
+          "line": 550,
+          "anchor": "packages-foundation-modeling-utils-src-str-ts-550-kebabtosnake",
           "currentTags": [
             "@category",
             "@since"
@@ -11255,26 +10918,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "startsWith",
           "exportKind": "const",
           "filePath": "src/Str.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
-          "line": 576,
-          "anchor": "packages-foundation-modeling-utils-src-str-ts-576-startswith",
+          "line": 577,
+          "anchor": "packages-foundation-modeling-utils-src-str-ts-577-startswith",
           "currentTags": [
             "@category",
             "@since"
@@ -11283,26 +10940,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "endsWith",
           "exportKind": "const",
           "filePath": "src/Str.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
-          "line": 616,
-          "anchor": "packages-foundation-modeling-utils-src-str-ts-616-endswith",
+          "line": 617,
+          "anchor": "packages-foundation-modeling-utils-src-str-ts-617-endswith",
           "currentTags": [
             "@category",
             "@since"
@@ -11311,26 +10962,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "contains",
           "exportKind": "const",
           "filePath": "src/Str.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
-          "line": 661,
-          "anchor": "packages-foundation-modeling-utils-src-str-ts-661-contains",
+          "line": 662,
+          "anchor": "packages-foundation-modeling-utils-src-str-ts-662-contains",
           "currentTags": [
             "@category",
             "@since"
@@ -11339,26 +10984,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "repeat",
           "exportKind": "const",
           "filePath": "src/Str.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
-          "line": 705,
-          "anchor": "packages-foundation-modeling-utils-src-str-ts-705-repeat",
+          "line": 706,
+          "anchor": "packages-foundation-modeling-utils-src-str-ts-706-repeat",
           "currentTags": [
             "@category",
             "@since"
@@ -11367,26 +11006,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "replaceWith",
           "exportKind": "const",
           "filePath": "src/Str.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
-          "line": 759,
-          "anchor": "packages-foundation-modeling-utils-src-str-ts-759-replacewith",
+          "line": 760,
+          "anchor": "packages-foundation-modeling-utils-src-str-ts-760-replacewith",
           "currentTags": [
             "@category",
             "@since"
@@ -11395,26 +11028,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "replaceAllWith",
           "exportKind": "const",
           "filePath": "src/Str.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
-          "line": 813,
-          "anchor": "packages-foundation-modeling-utils-src-str-ts-813-replaceallwith",
+          "line": 814,
+          "anchor": "packages-foundation-modeling-utils-src-str-ts-814-replaceallwith",
           "currentTags": [
             "@category",
             "@since"
@@ -11423,26 +11050,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "trimThunk",
           "exportKind": "const",
           "filePath": "src/Str.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
-          "line": 866,
-          "anchor": "packages-foundation-modeling-utils-src-str-ts-866-trimthunk",
+          "line": 867,
+          "anchor": "packages-foundation-modeling-utils-src-str-ts-867-trimthunk",
           "currentTags": [
             "@category",
             "@since"
@@ -11451,26 +11072,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "fromNumber",
           "exportKind": "const",
           "filePath": "src/Str.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
-          "line": 886,
-          "anchor": "packages-foundation-modeling-utils-src-str-ts-886-fromnumber",
+          "line": 887,
+          "anchor": "packages-foundation-modeling-utils-src-str-ts-887-fromnumber",
           "currentTags": [
             "@category",
             "@since",
@@ -11482,26 +11097,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "toSlug",
           "exportKind": "const",
           "filePath": "src/Str.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
-          "line": 903,
-          "anchor": "packages-foundation-modeling-utils-src-str-ts-903-toslug",
+          "line": 904,
+          "anchor": "packages-foundation-modeling-utils-src-str-ts-904-toslug",
           "currentTags": [
             "@category",
             "@since"
@@ -11510,26 +11119,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "truncate",
           "exportKind": "const",
           "filePath": "src/Str.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
-          "line": 941,
-          "anchor": "packages-foundation-modeling-utils-src-str-ts-941-truncate",
+          "line": 942,
+          "anchor": "packages-foundation-modeling-utils-src-str-ts-942-truncate",
           "currentTags": [
             "@param",
             "@returns",
@@ -11540,26 +11143,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "orEmpty",
           "exportKind": "const",
           "filePath": "src/Str.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
-          "line": 967,
-          "anchor": "packages-foundation-modeling-utils-src-str-ts-967-orempty",
+          "line": 968,
+          "anchor": "packages-foundation-modeling-utils-src-str-ts-968-orempty",
           "currentTags": [
             "@category",
             "@param",
@@ -11569,26 +11166,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "MatchEmptyResult",
           "exportKind": "type",
           "filePath": "src/Str.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
-          "line": 975,
-          "anchor": "packages-foundation-modeling-utils-src-str-ts-975-matchemptyresult",
+          "line": 976,
+          "anchor": "packages-foundation-modeling-utils-src-str-ts-976-matchemptyresult",
           "currentTags": [
             "@category",
             "@since"
@@ -11609,8 +11200,8 @@
           "exportKind": "const",
           "filePath": "src/Str.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Str.ts",
-          "line": 1015,
-          "anchor": "packages-foundation-modeling-utils-src-str-ts-1015-matchempty",
+          "line": 1016,
+          "anchor": "packages-foundation-modeling-utils-src-str-ts-1016-matchempty",
           "currentTags": [
             "@category",
             "@since"
@@ -11619,18 +11210,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "streamFilterJson",
@@ -11759,18 +11344,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "dotGetOption",
@@ -11787,18 +11366,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "MapPathResult",
@@ -11837,18 +11410,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "mapPathLazy",
@@ -11865,18 +11432,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "getLazy",
@@ -11893,18 +11454,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "pathsOf",
@@ -11921,18 +11476,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "StringKeyEntry",
@@ -12015,18 +11564,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "keys",
@@ -12043,18 +11586,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "keysNonEmpty",
@@ -12071,18 +11608,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "fromEntries",
@@ -12099,18 +11630,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "ReverseableStruct",
@@ -12171,18 +11696,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "DeepPartial",
@@ -12244,18 +11763,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "UnstubbedMemberError",
@@ -12492,18 +12005,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "formatNameWithAliases",
@@ -12520,18 +12027,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "joinLines",
@@ -12548,18 +12049,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "lineCharacterAt",
@@ -12688,18 +12183,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * as Bool from \"./Bool.ts\";",
@@ -12716,18 +12205,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * as Data from \"./Data.ts\";",
@@ -12744,18 +12227,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * as DateTime from \"./DateTime.ts\";",
@@ -12772,18 +12249,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * from \"./DrainableWorker.ts\";",
@@ -12822,18 +12293,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * as Err from \"./Errors.ts\";",
@@ -12850,18 +12315,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * as FileSystem from \"./FileSystem.ts\";",
@@ -12878,18 +12337,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * from \"./GlobalValue.ts\";",
@@ -12928,18 +12381,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * as Html from \"./Html.ts\";",
@@ -12956,18 +12403,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * as N from \"./Number.ts\";",
@@ -12984,18 +12425,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * as O from \"./Option.ts\";",
@@ -13012,18 +12447,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * as Path from \"./Path.ts\";",
@@ -13040,18 +12469,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * as P from \"./Predicate.ts\";",
@@ -13068,18 +12491,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * from \"./Random.ts\";",
@@ -13096,18 +12513,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * as R from \"./Record.ts\";",
@@ -13124,18 +12535,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * as Str from \"./Str.ts\";",
@@ -13152,18 +12557,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * as Stream from \"./Stream.ts\";",
@@ -13180,18 +12579,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * as Struct from \"./Struct.ts\";",
@@ -13208,18 +12601,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * as Text from \"./Text.ts\";",
@@ -13236,18 +12623,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * from \"./thunk.ts\";",
@@ -13264,18 +12645,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * as Utils from \"./Utils.ts\";",
@@ -13682,8 +13057,8 @@
           "exportKind": "const",
           "filePath": "src/thunk.ts",
           "repoPath": "packages/foundation/modeling/utils/src/thunk.ts",
-          "line": 367,
-          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-367-thunkemptyreadonlyrecord",
+          "line": 369,
+          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-369-thunkemptyreadonlyrecord",
           "currentTags": [
             "@category",
             "@since"
@@ -13692,26 +13067,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "thunkSome",
           "exportKind": "const",
           "filePath": "src/thunk.ts",
           "repoPath": "packages/foundation/modeling/utils/src/thunk.ts",
-          "line": 390,
-          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-390-thunksome",
+          "line": 392,
+          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-392-thunksome",
           "currentTags": [
             "@category",
             "@since"
@@ -13732,8 +13101,8 @@
           "exportKind": "const",
           "filePath": "src/thunk.ts",
           "repoPath": "packages/foundation/modeling/utils/src/thunk.ts",
-          "line": 412,
-          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-412-thunksomeemptystr",
+          "line": 414,
+          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-414-thunksomeemptystr",
           "currentTags": [
             "@category",
             "@since"
@@ -13754,8 +13123,8 @@
           "exportKind": "const",
           "filePath": "src/thunk.ts",
           "repoPath": "packages/foundation/modeling/utils/src/thunk.ts",
-          "line": 431,
-          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-431-thunknegative1",
+          "line": 433,
+          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-433-thunknegative1",
           "currentTags": [
             "@category",
             "@since"
@@ -13776,8 +13145,8 @@
           "exportKind": "const",
           "filePath": "src/thunk.ts",
           "repoPath": "packages/foundation/modeling/utils/src/thunk.ts",
-          "line": 450,
-          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-450-thunksomefalse",
+          "line": 452,
+          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-452-thunksomefalse",
           "currentTags": [
             "@category",
             "@since"
@@ -13798,8 +13167,8 @@
           "exportKind": "const",
           "filePath": "src/thunk.ts",
           "repoPath": "packages/foundation/modeling/utils/src/thunk.ts",
-          "line": 469,
-          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-469-thunksometrue",
+          "line": 471,
+          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-471-thunksometrue",
           "currentTags": [
             "@category",
             "@since"
@@ -13820,8 +13189,8 @@
           "exportKind": "const",
           "filePath": "src/thunk.ts",
           "repoPath": "packages/foundation/modeling/utils/src/thunk.ts",
-          "line": 488,
-          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-488-thunksomeemptyarray",
+          "line": 490,
+          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-490-thunksomeemptyarray",
           "currentTags": [
             "@category",
             "@since"
@@ -13842,8 +13211,8 @@
           "exportKind": "const",
           "filePath": "src/thunk.ts",
           "repoPath": "packages/foundation/modeling/utils/src/thunk.ts",
-          "line": 507,
-          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-507-thunksomeemptyrecord",
+          "line": 509,
+          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-509-thunksomeemptyrecord",
           "currentTags": [
             "@category",
             "@since"
@@ -13864,8 +13233,8 @@
           "exportKind": "const",
           "filePath": "src/thunk.ts",
           "repoPath": "packages/foundation/modeling/utils/src/thunk.ts",
-          "line": 531,
-          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-531-thunksomenone",
+          "line": 533,
+          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-533-thunksomenone",
           "currentTags": [
             "@category",
             "@since"
@@ -13886,8 +13255,8 @@
           "exportKind": "const",
           "filePath": "src/thunk.ts",
           "repoPath": "packages/foundation/modeling/utils/src/thunk.ts",
-          "line": 555,
-          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-555-thunkresultfailvoid",
+          "line": 557,
+          "anchor": "packages-foundation-modeling-utils-src-thunk-ts-557-thunkresultfailvoid",
           "currentTags": [
             "@category",
             "@since"
@@ -478946,8 +478315,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiCoverage.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiCoverage.ts",
-          "line": 688,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cicoverage-ts-688-cicoveragetestargs",
+          "line": 691,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cicoverage-ts-691-cicoveragetestargs",
           "currentTags": [
             "@category",
             "@since"

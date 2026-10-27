@@ -11,7 +11,7 @@
  * **Example** (Compare values with equals)
  *
  * ```ts import.meta.vitest name="Compare values with equals"
- * import {Eq} from "@beep/utils"
+ * import * as Eq from "@beep/utils/Equal"
  *
  * Eq.equals(1, 1) // => true
  * ```
