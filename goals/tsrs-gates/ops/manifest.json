@@ -1,0 +1,84 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "tsrs-gates",
+    "packetId": "goal-packet/v1:8def0fc5ca1b445253b7b599a2ba8bed0015db34b5856707f6de96d68f81779e",
+    "title": "Run the typecheck and build gates on the Effect-patched tsrs",
+    "status": "active",
+    "created": "2026-10-27",
+    "updated": "2026-10-27",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/tsrs-gates",
+  "lifecycle": "active",
+  "mission": "Replace tsc-rs with the Effect-patched tsrs that @effect/tsgo 0.59.0 ships, so one compiler gates TypeScript errors and every Effect rule, and the standalone Effect Diagnostics lane can fold into Check.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/tsrs-gates/README.md",
+    "goals/tsrs-gates/SPEC.md",
+    "goals/tsrs-gates/PLAN.md",
+    "goals/tsrs-gates/GOAL.md",
+    "goals/tsrs-gates/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/tsrs-gates/GOAL.md"
+    }
+  ],
+  "provides": [],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "complete"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "in-progress"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/tsrs-gates/GOAL.md)\" -le 4000",
+    "jq . goals/tsrs-gates/ops/manifest.json",
+    "rg -n \"tsrs-gates|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/tsrs-gates",
+    "git diff --check -- goals/tsrs-gates",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

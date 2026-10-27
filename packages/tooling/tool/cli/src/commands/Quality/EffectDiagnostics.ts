@@ -59,7 +59,8 @@ class EffectDiagnosticsProfile extends S.Opaque<EffectDiagnosticsProfile, { read
     }),
   }).pipe(
     $I.annoteSchema("EffectDiagnosticsProfile", {
-      description: "The eleven rules absent from tsc-rs 0.8.0, configured for the standalone @effect/tsgo lane.",
+      description:
+        "The eleven rules armed only in the standalone @effect/tsgo lane until they fold into the root compiler map.",
     })
   )
 ) {}
@@ -248,7 +249,7 @@ const checkCommands = (scripts: Readonly<Record<string, string>>, root: boolean)
   return pipe(
     commands,
     A.map(Str.trim),
-    A.filter((command) => O.isSome(Str.match(/^(?:tsc-rs|tsgo)\s/u)(command)))
+    A.filter((command) => O.isSome(Str.match(/^(?:tsrs|tsgo)\s/u)(command)))
   );
 };
 

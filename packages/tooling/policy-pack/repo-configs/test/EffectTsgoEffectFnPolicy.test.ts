@@ -21,16 +21,17 @@ import * as jsonc from "jsonc-parser";
 const repoRoot = NodeURL.fileURLToPath(new URL("../../../../..", import.meta.url));
 const tscBinPath = NodeURL.fileURLToPath(new URL("../../../../../node_modules/.bin/tsc", import.meta.url));
 const tsgoBinPath = NodeURL.fileURLToPath(new URL("../../../../../node_modules/.bin/tsgo", import.meta.url));
-const tscRsBinPath = NodeURL.fileURLToPath(new URL("../../../../../node_modules/.bin/tsc-rs", import.meta.url));
+const tsrsBinPath = NodeURL.fileURLToPath(new URL("../../../../../node_modules/.bin/tsrs", import.meta.url));
 const rootManifestPath = NodeURL.fileURLToPath(new URL("../../../../../package.json", import.meta.url));
 const effectTsgoCliPath = NodeURL.fileURLToPath(
   new URL("../../../../../node_modules/@effect/tsgo/dist/effect-tsgo.cjs", import.meta.url)
 );
 
-// tsc-rs reports Effect rules but gates TypeScript errors only; the standalone diagnostics lane gates the rules.
-// Its embedded Effect port may lag the independently reviewed editor/rule compiler.
+// tsrs reports Effect rules but gates TypeScript errors only while the three ignore flags are true;
+// the standalone diagnostics lane gates the rules. Its Effect build ships inside @effect/tsgo, so the
+// two catalog pins move together: @effect/tsgo packages one patched build per tsrs version it supports.
 const RootCatalog = S.Struct({
-  catalog: S.Struct({ "tsc-rs": S.String, "@effect/tsgo": S.String }),
+  catalog: S.Struct({ tsrs: S.String, "@effect/tsgo": S.String }),
 });
 const decodeRootCatalog = flow(S.decodeUnknownResult(S.fromJsonString(RootCatalog)), Result.getOrThrow);
 
@@ -183,20 +184,22 @@ it.layer(TestLayer, { timeout: "10 seconds" })((it) => {
         expect(typescript.version, "TypeScript API version").toMatch(/^7\./u);
       })
     );
-    it.effect("keeps the typecheck compiler independent of the Effect diagnostics version", () =>
+    it.effect("runs the typecheck compiler as the Effect-patched tsrs of the pinned @effect/tsgo", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        const tscRs = yield* runCommand(process.execPath, [tscRsBinPath, "--version"], repoRoot);
-        const context = `tsc-rs --version: stdout=${Str.takeLeft(tscRs.stdout, 2048)}; stderr=${Str.takeLeft(tscRs.stderr, 2048)}`;
+        const tscRs = yield* runCommand(process.execPath, [tsrsBinPath, "--version"], repoRoot);
+        const context = `tsrs --version: stdout=${Str.takeLeft(tscRs.stdout, 2048)}; stderr=${Str.takeLeft(tscRs.stderr, 2048)}`;
         expect(tscRs.exitCode, context).toBe(0);
-        // tsc-rs pins its own upstream TypeScript (7.1.0-dev.20261008.1 as of 0.8.0) and does not
-        // carry the +effect-tsgo build suffix; the Effect rules are compiled in.
-        expect(tscRs.stdout, context).toMatch(/^Version 7\.1\.0-dev/u);
-        expect(tscRs.stdout, context).not.toContain("+effect-tsgo");
         const { catalog } = decodeRootCatalog(yield* fs.readFileString(rootManifestPath));
-        // `deps:update` moves tsc-rs to the latest release, so only require an exact pin.
-        expect(catalog["tsc-rs"]).toMatch(/^\d+\.\d+\.\d+$/u);
-        expect(catalog["@effect/tsgo"]).toBe("0.55.0");
+        // tsrs pins its own upstream TypeScript (7.1.0-beta as of 0.20.0, the version tag names it) and
+        // `effect-tsgo patch --tsrs` replaces its binary with the Effect build of that exact tsrs
+        // version, so the reported build carries the @effect/tsgo suffix and the installed tsrs version.
+        expect(catalog.tsrs).toMatch(/^\d+\.\d+\.\d+-ts7\.\d+\.\d+(?:-[0-9A-Za-z.]+)?$/u);
+        expect(catalog["@effect/tsgo"]).toBe("0.59.0");
+        expect(tscRs.stdout, context).toMatch(
+          /^Version 7\.1\.0-beta\+effect-tsgo\.0\.59\.0 \(tsrs 0\.20\.0-ts7\.1\.0-beta,/u
+        );
+        expect(tscRs.stdout, context).toContain(`+effect-tsgo.${catalog["@effect/tsgo"]} (tsrs ${catalog.tsrs},`);
       })
     );
   });
@@ -228,7 +231,7 @@ it.layer(TestLayer, { timeout: "10 seconds" })((it) => {
       15_000
     );
   });
-  it.effect("keeps the root map compatible with the embedded 0.51.1 rules", () =>
+  it.effect("keeps the root map free of rule names the Effect-patched tsrs does not know", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -237,20 +240,20 @@ it.layer(TestLayer, { timeout: "10 seconds" })((it) => {
       yield* writeProjectFile(projectDir, "src/index.ts", "export const value = 1;\n");
       const result = yield* runCommand(
         process.execPath,
-        [tscRsBinPath, "--noEmit", "--pretty", "false", "-p", path.join(projectDir, "tsconfig.json")],
+        [tsrsBinPath, "--noEmit", "--pretty", "false", "-p", path.join(projectDir, "tsconfig.json")],
         projectDir
       );
       expect(result.exitCode, `${result.stdout}\n${result.stderr}`).toBe(0);
       expect(`${result.stdout}\n${result.stderr}`).not.toContain("unknownRuleName");
     })
   );
-  it.effect("leaves Effect rules to the diagnostics lane while TypeScript failures gate tsc-rs", () =>
+  it.effect("leaves Effect rules to the diagnostics lane while TypeScript failures gate tsrs", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const projectDir = yield* fs.makeTempDirectoryScoped({ prefix: "effect-tsgo-type-errors-" });
       yield* bootstrapTsgoProject(projectDir);
-      const args = [tscRsBinPath, "--noEmit", "--pretty", "false", "-p", path.join(projectDir, "tsconfig.json")];
+      const args = [tsrsBinPath, "--noEmit", "--pretty", "false", "-p", path.join(projectDir, "tsconfig.json")];
       const effectOnly = yield* runCommand(process.execPath, args, projectDir);
       expect(effectOnly.exitCode, effectOnly.stdout).toBe(0);
       expect(effectOnly.stdout).toContain("effect(effectFnOpportunity)");
