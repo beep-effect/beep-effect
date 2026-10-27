@@ -1,9 +1,9 @@
+import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { runTestTsgoChecksAt, testTsgoPlanningForTesting } from "@beep/repo-cli/test/Quality";
 import { checkScriptTestTypecheckCoverage, expandWorkspaceFiles } from "@beep/repo-cli/test/SharedInternals";
 import { it } from "@beep/test-runner";
 import { A, Str } from "@beep/utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
@@ -16,7 +16,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 
-const FileSystemLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
+const FileSystemLayer = Layer.mergeAll(MemoryFileSystem.layer, NodePath.layer);
 const PlatformLayer = Layer.mergeAll(BunCrypto.layer, FileSystemLayer, TestConsole.layer);
 
 const isString = (value: unknown): value is string => typeof value === "string";
