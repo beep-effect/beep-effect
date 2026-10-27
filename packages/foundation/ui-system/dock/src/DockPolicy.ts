@@ -29,8 +29,11 @@ import type { DockWorkspace as DockWorkspaceType } from "./Dock.tree.ts";
  * **Example** (Always-allow command policy)
  *
  * ```ts
- * import { ApiCommandOrigin, ClearWorkspaceCommand, CommandId, DockCommandEnvelope, GroupId, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView } from "@beep/dock"
- * import type { DockCommandPolicy } from "@beep/dock"
+ * import { ApiCommandOrigin, ClearWorkspaceCommand, DockCommandEnvelope } from "@beep/dock/Dock.commands"
+ * import { CommandId, GroupId, PanelId } from "@beep/dock/Dock.ids"
+ * import { Panel, TextPanelView } from "@beep/dock/Dock.models"
+ * import { PopulatedWorkspace, TabsNode } from "@beep/dock/Dock.tree"
+ * import type { DockCommandPolicy } from "@beep/dock/DockPolicy"
  * import * as Effect from "effect/Effect";
  * const allow: DockCommandPolicy = () => Effect.void
  * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) })
@@ -102,7 +105,12 @@ const rejectNoDropReference = (
  * **Example** (Reject open on locked group)
  *
  * ```ts
- * import { ApiCommandOrigin, CommandId, DockCommandEnvelope, GroupId, GroupMetadata, OpenPanelCommand, Panel, PanelId, PopulatedWorkspace, TabPlacement, TabsNode, TextPanelView, lockedGroupsPolicy } from "@beep/dock"
+ * import { ApiCommandOrigin, DockCommandEnvelope, OpenPanelCommand } from "@beep/dock/Dock.commands"
+ * import { CommandId, GroupId, PanelId } from "@beep/dock/Dock.ids"
+ * import { GroupMetadata, Panel, TextPanelView } from "@beep/dock/Dock.models"
+ * import { PopulatedWorkspace, TabsNode } from "@beep/dock/Dock.tree"
+ * import { TabPlacement } from "@beep/dock/Dock.placement"
+ * import { lockedGroupsPolicy } from "@beep/dock/DockPolicy"
  * import * as Effect from "effect/Effect";
  * const groupId = GroupId.make("group-one")
  * const openPanel = (id: string) => Panel.make({ id: PanelId.make(id), title: id, view: TextPanelView.make({ text: id }) })
@@ -179,7 +187,13 @@ export const lockedGroupsPolicy: DualDockCommandPolicy = dual(
  * **Example** (Policy-wrapped engine rejection)
  *
  * ```ts
- * import { ApiCommandOrigin, CommandId, DockCommandEnvelope, DockEngine, GroupId, GroupMetadata, OpenPanelCommand, Panel, PanelId, PopulatedWorkspace, TabPlacement, TabsNode, TextPanelView, lockedGroupsPolicy, makePolicyDockEngineLayer } from "@beep/dock"
+ * import { ApiCommandOrigin, DockCommandEnvelope, OpenPanelCommand } from "@beep/dock/Dock.commands"
+ * import { CommandId, GroupId, PanelId } from "@beep/dock/Dock.ids"
+ * import { DockEngine } from "@beep/dock/DockEngine.service"
+ * import { GroupMetadata, Panel, TextPanelView } from "@beep/dock/Dock.models"
+ * import { PopulatedWorkspace, TabsNode } from "@beep/dock/Dock.tree"
+ * import { TabPlacement } from "@beep/dock/Dock.placement"
+ * import { lockedGroupsPolicy, makePolicyDockEngineLayer } from "@beep/dock/DockPolicy"
  * import * as Effect from "effect/Effect";
  * const groupId = GroupId.make("group-one")
  * const openPanel = (id: string) => Panel.make({ id: PanelId.make(id), title: id, view: TextPanelView.make({ text: id }) })

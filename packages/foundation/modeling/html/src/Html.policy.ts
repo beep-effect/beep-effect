@@ -89,20 +89,21 @@ export const SafeHtmlAttributes = readonlyStruct({
  * ```ts import.meta.vitest name="Make empty attributes object"
  * import { SafeHtmlAttributesStruct } from "@beep/html/Html.policy"
  *
+ * import * as S from "effect/Schema"
+ *
  * const attributes = SafeHtmlAttributesStruct.make({})
- * attributes instanceof SafeHtmlAttributesStruct // => true
+ * S.is(SafeHtmlAttributesStruct)(attributes) // => true
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export class SafeHtmlAttributesStruct extends S.Class<SafeHtmlAttributesStruct, { readonly brand: unique symbol }>(
-  $I`SafeHtmlAttributesStruct`
-)(
-  SafeHtmlAttributes,
-  $I.annote("SafeHtmlAttributesStruct", {
-    description: "Global HTML attributes accepted by the conservative safe-output policy.",
-  })
+export class SafeHtmlAttributesStruct extends S.Opaque<SafeHtmlAttributesStruct, { readonly brand: unique symbol }>()(
+  S.Struct(SafeHtmlAttributes).pipe(
+    $I.annoteSchema("SafeHtmlAttributesStruct", {
+      description: "Global HTML attributes accepted by the conservative safe-output policy.",
+    })
+  )
 ) {}
 
 /**

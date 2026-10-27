@@ -26,7 +26,9 @@ const $I = $DockId.create("Dock.protocol");
  * **Example** (Make dispatch dock command)
  *
  * ```ts
- * import { ApiCommandOrigin, ClearWorkspaceCommand, CommandId, DispatchDockCommand, DockCommandEnvelope } from "@beep/dock"
+ * import { ApiCommandOrigin, ClearWorkspaceCommand, DockCommandEnvelope } from "@beep/dock/Dock.commands"
+ * import { CommandId } from "@beep/dock/Dock.ids"
+ * import { DispatchDockCommand } from "@beep/dock/Dock.protocol"
  *
  * const value = DispatchDockCommand.make({ envelope: DockCommandEnvelope.make({ commandId: CommandId.make("command-clear"), origin: ApiCommandOrigin.make({ requestId: "request-one" }), command: ClearWorkspaceCommand.make({}) }) })
  * console.log(value.kind)
@@ -52,7 +54,7 @@ export class DispatchDockCommand extends S.Opaque<DispatchDockCommand, { readonl
  * **Example** (Make unknown command dispatch)
  *
  * ```ts
- * import { DispatchUnknownDockCommand } from "@beep/dock"
+ * import { DispatchUnknownDockCommand } from "@beep/dock/Dock.protocol"
  *
  * const value = DispatchUnknownDockCommand.make({ input: { commandId: "command-clear" } })
  * console.log(value.kind)
@@ -81,7 +83,7 @@ export class DispatchUnknownDockCommand extends S.Opaque<
  * **Example** (Make save snapshot operation)
  *
  * ```ts
- * import { SaveDockSnapshot } from "@beep/dock"
+ * import { SaveDockSnapshot } from "@beep/dock/Dock.protocol"
  *
  * const value = SaveDockSnapshot.make({})
  * console.log(value.kind)
@@ -106,7 +108,9 @@ export class SaveDockSnapshot extends S.Opaque<SaveDockSnapshot, { readonly bran
  * **Example** (Make restore snapshot operation)
  *
  * ```ts
- * import { ApiCommandOrigin, CommandId, RestoreDockSnapshot, RestoreSnapshotRequest } from "@beep/dock"
+ * import { ApiCommandOrigin, RestoreSnapshotRequest } from "@beep/dock/Dock.commands"
+ * import { CommandId } from "@beep/dock/Dock.ids"
+ * import { RestoreDockSnapshot } from "@beep/dock/Dock.protocol"
  *
  * const value = RestoreDockSnapshot.make({ request: RestoreSnapshotRequest.make({ commandId: CommandId.make("command-restore"), origin: ApiCommandOrigin.make({ requestId: "request-one" }) }) })
  * console.log(value.kind)
@@ -132,7 +136,7 @@ export class RestoreDockSnapshot extends S.Opaque<RestoreDockSnapshot, { readonl
  * **Example** (Read operation kind field)
  *
  * ```ts
- * import { DockAtomOperation, SaveDockSnapshot } from "@beep/dock"
+ * import { DockAtomOperation, SaveDockSnapshot } from "@beep/dock/Dock.protocol"
  *
  * const value = SaveDockSnapshot.make({})
  * console.log(value.kind)
@@ -157,7 +161,7 @@ export const DockAtomOperationKind = LiteralKit([
  * **Example** (Make operation kind value)
  *
  * ```ts
- * import { DockAtomOperationKind } from "@beep/dock"
+ * import { DockAtomOperationKind } from "@beep/dock/Dock.protocol"
  *
  * const value: DockAtomOperationKind = DockAtomOperationKind.make("saveSnapshot")
  * console.log(value)
@@ -174,7 +178,7 @@ export type DockAtomOperationKind = typeof DockAtomOperationKind.Type;
  * **Example** (Wrap save snapshot operation)
  *
  * ```ts
- * import { DockAtomOperation, SaveDockSnapshot } from "@beep/dock"
+ * import { DockAtomOperation, SaveDockSnapshot } from "@beep/dock/Dock.protocol"
  *
  * const value = DockAtomOperation.make(SaveDockSnapshot.make({}))
  * console.log(value.kind)
@@ -202,7 +206,7 @@ export const DockAtomOperation = DockAtomOperationKind.mapMembers(
  * **Example** (Assign save snapshot type)
  *
  * ```ts
- * import { DockAtomOperation, SaveDockSnapshot } from "@beep/dock"
+ * import { DockAtomOperation, SaveDockSnapshot } from "@beep/dock/Dock.protocol"
  *
  * const value: DockAtomOperation = SaveDockSnapshot.make({})
  * console.log(value.kind)
@@ -220,7 +224,10 @@ export type DockAtomOperation = typeof DockAtomOperation.Type;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { ApiCommandOrigin, CommandId, DockMutationCompleted, DockMutationOutcome, DockUnchanged } from "@beep/dock"
+ * import { ApiCommandOrigin } from "@beep/dock/Dock.commands"
+ * import { CommandId } from "@beep/dock/Dock.ids"
+ * import { DockMutationCompleted } from "@beep/dock/Dock.protocol"
+ * import { DockMutationOutcome, DockUnchanged } from "@beep/dock/Dock.outcomes"
  *
  * const value = DockMutationCompleted.make({ outcome: DockMutationOutcome.make({ commandId: CommandId.make("command-activate"), origin: ApiCommandOrigin.make({ requestId: "request-one" }), result: DockUnchanged.make({ revision: S.Natural.make(2), reason: "panel-already-active" }) }) })
  * console.log(value.kind)
@@ -246,7 +253,7 @@ export class DockMutationCompleted extends S.Opaque<DockMutationCompleted, { rea
  * **Example** (Make snapshot saved result)
  *
  * ```ts
- * import { DockSnapshotSaved } from "@beep/dock"
+ * import { DockSnapshotSaved } from "@beep/dock/Dock.protocol"
  *
  * const value = DockSnapshotSaved.make({ snapshot: "{\"version\":1}" })
  * console.log(value.kind)
@@ -274,7 +281,7 @@ const DockAtomOperationOutcomeKind = LiteralKit(["mutationCompleted", "snapshotS
  * **Example** (Use snapshot saved outcome)
  *
  * ```ts
- * import { DockAtomOperationOutcome, DockSnapshotSaved } from "@beep/dock"
+ * import { DockAtomOperationOutcome, DockSnapshotSaved } from "@beep/dock/Dock.protocol"
  *
  * const value = DockSnapshotSaved.make({ snapshot: "{\"version\":1}" })
  * console.log(value.kind)
@@ -297,7 +304,7 @@ export const DockAtomOperationOutcome = DockAtomOperationOutcomeKind.mapMembers(
  * **Example** (Type snapshot saved outcome)
  *
  * ```ts
- * import { DockAtomOperationOutcome, DockSnapshotSaved } from "@beep/dock"
+ * import { DockAtomOperationOutcome, DockSnapshotSaved } from "@beep/dock/Dock.protocol"
  *
  * const value: DockAtomOperationOutcome = DockSnapshotSaved.make({ snapshot: "{\"version\":1}" })
  * console.log(value.kind)
@@ -314,7 +321,8 @@ export type DockAtomOperationOutcome = typeof DockAtomOperationOutcome.Type;
  * **Example** (Make snapshot missing error)
  *
  * ```ts
- * import { DockAtomSessionError, DockSnapshotMissing } from "@beep/dock"
+ * import { DockAtomSessionError } from "@beep/dock/Dock.protocol"
+ * import { DockSnapshotMissing } from "@beep/dock/Dock.errors"
  *
  * const value = DockSnapshotMissing.make({ message: "No snapshot exists" })
  * console.log(value)
@@ -341,7 +349,8 @@ export const DockAtomSessionError = S.Union([
  * **Example** (Type snapshot missing error)
  *
  * ```ts
- * import { DockAtomSessionError, DockSnapshotMissing } from "@beep/dock"
+ * import { DockAtomSessionError } from "@beep/dock/Dock.protocol"
+ * import { DockSnapshotMissing } from "@beep/dock/Dock.errors"
  *
  * const value: DockAtomSessionError = DockSnapshotMissing.make({ message: "No snapshot exists" })
  * console.log(value)
@@ -359,7 +368,7 @@ export type DockAtomSessionError = typeof DockAtomSessionError.Type;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { DockAtomFeedSuccess, DockSnapshotSaved } from "@beep/dock"
+ * import { DockAtomFeedSuccess, DockSnapshotSaved } from "@beep/dock/Dock.protocol"
  *
  * const value = DockAtomFeedSuccess.make({ submission: S.Natural.make(1), operationKind: "saveSnapshot", outcome: DockSnapshotSaved.make({ snapshot: "{\"version\":1}" }) })
  * console.log(value)
@@ -387,7 +396,8 @@ export class DockAtomFeedSuccess extends S.Opaque<DockAtomFeedSuccess, { readonl
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { DockAtomFeedFailure, DockSnapshotMissing } from "@beep/dock"
+ * import { DockAtomFeedFailure } from "@beep/dock/Dock.protocol"
+ * import { DockSnapshotMissing } from "@beep/dock/Dock.errors"
  *
  * const value = DockAtomFeedFailure.make({ submission: S.Natural.make(1), operationKind: "restoreSnapshot", error: DockSnapshotMissing.make({ message: "No snapshot exists" }) })
  * console.log(value)
@@ -415,7 +425,8 @@ export class DockAtomFeedFailure extends S.Opaque<DockAtomFeedFailure, { readonl
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { DockAtomFeedEntry, DockSnapshotMissing, DockAtomFeedFailure } from "@beep/dock"
+ * import { DockAtomFeedEntry, DockAtomFeedFailure } from "@beep/dock/Dock.protocol"
+ * import { DockSnapshotMissing } from "@beep/dock/Dock.errors"
  *
  * const value = DockAtomFeedFailure.make({ submission: S.Natural.make(1), operationKind: "restoreSnapshot", error: DockSnapshotMissing.make({ message: "No snapshot exists" }) })
  * console.log(value)
@@ -437,7 +448,8 @@ export const DockAtomFeedEntry = S.Union([DockAtomFeedSuccess, DockAtomFeedFailu
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { DockAtomFeedEntry, DockSnapshotMissing, DockAtomFeedFailure } from "@beep/dock"
+ * import { DockAtomFeedEntry, DockAtomFeedFailure } from "@beep/dock/Dock.protocol"
+ * import { DockSnapshotMissing } from "@beep/dock/Dock.errors"
  *
  * const value: DockAtomFeedEntry = DockAtomFeedFailure.make({ submission: S.Natural.make(1), operationKind: "restoreSnapshot", error: DockSnapshotMissing.make({ message: "No snapshot exists" }) })
  * console.log(value)
