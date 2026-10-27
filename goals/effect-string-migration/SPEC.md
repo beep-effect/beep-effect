@@ -30,7 +30,7 @@ Higher sources outrank lower sources when they conflict.
 - Native `String.prototype` calls in workspace source and tests
   (`research/census-2026-10-21.md`).
 - `package.json` catalog `@effect/tsgo` (0.54.1 → the 0.55+ release in hand).
-- `standards/effect-diagnostics.profile.json` and `EffectDiagnosticsProfile`
+- the standards/effect-diagnostics.profile.json profile (retired by goals/tsrs-gates) and `EffectDiagnosticsProfile`
   in `packages/tooling/tool/cli/src/commands/Quality/EffectDiagnostics.ts`.
 - `docs/runbooks/typescript-toolchain.md` and the `syncpack.config.ts` pin note.
 
@@ -47,7 +47,7 @@ Higher sources outrank lower sources when they conflict.
 
 - [ ] `@effect/tsgo` is at 0.55 or later and `preferEffectString` is `error`
       in the standalone profile.
-- [ ] `bun run beep quality effect-diagnostics` reports zero findings across
+- [ ] the retired quality effect-diagnostics command reports zero findings across
       every program, and `bun run beep quality tsgo-rules` passes.
 - [ ] The declared-off ledger is unchanged (5 rules).
 - [ ] No unrelated refactors or formatting churn.

@@ -52,7 +52,7 @@ PR 1 (#2260, ready, final a36dfffa74) swapped the gates; hosted Heavy / Check 3m
   from 2026-10-14.
 - The packaged tsrs build exists for linux-x64, linux-arm64 and darwin-arm64;
   `prepare` fails on win32 and darwin-x64 until upstream ships those.
-- PR 2 folds `standards/effect-diagnostics.profile.json` into
+- PR 2 folds the standards/effect-diagnostics.profile.json profile (retired by goals/tsrs-gates) into
   `tsconfig.base.json` and the copied profiles, flips the three
   `ignoreEffect*InTscExitCode` flags to false, and deletes the standalone lane
   (CLI command, CI lane, final-check gate, hosted matrix job). The full check

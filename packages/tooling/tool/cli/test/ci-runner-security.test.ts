@@ -12,7 +12,7 @@ import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { assert, expect } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
@@ -1137,7 +1137,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       assert.strictEqual(buildLane.uses_turbo, "true");
       // Effect rules run inside the patched tsrs typecheck, so the standalone
       // diagnostics matrix lane is retired.
-      assert.isTrue(O.isNone(A.findFirst(heavyMatrixLanes(heavyWorkflow), (lane) => lane.id === "effect-diagnostics")));
+      assertNone(A.findFirst(heavyMatrixLanes(heavyWorkflow), (lane) => lane.id === "effect-diagnostics"));
       assert.notInclude(heavyWorkflowText, "run_lane ci lane effect-diagnostics");
       assert.notInclude(heavyWorkflowText, "commands/Quality/EffectDiagnostics.ts");
       assert.include(heavyWorkflowText, "check|test-integration|build)");
