@@ -365,7 +365,7 @@ describe("CI lane descriptors", () => {
     expect(missing).toEqual([]);
   });
 
-  it.effect("matches captured workflow checks while retaining the external reviewer App check", () =>
+  it.effect("matches captured workflow checks apart from the optional external reviewer App check", () =>
     Effect.gen(function* () {
       const snapshot = yield* Effect.tryPromise(() => Bun.file(branchProtectionContextSnapshotUrl).text()).pipe(
         Effect.flatMap(decodeBranchProtectionContextSnapshot)
@@ -377,8 +377,7 @@ describe("CI lane descriptors", () => {
         A.dedupe,
         A.sort(Order.String)
       );
-      expect(A.contains(snapshot.requiredStatusChecks, "beep-reviewer")).toBe(true);
-      // The reviewer App owns this required context outside the workflow lane inventory.
+      // The reviewer App owns this optional context outside the workflow lane inventory (D41).
       expect(requiredContexts).toEqual(
         pipe(
           snapshot.requiredStatusChecks,
