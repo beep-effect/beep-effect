@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-10-27T16:54:36.651Z
+Generated: 2026-10-27T18:39:22.968Z
 
 ## Scope
 
@@ -11,23 +11,23 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | Metric | Count |
 |---|---:|
 | packages | 183 |
-| cleanPackages | 114 |
+| cleanPackages | 115 |
 | packagesWithoutPublicSrcSurface | 2 |
-| packagesNeedingRemediation | 67 |
-| publicModules | 3547 |
-| publicExports | 25293 |
-| openModules | 355 |
-| openExports | 646 |
+| packagesNeedingRemediation | 66 |
+| publicModules | 3546 |
+| publicExports | 25241 |
+| openModules | 348 |
+| openExports | 545 |
 | missingExportExamples | 7 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
 | forbiddenTagFindings | 0 |
 | malformedConditionalTagFindings | 0 |
-| exampleImportFindings | 569 |
+| exampleImportFindings | 468 |
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
-| undescribed-see | 11 |
-| multiple-description-paragraphs | 389 |
+| undescribed-see | 10 |
+| multiple-description-paragraphs | 383 |
 | leading-blank | 0 |
 | trailing-blank | 0 |
 | invalid-heading | 1 |
@@ -40,7 +40,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | duplicate-example | 0 |
 | loose-ts-fence | 0 |
 | forbidden-remarks | 0 |
-| no-root-package-import | 563 |
+| no-root-package-import | 462 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -60,31 +60,31 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 2 | `@beep/test-runner` | `packages/tooling/test-kit/test-runner` | clean | 4 | 6 | 0 | 0 |
 | 3 | `@beep/types` | `packages/foundation/primitive/types` | needs-remediation | 5 | 12 | 1 | 12 |
 | 4 | `@beep/identity` | `packages/foundation/modeling/identity` | clean | 8 | 280 | 0 | 0 |
-| 5 | `@beep/utils` | `packages/foundation/modeling/utils` | needs-remediation | 29 | 228 | 6 | 101 |
+| 5 | `@beep/utils` | `packages/foundation/modeling/utils` | clean | 29 | 228 | 0 | 0 |
 | 6 | `@beep/data` | `packages/foundation/primitive/data` | needs-remediation | 12 | 162 | 10 | 16 |
 | 7 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 169 | 974 | 14 | 33 |
-| 8 | `@beep/glob` | `packages/foundation/modeling/glob` | clean | 4 | 9 | 0 | 0 |
-| 9 | `@beep/memfs` | `packages/tooling/test-kit/memfs` | clean | 3 | 23 | 0 | 0 |
-| 10 | `@beep/walker` | `packages/foundation/capability/walker` | clean | 4 | 24 | 0 | 0 |
+| 8 | `@beep/semver` | `packages/foundation/modeling/semver` | clean | 6 | 23 | 0 | 0 |
+| 9 | `@beep/glob` | `packages/foundation/modeling/glob` | clean | 4 | 9 | 0 | 0 |
+| 10 | `@beep/memfs` | `packages/tooling/test-kit/memfs` | clean | 3 | 23 | 0 | 0 |
 | 11 | `@beep/test-utils` | `packages/tooling/test-kit/test-utils` | needs-remediation | 15 | 54 | 1 | 0 |
-| 12 | `@beep/jsonc` | `packages/foundation/modeling/jsonc` | clean | 8 | 48 | 0 | 0 |
-| 13 | `@beep/toml` | `packages/foundation/modeling/toml` | clean | 9 | 68 | 0 | 0 |
-| 14 | `@beep/yaml` | `packages/foundation/modeling/yaml` | clean | 11 | 95 | 0 | 0 |
-| 15 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 10 | 3 | 0 |
-| 16 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 66 | 698 | 18 | 0 |
-| 17 | `@beep/markdown` | `packages/foundation/modeling/markdown` | clean | 16 | 92 | 0 | 0 |
-| 18 | `@beep/html` | `packages/foundation/modeling/html` | needs-remediation | 15 | 544 | 9 | 28 |
-| 19 | `@beep/semver` | `packages/foundation/modeling/semver` | clean | 6 | 23 | 0 | 0 |
-| 20 | `@beep/md` | `packages/foundation/modeling/md` | needs-remediation | 11 | 311 | 4 | 87 |
-| 21 | `@beep/shared-domain` | `packages/shared/domain` | needs-remediation | 106 | 374 | 3 | 5 |
-| 22 | `@beep/provenance` | `packages/foundation/modeling/provenance` | needs-remediation | 4 | 28 | 1 | 0 |
-| 23 | `@beep/spdx` | `packages/foundation/modeling/spdx` | clean | 4 | 16 | 0 | 0 |
-| 24 | `@beep/npm-spec` | `packages/foundation/modeling/npm-spec` | clean | 13 | 72 | 0 | 0 |
-| 25 | `@beep/runtime-env` | `packages/foundation/capability/runtime-env` | clean | 6 | 31 | 0 | 0 |
-| 26 | `@beep/rdf` | `packages/foundation/modeling/rdf` | needs-remediation | 38 | 303 | 1 | 5 |
-| 27 | `@beep/workspace-domain` | `packages/workspace/domain` | clean | 30 | 58 | 0 | 0 |
-| 28 | `@beep/epistemics` | `packages/foundation/modeling/epistemics` | clean | 35 | 131 | 0 | 0 |
-| 29 | `@beep/package-json` | `packages/foundation/modeling/package-json` | clean | 18 | 121 | 0 | 0 |
+| 12 | `@beep/spdx` | `packages/foundation/modeling/spdx` | clean | 4 | 16 | 0 | 0 |
+| 13 | `@beep/jsonc` | `packages/foundation/modeling/jsonc` | clean | 8 | 48 | 0 | 0 |
+| 14 | `@beep/npm-spec` | `packages/foundation/modeling/npm-spec` | clean | 13 | 72 | 0 | 0 |
+| 15 | `@beep/walker` | `packages/foundation/capability/walker` | clean | 4 | 24 | 0 | 0 |
+| 16 | `@beep/package-json` | `packages/foundation/modeling/package-json` | clean | 18 | 121 | 0 | 0 |
+| 17 | `@beep/toml` | `packages/foundation/modeling/toml` | clean | 9 | 68 | 0 | 0 |
+| 18 | `@beep/yaml` | `packages/foundation/modeling/yaml` | clean | 11 | 95 | 0 | 0 |
+| 19 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 10 | 3 | 0 |
+| 20 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 65 | 646 | 17 | 0 |
+| 21 | `@beep/markdown` | `packages/foundation/modeling/markdown` | clean | 16 | 92 | 0 | 0 |
+| 22 | `@beep/html` | `packages/foundation/modeling/html` | needs-remediation | 15 | 544 | 9 | 28 |
+| 23 | `@beep/md` | `packages/foundation/modeling/md` | needs-remediation | 11 | 311 | 4 | 87 |
+| 24 | `@beep/shared-domain` | `packages/shared/domain` | needs-remediation | 106 | 374 | 3 | 5 |
+| 25 | `@beep/provenance` | `packages/foundation/modeling/provenance` | needs-remediation | 4 | 28 | 1 | 0 |
+| 26 | `@beep/runtime-env` | `packages/foundation/capability/runtime-env` | clean | 6 | 31 | 0 | 0 |
+| 27 | `@beep/rdf` | `packages/foundation/modeling/rdf` | needs-remediation | 38 | 303 | 1 | 5 |
+| 28 | `@beep/workspace-domain` | `packages/workspace/domain` | clean | 30 | 58 | 0 | 0 |
+| 29 | `@beep/epistemics` | `packages/foundation/modeling/epistemics` | clean | 35 | 131 | 0 | 0 |
 | 30 | `@beep/colors` | `packages/foundation/capability/colors` | clean | 1 | 9 | 0 | 0 |
 | 31 | `@beep/config-file` | `packages/foundation/capability/config-file` | clean | 13 | 70 | 0 | 0 |
 | 32 | `@beep/github-commands` | `packages/foundation/modeling/github-commands` | clean | 3 | 6 | 0 | 0 |
@@ -270,121 +270,6 @@ Export findings:
 - `src/index.ts:77` `export type * as TUnsafe from "./TUnsafe.types.ts";` (re-export) - 1 example import violation(s)
 - `src/index.ts:95` `export type * as TUtils from "./TUtils.types.ts";` (re-export) - 1 example import violation(s)
 
-### @beep/utils
-
-Path: `packages/foundation/modeling/utils`
-
-Module findings:
-- `src/Bool.ts:1` (jsdoc) - 1 example import violation(s)
-- `src/Data.ts:1` (jsdoc) - 1 documentation section/link violation(s)
-- `src/FileSystem.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/GlobalValue.ts:1` (jsdoc) - 1 documentation section/link violation(s)
-- `src/NodeUrl.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/Path.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-
-Export findings:
-- `src/Array.ts:614` `export * from "effect/Array";` (re-export) - 1 example import violation(s)
-- `src/Array.ts:43` `matchToBoolean` (const) - 1 example import violation(s)
-- `src/Array.ts:73` `assertNonEmptyArray` (const) - 1 example import violation(s)
-- `src/Array.ts:96` `assertNonEmptyReadonlyArray` (const) - 1 example import violation(s)
-- `src/Array.ts:138` `mapNonEmpty` (const) - 1 example import violation(s)
-- `src/Array.ts:177` `flatMapNonEmpty` (const) - 1 example import violation(s)
-- `src/Array.ts:218` `mapNonEmptyReadonly` (const) - 1 example import violation(s)
-- `src/Array.ts:263` `flatMapNonEmptyReadonly` (const) - 1 example import violation(s)
-- `src/Array.ts:324` `indexOf` (const) - 1 example import violation(s)
-- `src/Array.ts:356` `lastIndexOf` (const) - 1 example import violation(s)
-- `src/Array.ts:386` `slice` (const) - 1 example import violation(s)
-- `src/Array.ts:412` `entries` (const) - 1 example import violation(s)
-- `src/Array.ts:430` `keys` (const) - 1 example import violation(s)
-- `src/Array.ts:450` `values` (const) - 1 example import violation(s)
-- `src/Array.ts:476` `appendInPlace` (const) - 1 example import violation(s)
-- `src/Array.ts:506` `appendAllInPlace` (const) - 1 example import violation(s)
-- `src/Array.ts:540` `sortInPlace` (const) - 1 example import violation(s)
-- `src/Array.ts:575` `spliceInPlace` (const) - 1 example import violation(s)
-- `src/Array.ts:642` `makeReadonly` (const) - 1 example import violation(s)
-- `src/Array.ts:665` `fromIterableNonEmpty` (const) - 1 example import violation(s)
-- `src/Array.ts:689` `emptyReadonly` (const) - 1 example import violation(s)
-- `src/Bool.ts:18` `export * from "effect/Boolean";` (re-export) - 1 example import violation(s)
-- `src/Equal.ts:22` `export * from "effect/Equal";` (re-export) - 1 example import violation(s)
-- `src/Errors.ts:166` `mapToError` (function) - 1 example import violation(s)
-- `src/Errors.ts:45` `ErrorMapper` (type) - 1 example import violation(s)
-- `src/Errors.ts:99` `mapCauseError` (const) - 1 example import violation(s)
-- `src/GlobalValue.ts:73` `globalValue` (const) - 1 example import violation(s)
-- `src/Number.ts:44` `isPositive` (const) - 1 documentation section/link violation(s)
-- `src/Number.ts:88` `isInteger` (const) - 1 example import violation(s)
-- `src/Option.ts:132` `propFromNullishOr` (const) - 1 example import violation(s)
-- `src/Option.ts:181` `getSomesStruct` (const) - 1 example import violation(s)
-- `src/Predicate.ts:207` `chainRefinements` (function) - 1 example import violation(s)
-- `src/Predicate.ts:156` `hasInspectableObjectShape` (const) - 1 example import violation(s)
-- `src/Str.ts:846` `export * from "effect/String";` (re-export) - 1 example import violation(s)
-- `src/Str.ts:43` `equivalence` (const) - 1 example import violation(s)
-- `src/Str.ts:73` `orderAsc` (const) - 1 example import violation(s)
-- `src/Str.ts:120` `prefix` (const) - 1 example import violation(s)
-- `src/Str.ts:161` `prefixThunk` (const) - 1 example import violation(s)
-- `src/Str.ts:214` `postfix` (const) - 1 example import violation(s)
-- `src/Str.ts:255` `postfixThunk` (const) - 1 example import violation(s)
-- `src/Str.ts:296` `mapPrefix` (const) - 1 example import violation(s)
-- `src/Str.ts:336` `mapPostfix` (const) - 1 example import violation(s)
-- `src/Str.ts:362` `camelCase` (const) - 1 example import violation(s)
-- `src/Str.ts:380` `snakeCase` (const) - 1 example import violation(s)
-- `src/Str.ts:398` `kebabCase` (const) - 1 example import violation(s)
-- `src/Str.ts:417` `screamingSnake` (const) - 1 example import violation(s)
-- `src/Str.ts:436` `pascalCase` (const) - 1 example import violation(s)
-- `src/Str.ts:454` `pascalToSnake` (const) - 1 example import violation(s)
-- `src/Str.ts:473` `snakeToCamel` (const) - 1 example import violation(s)
-- `src/Str.ts:492` `snakeToKebab` (const) - 1 example import violation(s)
-- `src/Str.ts:511` `camelToSnake` (const) - 1 example import violation(s)
-- `src/Str.ts:530` `snakeToPascal` (const) - 1 example import violation(s)
-- `src/Str.ts:549` `kebabToSnake` (const) - 1 example import violation(s)
-- `src/Str.ts:576` `startsWith` (const) - 1 example import violation(s)
-- `src/Str.ts:616` `endsWith` (const) - 1 example import violation(s)
-- `src/Str.ts:661` `contains` (const) - 1 example import violation(s)
-- `src/Str.ts:705` `repeat` (const) - 1 example import violation(s)
-- `src/Str.ts:759` `replaceWith` (const) - 1 example import violation(s)
-- `src/Str.ts:813` `replaceAllWith` (const) - 1 example import violation(s)
-- `src/Str.ts:866` `trimThunk` (const) - 1 example import violation(s)
-- `src/Str.ts:886` `fromNumber` (const) - 1 example import violation(s)
-- `src/Str.ts:903` `toSlug` (const) - 1 example import violation(s)
-- `src/Str.ts:941` `truncate` (const) - 1 example import violation(s)
-- `src/Str.ts:967` `orEmpty` (const) - 1 example import violation(s)
-- `src/Str.ts:1015` `matchEmpty` (const) - 1 example import violation(s)
-- `src/Struct.ts:175` `dotGet` (const) - 1 example import violation(s)
-- `src/Struct.ts:222` `dotGetOption` (const) - 1 example import violation(s)
-- `src/Struct.ts:289` `mapPath` (const) - 1 example import violation(s)
-- `src/Struct.ts:367` `mapPathLazy` (const) - 1 example import violation(s)
-- `src/Struct.ts:449` `getLazy` (const) - 1 example import violation(s)
-- `src/Struct.ts:484` `pathsOf` (const) - 1 example import violation(s)
-- `src/Struct.ts:604` `entriesNonEmpty` (const) - 1 example import violation(s)
-- `src/Struct.ts:635` `keys` (const) - 1 example import violation(s)
-- `src/Struct.ts:661` `keysNonEmpty` (const) - 1 example import violation(s)
-- `src/Struct.ts:696` `fromEntries` (const) - 1 example import violation(s)
-- `src/Struct.ts:804` `reverse` (const) - 1 example import violation(s)
-- `src/Struct.ts:926` `deepMerge` (const) - 1 example import violation(s)
-- `src/Text.ts:33` `splitCommaSeparatedTrimmed` (const) - 1 example import violation(s)
-- `src/Text.ts:61` `formatNameWithAliases` (const) - 1 example import violation(s)
-- `src/Text.ts:93` `joinLines` (const) - 1 example import violation(s)
-- `src/index.ts:30` `export * as A from "./Array.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:45` `export * as Bool from "./Bool.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:63` `export * as Data from "./Data.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:78` `export * as DateTime from "./DateTime.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:106` `export * as Eq from "./Equal.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:133` `export * as Err from "./Errors.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:151` `export * as FileSystem from "./FileSystem.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:173` `export * from "./HostProcess.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:189` `export * as Html from "./Html.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:205` `export * as N from "./Number.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:221` `export * as O from "./Option.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:236` `export * as Path from "./Path.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:252` `export * as P from "./Predicate.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:267` `export * from "./Random.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:283` `export * as R from "./Record.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:299` `export * as Str from "./Str.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:314` `export * as Stream from "./Stream.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:330` `export * as Struct from "./Struct.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:346` `export * as Text from "./Text.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:362` `export * from "./thunk.ts";` (re-export) - 1 example import violation(s)
-- `src/thunk.ts:367` `thunkEmptyReadonlyRecord` (const) - 1 example import violation(s)
-
 ### @beep/data
 
 Path: `packages/foundation/primitive/data`
@@ -504,7 +389,6 @@ Module findings:
 - `src/ProcessArgs.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/Root.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/TsConfig.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/UniqueDeps.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/Workspaces.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/errors/CyclicDependencyError.ts:1` (jsdoc) - 1 documentation section/link violation(s)
 - `src/errors/DomainError.ts:1` (jsdoc) - 1 documentation section/link violation(s)
@@ -1409,10 +1293,10 @@ Export findings:
 - `src/commands/Cache/Cache.command.ts:290` `runCacheWarm` (const) - 1 example import violation(s)
 - `src/commands/Cache/Cache.command.ts:487` `buildCacheDashboard` (const) - 1 example import violation(s)
 - `src/commands/Cache/Cache.service.ts:111` `encodeCachePolicyBaselineText` (const) - 1 example import violation(s)
-- `src/commands/Ci/CiLane.ts:405` `CI_LANE_DESCRIPTORS` (const) - 1 documentation section/link violation(s)
-- `src/commands/Ci/CiLane.ts:1553` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
+- `src/commands/Ci/CiLane.ts:404` `CI_LANE_DESCRIPTORS` (const) - 1 documentation section/link violation(s)
+- `src/commands/Ci/CiLane.ts:1552` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
 - `src/commands/Corpus/Corpus.errors.ts:312` `CorpusArchiveMoveDigestMismatchError` (class) - 1 example import violation(s)
-- `src/commands/CreatePackage/CreatePackage.command.ts:121` `resolveCreatePackageTemplateDir` (const) - 1 documentation section/link violation(s)
+- `src/commands/CreatePackage/CreatePackage.command.ts:122` `resolveCreatePackageTemplateDir` (const) - 1 documentation section/link violation(s)
 - `src/commands/Drawings/Drawings.intake.schemas.ts:304` `MessageFacts` (class) - 1 example import violation(s)
 - `src/commands/Drawings/Drawings.intake.schemas.ts:354` `IntakeRecord` (class) - 1 example import violation(s)
 - `src/commands/Drawings/Drawings.intake.schemas.ts:405` `IntakeResult` (class) - 1 example import violation(s)

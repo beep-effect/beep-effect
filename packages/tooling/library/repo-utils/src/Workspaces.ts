@@ -20,10 +20,10 @@ import * as S from "effect/Schema";
 import { DomainError } from "./errors/index.ts";
 import { FsUtils, GlobOptions } from "./FsUtils.ts";
 import { decodePackageJsonEffect, PackageJson, readPackageJsonFile } from "./schemas/PackageJson.ts";
+import type { WorkspacesField } from "@beep/package-json/ManifestFields";
 import type * as FileSystem from "effect/FileSystem";
 import type { NoSuchFileError } from "./errors/index.ts";
 import type { FsUtilsShape } from "./FsUtils.ts";
-import type { Workspaces as PackageJsonWorkspaces } from "./schemas/PackageJson.ts";
 
 const $I = $RepoUtilsId.create("Workspaces");
 
@@ -39,42 +39,40 @@ const absoluteWorkspacePattern = /^(?:[A-Za-z]:\/|\/\/|\/)/;
 const workspaceManifestPattern = (workspaceGlob: string): string =>
   `${Str.replace(/\/+$/, "")(workspaceGlob)}/package.json`;
 
-const isWorkspacePatternArray = (value: PackageJsonWorkspaces): value is ReadonlyArray<string> => A.isArray(value);
+const isWorkspacePatternArray = (value: WorkspacesField): value is ReadonlyArray<string> => A.isArray(value);
 
 /**
  * Extract the workspace glob patterns declared in a `package.json` `workspaces`
- * field, normalizing the array and Yarn-object forms to a flat pattern list.
+ * field, normalizing the array and object forms to a flat pattern list.
  *
  * **Details**
  *
- * Returns an empty array when `workspaces` is absent or `None`. The Yarn-style
- * object form contributes its `packages` entry (or nothing when it is absent);
- * the array form is returned as-is.
+ * Returns an empty array when `workspaces` is absent. The object form
+ * contributes its `packages` entry (or nothing when it is absent); the array
+ * form is returned as-is.
  *
  * **Example** (Extract workspace glob patterns)
  *
  * ```ts
- * import * as O from "effect/Option"
  * import { workspaceGlobsFrom } from "@beep/repo-utils/Workspaces"
  *
- * const globs = workspaceGlobsFrom(O.some(["packages/*", "apps/*"]))
+ * const globs = workspaceGlobsFrom(["packages/*", "apps/*"])
  * console.log(globs) // ["packages/*", "apps/*"]
  * ```
  *
  * @param workspaces - The decoded `package.json` `workspaces` field, either the
- *   array form, the Yarn `{ packages }` object form, or `undefined`/`None` when
- *   the manifest declares no workspaces.
+ *   array form, the `{ packages }` object form, or `undefined` when the
+ *   manifest declares no workspaces.
  * @returns The flat list of workspace glob patterns, empty when none are declared.
  * @category utilities
  * @since 0.0.0
  */
-export const workspaceGlobsFrom = (workspaces: PackageJson["workspaces"]): ReadonlyArray<string> => {
-  if (P.isUndefined(workspaces) || O.isNone(workspaces)) {
+export const workspaceGlobsFrom = (workspaces: WorkspacesField | undefined): ReadonlyArray<string> => {
+  if (P.isUndefined(workspaces)) {
     return [];
   }
 
-  const presentWorkspaces = workspaces.value;
-  return isWorkspacePatternArray(presentWorkspaces) ? presentWorkspaces : (presentWorkspaces.packages ?? A.empty());
+  return isWorkspacePatternArray(workspaces) ? workspaces : (workspaces.packages ?? A.empty());
 };
 
 const isSafeWorkspacePattern = (pattern: string): boolean => {
@@ -253,23 +251,21 @@ export const getWorkspaceDir: {
 );
 
 /**
- * A resolved workspace package: its absolute directory, decoded manifest, and a
- * flattened scripts record.
+ * A resolved workspace package: its absolute directory and decoded manifest.
  *
  * **Details**
  *
- * `scripts` is the manifest's `scripts` field unwrapped to a plain record (empty
- * when the manifest declares no scripts), provided as a convenience so callers
- * need not re-open the `Option` on `manifest.scripts`.
+ * The manifest's `scripts` field is already a `HashMap` that defaults to
+ * empty, so callers read `manifest.scripts` directly.
  *
  * **Example** (Check workspace has script)
  *
  * ```ts
- * import * as R from "effect/Record"
+ * import * as HashMap from "effect/HashMap"
  * import type { WorkspacePackage } from "@beep/repo-utils/Workspaces"
  *
  * const hasCheckScript = (workspace: WorkspacePackage): boolean =>
- *   R.has(workspace.scripts, "check")
+ *   HashMap.has(workspace.manifest.scripts, "check")
  * console.log(hasCheckScript)
  * ```
  *
@@ -280,20 +276,16 @@ export class WorkspacePackage extends S.Opaque<WorkspacePackage, { readonly bran
   S.Struct({
     dir: S.String.annotateKey({ description: "Absolute, canonical directory of the workspace package." }),
     manifest: S.instanceOf(PackageJson).annotateKey({ description: "The package's strictly decoded manifest." }),
-    scripts: S.Record(S.String, S.String).annotateKey({
-      description: "The manifest's scripts field flattened to a plain record.",
-    }),
   }).pipe(
     $I.annoteSchema("WorkspacePackage", {
-      description:
-        "A resolved workspace package: its absolute directory, strictly decoded manifest, and flattened scripts record.",
+      description: "A resolved workspace package: its absolute directory and strictly decoded manifest.",
     })
   )
 ) {}
 
 /**
  * Resolve every workspace package declared by the root `package.json` into a map
- * from package name to its directory, decoded manifest, and scripts.
+ * from package name to its directory and decoded manifest.
  *
  * **Details**
  *
@@ -330,8 +322,7 @@ export const resolveWorkspacePackages: (
 
   for (const [name, dir] of dirs) {
     const manifest = yield* readPackageJsonFile(`${dir}/package.json`);
-    const scripts = O.getOrElse(manifest.scripts, (): Record<string, string> => ({}));
-    result = HashMap.set(result, name, WorkspacePackage.make({ dir, manifest, scripts }));
+    result = HashMap.set(result, name, WorkspacePackage.make({ dir, manifest }));
   }
 
   return result;
