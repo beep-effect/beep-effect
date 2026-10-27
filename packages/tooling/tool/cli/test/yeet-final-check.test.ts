@@ -237,8 +237,7 @@ describe("findExpectationRewrites", () => {
 
 describe("vitestReplayArgs", () => {
   const file = "test/a.test.ts";
-  const manifestWith = (scripts: Record<string, string>) =>
-    Effect.runSync(LenientManifest.parse(JSON.stringify({ scripts })));
+  const manifestWith = (scripts: Record<string, string>) => LenientManifest.make({ scripts, rest: {}, issues: [] });
 
   it("replays under Bun when the package's beep:test runs vitest with --bun", () => {
     const manifest = manifestWith({ "beep:test": "bunx --bun vitest run --passWithNoTests" });
