@@ -11,6 +11,7 @@
  * @since 0.0.0
  */
 
+import { Run } from "@beep/commands/Run";
 import { $ObsId } from "@beep/identity/packages";
 import { A, O, P, R } from "@beep/utils";
 import * as Clock from "effect/Clock";
@@ -20,7 +21,6 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as PubSub from "effect/PubSub";
 import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Result from "effect/Result";
 import * as Schedule from "effect/Schedule";
 import { ObsError } from "./Obs.errors.ts";
@@ -43,6 +43,7 @@ import {
   ObsVersionInfo,
 } from "./ObsProtocol.models.ts";
 import { ObsProtocol } from "./ObsProtocol.service.ts";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as Scope from "effect/Scope";
 import type * as Stream from "effect/Stream";
 import type * as Socket from "effect/socket/Socket";
@@ -289,7 +290,6 @@ const makeService = Effect.fn("Obs.make")(function* (
 });
 
 const spawnObsDetached = Effect.fn("Obs.spawnObsDetached")(function* (config: ObsConfig) {
-  const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
   const command = ChildProcess.make(config.obsBinaryPath, ["--minimize-to-tray"], {
     detached: true,
     forceKillAfter: Duration.millis(config.forceKillAfterMillis),
@@ -297,19 +297,15 @@ const spawnObsDetached = Effect.fn("Obs.spawnObsDetached")(function* (config: Ob
     stdin: "ignore",
     stdout: "ignore",
   });
-  // Spawn inside a short-lived scope: `unref` first so scope close releases
-  // the handle without killing the detached OBS process.
-  yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* spawner.spawn(command);
-      yield* Effect.asVoid(handle.unref);
-    })
-  ).pipe(
-    Effect.mapError((cause) =>
+  // `Run.detach` unrefs the handle before its short-lived scope closes, so the
+  // scope releases the handle without killing the detached OBS process. The
+  // driver error keeps the platform failure as its cause, as before.
+  yield* Run.detach(command).pipe(
+    Effect.mapError((error) =>
       ObsError.fromUnknown(
         "ensureRunning",
         `Failed to spawn "${config.obsBinaryPath}" — install OBS Studio or configure obsBinaryPath.`,
-        { cause }
+        { cause: error.cause }
       )
     )
   );

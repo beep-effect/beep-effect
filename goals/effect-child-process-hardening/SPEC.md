@@ -93,9 +93,14 @@ Higher sources outrank lower sources when they conflict.
 - Verification requires credentials, cost, destructive state, or publication.
 - The same blocker repeats after reasonable investigation.
 
+## Decision Log
+
+| Date | Decision | Reason | How to reverse |
+| --- | --- | --- | --- |
+| 2026-10-25 | The Exception Ledger row "Driver-local output folds" is retired (`goals/effected-promotion` SPEC D-03, roadmap PR R9). `@beep/commands` (`Run.collect`, `Run.detach`) is the shared process runner for drivers: `@beep/exiftool`, `@beep/pdf-tools`, `@beep/tailscale` and `@beep/obs` run through it, each keeping its package-owned error model behind a local reason map pinned by a test. The drivers that still fold locally (`@beep/ai-provider-cli`, `@beep/onepassword-cli`, `@beep/openclaw`, `@beep/ffmpeg`, `@beep/tesseract`, `@beep/poppler`, `@beep/tika`, `@beep/libpff`) are tracked in `goals/effected-promotion/history/reuse-ledger.md`, each waiting for its named kit option, not as an exception here. | The row's own removal condition is met: a stable existing package boundary (`@beep/commands`) gained compatible callers. | Restore the row and move the four drivers back to their local folds. |
+
 ## Exception Ledger
 
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
 | Streamed stdin | Repo CLI Codex command | `@beep/repo-cli` | `StepExec` intentionally models stdio modes, not arbitrary stdin streams. | Add only if a second real streamed-input CLI caller appears. |
-| Driver-local output folds | AI provider CLI, 1Password CLI, OpenClaw | Respective driver packages | Their result/error models are package-owned, and the approved design forbids a new shared process facade. | Reconsider if a stable existing package boundary gains another compatible caller. |
