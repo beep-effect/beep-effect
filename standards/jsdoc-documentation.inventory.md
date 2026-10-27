@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-10-27T15:08:25.540Z
+Generated: 2026-10-27T15:26:10.892Z
 
 ## Scope
 
@@ -157,9 +157,9 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 99 | `@beep/lockfiles` | `packages/foundation/modeling/lockfiles` | clean | 14 | 47 | 0 | 0 |
 | 100 | `@beep/repo-configs` | `packages/tooling/policy-pack/repo-configs` | needs-remediation | 24 | 197 | 0 | 1 |
 | 101 | `@beep/occt` | `packages/drivers/occt` | clean | 4 | 13 | 0 | 0 |
-| 102 | `@beep/qa-capture` | `packages/tooling/library/qa-capture` | needs-remediation | 11 | 155 | 10 | 0 |
-| 103 | `@beep/dock` | `packages/foundation/ui-system/dock` | clean | 20 | 212 | 0 | 0 |
-| 104 | `@beep/git` | `packages/drivers/git` | clean | 5 | 44 | 0 | 0 |
+| 102 | `@beep/git` | `packages/drivers/git` | clean | 5 | 44 | 0 | 0 |
+| 103 | `@beep/qa-capture` | `packages/tooling/library/qa-capture` | needs-remediation | 11 | 155 | 10 | 0 |
+| 104 | `@beep/dock` | `packages/foundation/ui-system/dock` | clean | 20 | 212 | 0 | 0 |
 | 105 | `@beep/agents-tables` | `packages/agents/tables` | clean | 7 | 15 | 0 | 0 |
 | 106 | `@beep/anthropic` | `packages/drivers/anthropic` | clean | 6 | 31 | 0 | 0 |
 | 107 | `@beep/lexical-schema` | `packages/foundation/modeling/lexical` | needs-remediation | 6 | 124 | 4 | 7 |

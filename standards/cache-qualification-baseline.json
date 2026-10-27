@@ -1130,11 +1130,11 @@
       }
     },
     "@beep/repo-cli": {
-      "reviewer": "Claude Fable 5.1 (tsrs-gates PR 2, feat/tsrs-gates-fold)",
-      "reason": "Re-record the input lists of //#lint:policy-fingerprint, //#lint:tsgo-rules, @beep/repo-cli#test and @beep/repo-cli#test:property after standards/effect-diagnostics.profile.json was folded into tsconfig.base.json and deleted (goals/tsrs-gates PR 2). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (effected-promotion roadmap R10, refactor/repo-cli-git-helpers)",
+      "reason": "Record the @beep/repo-cli manifest edit that adds the @beep/git workspace dependency for the R10 git adoptions; the task graphs gain only git build/transit, and the policy-tool fingerprint closure gains that one package, as measured in the review; no qualification is granted.",
       "basis": {
-        "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-27-fold.md",
-        "sha256": "47ac4273781785982a9357b011692b8c94c5bdb55ddf9a136c51cfe7e08d9adb"
+        "path": "goals/effected-promotion/research/cache-baseline-review-r10.md",
+        "sha256": "4643d6b3e3c0db41cc6f82bae825225cb378fcd760090059b9ea7e39522bf131"
       }
     },
     "@beep/repo-configs": {
@@ -2954,6 +2954,8 @@
             "packages/drivers/exiftool/src/**",
             "packages/drivers/ffmpeg/package.json",
             "packages/drivers/ffmpeg/src/**",
+            "packages/drivers/git/package.json",
+            "packages/drivers/git/src/**",
             "packages/drivers/github-actions/package.json",
             "packages/drivers/github-actions/src/**",
             "packages/drivers/github/package.json",
@@ -97834,6 +97836,7 @@
           "@beep/fc-runs#audit",
           "@beep/ffmpeg#audit",
           "@beep/file-processing#audit",
+          "@beep/git#audit",
           "@beep/github#audit",
           "@beep/github-actions#audit",
           "@beep/github-commands#audit",
@@ -97949,6 +97952,7 @@
           "@beep/fc-runs#build",
           "@beep/ffmpeg#build",
           "@beep/file-processing#build",
+          "@beep/git#build",
           "@beep/github#build",
           "@beep/github-actions#build",
           "@beep/github-commands#build",
@@ -98053,6 +98057,7 @@
           "@beep/fc-runs#build",
           "@beep/ffmpeg#build",
           "@beep/file-processing#build",
+          "@beep/git#build",
           "@beep/github#build",
           "@beep/github-actions#build",
           "@beep/github-commands#build",
@@ -98144,6 +98149,7 @@
           "@beep/fc-runs#build",
           "@beep/ffmpeg#build",
           "@beep/file-processing#build",
+          "@beep/git#build",
           "@beep/github#build",
           "@beep/github-actions#build",
           "@beep/github-commands#build",
@@ -98284,6 +98290,7 @@
           "@beep/fc-runs#transit",
           "@beep/ffmpeg#transit",
           "@beep/file-processing#transit",
+          "@beep/git#transit",
           "@beep/github#transit",
           "@beep/github-actions#transit",
           "@beep/github-commands#transit",
@@ -98420,6 +98427,7 @@
           "@beep/fc-runs#transit",
           "@beep/ffmpeg#transit",
           "@beep/file-processing#transit",
+          "@beep/git#transit",
           "@beep/github#transit",
           "@beep/github-actions#transit",
           "@beep/github-commands#transit",
@@ -98674,6 +98682,7 @@
           "@beep/fc-runs#transit",
           "@beep/ffmpeg#transit",
           "@beep/file-processing#transit",
+          "@beep/git#transit",
           "@beep/github#transit",
           "@beep/github-actions#transit",
           "@beep/github-commands#transit",
@@ -98768,6 +98777,7 @@
           "@beep/fc-runs#transit",
           "@beep/ffmpeg#transit",
           "@beep/file-processing#transit",
+          "@beep/git#transit",
           "@beep/github#transit",
           "@beep/github-actions#transit",
           "@beep/github-commands#transit",
@@ -98886,6 +98896,7 @@
           "@beep/fc-runs#transit",
           "@beep/ffmpeg#transit",
           "@beep/file-processing#transit",
+          "@beep/git#transit",
           "@beep/github#transit",
           "@beep/github-actions#transit",
           "@beep/github-commands#transit",
@@ -129871,7 +129882,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "16e1cba85349a49969e9fe10cf598ac02393ad06418fd0c50c1abfd981484d03"
+        "sha256": "ed1b5b765ba479a578f19c0c1175b5248ecd14b2024c56d93c99f9546839e180"
       }
     ]
   }

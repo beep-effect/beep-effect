@@ -3988,6 +3988,7 @@
         "@beep/exiftool": "workspace:^",
         "@beep/ffmpeg": "workspace:^",
         "@beep/file-processing": "workspace:^",
+        "@beep/git": "workspace:^",
         "@beep/github": "workspace:^",
         "@beep/github-actions": "workspace:^",
         "@beep/github-commands": "workspace:^",

@@ -207,6 +207,8 @@
         "packages/drivers/exiftool/src/**",
         "packages/drivers/ffmpeg/package.json",
         "packages/drivers/ffmpeg/src/**",
+        "packages/drivers/git/package.json",
+        "packages/drivers/git/src/**",
         "packages/drivers/github-actions/package.json",
         "packages/drivers/github-actions/src/**",
         "packages/drivers/github/package.json",
