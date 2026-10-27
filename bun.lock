@@ -1248,6 +1248,7 @@
       "name": "@beep/exiftool",
       "version": "0.0.0",
       "dependencies": {
+        "@beep/commands": "workspace:^",
         "@beep/identity": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/utils": "workspace:^",
@@ -1564,6 +1565,7 @@
       "name": "@beep/obs",
       "version": "0.0.0",
       "dependencies": {
+        "@beep/commands": "workspace:^",
         "@beep/identity": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/utils": "workspace:^",
@@ -1707,6 +1709,7 @@
       "name": "@beep/pdf-tools",
       "version": "0.0.0",
       "dependencies": {
+        "@beep/commands": "workspace:^",
         "@beep/identity": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/utils": "workspace:^",
@@ -1915,6 +1918,7 @@
       "name": "@beep/tailscale",
       "version": "0.0.0",
       "dependencies": {
+        "@beep/commands": "workspace:^",
         "@beep/identity": "workspace:^",
         "@beep/schema": "workspace:^",
         "effect": "catalog:",

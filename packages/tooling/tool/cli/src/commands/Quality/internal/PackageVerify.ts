@@ -625,6 +625,13 @@ const collectStepOutput = Effect.fn("PackageVerify.collectStepOutput")(function*
   );
 });
 
+// Both scripts typecheck against the dependencies' built declarations, which Turbo's own
+// `check` and `audit` tasks build first (`^build`). Running the bare script against a stale
+// or missing dependency build reports errors hosted Check never sees. The step plan and the
+// inbox capsule read this one rule, so the recorded command is the command that ran.
+const buildsUpstreamClosure = (step: PackageVerifyStepName): boolean =>
+  PackageVerifyStepName.is.audit(step) || PackageVerifyStepName.is.check(step);
+
 const packageVerifyStepPlan = (
   repoRoot: string,
   workspace: PackageVerifyWorkspace,
@@ -636,10 +643,10 @@ const packageVerifyStepPlan = (
     args: ["run", spec.script],
     cwd: workspace.dir,
   });
-  return PackageVerifyStepName.is.audit(spec.step)
+  return buildsUpstreamClosure(spec.step)
     ? [
         QualityTaskStep.make({
-          label: "audit:build-closure",
+          label: `${spec.step}:build-closure`,
           command: "bun",
           args: ["x", "turbo", "run", "build", `--filter=${workspace.name}^...`],
           cwd: repoRoot,
@@ -835,7 +842,7 @@ export const recordPackageVerifyInboxForTesting = Effect.fn("PackageVerify.recor
     recordYeetLocalShardOutcome(
       report.repoRoot,
       YeetLocalShardOutcome.make({
-        command: PackageVerifyStepName.is.audit(result.step)
+        command: buildsUpstreamClosure(result.step)
           ? `bun x turbo run build --filter=${report.packageName}^... && bun run ${result.script}`
           : `bun run ${result.script}`,
         exitCode: O.getOrElse(result.exitCode, () => (result.ok ? 0 : 1)),
@@ -985,9 +992,10 @@ export const packageVerifyStepSpecsForTesting = packageVerifyStepSpecs;
  *
  * **Details**
  *
- * Audit plans refresh the selected package's upstream Turbo build closure
- * without rebuilding the package itself before invoking its package-local
- * audit. Other steps remain direct package script invocations.
+ * Audit and check plans refresh the selected package's upstream Turbo build
+ * closure without rebuilding the package itself before invoking its
+ * package-local script, as Turbo's own `audit` and `check` tasks do. Lint and
+ * docgen remain direct package script invocations.
  *
  * **Example** (Inspect an audit plan)
  *

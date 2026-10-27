@@ -29,7 +29,7 @@ type GateIdLiterals = readonly [string, ...ReadonlyArray<string>];
  * **Example** (Construct a gate identifier)
  *
  * ```ts import.meta.vitest name="Construct a gate identifier"
- * import { GateId } from "@beep/skill-contract"
+ * import { GateId } from "@beep/skill-contract/Gate"
  *
  * const id = GateId.make("artifact-exists")
  * id // => "artifact-exists"
@@ -66,7 +66,7 @@ export type GateId = typeof GateId.Type;
  *
  * ```ts
  * import { LiteralKit } from "@beep/schema/LiteralKit"
- * import { makeGateId } from "@beep/skill-contract"
+ * import { makeGateId } from "@beep/skill-contract/Gate"
  *
  * const QaGateId = makeGateId(LiteralKit(["cited-artifact-exists"]))
  * console.log(QaGateId.make("cited-artifact-exists"))
@@ -92,7 +92,7 @@ export const makeGateId = <const Ids extends GateIdLiterals>(ids: LiteralKitSche
  * **Example** (Inspect severity options)
  *
  * ```ts import.meta.vitest name="Inspect severity options"
- * import { GateSeverity } from "@beep/skill-contract"
+ * import { GateSeverity } from "@beep/skill-contract/Gate"
  *
  * GateSeverity.literals // => ["blocking", "advisory"]
  * ```
@@ -120,7 +120,7 @@ export type GateSeverity = typeof GateSeverity.Type;
  * **Example** (Inspect applicability kinds)
  *
  * ```ts import.meta.vitest name="Inspect applicability kinds"
- * import { GateApplicabilityKind } from "@beep/skill-contract"
+ * import { GateApplicabilityKind } from "@beep/skill-contract/Gate"
  *
  * GateApplicabilityKind.literals // => ["always", "conditional"]
  * ```
@@ -148,7 +148,7 @@ export type GateApplicabilityKind = typeof GateApplicabilityKind.Type;
  * **Example** (Construct unconditional applicability)
  *
  * ```ts import.meta.vitest name="Construct unconditional applicability"
- * import { AlwaysGateApplicability } from "@beep/skill-contract"
+ * import { AlwaysGateApplicability } from "@beep/skill-contract/Gate"
  *
  * AlwaysGateApplicability.make({}).kind // => "always"
  * ```
@@ -177,7 +177,8 @@ export class AlwaysGateApplicability extends S.Opaque<AlwaysGateApplicability, {
  * **Example** (Construct conditional applicability)
  *
  * ```ts import.meta.vitest name="Construct conditional applicability"
- * import { ConditionalGateApplicability, SchemaReference, SchemaReferenceId } from "@beep/skill-contract"
+ * import { ConditionalGateApplicability } from "@beep/skill-contract/Gate"
+ * import { SchemaReference, SchemaReferenceId } from "@beep/skill-contract/SchemaReference"
  *
  * const applicability = ConditionalGateApplicability.make({
  *   condition: SchemaReference.make({ schemaId: SchemaReferenceId.make("qa.condition/v1") })
@@ -210,7 +211,7 @@ export class ConditionalGateApplicability extends S.Opaque<
  * **Example** (Match an unconditional applicability value)
  *
  * ```ts
- * import { AlwaysGateApplicability, GateApplicability } from "@beep/skill-contract"
+ * import { AlwaysGateApplicability, GateApplicability } from "@beep/skill-contract/Gate"
  *
  * const value = AlwaysGateApplicability.make({})
  * console.log(GateApplicability.match(value, {
@@ -245,7 +246,7 @@ export type GateApplicability = typeof GateApplicability.Type;
  * **Example** (Construct a predicate type)
  *
  * ```ts
- * import { EvidencePredicateType } from "@beep/skill-contract"
+ * import { EvidencePredicateType } from "@beep/skill-contract/Gate"
  *
  * const type = EvidencePredicateType.make("https://example.test/evidence/artifact-exists/v1")
  * console.log(type)
@@ -275,7 +276,7 @@ export type EvidencePredicateType = typeof EvidencePredicateType.Type;
  * **Example** (Require a versioned predicate)
  *
  * ```ts
- * import { EvidencePredicateType, GateEvidenceRequirement } from "@beep/skill-contract"
+ * import { EvidencePredicateType, GateEvidenceRequirement } from "@beep/skill-contract/Gate"
  *
  * const requirement = GateEvidenceRequirement.make({
  *   predicateType: EvidencePredicateType.make("https://example.test/evidence/artifact-exists/v1")
@@ -310,7 +311,7 @@ export class GateEvidenceRequirement extends S.Opaque<GateEvidenceRequirement, {
  *   GateDeclaration,
  *   GateEvidenceRequirement,
  *   GateId
- * } from "@beep/skill-contract"
+ * } from "@beep/skill-contract/Gate"
  *
  * const gate = GateDeclaration.make({
  *   applicability: AlwaysGateApplicability.make({}),
@@ -373,7 +374,7 @@ const UniqueGateIdsCheck = S.makeFilter(
  * **Example** (Construct a gate registry)
  *
  * ```ts import.meta.vitest name="Construct a gate registry"
- * import { GateRegistry } from "@beep/skill-contract"
+ * import { GateRegistry } from "@beep/skill-contract/Gate"
  *
  * GateRegistry.make({ declarations: [] }).declarations.length // => 0
  * ```
@@ -395,7 +396,7 @@ export class GateRegistry extends S.Opaque<GateRegistry, { readonly brand: uniqu
  * **Example** (Inspect gate outcomes)
  *
  * ```ts import.meta.vitest name="Inspect gate outcomes"
- * import { GateOutcome } from "@beep/skill-contract"
+ * import { GateOutcome } from "@beep/skill-contract/Gate"
  *
  * GateOutcome.literals // => ["allowed", "denied"]
  * ```
@@ -508,7 +509,7 @@ const gateAuditRecordImpl = <const Identifier extends string, const Outcome exte
  * **Example** (Build a denied audit schema)
  *
  * ```ts
- * import { GateAuditRecord } from "@beep/skill-contract"
+ * import { GateAuditRecord } from "@beep/skill-contract/Gate"
  * import * as S from "effect/Schema"
  *
  * const DeniedAudit = GateAuditRecord(
@@ -567,7 +568,7 @@ const gateVerdictImpl = <const Identifier extends string, AllowedDetail extends 
  * **Example** (Construct an allowed verdict)
  *
  * ```ts import.meta.vitest name="Construct an allowed verdict"
- * import { GateId, GateVerdict } from "@beep/skill-contract"
+ * import { GateId, GateVerdict } from "@beep/skill-contract/Gate"
  * import * as S from "effect/Schema"
  *
  * const Detail = S.Struct({ paths: S.Array(S.String) })
