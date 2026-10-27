@@ -209,10 +209,35 @@ their head-pinned merge, including `--relaxed` S11 merges. There is no tracked
 implementation of the external `beep-fleet-orchestrator` daemon in this monorepo;
 its deployment must invoke the `l0` and `gate` commands as described above.
 
-Until the human enables the source-bound required check, the shared merge gate is
-inactive. This permits a safe rollout of the CLI and reviewer before enforcement.
+While the ruleset does not list the source-bound required check, the shared merge
+gate is inactive. This permits a safe rollout of the CLI and reviewer before enforcement.
 GitHub enforces the source-bound rule for non-bypassing actors; preserving existing
 bypass actors makes the software gate necessary for the fleet's privileged App.
+
+## Advisory mode: merging without the reviewer
+
+When the reviewer cannot run, for example because the model quota behind it is
+exhausted, remove its required check instead of waiting. The merge gate follows
+the ruleset, so this one change releases both GitHub's required check and the
+`yeet merge` / `yeet merge-gate` software gate. The reviewer may keep posting
+checks and comments; they become advisory.
+
+```sh
+beep reviewer ruleset release            # preview (default)
+beep reviewer ruleset release --apply    # drop only the beep-reviewer entry
+```
+
+`release` uses the same selection, `kriegcloud` login check, preview, concurrent
+edit refusal and lossless PUT as `require`; it removes only the `beep-reviewer`
+entry and keeps every other check, condition and bypass actor. It needs no App
+credentials. Restore enforcement once the reviewer runs again:
+
+```sh
+BEEP_REVIEWER_APP_ID=5321138 beep reviewer ruleset require --apply
+```
+
+Record each switch, its reason and the restore condition in the owning packet's
+decision log (`goals/cloud-agent-readiness/SPEC.md`).
 
 ## Acceptance on a scratch PR
 
@@ -273,6 +298,12 @@ The update was applied using `kriegcloud`'s gh login. A comparison of the saved
 before/after responses confirmed that every other rule, required check, condition,
 and bypass actor was preserved, including the fleet orchestrator's bypass actor.
 
+On 2026-10-26 the operator switched the reviewer to advisory mode after the
+model quota behind it ran out: the `beep-reviewer` entry was removed from
+ruleset 10240248 and the other 16 required checks, the conditions and both bypass
+actors were confirmed unchanged (decision D41 in
+`goals/cloud-agent-readiness/SPEC.md`).
+
 These results verify the installed App and this checkout's CLI gate. They do not
 establish that a separately deployed fleet controller has adopted the commands;
 that deployment must run the `l0` and `gate` calls described above.
@@ -293,5 +324,5 @@ until expiry unless revoked or the installation is suspended. Stop the reviewer
 and explicitly revoke outstanding tokens if necessary using GitHub's installation
 token endpoint with credentials held in memory. Audit checks and comments from the
 affected interval. Do not remove the required rule merely to bypass a failed review.
-For an intentional rollback, preview a ruleset edit removing only this context,
-preserve other actors/rules, then uninstall the App and retire the service account.
+For an intentional rollback, run `beep reviewer ruleset release` (preview, then
+`--apply`), then uninstall the App and retire the service account.

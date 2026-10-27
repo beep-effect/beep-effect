@@ -1,6 +1,6 @@
 {
   "schemaVersion": "branch-protection-contexts/v1",
-  "capturedAt": "2026-10-15T19:15:22.432Z",
+  "capturedAt": "2026-10-27T03:41:42.741Z",
   "repository": "beep-effect/beep-effect",
   "branch": "main",
   "rulesetId": 10240248,
@@ -23,7 +23,6 @@
     "SAST",
     "Secret Scanning",
     "Security",
-    "Test Unit",
-    "beep-reviewer"
+    "Test Unit"
   ]
 }

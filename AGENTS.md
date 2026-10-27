@@ -351,7 +351,10 @@ needed only for the escalation list below.
   - the review window has elapsed: at least 20 minutes (`BEEP_YEET_REVIEW_WINDOW`)
     since the later of the latest "marked ready for review" event and the
     latest push to the head. No reviewer has to post (review bots never gate);
-    a window that cannot be read is unknown, never elapsed.
+    a window that cannot be read is unknown, never elapsed. The one exception
+    is the `beep-reviewer` check, and only while `main`'s ruleset requires it;
+    `beep reviewer ruleset release|require --apply` switches it off and on
+    (`docs/ops/beep-reviewer-app.md`).
 
   S11 exception (operator 2026-10-09, standing repo-wide since 2026-10-13):
   a PR whose owner called final may merge over failing jobs, required ones
