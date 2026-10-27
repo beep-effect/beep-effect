@@ -3804,6 +3804,7 @@
       "dependencies": {
         "@beep/glob": "workspace:^",
         "@beep/identity": "workspace:^",
+        "@beep/package-json": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/utils": "workspace:^",
         "@beep/walker": "workspace:^",
