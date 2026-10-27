@@ -19,7 +19,7 @@ const $I = $IdentityId.create("Vocab");
  * **Example** (Satisfies VocabShape registry)
  *
  * ```ts
- * import type { VocabShape } from "@beep/identity"
+ * import type { VocabShape } from "@beep/identity/Vocab"
  *
  * const vocab = {
  *   ex: {
@@ -51,7 +51,7 @@ export type VocabShape = Readonly<
  *
  * ```ts import.meta.vitest name="Make and validate entry"
  * import * as S from "effect/Schema"
- * import { VocabEntry } from "@beep/identity"
+ * import { VocabEntry } from "@beep/identity/Vocab"
  *
  * const entry = VocabEntry.make({ iri: "https://example.test/ns#", terms: ["Thing"] })
  * S.is(VocabEntry)(entry) // => true
@@ -78,7 +78,7 @@ export class VocabEntry extends S.Opaque<VocabEntry, { readonly brand: unique sy
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { VocabRegistry } from "@beep/identity"
+ * import { VocabRegistry } from "@beep/identity/Vocab"
  *
  * const isRegistry = S.is(VocabRegistry)
  * console.log(isRegistry({ ex: { iri: "https://example.test/ns#", terms: ["Thing"] } }))
@@ -99,7 +99,7 @@ export const VocabRegistry = S.Record(S.String, VocabEntry).annotate({
  * **Example** (Typed registry with VocabEntry)
  *
  * ```ts
- * import { VocabEntry, type VocabRegistry } from "@beep/identity"
+ * import { VocabEntry, type VocabRegistry } from "@beep/identity/Vocab"
  *
  * const registry: VocabRegistry = { ex: VocabEntry.make({ iri: "https://example.test/ns#", terms: ["Thing"] }) }
  * console.log(registry.ex?.terms[0])
@@ -118,7 +118,7 @@ type TermOf<V extends VocabShape, Prefix extends keyof V & string> = V[Prefix]["
  * **Example** (Build IRI from CoreVocab)
  *
  * ```ts import.meta.vitest name="Build IRI from CoreVocab"
- * import { CoreVocab } from "@beep/identity"
+ * import { CoreVocab } from "@beep/identity/Vocab"
  *
  * const iri = `${CoreVocab.skos.iri}prefLabel`
  * iri // => "http://www.w3.org/2004/02/skos/core#prefLabel"
@@ -366,7 +366,7 @@ export const CoreVocab = {
  * **Example** (Assign CoreVocab type alias)
  *
  * ```ts
- * import { CoreVocab, type CoreVocab as CoreVocabType } from "@beep/identity"
+ * import { CoreVocab, type CoreVocab as CoreVocabType } from "@beep/identity/Vocab"
  *
  * const vocab: CoreVocabType = CoreVocab
  * console.log(vocab.rdf.terms.includes("type"))
@@ -383,7 +383,7 @@ export type CoreVocab = typeof CoreVocab;
  * **Example** (Typed CURIE from CoreVocab)
  *
  * ```ts
- * import { CoreVocab, type Curie } from "@beep/identity"
+ * import { CoreVocab, type Curie } from "@beep/identity/Vocab"
  *
  * const curie: Curie<typeof CoreVocab> = "skos:prefLabel"
  * console.log(curie)
@@ -402,7 +402,7 @@ export type Curie<V extends VocabShape> = {
  * **Example** (Inverse predicate CURIE type)
  *
  * ```ts
- * import { CoreVocab, type Predicate } from "@beep/identity"
+ * import { CoreVocab, type Predicate } from "@beep/identity/Vocab"
  *
  * const predicate: Predicate<typeof CoreVocab> = "^rdfs:subClassOf"
  * console.log(predicate)
@@ -419,7 +419,7 @@ export type Predicate<V extends VocabShape> = Curie<V> | `^${Curie<V>}`;
  * **Example** (Expand CURIE to IRI literal)
  *
  * ```ts
- * import { CoreVocab, type Expand } from "@beep/identity"
+ * import { CoreVocab, type Expand } from "@beep/identity/Vocab"
  *
  * const iri: Expand<"skos:prefLabel", typeof CoreVocab> = "http://www.w3.org/2004/02/skos/core#prefLabel"
  * console.log(iri)
@@ -455,7 +455,7 @@ type MergedVocab<Base extends VocabShape, Extension extends VocabShape> = Omit<B
  * **Example** (Merge CoreVocab with extension)
  *
  * ```ts import.meta.vitest name="Merge CoreVocab with extension"
- * import { CoreVocab, mergeVocab } from "@beep/identity"
+ * import { CoreVocab, mergeVocab } from "@beep/identity/Vocab"
  *
  * const vocab = mergeVocab(CoreVocab, {
  *   ex: {
@@ -486,7 +486,7 @@ export const mergeVocab: {
  * **Example** (Access beep foundation terms)
  *
  * ```ts import.meta.vitest name="Access beep foundation terms"
- * import { SemanticFoundationVocab } from "@beep/identity"
+ * import { SemanticFoundationVocab } from "@beep/identity/Vocab"
  *
  * SemanticFoundationVocab.beep.iri // => "https://beep-effect.com/ns/"
  * SemanticFoundationVocab.beep.terms.includes("ontology/semantic-foundation") // => true
@@ -513,7 +513,7 @@ export const SemanticFoundationVocab = mergeVocab(CoreVocab, {
  * **Example** (Typed SemanticFoundationVocab value)
  *
  * ```ts
- * import { SemanticFoundationVocab, type SemanticFoundationVocab as SemanticFoundationVocabType } from "@beep/identity"
+ * import { SemanticFoundationVocab, type SemanticFoundationVocab as SemanticFoundationVocabType } from "@beep/identity/Vocab"
  *
  * const vocab: SemanticFoundationVocabType = SemanticFoundationVocab
  * console.log(vocab.beep.iri)
@@ -530,7 +530,7 @@ export type SemanticFoundationVocab = typeof SemanticFoundationVocab;
  * **Example** (Expand a SPAR section name)
  *
  * ```ts
- * import { SparVocab } from "@beep/identity"
+ * import { SparVocab } from "@beep/identity/Vocab"
  * console.log(`${SparVocab.doco.iri}Section`)
  * ```
  *
