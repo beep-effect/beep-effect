@@ -35,6 +35,8 @@ PR 1 (#2260, ready, final a36dfffa74) swapped the gates; hosted Heavy / Check 3m
 
 ## Latest Evidence
 
+- `history/reflections/2026-10-27-claude.md`: closeout reflection. PR 1 #2260 merged as e39244dbc5; PR 2 #2262 is the final PR (proposedCloseout `completed-retained`), final-check green including coverage; Security and Heavy / Effect Diagnostics stay red by design until the merge and the back-to-back ruleset edit.
+
 - `research/measurements-2026-10-26.md`: the Effect-patched tsrs (tsrs
   0.20.0-ts7.1.0-beta from `@effect/tsgo` 0.59.0) matches tsc-rs 0.8.0's
   diagnostics on all 181 check projects and infra's `-b` build at lower wall

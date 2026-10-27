@@ -73,7 +73,7 @@ Higher sources outrank lower sources when they conflict.
 - [x] P2: local `turbo run check` green on tsrs (337/337, 1m07s); hosted
       `Heavy / Check` 3m36s and `Heavy / Build` 2m23s green on the swap PR
       (#2260, head a36dfffa74).
-- [ ] PR 2: the eleven profile rules live in `tsconfig.base.json` and every
+- [x] PR 2: the eleven profile rules live in `tsconfig.base.json` and every
       copied compiler profile; the three `ignoreEffect*InTscExitCode` flags are
       false everywhere; the standards/effect-diagnostics.profile.json profile (retired by goals/tsrs-gates), the
       quality effect-diagnostics command, the `effect-diagnostics` CI lane, the
@@ -81,7 +81,7 @@ Higher sources outrank lower sources when they conflict.
       the policy test proves an Effect-only finding fails `tsrs`; the full check
       graph is green with the rules gating; the ruleset no longer requires the
       retired context when PR 2 merges.
-- [ ] No unrelated refactors or formatting churn.
+- [x] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
 
