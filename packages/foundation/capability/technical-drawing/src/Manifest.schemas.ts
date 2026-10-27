@@ -22,7 +22,7 @@ const $I = $TechnicalDrawingId.create("Manifest.schemas");
  * **Example** (The empty-string digest)
  *
  * ```ts
- * import { Sha256Hex } from "@beep/technical-drawing"
+ * import { Sha256Hex } from "@beep/technical-drawing/Manifest.schemas"
  *
  * console.log(Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"))
  * ```
@@ -51,7 +51,7 @@ export const Sha256Hex = S.String.check(
  * **Example** (Annotate a digest)
  *
  * ```ts
- * import { Sha256Hex } from "@beep/technical-drawing"
+ * import { Sha256Hex } from "@beep/technical-drawing/Manifest.schemas"
  *
  * const digest: Sha256Hex = Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
  * console.log(digest)
@@ -68,7 +68,7 @@ export type Sha256Hex = typeof Sha256Hex.Type;
  * **Example** (Make engine info)
  *
  * ```ts
- * import { EngineInfo } from "@beep/technical-drawing"
+ * import { EngineInfo } from "@beep/technical-drawing/Manifest.schemas"
  *
  * console.log(EngineInfo.make({ name: "replicad", version: "1.1.0", binarySha256: "00" }))
  * ```
@@ -143,7 +143,7 @@ export class OutlineSeparation extends S.Opaque<OutlineSeparation, { readonly br
  * **Example** (FIG. 1)
  *
  * ```ts
- * import { FigureRecord } from "@beep/technical-drawing"
+ * import { FigureRecord } from "@beep/technical-drawing/Manifest.schemas"
  *
  * const record = FigureRecord.make({
  *   figure: 1, view: "top-perspective", description: "is a top perspective view",
@@ -217,7 +217,7 @@ export class FigureRecord extends S.Opaque<FigureRecord, { readonly brand: uniqu
  * **Example** (A proven claim)
  *
  * ```ts
- * import { OmissionProof } from "@beep/technical-drawing"
+ * import { OmissionProof } from "@beep/technical-drawing/Manifest.schemas"
  *
  * console.log(OmissionProof.make({ omitted: "rear", shown: "front", relation: "identical", proven: true }))
  * ```
@@ -303,7 +303,8 @@ export class FontPin extends S.Opaque<FontPin, { readonly brand: unique symbol }
  * **Example** (A minimal manifest)
  *
  * ```ts
- * import { BoundingBox, EngineInfo, ModelSummary, RenderManifest } from "@beep/technical-drawing"
+ * import { BoundingBox, ModelSummary } from "@beep/technical-drawing/Geometry.schemas"
+ * import { EngineInfo, RenderManifest } from "@beep/technical-drawing/Manifest.schemas"
  * import * as O from "effect/Option"
  *
  * const manifest = RenderManifest.make({
