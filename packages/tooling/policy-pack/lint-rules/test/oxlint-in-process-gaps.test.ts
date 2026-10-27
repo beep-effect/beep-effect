@@ -349,4 +349,26 @@ describe("oxlint rules in process", () => {
 
     expect(reports).toHaveLength(2);
   });
+  it("restores enclosing global shadows across every function visitor and file reset", () => {
+    const reports: Array<unknown> = [];
+    const rule = createOnceRule("no-direct-process-io", "/repo/packages/example/src/fixture.ts", reports);
+
+    rule.VariableDeclarator?.(declarator(identifier("process")));
+    rule.FunctionDeclaration?.(params("Bun"));
+    rule.FunctionExpression?.(params("unrelated"));
+    rule.CallExpression?.(processExit());
+    rule.CallExpression?.(call(member(identifier("Bun"), "exit")));
+    rule["FunctionExpression:exit"]?.(params());
+    rule["FunctionDeclaration:exit"]?.(params());
+    rule.CallExpression?.(processExit());
+    rule.CallExpression?.(call(member(identifier("Bun"), "exit")));
+    expect(reports).toHaveLength(1);
+
+    // A new file must drop both the current scope and any unclosed ancestors.
+    rule.ArrowFunctionExpression?.(params("Bun"));
+    rule.before?.();
+    rule.CallExpression?.(processExit());
+    rule.CallExpression?.(call(member(identifier("Bun"), "exit")));
+    expect(reports).toHaveLength(3);
+  });
 });

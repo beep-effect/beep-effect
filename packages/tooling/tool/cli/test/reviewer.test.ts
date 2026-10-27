@@ -569,6 +569,21 @@ describe("lossless required check update", () => {
     })
   );
 
+  it.effect("refuses malformed rulesets in both require and release without losing the policy error", () =>
+    Effect.gen(function* () {
+      for (const value of [
+        null,
+        { rules: "invalid" },
+        { rules: [{ type: "required_status_checks", parameters: {} }] },
+      ]) {
+        const required = yield* requireReviewerInRuleset(value, 42).pipe(Effect.flip);
+        const released = yield* releaseReviewerInRuleset(value).pipe(Effect.flip);
+        expect(required.message).toBe("Cannot safely update this ruleset.");
+        expect(released.message).toBe("Cannot safely update this ruleset.");
+      }
+    })
+  );
+
   it.effect("refuses an ambiguous release", () =>
     Effect.gen(function* () {
       const checks = { type: "required_status_checks", parameters: { required_status_checks: [] } };

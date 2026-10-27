@@ -1,8 +1,14 @@
-import { releaseReviewerRuleset, requireReviewerRuleset, reviewerCommand } from "@beep/repo-cli/commands/Reviewer";
+import {
+  enforceReviewerGate,
+  releaseReviewerRuleset,
+  requireReviewerRuleset,
+  reviewerCommand,
+} from "@beep/repo-cli/commands/Reviewer";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
+import * as ConfigProvider from "effect/ConfigProvider";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
@@ -136,6 +142,13 @@ const readStdin = (input: ChildProcess.CommandOptions["stdin"]) =>
 
 // Answers each gh invocation from canned JSON keyed on its argv; unknown requests exit 1 like a failed gh call.
 const respond = Effect.fnUntraced(function* (fixture: GhFixture, args: string, priorCalls: ReadonlyArray<GhCall>) {
+  if (args === `api ${ROOT}/pulls/7`)
+    return O.some(
+      yield* encodeJson({
+        head: { sha: Str.repeat(40)("a") },
+        base: { sha: Str.repeat(40)("b"), ref: "main" },
+      })
+    );
   if (args === "api user --jq .login") return O.some(fixture.login);
   if (args === `api ${ROOT}`) return O.some(yield* encodeJson({ default_branch: "main" }));
   if (args === `api ${ROOT}/rules/branches/main`) return O.some(yield* encodeJson(fixture.branchRules));
@@ -188,6 +201,37 @@ const writable = ({ id: _id, source: _source, source_type: _sourceType, ...field
   fields;
 
 describe("reviewer ruleset workflow", () => {
+  it.effect("the merge gate stops requiring a reviewer after release", () =>
+    Effect.gen(function* () {
+      const result = yield* withFakeGh(
+        {
+          ...defaults,
+          branchRules: [
+            { type: "deletion" },
+            {
+              type: "required_status_checks",
+              parameters: { required_status_checks: [{ context: "Heavy / Check", integration_id: 15368 }] },
+            },
+          ],
+        },
+        enforceReviewerGate(7, Str.repeat(40)("a"))
+      );
+      yield* result.exit;
+      expect(A.map(result.calls, (call) => call.args)).toEqual([
+        `api ${ROOT}/pulls/7`,
+        `api ${ROOT}/rules/branches/main`,
+      ]);
+    })
+  );
+
+  it.effect("a moved PR head holds the merge gate before reading branch rules", () =>
+    Effect.gen(function* () {
+      const result = yield* withFakeGh(defaults, enforceReviewerGate(7, Str.repeat(40)("c")));
+      expect(O.getOrThrow(failureMessage(result.exit))).toContain("Reviewer merge gate held");
+      expect(A.map(result.calls, (call) => call.args)).toEqual([`api ${ROOT}/pulls/7`]);
+    })
+  );
+
   it.effect("dry run prints the release diff and never writes", () =>
     Effect.gen(function* () {
       const { calls, exit } = yield* withFakeGh(defaults, releaseReviewerRuleset(false, undefined));
@@ -319,6 +363,32 @@ it.layer(CommandLayer, { timeout: "30 seconds" })("reviewer ruleset command", (i
     Effect.gen(function* () {
       const result = yield* withFakeGh({ ...defaults, login: "someone-else" }, runReviewer(["ruleset", "release"]));
       expect(O.getOrThrow(failureMessage(result.exit))).toContain("[reviewer] Ruleset administration must use");
+    })
+  );
+  it.effect("ruleset release --apply writes the selected ruleset through the CLI", () =>
+    Effect.gen(function* () {
+      const result = yield* withFakeGh(
+        twoRulesets,
+        runReviewer(["ruleset", "release", "--apply", "--ruleset-id", "12"])
+      );
+      yield* result.exit;
+      const puts = putCalls(result.calls);
+      expect(A.map(puts, (call) => call.args)).toEqual([`api --method PUT ${ROOT}/rulesets/12 --input -`]);
+      const put = O.getOrThrow(A.head(puts));
+      expect(yield* put.stdin.pipe(O.getOrThrow, decodeObject)).toEqual(writable(ruleset(12, false)));
+    })
+  );
+
+  it.effect("ruleset require rejects a nonpositive App id before invoking gh", () =>
+    Effect.gen(function* () {
+      const result = yield* withFakeGh(
+        defaults,
+        runReviewer(["ruleset", "require"]).pipe(
+          Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_REVIEWER_APP_ID: 0 }))
+        )
+      );
+      expect(O.getOrThrow(failureMessage(result.exit))).toContain("A positive App id is required.");
+      expect(result.calls).toEqual([]);
     })
   );
 });
