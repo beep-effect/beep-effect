@@ -308,54 +308,6 @@
       "reason": "Internal kernel carrier of replicad WASM shape handles (one Shape3D plus its line style); not data, never encoded or persisted."
     },
     {
-      "file": "packages/drivers/openclaw/src/Openclaw.models.ts",
-      "symbol": "OpenclawConfigInvalid",
-      "kind": "plain-data-schema-class",
-      "status": "exception",
-      "owner": "@beep/openclaw",
-      "reason": "Plain data with a non-literal _tag field (_tag: S.tag(...).annotateKey(...)) that the schema-opaque-default codemod cannot promote to S.TaggedStruct (keep reason tag-field), so it stays a branded S.Class. Follow-up: convert by hand to a branded S.Opaque over S.Struct/S.TaggedStruct."
-    },
-    {
-      "file": "packages/drivers/openclaw/src/Openclaw.models.ts",
-      "symbol": "OpenclawConfigValid",
-      "kind": "plain-data-schema-class",
-      "status": "exception",
-      "owner": "@beep/openclaw",
-      "reason": "Plain data with a non-literal _tag field (_tag: S.tag(...).annotateKey(...)) that the schema-opaque-default codemod cannot promote to S.TaggedStruct (keep reason tag-field), so it stays a branded S.Class. Follow-up: convert by hand to a branded S.Opaque over S.Struct/S.TaggedStruct."
-    },
-    {
-      "file": "packages/drivers/openclaw/src/Openclaw.models.ts",
-      "symbol": "OpenclawSecretsReloadDegraded",
-      "kind": "plain-data-schema-class",
-      "status": "exception",
-      "owner": "@beep/openclaw",
-      "reason": "Plain data with a non-literal _tag field (_tag: S.tag(...).annotateKey(...)) that the schema-opaque-default codemod cannot promote to S.TaggedStruct (keep reason tag-field), so it stays a branded S.Class. Follow-up: convert by hand to a branded S.Opaque over S.Struct/S.TaggedStruct."
-    },
-    {
-      "file": "packages/drivers/openclaw/src/Openclaw.models.ts",
-      "symbol": "OpenclawSecretsReloaded",
-      "kind": "plain-data-schema-class",
-      "status": "exception",
-      "owner": "@beep/openclaw",
-      "reason": "Plain data with a non-literal _tag field (_tag: S.tag(...).annotateKey(...)) that the schema-opaque-default codemod cannot promote to S.TaggedStruct (keep reason tag-field), so it stays a branded S.Class. Follow-up: convert by hand to a branded S.Opaque over S.Struct/S.TaggedStruct."
-    },
-    {
-      "file": "packages/drivers/openclaw/src/OpenclawIntent.models.ts",
-      "symbol": "OpenclawProviderApiKeyPlaceholder",
-      "kind": "plain-data-schema-class",
-      "status": "exception",
-      "owner": "@beep/openclaw",
-      "reason": "Plain data with a non-literal _tag field (_tag: S.tag(...).annotateKey(...)) that the schema-opaque-default codemod cannot promote to S.TaggedStruct (keep reason tag-field), so it stays a branded S.Class. Follow-up: convert by hand to a branded S.Opaque over S.Struct/S.TaggedStruct."
-    },
-    {
-      "file": "packages/drivers/openclaw/src/OpenclawIntent.models.ts",
-      "symbol": "OpenclawProviderApiKeySecretRef",
-      "kind": "plain-data-schema-class",
-      "status": "exception",
-      "owner": "@beep/openclaw",
-      "reason": "Plain data with a non-literal _tag field (_tag: S.tag(...).annotateKey(...)) that the schema-opaque-default codemod cannot promote to S.TaggedStruct (keep reason tag-field), so it stays a branded S.Class. Follow-up: convert by hand to a branded S.Opaque over S.Struct/S.TaggedStruct."
-    },
-    {
       "file": "packages/drivers/runpod/scripts/operations.renderer.ts",
       "symbol": "JsonSchema",
       "kind": "plain-data-schema-class",
@@ -1463,7 +1415,7 @@
       "ruleId": "SFV4-arbitrary-tests",
       "line": 42,
       "owner": "@beep/law-practice-server",
-      "reason": "Schema-heavy test file has 4 Schema codec assertions but no schema-derived property coverage."
+      "reason": "In-memory repository proof decodes fixed fixture wires to assert append/read-back, filing scope isolation and id ordering; schema-derived Arbitrary round-trips for PatentCitationEvent, CandorDisposition and IdsSubmissionFact live in packages/law-practice/domain/test/LawPracticeDomain.test.ts."
     },
     {
       "file": "packages/law-practice/server/test/CompetencyQuestions.test.ts",

@@ -30,7 +30,9 @@ const eventGroupId = (event: DockEvent): O.Option<GroupId> => ("groupId" in even
  * **Example** (Project group touches from events)
  *
  * ```ts
- * import { GroupId, GroupUpdatedEvent, touchedGroupsInEvents } from "@beep/dock"
+ * import { GroupId } from "@beep/dock/Dock.ids"
+ * import { GroupUpdatedEvent } from "@beep/dock/Dock.events"
+ * import { touchedGroupsInEvents } from "@beep/dock/Recency"
  *
  * const groups = touchedGroupsInEvents([GroupUpdatedEvent.make({ groupId: GroupId.make("group-one") })])
  * console.log(groups)
@@ -56,7 +58,14 @@ export const touchedGroupsInEvents: (events: ReadonlyArray<DockEvent>) => Readon
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { ApiCommandOrigin, CommandId, DockAtomFeedSuccess, DockChanged, DockMutationCompleted, DockMutationOutcome, GroupId, GroupUpdatedEvent, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView, touchedGroups } from "@beep/dock"
+ * import { ApiCommandOrigin } from "@beep/dock/Dock.commands"
+ * import { CommandId, GroupId, PanelId } from "@beep/dock/Dock.ids"
+ * import { DockAtomFeedSuccess, DockMutationCompleted } from "@beep/dock/Dock.protocol"
+ * import { DockChanged, DockMutationOutcome } from "@beep/dock/Dock.outcomes"
+ * import { GroupUpdatedEvent } from "@beep/dock/Dock.events"
+ * import { Panel, TextPanelView } from "@beep/dock/Dock.models"
+ * import { PopulatedWorkspace, TabsNode } from "@beep/dock/Dock.tree"
+ * import { touchedGroups } from "@beep/dock/Recency"
  *
  * const groupId = GroupId.make("group-one")
  * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) })
@@ -103,7 +112,14 @@ export const touchedGroups: (entries: ReadonlyArray<DockAtomFeedEntry>) => Reado
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { ApiCommandOrigin, CommandId, DockAtomFeedSuccess, DockChanged, DockMutationCompleted, DockMutationOutcome, GroupId, GroupUpdatedEvent, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView, makeMruGroupsAtom } from "@beep/dock"
+ * import { ApiCommandOrigin } from "@beep/dock/Dock.commands"
+ * import { CommandId, GroupId, PanelId } from "@beep/dock/Dock.ids"
+ * import { DockAtomFeedSuccess, DockMutationCompleted } from "@beep/dock/Dock.protocol"
+ * import { DockChanged, DockMutationOutcome } from "@beep/dock/Dock.outcomes"
+ * import { GroupUpdatedEvent } from "@beep/dock/Dock.events"
+ * import { Panel, TextPanelView } from "@beep/dock/Dock.models"
+ * import { PopulatedWorkspace, TabsNode } from "@beep/dock/Dock.tree"
+ * import { makeMruGroupsAtom } from "@beep/dock/Recency"
  * import * as Atom from "effect/reactivity/Atom";
  * import * as AtomRegistry from "effect/reactivity/AtomRegistry";
  * const groupId = GroupId.make("group-one")
