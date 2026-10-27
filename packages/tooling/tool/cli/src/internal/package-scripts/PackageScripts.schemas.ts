@@ -337,21 +337,21 @@ export const scriptsBlockFromRecord = (kind: PackageKind) =>
   );
 
 /**
- * TypeScript checkers a type-check or build script may invoke; `tsc-rs` is canonical.
+ * TypeScript checkers a type-check or build script may invoke; `tsrs` is canonical.
  *
  * **Example** (Inspect TypeScriptChecker)
  *
  * ```ts
  * import { TypeScriptChecker } from "@beep/repo-cli/test/PackageScripts"
- * console.log(TypeScriptChecker.is["tsc-rs"]("tsc-rs")) // true
+ * console.log(TypeScriptChecker.is["tsrs"]("tsrs")) // true
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const TypeScriptChecker = LiteralKit(["tsc-rs", "tsgo", "tsc"]).pipe(
+export const TypeScriptChecker = LiteralKit(["tsrs", "tsgo", "tsc"]).pipe(
   $I.annoteSchema("TypeScriptChecker", {
-    description: "TypeScript checkers a type-check or build script may invoke; tsc-rs is canonical.",
+    description: "TypeScript checkers a type-check or build script may invoke; tsrs is canonical.",
   })
 );
 /** Decoded TypeScriptChecker value. @category type-level @since 0.0.0 */
@@ -365,13 +365,13 @@ export type TypeScriptChecker = typeof TypeScriptChecker.Type;
  * ```ts
  * import { NonCanonicalChecker } from "@beep/repo-cli/test/PackageScripts"
  * import * as S from "effect/Schema"
- * console.log(S.is(NonCanonicalChecker)("tsc-rs")) // false
+ * console.log(S.is(NonCanonicalChecker)("tsrs")) // false
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const NonCanonicalChecker = TypeScriptChecker.omit(["tsc-rs"]).pipe(
+export const NonCanonicalChecker = TypeScriptChecker.omit(["tsrs"]).pipe(
   $I.annoteSchema("NonCanonicalChecker", {
     description: "TypeScript checkers that fail the gate unless a manifest script carries an exemption.",
   })
@@ -380,7 +380,7 @@ export const NonCanonicalChecker = TypeScriptChecker.omit(["tsc-rs"]).pipe(
 export type NonCanonicalChecker = typeof NonCanonicalChecker.Type;
 
 /**
- * Script keys whose commands must type-check with `tsc-rs`: `beep:build`, `beep:check`, `beep:check:*`.
+ * Script keys whose commands must type-check with `tsrs`: `beep:build`, `beep:check`, `beep:check:*`.
  *
  * **Example** (Inspect CheckerScriptName)
  *
@@ -395,7 +395,7 @@ export type NonCanonicalChecker = typeof NonCanonicalChecker.Type;
  */
 export const CheckerScriptName = S.String.check(S.isPattern(/^beep:(?:build|check(?::[\w:-]+)?)$/u)).pipe(
   $I.annoteSchema("CheckerScriptName", {
-    description: "Script keys whose commands must type-check with tsc-rs: beep:build, beep:check, beep:check:*.",
+    description: "Script keys whose commands must type-check with tsrs: beep:build, beep:check, beep:check:*.",
   })
 );
 /** Decoded CheckerScriptName value. @category type-level @since 0.0.0 */
@@ -437,7 +437,7 @@ export type PackageScriptsDrift = typeof PackageScriptsDrift.Type;
  * **Example** (Review a type-check command change)
  * ```ts
  * import { ImplScriptDrift } from "@beep/repo-cli/test/PackageScripts"
- * const drift = ImplScriptDrift.make({ name: "beep:check", expected: "tsc-rs -p tsconfig.check.json", actual: "tsc-rs -b tsconfig.json" })
+ * const drift = ImplScriptDrift.make({ name: "beep:check", expected: "tsrs -p tsconfig.check.json", actual: "tsrs -b tsconfig.json" })
  * console.log(drift.name) // beep:check
  * ```
  *
@@ -459,8 +459,8 @@ export class ImplScriptDrift extends S.Opaque<ImplScriptDrift, { readonly brand:
  * **Details**
  *
  * The package-scripts gate fails a `beep:build`, `beep:check`, or `beep:check:*` script that runs
- * a checker other than `tsc-rs`. An exemption names the manifest, the script, the checker, and why
- * `tsc-rs` cannot serve that package (for example a reproduced `tsc-rs` defect or a plugin that only
+ * a checker other than `tsrs`. An exemption names the manifest, the script, the checker, and why
+ * `tsrs` cannot serve that package (for example a reproduced `tsrs` defect or a plugin that only
  * `tsgo` loads). Remove the row when the reason no longer holds.
  *
  * **Example** (Exempt one script)
@@ -470,7 +470,7 @@ export class ImplScriptDrift extends S.Opaque<ImplScriptDrift, { readonly brand:
  *   manifest: "packages/drivers/example/package.json",
  *   script: "beep:check",
  *   engine: "tsgo",
- *   reason: "tsc-rs rejects a valid program; upstream issue linked in the package README",
+ *   reason: "tsrs rejects a valid program; upstream issue linked in the package README",
  * })
  * console.log(exemption.engine) // tsgo
  * ```
@@ -492,7 +492,7 @@ export class CheckerEngineExemption extends S.Opaque<CheckerEngineExemption, { r
 ) {}
 
 /**
- * Reviewed checker-engine exemptions; empty while every workspace type-checks with `tsc-rs`.
+ * Reviewed checker-engine exemptions; empty while every workspace type-checks with `tsrs`.
  *
  * **Example** (Inspect checkerEngineExemptions)
  *
@@ -1340,11 +1340,11 @@ export const taskScriptRules: ReadonlyArray<TaskScriptRule> = [
  * @since 0.0.0
  */
 export const implScriptDefaults: ReadonlyArray<ImplScriptDefault> = [
-  ImplScriptDefault.make({ kind: "library", name: "beep:build", value: "tsc-rs -p tsconfig.json && bun run babel" }),
+  ImplScriptDefault.make({ kind: "library", name: "beep:build", value: "tsrs -p tsconfig.json && bun run babel" }),
   ImplScriptDefault.make({
     kind: "library",
     name: "beep:check",
-    value: "tsc-rs -p tsconfig.check.json && bun run beep:check:tests",
+    value: "tsrs -p tsconfig.check.json && bun run beep:check:tests",
   }),
   ImplScriptDefault.make({ kind: "library", name: "beep:lint", value: "biome check ." }),
   ImplScriptDefault.make({ kind: "library", name: "beep:lint:fix", value: "biome check . --write" }),
@@ -1370,11 +1370,11 @@ export const implScriptDefaults: ReadonlyArray<ImplScriptDefault> = [
     name: "beep:doctest",
     value: "BEEP_VITEST_DOCTEST=1 bunx vitest run",
   }),
-  ImplScriptDefault.make({ kind: "tool", name: "beep:build", value: "tsc-rs -p tsconfig.json && bun run babel" }),
+  ImplScriptDefault.make({ kind: "tool", name: "beep:build", value: "tsrs -p tsconfig.json && bun run babel" }),
   ImplScriptDefault.make({
     kind: "tool",
     name: "beep:check",
-    value: "tsc-rs -p tsconfig.check.json && bun run beep:check:tests",
+    value: "tsrs -p tsconfig.check.json && bun run beep:check:tests",
   }),
   ImplScriptDefault.make({ kind: "tool", name: "beep:lint", value: "biome check ." }),
   ImplScriptDefault.make({ kind: "tool", name: "beep:lint:fix", value: "biome check . --write" }),
@@ -1396,11 +1396,11 @@ export const implScriptDefaults: ReadonlyArray<ImplScriptDefault> = [
       "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run lint:laws && bun run beep:docgen && bun run beep:lint",
   }),
   ImplScriptDefault.make({ kind: "tool", name: "beep:doctest", value: "BEEP_VITEST_DOCTEST=1 bunx vitest run" }),
-  ImplScriptDefault.make({ kind: "ecosystem", name: "beep:build", value: "tsc-rs -p tsconfig.json && bun run babel" }),
+  ImplScriptDefault.make({ kind: "ecosystem", name: "beep:build", value: "tsrs -p tsconfig.json && bun run babel" }),
   ImplScriptDefault.make({
     kind: "ecosystem",
     name: "beep:check",
-    value: "tsc-rs -p tsconfig.check.json && bun run beep:check:tests",
+    value: "tsrs -p tsconfig.check.json && bun run beep:check:tests",
   }),
   ImplScriptDefault.make({ kind: "ecosystem", name: "beep:lint", value: "biome check ." }),
   ImplScriptDefault.make({ kind: "ecosystem", name: "beep:lint:fix", value: "biome check . --write" }),
@@ -1426,11 +1426,11 @@ export const implScriptDefaults: ReadonlyArray<ImplScriptDefault> = [
     name: "beep:doctest",
     value: "BEEP_VITEST_DOCTEST=1 bunx vitest run",
   }),
-  ImplScriptDefault.make({ kind: "app", name: "beep:build", value: "tsc-rs -p tsconfig.check.json" }),
+  ImplScriptDefault.make({ kind: "app", name: "beep:build", value: "tsrs -p tsconfig.check.json" }),
   ImplScriptDefault.make({
     kind: "app",
     name: "beep:check",
-    value: "tsc-rs -p tsconfig.check.json",
+    value: "tsrs -p tsconfig.check.json",
   }),
   ImplScriptDefault.make({ kind: "app", name: "beep:lint", value: "biome check ." }),
   ImplScriptDefault.make({ kind: "app", name: "beep:lint:fix", value: "biome check . --write" }),
@@ -1447,11 +1447,11 @@ export const implScriptDefaults: ReadonlyArray<ImplScriptDefault> = [
     value: "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
   }),
   ImplScriptDefault.make({ kind: "app", name: "beep:doctest", value: "BEEP_VITEST_DOCTEST=1 bunx vitest run" }),
-  ImplScriptDefault.make({ kind: "lab", name: "beep:build", value: "tsc-rs -p tsconfig.check.json" }),
+  ImplScriptDefault.make({ kind: "lab", name: "beep:build", value: "tsrs -p tsconfig.check.json" }),
   ImplScriptDefault.make({
     kind: "lab",
     name: "beep:check",
-    value: "tsc-rs -p tsconfig.check.json",
+    value: "tsrs -p tsconfig.check.json",
   }),
   ImplScriptDefault.make({ kind: "lab", name: "beep:lint", value: "biome check ." }),
   ImplScriptDefault.make({ kind: "lab", name: "beep:lint:fix", value: "biome check . --write" }),
@@ -1473,11 +1473,11 @@ export const implScriptDefaults: ReadonlyArray<ImplScriptDefault> = [
     value: "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
   }),
   ImplScriptDefault.make({ kind: "lab", name: "beep:doctest", value: "BEEP_VITEST_DOCTEST=1 bunx vitest run" }),
-  ImplScriptDefault.make({ kind: "infra", name: "beep:build", value: "tsc-rs -p tsconfig.json && bun run babel" }),
+  ImplScriptDefault.make({ kind: "infra", name: "beep:build", value: "tsrs -p tsconfig.json && bun run babel" }),
   ImplScriptDefault.make({
     kind: "infra",
     name: "beep:check",
-    value: "tsc-rs -p tsconfig.check.json && bun run beep:check:tests",
+    value: "tsrs -p tsconfig.check.json && bun run beep:check:tests",
   }),
   ImplScriptDefault.make({ kind: "infra", name: "beep:lint", value: "biome check ." }),
   ImplScriptDefault.make({ kind: "infra", name: "beep:lint:fix", value: "biome check . --write" }),

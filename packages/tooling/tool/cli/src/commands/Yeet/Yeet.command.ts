@@ -1246,7 +1246,7 @@ const yeetFinalCheckCommand = Command.make(
   (options) => runYeetFinalCheck(YeetFinalCheckOptions.make(options)).pipe(Effect.asVoid)
 ).pipe(
   Command.withDescription(
-    "Replay, scoped to the diff, every hosted gate the cheap tier skips (Lint Policy, Lint, Effect Diagnostics, Check, Docgen, Repo Sanity, Fallow, Coverage, rewritten test expectations) and write the head-pinned receipt yeet ready requires"
+    "Replay, scoped to the diff, every hosted gate the cheap tier skips (Lint Policy, Lint, Check, Docgen, Repo Sanity, Fallow, Coverage, rewritten test expectations) and write the head-pinned receipt yeet ready requires"
   )
 );
 

@@ -2,7 +2,7 @@ import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import { MemoryFileSystem } from "@beep/memfs";
 import { HostProcessPlatform } from "@beep/utils/HostProcess";
 import { AppDirKind, AppDirs, AppDirsError, ResolvedAppDirs, Xdg, XdgPaths } from "@beep/xdg";
-import { AppDirOverrides, AppDirsNamespaceError, AppDirsOptions } from "@beep/xdg/AppDirs";
+import { AppDirOverrides, AppDirsNamespaceError, AppDirsOptions, AppDirsOverrideError } from "@beep/xdg/AppDirs";
 import { assert, describe, it } from "@effect/vitest";
 import { assertExitFailure, assertNone, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -182,6 +182,22 @@ describe("AppDirs", () => {
         assert.isTrue(S.is(AppDirsOptions)({ namespace: "" }));
         assert.isTrue(S.is(AppDirsOptions)({ namespace: "my/app" }));
         assert.isTrue(S.is(AppDirsOptions)({ namespace: "myapp", native: false }));
+      })
+    );
+
+    // Inverted in 4-X-A: the lab used an override "as given", so a relative one
+    // won rung 1 and resolved against the working directory.
+    it.effect("admits only absolute override paths, POSIX or Windows", () =>
+      Effect.gen(function* () {
+        for (const kind of AppDirKind.literals) {
+          for (const path of ["relative", "./dir", "", " /padded", "~/dir", "C:relative"]) {
+            assert.isFalse(S.is(AppDirOverrides)({ [kind]: path }));
+            assert.isFalse(S.is(AppDirsOptions)({ namespace: "myapp", dirs: { [kind]: path } }));
+          }
+          for (const path of ["/abs", "C:\\Users\\ada", "D:/data", "\\\\server\\share"]) {
+            assert.isTrue(S.is(AppDirOverrides)({ [kind]: path }));
+          }
+        }
       })
     );
   });
@@ -555,6 +571,57 @@ describe("AppDirs", () => {
         const appDirs = yield* build("my-app.v2");
         assert.strictEqual(appDirs.namespace, "my-app.v2");
         assert.strictEqual(appDirs.dirs.config, "/home/ada/.my-app.v2");
+      })
+    );
+  });
+
+  describe("the override guard", () => {
+    const build = (dirs: typeof AppDirOverrides.Encoded) =>
+      AppDirs.pipe(
+        provideLayer(
+          AppDirs.layer({ namespace: "myapp", dirs }).pipe(
+            Layer.provide(Xdg.layerFrom(xdgPaths())),
+            Layer.provide(base)
+          )
+        )
+      );
+
+    for (const kind of AppDirKind.literals) {
+      it.effect(`a relative ${kind} override dies with AppDirsOverrideError`, () =>
+        Effect.gen(function* () {
+          const exit = yield* Effect.exit(build({ [kind]: "relative/dir" }));
+          assertExitFailure(exit, exit.pipe(Exit.getCause, O.getOrThrow));
+          const reasons = exit.cause.reasons;
+          assert.isFalse(A.some(reasons, Cause.isFailReason));
+          const defect = A.findFirst(reasons, Cause.isDieReason).pipe(O.getOrThrow).defect;
+          assert(S.is(AppDirsOverrideError)(defect));
+          assert.strictEqual(defect.directory, kind);
+          assert.strictEqual(defect.path, "relative/dir");
+          assert.strictEqual(
+            defect.message,
+            `AppDirs.layer: the ${kind} override must be an absolute path, received "relative/dir"`
+          );
+        })
+      );
+    }
+
+    it.effect("the first relative override in kind order is the one reported", () =>
+      Effect.gen(function* () {
+        const exit = yield* Effect.exit(build({ config: "/abs", cache: "cache", state: "state" }));
+        const defect = exit.pipe(Exit.getCause, O.getOrThrow, (cause) =>
+          A.findFirst(cause.reasons, Cause.isDieReason).pipe(O.getOrThrow)
+        ).defect;
+        assert(S.is(AppDirsOverrideError)(defect));
+        assert.strictEqual(defect.directory, "cache");
+      })
+    );
+
+    it.effect("absolute overrides, POSIX or Windows, are used verbatim", () =>
+      Effect.gen(function* () {
+        const appDirs = yield* build({ config: "/abs/config", data: "D:\\data", runtime: "/run/rt" });
+        assert.strictEqual(appDirs.dirs.config, "/abs/config");
+        assert.strictEqual(appDirs.dirs.data, "D:\\data");
+        assert.strictEqual(appDirs.dirs.runtime, "/run/rt");
       })
     );
   });

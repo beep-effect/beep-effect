@@ -24,7 +24,7 @@
     "test": "bun run beep:test",
     "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
     "beep:build": "vite build",
-    "beep:check": "tsc-rs -p tsconfig.check.json",
+    "beep:check": "tsrs -p tsconfig.check.json",
     "beep:coverage": "bunx vitest run --coverage --exclude=test/integration/**",
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",

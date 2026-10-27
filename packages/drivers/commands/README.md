@@ -84,7 +84,7 @@ Run from the repository root:
 
 ```sh
 bun run beep quality package-verify @beep/commands   # full package gate
-bun run --cwd packages/drivers/commands check         # tsc-rs over src and test
+bun run --cwd packages/drivers/commands check         # tsrs over src and test
 bun run --cwd packages/drivers/commands test          # vitest unit and property suites
 bun run --cwd packages/drivers/commands test:integration
 ```

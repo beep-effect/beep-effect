@@ -14,8 +14,8 @@ import {
   readPracticeKgMailIndex,
 } from "@beep/law-practice-server";
 import { extractPracticeKgReferences } from "@beep/law-practice-use-cases/server";
+import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertInstanceOf } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -24,6 +24,8 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
+
+const PlatformLayer = Layer.mergeAll(MemoryFileSystem.layer, Path.layer);
 
 const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
@@ -373,7 +375,7 @@ describe("practice KG mail index", () => {
     ).toStrictEqual([["cc:client@example.com"], ["to:client@example.com"]]);
   });
 
-  it.layer(Layer.fresh(NodeServices.layer), { timeout: "30 seconds" })((it) => {
+  it.layer(Layer.fresh(PlatformLayer), { timeout: "30 seconds" })((it) => {
     it.effect(
       "reads index files in order, ignores the fields it does not need, and names a bad line",
       Effect.fnUntraced(function* () {

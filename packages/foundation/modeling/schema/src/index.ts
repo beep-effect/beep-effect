@@ -142,6 +142,11 @@ export * from "./Html.ts";
  * @since 0.0.0
  * @category validation
  */
+export * from "./IeeeNumber.ts";
+/**
+ * @since 0.0.0
+ * @category validation
+ */
 export * from "./Jsonc.ts";
 /**
  * @since 0.0.0

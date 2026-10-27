@@ -13,6 +13,7 @@
 
 import { $GithubId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
+import { unstubbedFor } from "@beep/utils/TestDouble";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
@@ -23,7 +24,6 @@ import * as Str from "effect/String";
 import { GitHubClient } from "./GitHubClient.ts";
 import { GitHubError } from "./GitHubError.ts";
 import { GraphQLDocument } from "./GraphQL.ts";
-import { unstubbedFor } from "./internal/unstubbed.ts";
 import { Repo } from "./Repo.ts";
 import type { GitHubGraphQLError } from "./GraphQL.ts";
 

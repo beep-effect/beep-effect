@@ -7,8 +7,11 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { Err } from "@beep/utils";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { OpaqueDefect } from "../../internal/schema/OpaqueDefect.ts";
 
 const $I = $RepoCliId.create("commands/Ci/Ci.errors");
@@ -151,3 +154,25 @@ export class CiLanePartitionError extends S.TaggedError<CiLanePartitionError, { 
     description: "Fail-closed CI lane partition validation or discovery failure.",
   })
 ) {}
+
+/**
+ * Report a `ci` command failure the way every `ci` subcommand does: the
+ * `[ci] <message>` line on stderr, then a reported non-zero exit.
+ *
+ * **Example** (Report a failure)
+ *
+ * ```ts
+ * import { CiCommandError, reportCiCommandError } from "@beep/repo-cli/commands/Ci"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = reportCiCommandError(CiCommandError.make({ message: "no event" }))
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param error - The failure to report.
+ * @returns An effect that prints the line and fails with the reported exit.
+ * @category error-handling
+ * @since 0.0.0
+ */
+export const reportCiCommandError = (error: CiCommandError | CiLanePartitionError) =>
+  Console.error(`[ci] ${error.message}`).pipe(Effect.andThen(failWithReportedExit(`[ci] ${error.message}`)));

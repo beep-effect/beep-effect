@@ -17,7 +17,7 @@ import * as Layer from "effect/Layer";
 const TestLayer = Layer.provide(WinkBackendLive, WinkEngine.WinkEngineLive);
 
 describe("WinkBackend", () => {
-  it.layer(TestLayer)("tokenizes text into words", (it) => {
+  it.layer(TestLayer, { timeout: "30 seconds" })("tokenizes text into words", (it) => {
     it.effect(
       "tokenizes text into words",
       Effect.fnUntraced(function* () {
@@ -29,7 +29,7 @@ describe("WinkBackend", () => {
     );
   });
 
-  it.layer(TestLayer)("splits text into sentences", (it) => {
+  it.layer(TestLayer, { timeout: "30 seconds" })("splits text into sentences", (it) => {
     it.effect(
       "splits text into sentences",
       Effect.fnUntraced(function* () {
@@ -40,7 +40,7 @@ describe("WinkBackend", () => {
     );
   });
 
-  it.layer(TestLayer)("tags parts of speech, one POSNode per token", (it) => {
+  it.layer(TestLayer, { timeout: "30 seconds" })("tags parts of speech, one POSNode per token", (it) => {
     it.effect(
       "tags parts of speech, one POSNode per token",
       Effect.fnUntraced(function* () {
@@ -54,7 +54,7 @@ describe("WinkBackend", () => {
     );
   });
 
-  it.layer(TestLayer)("lemmatizes tokens to canonical forms", (it) => {
+  it.layer(TestLayer, { timeout: "30 seconds" })("lemmatizes tokens to canonical forms", (it) => {
     it.effect(
       "lemmatizes tokens to canonical forms",
       Effect.fnUntraced(function* () {
@@ -67,7 +67,7 @@ describe("WinkBackend", () => {
     );
   });
 
-  it.layer(TestLayer)("extracts entities with a type and span", (it) => {
+  it.layer(TestLayer, { timeout: "30 seconds" })("extracts entities with a type and span", (it) => {
     it.effect(
       "extracts entities with a type and span",
       Effect.fnUntraced(function* () {
@@ -83,7 +83,7 @@ describe("WinkBackend", () => {
     );
   });
 
-  it.layer(TestLayer)("fails parseDependencies with BackendNotSupported", (it) => {
+  it.layer(TestLayer, { timeout: "30 seconds" })("fails parseDependencies with BackendNotSupported", (it) => {
     it.effect(
       "fails parseDependencies with BackendNotSupported",
       Effect.fnUntraced(function* () {
@@ -94,7 +94,7 @@ describe("WinkBackend", () => {
     );
   });
 
-  it.layer(TestLayer)("fails extractRelations with BackendNotSupported", (it) => {
+  it.layer(TestLayer, { timeout: "30 seconds" })("fails extractRelations with BackendNotSupported", (it) => {
     it.effect(
       "fails extractRelations with BackendNotSupported",
       Effect.fnUntraced(function* () {

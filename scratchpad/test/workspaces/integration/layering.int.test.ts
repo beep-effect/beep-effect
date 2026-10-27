@@ -51,6 +51,9 @@ const POLICY = fileURLToPath(new URL("./lab-layers.json", import.meta.url));
 // still counts as that module even without its barrel (the `sbom` signer below).
 // Wave 4-S split `sbom` the same way: its pure models are `@beep/sbom` and the Sigstore
 // signer stays a lab directory, so the package folds into the `sbom` lab module.
+// Wave 5 promoted the rest of `github-actions` as `@beep/github-actions`; with
+// `@beep/github-reporting` it folds into the `github-actions` lab module, which no
+// longer has a lab directory.
 // Every other kit module is still a lab directory reached relatively.
 const PROMOTED: Readonly<Record<string, string>> = {
 	"@beep/cli-kit": "cli",
@@ -60,6 +63,7 @@ const PROMOTED: Readonly<Record<string, string>> = {
 	"@beep/github": "github",
 	"@beep/github-commands": "github-commands",
 	"@beep/github-references": "github-references",
+	"@beep/github-actions": "github-actions",
 	"@beep/github-reporting": "github-actions",
 	"@beep/glob": "glob",
 	"@beep/jsonc": "jsonc",

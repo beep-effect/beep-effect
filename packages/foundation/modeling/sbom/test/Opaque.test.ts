@@ -31,11 +31,11 @@ import {
 import { Sha256Digest } from "@beep/sbom/InTotoStatement";
 import { assert, describe, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
-const DIGEST = Effect.runSync(Sha256Digest.parse(Str.repeat(32)("ab")));
+const DIGEST = Result.getOrThrow(Sha256Digest.parseResult(Str.repeat(32)("ab")));
 
 const component = { type: "library", name: "lib", version: "1.0.0" } as const;
 const contact = { name: "Ada", email: "ada@example.com" };

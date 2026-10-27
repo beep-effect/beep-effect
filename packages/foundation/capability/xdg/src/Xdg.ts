@@ -17,7 +17,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { isAbsolutePosix, isAbsoluteWin32 } from "./internal/absolute.ts";
+import { AbsolutePath, isAbsolutePosix, isAbsoluteWin32 } from "./Absolute.ts";
 
 const $I = $XdgId.create("Xdg");
 
@@ -103,9 +103,10 @@ export const currentPlatform: Effect.Effect<XdgPlatform> = Effect.map(
  *
  * **Details**
  *
- * Raised only for `HOME`: every other XDG variable is optional by construction,
- * and its absence is a resolved default rather than a failure. `cause` carries
- * the underlying `ConfigError` structurally.
+ * Raised only for `HOME`, when it is unset, empty or relative: every other XDG
+ * variable is optional by construction, and its absence is a resolved default
+ * rather than a failure. `cause` carries the underlying `ConfigError`
+ * structurally.
  *
  * **Example** (Inspect the missing HOME failure)
  *
@@ -113,7 +114,7 @@ export const currentPlatform: Effect.Effect<XdgPlatform> = Effect.map(
  * import { XdgEnvError } from "@beep/xdg/Xdg";
  *
  * const error = XdgEnvError.make({ variable: "HOME", cause: "missing environment value" });
- * console.log(error.message); // The HOME environment variable is not set
+ * console.log(error.message); // The HOME environment variable is not set to an absolute path
  * ```
  *
  * @public
@@ -123,9 +124,11 @@ export const currentPlatform: Effect.Effect<XdgPlatform> = Effect.map(
 export class XdgEnvError extends S.TaggedError<XdgEnvError, { readonly brand: unique symbol }>($I`XdgEnvError`)(
   "XdgEnvError",
   {
-    /** The environment variable that was required and not found. */
+    /** The environment variable that was required and not found as an absolute path. */
     variable: S.String.pipe(
-      $I.annoteKey("XdgEnvError.variable", { description: "The environment variable that was required and not found." })
+      $I.annoteKey("XdgEnvError.variable", {
+        description: "The environment variable that was required and not found as an absolute path.",
+      })
     ),
     /** The underlying failure, preserved structurally. */
     cause: S.Defect({ includeStack: true }).pipe(
@@ -145,13 +148,13 @@ export class XdgEnvError extends S.TaggedError<XdgEnvError, { readonly brand: un
    * import { XdgEnvError } from "@beep/xdg/Xdg";
    *
    * const error = XdgEnvError.make({ variable: "HOME", cause: "missing environment value" });
-   * console.log(error.message); // The HOME environment variable is not set
+   * console.log(error.message); // The HOME environment variable is not set to an absolute path
    * ```
    *
    * @since 0.0.0
    */
   override get message(): string {
-    return `The ${this.variable} environment variable is not set`;
+    return `The ${this.variable} environment variable is not set to an absolute path`;
   }
 }
 
@@ -184,8 +187,10 @@ export class XdgEnvError extends S.TaggedError<XdgEnvError, { readonly brand: un
  */
 export class XdgPaths extends S.Opaque<XdgPaths, { readonly brand: unique symbol }>()(
   S.Struct({
-    /** `$HOME`. The one variable that must be set. */
-    home: S.String.pipe($I.annoteKey("XdgPaths.home", { description: "`$HOME`. The one variable that must be set." })),
+    /** `$HOME`. The one variable that must be set, to an absolute path. */
+    home: S.String.pipe(
+      $I.annoteKey("XdgPaths.home", { description: "`$HOME`. The one variable that must be set, to an absolute path." })
+    ),
     /** `$XDG_CONFIG_HOME`. */
     configHome: S.optionalKey(S.String).pipe(
       $I.annoteKey("XdgPaths.configHome", { description: "`$XDG_CONFIG_HOME`." })
@@ -287,10 +292,12 @@ export class Xdg extends Context.Service<Xdg, XdgPaths>()($I`Xdg`) {
    *
    * **Gotchas**
    *
-   * The absolute-only rule covers the `$XDG_*`, `APPDATA` and `LOCALAPPDATA`
-   * values, not `HOME`: any non-empty `HOME` is kept verbatim, a relative one
-   * included, so `AppDirs` and `NativeDirs` can then resolve relative
-   * fallbacks. `XdgBase` treats a relative `HOME` as absent.
+   * The absolute-only rule covers `HOME` too, with a different outcome: an
+   * invalid `$XDG_*`, `APPDATA` or `LOCALAPPDATA` value is ignored, but `HOME`
+   * is required, so an unset, empty or relative `HOME` (a POSIX or Windows
+   * absolute path is accepted) fails the layer with an `XdgEnvError` instead of
+   * resolving every `AppDirs` fallback against the working directory.
+   * `XdgBase`, which is HOME-optional, treats a relative `HOME` as absent.
    *
    * **Example** (Construct the environment-reading layer)
    *
@@ -320,7 +327,7 @@ export class Xdg extends Context.Service<Xdg, XdgPaths>()($I`Xdg`) {
           Effect.catchTag(config, "ConfigError", (cause) => Effect.fail(XdgEnvError.make({ variable: name, cause })))
       );
 
-      const home = yield* asEnvError("HOME", Config.NonEmptyString("HOME"));
+      const home = yield* asEnvError("HOME", Config.schema(AbsolutePath, "HOME"));
 
       /**
        * An unset variable is `Option.none()`, not a failure, and so is a value

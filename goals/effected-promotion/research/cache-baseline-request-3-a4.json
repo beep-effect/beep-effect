@@ -1,5 +1,5 @@
 {
-  "previous": "d2b9a1b085bf0edb2f926b783beb7845203d1bef49c1d9ac3ad05384c78f56c2",
+  "previous": "8962d04d58fa3e2019236fa35e271b54ea1dfe735ebcecf4a020f896021b1df5",
   "review": {
     "reviewer": "Claude Opus 5.5 (effected-promotion 3-A4, effected-3a4)",
     "reason": "Record the dependency-only drift of @beep/repo-cli and @beep/repo-docgen from their new @beep/package-json edges (package.json readers, map sites #130-#135, #143, #277, #307); repo-cli's closure is unchanged and docgen's gains four modeling packages, as measured in the review; no qualification is granted.",

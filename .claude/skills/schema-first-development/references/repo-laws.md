@@ -75,9 +75,8 @@ argument, for example
 ``S.Class<X, { readonly brand: unique symbol }>($I`X`)(...)``. A structural
 `{}` brand needs a documented exception in
 `standards/schema-first.inventory.jsonc`.
-`schemaClassMissingBrand` is an error in the Effect diagnostics lane
-(`bun run beep quality effect-diagnostics`, profile
-`standards/effect-diagnostics.profile.json`).
+`schemaClassMissingBrand` is an error in the root compiler map
+(`tsconfig.base.json`), so `tsrs` fails Check on it.
 Decision: `standards/architecture/DECISIONS.md` (2026-10-14).
 
 Avoid plain data as `S.Class`:

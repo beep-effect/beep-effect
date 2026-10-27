@@ -226,6 +226,85 @@ describe("@beep/infra CiTurboCache remediation", { concurrent: false }, () => {
   );
 });
 
+describe("@beep/infra CiTurboCache throttle alarms", { concurrent: false }, () => {
+  type AlarmInputs = {
+    readonly alarmActions?: ReadonlyArray<string>;
+    readonly comparisonOperator?: string;
+    readonly dimensions?: { readonly FunctionName?: string };
+    readonly metricName?: string;
+    readonly namespace?: string;
+    readonly statistic?: string;
+    readonly threshold?: number;
+    readonly treatMissingData?: string;
+  };
+  type Declared = { readonly type: string; readonly inputs: AlarmInputs & { readonly protocol?: string } };
+
+  const resourcesFor = Effect.fnUntraced(function* (throttleAlarmRecipients?: ReadonlyArray<string>) {
+    const resources = MutableHashMap.empty<string, Declared>();
+    yield* Effect.acquireUseRelease(
+      Effect.tryPromise(() =>
+        pulumi.runtime.setMocks(
+          {
+            call: () => ({ accountId: "123456789012", json: "{}", partition: "aws" }),
+            newResource: (args) => {
+              MutableHashMap.set(resources, args.name, { type: args.type, inputs: args.inputs as Declared["inputs"] });
+              return {
+                id: `${args.name}-id`,
+                state: { ...args.inputs, arn: `arn:aws:mock:us-east-1:123456789012:${args.name}` },
+              };
+            },
+          },
+          "beep-effect",
+          "test"
+        )
+      ),
+      () =>
+        Effect.sync(() => {
+          new CiTurboCache("ci-turbo-cache-test", {
+            config: CiTurboCachePulumiConfigValues.make(validConfigValues),
+            ...(throttleAlarmRecipients === undefined ? {} : { throttleAlarmRecipients }),
+          });
+        }),
+      () => Effect.tryPromise(() => pulumi.runtime.disconnect())
+    );
+    return (name: string) => pipe(MutableHashMap.get(resources, `ci-turbo-cache-test-${name}`), O.getOrUndefined);
+  });
+
+  it.effect(
+    "declares no topic or alarms without recipients",
+    Effect.fnUntraced(function* () {
+      const resource = yield* resourcesFor();
+      expect(resource("throttles")).toBeUndefined();
+      expect(resource("read-throttles")).toBeUndefined();
+    })
+  );
+
+  it.effect(
+    "alarms on any throttle of each function and notifies every recipient by email",
+    Effect.fnUntraced(function* () {
+      const resource = yield* resourcesFor(["ops@example.com", "cost@example.com"]);
+      expect(resource("throttles")?.type).toBe("aws:sns/topic:Topic");
+      expect(resource("throttles-recipient-0")?.inputs.protocol).toBe("email");
+      expect(resource("throttles-recipient-1")?.inputs.protocol).toBe("email");
+      expect(resource("throttles-recipient-2")).toBeUndefined();
+      for (const role of ["read", "write", "authorizer"]) {
+        const alarm = resource(`${role}-throttles`);
+        expect(alarm?.type).toBe("aws:cloudwatch/metricAlarm:MetricAlarm");
+        expect(alarm?.inputs).toMatchObject({
+          alarmActions: ["arn:aws:mock:us-east-1:123456789012:ci-turbo-cache-test-throttles"],
+          comparisonOperator: "GreaterThanThreshold",
+          dimensions: { FunctionName: `ci-turbo-cache-test-${role}` },
+          metricName: "Throttles",
+          namespace: "AWS/Lambda",
+          statistic: "Sum",
+          threshold: 0,
+          treatMissingData: "notBreaching",
+        });
+      }
+    })
+  );
+});
+
 describe("@beep/infra resolveTurboCacheLabBuckets", () => {
   it("derives the lab component prefix and the evolved bucket", () => {
     expect(resolveTurboCacheLabBuckets({ epoch: "c1023a", bucketName: "beep-tcl-c1023a-123456789012" })).toEqual({
