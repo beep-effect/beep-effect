@@ -20,6 +20,7 @@ import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import type * as Scope from "effect/Scope";
 
@@ -460,5 +461,19 @@ it.layer(PlatformLayer, { timeout: "5 seconds" })("allowlist-check", (it) => {
         "- entries.1: second",
       ]);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+  );
+  it.effect("rejects empty entry metadata before checking referenced files", () =>
+    Effect.gen(function* () {
+      const tmpDir = yield* makeRepoWithEntry("export const value = 1;", "object-method");
+      yield* writeRepoFile(
+        tmpDir,
+        ALLOWLIST_PATH,
+        Str.replace('"reason": "test"', '"reason": ""')(renderSingleEntryAllowlist("object-method"))
+      );
+      const summary = yield* runAllowlistCheck(AllowlistCheckOptions.make({ cwd: tmpDir }));
+      expect(summary.ok).toBe(false);
+      expect(summary.diagnostics).toEqual([expect.stringContaining("entries.0.reason")]);
+      expect(summary.diagnostics[0]).toContain("Expected non-empty string.");
+    })
   );
 });
