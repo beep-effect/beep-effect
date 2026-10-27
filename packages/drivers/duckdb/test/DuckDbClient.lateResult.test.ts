@@ -1,14 +1,13 @@
 import { DuckDbClient } from "@beep/duckdb";
 import { it } from "@beep/test-runner";
 import { DuckDBConnection, DuckDBInstance } from "@duckdb/node-api";
-import { assert, describe } from "@effect/vitest";
+import { assert, describe, vi } from "@effect/vitest";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as MutableRef from "effect/MutableRef";
 import * as Reactivity from "effect/reactivity/Reactivity";
 import * as Stream from "effect/Stream";
-import { vi } from "vitest";
 
 // Fake native connection whose `stream` call ignores `interrupt()` and only
 // resolves once the test releases it, after the caller was already cancelled.
