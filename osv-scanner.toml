@@ -11,7 +11,8 @@
 # enforces both expiry forms natively. The local Bun audit wrapper (runBunAudit
 # in packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts) mirrors
 # active `IgnoredVulns` ids and mirrors exact `PackageOverrides` only while
-# every resolution of that package in bun.lock matches the reviewed version.
+# every resolution of that package in bun.lock matches the reviewed version, so
+# an exact override needs no `IgnoredVulns` twin (OSV reports one as unused).
 #
 # Retired dependency-refresh ignores are intentionally absent when the lockfile
 # resolves fixed versions. The current lock resolves esbuild 0.25.12 and 0.28.2,
@@ -56,15 +57,3 @@ ecosystem = "npm"
 ignore = true
 effectiveUntil = 2027-01-14T00:00:00Z
 reason = "GHSA-hp3w-g68c-fv3c: no fixed npm release at the 2026-10-17 recheck (alexei/sprintf.js#237 open; latest 1.1.3 is affected). Consumers/owners: @beep/doc-text (mammoth) and @beep/repo-docgen (remarkable and gray-matter's js-yaml 3 via markdown-toc), all via argparse 1.0.10 CLI entrypoints with package-authored templates. Exit: fixed sprintf-js passes consumers and OSV, or every argparse 1 path is removed. Recheck by 2027-01-14; receipt: goals/repository-simplification-residue/history/receipts/hold-register.md."
-
-# Bun audit mirrors active exact PackageOverrides and IgnoredVulns. These ids match the package overrides
-# above so repo-sanity:bun-audit honors the same accepted exceptions.
-[[IgnoredVulns]]
-id = "GHSA-vfj7-8cjw-p6xm"
-ignoreUntil = 2027-01-14T00:00:00Z
-reason = "GHSA-vfj7-8cjw-p6xm; owner @beep/storybook. Same reviewed braces 3.0.3 exception above, including its fixed-release or dependency-removal exit and 2027-01-14 recheck."
-
-[[IgnoredVulns]]
-id = "GHSA-hp3w-g68c-fv3c"
-ignoreUntil = 2027-01-14T00:00:00Z
-reason = "GHSA-hp3w-g68c-fv3c; owners @beep/doc-text and @beep/repo-docgen. Same reviewed sprintf-js 1.0.3 exception above, including its fixed-release or dependency-removal exit and 2027-01-14 recheck."
