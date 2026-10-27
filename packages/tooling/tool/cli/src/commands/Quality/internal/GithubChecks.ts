@@ -361,15 +361,8 @@ export const githubCheckQualityLanes = (repoRoot: string): ReadonlyArray<GithubC
     "heavy",
     ciLaneStep(repoRoot, "quality:lint-policy", "lint-policy")
   ),
-  // Check retains test-file types and the smoke canary. The full Effect-rule
-  // sweep is a separate parallel hosted job, affected-scoped on PRs.
-  githubCheckLane(
-    "quality:effect-diagnostics",
-    "pre-push",
-    "repo-quality",
-    "heavy",
-    ciLaneStep(repoRoot, "quality:effect-diagnostics", "effect-diagnostics")
-  ),
+  // Check retains test-file types and the smoke canary; the Effect rules run
+  // inside its patched tsrs typecheck.
   githubCheckLane(
     "quality:check",
     "pre-push",

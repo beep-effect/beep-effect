@@ -6,10 +6,6 @@ Replace tsc-rs with the Effect-patched tsrs that @effect/tsgo 0.59.0 ships, so o
 
 ## Non-Goals
 
-- Retiring the standalone `Heavy / Effect Diagnostics` lane, folding
-  `standards/effect-diagnostics.profile.json` into `tsconfig.base.json`, or
-  flipping the three `ignoreEffect*InTscExitCode` flags: that is PR 2 of this
-  packet, after the gate swap has hosted evidence.
 - Moving editors, `beep quality test-tsgo`, `tsgo-smoke`, CheckCensus or the
   docgen example compile off the Go `@effect/tsgo` binary; `tsrs --lsp` is not
   qualified for editors.
@@ -74,9 +70,17 @@ Higher sources outrank lower sources when they conflict.
       tsrs identity line; the nine repo-cli compiler tests pass.
 - [x] P1: the cache-qualification baseline is re-recorded through a reviewed
       request naming every drifted subject (`research/cache-baseline-*`).
-- [ ] P2: local `turbo run check` green on tsrs; hosted `Heavy / Check` and
-      `Heavy / Build` green on the swap PR, timings recorded against the
-      tsc-rs baseline (2m15s turbo time, 2026-10-14).
+- [x] P2: local `turbo run check` green on tsrs (337/337, 1m07s); hosted
+      `Heavy / Check` 3m36s and `Heavy / Build` 2m23s green on the swap PR
+      (#2260, head a36dfffa74).
+- [ ] PR 2: the eleven profile rules live in `tsconfig.base.json` and every
+      copied compiler profile; the three `ignoreEffect*InTscExitCode` flags are
+      false everywhere; `standards/effect-diagnostics.profile.json`, the
+      `quality effect-diagnostics` command, the `effect-diagnostics` CI lane, the
+      final-check gate and the `Heavy / Effect Diagnostics` matrix job are gone;
+      the policy test proves an Effect-only finding fails `tsrs`; the full check
+      graph is green with the rules gating; the ruleset no longer requires the
+      retired context when PR 2 merges.
 - [ ] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
@@ -110,7 +114,9 @@ them and record each in the Decision Log.
 | 2026-10-26 | Patch the installed `tsrs` in `prepare` instead of routing scripts through the `effect-tsgo tsrs` proxy. | The proxy costs about 160 ms of Node start-up per invocation across 189 manifests; the patched bin keeps tsrs's 20 ms launcher and mirrors how the Go binary is already patched. | Switch the scaffold defaults and manifests to `effect-tsgo tsrs` and drop `--tsrs` from `prepare`. |
 | 2026-10-26 | Couple the `tsrs` pin to `@effect/tsgo` in syncpack's held-back group. | `@effect/tsgo` ships one Effect tsrs build per release; an independent `deps:update` of `tsrs` would leave `prepare` without a matching build. | Remove `tsrs` from the group once `@effect/tsgo` ships builds for a version range. |
 | 2026-10-26 | Keep `prepare` strict (no `--skip-missing`). | A missing Effect build must fail install loudly rather than leave a stock tsrs gating with no Effect rules; 0.59.0 ships no win32 or darwin-x64 tsrs build, so those hosts cannot install this repo until upstream adds them. | Add `--skip-missing` to `effect-tsgo patch --tsrs` and rely on the policy test to catch an unpatched gate in CI. |
-| 2026-10-26 | Keep the standalone Effect Diagnostics lane and the three ignore flags in this PR. | The swap and the lane fold are separate risks; hosted evidence for the swap lands first. | None needed; PR 2 of this packet folds the lane. |
+| 2026-10-26 | Keep the standalone Effect Diagnostics lane and the three ignore flags in PR 1. | The swap and the lane fold are separate risks; hosted evidence for the swap lands first. | None needed; PR 2 of this packet folds the lane. |
+| 2026-10-27 | PR 2: fold the eleven profile rules into `tsconfig.base.json` and the copied profiles, set the three `ignoreEffect*InTscExitCode` flags to false, delete the profile, the `quality effect-diagnostics` command, the CI lane, the final-check gate and the hosted matrix job. | The Effect-patched tsrs knows every rule, so `Heavy / Check` gates them in about four minutes where the standalone lane needed 20 to 25 minutes on an 8-vCPU runner under a 19 GiB cgroup; the full check graph passed 336/337 locally with the rules gating (the one red was PR 2's own in-progress test file). This is the reversal the 2026-10-14 decoupling ruling named. | Restore the profile and its loader from PR 1's head, set the flags back to true, re-add the matrix entry, the CI lane, the gate and the command from git history. |
+| 2026-10-27 | Remove `Heavy / Effect Diagnostics` from ruleset 10240248's required contexts when PR 2 merges, not before. | A required context with no job would hold every later PR; removing it early would let PRs merge without the lane while it still exists. | Re-add the context to the ruleset with `gh api`. |
 
 ## Exception Ledger
 

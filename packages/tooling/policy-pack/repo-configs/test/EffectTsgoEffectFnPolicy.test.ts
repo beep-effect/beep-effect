@@ -27,8 +27,8 @@ const effectTsgoCliPath = NodeURL.fileURLToPath(
   new URL("../../../../../node_modules/@effect/tsgo/dist/effect-tsgo.cjs", import.meta.url)
 );
 
-// tsrs reports Effect rules but gates TypeScript errors only while the three ignore flags are true;
-// the standalone diagnostics lane gates the rules. Its Effect build ships inside @effect/tsgo, so the
+// tsrs gates TypeScript errors and every Effect rule: the three ignore flags are false and the
+// standalone diagnostics lane is retired (goals/tsrs-gates). Its Effect build ships inside @effect/tsgo, so the
 // two catalog pins move together: @effect/tsgo packages one patched build per tsrs version it supports.
 const RootCatalog = S.Struct({
   catalog: S.Struct({ tsrs: S.String, "@effect/tsgo": S.String }),
@@ -247,15 +247,17 @@ it.layer(TestLayer, { timeout: "10 seconds" })((it) => {
       expect(`${result.stdout}\n${result.stderr}`).not.toContain("unknownRuleName");
     })
   );
-  it.effect("leaves Effect rules to the diagnostics lane while TypeScript failures gate tsrs", () =>
+  it.effect("fails tsrs on Effect rule findings and on TypeScript errors alike", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const projectDir = yield* fs.makeTempDirectoryScoped({ prefix: "effect-tsgo-type-errors-" });
       yield* bootstrapTsgoProject(projectDir);
       const args = [tsrsBinPath, "--noEmit", "--pretty", "false", "-p", path.join(projectDir, "tsconfig.json")];
+      // The three ignoreEffect*InTscExitCode flags are false since goals/tsrs-gates folded the
+      // standalone diagnostics lane into Check: an Effect-only finding now fails the gate compiler.
       const effectOnly = yield* runCommand(process.execPath, args, projectDir);
-      expect(effectOnly.exitCode, effectOnly.stdout).toBe(0);
+      expect(effectOnly.exitCode, effectOnly.stdout).not.toBe(0);
       expect(effectOnly.stdout).toContain("effect(effectFnOpportunity)");
       const diagnostics = yield* runTsgoOnProject(projectDir);
       expect(diagnostics.exitCode, diagnostics.stdout).toBe(1);

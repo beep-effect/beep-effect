@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-10-26T21:54:57.967Z
+Generated: 2026-10-27T02:14:31.618Z
 
 ## Scope
 
@@ -15,7 +15,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 79 |
 | publicModules | 3547 |
-| publicExports | 25293 |
+| publicExports | 25290 |
 | openModules | 403 |
 | openExports | 1382 |
 | missingExportExamples | 7 |
@@ -189,7 +189,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 131 | `@beep/epistemic-ui` | `packages/epistemic/ui` | clean | 6 | 14 | 0 | 0 |
 | 132 | `@beep/graph-3d` | `packages/drivers/graph-3d` | needs-remediation | 7 | 17 | 2 | 0 |
 | 133 | `@beep/ontology` | `packages/foundation/modeling/ontology` | needs-remediation | 15 | 157 | 5 | 54 |
-| 134 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 473 | 4454 | 47 | 35 |
+| 134 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 473 | 4451 | 47 | 35 |
 | 135 | `@beep/dock-react` | `packages/foundation/ui-system/dock-react` | needs-remediation | 3 | 12 | 0 | 10 |
 | 136 | `@beep/drizzle` | `packages/drivers/drizzle` | clean | 3 | 11 | 0 | 0 |
 | 137 | `@beep/repo-workspaces` | `packages/tooling/library/repo-workspaces` | clean | 27 | 244 | 0 | 0 |
@@ -2239,8 +2239,8 @@ Export findings:
 - `src/commands/Cache/Cache.command.ts:290` `runCacheWarm` (const) - 1 example import violation(s)
 - `src/commands/Cache/Cache.command.ts:487` `buildCacheDashboard` (const) - 1 example import violation(s)
 - `src/commands/Cache/Cache.service.ts:111` `encodeCachePolicyBaselineText` (const) - 1 example import violation(s)
-- `src/commands/Ci/CiLane.ts:406` `CI_LANE_DESCRIPTORS` (const) - 1 documentation section/link violation(s)
-- `src/commands/Ci/CiLane.ts:1565` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
+- `src/commands/Ci/CiLane.ts:405` `CI_LANE_DESCRIPTORS` (const) - 1 documentation section/link violation(s)
+- `src/commands/Ci/CiLane.ts:1553` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
 - `src/commands/Corpus/Corpus.errors.ts:312` `CorpusArchiveMoveDigestMismatchError` (class) - 1 example import violation(s)
 - `src/commands/CreatePackage/CreatePackage.command.ts:121` `resolveCreatePackageTemplateDir` (const) - 1 documentation section/link violation(s)
 - `src/commands/Drawings/Drawings.intake.schemas.ts:304` `MessageFacts` (class) - 1 example import violation(s)
@@ -2255,7 +2255,7 @@ Export findings:
 - `src/commands/Qa/JudgeCheck.ts:512` `extractLastJsonBlock` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgePack.ts:628` `renderTimeline` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgePack.ts:732` `selectJudgeEvidence` (const) - 1 documentation section/link violation(s)
-- `src/commands/Quality/Quality.command.ts:1053` `runBunAudit` (const) - 1 documentation section/link violation(s)
+- `src/commands/Quality/Quality.command.ts:1052` `runBunAudit` (const) - 1 documentation section/link violation(s)
 - `src/commands/Runners/Runners.schemas.ts:120` `BakeConfig` (class) - 1 example import violation(s)
 - `src/commands/Runners/Runners.schemas.ts:167` `BakeReport` (class) - 1 example import violation(s)
 - `src/commands/Runners/Runners.schemas.ts:276` `BakePlan` (class) - 1 example import violation(s)

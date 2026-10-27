@@ -1,0 +1,20 @@
+{
+  "previous": "30d645276acf0ca937269404eaaea5a2db980cd6a80f604faf21fbfe5aef3925",
+  "review": {
+    "reviewer": "Claude Fable 5.1 (tsrs-gates PR 2, feat/tsrs-gates-fold)",
+    "reason": "Re-record the input lists of //#lint:policy-fingerprint, //#lint:tsgo-rules, @beep/repo-cli#test and @beep/repo-cli#test:property after standards/effect-diagnostics.profile.json was folded into tsconfig.base.json and deleted (goals/tsrs-gates PR 2). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
+    "basis": {
+      "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-27-fold.md",
+      "sha256": "fc3c08ae78b61a29e62120df77b5406755e1c84521302e45b1c2751920f441fa"
+    }
+  },
+  "subjects": ["//", "@beep/repo-cli"],
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2"
+}

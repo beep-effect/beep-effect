@@ -31,7 +31,7 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P2 Verify: the swap is implemented in `feat/tsrs-gates`; local proof and the hosted gates on the swap PR are pending. PR 2 (fold the standalone Effect Diagnostics lane into Check) follows.
+PR 1 (#2260, ready, final a36dfffa74) swapped the gates; hosted Heavy / Check 3m36s and Heavy / Build 2m23s on tsrs. PR 2 (`feat/tsrs-gates-fold`, stacked on PR 1) folds the standalone Effect Diagnostics lane into Check.
 
 ## Latest Evidence
 
@@ -52,9 +52,9 @@ P2 Verify: the swap is implemented in `feat/tsrs-gates`; local proof and the hos
   from 2026-10-14.
 - The packaged tsrs build exists for linux-x64, linux-arm64 and darwin-arm64;
   `prepare` fails on win32 and darwin-x64 until upstream ships those.
-- PR 2: fold `standards/effect-diagnostics.profile.json` into
-  `tsconfig.base.json`, flip the three `ignoreEffect*InTscExitCode` flags to
-  false, delete the standalone lane's profile loader and the hosted
-  `Heavy / Effect Diagnostics` job, and update
-  `goals/effect-rules-diagnostics-lane` (its 2026-10-14 decision log names this
-  as the reversal).
+- PR 2 folds `standards/effect-diagnostics.profile.json` into
+  `tsconfig.base.json` and the copied profiles, flips the three
+  `ignoreEffect*InTscExitCode` flags to false, and deletes the standalone lane
+  (CLI command, CI lane, final-check gate, hosted matrix job). The full check
+  graph passed with every rule gating on 2026-10-27. Ruleset 10240248 drops the
+  `Heavy / Effect Diagnostics` required context at PR 2's merge.

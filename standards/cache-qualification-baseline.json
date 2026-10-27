@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Fable 5.1 (tsrs-gates, feat/tsrs-gates)",
-      "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
+      "reviewer": "Claude Fable 5.1 (tsrs-gates PR 2, feat/tsrs-gates-fold)",
+      "reason": "Re-record the input lists of //#lint:policy-fingerprint, //#lint:tsgo-rules, @beep/repo-cli#test and @beep/repo-cli#test:property after standards/effect-diagnostics.profile.json was folded into tsconfig.base.json and deleted (goals/tsrs-gates PR 2). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
-        "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-27-fold.md",
+        "sha256": "fc3c08ae78b61a29e62120df77b5406755e1c84521302e45b1c2751920f441fa"
       }
     },
     "@beep/acp": {
@@ -1130,11 +1130,11 @@
       }
     },
     "@beep/repo-cli": {
-      "reviewer": "Claude Fable 5.1 (tsrs-gates, feat/tsrs-gates)",
-      "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
+      "reviewer": "Claude Fable 5.1 (tsrs-gates PR 2, feat/tsrs-gates-fold)",
+      "reason": "Re-record the input lists of //#lint:policy-fingerprint, //#lint:tsgo-rules, @beep/repo-cli#test and @beep/repo-cli#test:property after standards/effect-diagnostics.profile.json was folded into tsconfig.base.json and deleted (goals/tsrs-gates PR 2). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
-        "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "dada6e03eb831907202fcf2f5bec1c4f7684819d6e6e2ad42500927f28312038"
+        "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-27-fold.md",
+        "sha256": "fc3c08ae78b61a29e62120df77b5406755e1c84521302e45b1c2751920f441fa"
       }
     },
     "@beep/repo-configs": {
@@ -3071,7 +3071,6 @@
             "packages/tooling/tool/cli/src/**",
             "packages/tooling/tool/docgen/package.json",
             "packages/tooling/tool/docgen/src/**",
-            "standards/effect-diagnostics.profile.json",
             "standards/lint-policy.sweeps.jsonc",
             "standards/policy-tools.fingerprint.json",
             "tsconfig.base.json",
@@ -3412,7 +3411,6 @@
             "./tsconfig.json",
             "./tsconfig.packages.json",
             ".gitignore",
-            "standards/effect-diagnostics.profile.json",
             "tsconfig*.json",
             "vitest.aliases.generated.json",
             "{apps,packages,infra,scratchpad}/**/tsconfig*.json",
@@ -98810,7 +98808,6 @@
             "../../../../package.json",
             "../../../../packages/_internal/db-admin/**",
             "../../../../packages/architecture-lab/**",
-            "../../../../standards/effect-diagnostics.profile.json",
             "../../../../tsconfig.base.json",
             "../../../../tsconfig.json",
             "../../../../tsconfig.packages.json",
@@ -98914,7 +98911,6 @@
             "../../../../goals/time-to-certainty/research/economics.json",
             "../../../../goals/time-to-certainty/research/gate-order-handoff.json",
             "../../../../package.json",
-            "../../../../standards/effect-diagnostics.profile.json",
             "../../../../tsconfig.base.json",
             "../../../../tsconfig.json",
             "../../../../tsconfig.packages.json",
@@ -129833,11 +129829,11 @@
       },
       {
         "path": "packages/tooling/tool/cli/turbo.json",
-        "sha256": "8f2d4af0fce6cca096f6c7d14f18c9390f2b474580ce802e145e4c9c30063974"
+        "sha256": "c52155e26db44b552bf3462bf1da200496fb5792050908fd2f16dd80f2483f8d"
       },
       {
         "path": "turbo.json",
-        "sha256": "894e05dc04cb8a58a4fcb50efa48239a7548959b0644c53a002fc686cc976178"
+        "sha256": "761861540ebfa93f512cb43e9adc98de3cd4b712f93b68642f2709a98b7f47da"
       }
     ]
   }
