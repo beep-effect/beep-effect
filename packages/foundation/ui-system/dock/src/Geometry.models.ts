@@ -28,7 +28,7 @@ type Dual2<Self, That, Result> = {
  * **Example** (Read constructed box width)
  *
  * ```ts
- * import { DockBox } from "@beep/dock"
+ * import { DockBox } from "@beep/dock/Dock.geometry"
  *
  * const width = DockBox.make({ width: 640 }).width
  * console.log(width)
@@ -52,7 +52,7 @@ export const Extent = S.Finite.check(S.isGreaterThanOrEqualTo(0)).pipe(
  * **Example** (Construct positioned rectangle)
  *
  * ```ts
- * import { DockBox } from "@beep/dock"
+ * import { DockBox } from "@beep/dock/Dock.geometry"
  *
  * const box = DockBox.make({ left: 10, top: 20, width: 640, height: 480 })
  * console.log(box.width)
@@ -76,7 +76,8 @@ export class DockBox extends S.Opaque<DockBox, { readonly brand: unique symbol }
  * **Example** (Create group geometry)
  *
  * ```ts
- * import { DockBox, GroupGeometry, GroupId } from "@beep/dock"
+ * import { DockBox, GroupGeometry } from "@beep/dock/Dock.geometry"
+ * import { GroupId } from "@beep/dock/Dock.ids"
  *
  * const geometry = GroupGeometry.make({ groupId: GroupId.make("group-one"), box: DockBox.make({ width: 640, height: 480 }) })
  * console.log(geometry.groupId)
@@ -97,7 +98,8 @@ export class GroupGeometry extends S.Opaque<GroupGeometry, { readonly brand: uni
  * **Example** (Create horizontal sash geometry)
  *
  * ```ts
- * import { DockBox, SashGeometry, SplitId } from "@beep/dock"
+ * import { DockBox, SashGeometry } from "@beep/dock/Dock.geometry"
+ * import { SplitId } from "@beep/dock/Dock.ids"
  *
  * const sash = SashGeometry.make({ splitId: SplitId.make("split-one"), axis: "horizontal", box: DockBox.make({ left: 320, width: 8, height: 480 }) })
  * console.log(sash.axis)
@@ -118,7 +120,7 @@ export class SashGeometry extends S.Opaque<SashGeometry, { readonly brand: uniqu
  * **Example** (Create empty floating geometry)
  *
  * ```ts
- * import { DockBox, FloatingGeometry } from "@beep/dock"
+ * import { DockBox, FloatingGeometry } from "@beep/dock/Dock.geometry"
  *
  * const geometry = FloatingGeometry.make({ box: DockBox.make({ width: 640, height: 480 }), groups: [], sashes: [] })
  * console.log(geometry.groups.length)
@@ -139,7 +141,7 @@ export class FloatingGeometry extends S.Opaque<FloatingGeometry, { readonly bran
  * **Example** (Use empty dock geometry)
  *
  * ```ts
- * import { DockGeometry } from "@beep/dock"
+ * import { DockGeometry } from "@beep/dock/Dock.geometry"
  *
  * const geometry = DockGeometry.empty
  * console.log(geometry.groups.length)
@@ -178,7 +180,8 @@ const minimumFloatingExtent = 32;
  * **Example** (Resolve top-right anchored box)
  *
  * ```ts
- * import { DockBox, TopRightAnchoredBox, resolveAnchoredBox } from "@beep/dock"
+ * import { DockBox, resolveAnchoredBox } from "@beep/dock/Dock.geometry"
+ * import { TopRightAnchoredBox } from "@beep/dock/AnchoredBox"
  *
  * const box = resolveAnchoredBox(TopRightAnchoredBox.make({ right: 10, top: 20, width: 300, height: 200 }), DockBox.make({ width: 800, height: 600 }))
  * console.log(box.left)
@@ -221,7 +224,7 @@ export const resolveAnchoredBox: Dual2<AnchoredBox, DockBox, DockBox> = dual(
  * **Example** (Set gap and sash thickness)
  *
  * ```ts
- * import { GeometryOptions } from "@beep/dock"
+ * import { GeometryOptions } from "@beep/dock/Dock.geometry"
  *
  * const options = GeometryOptions.make({ gap: 3, minSashThickness: 9 })
  * console.log(options.gap)
@@ -255,8 +258,8 @@ export class GeometryOptions extends S.Opaque<GeometryOptions, { readonly brand:
  * **Example** (Lookup minimum by group)
  *
  * ```ts
- * import { GroupId } from "@beep/dock"
- * import type { GroupMinimumLookup } from "@beep/dock"
+ * import { GroupId } from "@beep/dock/Dock.ids"
+ * import type { GroupMinimumLookup } from "@beep/dock/Dock.geometry"
  *
  * const minimum: GroupMinimumLookup = (groupId) => groupId === GroupId.make("group-one") ? 120 : 0
  * console.log(minimum(GroupId.make("group-one")))
@@ -273,7 +276,7 @@ export type GroupMinimumLookup = (groupId: GroupId) => number;
  * **Example** (Define group minima map)
  *
  * ```ts
- * import type { GroupMinimaRecord } from "@beep/dock"
+ * import type { GroupMinimaRecord } from "@beep/dock/Dock.geometry"
  *
  * const minima: GroupMinimaRecord = { "group-one": 120 }
  * console.log(minima["group-one"])

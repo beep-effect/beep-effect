@@ -166,7 +166,10 @@ const ensureUnique = (
  * **Example** (Validate populated workspace)
  *
  * ```ts
- * import { DockWorkspace, GroupId, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView, validateWorkspace } from "@beep/dock"
+ * import { DockWorkspace, PopulatedWorkspace, TabsNode } from "@beep/dock/Dock.tree"
+ * import { GroupId, PanelId } from "@beep/dock/Dock.ids"
+ * import { Panel, TextPanelView } from "@beep/dock/Dock.models"
+ * import { validateWorkspace } from "@beep/dock/Dock.reducer"
  * import * as Effect from "effect/Effect";
  * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) })
  * const workspace = PopulatedWorkspace.make({ root: TabsNode.make({ groupId: GroupId.make("group-one"), active: panel }) })
@@ -1056,7 +1059,11 @@ const moveGroupForest = Effect.fn("DockReducer.moveGroupForest")(function* (
  * **Example** (Reduce clear workspace command)
  *
  * ```ts
- * import { ApiCommandOrigin, ClearWorkspaceCommand, CommandId, DockCommandEnvelope, GroupId, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView, reduceDockCommand } from "@beep/dock"
+ * import { ApiCommandOrigin, ClearWorkspaceCommand, DockCommandEnvelope } from "@beep/dock/Dock.commands"
+ * import { CommandId, GroupId, PanelId } from "@beep/dock/Dock.ids"
+ * import { Panel, TextPanelView } from "@beep/dock/Dock.models"
+ * import { PopulatedWorkspace, TabsNode } from "@beep/dock/Dock.tree"
+ * import { reduceDockCommand } from "@beep/dock/Dock.reducer"
  * import * as Effect from "effect/Effect";
  * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) })
  * const workspace = PopulatedWorkspace.make({ root: TabsNode.make({ groupId: GroupId.make("group-one"), active: panel }) })
@@ -1194,7 +1201,11 @@ export const reduceDockCommand = Effect.fn("DockReducer.reduceDockCommand")(func
  * **Example** (Restore from empty workspace)
  *
  * ```ts
- * import { ApiCommandOrigin, CommandId, DockWorkspace, GroupId, Panel, PanelId, PopulatedWorkspace, RestoreSnapshotRequest, TabsNode, TextPanelView, restoreDockWorkspace } from "@beep/dock"
+ * import { ApiCommandOrigin, RestoreSnapshotRequest } from "@beep/dock/Dock.commands"
+ * import { CommandId, GroupId, PanelId } from "@beep/dock/Dock.ids"
+ * import { DockWorkspace, PopulatedWorkspace, TabsNode } from "@beep/dock/Dock.tree"
+ * import { Panel, TextPanelView } from "@beep/dock/Dock.models"
+ * import { restoreDockWorkspace } from "@beep/dock/Dock.reducer"
  * import * as Effect from "effect/Effect";
  * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) })
  * const restored = PopulatedWorkspace.make({ root: TabsNode.make({ groupId: GroupId.make("group-one"), active: panel }) })
