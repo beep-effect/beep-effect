@@ -2208,7 +2208,6 @@ describe("worktree git operations", () => {
                 Effect.map(Context.get(WorktreeRemovalService))
               )
             ),
-            Effect.scoped,
             Effect.provideService(ConfigProvider.ConfigProvider, residueConfigProvider(context.worktreesRoot))
           );
 
@@ -2357,92 +2356,90 @@ describe("worktree git operations", () => {
                   Effect.catchTag("WorktreeCommandError", (error) => Effect.succeed(error.message))
                 );
 
-            yield* Effect.scoped(
-              Effect.gen(function* () {
-                yield* fs.open(path.join(targetPath, "README.md"), { flag: "r" });
-                const ownName = Str.trim(yield* fs.readFileString("/proc/self/comm"));
-                // Under the other session's shell the descriptor is a foreign holder.
-                expect(yield* removeUnder(90)).toContain(
-                  `Refusing to retire ${targetPath}: pid ${process.pid} (${ownName}) via descriptor`
-                );
-                expect(yield* fs.exists(targetPath)).toBe(true);
-                // A shared terminal is not a proven agent session: both a sibling
-                // pipeline and another tab below it must retain the archive fence.
-                expect(yield* removeUnder(70, "ghostty")).toContain(
-                  `Refusing to retire ${targetPath}: pid ${process.pid} (${ownName}) via descriptor`
-                );
-                expect(yield* removeUnder(95, "ghostty")).toContain(
-                  `Refusing to retire ${targetPath}: pid ${process.pid} (${ownName}) via descriptor`
-                );
-                expect(yield* fs.exists(targetPath)).toBe(true);
-                // A recognized session exempts its descendants. A terminal fallback
-                // must also permit the holder when it is the invoking process itself.
-                expect(yield* removeUnder(70, rootCommand, rootCommand === "ghostty" ? process.pid : 100)).toBe(
-                  "retired"
-                );
-                {
-                  const fs = yield* FileSystem.FileSystem;
-                  const path = yield* Path.Path;
-                  const removal = yield* WorktreeRemovalService;
-                  const context = yield* resolveWorktreeContext(repoRoot);
-                  const branch = defaultWorktreeBranch("marker-priority");
-                  const targetPath = yield* addWorktree(context, "marker-priority", branch);
-                  const holder = yield* ChildProcess.make("sleep", ["60"], {
-                    cwd: targetPath,
-                    stdin: "ignore",
-                    stdout: "ignore",
-                    stderr: "ignore",
-                  });
-                  const request = WorktreeRemovalRequest.make({
-                    name: "marker-priority",
-                    targetPath,
-                    mainCheckout: context.mainCheckout,
-                    branch: O.some(branch),
-                    archive: true,
-                    deleteBranch: true,
-                    expectedHead: O.none(),
-                    exemptInvokerSession: true,
-                  });
-                  const table = processTableWithLineage({
-                    base: procProcessTable,
-                    self: process.pid,
-                    entries: [
-                      ProcessTableEntry.make({ pid: 60, parent: 1, command: "claude" }),
-                      ProcessTableEntry.make({ pid: process.pid, parent: 60, command: "bun" }),
-                      ProcessTableEntry.make({ pid: holder.pid, parent: 60, command: "sleep" }),
-                    ],
-                  });
-                  const config = ConfigProvider.fromEnv({
-                    env: {
-                      BEEP_WORKTREE_RESIDUE_ROOT: path.join(context.worktreesRoot, "test-residue"),
-                      HOME: context.worktreesRoot,
-                    },
-                  });
-                  yield* Effect.gen(function* () {
-                    const error = yield* Effect.flip(
-                      removal.remove(
-                        WorktreeRemovalRequest.make({
-                          ...request,
-                          exemptInvoker: WorktreeInvokerExemption.make({
-                            sessionMarker: O.some(WorktreeSessionMarker.make({ name: "CLAUDE_PID", pid: 1 })),
-                          }),
-                        })
-                      )
-                    );
-                    expect(error.message).toContain("still hold it");
-                    expect(yield* fs.exists(targetPath)).toBe(true);
-                    // The same scripted topology permits retirement only when the caller
-                    // requests command-name inference without supplying an explicit proof.
-                    yield* removal.remove(request);
-                    expect(yield* fs.exists(targetPath)).toBe(false);
-                  }).pipe(
-                    Effect.provideService(ProcessTable, table),
-                    Effect.provideService(ConfigProvider.ConfigProvider, config),
-                    Effect.ensuring(Effect.ignore(holder.kill()))
+            {
+              yield* fs.open(path.join(targetPath, "README.md"), { flag: "r" });
+              const ownName = Str.trim(yield* fs.readFileString("/proc/self/comm"));
+              // Under the other session's shell the descriptor is a foreign holder.
+              expect(yield* removeUnder(90)).toContain(
+                `Refusing to retire ${targetPath}: pid ${process.pid} (${ownName}) via descriptor`
+              );
+              expect(yield* fs.exists(targetPath)).toBe(true);
+              // A shared terminal is not a proven agent session: both a sibling
+              // pipeline and another tab below it must retain the archive fence.
+              expect(yield* removeUnder(70, "ghostty")).toContain(
+                `Refusing to retire ${targetPath}: pid ${process.pid} (${ownName}) via descriptor`
+              );
+              expect(yield* removeUnder(95, "ghostty")).toContain(
+                `Refusing to retire ${targetPath}: pid ${process.pid} (${ownName}) via descriptor`
+              );
+              expect(yield* fs.exists(targetPath)).toBe(true);
+              // A recognized session exempts its descendants. A terminal fallback
+              // must also permit the holder when it is the invoking process itself.
+              expect(yield* removeUnder(70, rootCommand, rootCommand === "ghostty" ? process.pid : 100)).toBe(
+                "retired"
+              );
+              {
+                const fs = yield* FileSystem.FileSystem;
+                const path = yield* Path.Path;
+                const removal = yield* WorktreeRemovalService;
+                const context = yield* resolveWorktreeContext(repoRoot);
+                const branch = defaultWorktreeBranch("marker-priority");
+                const targetPath = yield* addWorktree(context, "marker-priority", branch);
+                const holder = yield* ChildProcess.make("sleep", ["60"], {
+                  cwd: targetPath,
+                  stdin: "ignore",
+                  stdout: "ignore",
+                  stderr: "ignore",
+                });
+                const request = WorktreeRemovalRequest.make({
+                  name: "marker-priority",
+                  targetPath,
+                  mainCheckout: context.mainCheckout,
+                  branch: O.some(branch),
+                  archive: true,
+                  deleteBranch: true,
+                  expectedHead: O.none(),
+                  exemptInvokerSession: true,
+                });
+                const table = processTableWithLineage({
+                  base: procProcessTable,
+                  self: process.pid,
+                  entries: [
+                    ProcessTableEntry.make({ pid: 60, parent: 1, command: "claude" }),
+                    ProcessTableEntry.make({ pid: process.pid, parent: 60, command: "bun" }),
+                    ProcessTableEntry.make({ pid: holder.pid, parent: 60, command: "sleep" }),
+                  ],
+                });
+                const config = ConfigProvider.fromEnv({
+                  env: {
+                    BEEP_WORKTREE_RESIDUE_ROOT: path.join(context.worktreesRoot, "test-residue"),
+                    HOME: context.worktreesRoot,
+                  },
+                });
+                yield* Effect.gen(function* () {
+                  const error = yield* Effect.flip(
+                    removal.remove(
+                      WorktreeRemovalRequest.make({
+                        ...request,
+                        exemptInvoker: WorktreeInvokerExemption.make({
+                          sessionMarker: O.some(WorktreeSessionMarker.make({ name: "CLAUDE_PID", pid: 1 })),
+                        }),
+                      })
+                    )
                   );
-                }
-              })
-            );
+                  expect(error.message).toContain("still hold it");
+                  expect(yield* fs.exists(targetPath)).toBe(true);
+                  // The same scripted topology permits retirement only when the caller
+                  // requests command-name inference without supplying an explicit proof.
+                  yield* removal.remove(request);
+                  expect(yield* fs.exists(targetPath)).toBe(false);
+                }).pipe(
+                  Effect.provideService(ProcessTable, table),
+                  Effect.provideService(ConfigProvider.ConfigProvider, config),
+                  Effect.ensuring(Effect.ignore(holder.kill()))
+                );
+              }
+            }
             expect(yield* fs.exists(targetPath)).toBe(false);
             expect(A.filter(yield* fs.readDirectory(context.worktreesRoot), Str.includes(".retiring-"))).toEqual([]);
             expect(yield* runGitText(repoRoot, ["branch", "--list", branch])).toBe("");

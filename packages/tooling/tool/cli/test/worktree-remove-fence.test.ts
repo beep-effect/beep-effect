@@ -131,45 +131,42 @@ const failureMessage = (error: unknown): string =>
 
 // A clone with a nested Claude Code lane whose only commit is already on
 // origin/main, so archive mode finds nothing to preserve and deletes the branch.
-const withScratchRepo = <A, E, R>(
+const withScratchRepo = Effect.fnUntraced(function* <A, E, R>(
   use: (fixture: { repoRoot: string; lane: string; env: Record<string, string> }) => Effect.Effect<A, E, R>
-) =>
-  Effect.scoped(
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      // The command moves its own cwd into the clone while removing the lane it
-      // stands in, and that clone is this scratch tree; put the process back
-      // before the tree is deleted so the next test does not inherit a vanished cwd.
-      const previousCwd = process.cwd();
-      yield* Effect.addFinalizer(() => Effect.sync(() => process.chdir(previousCwd)));
-      const tmp = yield* fs.makeTempDirectoryScoped({ prefix: "worktree-remove-fence-test-" });
-      const repoRoot = path.join(tmp, "main");
-      const origin = path.join(tmp, "origin.git");
-      yield* fs.makeDirectory(repoRoot);
-      yield* fs.makeDirectory(origin);
-      yield* runGit(origin, ["init", "--bare", "-b", "main"]);
-      yield* runGit(repoRoot, ["init", "-b", "main"]);
-      for (const root of [origin, repoRoot]) {
-        yield* runGit(root, ["config", "user.email", "worktree-remove-fence-test@example.com"]);
-        yield* runGit(root, ["config", "user.name", "Worktree Remove Fence Test"]);
-        yield* runGit(root, ["config", "commit.gpgsign", "false"]);
-      }
-      yield* fs.writeFileString(path.join(repoRoot, "README.md"), "# scratch\n");
-      yield* runGit(repoRoot, ["add", "README.md"]);
-      yield* runGit(repoRoot, ["commit", "-m", "init"]);
-      yield* runGit(repoRoot, ["remote", "add", "origin", origin]);
-      yield* runGit(repoRoot, ["push", "--set-upstream", "origin", "main"]);
-      const lane = path.join(repoRoot, CLAUDE_WORKTREES_RELATIVE_ROOT, "lane");
-      yield* runGit(repoRoot, ["worktree", "add", "-b", "claude/lane", lane]);
-      // The fixture env stands in for the process environment, so the real
-      // session's CLAUDE_PID never leaks into a test: each case names its own.
-      const env = { HOME: tmp, BEEP_WORKTREE_RESIDUE_ROOT: path.join(tmp, "test-residue") };
-      yield* use({ repoRoot, lane, env }).pipe(
-        Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnv({ env }))
-      );
-    }).pipe(provideScopedLayer(testLayer))
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  // The command moves its own cwd into the clone while removing the lane it
+  // stands in, and that clone is this scratch tree; put the process back
+  // before the tree is deleted so the next test does not inherit a vanished cwd.
+  const previousCwd = process.cwd();
+  yield* Effect.addFinalizer(() => Effect.sync(() => process.chdir(previousCwd)));
+  const tmp = yield* fs.makeTempDirectoryScoped({ prefix: "worktree-remove-fence-test-" });
+  const repoRoot = path.join(tmp, "main");
+  const origin = path.join(tmp, "origin.git");
+  yield* fs.makeDirectory(repoRoot);
+  yield* fs.makeDirectory(origin);
+  yield* runGit(origin, ["init", "--bare", "-b", "main"]);
+  yield* runGit(repoRoot, ["init", "-b", "main"]);
+  for (const root of [origin, repoRoot]) {
+    yield* runGit(root, ["config", "user.email", "worktree-remove-fence-test@example.com"]);
+    yield* runGit(root, ["config", "user.name", "Worktree Remove Fence Test"]);
+    yield* runGit(root, ["config", "commit.gpgsign", "false"]);
+  }
+  yield* fs.writeFileString(path.join(repoRoot, "README.md"), "# scratch\n");
+  yield* runGit(repoRoot, ["add", "README.md"]);
+  yield* runGit(repoRoot, ["commit", "-m", "init"]);
+  yield* runGit(repoRoot, ["remote", "add", "origin", origin]);
+  yield* runGit(repoRoot, ["push", "--set-upstream", "origin", "main"]);
+  const lane = path.join(repoRoot, CLAUDE_WORKTREES_RELATIVE_ROOT, "lane");
+  yield* runGit(repoRoot, ["worktree", "add", "-b", "claude/lane", lane]);
+  // The fixture env stands in for the process environment, so the real
+  // session's CLAUDE_PID never leaks into a test: each case names its own.
+  const env = { HOME: tmp, BEEP_WORKTREE_RESIDUE_ROOT: path.join(tmp, "test-residue") };
+  yield* use({ repoRoot, lane, env }).pipe(
+    Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnv({ env }))
   );
+}, provideScopedLayer(testLayer));
 
 const remove = (cwd: string) =>
   withCwd(
@@ -466,61 +463,55 @@ describe("worktree remove archive fence", { concurrent: false }, () => {
 
   it.effect("exempts holders under the session that exported CLAUDE_PID to the invoker", () =>
     withScratchRepo(({ repoRoot, lane, env }) =>
-      Effect.scoped(
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          // This test process is the session: it exports its own pid as CLAUDE_PID
-          // to the invoker it spawns, and the lane holder is its other child, a
-          // sibling of the invoker's chain, exactly where an MCP server sits.
-          const holder = yield* spawnLaneHolder(lane);
-          const outcome = yield* runRemoveInvoker(lane, { ...env, CLAUDE_PID: String(process.pid) }).pipe(
-            Effect.ensuring(Effect.ignore(holder.kill()))
-          );
-          expect(outcome).toMatchObject({ ok: true, exitCode: 0 });
-          expect(yield* fs.exists(lane)).toBe(false);
-          expect(yield* runGitText(repoRoot, ["branch", "--list", "claude/lane"])).toBe("");
-        })
-      )
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        // This test process is the session: it exports its own pid as CLAUDE_PID
+        // to the invoker it spawns, and the lane holder is its other child, a
+        // sibling of the invoker's chain, exactly where an MCP server sits.
+        const holder = yield* spawnLaneHolder(lane);
+        const outcome = yield* runRemoveInvoker(lane, { ...env, CLAUDE_PID: String(process.pid) }).pipe(
+          Effect.ensuring(Effect.ignore(holder.kill()))
+        );
+        expect(outcome).toMatchObject({ ok: true, exitCode: 0 });
+        expect(yield* fs.exists(lane)).toBe(false);
+        expect(yield* runGitText(repoRoot, ["branch", "--list", "claude/lane"])).toBe("");
+      })
     )
   );
 
   it.effect("refuses the same holder when the invoker was started with CLAUDE_PID naming init", () =>
     withScratchRepo(({ lane, env }) =>
-      Effect.scoped(
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          // Same topology, but the marker in the invoker's real environment claims
-          // pid 1: an ancestor of everything that never exported it, so nothing on
-          // the invoker's path vouches for it and the sibling holder still blocks.
-          const holder = yield* spawnLaneHolder(lane);
-          const outcome = yield* runRemoveInvoker(lane, { ...env, CLAUDE_PID: "1" }).pipe(
-            Effect.ensuring(Effect.ignore(holder.kill()))
-          );
-          expect(outcome.ok).toBe(false);
-          expect(outcome.message).toContain("still hold it");
-          expect(outcome.message).toContain("(sh) via cwd");
-          expect(yield* fs.exists(lane)).toBe(true);
-        })
-      )
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        // Same topology, but the marker in the invoker's real environment claims
+        // pid 1: an ancestor of everything that never exported it, so nothing on
+        // the invoker's path vouches for it and the sibling holder still blocks.
+        const holder = yield* spawnLaneHolder(lane);
+        const outcome = yield* runRemoveInvoker(lane, { ...env, CLAUDE_PID: "1" }).pipe(
+          Effect.ensuring(Effect.ignore(holder.kill()))
+        );
+        expect(outcome.ok).toBe(false);
+        expect(outcome.message).toContain("still hold it");
+        expect(outcome.message).toContain("(sh) via cwd");
+        expect(yield* fs.exists(lane)).toBe(true);
+      })
     )
   );
 
   it.effect("refuses the holder when CLAUDE_PID names a pid off the invoker's path", () =>
     withScratchRepo(({ lane, env }) =>
-      Effect.scoped(
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const holder = yield* spawnLaneHolder(lane);
-          // The holder's own pid sits in its ancestry but nowhere on the invoker's
-          // path, so no process below it can carry the marker and the proof fails.
-          const error = yield* Effect.flip(withEnv({ ...env, CLAUDE_PID: String(holder.pid) }, remove(lane))).pipe(
-            Effect.ensuring(Effect.ignore(holder.kill()))
-          );
-          expect(failureMessage(error)).toContain("still hold it");
-          expect(failureMessage(error)).toContain("(sh) via cwd");
-          expect(yield* fs.exists(lane)).toBe(true);
-        })
-      )
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const holder = yield* spawnLaneHolder(lane);
+        // The holder's own pid sits in its ancestry but nowhere on the invoker's
+        // path, so no process below it can carry the marker and the proof fails.
+        const error = yield* Effect.flip(withEnv({ ...env, CLAUDE_PID: String(holder.pid) }, remove(lane))).pipe(
+          Effect.ensuring(Effect.ignore(holder.kill()))
+        );
+        expect(failureMessage(error)).toContain("still hold it");
+        expect(failureMessage(error)).toContain("(sh) via cwd");
+        expect(yield* fs.exists(lane)).toBe(true);
+      })
     )
   );
 });
