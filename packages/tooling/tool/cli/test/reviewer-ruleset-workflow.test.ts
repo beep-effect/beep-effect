@@ -36,7 +36,10 @@ const CommandLayer = Layer.mergeAll(
   FileSystem.layerNoop({}),
   Path.layer,
   Stdio.layerTest({ stdinIsTerminal: Effect.succeed(false), stdoutIsTerminal: Effect.succeed(false) }),
-  Layer.mock(HttpClient.HttpClient, {}),
+  Layer.succeed(
+    HttpClient.HttpClient,
+    HttpClient.make(() => Effect.die("unused: ruleset commands only call gh"))
+  ),
   Layer.succeed(
     Terminal.Terminal,
     Terminal.make({
