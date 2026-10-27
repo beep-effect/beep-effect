@@ -17,7 +17,7 @@ const $I = $DockId.create("Dock.errors");
  * **Example** (Make panel-not-found reason)
  *
  * ```ts
- * import { DockRejectionReason } from "@beep/dock"
+ * import { DockRejectionReason } from "@beep/dock/Dock.errors"
  *
  * const value = DockRejectionReason.make("panel-not-found")
  * console.log(value)
@@ -52,7 +52,7 @@ export const DockRejectionReason = LiteralKit([
  * **Example** (Annotate rejection reason type)
  *
  * ```ts
- * import { DockRejectionReason } from "@beep/dock"
+ * import { DockRejectionReason } from "@beep/dock/Dock.errors"
  *
  * const value: DockRejectionReason = DockRejectionReason.make("panel-not-found")
  * console.log(value)
@@ -69,7 +69,8 @@ export type DockRejectionReason = typeof DockRejectionReason.Type;
  * **Example** (Make rejected command error)
  *
  * ```ts
- * import { CommandId, DockCommandRejected } from "@beep/dock"
+ * import { CommandId } from "@beep/dock/Dock.ids"
+ * import { DockCommandRejected } from "@beep/dock/Dock.errors"
  *
  * const value = DockCommandRejected.make({ commandId: CommandId.make("command-close"), reason: "panel-not-found", message: "Panel was not found" })
  * console.log(value)
@@ -98,7 +99,7 @@ export class DockCommandRejected extends S.TaggedError<DockCommandRejected, { re
  * **Example** (Make duplicate-panel-id reason)
  *
  * ```ts
- * import { DockInvariantReason } from "@beep/dock"
+ * import { DockInvariantReason } from "@beep/dock/Dock.errors"
  *
  * const value = DockInvariantReason.make("duplicate-panel-id")
  * console.log(value)
@@ -125,7 +126,7 @@ export const DockInvariantReason = LiteralKit([
  * **Example** (Annotate invariant reason type)
  *
  * ```ts
- * import { DockInvariantReason } from "@beep/dock"
+ * import { DockInvariantReason } from "@beep/dock/Dock.errors"
  *
  * const value: DockInvariantReason = DockInvariantReason.make("duplicate-panel-id")
  * console.log(value)
@@ -142,7 +143,7 @@ export type DockInvariantReason = typeof DockInvariantReason.Type;
  * **Example** (Make invariant violation error)
  *
  * ```ts
- * import { DockInvariantViolation } from "@beep/dock"
+ * import { DockInvariantViolation } from "@beep/dock/Dock.errors"
  *
  * const value = DockInvariantViolation.make({ reason: "duplicate-panel-id", message: "Panel identifiers must be unique" })
  * console.log(value)
@@ -170,7 +171,7 @@ export class DockInvariantViolation extends S.TaggedError<DockInvariantViolation
  * **Example** (Make command boundary value)
  *
  * ```ts
- * import { DockInputBoundary } from "@beep/dock"
+ * import { DockInputBoundary } from "@beep/dock/Dock.errors"
  *
  * const value = DockInputBoundary.make("command")
  * console.log(value)
@@ -190,7 +191,7 @@ export const DockInputBoundary = LiteralKit(["command", "snapshot"]).pipe(
  * **Example** (Annotate input boundary type)
  *
  * ```ts
- * import { DockInputBoundary } from "@beep/dock"
+ * import { DockInputBoundary } from "@beep/dock/Dock.errors"
  *
  * const value: DockInputBoundary = DockInputBoundary.make("command")
  * console.log(value)
@@ -207,7 +208,7 @@ export type DockInputBoundary = typeof DockInputBoundary.Type;
  * **Example** (Make snapshot input error)
  *
  * ```ts
- * import { DockInputError } from "@beep/dock"
+ * import { DockInputError } from "@beep/dock/Dock.errors"
  *
  * const value = DockInputError.make({ boundary: "snapshot", message: "Invalid snapshot" })
  * console.log(value)
@@ -235,7 +236,7 @@ export class DockInputError extends S.TaggedError<DockInputError, { readonly bra
  * **Example** (Make save operation value)
  *
  * ```ts
- * import { DockPersistenceOperation } from "@beep/dock"
+ * import { DockPersistenceOperation } from "@beep/dock/Dock.errors"
  *
  * const value = DockPersistenceOperation.make("save")
  * console.log(value)
@@ -255,7 +256,7 @@ export const DockPersistenceOperation = LiteralKit(["load", "save"]).pipe(
  * **Example** (Annotate persistence operation type)
  *
  * ```ts
- * import { DockPersistenceOperation } from "@beep/dock"
+ * import { DockPersistenceOperation } from "@beep/dock/Dock.errors"
  *
  * const value: DockPersistenceOperation = DockPersistenceOperation.make("save")
  * console.log(value)
@@ -272,7 +273,7 @@ export type DockPersistenceOperation = typeof DockPersistenceOperation.Type;
  * **Example** (Make save persistence error)
  *
  * ```ts
- * import { DockPersistenceError } from "@beep/dock"
+ * import { DockPersistenceError } from "@beep/dock/Dock.errors"
  *
  * const value = DockPersistenceError.make({ operation: "save", message: "Storage unavailable" })
  * console.log(value)
@@ -300,7 +301,7 @@ export class DockPersistenceError extends S.TaggedError<DockPersistenceError, { 
  * **Example** (Make missing snapshot error)
  *
  * ```ts
- * import { DockSnapshotMissing } from "@beep/dock"
+ * import { DockSnapshotMissing } from "@beep/dock/Dock.errors"
  *
  * const value = DockSnapshotMissing.make({ message: "No snapshot exists" })
  * console.log(value)
@@ -327,7 +328,8 @@ export class DockSnapshotMissing extends S.TaggedError<DockSnapshotMissing, { re
  * **Example** (Create command rejected member)
  *
  * ```ts
- * import { CommandId, DockCommandRejected, DockTransitionError } from "@beep/dock"
+ * import { CommandId } from "@beep/dock/Dock.ids"
+ * import { DockCommandRejected, DockTransitionError } from "@beep/dock/Dock.errors"
  *
  * const value = DockCommandRejected.make({ commandId: CommandId.make("command-close"), reason: "panel-not-found", message: "Panel was not found" })
  * console.log(value)
@@ -349,7 +351,8 @@ export const DockTransitionError = S.Union([DockCommandRejected, DockInvariantVi
  * **Example** (Type transition error union)
  *
  * ```ts
- * import { CommandId, DockCommandRejected, DockTransitionError } from "@beep/dock"
+ * import { CommandId } from "@beep/dock/Dock.ids"
+ * import { DockCommandRejected, DockTransitionError } from "@beep/dock/Dock.errors"
  *
  * const value: DockTransitionError = DockCommandRejected.make({ commandId: CommandId.make("command-close"), reason: "panel-not-found", message: "Panel was not found" })
  * console.log(value)
