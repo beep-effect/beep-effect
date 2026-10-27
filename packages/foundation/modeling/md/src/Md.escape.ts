@@ -1,6 +1,8 @@
 /**
  * Markdown and HTML escaping and URL-sanitization helpers.
  *
+ * **Details**
+ *
  * These functions are the XSS/injection boundary for rendered Markdown and HTML
  * output: every public escaper here normalizes and neutralizes untrusted input
  * before it reaches a render adapter.
@@ -703,7 +705,7 @@ export const escapeHtmlUrlAttribute = flow(
  * **Example** (Measure longest backtick run)
  *
  * ```ts import.meta.vitest name="Measure longest backtick run"
- * import { Str } from "@beep/utils"
+ * import * as Str from "@beep/utils/Str"
  * import { maxBackticks } from "@beep/md/Md.escape"
  *
  * const triple = Str.repeat("`", 3)
@@ -772,7 +774,7 @@ export const renderInlineCode = (text: string): string => {
  * **Example** (Render TypeScript code fence)
  *
  * ```ts import.meta.vitest name="Render TypeScript code fence"
- * import { Str } from "@beep/utils"
+ * import * as Str from "@beep/utils/Str"
  * import { renderFencedCode } from "@beep/md/Md.escape"
  *
  * const block = renderFencedCode("console.log('beep')", "ts")

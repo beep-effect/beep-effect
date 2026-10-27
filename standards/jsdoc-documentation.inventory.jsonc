@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-27T02:14:31.618Z",
+  "generatedAt": "2026-10-27T11:54:08.080Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -62,23 +62,23 @@
   },
   "totals": {
     "packages": 183,
-    "cleanPackages": 102,
+    "cleanPackages": 103,
     "packagesWithoutPublicSrcSurface": 2,
-    "packagesNeedingRemediation": 79,
+    "packagesNeedingRemediation": 78,
     "publicModules": 3547,
-    "publicExports": 25290,
-    "openModules": 403,
-    "openExports": 1382,
+    "publicExports": 25292,
+    "openModules": 399,
+    "openExports": 1295,
     "missingExportExamples": 7,
     "missingExportCategories": 0,
     "missingExportSince": 0,
     "forbiddenTagFindings": 0,
     "malformedConditionalTagFindings": 0,
-    "exampleImportFindings": 1351,
+    "exampleImportFindings": 1263,
     "unsafeExampleFindings": 0,
     "schemaAnnotationFindings": 0,
     "undescribed-see": 11,
-    "multiple-description-paragraphs": 425,
+    "multiple-description-paragraphs": 421,
     "leading-blank": 0,
     "trailing-blank": 0,
     "invalid-heading": 1,
@@ -91,7 +91,7 @@
     "duplicate-example": 0,
     "loose-ts-fence": 0,
     "forbidden-remarks": 0,
-    "no-root-package-import": 1330,
+    "no-root-package-import": 1242,
     "rootPolicyOpen": 0
   },
   "packages": [
@@ -86693,7 +86693,7 @@
       "packageName": "@beep/md",
       "packagePath": "packages/foundation/modeling/md",
       "topoOrder": 20,
-      "status": "needs-remediation",
+      "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
         "sourceFileCount": 11,
@@ -86707,20 +86707,20 @@
         "enforceVersion": true
       },
       "counts": {
-        "openModules": 4,
-        "openExports": 87,
+        "openModules": 0,
+        "openExports": 0,
         "missingExportExamples": 0,
         "missingExportCategories": 0,
         "missingExportSince": 0,
         "missingExportSummaries": 0,
         "forbiddenTagFindings": 0,
         "malformedConditionalTagFindings": 0,
-        "exampleImportFindings": 88,
+        "exampleImportFindings": 0,
         "unsafeExampleFindings": 0,
         "schemaAnnotationFindings": 0,
         "documentationRuleFindings": {
           "undescribed-see": 0,
-          "multiple-description-paragraphs": 4,
+          "multiple-description-paragraphs": 0,
           "leading-blank": 0,
           "trailing-blank": 0,
           "invalid-heading": 0,
@@ -86733,7 +86733,7 @@
           "duplicate-example": 0,
           "loose-ts-fence": 0,
           "forbidden-remarks": 0,
-          "no-root-package-import": 88
+          "no-root-package-import": 0
         }
       },
       "modules": [
@@ -86755,13 +86755,9 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
+          "documentationShapeViolations": [],
           "exportCount": 5,
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "packageDocumentation",
@@ -86803,13 +86799,9 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
+          "documentationShapeViolations": [],
           "exportCount": 24,
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "packageDocumentation",
@@ -86829,13 +86821,9 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
+          "documentationShapeViolations": [],
           "exportCount": 2,
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "packageDocumentation",
@@ -86920,13 +86908,9 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
+          "documentationShapeViolations": [],
           "exportCount": 25,
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "jsdoc",
@@ -87000,8 +86984,8 @@
           "exportKind": "interface",
           "filePath": "src/Md.behavior.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.behavior.ts",
-          "line": 38,
-          "anchor": "packages-foundation-modeling-md-src-md-behavior-ts-38-segmentstrategy",
+          "line": 40,
+          "anchor": "packages-foundation-modeling-md-src-md-behavior-ts-40-segmentstrategy",
           "currentTags": [
             "@typeParam",
             "@category",
@@ -87023,8 +87007,8 @@
           "exportKind": "const",
           "filePath": "src/Md.behavior.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.behavior.ts",
-          "line": 97,
-          "anchor": "packages-foundation-modeling-md-src-md-behavior-ts-97-segmentinlineruns",
+          "line": 99,
+          "anchor": "packages-foundation-modeling-md-src-md-behavior-ts-99-segmentinlineruns",
           "currentTags": [
             "@typeParam",
             "@param",
@@ -87036,26 +87020,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "renderPlainTextInline",
           "exportKind": "const",
           "filePath": "src/Md.behavior.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.behavior.ts",
-          "line": 133,
-          "anchor": "packages-foundation-modeling-md-src-md-behavior-ts-133-renderplaintextinline",
+          "line": 135,
+          "anchor": "packages-foundation-modeling-md-src-md-behavior-ts-135-renderplaintextinline",
           "currentTags": [
             "@category",
             "@since"
@@ -87064,26 +87042,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "renderPlainTextBlock",
           "exportKind": "const",
           "filePath": "src/Md.behavior.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.behavior.ts",
-          "line": 150,
-          "anchor": "packages-foundation-modeling-md-src-md-behavior-ts-150-renderplaintextblock",
+          "line": 152,
+          "anchor": "packages-foundation-modeling-md-src-md-behavior-ts-152-renderplaintextblock",
           "currentTags": [
             "@category",
             "@since"
@@ -87092,26 +87064,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "renderPlainTextBlocks",
           "exportKind": "const",
           "filePath": "src/Md.behavior.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.behavior.ts",
-          "line": 167,
-          "anchor": "packages-foundation-modeling-md-src-md-behavior-ts-167-renderplaintextblocks",
+          "line": 169,
+          "anchor": "packages-foundation-modeling-md-src-md-behavior-ts-169-renderplaintextblocks",
           "currentTags": [
             "@category",
             "@since"
@@ -87120,18 +87086,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "CommonMarkSpecificationProfile",
@@ -87401,18 +87361,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "inspectMarkdownSpecificationConformance",
@@ -87432,26 +87386,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "CompatibilityUrlPolicy",
           "exportKind": "class",
           "filePath": "src/Md.escape.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.escape.ts",
-          "line": 95,
-          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-95-compatibilityurlpolicy",
+          "line": 97,
+          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-97-compatibilityurlpolicy",
           "currentTags": [
             "@category",
             "@since"
@@ -87472,8 +87420,8 @@
           "exportKind": "class",
           "filePath": "src/Md.escape.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.escape.ts",
-          "line": 124,
-          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-124-allowlisturlpolicyspec",
+          "line": 126,
+          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-126-allowlisturlpolicyspec",
           "currentTags": [
             "@category",
             "@since"
@@ -87494,8 +87442,8 @@
           "exportKind": "const",
           "filePath": "src/Md.escape.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.escape.ts",
-          "line": 163,
-          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-163-urlpolicyspec",
+          "line": 165,
+          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-165-urlpolicyspec",
           "currentTags": [
             "@category",
             "@since"
@@ -87516,8 +87464,8 @@
           "exportKind": "type",
           "filePath": "src/Md.escape.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.escape.ts",
-          "line": 186,
-          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-186-urlpolicyspec",
+          "line": 188,
+          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-188-urlpolicyspec",
           "currentTags": [
             "@category",
             "@since"
@@ -87538,8 +87486,8 @@
           "exportKind": "const",
           "filePath": "src/Md.escape.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.escape.ts",
-          "line": 202,
-          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-202-compatibilityurlpolicyspec",
+          "line": 204,
+          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-204-compatibilityurlpolicyspec",
           "currentTags": [
             "@category",
             "@since"
@@ -87560,8 +87508,8 @@
           "exportKind": "const",
           "filePath": "src/Md.escape.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.escape.ts",
-          "line": 218,
-          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-218-browsersafeurlpolicyspec",
+          "line": 220,
+          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-220-browsersafeurlpolicyspec",
           "currentTags": [
             "@category",
             "@since"
@@ -87582,8 +87530,8 @@
           "exportKind": "const",
           "filePath": "src/Md.escape.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.escape.ts",
-          "line": 238,
-          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-238-strictweburlpolicyspec",
+          "line": 240,
+          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-240-strictweburlpolicyspec",
           "currentTags": [
             "@category",
             "@since"
@@ -87604,8 +87552,8 @@
           "exportKind": "const",
           "filePath": "src/Md.escape.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.escape.ts",
-          "line": 258,
-          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-258-usercontentlinkurlpolicyspec",
+          "line": 260,
+          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-260-usercontentlinkurlpolicyspec",
           "currentTags": [
             "@category",
             "@since"
@@ -87626,8 +87574,8 @@
           "exportKind": "const",
           "filePath": "src/Md.escape.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.escape.ts",
-          "line": 278,
-          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-278-usercontentimageurlpolicyspec",
+          "line": 280,
+          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-280-usercontentimageurlpolicyspec",
           "currentTags": [
             "@category",
             "@since"
@@ -87648,8 +87596,8 @@
           "exportKind": "const",
           "filePath": "src/Md.escape.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.escape.ts",
-          "line": 480,
-          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-480-isurldestinationallowedwithpolicy",
+          "line": 482,
+          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-482-isurldestinationallowedwithpolicy",
           "currentTags": [
             "@category",
             "@since"
@@ -87670,8 +87618,8 @@
           "exportKind": "const",
           "filePath": "src/Md.escape.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.escape.ts",
-          "line": 508,
-          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-508-isurldestinationallowed",
+          "line": 510,
+          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-510-isurldestinationallowed",
           "currentTags": [
             "@category",
             "@since"
@@ -87692,8 +87640,8 @@
           "exportKind": "const",
           "filePath": "src/Md.escape.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.escape.ts",
-          "line": 525,
-          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-525-joinblocks",
+          "line": 527,
+          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-527-joinblocks",
           "currentTags": [
             "@category",
             "@since"
@@ -87714,8 +87662,8 @@
           "exportKind": "const",
           "filePath": "src/Md.escape.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.escape.ts",
-          "line": 546,
-          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-546-prefixlines",
+          "line": 548,
+          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-548-prefixlines",
           "currentTags": [
             "@category",
             "@since"
@@ -87736,8 +87684,8 @@
           "exportKind": "const",
           "filePath": "src/Md.escape.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.escape.ts",
-          "line": 568,
-          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-568-escapemarkdowntext",
+          "line": 570,
+          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-570-escapemarkdowntext",
           "currentTags": [
             "@category",
             "@since"
@@ -87758,8 +87706,8 @@
           "exportKind": "const",
           "filePath": "src/Md.escape.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.escape.ts",
-          "line": 588,
-          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-588-sanitizeurldestinationwithpolicy",
+          "line": 590,
+          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-590-sanitizeurldestinationwithpolicy",
           "currentTags": [
             "@category",
             "@since"
@@ -87780,8 +87728,8 @@
           "exportKind": "const",
           "filePath": "src/Md.escape.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.escape.ts",
-          "line": 614,
-          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-614-sanitizeurldestination",
+          "line": 616,
+          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-616-sanitizeurldestination",
           "currentTags": [
             "@category",
             "@since"
@@ -87802,8 +87750,8 @@
           "exportKind": "const",
           "filePath": "src/Md.escape.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.escape.ts",
-          "line": 631,
-          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-631-escapemarkdowndestinationwithpolicy",
+          "line": 633,
+          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-633-escapemarkdowndestinationwithpolicy",
           "currentTags": [
             "@category",
             "@since"
@@ -87824,8 +87772,8 @@
           "exportKind": "const",
           "filePath": "src/Md.escape.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.escape.ts",
-          "line": 653,
-          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-653-escapemarkdowndestination",
+          "line": 655,
+          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-655-escapemarkdowndestination",
           "currentTags": [
             "@category",
             "@since"
@@ -87846,8 +87794,8 @@
           "exportKind": "const",
           "filePath": "src/Md.escape.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.escape.ts",
-          "line": 673,
-          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-673-escapehtmlurlattributewithpolicy",
+          "line": 675,
+          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-675-escapehtmlurlattributewithpolicy",
           "currentTags": [
             "@category",
             "@since"
@@ -87868,8 +87816,8 @@
           "exportKind": "const",
           "filePath": "src/Md.escape.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.escape.ts",
-          "line": 694,
-          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-694-escapehtmlurlattribute",
+          "line": 696,
+          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-696-escapehtmlurlattribute",
           "currentTags": [
             "@category",
             "@since"
@@ -87890,8 +87838,8 @@
           "exportKind": "const",
           "filePath": "src/Md.escape.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.escape.ts",
-          "line": 717,
-          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-717-maxbackticks",
+          "line": 719,
+          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-719-maxbackticks",
           "currentTags": [
             "@category",
             "@since"
@@ -87900,26 +87848,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "renderInlineCode",
           "exportKind": "const",
           "filePath": "src/Md.escape.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.escape.ts",
-          "line": 746,
-          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-746-renderinlinecode",
+          "line": 748,
+          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-748-renderinlinecode",
           "currentTags": [
             "@category",
             "@since"
@@ -87940,8 +87882,8 @@
           "exportKind": "const",
           "filePath": "src/Md.escape.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.escape.ts",
-          "line": 786,
-          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-786-renderfencedcode",
+          "line": 788,
+          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-788-renderfencedcode",
           "currentTags": [
             "@category",
             "@since"
@@ -87950,26 +87892,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/utils package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "isStringArray",
           "exportKind": "const",
           "filePath": "src/Md.escape.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.escape.ts",
-          "line": 810,
-          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-810-isstringarray",
+          "line": 812,
+          "anchor": "packages-foundation-modeling-md-src-md-escape-ts-812-isstringarray",
           "currentTags": [
             "@category",
             "@since"
@@ -87990,8 +87926,8 @@
           "exportKind": "re-export",
           "filePath": "src/Md.html.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.html.ts",
-          "line": 56,
-          "anchor": "packages-foundation-modeling-md-src-md-html-ts-56-export-safehtmlvalue-from-beep-html",
+          "line": 59,
+          "anchor": "packages-foundation-modeling-md-src-md-html-ts-59-export-safehtmlvalue-from-beep-html",
           "currentTags": [
             "@category",
             "@since"
@@ -88012,8 +87948,8 @@
           "exportKind": "const",
           "filePath": "src/Md.html.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.html.ts",
-          "line": 42,
-          "anchor": "packages-foundation-modeling-md-src-md-html-ts-42-rendersafehtml",
+          "line": 45,
+          "anchor": "packages-foundation-modeling-md-src-md-html-ts-45-rendersafehtml",
           "currentTags": [
             "@category",
             "@since"
@@ -88022,18 +87958,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "CodeFenceLanguage",
@@ -90630,18 +90560,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "renderHtmlInline",
@@ -90658,18 +90582,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "RenderError",
@@ -90752,18 +90670,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "renderHtmlBlock",
@@ -90780,18 +90692,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "renderMarkdownBlocks",
@@ -90808,18 +90714,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "renderHtmlBlocks",
@@ -90836,18 +90736,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "renderUnsafe",
@@ -90864,18 +90758,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "renderHtmlUnsafe",
@@ -90892,18 +90780,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "renderPlainTextUnsafe",
@@ -90920,18 +90802,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "RenderOutputOf",
@@ -90970,18 +90846,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "renderEffectWithUnsafe",
@@ -90998,18 +90868,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "renderEffectWith",
@@ -91026,18 +90890,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "UrlRenderOptions",
@@ -91076,18 +90934,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "makeHtmlFragmentAdapter",
@@ -91104,18 +90956,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "MarkdownAdapter",
@@ -91132,18 +90978,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "HtmlFragmentAdapter",
@@ -91160,18 +91000,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "PlainTextAdapter",
@@ -91188,18 +91022,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "renderWith",
@@ -91216,18 +91044,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "render",
@@ -91244,18 +91066,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "renderHtml",
@@ -91272,18 +91088,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "renderPlainText",
@@ -91300,26 +91110,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "MAX_SAFE_DOCUMENT_NODES",
           "exportKind": "const",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 56,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-56-max-safe-document-nodes",
+          "line": 58,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-58-max-safe-document-nodes",
           "currentTags": [
             "@category",
             "@since"
@@ -91340,8 +91144,8 @@
           "exportKind": "const",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 80,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-80-documentsafetypathsegment",
+          "line": 82,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-82-documentsafetypathsegment",
           "currentTags": [
             "@category",
             "@since"
@@ -91362,8 +91166,8 @@
           "exportKind": "type",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 101,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-101-documentsafetypathsegment",
+          "line": 103,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-103-documentsafetypathsegment",
           "currentTags": [
             "@category",
             "@since"
@@ -91384,8 +91188,8 @@
           "exportKind": "class",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 118,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-118-rawnodesafetyviolation",
+          "line": 120,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-120-rawnodesafetyviolation",
           "currentTags": [
             "@category",
             "@since"
@@ -91406,8 +91210,8 @@
           "exportKind": "const",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 143,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-143-destinationkind",
+          "line": 145,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-145-destinationkind",
           "currentTags": [
             "@category",
             "@since"
@@ -91428,8 +91232,8 @@
           "exportKind": "type",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 164,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-164-destinationkind",
+          "line": 166,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-166-destinationkind",
           "currentTags": [
             "@category",
             "@since"
@@ -91450,8 +91254,8 @@
           "exportKind": "const",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 180,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-180-urlnodetag",
+          "line": 182,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-182-urlnodetag",
           "currentTags": [
             "@category",
             "@since"
@@ -91472,8 +91276,8 @@
           "exportKind": "type",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 201,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-201-urlnodetag",
+          "line": 203,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-203-urlnodetag",
           "currentTags": [
             "@category",
             "@since"
@@ -91494,8 +91298,8 @@
           "exportKind": "class",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 225,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-225-urlsafetyviolation",
+          "line": 227,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-227-urlsafetyviolation",
           "currentTags": [
             "@category",
             "@since"
@@ -91516,8 +91320,8 @@
           "exportKind": "class",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 258,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-258-scalarsafetyviolation",
+          "line": 260,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-260-scalarsafetyviolation",
           "currentTags": [
             "@category",
             "@since"
@@ -91538,8 +91342,8 @@
           "exportKind": "class",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 289,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-289-duplicatefootnotedefinitionsafetyviolation",
+          "line": 291,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-291-duplicatefootnotedefinitionsafetyviolation",
           "currentTags": [
             "@category",
             "@since"
@@ -91560,8 +91364,8 @@
           "exportKind": "class",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 330,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-330-htmlprojectionsafetyviolation",
+          "line": 332,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-332-htmlprojectionsafetyviolation",
           "currentTags": [
             "@invariant",
             "@see",
@@ -91584,8 +91388,8 @@
           "exportKind": "class",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 360,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-360-documentcomplexitysafetyviolation",
+          "line": 362,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-362-documentcomplexitysafetyviolation",
           "currentTags": [
             "@category",
             "@since"
@@ -91606,8 +91410,8 @@
           "exportKind": "const",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 391,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-391-documentsafetyviolation",
+          "line": 393,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-393-documentsafetyviolation",
           "currentTags": [
             "@category",
             "@since"
@@ -91628,8 +91432,8 @@
           "exportKind": "type",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 421,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-421-documentsafetyviolation",
+          "line": 423,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-423-documentsafetyviolation",
           "currentTags": [
             "@category",
             "@since"
@@ -91650,8 +91454,8 @@
           "exportKind": "const",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 750,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-750-documentsafetyissues",
+          "line": 752,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-752-documentsafetyissues",
           "currentTags": [
             "@category",
             "@since"
@@ -91660,26 +91464,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "inlineSafetyIssuesAtRoot",
           "exportKind": "const",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 776,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-776-inlinesafetyissuesatroot",
+          "line": 778,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-778-inlinesafetyissuesatroot",
           "currentTags": [
             "@category",
             "@since"
@@ -91688,26 +91486,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "SafeInline",
           "exportKind": "const",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 818,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-818-safeinline",
+          "line": 820,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-820-safeinline",
           "currentTags": [
             "@category",
             "@since"
@@ -91728,8 +91520,8 @@
           "exportKind": "type",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 845,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-845-safeinline",
+          "line": 847,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-847-safeinline",
           "currentTags": [
             "@category",
             "@since"
@@ -91750,8 +91542,8 @@
           "exportKind": "const",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 867,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-867-safedocument",
+          "line": 869,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-869-safedocument",
           "currentTags": [
             "@invariant",
             "@see",
@@ -91774,8 +91566,8 @@
           "exportKind": "type",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 894,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-894-safedocument",
+          "line": 896,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-896-safedocument",
           "currentTags": [
             "@category",
             "@since"
@@ -91796,8 +91588,8 @@
           "exportKind": "const",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 911,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-911-decodesafedocument",
+          "line": 913,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-913-decodesafedocument",
           "currentTags": [
             "@category",
             "@since"
@@ -91818,8 +91610,8 @@
           "exportKind": "const",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 931,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-931-decodesafedocumenteffect",
+          "line": 933,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-933-decodesafedocumenteffect",
           "currentTags": [
             "@category",
             "@since"
@@ -91840,8 +91632,8 @@
           "exportKind": "const",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 950,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-950-decodesafedocumentunsafe",
+          "line": 952,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-952-decodesafedocumentunsafe",
           "currentTags": [
             "@category",
             "@since"
@@ -91862,8 +91654,8 @@
           "exportKind": "const",
           "filePath": "src/Md.safe.ts",
           "repoPath": "packages/foundation/modeling/md/src/Md.safe.ts",
-          "line": 968,
-          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-968-refinesafedocument",
+          "line": 970,
+          "anchor": "packages-foundation-modeling-md-src-md-safe-ts-970-refinesafedocument",
           "currentTags": [
             "@category",
             "@since"
@@ -91872,18 +91664,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "MdLossReason",
@@ -92780,18 +92566,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "InlineContentBuilder",
@@ -92852,18 +92632,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "BlockTemplateValue",
@@ -92880,18 +92654,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "BlockContentBuilder",
@@ -92930,18 +92698,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "ListItemContent",
@@ -92958,18 +92720,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "ListItemContentBuilder",
@@ -93008,18 +92764,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "TableCellInput",
@@ -93058,18 +92808,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "text",
@@ -93086,18 +92830,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "rawMarkdown",
@@ -93114,18 +92852,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "rawHtml",
@@ -93142,18 +92874,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "strong",
@@ -93170,18 +92896,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "em",
@@ -93198,18 +92918,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "del",
@@ -93226,18 +92940,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "code",
@@ -93254,18 +92962,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "a",
@@ -93282,18 +92984,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "img",
@@ -93310,18 +93006,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "br",
@@ -93338,18 +93028,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "inlineMath",
@@ -93366,18 +93050,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "footnoteRef",
@@ -93394,18 +93072,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "h1",
@@ -93422,18 +93094,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "h2",
@@ -93450,18 +93116,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "h3",
@@ -93478,18 +93138,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "h4",
@@ -93506,18 +93160,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "h5",
@@ -93534,18 +93182,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "h6",
@@ -93562,18 +93204,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "p",
@@ -93590,18 +93226,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "li",
@@ -93618,18 +93248,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "ul",
@@ -93646,18 +93270,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "ol",
@@ -93674,18 +93292,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "taskItem",
@@ -93702,18 +93314,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "taskListFromItems",
@@ -93730,18 +93336,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "blockquote",
@@ -93758,18 +93358,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "pre",
@@ -93786,18 +93380,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "tableCell",
@@ -93814,18 +93402,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "tableRow",
@@ -93842,18 +93424,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "table",
@@ -93870,18 +93446,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "mathBlock",
@@ -93898,18 +93468,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "footnoteDef",
@@ -93926,18 +93490,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "admonition",
@@ -93954,18 +93512,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "embed",
@@ -93982,18 +93534,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "youtube",
@@ -94010,18 +93556,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "youtubeEffect",
@@ -94038,18 +93578,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "youtubeUnsafe",
@@ -94066,18 +93600,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "hr",
@@ -94094,18 +93622,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "make",
@@ -94122,18 +93644,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "Md",
@@ -94150,18 +93666,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * from \"./Md.behavior.ts\";",
@@ -94178,31 +93688,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            },
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * from \"./Md.conformance.ts\";",
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/modeling/md/src/index.ts",
-          "line": 39,
-          "anchor": "packages-foundation-modeling-md-src-index-ts-39-export-from-md-conformance-ts",
+          "line": 40,
+          "anchor": "packages-foundation-modeling-md-src-index-ts-40-export-from-md-conformance-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -94211,26 +93710,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * from \"./Md.escape.ts\";",
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/modeling/md/src/index.ts",
-          "line": 54,
-          "anchor": "packages-foundation-modeling-md-src-index-ts-54-export-from-md-escape-ts",
+          "line": 55,
+          "anchor": "packages-foundation-modeling-md-src-index-ts-55-export-from-md-escape-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -94239,26 +93732,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * from \"./Md.html.ts\";",
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/modeling/md/src/index.ts",
-          "line": 70,
-          "anchor": "packages-foundation-modeling-md-src-index-ts-70-export-from-md-html-ts",
+          "line": 72,
+          "anchor": "packages-foundation-modeling-md-src-index-ts-72-export-from-md-html-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -94267,26 +93754,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * from \"./Md.model.ts\";",
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/modeling/md/src/index.ts",
-          "line": 85,
-          "anchor": "packages-foundation-modeling-md-src-index-ts-85-export-from-md-model-ts",
+          "line": 87,
+          "anchor": "packages-foundation-modeling-md-src-index-ts-87-export-from-md-model-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -94295,26 +93776,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * from \"./Md.render.ts\";",
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/modeling/md/src/index.ts",
-          "line": 100,
-          "anchor": "packages-foundation-modeling-md-src-index-ts-100-export-from-md-render-ts",
+          "line": 103,
+          "anchor": "packages-foundation-modeling-md-src-index-ts-103-export-from-md-render-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -94323,26 +93798,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * from \"./Md.safe.ts\";",
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/modeling/md/src/index.ts",
-          "line": 115,
-          "anchor": "packages-foundation-modeling-md-src-index-ts-115-export-from-md-safe-ts",
+          "line": 119,
+          "anchor": "packages-foundation-modeling-md-src-index-ts-119-export-from-md-safe-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -94351,26 +93820,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * from \"./Md.ts\";",
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/modeling/md/src/index.ts",
-          "line": 131,
-          "anchor": "packages-foundation-modeling-md-src-index-ts-131-export-from-md-ts",
+          "line": 135,
+          "anchor": "packages-foundation-modeling-md-src-index-ts-135-export-from-md-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -94379,18 +93842,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/md package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         }
       ]
     },
@@ -363966,8 +363423,8 @@
           "exportKind": "class",
           "filePath": "src/PackageManagerInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/PackageManagerInstaller.ts",
-          "line": 94,
-          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-94-packagemanagerinstallererror",
+          "line": 95,
+          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-95-packagemanagerinstallererror",
           "currentTags": [
             "@public",
             "@category",
@@ -363989,8 +363446,8 @@
           "exportKind": "class",
           "filePath": "src/PackageManagerInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/PackageManagerInstaller.ts",
-          "line": 243,
-          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-243-packagemanagerinstalloptions",
+          "line": 244,
+          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-244-packagemanagerinstalloptions",
           "currentTags": [
             "@public",
             "@category",
@@ -364012,8 +363469,8 @@
           "exportKind": "namespace",
           "filePath": "src/PackageManagerInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/PackageManagerInstaller.ts",
-          "line": 379,
-          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-379-packagemanagerinstalloptions",
+          "line": 380,
+          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-380-packagemanagerinstalloptions",
           "currentTags": [
             "@category",
             "@since"
@@ -364034,8 +363491,8 @@
           "exportKind": "class",
           "filePath": "src/PackageManagerInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/PackageManagerInstaller.ts",
-          "line": 423,
-          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-423-ambientpackagemanager",
+          "line": 424,
+          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-424-ambientpackagemanager",
           "currentTags": [
             "@public",
             "@category",
@@ -364057,8 +363514,8 @@
           "exportKind": "namespace",
           "filePath": "src/PackageManagerInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/PackageManagerInstaller.ts",
-          "line": 461,
-          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-461-ambientpackagemanager",
+          "line": 462,
+          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-462-ambientpackagemanager",
           "currentTags": [
             "@category",
             "@since"
@@ -364079,8 +363536,8 @@
           "exportKind": "class",
           "filePath": "src/PackageManagerInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/PackageManagerInstaller.ts",
-          "line": 510,
-          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-510-cachedpackagemanager",
+          "line": 511,
+          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-511-cachedpackagemanager",
           "currentTags": [
             "@public",
             "@category",
@@ -364102,8 +363559,8 @@
           "exportKind": "namespace",
           "filePath": "src/PackageManagerInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/PackageManagerInstaller.ts",
-          "line": 560,
-          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-560-cachedpackagemanager",
+          "line": 561,
+          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-561-cachedpackagemanager",
           "currentTags": [
             "@category",
             "@since"
@@ -364124,8 +363581,8 @@
           "exportKind": "const",
           "filePath": "src/PackageManagerInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/PackageManagerInstaller.ts",
-          "line": 603,
-          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-603-installedpackagemanager",
+          "line": 604,
+          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-604-installedpackagemanager",
           "currentTags": [
             "@public",
             "@category",
@@ -364147,8 +363604,8 @@
           "exportKind": "type",
           "filePath": "src/PackageManagerInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/PackageManagerInstaller.ts",
-          "line": 618,
-          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-618-installedpackagemanager",
+          "line": 619,
+          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-619-installedpackagemanager",
           "currentTags": [
             "@public",
             "@category",
@@ -364170,8 +363627,8 @@
           "exportKind": "interface",
           "filePath": "src/PackageManagerInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/PackageManagerInstaller.ts",
-          "line": 628,
-          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-628-packagemanagerinstallershape",
+          "line": 629,
+          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-629-packagemanagerinstallershape",
           "currentTags": [
             "@public",
             "@category",
@@ -364193,8 +363650,8 @@
           "exportKind": "class",
           "filePath": "src/PackageManagerInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/PackageManagerInstaller.ts",
-          "line": 1851,
-          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-1851-packagemanagerinstaller",
+          "line": 1854,
+          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-1854-packagemanagerinstaller",
           "currentTags": [
             "@public",
             "@category",
@@ -364239,8 +363696,8 @@
           "exportKind": "class",
           "filePath": "src/ToolInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/ToolInstaller.ts",
-          "line": 54,
-          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-54-toolinstallererror",
+          "line": 55,
+          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-55-toolinstallererror",
           "currentTags": [
             "@public",
             "@category",
@@ -364262,8 +363719,8 @@
           "exportKind": "class",
           "filePath": "src/ToolInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/ToolInstaller.ts",
-          "line": 177,
-          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-177-extractoptions",
+          "line": 178,
+          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-178-extractoptions",
           "currentTags": [
             "@public",
             "@category",
@@ -364285,8 +363742,8 @@
           "exportKind": "namespace",
           "filePath": "src/ToolInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/ToolInstaller.ts",
-          "line": 217,
-          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-217-extractoptions",
+          "line": 218,
+          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-218-extractoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -364307,8 +363764,8 @@
           "exportKind": "class",
           "filePath": "src/ToolInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/ToolInstaller.ts",
-          "line": 243,
-          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-243-tooldownloadoptions",
+          "line": 244,
+          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-244-tooldownloadoptions",
           "currentTags": [
             "@public",
             "@category",
@@ -364330,8 +363787,8 @@
           "exportKind": "namespace",
           "filePath": "src/ToolInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/ToolInstaller.ts",
-          "line": 272,
-          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-272-tooldownloadoptions",
+          "line": 273,
+          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-273-tooldownloadoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -364352,8 +363809,8 @@
           "exportKind": "class",
           "filePath": "src/ToolInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/ToolInstaller.ts",
-          "line": 301,
-          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-301-provisionfileoptions",
+          "line": 302,
+          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-302-provisionfileoptions",
           "currentTags": [
             "@public",
             "@category",
@@ -364375,8 +363832,8 @@
           "exportKind": "namespace",
           "filePath": "src/ToolInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/ToolInstaller.ts",
-          "line": 335,
-          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-335-provisionfileoptions",
+          "line": 336,
+          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-336-provisionfileoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -364397,8 +363854,8 @@
           "exportKind": "class",
           "filePath": "src/ToolInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/ToolInstaller.ts",
-          "line": 371,
-          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-371-provisionedfile",
+          "line": 372,
+          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-372-provisionedfile",
           "currentTags": [
             "@public",
             "@category",
@@ -364420,8 +363877,8 @@
           "exportKind": "namespace",
           "filePath": "src/ToolInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/ToolInstaller.ts",
-          "line": 396,
-          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-396-provisionedfile",
+          "line": 397,
+          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-397-provisionedfile",
           "currentTags": [
             "@category",
             "@since"
@@ -364442,8 +363899,8 @@
           "exportKind": "interface",
           "filePath": "src/ToolInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/ToolInstaller.ts",
-          "line": 414,
-          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-414-toolinstallershape",
+          "line": 415,
+          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-415-toolinstallershape",
           "currentTags": [
             "@public",
             "@category",
@@ -364465,8 +363922,8 @@
           "exportKind": "class",
           "filePath": "src/ToolInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/ToolInstaller.ts",
-          "line": 923,
-          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-923-toolinstaller",
+          "line": 927,
+          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-927-toolinstaller",
           "currentTags": [
             "@public",
             "@category",
@@ -458426,7 +457883,7 @@
         "srcDir": "src",
         "sourceFileCount": 475,
         "publicModuleCount": 473,
-        "publicExportCount": 4451
+        "publicExportCount": 4453
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -467267,7 +466724,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 8,
+          "exportCount": 10,
           "remediationStatus": "resolved"
         },
         {
@@ -482755,8 +482212,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiGovernance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts",
-          "line": 564,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-564-reviewerappintegrationmatches",
+          "line": 568,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-568-reviewerappintegrationmatches",
           "currentTags": [
             "@param",
             "@returns",
@@ -482779,8 +482236,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiGovernance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts",
-          "line": 760,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-760-cigovernancecommands",
+          "line": 766,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-766-cigovernancecommands",
           "currentTags": [
             "@category",
             "@since"
@@ -521668,8 +521125,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Laws/AllowlistCheck.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/AllowlistCheck.ts",
-          "line": 45,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-allowlistcheck-ts-45-allowlist-path",
+          "line": 44,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-allowlistcheck-ts-44-allowlist-path",
           "currentTags": [
             "@category",
             "@since"
@@ -521690,8 +521147,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Laws/AllowlistCheck.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/AllowlistCheck.ts",
-          "line": 132,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-allowlistcheck-ts-132-allowlistcheckoptions",
+          "line": 131,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-allowlistcheck-ts-131-allowlistcheckoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -521712,8 +521169,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Laws/AllowlistCheck.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/AllowlistCheck.ts",
-          "line": 154,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-allowlistcheck-ts-154-allowlistchecksummary",
+          "line": 153,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-allowlistcheck-ts-153-allowlistchecksummary",
           "currentTags": [
             "@category",
             "@since"
@@ -521734,8 +521191,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Laws/AllowlistCheck.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/AllowlistCheck.ts",
-          "line": 303,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-allowlistcheck-ts-303-runallowlistcheck",
+          "line": 302,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-allowlistcheck-ts-302-runallowlistcheck",
           "currentTags": [
             "@category",
             "@since"
@@ -521756,8 +521213,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Laws/AllowlistCheck.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/AllowlistCheck.ts",
-          "line": 373,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-allowlistcheck-ts-373-reportallowlistchecksummary",
+          "line": 372,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-allowlistcheck-ts-372-reportallowlistchecksummary",
           "currentTags": [
             "@category",
             "@since"
@@ -550809,8 +550266,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Reviewer/ReviewerCommand.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerCommand.ts",
-          "line": 195,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewercommand-ts-195-reviewercommand",
+          "line": 205,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewercommand-ts-205-reviewercommand",
           "currentTags": [
             "@category",
             "@since"
@@ -551095,8 +550552,30 @@
           "exportKind": "const",
           "filePath": "src/commands/Reviewer/ReviewerRuleset.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerRuleset.ts",
-          "line": 183,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-183-requirereviewerinruleset",
+          "line": 212,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-212-requirereviewerinruleset",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "releaseReviewerInRuleset",
+          "exportKind": "const",
+          "filePath": "src/commands/Reviewer/ReviewerRuleset.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerRuleset.ts",
+          "line": 234,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-234-releasereviewerinruleset",
           "currentTags": [
             "@category",
             "@since"
@@ -551117,8 +550596,30 @@
           "exportKind": "const",
           "filePath": "src/commands/Reviewer/ReviewerRuleset.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerRuleset.ts",
-          "line": 228,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-228-requirereviewerruleset",
+          "line": 310,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-310-requirereviewerruleset",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "releaseReviewerRuleset",
+          "exportKind": "const",
+          "filePath": "src/commands/Reviewer/ReviewerRuleset.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerRuleset.ts",
+          "line": 336,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-336-releasereviewerruleset",
           "currentTags": [
             "@category",
             "@since"
@@ -551139,8 +550640,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Reviewer/ReviewerRuleset.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerRuleset.ts",
-          "line": 293,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-293-reviewerchecksatisfied",
+          "line": 355,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-355-reviewerchecksatisfied",
           "currentTags": [
             "@category",
             "@since"
@@ -551161,8 +550662,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Reviewer/ReviewerRuleset.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerRuleset.ts",
-          "line": 330,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-330-reviewerdocsonly",
+          "line": 392,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-392-reviewerdocsonly",
           "currentTags": [
             "@param",
             "@returns",
@@ -551185,8 +550686,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Reviewer/ReviewerRuleset.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerRuleset.ts",
-          "line": 388,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-388-enforcereviewergate",
+          "line": 450,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-450-enforcereviewergate",
           "currentTags": [
             "@category",
             "@since"
@@ -608452,8 +607953,8 @@
           "exportKind": "type",
           "filePath": "src/rules/utils.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-          "line": 99,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-99-astnode",
+          "line": 104,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-104-astnode",
           "currentTags": [
             "@category",
             "@since"
@@ -608474,8 +607975,8 @@
           "exportKind": "type",
           "filePath": "src/rules/utils.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-          "line": 124,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-124-maybenode",
+          "line": 129,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-129-maybenode",
           "currentTags": [
             "@category",
             "@since"
@@ -608496,8 +607997,8 @@
           "exportKind": "const",
           "filePath": "src/rules/utils.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-          "line": 165,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-165-unwrapexpression",
+          "line": 170,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-170-unwrapexpression",
           "currentTags": [
             "@param",
             "@returns",
@@ -608520,8 +608021,8 @@
           "exportKind": "type",
           "filePath": "src/rules/utils.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-          "line": 194,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-194-memberaccess",
+          "line": 199,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-199-memberaccess",
           "currentTags": [
             "@category",
             "@since"
@@ -608542,8 +608043,8 @@
           "exportKind": "const",
           "filePath": "src/rules/utils.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-          "line": 219,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-219-unwrapmemberexpression",
+          "line": 224,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-224-unwrapmemberexpression",
           "currentTags": [
             "@param",
             "@returns",
@@ -608566,8 +608067,8 @@
           "exportKind": "const",
           "filePath": "src/rules/utils.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-          "line": 255,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-255-getpropertyname",
+          "line": 260,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-260-getpropertyname",
           "currentTags": [
             "@param",
             "@returns",
@@ -608590,8 +608091,8 @@
           "exportKind": "const",
           "filePath": "src/rules/utils.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-          "line": 277,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-277-isidentifier",
+          "line": 282,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-282-isidentifier",
           "currentTags": [
             "@param",
             "@returns",
@@ -608614,8 +608115,8 @@
           "exportKind": "const",
           "filePath": "src/rules/utils.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-          "line": 310,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-310-literalstringvalue",
+          "line": 315,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-315-literalstringvalue",
           "currentTags": [
             "@param",
             "@returns",
@@ -608638,8 +608139,8 @@
           "exportKind": "const",
           "filePath": "src/rules/utils.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-          "line": 333,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-333-identifiername",
+          "line": 338,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-338-identifiername",
           "currentTags": [
             "@param",
             "@returns",
@@ -608662,8 +608163,8 @@
           "exportKind": "const",
           "filePath": "src/rules/utils.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-          "line": 383,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-383-importbinding",
+          "line": 388,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-388-importbinding",
           "currentTags": [
             "@category",
             "@since"
@@ -608684,8 +608185,8 @@
           "exportKind": "type",
           "filePath": "src/rules/utils.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-          "line": 407,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-407-importbinding",
+          "line": 412,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-412-importbinding",
           "currentTags": [
             "@category",
             "@since"
@@ -608706,8 +608207,8 @@
           "exportKind": "const",
           "filePath": "src/rules/utils.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-          "line": 446,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-446-classifyimportspecifier",
+          "line": 451,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-451-classifyimportspecifier",
           "currentTags": [
             "@param",
             "@returns",
@@ -608730,8 +608231,8 @@
           "exportKind": "const",
           "filePath": "src/rules/utils.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-          "line": 486,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-486-torepopath",
+          "line": 491,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-491-torepopath",
           "currentTags": [
             "@param",
             "@returns",
@@ -608754,8 +608255,8 @@
           "exportKind": "const",
           "filePath": "src/rules/utils.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-          "line": 516,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-516-pathmatchessuffix",
+          "line": 521,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-521-pathmatchessuffix",
           "currentTags": [
             "@param",
             "@returns",
