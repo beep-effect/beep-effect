@@ -314,16 +314,6 @@
       "reason": "Sidecar registration regression decodes fixed RPC payload/result envelopes to prove wiring; schema-derived arbitrary coverage belongs with the use-case schemas."
     },
     {
-      "file": "infra/src/CiTurboCache.ts",
-      "symbol": "resolveTurboCacheLabBuckets",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-fn-schema",
-      "line": 220,
-      "owner": "@beep/infra",
-      "reason": "Exported function \"resolveTurboCacheLabBuckets\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
-    },
-    {
       "file": "infra/src/OipWeb.ts",
       "symbol": "OipPulumiStateBackendConfig",
       "kind": "plain-data-schema-class",
