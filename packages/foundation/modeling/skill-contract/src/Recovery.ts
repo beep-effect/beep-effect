@@ -56,7 +56,7 @@ const BudgetDurationCheck = S.makeFilter(
  * **Example** (Construct a budget duration)
  *
  * ```ts import.meta.vitest name="Construct a budget duration"
- * import { BudgetDuration } from "@beep/skill-contract"
+ * import { BudgetDuration } from "@beep/skill-contract/Recovery"
  * import * as Duration from "effect/Duration"
  *
  * Duration.toMillis(BudgetDuration.make(Duration.seconds(5))) // => 5000
@@ -85,7 +85,7 @@ export type BudgetDuration = typeof BudgetDuration.Type;
  * **Example** (Inspect recovery budget fields)
  *
  * ```ts import.meta.vitest name="Inspect recovery budget fields"
- * import { RecoveryBudget } from "@beep/skill-contract"
+ * import { RecoveryBudget } from "@beep/skill-contract/Recovery"
  *
  * RecoveryBudget.fields.maxAttempts !== undefined // => true
  * ```
@@ -112,7 +112,7 @@ export class RecoveryBudget extends S.Opaque<RecoveryBudget, { readonly brand: u
  * **Example** (Inspect consumed budget fields)
  *
  * ```ts import.meta.vitest name="Inspect consumed budget fields"
- * import { RecoveryBudgetConsumed } from "@beep/skill-contract"
+ * import { RecoveryBudgetConsumed } from "@beep/skill-contract/Recovery"
  *
  * RecoveryBudgetConsumed.fields.elapsed !== undefined // => true
  * ```
@@ -138,7 +138,7 @@ export class RecoveryBudgetConsumed extends S.Opaque<RecoveryBudgetConsumed, { r
  * **Example** (Inspect attempt outcomes)
  *
  * ```ts import.meta.vitest name="Inspect attempt outcomes"
- * import { RecoveryAttemptOutcome } from "@beep/skill-contract"
+ * import { RecoveryAttemptOutcome } from "@beep/skill-contract/Recovery"
  *
  * RecoveryAttemptOutcome.literals // => ["succeeded", "failed", "aborted"]
  * ```
@@ -166,7 +166,7 @@ export type RecoveryAttemptOutcome = typeof RecoveryAttemptOutcome.Type;
  * **Example** (Inspect recovery attempt fields)
  *
  * ```ts import.meta.vitest name="Inspect recovery attempt fields"
- * import { RecoveryAttemptReceipt } from "@beep/skill-contract"
+ * import { RecoveryAttemptReceipt } from "@beep/skill-contract/Recovery"
  *
  * RecoveryAttemptReceipt.fields.observations !== undefined // => true
  * ```
@@ -196,7 +196,7 @@ export class RecoveryAttemptReceipt extends S.Opaque<RecoveryAttemptReceipt, { r
  * **Example** (Inspect terminal failure reasons)
  *
  * ```ts
- * import { FailureTerminalReason } from "@beep/skill-contract"
+ * import { FailureTerminalReason } from "@beep/skill-contract/Recovery"
  *
  * console.log(FailureTerminalReason.literals)
  * ```
@@ -307,7 +307,7 @@ const RecoveryBudgetCoherenceCheck = S.makeFilter(
  * **Example** (Inspect failure predicate fields)
  *
  * ```ts import.meta.vitest name="Inspect failure predicate fields"
- * import { FailureReceiptPredicate } from "@beep/skill-contract"
+ * import { FailureReceiptPredicate } from "@beep/skill-contract/Recovery"
  *
  * FailureReceiptPredicate.fields.partialEffects !== undefined // => true
  * ```
@@ -329,7 +329,7 @@ export class FailureReceiptPredicate extends S.Opaque<FailureReceiptPredicate, {
  * **Example** (Inspect failure predicate identity)
  *
  * ```ts
- * import { FailurePredicateType } from "@beep/skill-contract"
+ * import { FailurePredicateType } from "@beep/skill-contract/Recovery"
  *
  * console.log(FailurePredicateType)
  * ```
@@ -345,7 +345,7 @@ export const FailurePredicateType = EvidencePredicateType.make($SkillContractId.
  * **Example** (Inspect the pinned failure predicate field)
  *
  * ```ts import.meta.vitest name="Inspect the pinned failure predicate field"
- * import { FailureReceipt } from "@beep/skill-contract"
+ * import { FailureReceipt } from "@beep/skill-contract/Recovery"
  *
  * FailureReceipt.fields.predicateType !== undefined // => true
  * ```
@@ -369,7 +369,7 @@ export type FailureReceipt = typeof FailureReceipt.Type;
  * **Example** (Disable recovery)
  *
  * ```ts import.meta.vitest name="Disable recovery"
- * import { NoRecoveryPolicy } from "@beep/skill-contract"
+ * import { NoRecoveryPolicy } from "@beep/skill-contract/Recovery"
  *
  * NoRecoveryPolicy.make({}).mode // => "none"
  * ```
@@ -393,7 +393,7 @@ export class NoRecoveryPolicy extends S.Opaque<NoRecoveryPolicy, { readonly bran
  * **Example** (Inspect bounded recovery fields)
  *
  * ```ts import.meta.vitest name="Inspect bounded recovery fields"
- * import { BoundedRecoveryPolicy } from "@beep/skill-contract"
+ * import { BoundedRecoveryPolicy } from "@beep/skill-contract/Recovery"
  *
  * BoundedRecoveryPolicy.fields.budget !== undefined // => true
  * ```
@@ -425,7 +425,7 @@ export class BoundedRecoveryPolicy extends S.Opaque<BoundedRecoveryPolicy, { rea
  * **Example** (Inspect recovery policy variants)
  *
  * ```ts import.meta.vitest name="Inspect recovery policy variants"
- * import { RecoveryPolicy } from "@beep/skill-contract"
+ * import { RecoveryPolicy } from "@beep/skill-contract/Recovery"
  *
  * RecoveryPolicy.discriminants // => ["none", "bounded"]
  * ```
