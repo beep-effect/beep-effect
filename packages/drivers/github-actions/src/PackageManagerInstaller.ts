@@ -9,6 +9,7 @@ import { $GithubActionsId } from "@beep/identity/packages";
 import { CorepackIntegrityHash, IntegrityHash } from "@beep/npm-spec/IntegrityHash";
 import { PackageManagerPin, PackageManagerPinName } from "@beep/npm-spec/PackageManagerPin";
 import { DEFAULT_REGISTRY } from "@beep/npm-spec/RegistryKind";
+import { HostProcessArchitecture, HostProcessPlatform } from "@beep/utils/HostProcess";
 import * as O from "@beep/utils/Option";
 import { unstubbed } from "@beep/utils/TestDouble";
 import * as A from "effect/Array";
@@ -781,17 +782,19 @@ const make = Effect.gen(function* () {
   // `RUNNER_ARCH`, the runner's own answers, per the ToolInstaller precedent.
   // `arch` selects the native binary target (pnpm exe, bun); the CACHE path's
   // arch segment is ToolInstaller's business, asked via `installer.cachePath`.
-  // Off a runner `RUNNER_ARCH` is absent and the host's `process.arch` is the
-  // honest fallback; that read exists only for the fallback, everything else
-  // routes through ActionEnvironment.
+  // Off a runner `RUNNER_ARCH` is absent and the host architecture (the
+  // injected `HostProcessArchitecture`) is the honest fallback; that read
+  // exists only for the fallback, everything else routes through
+  // ActionEnvironment.
   const runnerOs = yield* Effect.map(env.getOptional("RUNNER_OS"), (found) => O.getOrElse(found, () => ""));
+  const hostArch = yield* HostProcessArchitecture;
   const arch = yield* Effect.map(env.getOptional("RUNNER_ARCH"), (found) =>
-    O.match(found, { onNone: (): string => process.arch, onSome: archFromRunner })
+    O.match(found, { onNone: (): string => hostArch, onSome: archFromRunner })
   );
   const windows = yield* isWindowsRunner(env);
   // The host libc, read once here beside the platform: it decides between
   // pnpm's glibc and musl native binaries on linux and nothing else.
-  const musl = detectMusl();
+  const musl = detectMusl(yield* HostProcessPlatform);
   const bunBinaryName = windows ? "bun.exe" : "bun";
   const shimFileName = (name: string): string => (windows ? `${name}.cmd` : name);
   const shimBody = windows ? cmdShim : posixShim;

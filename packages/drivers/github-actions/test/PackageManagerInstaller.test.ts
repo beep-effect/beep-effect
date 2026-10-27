@@ -13,6 +13,7 @@ import { PackageManagerInstallOptions } from "@beep/github-actions/PackageManage
 import { CorepackIntegrityHash, IntegrityHash } from "@beep/npm-spec/IntegrityHash";
 import { PackageManagerPin } from "@beep/npm-spec/PackageManagerPin";
 import { provideScopedLayer } from "@beep/test-utils/Layer";
+import { currentHostArchitecture } from "@beep/utils/HostProcess";
 import { assert, describe, it } from "@effect/vitest";
 import { assertExitFailure, assertSuccess, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -675,7 +676,12 @@ describe("PackageManagerInstaller", () => {
           // The entry has no `.bin` — a foreign writer (runner image, setup-*
           // action, or the previous version of this module) cached it — so
           // the shims must be regenerated into the entry.
-          const cached = ToolInstaller.cachePath({ root, tool: "pnpm", version: "7.7.7", arch: process.arch });
+          const cached = ToolInstaller.cachePath({
+            root,
+            tool: "pnpm",
+            version: "7.7.7",
+            arch: currentHostArchitecture,
+          });
           mkdirSync(join(cached, "bin"), { recursive: true });
           writeFileSync(
             join(cached, "package.json"),
@@ -705,7 +711,12 @@ describe("PackageManagerInstaller", () => {
         Effect.gen(function* () {
           // The tool cache is SHARED: another writer's shim must not be
           // rewritten out from under it.
-          const cached = ToolInstaller.cachePath({ root, tool: "pnpm", version: "7.7.9", arch: process.arch });
+          const cached = ToolInstaller.cachePath({
+            root,
+            tool: "pnpm",
+            version: "7.7.9",
+            arch: currentHostArchitecture,
+          });
           mkdirSync(join(cached, "bin"), { recursive: true });
           mkdirSync(join(cached, ".bin"), { recursive: true });
           writeFileSync(
@@ -727,7 +738,12 @@ describe("PackageManagerInstaller", () => {
     it.layer(
       rootFixture((root) =>
         Effect.gen(function* () {
-          const cached = ToolInstaller.cachePath({ root, tool: "pnpm", version: "7.8.0", arch: process.arch });
+          const cached = ToolInstaller.cachePath({
+            root,
+            tool: "pnpm",
+            version: "7.8.0",
+            arch: currentHostArchitecture,
+          });
           mkdirSync(join(cached, "bin"), { recursive: true });
           writeFileSync(
             join(cached, "package.json"),
@@ -749,7 +765,12 @@ describe("PackageManagerInstaller", () => {
     it.layer(
       rootFixture((root) =>
         Effect.gen(function* () {
-          const cached = ToolInstaller.cachePath({ root, tool: "pnpm", version: "7.7.8", arch: process.arch });
+          const cached = ToolInstaller.cachePath({
+            root,
+            tool: "pnpm",
+            version: "7.7.8",
+            arch: currentHostArchitecture,
+          });
           mkdirSync(cached, { recursive: true }); // present, but empty — no manifest
           const error = yield* Effect.flip(install("pnpm@7.7.8"));
           assert.instanceOf(error, PackageManagerInstallerError);
@@ -769,7 +790,12 @@ describe("PackageManagerInstaller", () => {
           // pass, a shim would be written invoking it, and `bins` would
           // publish a path the artifact never legitimately owned. Only the
           // containment guard can refuse this one.
-          const cached = ToolInstaller.cachePath({ root, tool: "pnpm", version: "7.9.0", arch: process.arch });
+          const cached = ToolInstaller.cachePath({
+            root,
+            tool: "pnpm",
+            version: "7.9.0",
+            arch: currentHostArchitecture,
+          });
           mkdirSync(cached, { recursive: true });
           writeFileSync(
             join(cached, "package.json"),
@@ -834,7 +860,12 @@ describe("PackageManagerInstaller", () => {
             Result.getOrThrowWith(S.encodeResult(Json)({ bin: { npm: "bin/npm-cli.js" } }), (error) => error)
           );
           writeFileSync(join(extracted, "bin", "npm-cli.js"), "console.log('npm')");
-          const destination = ToolInstaller.cachePath({ root, tool: "npm", version: "9.9.9", arch: process.arch });
+          const destination = ToolInstaller.cachePath({
+            root,
+            tool: "npm",
+            version: "9.9.9",
+            arch: currentHostArchitecture,
+          });
 
           const probes: Array<string> = [];
           return {
@@ -914,7 +945,12 @@ describe("PackageManagerInstaller", () => {
           );
           writeFileSync(join(extracted, "bin", "npm-cli.js"), "console.log('npm')");
           writeFileSync(join(extracted, "bin", "npx-cli.js"), "console.log('npx')");
-          const destination = ToolInstaller.cachePath({ root, tool: "npm", version: "12.0.2", arch: process.arch });
+          const destination = ToolInstaller.cachePath({
+            root,
+            tool: "npm",
+            version: "12.0.2",
+            arch: currentHostArchitecture,
+          });
 
           const probes: Array<string> = [];
           return {
@@ -1006,7 +1042,12 @@ describe("PackageManagerInstaller", () => {
 
           // The stub answers with the destination the module derives, so the
           // divergence guard passes and the record comes back tool-cache.
-          const destination = ToolInstaller.cachePath({ root, tool: "npm", version: "1.2.3", arch: process.arch });
+          const destination = ToolInstaller.cachePath({
+            root,
+            tool: "npm",
+            version: "1.2.3",
+            arch: currentHostArchitecture,
+          });
           return {
             layer: stubbed({
               env: { RUNNER_TOOL_CACHE: root },
@@ -1059,7 +1100,7 @@ describe("PackageManagerInstaller", () => {
             root: cacheRoot,
             tool: "pnpm",
             version: "7.7.7",
-            arch: process.arch,
+            arch: currentHostArchitecture,
           });
           const targets = {
             pnpm: "bin/$tool 'quoted' `echo injected` $(echo injected).js",
@@ -1100,7 +1141,12 @@ describe("PackageManagerInstaller", () => {
     it.layer(
       rootFixture((root) =>
         Effect.gen(function* () {
-          const directory = ToolInstaller.cachePath({ root, tool: "pnpm", version: "7.7.7", arch: process.arch });
+          const directory = ToolInstaller.cachePath({
+            root,
+            tool: "pnpm",
+            version: "7.7.7",
+            arch: currentHostArchitecture,
+          });
           mkdirSync(join(directory, "bin"), { recursive: true });
           writeFileSync(join(directory, "package.json"), '{"bin":{"__proto__":"bin/pnpm.cjs","pnpm":"bin/pnpm.cjs"}}');
           writeFileSync(join(directory, "bin", "pnpm.cjs"), "fixture");
@@ -1218,7 +1264,12 @@ describe("PackageManagerInstaller", () => {
               const error = yield* Effect.flip(install("pnpm@5.0.2"));
               assert.instanceOf(error, PackageManagerInstallerError);
               assert.strictEqual(error.reason, "cacheFailed");
-              const destination = ToolInstaller.cachePath({ root, tool: "pnpm", version: "5.0.2", arch: process.arch });
+              const destination = ToolInstaller.cachePath({
+                root,
+                tool: "pnpm",
+                version: "5.0.2",
+                arch: currentHostArchitecture,
+              });
               assert.isFalse(existsSync(destination), "a failed shim write must not leave a cached entry behind");
               rmSync(root, { recursive: true, force: true });
             }),
@@ -1294,7 +1345,12 @@ describe("PackageManagerInstaller", () => {
                 }).message,
                 "Could not verify the integrity"
               );
-              const destination = ToolInstaller.cachePath({ root, tool: "pnpm", version: "1.0.1", arch: process.arch });
+              const destination = ToolInstaller.cachePath({
+                root,
+                tool: "pnpm",
+                version: "1.0.1",
+                arch: currentHostArchitecture,
+              });
               assert.isFalse(existsSync(destination), "a failed verification must not leave anything in the cache");
               rmSync(root, { recursive: true, force: true });
             }),
@@ -1420,7 +1476,12 @@ describe("PackageManagerInstaller", () => {
               assert.strictEqual(error.reason, "integrityMismatch");
               assert.strictEqual(error.expected, wrong);
               assert.strictEqual(error.actual, `sha512.${sha512Hex(archive)}`);
-              const destination = ToolInstaller.cachePath({ root, tool: "pnpm", version: "1.1.1", arch: process.arch });
+              const destination = ToolInstaller.cachePath({
+                root,
+                tool: "pnpm",
+                version: "1.1.1",
+                arch: currentHostArchitecture,
+              });
               assert.isFalse(existsSync(destination), "a failed verification must not leave anything in the cache");
               rmSync(root, { recursive: true, force: true });
             }),
@@ -1541,7 +1602,12 @@ describe("PackageManagerInstaller", () => {
         Effect.gen(function* () {
           // A cached entry the install would otherwise answer from: an
           // unvalidated option would be laundered by the cache hit.
-          const cached = ToolInstaller.cachePath({ root, tool: "pnpm", version: "7.8.1", arch: process.arch });
+          const cached = ToolInstaller.cachePath({
+            root,
+            tool: "pnpm",
+            version: "7.8.1",
+            arch: currentHostArchitecture,
+          });
           mkdirSync(join(cached, "bin"), { recursive: true });
           writeFileSync(
             join(cached, "package.json"),
@@ -1568,7 +1634,12 @@ describe("PackageManagerInstaller", () => {
       rootFixture((root) =>
         Effect.gen(function* () {
           // The fetch always fails, so the only way to answer is the cache.
-          const cached = ToolInstaller.cachePath({ root, tool: "pnpm", version: "7.8.0", arch: process.arch });
+          const cached = ToolInstaller.cachePath({
+            root,
+            tool: "pnpm",
+            version: "7.8.0",
+            arch: currentHostArchitecture,
+          });
           mkdirSync(join(cached, "bin"), { recursive: true });
           writeFileSync(
             join(cached, "package.json"),
@@ -2077,7 +2148,12 @@ describe("PackageManagerInstaller", () => {
               assert.strictEqual(error.actual, `sha512.${sha512Hex(exe)}`);
               assert.strictEqual(error.subject, urls.exe);
               assert.include(error.message, "Integrity mismatch");
-              const destination = ToolInstaller.cachePath({ root, tool: "pnpm", version, arch: process.arch });
+              const destination = ToolInstaller.cachePath({
+                root,
+                tool: "pnpm",
+                version,
+                arch: currentHostArchitecture,
+              });
               assert.isFalse(existsSync(destination), "a failed verification must not leave anything in the cache");
               rmSync(root, { recursive: true, force: true });
             }),
@@ -2209,7 +2285,12 @@ describe("PackageManagerInstaller", () => {
                 assert.strictEqual(error.actual, `sha512.${sha512Hex(exe)}`);
                 assert.include(error.message, "Integrity mismatch");
                 assert.deepStrictEqual(script.calls, [urls.wrapper, urls.exe]);
-                const destination = ToolInstaller.cachePath({ root, tool: "pnpm", version, arch: process.arch });
+                const destination = ToolInstaller.cachePath({
+                  root,
+                  tool: "pnpm",
+                  version,
+                  arch: currentHostArchitecture,
+                });
                 assert.isFalse(existsSync(destination), "a failed verification must not leave anything in the cache");
                 rmSync(root, { recursive: true, force: true });
               }),
@@ -2406,7 +2487,7 @@ describe("PackageManagerInstaller", () => {
           // shim that hands the placeholder to node — the production failure.
           const root = yield* scratchResource;
           const version = "12.0.6";
-          const cached = ToolInstaller.cachePath({ root, tool: "pnpm", version, arch: process.arch });
+          const cached = ToolInstaller.cachePath({ root, tool: "pnpm", version, arch: currentHostArchitecture });
           mkdirSync(join(cached, ".bin"), { recursive: true });
           mkdirSync(join(cached, "bin"), { recursive: true });
           writeFileSync(
@@ -2486,7 +2567,12 @@ describe("PackageManagerInstaller", () => {
               (yield* Effect.suspend(() =>
                 Effect.gen(function* () {
                   const root = yield* scratchResource;
-                  const cached = ToolInstaller.cachePath({ root, tool: "pnpm", version, arch: process.arch });
+                  const cached = ToolInstaller.cachePath({
+                    root,
+                    tool: "pnpm",
+                    version,
+                    arch: currentHostArchitecture,
+                  });
                   mkdirSync(cached, { recursive: true });
                   writeFileSync(
                     join(cached, "package.json"),
@@ -2601,7 +2687,7 @@ describe("PackageManagerInstaller", () => {
               env: { RUNNER_OS: runnerOs, RUNNER_TOOL_CACHE: root },
               publish: () => {
                 cachedEntry = true;
-                return ToolInstaller.cachePath({ root, tool: "pnpm", version: "2.0.7", arch: process.arch });
+                return ToolInstaller.cachePath({ root, tool: "pnpm", version: "2.0.7", arch: currentHostArchitecture });
               },
             });
             const result = yield* Effect.result(install("pnpm@2.0.7").pipe(provideScopedLayer(layer)));

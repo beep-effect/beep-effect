@@ -359,6 +359,7 @@ const EXPECTED_PACKAGES: Readonly<Record<string, ReadonlyArray<string>>> = {
     "@beep/npm-spec/IntegrityHash",
     "@beep/npm-spec/PackageManagerPin",
     "@beep/npm-spec/RegistryKind",
+    "@beep/utils/HostProcess",
     "@beep/utils/Option",
     "@beep/utils/TestDouble",
     "effect/Array",

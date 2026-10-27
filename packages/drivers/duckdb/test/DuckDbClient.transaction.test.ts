@@ -404,6 +404,40 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
     );
 
     it.effect(
+      "commits after a swallowed client-side bind failure that never reached DuckDB",
+      Effect.fnUntraced(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        yield* sql`create table tx_bind (id INTEGER)`;
+        // The bind fails before DuckDB runs anything, so the abort probe finds a
+        // healthy transaction and COMMIT proceeds.
+        yield* sql.withTransaction(
+          Effect.gen(function* () {
+            yield* sql`insert into tx_bind values (1)`;
+            const bindError = yield* sql
+              .unsafe("insert into tx_bind values (?)", [Symbol("unbindable")])
+              .pipe(Effect.flip, Effect.orDie);
+            expect(Str.startsWith("Failed to bind statement parameters:")(bindError.reason.message)).toBe(true);
+          })
+        );
+        expect(yield* countRows(sql, "tx_bind")).toBe(1);
+      })
+    );
+
+    it.effect(
+      "commits a raw transaction after a swallowed client-side bind failure",
+      Effect.fnUntraced(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        yield* sql`create table tx_raw_bind (id INTEGER)`;
+        yield* sql.unsafe("BEGIN TRANSACTION");
+        yield* sql`insert into tx_raw_bind values (1)`;
+        yield* sql.unsafe("insert into tx_raw_bind values (?)", [Symbol("unbindable")]).pipe(Effect.ignore);
+        yield* sql.unsafe("COMMIT");
+        expect(yield* countRows(sql, "tx_raw_bind")).toBe(1);
+        yield* expectUsable(sql);
+      })
+    );
+
+    it.effect(
       "refuses the commit after a swallowed interrupted statement",
       Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;

@@ -6,6 +6,7 @@
  */
 
 import { $GithubActionsId } from "@beep/identity/packages";
+import { currentHostArchitecture, HostProcessArchitecture } from "@beep/utils/HostProcess";
 import { unstubbed } from "@beep/utils/TestDouble";
 import * as Config from "effect/Config";
 import * as ConfigProvider from "effect/ConfigProvider";
@@ -527,9 +528,12 @@ const make = Effect.gen(function* () {
   // Resolved once, at construction (`internal/runner.ts` says why not at import).
   const root = yield* toolCacheRoot(env, path);
   const windows = yield* isWindowsRunner(env);
+  // The cache layout's arch segment is the host's, in Node's spelling; read
+  // through the injected reference so a caller can pin it.
+  const arch = yield* HostProcessArchitecture;
 
   const cachePath: ToolInstallerShape["cachePath"] = dual(2, (tool: string, version: string): string =>
-    ToolInstaller.cachePath({ root, tool, version, arch: process.arch })
+    ToolInstaller.cachePath({ root, tool, version, arch })
   );
 
   const destinationFor = (options: ExtractOptions.Encoded | undefined): Effect.Effect<string, ToolInstallerError> => {
@@ -1014,7 +1018,7 @@ export class ToolInstaller extends Context.Service<ToolInstaller, ToolInstallerS
   static readonly makeTest = (overrides: Partial<ToolInstallerShape> = {}): ToolInstallerShape => ({
     find: dual(2, (_tool: string, _version: string): Effect.Effect<O.Option<string>> => dies("find")),
     cachePath: dual(2, (tool: string, version: string): string =>
-      ToolInstaller.cachePath({ root: testRoot(), tool, version, arch: process.arch })
+      ToolInstaller.cachePath({ root: testRoot(), tool, version, arch: currentHostArchitecture })
     ),
     download: dual(
       (args) => P.isString(args[0]),
