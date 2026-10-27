@@ -607,20 +607,18 @@ const seedIngested = Effect.fnUntraced(function* (options: { readonly roundDir: 
   return findings;
 });
 
-const toolPresent = (command: string) =>
-  Effect.scoped(
-    Effect.gen(function* () {
-      const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-      const handle = yield* spawner.spawn(
-        ChildProcess.make(command, ["-v"], { stdin: "ignore", stderr: "ignore", stdout: "ignore" })
-      );
-      return (yield* handle.exitCode) === 0;
-    })
-  ).pipe(
-    Effect.catchTag("PlatformError", (error) =>
-      error.reason._tag === "NotFound" ? Effect.succeed(false) : Effect.fail(error)
-    )
-  );
+const toolPresent = Effect.fnUntraced(
+  function* (command: string) {
+    const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+    const handle = yield* spawner.spawn(
+      ChildProcess.make(command, ["-v"], { stdin: "ignore", stderr: "ignore", stdout: "ignore" })
+    );
+    return (yield* handle.exitCode) === 0;
+  },
+  Effect.catchTag("PlatformError", (error) =>
+    error.reason._tag === "NotFound" ? Effect.succeed(false) : Effect.fail(error)
+  )
+);
 
 const skipWithoutPoppler = Effect.fnUntraced(function* (context: { readonly skip: (note?: string) => void }) {
   for (const tool of ["pdftoppm", "pdftotext"]) {

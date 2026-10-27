@@ -15,7 +15,7 @@ const $I = $DockId.create("AnchoredBox");
  * **Example** (Make TopLeft coordinates)
  *
  * ```ts import.meta.vitest name="Make TopLeft coordinates"
- * import { TopLeft } from "@beep/dock"
+ * import { TopLeft } from "@beep/dock/AnchoredBox"
  *
  * const anchor = TopLeft.make({ left: 24, top: 16 })
  * anchor._tag // => "TopLeft"
@@ -36,7 +36,7 @@ export class TopLeft extends S.Opaque<TopLeft, { readonly brand: unique symbol }
  * **Example** (Make TopRight coordinates)
  *
  * ```ts import.meta.vitest name="Make TopRight coordinates"
- * import { TopRight } from "@beep/dock"
+ * import { TopRight } from "@beep/dock/AnchoredBox"
  *
  * const anchor = TopRight.make({ right: 24, top: 16 })
  * anchor.right // => 24
@@ -57,7 +57,7 @@ export class TopRight extends S.Opaque<TopRight, { readonly brand: unique symbol
  * **Example** (Make BottomLeft coordinates)
  *
  * ```ts import.meta.vitest name="Make BottomLeft coordinates"
- * import { BottomLeft } from "@beep/dock"
+ * import { BottomLeft } from "@beep/dock/AnchoredBox"
  *
  * const anchor = BottomLeft.make({ bottom: 12, left: 20 })
  * anchor.bottom // => 12
@@ -78,7 +78,7 @@ export class BottomLeft extends S.Opaque<BottomLeft, { readonly brand: unique sy
  * **Example** (Make BottomRight coordinates)
  *
  * ```ts import.meta.vitest name="Make BottomRight coordinates"
- * import { BottomRight } from "@beep/dock"
+ * import { BottomRight } from "@beep/dock/AnchoredBox"
  *
  * const anchor = BottomRight.make({ bottom: 12, right: 20 })
  * anchor._tag // => "BottomRight"
@@ -99,7 +99,7 @@ export class BottomRight extends S.Opaque<BottomRight, { readonly brand: unique 
  * **Example** (Make width and height)
  *
  * ```ts import.meta.vitest name="Make width and height"
- * import { AnchoredSize } from "@beep/dock"
+ * import { AnchoredSize } from "@beep/dock/AnchoredBox"
  *
  * const size = AnchoredSize.make({ width: 640, height: 480 })
  * size.width // => 640
@@ -119,7 +119,7 @@ export class AnchoredSize extends S.Class<AnchoredSize, { readonly brand: unique
  * **Example** (Make top-left sized box)
  *
  * ```ts import.meta.vitest name="Make top-left sized box"
- * import { TopLeftAnchoredBox } from "@beep/dock"
+ * import { TopLeftAnchoredBox } from "@beep/dock/AnchoredBox"
  *
  * const box = TopLeftAnchoredBox.make({ left: 20, top: 12, width: 640, height: 480 })
  * box._tag // => "TopLeft"
@@ -143,7 +143,7 @@ export class TopLeftAnchoredBox extends AnchoredSize.extend<TopLeftAnchoredBox>(
  * **Example** (Make top-right sized box)
  *
  * ```ts import.meta.vitest name="Make top-right sized box"
- * import { TopRightAnchoredBox } from "@beep/dock"
+ * import { TopRightAnchoredBox } from "@beep/dock/AnchoredBox"
  *
  * const box = TopRightAnchoredBox.make({ right: 20, top: 12, width: 640, height: 480 })
  * box.right // => 20
@@ -167,7 +167,7 @@ export class TopRightAnchoredBox extends AnchoredSize.extend<TopRightAnchoredBox
  * **Example** (Make bottom-right sized box)
  *
  * ```ts import.meta.vitest name="Make bottom-right sized box"
- * import { BottomRightAnchoredBox } from "@beep/dock"
+ * import { BottomRightAnchoredBox } from "@beep/dock/AnchoredBox"
  *
  * const box = BottomRightAnchoredBox.make({ bottom: 12, right: 20, width: 640, height: 480 })
  * box.bottom // => 12
@@ -191,7 +191,7 @@ export class BottomRightAnchoredBox extends AnchoredSize.extend<BottomRightAncho
  * **Example** (Make bottom-left sized box)
  *
  * ```ts import.meta.vitest name="Make bottom-left sized box"
- * import { BottomLeftAnchoredBox } from "@beep/dock"
+ * import { BottomLeftAnchoredBox } from "@beep/dock/AnchoredBox"
  *
  * const box = BottomLeftAnchoredBox.make({ bottom: 12, left: 20, width: 640, height: 480 })
  * box.left // => 20
@@ -215,7 +215,7 @@ export class BottomLeftAnchoredBox extends AnchoredSize.extend<BottomLeftAnchore
  * **Example** (Decode untagged top-left box)
  *
  * ```ts import.meta.vitest name="Decode untagged top-left box"
- * import { AnchoredBox } from "@beep/dock"
+ * import { AnchoredBox } from "@beep/dock/AnchoredBox"
  * import * as S from "effect/Schema"
  *
  * const box = S.decodeUnknownSync(AnchoredBox)({
@@ -245,7 +245,7 @@ export const AnchoredBox = S.Union([
  * **Example** (Type a top-left box)
  *
  * ```ts import.meta.vitest name="Type a top-left box"
- * import { AnchoredBox, TopLeftAnchoredBox } from "@beep/dock"
+ * import { AnchoredBox, TopLeftAnchoredBox } from "@beep/dock/AnchoredBox"
  *
  * const box: AnchoredBox = TopLeftAnchoredBox.make({
  *   left: 20,
@@ -266,7 +266,7 @@ export type AnchoredBox = typeof AnchoredBox.Type;
  * **Example** (Declare encoded TopLeft shape)
  *
  * ```ts import.meta.vitest name="Declare encoded TopLeft shape"
- * import type { AnchoredBox } from "@beep/dock"
+ * import type { AnchoredBox } from "@beep/dock/AnchoredBox"
  *
  * const encoded: AnchoredBox.Encoded = {
  *   _tag: "TopLeft",
@@ -288,7 +288,7 @@ export declare namespace AnchoredBox {
    * **Example** (Declare encoded BottomRight shape)
    *
    * ```ts import.meta.vitest name="Declare encoded BottomRight shape"
-   * import type { AnchoredBox } from "@beep/dock"
+   * import type { AnchoredBox } from "@beep/dock/AnchoredBox"
    *
    * const encoded: AnchoredBox.Encoded = {
    *   _tag: "BottomRight",

@@ -4144,48 +4144,6 @@
       "reason": "Deliberate shorter environment lifetime, not a whole-body scope. Restore TURBO_API/TOKEN/TEAM immediately after this warm operation, before following assertions or the next dirty/stale operation. Effect.scoped owns acquired restoration finalizers; removing it broadens process-global mutation. Scoped environment controls pass success, failure and interruption for absent/present values under Bun; all seven installed cases pass Node/Bun. See research/OPPORTUNITIES.md."
     },
     {
-      "id": "EV004:packages/tooling/tool/cli/test/cache-evidence.test.ts:47:scoped@14#1",
-      "lens": "detector",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/cache-evidence.test.ts",
-      "line": 47,
-      "endLine": 47,
-      "symbol": "scoped",
-      "occurrence": "v2:a261ad827eac45762df2918ae43413fb97b882764eb17addc78d436b90117b78",
-      "class": "redundant-whole-body-scope",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/cache-evidence.test.ts:64:scoped@14#1",
-      "lens": "detector",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/cache-evidence.test.ts",
-      "line": 64,
-      "endLine": 64,
-      "symbol": "scoped",
-      "occurrence": "v2:b2ecd3bdcf82b6ab05b016dae9e7acffa9279f3d62e2ee3a1e6466f614a0b8d9",
-      "class": "redundant-whole-body-scope",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV004:packages/tooling/tool/cli/test/cache-protocol-fixture.test.ts:468:scoped@10#1",
       "lens": "resource",
       "ruleId": "EV004",
@@ -4318,27 +4276,6 @@
       "reason": "Owner repository-simplification-confidence / lane C. End each subprocess/resource helper scope before examining files or beginning the next invocation. Reconsider when lane B's census lands."
     },
     {
-      "id": "EV004:packages/tooling/tool/cli/test/drawings-review.test.ts:611:scoped@2#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/drawings-review.test.ts",
-      "line": 611,
-      "endLine": 619,
-      "symbol": "scoped",
-      "occurrence": "v2:0a09c561d1deb42b2337280ef11708c5b7aaf9e7ae09c728d48d708ff3b32a3d",
-      "class": "inner-helper-scope-lifetime-review",
-      "evidence": "Effect.scoped( Effect.gen(function* () { const spawner = yield* ChildProcessSpawner.ChildProcessSpawner; const handle = yield* spawner.spawn( ChildProcess.make(command, [\"-v\"], { stdin: \"ignore\", stde",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV004:packages/tooling/tool/cli/test/explore-atlas.test.ts:117:scoped@31#1",
       "lens": "resource",
       "ruleId": "EV004",
@@ -4361,69 +4298,6 @@
       "reason": "This deliberately shorter nested scope closes before the assertion so the test can prove a scoped fixture directory is removed when its body fails. Removing this scope would make the cleanup assertion observe the still-live test scope."
     },
     {
-      "id": "EV004:packages/tooling/tool/cli/test/goals-packet-convention-migration.test.ts:865:scoped@10#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/goals-packet-convention-migration.test.ts",
-      "line": 865,
-      "endLine": 865,
-      "symbol": "scoped",
-      "occurrence": "v2:a63fe64239e226dcb32619beee5b2f585aef37a06a3322fe6adfee806433b42c",
-      "class": "helper-scope-lifetime-review",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/goals-packet-convention-migration.test.ts:931:scoped@8#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/goals-packet-convention-migration.test.ts",
-      "line": 931,
-      "endLine": 931,
-      "symbol": "scoped",
-      "occurrence": "v2:144c4943c70f5206b13bfbb20120a8e94eacfda3cb3e38dd3a7b73fd333c0e59",
-      "class": "inner-helper-scope-lifetime-review",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/goals-packet-convention-migration.test.ts:968:scoped@10#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/goals-packet-convention-migration.test.ts",
-      "line": 968,
-      "endLine": 968,
-      "symbol": "scoped",
-      "occurrence": "v2:0c4fdfcc9aa548e71e0c0517e1eb76d953849d3968c3ab5487ea1643898cc391",
-      "class": "helper-scope-lifetime-review",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV004:packages/tooling/tool/cli/test/image-command.test.ts:137:scoped@2#1",
       "lens": "resource",
       "ruleId": "EV004",
@@ -4444,27 +4318,6 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "runCliCommand deliberately closes the child-process scope after collecting output and awaiting exitCode, before returning to the enclosing test. This is a shorter helper scope, not a redundant whole-test scope; preserve the subprocess lifetime and real BunRuntime entrypoint oracle, whose exit-status mutant fails on Node and Bun."
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/knowledge-doctor-baseline.test.ts:847:scoped@9#1",
-      "lens": "detector",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/knowledge-doctor-baseline.test.ts",
-      "line": 847,
-      "endLine": 847,
-      "symbol": "scoped",
-      "occurrence": "v2:df39eaf8d374ce187dcf1e2b6b46168896dee3a63c4dc32fafc9ce32da635f72",
-      "class": "redundant-whole-body-scope",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
     },
     {
       "id": "EV004:packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts:954:scoped@4#1",
@@ -4510,48 +4363,6 @@
       "status": "open"
     },
     {
-      "id": "EV004:packages/tooling/tool/cli/test/models-manifest-errors.test.ts:166:scoped@14#1",
-      "lens": "detector",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/models-manifest-errors.test.ts",
-      "line": 166,
-      "endLine": 166,
-      "symbol": "scoped",
-      "occurrence": "v2:7bc3532e750f7bb87290dd20858e357bc2b40d14e4c9d001630309ceeb3634c6",
-      "class": "redundant-whole-body-scope",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/models-manifest-errors.test.ts:180:scoped@14#1",
-      "lens": "detector",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/models-manifest-errors.test.ts",
-      "line": 180,
-      "endLine": 180,
-      "symbol": "scoped",
-      "occurrence": "v2:edcd04ad2fe21f9cdbd6389e3282649cd2f9d05154d69ed7f62952bbe663ce56",
-      "class": "redundant-whole-body-scope",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV004:packages/tooling/tool/cli/test/process-attachment.test.ts:61:scoped@31#1",
       "lens": "resource",
       "ruleId": "EV004",
@@ -4563,27 +4374,6 @@
       "occurrence": "v2:0d047e0692f9688179ca33f3fe9bf8d73fdb13e4f88c922550acfc7823f20cb4",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped( Effect.gen(function* () { yield* fs.open(path.join(real, \"held.log\"), { flag: \"r\" }); return yield* scanProcessAttachments({ directory: link, kinds: [\"descriptor\"] }); }) )",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/proof-job.test.ts:140:scoped@5#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/proof-job.test.ts",
-      "line": 140,
-      "endLine": 140,
-      "symbol": "scoped",
-      "occurrence": "v2:13855f4b81c390831dd2440179c72369eb872629cef65a8ce064e0af6de9324c",
-      "class": "inner-helper-scope-lifetime-review",
-      "evidence": "Effect.scoped(runFixture(use, exitCode))",
       "replacement": {
         "primitive": "readme.resource-safety",
         "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
@@ -4658,237 +4448,6 @@
       "status": "open"
     },
     {
-      "id": "EV004:packages/tooling/tool/cli/test/restoration-archive-coverage.test.ts:1129:scoped@16#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/restoration-archive-coverage.test.ts",
-      "line": 1129,
-      "endLine": 1131,
-      "symbol": "scoped",
-      "occurrence": "v2:3e0e12a689ce4f031d5a31c85d526fb77a0e58669ac4ce98c3550b31571441ca",
-      "class": "shorter-scope-lifetime-review",
-      "evidence": "Effect.scoped( RA.hashResumedArchivePrefix(sourcePath, object.expectedSizeBytes + 1, 2, RA.createStreamingSha256()) )",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/restoration-archive-coverage.test.ts:467:scoped@10#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/restoration-archive-coverage.test.ts",
-      "line": 467,
-      "endLine": 467,
-      "symbol": "scoped",
-      "occurrence": "v2:adfe71c1adbade4c8d03a886633830c446ed26e3cf84b8edcbac13e4352470e2",
-      "class": "inner-helper-scope-lifetime-review",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/restoration-archive-coverage.test.ts:543:scoped@12#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/restoration-archive-coverage.test.ts",
-      "line": 543,
-      "endLine": 543,
-      "symbol": "scoped",
-      "occurrence": "v2:e04d2b5898e3f60fb5ba330100d5c2d66c6d607ed9bf0c7aa41cb44fe21bf2c0",
-      "class": "inner-helper-scope-lifetime-review",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/restoration-archive-coverage.test.ts:619:scoped@10#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/restoration-archive-coverage.test.ts",
-      "line": 619,
-      "endLine": 619,
-      "symbol": "scoped",
-      "occurrence": "v2:abdb5723bf0477d40b12e31e4ad636efea26d9d0810a2b64452bedd82becc5ba",
-      "class": "inner-helper-scope-lifetime-review",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/runners-bake.test.ts:326:scoped@12#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/runners-bake.test.ts",
-      "line": 326,
-      "endLine": 326,
-      "symbol": "scoped",
-      "occurrence": "v2:93c02ff3c7dd2b50705cfa1cc8b5a7fcf407da3ae493535d4852fc2216a85e5d",
-      "class": "inner-helper-scope-lifetime-review",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/runners-bake.test.ts:536:scoped@8#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/runners-bake.test.ts",
-      "line": 536,
-      "endLine": 536,
-      "symbol": "scoped",
-      "occurrence": "v2:b1f8a05e1e9e999c072a2fab4b0740812f000ec651350114ea627d52466d909d",
-      "class": "inner-helper-scope-lifetime-review",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/runners-bake.test.ts:585:scoped@12#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/runners-bake.test.ts",
-      "line": 585,
-      "endLine": 585,
-      "symbol": "scoped",
-      "occurrence": "v2:db7e3233bf4b21e9b86b7fea56e88859d39b3e15ba33b256d36c0c1ef0998f59",
-      "class": "inner-helper-scope-lifetime-review",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/runners-bake.test.ts:714:scoped@12#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/runners-bake.test.ts",
-      "line": 714,
-      "endLine": 714,
-      "symbol": "scoped",
-      "occurrence": "v2:fb4cd54452dbc4a5d22f76c9dafcd02c319253eacb3cc0c9293b89e08d8b554c",
-      "class": "inner-helper-scope-lifetime-review",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/runners-bake.test.ts:749:scoped@12#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/runners-bake.test.ts",
-      "line": 749,
-      "endLine": 749,
-      "symbol": "scoped",
-      "occurrence": "v2:74c7f9242d9bc9ed8db8931bab069a171cd325613ab2f29593e7dd46555f8b68",
-      "class": "inner-helper-scope-lifetime-review",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/runners-bake.test.ts:786:scoped@12#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/runners-bake.test.ts",
-      "line": 786,
-      "endLine": 786,
-      "symbol": "scoped",
-      "occurrence": "v2:e5793733b77abfded347f3b7adbcb140f5c5063ec408fcec22afee3191c571b6",
-      "class": "inner-helper-scope-lifetime-review",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/runners-bake.test.ts:824:scoped@8#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/runners-bake.test.ts",
-      "line": 824,
-      "endLine": 824,
-      "symbol": "scoped",
-      "occurrence": "v2:aa7b08f414ce39b43ee6b0abe8e78e0c8daf7ebc79d4035ca1d62821aff165b7",
-      "class": "inner-helper-scope-lifetime-review",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV004:packages/tooling/tool/cli/test/session-ledger.test.ts:94:scoped@2#1",
       "lens": "resource",
       "ruleId": "EV004",
@@ -4931,48 +4490,6 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "Owner repository-simplification-confidence / lane C. End each subprocess/resource helper scope before examining files or beginning the next invocation. Reconsider when lane B's census lands."
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/skills-provenance.test.ts:1157:scoped@4#1",
-      "lens": "detector",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/skills-provenance.test.ts",
-      "line": 1157,
-      "endLine": 1198,
-      "symbol": "scoped",
-      "occurrence": "v2:bd92d1c2610d772dcf84cc408d536b2534d7843a9f05e68aa7d8c6e77cbfa9c6",
-      "class": "redundant-whole-body-scope",
-      "evidence": "Effect.scoped( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const repoRoot = yield* fs.makeTempDirectoryScoped({ prefix: \"skills-provenance-symlink",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/skills-provenance.test.ts:1290:scoped@4#1",
-      "lens": "detector",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/skills-provenance.test.ts",
-      "line": 1290,
-      "endLine": 1353,
-      "symbol": "scoped",
-      "occurrence": "v2:ccb77e468c4c0e3dc6c53367c47e16bc22af7178ed93d72a0eefca211cfee920",
-      "class": "redundant-whole-body-scope",
-      "evidence": "Effect.scoped( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const repoRoot = yield* findRepoRoot(); const fixtureRoot = yield* fs.makeTempDirectory",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
     },
     {
       "id": "EV004:packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts:604:scoped@90#1",
@@ -5191,69 +4708,6 @@
       "status": "open"
     },
     {
-      "id": "EV004:packages/tooling/tool/cli/test/test-typecheck-coverage.test.ts:199:scoped@9#1",
-      "lens": "detector",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/test-typecheck-coverage.test.ts",
-      "line": 199,
-      "endLine": 199,
-      "symbol": "scoped",
-      "occurrence": "v2:4079d95b3aee78b076cd8cdc5ae10abad364e26693b768f307b6e1ef6cbc114d",
-      "class": "redundant-whole-body-scope",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/test-typecheck-coverage.test.ts:227:scoped@9#1",
-      "lens": "detector",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/test-typecheck-coverage.test.ts",
-      "line": 227,
-      "endLine": 227,
-      "symbol": "scoped",
-      "occurrence": "v2:daafbc6114ba4d6fe69822c5f84805be64d7c740b22a2f1a234ae14e40d92c84",
-      "class": "redundant-whole-body-scope",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/test-typecheck-coverage.test.ts:84:scoped@9#1",
-      "lens": "detector",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/test-typecheck-coverage.test.ts",
-      "line": 84,
-      "endLine": 84,
-      "symbol": "scoped",
-      "occurrence": "v2:8292758838e70cfde87121e439531813979aca656d1ab7211a640a777c675651",
-      "class": "redundant-whole-body-scope",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV004:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:392:scoped@8#1",
       "lens": "resource",
       "ruleId": "EV004",
@@ -5364,143 +4818,17 @@
       "reason": "Intentional short fixture scope: scratch repository cleanup, fresh probe service lifetime, or open-file descriptor release must finish before caller assertions or subsequent invocations. Public it.layer owns static providers; moving this scope to test teardown would change the lifetime. See goals/effect-vitest-canon/research/worktree-command-scope-proof.md."
     },
     {
-      "id": "EV004:packages/tooling/tool/cli/test/worktree-command.test.ts:2211:scoped@12#1",
+      "id": "EV004:packages/tooling/tool/cli/test/worktree-command.test.ts:2270:scoped@33#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/worktree-command.test.ts",
-      "line": 2211,
-      "endLine": 2211,
-      "symbol": "scoped",
-      "occurrence": "v2:0af1529df31ed4abe37d51e37b2c2dd7a2af8e70b970c85ed3092fb321a10b83",
-      "class": "shared-helper-scope-lifetime-review",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/worktree-command.test.ts:2271:scoped@33#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/worktree-command.test.ts",
-      "line": 2271,
-      "endLine": 2276,
+      "line": 2270,
+      "endLine": 2275,
       "symbol": "scoped",
       "occurrence": "v2:bec94b204861e7984d6f6e58e51f25a7a4aff4aa5471e1499ab0a6f34da3f1b1",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped( Effect.gen(function* () { yield* fs.open(path.join(targetPath, \"README.md\"), { flag: \"r\" }); return yield* outcome; }) )",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/worktree-command.test.ts:2360:scoped@19#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/worktree-command.test.ts",
-      "line": 2360,
-      "endLine": 2445,
-      "symbol": "scoped",
-      "occurrence": "v2:7cfbcfb803d38be16aa49f82851d4ad6f0bdca3d754cf579cf07549e4e8c1aae",
-      "class": "shorter-scope-lifetime-review",
-      "evidence": "Effect.scoped( Effect.gen(function* () { yield* fs.open(path.join(targetPath, \"README.md\"), { flag: \"r\" }); const ownName = Str.trim(yield* fs.readFileString(\"/proc/self/comm\")); // Under the other se",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/worktree-remove-fence.test.ts:137:scoped@2#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/worktree-remove-fence.test.ts",
-      "line": 137,
-      "endLine": 172,
-      "symbol": "scoped",
-      "occurrence": "v2:a5656278a0fb756528af6de1286d3e4a29dd0b68322b25f7010b331fed6c6993",
-      "class": "helper-scope-lifetime-review",
-      "evidence": "Effect.scoped( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; // The command moves its own cwd into the clone while removing the lane it // stands in",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/worktree-remove-fence.test.ts:469:scoped@6#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/worktree-remove-fence.test.ts",
-      "line": 469,
-      "endLine": 483,
-      "symbol": "scoped",
-      "occurrence": "v2:4de6bfe1c5009b01614460432bb37adaa60dd5419d4f6932826a17acb9e99cb7",
-      "class": "shorter-scope-lifetime-review",
-      "evidence": "Effect.scoped( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; // This test process is the session: it exports its own pid as CLAUDE_PID // to the invoker it spawns, and the lane ho",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/worktree-remove-fence.test.ts:489:scoped@6#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/worktree-remove-fence.test.ts",
-      "line": 489,
-      "endLine": 504,
-      "symbol": "scoped",
-      "occurrence": "v2:62136c7811cef762c35787749e96885bf3c86c3a67dfc1ae26142c3a52ceda9e",
-      "class": "shorter-scope-lifetime-review",
-      "evidence": "Effect.scoped( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; // Same topology, but the marker in the invoker's real environment claims // pid 1: an ancestor of everything that nev",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/worktree-remove-fence.test.ts:510:scoped@6#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/worktree-remove-fence.test.ts",
-      "line": 510,
-      "endLine": 523,
-      "symbol": "scoped",
-      "occurrence": "v2:c1296a3b85558fff3eeede8d450f37d862fd8f72ca04d8071ea3544f4a396392",
-      "class": "shorter-scope-lifetime-review",
-      "evidence": "Effect.scoped( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const holder = yield* spawnLaneHolder(lane); // The holder's own pid sits in its ancestry but nowhere on the invoker's",
       "replacement": {
         "primitive": "readme.resource-safety",
         "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
