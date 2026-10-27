@@ -2,6 +2,8 @@ import { assert, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
+import * as HttpClient from "effect/http/HttpClient";
 import * as P from "effect/Predicate";
 
 // These cases exercise the Bun.serve shim that vitest.setup.ts installs for Node runs, which names
@@ -23,52 +25,60 @@ const writeLock = (port: number, owner: number) => Effect.promise(() => Bun.writ
 const serveText = (text: string) =>
   Effect.sync(() => Bun.serve({ hostname: "127.0.0.1", port: 0, fetch: () => new Response(text) }));
 
+// Bun types `port` as optional (a Unix-socket server has none); a TCP server always has one.
+const portOf = (server: { readonly port?: number | undefined }): number => server.port ?? -1;
+
 const stop = (server: { readonly stop: () => Promise<void> }) => Effect.promise(() => server.stop());
 
 const fetchText = (port: number) =>
-  Effect.promise(() => fetch(`http://127.0.0.1:${port}/`).then((response) => response.text()));
+  HttpClient.get(`http://127.0.0.1:${port}/`).pipe(
+    Effect.flatMap((response) => response.text),
+    Effect.orDie
+  );
 
 // Serves once and stops at once, returning the port the shim handed out.
 const servedPort = Effect.fnUntraced(function* (text: string) {
   const server = yield* serveText(text);
   yield* stop(server);
-  return server.port;
+  return portOf(server);
 });
 
-it.effect.skipIf(!shimActive)("serves every port-0 server on its own reserved port below the ephemeral range", () =>
-  Effect.gen(function* () {
-    const names = A.map(A.range(1, 40), (index) => `server-${index}`);
-    const servers = yield* Effect.forEach(names, serveText);
-    const ports = A.map(servers, (server) => server.port);
-    yield* Effect.gen(function* () {
-      assert.strictEqual(HashSet.size(HashSet.fromIterable(ports)), names.length);
-      for (const port of ports) {
-        assert.isAtLeast(port, shimPortFloor);
-        assert.isBelow(port, ephemeralPortFloor);
-        assert.strictEqual(yield* readLock(port), `${process.pid}`);
-      }
-      const replies = yield* Effect.forEach(ports, fetchText, { concurrency: "unbounded" });
-      assert.deepStrictEqual(replies, names);
-    }).pipe(Effect.ensuring(Effect.forEach(servers, stop, { discard: true })));
-  })
-);
+it.layer(FetchHttpClient.layer)("vitest Bun.serve shim", (it) => {
+  it.effect.skipIf(!shimActive)("serves every port-0 server on its own reserved port below the ephemeral range", () =>
+    Effect.gen(function* () {
+      const names = A.map(A.range(1, 40), (index) => `server-${index}`);
+      const servers = yield* Effect.forEach(names, serveText);
+      const ports = A.map(servers, portOf);
+      yield* Effect.gen(function* () {
+        assert.strictEqual(HashSet.size(HashSet.fromIterable(ports)), names.length);
+        for (const port of ports) {
+          assert.isAtLeast(port, shimPortFloor);
+          assert.isBelow(port, ephemeralPortFloor);
+          assert.strictEqual(yield* readLock(port), `${process.pid}`);
+        }
+        const replies = yield* Effect.forEach(ports, fetchText, { concurrency: "unbounded" });
+        assert.deepStrictEqual(replies, names);
+      }).pipe(Effect.ensuring(Effect.forEach(servers, stop, { discard: true })));
+    })
+  );
 
-it.effect.skipIf(!shimActive)("removes the port reservation when the server stops", () =>
-  Effect.gen(function* () {
-    const port = yield* servedPort("stopped");
-    const missing = yield* Effect.flip(readLock(port));
-    assert.propertyVal(missing.cause, "code", "ENOENT");
-  })
-);
+  it.effect.skipIf(!shimActive)("removes the port reservation when the server stops", () =>
+    Effect.gen(function* () {
+      const port = yield* servedPort("stopped");
+      const missing = yield* Effect.flip(readLock(port));
+      assert.propertyVal(missing.cause, "code", "ENOENT");
+    })
+  );
 
-it.effect.skipIf(!shimActive)("skips a port a live process reserved and reclaims one whose owner exited", () =>
-  Effect.gen(function* () {
-    // Ports are handed out in order after the last one this process claimed.
-    const first = yield* servedPort("first");
-    yield* writeLock(first + 1, process.ppid);
-    yield* writeLock(first + 2, exitedPid);
-    // Afterwards the stand-in live reservation names an exited owner, so any process may reclaim it.
-    const reclaimed = yield* servedPort("reclaimed").pipe(Effect.ensuring(writeLock(first + 1, exitedPid)));
-    assert.strictEqual(reclaimed, first + 2);
-  })
-);
+  it.effect.skipIf(!shimActive)("skips a port a live process reserved and reclaims one whose owner exited", () =>
+    Effect.gen(function* () {
+      // Ports are handed out in order after the last one this process claimed.
+      const first = yield* servedPort("first");
+      yield* writeLock(first + 1, process.ppid);
+      yield* writeLock(first + 2, exitedPid);
+      // Afterwards the stand-in live reservation names an exited owner, so any process may reclaim it.
+      const reclaimed = yield* servedPort("reclaimed").pipe(Effect.ensuring(writeLock(first + 1, exitedPid)));
+      assert.strictEqual(reclaimed, first + 2);
+    })
+  );
+});
