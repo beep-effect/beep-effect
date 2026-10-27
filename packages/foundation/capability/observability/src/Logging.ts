@@ -11,7 +11,7 @@
  * ```typescript
  * import * as Effect from "effect/Effect";
  * import * as Layer from "effect/Layer";
- * import { LoggingConfig, layerConsoleLogger } from "@beep/observability"
+ * import { LoggingConfig, layerConsoleLogger } from "@beep/observability/Logging"
  *
  * const config = LoggingConfig.make({ format: "pretty", minLogLevel: "Info" })
  * const loggerLayer = layerConsoleLogger(config)
@@ -50,7 +50,7 @@ const $I = $ObservabilityId.create("Logging");
  * **Example** (JSON format logger config)
  *
  * ```typescript
- * import { LoggingConfig, layerConsoleLogger } from "@beep/observability"
+ * import { LoggingConfig, layerConsoleLogger } from "@beep/observability/Logging"
  *
  * const config = LoggingConfig.make({ format: "json", minLogLevel: "Debug" })
  * console.log(layerConsoleLogger(config))
@@ -71,7 +71,7 @@ export const LogFormat = LiteralKit(["pretty", "structured", "json", "logfmt", "
  * **Example** (Assign LogFormat type)
  *
  * ```typescript
- * import type { LogFormat } from "@beep/observability"
+ * import type { LogFormat } from "@beep/observability/Logging"
  *
  * const format: LogFormat = "json"
  * console.log(format)
@@ -88,7 +88,7 @@ export type LogFormat = typeof LogFormat.Type;
  * **Example** (Forest theme pretty config)
  *
  * ```ts import.meta.vitest name="Forest theme pretty config"
- * import { PrettyLoggerConfig } from "@beep/observability"
+ * import { PrettyLoggerConfig } from "@beep/observability/Logging"
  *
  * const config = PrettyLoggerConfig.make({ theme: "forest", bannerMode: "off" })
  * config.theme // => "forest"
@@ -109,7 +109,7 @@ export const PrettyLogTheme = LiteralKit(["ocean", "forest", "sunrise", "mono"])
  * **Example** (Assign PrettyLogTheme type)
  *
  * ```typescript
- * import type { PrettyLogTheme } from "@beep/observability"
+ * import type { PrettyLogTheme } from "@beep/observability/Logging"
  *
  * const theme: PrettyLogTheme = "forest"
  * console.log(theme)
@@ -126,7 +126,7 @@ export type PrettyLogTheme = typeof PrettyLogTheme.Type;
  * **Example** (Startup banner mode config)
  *
  * ```ts import.meta.vitest name="Startup banner mode config"
- * import { PrettyLoggerConfig } from "@beep/observability"
+ * import { PrettyLoggerConfig } from "@beep/observability/Logging"
  *
  * const config = PrettyLoggerConfig.make({ theme: "ocean", bannerMode: "startup" })
  * config.bannerMode // => "startup"
@@ -147,7 +147,7 @@ export const BannerMode = LiteralKit(["off", "startup", "phase", "all"]).pipe(
  * **Example** (Assign BannerMode type)
  *
  * ```typescript
- * import type { BannerMode } from "@beep/observability"
+ * import type { BannerMode } from "@beep/observability/Logging"
  *
  * const mode: BannerMode = "startup"
  * console.log(mode)
@@ -164,7 +164,7 @@ export type BannerMode = typeof BannerMode.Type;
  * **Example** (Pretty logger theme config)
  *
  * ```ts import.meta.vitest name="Pretty logger theme config"
- * import { PrettyLoggerConfig } from "@beep/observability"
+ * import { PrettyLoggerConfig } from "@beep/observability/Logging"
  *
  * const config = PrettyLoggerConfig.make({
  *   theme: "forest",
@@ -194,7 +194,7 @@ export class PrettyLoggerConfig extends S.Opaque<PrettyLoggerConfig, { readonly 
  * **Example** (Structured logging config)
  *
  * ```ts import.meta.vitest name="Structured logging config"
- * import { LoggingConfig } from "@beep/observability"
+ * import { LoggingConfig } from "@beep/observability/Logging"
  *
  * const config = LoggingConfig.make({
  *   format: "structured",
@@ -230,7 +230,7 @@ export class LoggingConfig extends S.Opaque<LoggingConfig, { readonly brand: uni
  * **Example** (Minimum log level layer)
  *
  * ```typescript
- * import { layerMinimumLogLevel } from "@beep/observability"
+ * import { layerMinimumLogLevel } from "@beep/observability/Logging"
  * import * as Effect from "effect/Effect";
  * const program = Effect.logInfo("visible").pipe(
  *   Effect.provide(layerMinimumLogLevel("Info"))
@@ -250,7 +250,7 @@ export const layerMinimumLogLevel = (minLogLevel: LogLevel.LogLevel): Layer.Laye
  * **Example** (Startup banner options)
  *
  * ```typescript
- * import { RenderLogBannerOptions } from "@beep/observability"
+ * import { RenderLogBannerOptions } from "@beep/observability/Logging"
  *
  * const options = RenderLogBannerOptions.make({ kind: "startup" })
  * console.log(options.kind)
@@ -361,7 +361,7 @@ const renderBannerGlyph = (kind: "phase" | "startup"): string => (kind === "phas
  * **Example** (Render themed startup banner)
  *
  * ```typescript
- * import { renderLogBanner, PrettyLoggerConfig, RenderLogBannerOptions } from "@beep/observability"
+ * import { renderLogBanner, PrettyLoggerConfig, RenderLogBannerOptions } from "@beep/observability/Logging"
  *
  * const pretty = PrettyLoggerConfig.make({ theme: "ocean", bannerMode: "all" })
  * const banner = renderLogBanner("Server Ready", RenderLogBannerOptions.make({ kind: "startup", pretty }))
@@ -451,7 +451,7 @@ const resolveLogger = (format: LogFormat, pretty = defaultPrettyLoggerConfig) =>
  *
  * ```typescript
  * import * as Effect from "effect/Effect";
- * import { LoggingConfig, layerConsoleLogger } from "@beep/observability"
+ * import { LoggingConfig, layerConsoleLogger } from "@beep/observability/Logging"
  *
  * const config = LoggingConfig.make({ format: "json", minLogLevel: "Info" })
  * const layer = layerConsoleLogger(config)

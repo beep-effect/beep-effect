@@ -24,7 +24,7 @@ const SheetFormatBase = LiteralKit(["letter", "a4"]);
  * **Example** (Read the formats)
  *
  * ```ts
- * import { SheetFormat } from "@beep/technical-drawing"
+ * import { SheetFormat } from "@beep/technical-drawing/Sheet.schemas"
  *
  * console.log(SheetFormat.literals)
  * ```
@@ -45,7 +45,7 @@ export const SheetFormat = SheetFormatBase.pipe(
  * **Example** (Annotate a format)
  *
  * ```ts
- * import type { SheetFormat } from "@beep/technical-drawing"
+ * import type { SheetFormat } from "@beep/technical-drawing/Sheet.schemas"
  *
  * const format: SheetFormat = "letter"
  * console.log(format)
@@ -73,7 +73,7 @@ const PositiveFinite = S.Finite.check(
  * **Example** (Use PT_PER_CM)
  *
  * ```ts
- * import { PT_PER_CM } from "@beep/technical-drawing"
+ * import { PT_PER_CM } from "@beep/technical-drawing/Sheet.schemas"
  *
  * console.log(PT_PER_CM * 2.5) // top margin in points
  * ```
@@ -89,7 +89,7 @@ export const PT_PER_CM = 72 / 2.54;
  * **Example** (Use PT_PER_MM)
  *
  * ```ts
- * import { PT_PER_MM } from "@beep/technical-drawing"
+ * import { PT_PER_MM } from "@beep/technical-drawing/Sheet.schemas"
  *
  * console.log(PT_PER_MM * 0.35) // 0.35 mm line in points
  * ```
@@ -105,7 +105,7 @@ export const PT_PER_MM = PT_PER_CM / 10;
  * **Example** (Letter)
  *
  * ```ts
- * import { PagePoints } from "@beep/technical-drawing"
+ * import { PagePoints } from "@beep/technical-drawing/Sheet.schemas"
  *
  * console.log(PagePoints.make({ width: 612, height: 792 }))
  * ```
@@ -136,7 +136,7 @@ const PageSizePt = Fn({ input: SheetFormat, output: PagePoints }).pipe(
  * **Example** (Letter in points)
  *
  * ```ts
- * import { pageSizePt } from "@beep/technical-drawing"
+ * import { pageSizePt } from "@beep/technical-drawing/Sheet.schemas"
  *
  * console.log(pageSizePt("letter"))
  * ```
@@ -157,7 +157,7 @@ export const pageSizePt: (format: SheetFormat) => PagePoints = PageSizePt.implem
  * **Example** (Use MARGINS_CM)
  *
  * ```ts
- * import { MARGINS_CM } from "@beep/technical-drawing"
+ * import { MARGINS_CM } from "@beep/technical-drawing/Sheet.schemas"
  *
  * console.log(MARGINS_CM.top, MARGINS_CM.bottom)
  * ```
@@ -173,7 +173,7 @@ export const MARGINS_CM = { top: 2.5, left: 2.5, right: 1.5, bottom: 1.0 } as co
  * **Example** (Use MIN_LETTER_HEIGHT_CM)
  *
  * ```ts
- * import { MIN_LETTER_HEIGHT_CM } from "@beep/technical-drawing"
+ * import { MIN_LETTER_HEIGHT_CM } from "@beep/technical-drawing/Sheet.schemas"
  *
  * console.log(MIN_LETTER_HEIGHT_CM)
  * ```
@@ -702,7 +702,7 @@ export class SheetFonts extends S.Opaque<SheetFonts, { readonly brand: unique sy
  * **Example** (Defaults)
  *
  * ```ts
- * import { SheetOptions } from "@beep/technical-drawing"
+ * import { SheetOptions } from "@beep/technical-drawing/Sheet.schemas"
  *
  * const options = SheetOptions.make({})
  * console.log(options.format, options.lineWeightMm, options.letterHeightCm)

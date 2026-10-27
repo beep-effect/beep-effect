@@ -25,7 +25,7 @@ const $I = $TechnicalDrawingId.create("TechnicalDrawing.ports");
  * **Example** (Stub geometry engine)
  *
  * ```ts
- * import type { GeometryEngineShape } from "@beep/technical-drawing"
+ * import type { GeometryEngineShape } from "@beep/technical-drawing/TechnicalDrawing.ports"
  * import * as Effect from "effect/Effect";
  * const engine: GeometryEngineShape = {
  *   info: Effect.die("not implemented"),
@@ -56,7 +56,7 @@ export interface GeometryEngineShape {
  * **Example** (Reference the port)
  *
  * ```ts
- * import { GeometryEngine } from "@beep/technical-drawing"
+ * import { GeometryEngine } from "@beep/technical-drawing/TechnicalDrawing.ports"
  *
  * console.log(GeometryEngine)
  * ```
@@ -72,7 +72,7 @@ export class GeometryEngine extends Context.Service<GeometryEngine, GeometryEngi
  * **Example** (Stub PDF backend)
  *
  * ```ts
- * import type { PdfBackendShape } from "@beep/technical-drawing"
+ * import type { PdfBackendShape } from "@beep/technical-drawing/TechnicalDrawing.ports"
  * import * as Effect from "effect/Effect";
  * const backend: PdfBackendShape = {
  *   svgToPdf: () => Effect.die("not implemented"),
@@ -116,7 +116,7 @@ export interface PdfBackendShape {
  * **Example** (Reference the port)
  *
  * ```ts
- * import { PdfBackend } from "@beep/technical-drawing"
+ * import { PdfBackend } from "@beep/technical-drawing/TechnicalDrawing.ports"
  *
  * console.log(PdfBackend)
  * ```
@@ -132,7 +132,7 @@ export class PdfBackend extends Context.Service<PdfBackend, PdfBackendShape>()($
  * **Example** (Stub mail reader)
  *
  * ```ts
- * import type { MailReaderShape } from "@beep/technical-drawing"
+ * import type { MailReaderShape } from "@beep/technical-drawing/TechnicalDrawing.ports"
  * import * as Effect from "effect/Effect";
  * const reader: MailReaderShape = { authoredText: () => Effect.die("not implemented") }
  * console.log(reader)
@@ -152,7 +152,7 @@ export interface MailReaderShape {
  * **Example** (Reference the port)
  *
  * ```ts
- * import { MailReader } from "@beep/technical-drawing"
+ * import { MailReader } from "@beep/technical-drawing/TechnicalDrawing.ports"
  *
  * console.log(MailReader)
  * ```

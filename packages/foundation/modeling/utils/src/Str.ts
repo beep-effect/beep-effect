@@ -28,7 +28,7 @@ import type * as TF from "type-fest";
  *
  * ```ts
  * import { pipe } from "effect/Function";
- * import { Str } from "@beep/utils"
+ * import * as Str from "@beep/utils/Str"
  *
  * const same = Str.equivalence("docs", "docs")
  * const piped = pipe("docs", Str.equivalence("tests"))
@@ -58,7 +58,8 @@ export const equivalence: {
  *
  * ```ts
  * import { pipe } from "effect/Function";
- * import { A, Str } from "@beep/utils"
+ * import * as A from "@beep/utils/Array"
+ * import * as Str from "@beep/utils/Str"
  *
  * const sorted = A.sort(["b", "a"], Str.orderAsc)
  * const compared = pipe("a", Str.orderAsc("b"))
@@ -100,7 +101,7 @@ export type Prefixed<Pre extends string, S extends string> = Pre extends string 
  *
  * ```ts
  * import { pipe } from "effect/Function";
- * import { Str } from "@beep/utils"
+ * import * as Str from "@beep/utils/Str"
  *
  * // Data-first
  * const prefixed = Str.prefix("world", "hello-")
@@ -139,7 +140,7 @@ export const prefix: {
  *
  * ```ts
  * import { pipe } from "effect/Function";
- * import { Str } from "@beep/utils"
+ * import * as Str from "@beep/utils/Str"
  *
  * // Data-first
  * const lazy = Str.prefixThunk("world", "hello-")
@@ -194,7 +195,7 @@ export type Postfixed<S extends string, Post extends string> = Post extends stri
  *
  * ```ts
  * import { pipe } from "effect/Function";
- * import { Str } from "@beep/utils"
+ * import * as Str from "@beep/utils/Str"
  *
  * // Data-first
  * const suffixed = Str.postfix("hello", "-world")
@@ -233,7 +234,7 @@ export const postfix: {
  *
  * ```ts
  * import { pipe } from "effect/Function";
- * import { Str } from "@beep/utils"
+ * import * as Str from "@beep/utils/Str"
  *
  * // Data-first
  * const lazy = Str.postfixThunk("hello", "-world")
@@ -275,7 +276,7 @@ export const postfixThunk: {
  *
  * ```ts
  * import { pipe } from "effect/Function";
- * import { Str } from "@beep/utils"
+ * import * as Str from "@beep/utils/Str"
  * import * as A from "effect/Array"
  *
  * const routes: A.NonEmptyReadonlyArray<string> = ["users", "posts"]
@@ -315,7 +316,7 @@ export const mapPrefix: {
  *
  * ```ts
  * import { pipe } from "effect/Function";
- * import { Str } from "@beep/utils"
+ * import * as Str from "@beep/utils/Str"
  * import * as A from "effect/Array"
  *
  * const files: A.NonEmptyReadonlyArray<string> = ["index", "main"]
@@ -349,7 +350,7 @@ export const mapPostfix: {
  * **Example** (Call `camelCase`)
  *
  * ```ts
- * import { Str } from "@beep/utils"
+ * import * as Str from "@beep/utils/Str"
  *
  * const value = Str.camelCase("my_cool_name")
  * // "myCoolName"
@@ -367,7 +368,7 @@ export const camelCase = <TStr extends string>(str: TStr): TF.CamelCase<TStr> =>
  * **Example** (Call `snakeCase`)
  *
  * ```ts
- * import { Str } from "@beep/utils"
+ * import * as Str from "@beep/utils/Str"
  *
  * const value = Str.snakeCase("myCoolName")
  * // "my_cool_name"
@@ -385,7 +386,7 @@ export const snakeCase = <const TStr extends string>(str: TStr): TF.SnakeCase<TS
  * **Example** (Call `kebabCase`)
  *
  * ```ts
- * import { Str } from "@beep/utils"
+ * import * as Str from "@beep/utils/Str"
  *
  * const value = Str.kebabCase("myCoolName")
  * // "my-cool-name"
@@ -404,7 +405,7 @@ export const kebabCase = <const TStr extends string>(str: TStr): TF.KebabCase<TS
  * **Example** (Call `screamingSnake`)
  *
  * ```ts
- * import { Str } from "@beep/utils"
+ * import * as Str from "@beep/utils/Str"
  *
  * const value = Str.screamingSnake("myCoolName")
  * // "MY_COOL_NAME"
@@ -423,7 +424,7 @@ export const screamingSnake = <const TStr extends string>(str: TStr): TF.Screami
  * **Example** (Call `pascalCase`)
  *
  * ```ts
- * import { Str } from "@beep/utils"
+ * import * as Str from "@beep/utils/Str"
  *
  * const value = Str.pascalCase("my_cool_name")
  * // "MyCoolName"
@@ -441,7 +442,7 @@ export const pascalCase = <const TStr extends string>(str: TStr): TF.PascalCase<
  * **Example** (Call `pascalToSnake`)
  *
  * ```ts
- * import { Str } from "@beep/utils"
+ * import * as Str from "@beep/utils/Str"
  *
  * const value = Str.pascalToSnake("MyCoolName")
  * // "my_cool_name"
@@ -460,7 +461,7 @@ export const pascalToSnake = <const TStr extends string>(str: TF.PascalCase<TStr
  * **Example** (Call `snakeToCamel`)
  *
  * ```ts
- * import { Str } from "@beep/utils"
+ * import * as Str from "@beep/utils/Str"
  *
  * const value = Str.snakeToCamel("my_cool_name")
  * // "myCoolName"
@@ -479,7 +480,7 @@ export const snakeToCamel = <const TStr extends string>(str: TF.SnakeCase<TStr>)
  * **Example** (Call `snakeToKebab`)
  *
  * ```ts
- * import { Str } from "@beep/utils"
+ * import * as Str from "@beep/utils/Str"
  *
  * const value = Str.snakeToKebab("my_cool_name")
  * // "my-cool-name"
@@ -498,7 +499,7 @@ export const snakeToKebab = <const TStr extends string>(str: TF.SnakeCase<TStr>)
  * **Example** (Call `camelToSnake`)
  *
  * ```ts
- * import { Str } from "@beep/utils"
+ * import * as Str from "@beep/utils/Str"
  *
  * const value = Str.camelToSnake("myCoolName")
  * // "my_cool_name"
@@ -517,7 +518,7 @@ export const camelToSnake = <const TStr extends string>(str: TF.CamelCase<TStr>)
  * **Example** (Call `snakeToPascal`)
  *
  * ```ts
- * import { Str } from "@beep/utils"
+ * import * as Str from "@beep/utils/Str"
  *
  * const value = Str.snakeToPascal("my_cool_name")
  * // "MyCoolName"
@@ -536,7 +537,7 @@ export const snakeToPascal = <const TStr extends TF.SnakeCase<string>>(str: TStr
  * **Example** (Call `kebabToSnake`)
  *
  * ```ts
- * import { Str } from "@beep/utils"
+ * import * as Str from "@beep/utils/Str"
  *
  * const value = Str.kebabToSnake("my-cool-name")
  * // "my_cool_name"
@@ -561,7 +562,7 @@ export const kebabToSnake = <const TStr extends string>(str: TF.KebabCase<TStr>)
  *
  * ```ts
  * import { pipe } from "effect/Function";
- * import { Str } from "@beep/utils"
+ * import * as Str from "@beep/utils/Str"
  *
  * const direct = Str.startsWith("hello-world", "hello")
  * const piped = pipe("hello-world", Str.startsWith("hello"))
@@ -601,7 +602,7 @@ export const startsWith: {
  *
  * ```ts
  * import { pipe } from "effect/Function";
- * import { Str } from "@beep/utils"
+ * import * as Str from "@beep/utils/Str"
  *
  * const direct = Str.endsWith("hello-world", "world")
  * const piped = pipe("hello-world", Str.endsWith("world"))
@@ -641,7 +642,7 @@ export const endsWith: {
  *
  * ```ts
  * import { pipe } from "effect/Function";
- * import { Str } from "@beep/utils"
+ * import * as Str from "@beep/utils/Str"
  *
  * // Data-first
  * const result = Str.contains("hello world", "lo wo")
@@ -685,7 +686,7 @@ export const contains: {
  *
  * ```ts
  * import { pipe } from "effect/Function";
- * import { Str } from "@beep/utils"
+ * import * as Str from "@beep/utils/Str"
  *
  * // Data-first
  * const result = Str.repeat("ha", 3)
@@ -744,7 +745,7 @@ const globalSearchPattern = (searchValue: string | RegExp): RegExp => {
  * **Example** (Call `replaceWith`)
  *
  * ```ts
- * import { Str } from "@beep/utils"
+ * import * as Str from "@beep/utils/Str"
  * import { pipe } from "effect/Function";
  * const replaced = Str.replaceWith("beep", (match) => Str.toUpperCase(match))("hello beep")
  * const piped = pipe("hello beep", Str.replaceWith("beep", (match) => Str.toUpperCase(match)))
@@ -798,7 +799,7 @@ export const replaceWith: {
  * **Example** (Call `replaceAllWith`)
  *
  * ```ts
- * import { Str } from "@beep/utils"
+ * import * as Str from "@beep/utils/Str"
  * import { pipe } from "effect/Function";
  * const replaced = Str.replaceAllWith(/beep/g, (match) => Str.toUpperCase(match))("beep beep")
  * const piped = pipe("beep beep", Str.replaceAllWith(/beep/g, (match) => Str.toUpperCase(match)))
@@ -834,7 +835,7 @@ export const replaceAllWith: {
  * **Example** (Call a re-exported helper)
  *
  * ```ts
- * import { Str } from "@beep/utils"
+ * import * as Str from "@beep/utils/Str"
  *
  * const lower = Str.toLowerCase("BEEP")
  * console.log(lower)
@@ -851,7 +852,7 @@ export * from "effect/String";
  * **Example** (Call `trimThunk`)
  *
  * ```ts
- * import { Str } from "@beep/utils"
+ * import * as Str from "@beep/utils/Str"
  *
  * const lazy = Str.trimThunk("  hello  ")
  * const value = lazy()
@@ -871,7 +872,7 @@ export const trimThunk = (s: string) => () => Str.trim(s);
  * **Example** (Call `fromNumber`)
  *
  * ```ts
- * import { Str } from "@beep/utils"
+ * import * as Str from "@beep/utils/Str"
  *
  * const value = Str.fromNumber(42)
  * console.log(value)
@@ -891,7 +892,7 @@ export const fromNumber = <const T extends number>(num: T): `${T}` => `${num}` a
  * **Example** (Call `toSlug`)
  *
  * ```ts
- * import { Str } from "@beep/utils"
+ * import * as Str from "@beep/utils/Str"
  *
  * const value = Str.toSlug("Hello, Beep Effect!")
  * console.log(value)
@@ -920,7 +921,7 @@ export const toSlug = flow(
  *
  * ```ts
  * import { pipe } from "effect/Function";
- * import { Str } from "@beep/utils"
+ * import * as Str from "@beep/utils/Str"
  *
  * const direct = Str.truncate("  hello world  ", 5)
  * // "hello..."
@@ -955,7 +956,7 @@ export const truncate: {
  * **Example** (Call `orEmpty`)
  *
  * ```ts
- * import { Str } from "@beep/utils";
+ * import * as Str from "@beep/utils/Str"
  *
  * const fn = (someStr: string | null | undefined) => console.log(Str.orEmpty(someStr)) // "" if null or undefined
  * ```
@@ -991,7 +992,7 @@ export type MatchEmptyResult<Self extends string, OnEmpty, OnNonEmpty> = string 
  * **Example** (Call `matchEmpty`)
  *
  * ```ts
- * import { Str } from "@beep/utils"
+ * import * as Str from "@beep/utils/Str"
  *
  * // Data-last (pipeable)
  * const summarize = Str.matchEmpty({

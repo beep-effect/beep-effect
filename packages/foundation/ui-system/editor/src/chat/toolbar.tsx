@@ -4,6 +4,8 @@
  * numbered/check), quote, and code block. Button pressed-state mirrors the
  * current selection so the bar stays in sync as the caret moves.
  *
+ * **Details**
+ *
  * Per the repo atom-first law the selection-mirroring registration is a
  * per-editor `@effect/atom` binding ({@link toolbarSelectionAtom}) rather than a
  * `useState` + `useEffect` pair: the read fn registers the Lexical update +

@@ -144,7 +144,7 @@ export * from "effect/Predicate";
  * **Example** (Proxy trap safety check)
  *
  * ```ts
- * import { P } from "@beep/utils"
+ * import * as P from "@beep/utils/Predicate"
  *
  * const value = new Proxy({}, { ownKeys: () => { throw new Error("blocked") } })
  * console.log(P.hasInspectableObjectShape(value))
@@ -184,7 +184,7 @@ export const hasInspectableObjectShape = (value: unknown): boolean => {
  * **Example** (Chain successive refinements)
  *
  * ```ts
- * import { P } from "@beep/utils";
+ * import * as P from "@beep/utils/Predicate"
  *
  * const hasMessage = P.chainRefinements([
  *   P.isNotNullish,

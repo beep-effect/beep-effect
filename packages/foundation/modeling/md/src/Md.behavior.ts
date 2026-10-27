@@ -1,6 +1,8 @@
 /**
  * Shared list-item segmentation and compatibility aliases for Markdown AST behavior.
  *
+ * **Details**
+ *
  * The schema unions own their plain-text projections; this module retains the
  * established function exports and the renderer-facing run segmentation.
  *
@@ -75,7 +77,7 @@ export interface SegmentStrategy<I, B> {
  * ```ts import.meta.vitest name="Segment inline and block runs"
  * import { Inline } from "@beep/md/Md.model"
  * import { segmentInlineRuns } from "@beep/md/Md.behavior"
- * import { Md } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
  * import * as S from "effect/Schema"
  *
  * const segments = segmentInlineRuns([Md.text("a"), Md.text("b"), Md.p("para")], {
@@ -121,7 +123,7 @@ export const segmentInlineRuns: {
  * **Example** (Plain text from inline)
  *
  * ```ts import.meta.vitest name="Plain text from inline"
- * import { Md } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
  * import { renderPlainTextInline } from "@beep/md/Md.behavior"
  *
  * renderPlainTextInline(Md.strong("beep")) // => "beep"
@@ -138,7 +140,7 @@ export const renderPlainTextInline: (inline: Inline) => string = Inline.toPlainT
  * **Example** (Plain text from block)
  *
  * ```ts import.meta.vitest name="Plain text from block"
- * import { Md } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
  * import { renderPlainTextBlock } from "@beep/md/Md.behavior"
  *
  * renderPlainTextBlock(Md.h1("Hello")) // => "Hello"
@@ -155,7 +157,7 @@ export const renderPlainTextBlock: (block: Block) => string = Block.toPlainText;
  * **Example** (Plain text blocks per line)
  *
  * ```ts import.meta.vitest name="Plain text blocks per line"
- * import { Md } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
  * import { renderPlainTextBlocks } from "@beep/md/Md.behavior"
  *
  * renderPlainTextBlocks([Md.h1("Hello"), Md.p("World")]) // => "Hello\nWorld"

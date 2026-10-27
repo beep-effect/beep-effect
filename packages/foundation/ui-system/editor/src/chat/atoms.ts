@@ -6,6 +6,8 @@
  * on one page never share state and Lexical command/listener registrations are
  * torn down via atom finalizers (never `useEffect`).
  *
+ * **Details**
+ *
  * The atoms work without a `RegistryProvider` (the default global registry), so
  * the composer still renders in Storybook where no provider is mounted.
  *
@@ -882,7 +884,7 @@ export const unboundSend = (): void => undefined;
  * import { onSendAtom } from "@beep/editor/chat/atoms"
  * import { useAtomInitialValues } from "@effect/atom-react"
  * import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
- * import type { SerializedEditorState } from "@beep/lexical-schema"
+ * import type { SerializedEditorState } from "@beep/lexical-schema/Lexical.model"
  *
  * function SeedSendHandler({
  *   onSend,

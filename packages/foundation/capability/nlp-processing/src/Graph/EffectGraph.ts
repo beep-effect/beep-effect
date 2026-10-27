@@ -1,6 +1,8 @@
 /**
  * EffectGraph - a categorical approach to text processing as graph transformations.
  *
+ * **Details**
+ *
  * Models text processing as morphisms in a category where objects are nodes in a
  * directed acyclic graph and morphisms are operations that transform nodes
  * (potentially creating children). Composition preserves the DAG property.

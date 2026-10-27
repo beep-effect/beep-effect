@@ -1,6 +1,8 @@
 /**
  * TextGraph - text processing over Effect's in-core `effect/Graph`.
  *
+ * **Details**
+ *
  * Builds and manipulates directed graphs of {@link TextNode} data linked by
  * {@link TextEdge} relationships, integrating with the package's
  * {@link Tokenization} service for sentence/token extraction.

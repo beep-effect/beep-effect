@@ -1,6 +1,8 @@
 /**
  * Enter-to-send key handling and the live character count.
  *
+ * **Details**
+ *
  * Per the deep-research a11y contract, Enter-to-send is suppressed while an IME
  * composition session is active (`KeyboardEvent.isComposing` or the legacy
  * `keyCode === 229` signal), so committing a CJK/diacritic candidate never

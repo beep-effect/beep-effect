@@ -22,7 +22,7 @@ import { Sha256Hex } from "./Manifest.schemas.ts";
  *
  * ```ts
  * import * as Effect from "effect/Effect"
- * import { sha256Hex } from "@beep/technical-drawing"
+ * import { sha256Hex } from "@beep/technical-drawing/Manifest.digest"
  *
  * const digest = await Effect.runPromise(sha256Hex(new Uint8Array()))
  * console.log(digest) // "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
