@@ -9,7 +9,7 @@
  * **Example** (Forced plain color output)
  *
  * ```typescript
- * import colors, { createColors, isColorSupported } from "@beep/colors"
+ * import colors, { createColors, isColorSupported } from "@beep/colors/Colors"
  *
  * const forcedPlain = createColors(false)
  * const status = isColorSupported ? colors.green("ok") : forcedPlain.green("ok")

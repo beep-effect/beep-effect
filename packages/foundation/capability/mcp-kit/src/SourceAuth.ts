@@ -1,6 +1,8 @@
 /**
  * Source authentication gate registry.
  *
+ * **Details**
+ *
  * A `SourceAuth` registration describes one credential-gated data source: its
  * human-readable name, the environment variable that carries its secret, a
  * `gate` policy (`none | soft | hard`), and an optional signup URL surfaced to
@@ -42,7 +44,7 @@ const $I = $McpKitId.create("SourceAuth");
  * **Example** (Soft gate enum member)
  *
  * ```ts
- * import { SourceAuthGate } from "@beep/mcp-kit"
+ * import { SourceAuthGate } from "@beep/mcp-kit/SourceAuth"
  *
  * const gate = SourceAuthGate.Enum.soft
  * console.log(gate)
@@ -65,7 +67,7 @@ export const SourceAuthGate = LiteralKit(["none", "soft", "hard"]).pipe(
  * **Example** (Hard gate type satisfaction)
  *
  * ```ts
- * import type { SourceAuthGate } from "@beep/mcp-kit"
+ * import type { SourceAuthGate } from "@beep/mcp-kit/SourceAuth"
  *
  * const gate = "hard" satisfies SourceAuthGate
  * console.log(gate)
@@ -83,7 +85,7 @@ export type SourceAuthGate = typeof SourceAuthGate.Type;
  *
  * ```ts
  * import * as O from "effect/Option"
- * import { SourceAuthRegistration } from "@beep/mcp-kit"
+ * import { SourceAuthRegistration } from "@beep/mcp-kit/SourceAuth"
  *
  * const registration = SourceAuthRegistration.make({
  *   name: "USPTO Open Data Portal",
@@ -131,7 +133,7 @@ export class SourceAuthRegistration extends S.Opaque<SourceAuthRegistration, { r
  * ```ts
  * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
- * import { resolveSourceCredential, SourceAuthRegistration } from "@beep/mcp-kit"
+ * import { resolveSourceCredential, SourceAuthRegistration } from "@beep/mcp-kit/SourceAuth"
  *
  * const registration = SourceAuthRegistration.make({
  *   name: "Example",
@@ -163,8 +165,8 @@ export const resolveSourceCredential = (
  *
  * ```ts
  * import * as O from "effect/Option"
- * import { SourceAuthDecision as SourceAuthDecisionValue } from "@beep/mcp-kit"
- * import type { SourceAuthDecision } from "@beep/mcp-kit"
+ * import { SourceAuthDecision as SourceAuthDecisionValue } from "@beep/mcp-kit/SourceAuth"
+ * import type { SourceAuthDecision } from "@beep/mcp-kit/SourceAuth"
  *
  * const decision: SourceAuthDecision = SourceAuthDecisionValue.Mount({
  *   credential: O.none()
@@ -187,7 +189,7 @@ export type SourceAuthDecision = Data.TaggedEnum<{
  * **Example** (Vanish decision constructor)
  *
  * ```ts
- * import { SourceAuthDecision } from "@beep/mcp-kit"
+ * import { SourceAuthDecision } from "@beep/mcp-kit/SourceAuth"
  *
  * const decision = SourceAuthDecision.Vanish()
  * console.log(decision._tag)
@@ -210,7 +212,7 @@ export const SourceAuthDecision = Data.taggedEnum<SourceAuthDecision>();
  * ```ts
  * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
- * import { decideSourceAuthMount, SourceAuthRegistration } from "@beep/mcp-kit"
+ * import { decideSourceAuthMount, SourceAuthRegistration } from "@beep/mcp-kit/SourceAuth"
  *
  * const registration = SourceAuthRegistration.make({
  *   name: "Example",

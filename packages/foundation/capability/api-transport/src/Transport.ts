@@ -1,6 +1,8 @@
 /**
  * Shared, hand-authored HTTP transport transformer for gov/legal data drivers.
  *
+ * **Details**
+ *
  * Bundles the transport concerns — auth, rate-limit, retry, and an observable
  * rate-limit snapshot — onto native `effect/http` primitives
  * (`HttpClient.mapRequest`, `HttpClient.withRateLimiter`, `HttpClient.retryTransient`
@@ -54,7 +56,7 @@ const $I = $ApiTransportId.create("Transport");
  * **Example** (Create ApiKeyQueryAuth instance)
  *
  * ```ts
- * import { ApiAuth } from "@beep/api-transport"
+ * import { ApiAuth } from "@beep/api-transport/Transport"
  * import * as Redacted from "effect/Redacted"
  *
  * const auth = ApiAuth.ApiKeyQueryAuth({ param: "api_key", key: Redacted.make("secret") })
@@ -102,7 +104,7 @@ export const ApiAuth = S.TaggedUnion({
  * **Example** (Type NoAuth as ApiAuth)
  *
  * ```ts
- * import { ApiAuth } from "@beep/api-transport"
+ * import { ApiAuth } from "@beep/api-transport/Transport"
  *
  * const auth: ApiAuth = ApiAuth.NoAuth()
  * console.log(auth._tag)
@@ -165,7 +167,7 @@ const fromRateLimitHeaders = (headers: Headers.Headers): O.Option<RateLimitSnaps
  * **Example** (Make RateLimitSnapshot values)
  *
  * ```ts
- * import { RateLimitSnapshot } from "@beep/api-transport"
+ * import { RateLimitSnapshot } from "@beep/api-transport/Transport"
  *
  * const snapshot = RateLimitSnapshot.make({ limit: 1000, remaining: 999 })
  * console.log(snapshot.remaining)
@@ -266,7 +268,7 @@ const ApiTransportDurationInput = S.Union([
  * **Example** (Build ApiTransportOptions object)
  *
  * ```ts
- * import { ApiAuth, ApiTransportOptions } from "@beep/api-transport"
+ * import { ApiAuth, ApiTransportOptions } from "@beep/api-transport/Transport"
  *
  * const options = ApiTransportOptions.make({
  *   auth: ApiAuth.NoAuth(),
@@ -335,7 +337,7 @@ export class ApiTransportOptions extends S.Opaque<ApiTransportOptions, { readonl
  * ```ts import.meta.vitest name="Read rate-limit from transport"
  * import * as Effect from "effect/Effect";
  * import * as RateLimiter from "effect/persistence/RateLimiter"
- * import { ApiAuth, type ApiTransport, ApiTransportOptions, makeApiTransport } from "@beep/api-transport"
+ * import { ApiAuth, type ApiTransport, ApiTransportOptions, makeApiTransport } from "@beep/api-transport/Transport"
  *
  * const readSnapshot = (transport: ApiTransport) => transport.rateLimit
  *
@@ -378,7 +380,7 @@ export interface ApiTransport {
  * ```ts import.meta.vitest name="Build transport transformClient"
  * import * as Effect from "effect/Effect";
  * import * as RateLimiter from "effect/persistence/RateLimiter"
- * import { ApiAuth, ApiTransportOptions, makeApiTransport } from "@beep/api-transport"
+ * import { ApiAuth, ApiTransportOptions, makeApiTransport } from "@beep/api-transport/Transport"
  *
  * const program = Effect.gen(function* () {
  *   const transport = yield* makeApiTransport(

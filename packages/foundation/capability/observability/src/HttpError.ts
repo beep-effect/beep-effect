@@ -11,11 +11,11 @@
  *
  * ```typescript
  * import * as Effect from "effect/Effect";
- * import * as Option from "effect/Option";
- * import { NotFoundError, makeBadRequestError } from "@beep/observability"
+ * import * as O from "effect/Option";
+ * import { NotFoundError, makeBadRequestError } from "@beep/observability/HttpError"
  *
  * const failNotFound = Effect.fail(
- *   NotFoundError.make({ cause: Option.none(), message: "missing", status: 404 })
+ *   NotFoundError.make({ cause: O.none(), message: "missing", status: 404 })
  * )
  *
  * const failBadReq = Effect.fail(makeBadRequestError("missing field"))
@@ -148,11 +148,11 @@ const statusFields = <Status extends S.Top>(status: Status) =>
  *
  * ```typescript
  * import * as Effect from "effect/Effect";
- * import * as Option from "effect/Option";
- * import { ClientHttpError } from "@beep/observability"
+ * import * as O from "effect/Option";
+ * import { ClientHttpError } from "@beep/observability/HttpError"
  *
  * const err = ClientHttpError.make({
- *   cause: Option.none(),
+ *   cause: O.none(),
  *   message: "invalid input",
  *   status: 400
  * })
@@ -189,11 +189,11 @@ export class ClientHttpError extends S.TaggedError<ClientHttpError, { readonly b
  *
  * ```typescript
  * import * as Effect from "effect/Effect";
- * import * as Option from "effect/Option";
- * import { ServerHttpError } from "@beep/observability"
+ * import * as O from "effect/Option";
+ * import { ServerHttpError } from "@beep/observability/HttpError"
  *
  * const err = ServerHttpError.make({
- *   cause: Option.none(),
+ *   cause: O.none(),
  *   message: "server failed",
  *   status: 500
  * })
@@ -230,10 +230,10 @@ export class ServerHttpError extends S.TaggedError<ServerHttpError, { readonly b
  *
  * ```typescript
  * import * as Effect from "effect/Effect";
- * import * as Option from "effect/Option";
- * import { BadRequestError } from "@beep/observability"
+ * import * as O from "effect/Option";
+ * import { BadRequestError } from "@beep/observability/HttpError"
  *
- * const err = BadRequestError.make({ cause: Option.none(), message: "invalid input", status: 400 })
+ * const err = BadRequestError.make({ cause: O.none(), message: "invalid input", status: 400 })
  * console.log(Effect.fail(err))
  * ```
  *
@@ -260,10 +260,10 @@ export class BadRequestError extends S.TaggedError<BadRequestError, { readonly b
  *
  * ```typescript
  * import * as Effect from "effect/Effect";
- * import * as Option from "effect/Option";
- * import { UnauthorizedError } from "@beep/observability"
+ * import * as O from "effect/Option";
+ * import { UnauthorizedError } from "@beep/observability/HttpError"
  *
- * const err = UnauthorizedError.make({ cause: Option.none(), message: "token expired", status: 401 })
+ * const err = UnauthorizedError.make({ cause: O.none(), message: "token expired", status: 401 })
  * console.log(Effect.fail(err))
  * ```
  *
@@ -290,10 +290,10 @@ export class UnauthorizedError extends S.TaggedError<UnauthorizedError, { readon
  *
  * ```typescript
  * import * as Effect from "effect/Effect";
- * import * as Option from "effect/Option";
- * import { ForbiddenError } from "@beep/observability"
+ * import * as O from "effect/Option";
+ * import { ForbiddenError } from "@beep/observability/HttpError"
  *
- * const err = ForbiddenError.make({ cause: Option.none(), message: "access denied", status: 403 })
+ * const err = ForbiddenError.make({ cause: O.none(), message: "access denied", status: 403 })
  * console.log(Effect.fail(err))
  * ```
  *
@@ -320,10 +320,10 @@ export class ForbiddenError extends S.TaggedError<ForbiddenError, { readonly bra
  *
  * ```typescript
  * import * as Effect from "effect/Effect";
- * import * as Option from "effect/Option";
- * import { NotFoundError } from "@beep/observability"
+ * import * as O from "effect/Option";
+ * import { NotFoundError } from "@beep/observability/HttpError"
  *
- * const err = NotFoundError.make({ cause: Option.none(), message: "user not found", status: 404 })
+ * const err = NotFoundError.make({ cause: O.none(), message: "user not found", status: 404 })
  * console.log(Effect.fail(err))
  * ```
  *
@@ -348,10 +348,10 @@ export class NotFoundError extends S.TaggedError<NotFoundError, { readonly brand
  *
  * ```typescript
  * import * as Effect from "effect/Effect";
- * import * as Option from "effect/Option";
- * import { ConflictError } from "@beep/observability"
+ * import * as O from "effect/Option";
+ * import { ConflictError } from "@beep/observability/HttpError"
  *
- * const err = ConflictError.make({ cause: Option.none(), message: "duplicate entry", status: 409 })
+ * const err = ConflictError.make({ cause: O.none(), message: "duplicate entry", status: 409 })
  * console.log(Effect.fail(err))
  * ```
  *
@@ -376,10 +376,10 @@ export class ConflictError extends S.TaggedError<ConflictError, { readonly brand
  *
  * ```typescript
  * import * as Effect from "effect/Effect";
- * import * as Option from "effect/Option";
- * import { UnprocessableEntityError } from "@beep/observability"
+ * import * as O from "effect/Option";
+ * import { UnprocessableEntityError } from "@beep/observability/HttpError"
  *
- * const err = UnprocessableEntityError.make({ cause: Option.none(), message: "validation failed", status: 422 })
+ * const err = UnprocessableEntityError.make({ cause: O.none(), message: "validation failed", status: 422 })
  * console.log(Effect.fail(err))
  * ```
  *
@@ -407,10 +407,10 @@ export class UnprocessableEntityError extends S.TaggedError<
  *
  * ```typescript
  * import * as Effect from "effect/Effect";
- * import * as Option from "effect/Option";
- * import { TooManyRequestsError } from "@beep/observability"
+ * import * as O from "effect/Option";
+ * import { TooManyRequestsError } from "@beep/observability/HttpError"
  *
- * const err = TooManyRequestsError.make({ cause: Option.none(), message: "rate limit exceeded", status: 429 })
+ * const err = TooManyRequestsError.make({ cause: O.none(), message: "rate limit exceeded", status: 429 })
  * console.log(Effect.fail(err))
  * ```
  *
@@ -437,10 +437,10 @@ export class TooManyRequestsError extends S.TaggedError<TooManyRequestsError, { 
  *
  * ```typescript
  * import * as Effect from "effect/Effect";
- * import * as Option from "effect/Option";
- * import { InternalServerErrorError } from "@beep/observability"
+ * import * as O from "effect/Option";
+ * import { InternalServerErrorError } from "@beep/observability/HttpError"
  *
- * const err = InternalServerErrorError.make({ cause: Option.none(), message: "unexpected failure", status: 500 })
+ * const err = InternalServerErrorError.make({ cause: O.none(), message: "unexpected failure", status: 500 })
  * console.log(Effect.fail(err))
  * ```
  *
@@ -468,10 +468,10 @@ export class InternalServerErrorError extends S.TaggedError<
  *
  * ```typescript
  * import * as Effect from "effect/Effect";
- * import * as Option from "effect/Option";
- * import { BadGatewayError } from "@beep/observability"
+ * import * as O from "effect/Option";
+ * import { BadGatewayError } from "@beep/observability/HttpError"
  *
- * const err = BadGatewayError.make({ cause: Option.none(), message: "upstream unavailable", status: 502 })
+ * const err = BadGatewayError.make({ cause: O.none(), message: "upstream unavailable", status: 502 })
  * console.log(Effect.fail(err))
  * ```
  *
@@ -498,10 +498,10 @@ export class BadGatewayError extends S.TaggedError<BadGatewayError, { readonly b
  *
  * ```typescript
  * import * as Effect from "effect/Effect";
- * import * as Option from "effect/Option";
- * import { ServiceUnavailableError } from "@beep/observability"
+ * import * as O from "effect/Option";
+ * import { ServiceUnavailableError } from "@beep/observability/HttpError"
  *
- * const err = ServiceUnavailableError.make({ cause: Option.none(), message: "service down", status: 503 })
+ * const err = ServiceUnavailableError.make({ cause: O.none(), message: "service down", status: 503 })
  * console.log(Effect.fail(err))
  * ```
  *
@@ -528,10 +528,10 @@ export class ServiceUnavailableError extends S.TaggedError<ServiceUnavailableErr
  *
  * ```typescript
  * import * as Effect from "effect/Effect";
- * import * as Option from "effect/Option";
- * import { GatewayTimeoutError } from "@beep/observability"
+ * import * as O from "effect/Option";
+ * import { GatewayTimeoutError } from "@beep/observability/HttpError"
  *
- * const err = GatewayTimeoutError.make({ cause: Option.none(), message: "upstream timed out", status: 504 })
+ * const err = GatewayTimeoutError.make({ cause: O.none(), message: "upstream timed out", status: 504 })
  * console.log(Effect.fail(err))
  * ```
  *
@@ -557,7 +557,7 @@ export class GatewayTimeoutError extends S.TaggedError<GatewayTimeoutError, { re
  * **Example** (Make BadRequestError helper)
  *
  * ```ts import.meta.vitest name="Make BadRequestError helper"
- * import { makeBadRequestError } from "@beep/observability"
+ * import { makeBadRequestError } from "@beep/observability/HttpError"
  *
  * const error = makeBadRequestError("missing required field 'email'")
  * error.status // => 400
@@ -577,7 +577,7 @@ export const makeBadRequestError: StatusErrorConstructor<BadRequestError> = dual
  * **Example** (Make UnauthorizedError helper)
  *
  * ```ts import.meta.vitest name="Make UnauthorizedError helper"
- * import { makeUnauthorizedError } from "@beep/observability"
+ * import { makeUnauthorizedError } from "@beep/observability/HttpError"
  *
  * const error = makeUnauthorizedError("token expired")
  * error.status // => 401
@@ -597,7 +597,7 @@ export const makeUnauthorizedError: StatusErrorConstructor<UnauthorizedError> = 
  * **Example** (Make ForbiddenError helper)
  *
  * ```ts import.meta.vitest name="Make ForbiddenError helper"
- * import { makeForbiddenError } from "@beep/observability"
+ * import { makeForbiddenError } from "@beep/observability/HttpError"
  *
  * const error = makeForbiddenError("insufficient permissions")
  * error.status // => 403
@@ -617,7 +617,7 @@ export const makeForbiddenError: StatusErrorConstructor<ForbiddenError> = dual(
  * **Example** (Make NotFoundError helper)
  *
  * ```ts import.meta.vitest name="Make NotFoundError helper"
- * import { makeNotFoundError } from "@beep/observability"
+ * import { makeNotFoundError } from "@beep/observability/HttpError"
  *
  * const error = makeNotFoundError("resource missing")
  * error.status // => 404
@@ -637,7 +637,7 @@ export const makeNotFoundError: StatusErrorConstructor<NotFoundError> = dual(
  * **Example** (Make ConflictError helper)
  *
  * ```ts import.meta.vitest name="Make ConflictError helper"
- * import { makeConflictError } from "@beep/observability"
+ * import { makeConflictError } from "@beep/observability/HttpError"
  *
  * const error = makeConflictError("duplicate key")
  * error.status // => 409
@@ -657,7 +657,7 @@ export const makeConflictError: StatusErrorConstructor<ConflictError> = dual(
  * **Example** (Make UnprocessableEntityError helper)
  *
  * ```ts import.meta.vitest name="Make UnprocessableEntityError helper"
- * import { makeUnprocessableEntityError } from "@beep/observability"
+ * import { makeUnprocessableEntityError } from "@beep/observability/HttpError"
  *
  * const error = makeUnprocessableEntityError("schema mismatch")
  * error.status // => 422
@@ -677,7 +677,7 @@ export const makeUnprocessableEntityError: StatusErrorConstructor<UnprocessableE
  * **Example** (Make TooManyRequestsError helper)
  *
  * ```ts import.meta.vitest name="Make TooManyRequestsError helper"
- * import { makeTooManyRequestsError } from "@beep/observability"
+ * import { makeTooManyRequestsError } from "@beep/observability/HttpError"
  *
  * const error = makeTooManyRequestsError("rate limit hit")
  * error.status // => 429
@@ -697,7 +697,7 @@ export const makeTooManyRequestsError: StatusErrorConstructor<TooManyRequestsErr
  * **Example** (Make InternalServerError helper)
  *
  * ```ts import.meta.vitest name="Make InternalServerError helper"
- * import { makeInternalServerError } from "@beep/observability"
+ * import { makeInternalServerError } from "@beep/observability/HttpError"
  *
  * const error = makeInternalServerError("unexpected failure")
  * error.status // => 500
@@ -717,7 +717,7 @@ export const makeInternalServerError: StatusErrorConstructor<InternalServerError
  * **Example** (Make BadGatewayError helper)
  *
  * ```ts import.meta.vitest name="Make BadGatewayError helper"
- * import { makeBadGatewayError } from "@beep/observability"
+ * import { makeBadGatewayError } from "@beep/observability/HttpError"
  *
  * const error = makeBadGatewayError("upstream unreachable")
  * error.status // => 502
@@ -737,7 +737,7 @@ export const makeBadGatewayError: StatusErrorConstructor<BadGatewayError> = dual
  * **Example** (Make ServiceUnavailableError helper)
  *
  * ```ts import.meta.vitest name="Make ServiceUnavailableError helper"
- * import { makeServiceUnavailableError } from "@beep/observability"
+ * import { makeServiceUnavailableError } from "@beep/observability/HttpError"
  *
  * const error = makeServiceUnavailableError("service down for maintenance")
  * error.status // => 503
@@ -757,7 +757,7 @@ export const makeServiceUnavailableError: StatusErrorConstructor<ServiceUnavaila
  * **Example** (Make GatewayTimeoutError helper)
  *
  * ```ts import.meta.vitest name="Make GatewayTimeoutError helper"
- * import { makeGatewayTimeoutError } from "@beep/observability"
+ * import { makeGatewayTimeoutError } from "@beep/observability/HttpError"
  *
  * const error = makeGatewayTimeoutError("upstream timed out")
  * error.status // => 504

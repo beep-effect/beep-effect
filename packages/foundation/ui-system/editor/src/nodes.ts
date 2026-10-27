@@ -1,6 +1,8 @@
 /**
  * Node registration for the `@beep/lexical-schema` v1 vocabulary.
  *
+ * **Details**
+ *
  * `CodeHighlightNode` is intentionally NOT registered: without the prism
  * highlight extension, code blocks keep plain text/tab/linebreak children,
  * which is exactly the wire profile `@beep/lexical-schema` persists.
