@@ -8,11 +8,14 @@ import { decodePackageJson } from "@beep/repo-utils/schemas/PackageJson";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
 const isCyclicDependencyError = S.is(CyclicDependencyError);
+const toRecord = (map: HashMap.HashMap<string, string>): Readonly<Record<string, string>> =>
+  map.pipe(HashMap.toEntries, R.fromEntries);
 
 describe("workspaceDependencyNames", () => {
   it("reads package names inside every bucket and drops the bucket names", () => {
@@ -97,8 +100,8 @@ describe("Dependencies", () => {
       const result = extractWorkspaceDependencies(pkg, workspaceNames);
 
       expect(result.packageName).toBe("@mock/pkg-a");
-      expect(result.workspace.dependencies).toEqual({ "@mock/pkg-b": "workspace:*" });
-      expect(result.npm.dependencies).toEqual({ effect: "^3.0.0" });
+      expect(toRecord(result.workspace.dependencies)).toEqual({ "@mock/pkg-b": "workspace:*" });
+      expect(toRecord(result.npm.dependencies)).toEqual({ effect: "^3.0.0" });
     });
 
     it("should classify devDependencies correctly", () => {
@@ -112,8 +115,8 @@ describe("Dependencies", () => {
 
       const result = extractWorkspaceDependencies(pkg, workspaceNames);
 
-      expect(result.workspace.devDependencies).toEqual({ "@mock/pkg-c": "workspace:*" });
-      expect(result.npm.devDependencies).toEqual({ vitest: "^1.0.0" });
+      expect(toRecord(result.workspace.devDependencies)).toEqual({ "@mock/pkg-c": "workspace:*" });
+      expect(toRecord(result.npm.devDependencies)).toEqual({ vitest: "^1.0.0" });
     });
 
     it("should classify peerDependencies correctly", () => {
@@ -127,8 +130,8 @@ describe("Dependencies", () => {
 
       const result = extractWorkspaceDependencies(pkg, workspaceNames);
 
-      expect(result.workspace.peerDependencies).toEqual({ "@mock/pkg-a": ">=1.0.0" });
-      expect(result.npm.peerDependencies).toEqual({ react: "^18.0.0" });
+      expect(toRecord(result.workspace.peerDependencies)).toEqual({ "@mock/pkg-a": ">=1.0.0" });
+      expect(toRecord(result.npm.peerDependencies)).toEqual({ react: "^18.0.0" });
     });
 
     it("should classify optionalDependencies correctly", () => {
@@ -142,8 +145,8 @@ describe("Dependencies", () => {
 
       const result = extractWorkspaceDependencies(pkg, workspaceNames);
 
-      expect(result.workspace.optionalDependencies).toEqual({ "@mock/pkg-c": "workspace:*" });
-      expect(result.npm.optionalDependencies).toEqual({ fsevents: "^2.3.0" });
+      expect(toRecord(result.workspace.optionalDependencies)).toEqual({ "@mock/pkg-c": "workspace:*" });
+      expect(toRecord(result.npm.optionalDependencies)).toEqual({ fsevents: "^2.3.0" });
     });
 
     it("should handle package with no dependencies", () => {
@@ -154,14 +157,14 @@ describe("Dependencies", () => {
       const result = extractWorkspaceDependencies(pkg, workspaceNames);
 
       expect(result.packageName).toBe("@mock/empty");
-      expect(result.workspace.dependencies).toEqual({});
-      expect(result.workspace.devDependencies).toEqual({});
-      expect(result.workspace.peerDependencies).toEqual({});
-      expect(result.workspace.optionalDependencies).toEqual({});
-      expect(result.npm.dependencies).toEqual({});
-      expect(result.npm.devDependencies).toEqual({});
-      expect(result.npm.peerDependencies).toEqual({});
-      expect(result.npm.optionalDependencies).toEqual({});
+      expect(toRecord(result.workspace.dependencies)).toEqual({});
+      expect(toRecord(result.workspace.devDependencies)).toEqual({});
+      expect(toRecord(result.workspace.peerDependencies)).toEqual({});
+      expect(toRecord(result.workspace.optionalDependencies)).toEqual({});
+      expect(toRecord(result.npm.dependencies)).toEqual({});
+      expect(toRecord(result.npm.devDependencies)).toEqual({});
+      expect(toRecord(result.npm.peerDependencies)).toEqual({});
+      expect(toRecord(result.npm.optionalDependencies)).toEqual({});
     });
 
     it("should handle all-workspace dependencies", () => {
@@ -176,8 +179,8 @@ describe("Dependencies", () => {
 
       const result = extractWorkspaceDependencies(pkg, workspaceNames);
 
-      expect(R.keys(result.workspace.dependencies)).toHaveLength(3);
-      expect(R.keys(result.npm.dependencies)).toHaveLength(0);
+      expect(HashMap.size(result.workspace.dependencies)).toBe(3);
+      expect(HashMap.size(result.npm.dependencies)).toBe(0);
     });
 
     it("should handle all-npm dependencies", () => {
@@ -191,8 +194,8 @@ describe("Dependencies", () => {
 
       const result = extractWorkspaceDependencies(pkg, workspaceNames);
 
-      expect(R.keys(result.workspace.dependencies)).toHaveLength(0);
-      expect(R.keys(result.npm.dependencies)).toHaveLength(2);
+      expect(HashMap.size(result.workspace.dependencies)).toBe(0);
+      expect(HashMap.size(result.npm.dependencies)).toBe(2);
     });
 
     it("should use empty HashSet to treat all deps as npm", () => {
@@ -206,8 +209,8 @@ describe("Dependencies", () => {
 
       const result = extractWorkspaceDependencies(pkg, HashSet.empty<string>());
 
-      expect(R.keys(result.workspace.dependencies)).toHaveLength(0);
-      expect(R.keys(result.npm.dependencies)).toHaveLength(2);
+      expect(HashMap.size(result.workspace.dependencies)).toBe(0);
+      expect(HashMap.size(result.npm.dependencies)).toBe(2);
     });
   });
 });

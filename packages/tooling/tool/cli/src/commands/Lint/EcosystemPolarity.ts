@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { findRepoRoot, readPackageJsonFile } from "@beep/repo-utils";
+import { findRepoRoot, readPackageJsonFile, toSortedRecord } from "@beep/repo-utils";
 import { normalizePath } from "@beep/schema";
 import { A, Str, Text, thunkFalse } from "@beep/utils";
 import * as Console from "effect/Console";
@@ -24,6 +24,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Node, Project, SyntaxKind } from "ts-morph";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import type * as HashMap from "effect/HashMap";
 
 const $I = $RepoCliId.create("commands/Lint/EcosystemPolarity");
 const ECOSYSTEM_ROOT = "packages/ecosystem";
@@ -306,46 +307,42 @@ const collectSourceViolations = (
 const runtimeDependencyViolations = (
   relativeManifestPath: string,
   field: string,
-  dependencies: O.Option<Readonly<Record<string, string>>>
+  dependencies: HashMap.HashMap<string, string>
 ): ReadonlyArray<EcosystemPolarityViolation> =>
   pipe(
     dependencies,
-    O.map((entries) =>
-      pipe(
-        R.toEntries(entries),
-        A.flatMap(([dependency, target]) => {
-          const detail = Str.startsWith("@beep/")(dependency)
-            ? O.some(`${field}.${dependency}`)
-            : pipe(
-                target,
-                O.liftPredicate(Str.startsWith("npm:@beep/")),
-                O.map((aliasTarget) => `${field}.${dependency} -> ${aliasTarget}`)
-              );
-          return O.match(detail, {
-            onNone: A.empty<EcosystemPolarityViolation>,
-            onSome: (violationDetail) =>
-              A.of(
-                EcosystemPolarityViolation.make({
-                  file: relativeManifestPath,
-                  line: 1,
-                  kind: "runtime-dependency",
-                  detail: violationDetail,
-                })
-              ),
-          });
-        })
-      )
-    ),
-    O.getOrElse(A.empty<EcosystemPolarityViolation>)
+    toSortedRecord,
+    R.toEntries,
+    A.flatMap(([dependency, target]) => {
+      const detail = Str.startsWith("@beep/")(dependency)
+        ? O.some(`${field}.${dependency}`)
+        : pipe(
+            target,
+            O.liftPredicate(Str.startsWith("npm:@beep/")),
+            O.map((aliasTarget) => `${field}.${dependency} -> ${aliasTarget}`)
+          );
+      return O.match(detail, {
+        onNone: A.empty<EcosystemPolarityViolation>,
+        onSome: (violationDetail) =>
+          A.of(
+            EcosystemPolarityViolation.make({
+              file: relativeManifestPath,
+              line: 1,
+              kind: "runtime-dependency",
+              detail: violationDetail,
+            })
+          ),
+      });
+    })
   );
 
 const bundledFieldViolations = (
   relativeManifestPath: string,
-  fields: ReadonlyArray<readonly [field: string, value: O.Option<unknown>]>
+  fields: ReadonlyArray<readonly [field: string, value: unknown]>
 ): ReadonlyArray<EcosystemPolarityViolation> =>
   pipe(
     fields,
-    A.filter(([, value]) => O.isSome(value)),
+    A.filter(([, value]) => P.isNotUndefined(value)),
     A.map(([field]) =>
       EcosystemPolarityViolation.make({
         file: relativeManifestPath,
