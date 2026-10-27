@@ -618,8 +618,8 @@ const optionalMillis = S.OptionFromOptionalKey(S.Finite);
  * @category models
  * @since 0.0.0
  */
-export class KpiAdmissionRow extends S.Class<KpiAdmissionRow, { readonly brand: unique symbol }>($I`KpiAdmissionRow`)(
-  {
+export class KpiAdmissionRow extends S.Opaque<KpiAdmissionRow, { readonly brand: unique symbol }>()(
+  S.Struct({
     _tag: AdmissionEventTag,
     nonce: S.NonEmptyString,
     attemptId: optionalString,
@@ -629,10 +629,11 @@ export class KpiAdmissionRow extends S.Class<KpiAdmissionRow, { readonly brand: 
     admittedAtMillis: optionalMillis,
     withdrawnAtMillis: optionalMillis,
     evictedAtMillis: optionalMillis,
-  },
-  $I.annote("KpiAdmissionRow", {
-    description: "Admission row members the KPI reading consumes: tag, nonce, join keys and instants.",
-  })
+  }).pipe(
+    $I.annoteSchema("KpiAdmissionRow", {
+      description: "Admission row members the KPI reading consumes: tag, nonce, join keys and instants.",
+    })
+  )
 ) {}
 
 const AdmissionCell = S.Union([S.String, S.Finite, S.Boolean, S.Null]);
