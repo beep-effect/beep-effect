@@ -11,7 +11,8 @@
  * ```ts
  * import * as Cause from "effect/Cause";
  * import * as Effect from "effect/Effect";
- * import { LoggingConfig, classifyCause, layerConsoleLogger } from "@beep/observability"
+ * import { LoggingConfig, layerConsoleLogger } from "@beep/observability/Logging"
+ * import { classifyCause } from "@beep/observability/CauseDiagnostics"
  *
  * const classification = classifyCause(Cause.fail(new Error("boom")))
  *

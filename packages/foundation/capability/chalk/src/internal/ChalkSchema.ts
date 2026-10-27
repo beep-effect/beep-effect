@@ -204,7 +204,7 @@ export const styleChannelValues = ["color", "bgColor"] as const;
  * **Example** (Decode color support level)
  *
  * ```ts
- * import { ColorSupportLevel } from "@beep/chalk"
+ * import { ColorSupportLevel } from "@beep/chalk/Chalk"
  * import * as S from "effect/Schema"
  *
  * const decode = S.decodeUnknownSync(ColorSupportLevel)
@@ -230,7 +230,7 @@ export const ColorSupportLevel = S.Literals(colorSupportLevelValues).pipe(
  * **Example** (Annotate color support level)
  *
  * ```ts
- * import type { ColorSupportLevel } from "@beep/chalk"
+ * import type { ColorSupportLevel } from "@beep/chalk/Chalk"
  *
  * const level: ColorSupportLevel = 2
  * console.log(level)
@@ -247,7 +247,7 @@ export type ColorSupportLevel = typeof ColorSupportLevel.Type;
  * **Example** (Create color support metadata)
  *
  * ```ts
- * import { ColorSupport } from "@beep/chalk"
+ * import { ColorSupport } from "@beep/chalk/Chalk"
  *
  * const support = ColorSupport.make({ has16m: true, has256: true, hasBasic: true, level: 3 })
  * console.log(support.level)
@@ -275,7 +275,7 @@ export class ColorSupport extends S.Opaque<ColorSupport, { readonly brand: uniqu
  * **Example** (Decode disabled color info)
  *
  * ```ts
- * import { ColorInfo } from "@beep/chalk"
+ * import { ColorInfo } from "@beep/chalk/Chalk"
  * import * as S from "effect/Schema"
  *
  * const decode = S.decodeUnknownSync(ColorInfo)
@@ -297,7 +297,7 @@ export const ColorInfo = S.Union([ColorSupport, S.Literal(false)]).pipe(
  * **Example** (Annotate disabled color info)
  *
  * ```ts
- * import type { ColorInfo } from "@beep/chalk"
+ * import type { ColorInfo } from "@beep/chalk/Chalk"
  *
  * const info: ColorInfo = false
  * console.log(info)
@@ -314,7 +314,7 @@ export type ColorInfo = typeof ColorInfo.Type;
  * **Example** (Create chalk options)
  *
  * ```ts
- * import { ChalkOptions } from "@beep/chalk"
+ * import { ChalkOptions } from "@beep/chalk/Chalk"
  *
  * const options = ChalkOptions.make({ level: 3 })
  * console.log(options.level)
@@ -339,7 +339,7 @@ export class ChalkOptions extends S.Opaque<ChalkOptions, { readonly brand: uniqu
  * **Example** (Decode bold modifier name)
  *
  * ```ts
- * import { ModifierName } from "@beep/chalk"
+ * import { ModifierName } from "@beep/chalk/Chalk"
  * import * as S from "effect/Schema"
  *
  * const decode = S.decodeUnknownSync(ModifierName)
@@ -364,7 +364,7 @@ export const ModifierName = S.Literals(modifierNameValues).pipe(
  * **Example** (Annotate italic modifier name)
  *
  * ```ts
- * import type { ModifierName } from "@beep/chalk"
+ * import type { ModifierName } from "@beep/chalk/Chalk"
  *
  * const name: ModifierName = "italic"
  * console.log(name)
@@ -381,7 +381,7 @@ export type ModifierName = typeof ModifierName.Type;
  * **Example** (Decode green foreground name)
  *
  * ```ts
- * import { ForegroundColorName } from "@beep/chalk"
+ * import { ForegroundColorName } from "@beep/chalk/Chalk"
  * import * as S from "effect/Schema"
  *
  * const decode = S.decodeUnknownSync(ForegroundColorName)
@@ -406,7 +406,7 @@ export const ForegroundColorName = S.Literals(foregroundColorNameValues).pipe(
  * **Example** (Annotate cyan foreground name)
  *
  * ```ts
- * import type { ForegroundColorName } from "@beep/chalk"
+ * import type { ForegroundColorName } from "@beep/chalk/Chalk"
  *
  * const name: ForegroundColorName = "cyan"
  * console.log(name)
@@ -423,7 +423,7 @@ export type ForegroundColorName = typeof ForegroundColorName.Type;
  * **Example** (Decode blue background name)
  *
  * ```ts
- * import { BackgroundColorName } from "@beep/chalk"
+ * import { BackgroundColorName } from "@beep/chalk/Chalk"
  * import * as S from "effect/Schema"
  *
  * const decode = S.decodeUnknownSync(BackgroundColorName)
@@ -448,7 +448,7 @@ export const BackgroundColorName = S.Literals(backgroundColorNameValues).pipe(
  * **Example** (Annotate magenta background name)
  *
  * ```ts
- * import type { BackgroundColorName } from "@beep/chalk"
+ * import type { BackgroundColorName } from "@beep/chalk/Chalk"
  *
  * const name: BackgroundColorName = "bgMagenta"
  * console.log(name)
@@ -465,7 +465,7 @@ export type BackgroundColorName = typeof BackgroundColorName.Type;
  * **Example** (Decode red color name)
  *
  * ```ts
- * import { ColorName } from "@beep/chalk"
+ * import { ColorName } from "@beep/chalk/Chalk"
  * import * as S from "effect/Schema"
  *
  * const decode = S.decodeUnknownSync(ColorName)
@@ -490,7 +490,7 @@ export const ColorName = S.Literals(colorNameValues).pipe(
  * **Example** (Annotate yellow background name)
  *
  * ```ts
- * import type { ColorName } from "@beep/chalk"
+ * import type { ColorName } from "@beep/chalk/Chalk"
  *
  * const name: ColorName = "bgYellow"
  * console.log(name)

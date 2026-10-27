@@ -2384,6 +2384,7 @@
       {
         "from": "@beep/exiftool",
         "allow": [
+          "@beep/commands",
           "@beep/exiftool",
           "@beep/identity",
           "@beep/memfs",
@@ -2393,6 +2394,7 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/commands",
           "@beep/exiftool",
           "@beep/identity",
           "@beep/memfs",
@@ -3358,6 +3360,7 @@
       {
         "from": "@beep/obs",
         "allow": [
+          "@beep/commands",
           "@beep/identity",
           "@beep/obs",
           "@beep/schema",
@@ -3365,6 +3368,7 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/commands",
           "@beep/identity",
           "@beep/obs",
           "@beep/schema",
@@ -3808,6 +3812,7 @@
       {
         "from": "@beep/pdf-tools",
         "allow": [
+          "@beep/commands",
           "@beep/identity",
           "@beep/memfs",
           "@beep/pdf-tools",
@@ -3816,6 +3821,7 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/commands",
           "@beep/identity",
           "@beep/memfs",
           "@beep/pdf-tools",
@@ -5087,6 +5093,7 @@
       {
         "from": "@beep/tailscale",
         "allow": [
+          "@beep/commands",
           "@beep/fc-runs",
           "@beep/identity",
           "@beep/schema",
@@ -5094,6 +5101,7 @@
           "@beep/test-runner"
         ],
         "allowTypeOnly": [
+          "@beep/commands",
           "@beep/fc-runs",
           "@beep/identity",
           "@beep/schema",

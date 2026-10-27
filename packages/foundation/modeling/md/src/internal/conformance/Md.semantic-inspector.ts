@@ -364,7 +364,7 @@ export type MarkdownConformanceIssue = typeof MarkdownConformanceIssue.Type;
  *
  * ```ts import.meta.vitest name="Inspect without rejecting"
  * import { inspectMarkdownDocumentLosslessly, MarkdownConformanceProfile } from "@beep/md/Md.conformance"
- * import { Md } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
  *
  * const document = Md.make([Md.p(Md.footnoteRef("missing"))])
  * const report = inspectMarkdownDocumentLosslessly(document, MarkdownConformanceProfile.Enum["beep-md-extensions-v1"])
@@ -690,7 +690,7 @@ const footnoteIssues = (
  *
  * ```ts import.meta.vitest name="Report a nested link"
  * import { markdownConformanceIssues, MarkdownConformanceProfile } from "@beep/md/Md.conformance"
- * import { Md } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
  *
  * const document = Md.make([Md.p(Md.a("/outer", Md.a("/inner", "nested")))])
  * const issues = markdownConformanceIssues(document, MarkdownConformanceProfile.Enum["commonmark-0.31.2"])
@@ -753,7 +753,7 @@ export const formatMarkdownConformanceIssue = MarkdownConformanceIssue.match({
  *
  * ```ts import.meta.vitest name="Retain an unsupported extension"
  * import { inspectMarkdownDocumentLosslessly, MarkdownConformanceProfile } from "@beep/md/Md.conformance"
- * import { Md } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
  *
  * const document = Md.make([Md.mathBlock("x")])
  * const report = inspectMarkdownDocumentLosslessly(document, MarkdownConformanceProfile.Enum["commonmark-0.31.2"])

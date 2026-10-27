@@ -6,6 +6,8 @@
  * app's `onAttach` upload-port callback; sending attachments on the turn payload
  * is a separately-gated cross-slice extension.
  *
+ * **Details**
+ *
  * The pure {@link ComposerAttachment} model + capture validation live in
  * `./attachment-model.ts` (no atom/React deps) so the per-editor atom layer
  * (`./atoms.ts`) can reuse them without a circular import back through here. This

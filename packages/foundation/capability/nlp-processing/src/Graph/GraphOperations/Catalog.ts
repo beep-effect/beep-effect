@@ -1,6 +1,8 @@
 /**
  * GraphOperations/Catalog - a library of standard NLP graph operations.
  *
+ * **Details**
+ *
  * Ready-to-use {@link GraphOperation}s that the
  * {@link GraphExecutor} can apply to a text graph. The linguistic
  * operations are backed by the pluggable {@link Backend.NLPBackend} (so they

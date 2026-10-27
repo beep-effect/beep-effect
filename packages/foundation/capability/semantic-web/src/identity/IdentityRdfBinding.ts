@@ -81,7 +81,7 @@ const CheckedIdentityRdfBindingFields = IdentityRdfBindingFields.pipe(S.check(Id
  * **Example** (Bind one identity fiber)
  *
  * ```ts
- * import { IdentityRdfBinding } from "@beep/semantic-web"
+ * import { IdentityRdfBinding } from "@beep/semantic-web/identity/IdentityRdfBinding"
  * import { makeNamedNode } from "@beep/rdf/Rdf"
  *
  * const binding = IdentityRdfBinding.make({
@@ -132,7 +132,7 @@ export class IdentityRdfBinding extends S.Class<IdentityRdfBinding, { readonly b
  * **Example** (Inspect the default identifier predicate)
  *
  * ```ts
- * import { DefaultIdentityRdfBinding } from "@beep/semantic-web"
+ * import { DefaultIdentityRdfBinding } from "@beep/semantic-web/identity/IdentityRdfBinding"
  *
  * console.log(DefaultIdentityRdfBinding.identifierPath.value)
  * ```
@@ -152,7 +152,7 @@ export const DefaultIdentityRdfBinding: IdentityRdfBinding = IdentityRdfBinding.
  * **Example** (Identify an unmapped fiber)
  *
  * ```ts import.meta.vitest name="Identify an unmapped fiber"
- * import { IdentityFiberPathError } from "@beep/semantic-web"
+ * import { IdentityFiberPathError } from "@beep/semantic-web/identity/IdentityRdfBinding"
  *
  * const error = IdentityFiberPathError.make({ fiber: "label" })
  * error._tag // => "IdentityFiberPathError"
@@ -177,7 +177,7 @@ export class IdentityFiberPathError extends S.TaggedError<IdentityFiberPathError
  * **Example** (Inspect an invalid entry IRI)
  *
  * ```ts import.meta.vitest name="Inspect an invalid entry IRI"
- * import { IdentityEntryIriError } from "@beep/semantic-web"
+ * import { IdentityEntryIriError } from "@beep/semantic-web/identity/IdentityRdfBinding"
  *
  * const error = IdentityEntryIriError.make({
  *   identity: "@beep/example/Invalid",
@@ -205,7 +205,7 @@ export class IdentityEntryIriError extends S.TaggedError<IdentityEntryIriError, 
  * **Example** (Describe an invalid identity subject)
  *
  * ```ts
- * import { IdentityDatasetDecodeError } from "@beep/semantic-web"
+ * import { IdentityDatasetDecodeError } from "@beep/semantic-web/identity/IdentityRdfBinding"
  *
  * const error = IdentityDatasetDecodeError.make({
  *   subject: "_:identity",
@@ -241,7 +241,7 @@ export class IdentityDatasetDecodeError extends S.TaggedError<
  *
  * ```ts
  * import * as Effect from "effect/Effect";
- * import { IdentityEntry } from "@beep/identity"
+ * import { IdentityEntry } from "@beep/identity/IdentityRegistry"
  * import { decodeEntrySubject } from "@beep/semantic-web/identity/IdentityRdfBinding"
  *
  * const entry = IdentityEntry.make({
@@ -434,7 +434,7 @@ const decodeSubject = Effect.fn("IdentityRdfBinding.decodeSubject")(function* (
  * **Example** (Encode an empty registry dataset)
  *
  * ```ts import.meta.vitest name="Encode an empty registry dataset"
- * import { DefaultIdentityRdfBinding, entriesToDataset } from "@beep/semantic-web"
+ * import { DefaultIdentityRdfBinding, entriesToDataset } from "@beep/semantic-web/identity/IdentityRdfBinding"
  * import * as Effect from "effect/Effect";
  * const dataset = await Effect.runPromise(entriesToDataset(DefaultIdentityRdfBinding)([]))
  * dataset.quads.length // => 0
@@ -487,7 +487,7 @@ export const entriesToDataset = (binding: IdentityRdfBinding) =>
  * **Example** (Decode an empty registry dataset)
  *
  * ```ts import.meta.vitest name="Decode an empty registry dataset"
- * import { DefaultIdentityRdfBinding, datasetToEntries } from "@beep/semantic-web"
+ * import { DefaultIdentityRdfBinding, datasetToEntries } from "@beep/semantic-web/identity/IdentityRdfBinding"
  * import { makeDataset } from "@beep/rdf/Rdf"
  * import * as Effect from "effect/Effect";
  * const entries = await Effect.runPromise(datasetToEntries(DefaultIdentityRdfBinding)(makeDataset([])))

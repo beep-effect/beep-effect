@@ -92,7 +92,7 @@ const textLabelsOf = (sheet: SheetOptions): ReadonlyArray<{ readonly label: Shee
  * **Example** (Render to a directory)
  *
  * ```ts
- * import { RenderRequest } from "@beep/technical-drawing"
+ * import { RenderRequest } from "@beep/technical-drawing/FigureSet.service"
  *
  * console.log(RenderRequest.make({ specPath: "spec.json", outputDir: "out" }).validate)
  * ```
@@ -140,7 +140,7 @@ export class RenderRequest extends S.Opaque<RenderRequest, { readonly brand: uni
  * **Example** (Stub service)
  *
  * ```ts
- * import type { FigureSetShape } from "@beep/technical-drawing"
+ * import type { FigureSetShape } from "@beep/technical-drawing/FigureSet.service"
  * import * as Effect from "effect/Effect";
  * const service: FigureSetShape = {
  *   render: () => Effect.die("not implemented"),
@@ -769,7 +769,7 @@ const makeService = Effect.fn("FigureSet.makeService")(function* () {
  * **Example** (Reference the service)
  *
  * ```ts
- * import { FigureSet } from "@beep/technical-drawing"
+ * import { FigureSet } from "@beep/technical-drawing/FigureSet.service"
  *
  * console.log(FigureSet)
  * ```
@@ -784,7 +784,7 @@ export class FigureSet extends Context.Service<FigureSet, FigureSetShape>()($I`F
    * **Example** (Reference the layer)
    *
    * ```ts
-   * import { FigureSet } from "@beep/technical-drawing"
+   * import { FigureSet } from "@beep/technical-drawing/FigureSet.service"
    *
    * console.log(FigureSet.layer)
    * ```
