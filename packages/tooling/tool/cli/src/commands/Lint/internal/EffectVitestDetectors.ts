@@ -1393,12 +1393,49 @@ const isContextProvision = (
   seen: ReadonlyArray<string> = []
 ): boolean => {
   if (Node.isCallExpression(expression)) {
-    return isProvenanceCall(expression, imports, CONTEXT_MODULES, "Context", ["make", "empty", "add", "merge"]);
+    return (
+      isProvenanceCall(expression, imports, CONTEXT_MODULES, "Context", ["make", "empty", "add", "merge"]) ||
+      isContextPipe(expression, imports, seen) ||
+      isContextFactoryCall(expression, imports, seen)
+    );
   }
   if (!Node.isIdentifier(expression) || A.contains(seen, expression.getText())) return false;
   return O.exists(localInitializer(expression, imports), (initializer) =>
     isContextProvision(initializer, imports, [...seen, expression.getText()])
   );
+};
+
+// `Context.make(...).pipe(Context.add(...))` stays a Context when every stage is a data-last Context combinator.
+const isContextPipe = (call: CallExpression, imports: EffectVitestImports, seen: ReadonlyArray<string>): boolean => {
+  const callee = call.getExpression();
+  return (
+    Node.isPropertyAccessExpression(callee) &&
+    callee.getName() === "pipe" &&
+    isContextProvision(callee.getExpression(), imports, seen) &&
+    A.every(
+      call.getArguments(),
+      (stage) =>
+        Node.isCallExpression(stage) && isProvenanceCall(stage, imports, CONTEXT_MODULES, "Context", ["add", "merge"])
+    )
+  );
+};
+
+// A call of a same-file function is a Context when every value that function returns is one.
+const isContextFactoryCall = (
+  call: CallExpression,
+  imports: EffectVitestImports,
+  seen: ReadonlyArray<string>
+): boolean => {
+  const callee = call.getExpression();
+  if (!Node.isIdentifier(callee) || A.contains(seen, callee.getText())) return false;
+  return O.exists(imports.resolveBinding(callee), (declaration) => {
+    const definition = Node.isVariableDeclaration(declaration) ? declaration.getInitializer() : declaration;
+    const returns = definition !== undefined && isLayerFunctionNode(definition) ? layerFunctionReturns(definition) : [];
+    return (
+      A.isReadonlyArrayNonEmpty(returns) &&
+      A.every(returns, (value) => isContextProvision(value, imports, [...seen, callee.getText()]))
+    );
+  });
 };
 
 const isResourceExpression = (
@@ -4078,10 +4115,23 @@ const testerConfinedTo = (registration: CallExpression, block: EffectVitestFunct
     );
   });
 
+// A nested `it.layer` builds `Layer.provideMerge(nested, parentEnv)`, whose later context wins, so a direct
+// `TestClock.layer()` argument (a new layer object, built once in the forked memo map) replaces the parent clock.
+const installsFreshTestClock = (block: EffectVitestFunctionNode, imports: EffectVitestImports): boolean => {
+  const registration = block.getParent();
+  const builder = Node.isCallExpression(registration) ? registration.getExpression() : undefined;
+  const layer = Node.isCallExpression(builder) ? builder.getArguments()[0] : undefined;
+  return Node.isCallExpression(layer) && isProvenanceCall(layer, imports, TEST_CLOCK_MODULES, "TestClock", ["layer"]);
+};
+
 // `@effect/vitest` builds every top-level `it.layer` in a fresh memo map, so its TestClock is the block's
-// own. Nested blocks fork the parent's memo map and share its TestClock, so they never qualify.
+// own. Nested blocks fork the parent's memo map and share its TestClock unless their own layer installs a
+// fresh one.
 const ownsUnsharedTestClock = (block: EffectVitestFunctionNode, adjust: CallExpression, state: DetectorState) =>
-  O.isNone(state.harness.enclosingLayerBlock(block)) &&
+  O.match(state.harness.enclosingLayerBlock(block), {
+    onNone: constTrue,
+    onSome: () => installsFreshTestClock(block, state.imports),
+  }) &&
   A.match(
     A.filter(callbackCalls(block), (call) => O.isSome(classifyHarnessCall(call, state.imports))),
     {
