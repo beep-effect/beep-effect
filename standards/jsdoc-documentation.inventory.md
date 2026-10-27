@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-10-27T11:38:50.358Z
+Generated: 2026-10-27T13:21:25.479Z
 
 ## Scope
 
@@ -11,19 +11,19 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | Metric | Count |
 |---|---:|
 | packages | 183 |
-| cleanPackages | 103 |
+| cleanPackages | 104 |
 | packagesWithoutPublicSrcSurface | 2 |
-| packagesNeedingRemediation | 78 |
+| packagesNeedingRemediation | 77 |
 | publicModules | 3547 |
 | publicExports | 25292 |
 | openModules | 397 |
-| openExports | 1281 |
+| openExports | 1092 |
 | missingExportExamples | 7 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
 | forbiddenTagFindings | 0 |
 | malformedConditionalTagFindings | 0 |
-| exampleImportFindings | 1250 |
+| exampleImportFindings | 1057 |
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
 | undescribed-see | 10 |
@@ -40,7 +40,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | duplicate-example | 0 |
 | loose-ts-fence | 0 |
 | forbidden-remarks | 0 |
-| no-root-package-import | 1229 |
+| no-root-package-import | 1036 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -157,7 +157,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 99 | `@beep/repo-configs` | `packages/tooling/policy-pack/repo-configs` | needs-remediation | 24 | 197 | 0 | 1 |
 | 100 | `@beep/occt` | `packages/drivers/occt` | clean | 4 | 13 | 0 | 0 |
 | 101 | `@beep/qa-capture` | `packages/tooling/library/qa-capture` | needs-remediation | 11 | 155 | 10 | 0 |
-| 102 | `@beep/dock` | `packages/foundation/ui-system/dock` | needs-remediation | 20 | 212 | 0 | 189 |
+| 102 | `@beep/dock` | `packages/foundation/ui-system/dock` | clean | 20 | 212 | 0 | 0 |
 | 103 | `@beep/commands` | `packages/drivers/commands` | clean | 8 | 58 | 0 | 0 |
 | 104 | `@beep/git` | `packages/drivers/git` | clean | 5 | 44 | 0 | 0 |
 | 105 | `@beep/agents-tables` | `packages/agents/tables` | clean | 7 | 15 | 0 | 0 |
@@ -1641,201 +1641,6 @@ Module findings:
 - `src/SessionStore.service.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/Witness.service.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/index.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-
-### @beep/dock
-
-Path: `packages/foundation/ui-system/dock`
-
-Export findings:
-- `src/AnchoredBox.ts:27` `TopLeft` (class) - 1 example import violation(s)
-- `src/AnchoredBox.ts:48` `TopRight` (class) - 1 example import violation(s)
-- `src/AnchoredBox.ts:69` `BottomLeft` (class) - 1 example import violation(s)
-- `src/AnchoredBox.ts:90` `BottomRight` (class) - 1 example import violation(s)
-- `src/AnchoredBox.ts:111` `AnchoredSize` (class) - 1 example import violation(s)
-- `src/AnchoredBox.ts:131` `TopLeftAnchoredBox` (class) - 1 example import violation(s)
-- `src/AnchoredBox.ts:155` `TopRightAnchoredBox` (class) - 1 example import violation(s)
-- `src/AnchoredBox.ts:179` `BottomRightAnchoredBox` (class) - 1 example import violation(s)
-- `src/AnchoredBox.ts:203` `BottomLeftAnchoredBox` (class) - 1 example import violation(s)
-- `src/AnchoredBox.ts:233` `AnchoredBox` (const) - 1 example import violation(s)
-- `src/AnchoredBox.ts:262` `AnchoredBox` (type) - 1 example import violation(s)
-- `src/AnchoredBox.ts:284` `AnchoredBox` (namespace) - 1 example import violation(s)
-- `src/Dock.atoms.ts:55` `DockAtomObservabilityLive` (const) - 1 example import violation(s)
-- `src/Dock.atoms.ts:213` `makeDockAtomsWith` (const) - 1 example import violation(s)
-- `src/Dock.atoms.ts:246` `makeDockAtoms` (const) - 1 example import violation(s)
-- `src/Dock.commands.ts:34` `UserCommandOrigin` (class) - 1 example import violation(s)
-- `src/Dock.commands.ts:60` `ApiCommandOrigin` (class) - 1 example import violation(s)
-- `src/Dock.commands.ts:88` `CommandOrigin` (const) - 1 example import violation(s)
-- `src/Dock.commands.ts:111` `CommandOrigin` (type) - 1 example import violation(s)
-- `src/Dock.commands.ts:128` `OpenPanelCommand` (class) - 1 example import violation(s)
-- `src/Dock.commands.ts:155` `ActivatePanelCommand` (class) - 1 example import violation(s)
-- `src/Dock.commands.ts:182` `UpdatePanelCommand` (class) - 1 example import violation(s)
-- `src/Dock.commands.ts:203` `MovePanelCommand` (class) - 1 example import violation(s)
-- `src/Dock.commands.ts:230` `MoveGroupCommand` (class) - 1 example import violation(s)
-- `src/Dock.commands.ts:254` `UpdateGroupCommand` (class) - 1 example import violation(s)
-- `src/Dock.commands.ts:277` `ClosePanelCommand` (class) - 1 example import violation(s)
-- `src/Dock.commands.ts:303` `ResizeSplitCommand` (class) - 1 example import violation(s)
-- `src/Dock.commands.ts:330` `ClearWorkspaceCommand` (class) - 1 example import violation(s)
-- `src/Dock.commands.ts:355` `MaximizeGroupCommand` (class) - 1 example import violation(s)
-- `src/Dock.commands.ts:376` `RestoreMaximizedCommand` (class) - 1 example import violation(s)
-- `src/Dock.commands.ts:397` `FloatGroupCommand` (class) - 1 example import violation(s)
-- `src/Dock.commands.ts:417` `DockFloatingGroupCommand` (class) - 1 example import violation(s)
-- `src/Dock.commands.ts:437` `MoveFloatingGroupCommand` (class) - 1 example import violation(s)
-- `src/Dock.commands.ts:477` `DockCommand` (const) - 1 example import violation(s)
-- `src/Dock.commands.ts:515` `DockCommand` (type) - 1 example import violation(s)
-- `src/Dock.commands.ts:532` `DockCommandEnvelope` (class) - 1 example import violation(s)
-- `src/Dock.commands.ts:559` `AllowedRenderers` (const) - 1 example import violation(s)
-- `src/Dock.commands.ts:582` `AllowedRenderers` (type) - 1 example import violation(s)
-- `src/Dock.commands.ts:599` `RestoreSnapshotRequest` (class) - 1 example import violation(s)
-- `src/Dock.errors.ts:29` `DockRejectionReason` (const) - 1 example import violation(s)
-- `src/Dock.errors.ts:64` `DockRejectionReason` (type) - 1 example import violation(s)
-- `src/Dock.errors.ts:81` `DockCommandRejected` (class) - 1 example import violation(s)
-- `src/Dock.errors.ts:110` `DockInvariantReason` (const) - 1 example import violation(s)
-- `src/Dock.errors.ts:137` `DockInvariantReason` (type) - 1 example import violation(s)
-- `src/Dock.errors.ts:154` `DockInvariantViolation` (class) - 1 example import violation(s)
-- `src/Dock.errors.ts:182` `DockInputBoundary` (const) - 1 example import violation(s)
-- `src/Dock.errors.ts:202` `DockInputBoundary` (type) - 1 example import violation(s)
-- `src/Dock.errors.ts:219` `DockInputError` (class) - 1 example import violation(s)
-- `src/Dock.errors.ts:247` `DockPersistenceOperation` (const) - 1 example import violation(s)
-- `src/Dock.errors.ts:267` `DockPersistenceOperation` (type) - 1 example import violation(s)
-- `src/Dock.errors.ts:284` `DockPersistenceError` (class) - 1 example import violation(s)
-- `src/Dock.errors.ts:312` `DockSnapshotMissing` (class) - 1 example import violation(s)
-- `src/Dock.errors.ts:339` `DockTransitionError` (const) - 1 example import violation(s)
-- `src/Dock.errors.ts:361` `DockTransitionError` (type) - 1 example import violation(s)
-- `src/Dock.events.ts:31` `PanelOpenedEvent` (class) - 1 example import violation(s)
-- `src/Dock.events.ts:58` `PanelActivatedEvent` (class) - 1 example import violation(s)
-- `src/Dock.events.ts:85` `PanelTitleChangedEvent` (class) - 1 example import violation(s)
-- `src/Dock.events.ts:106` `PanelViewChangedEvent` (class) - 1 example import violation(s)
-- `src/Dock.events.ts:127` `PanelRenderModeChangedEvent` (class) - 1 example import violation(s)
-- `src/Dock.events.ts:155` `PanelTabComponentChangedEvent` (class) - 1 example import violation(s)
-- `src/Dock.events.ts:191` `PanelConstraintsChangedEvent` (class) - 1 example import violation(s)
-- `src/Dock.events.ts:222` `PanelMovedEvent` (class) - 1 example import violation(s)
-- `src/Dock.events.ts:251` `PanelReorderedEvent` (class) - 1 example import violation(s)
-- `src/Dock.events.ts:272` `GroupMergedEvent` (class) - 1 example import violation(s)
-- `src/Dock.events.ts:300` `GroupMovedEvent` (class) - 1 example import violation(s)
-- `src/Dock.events.ts:323` `GroupUpdatedEvent` (class) - 1 example import violation(s)
-- `src/Dock.events.ts:344` `PanelClosedEvent` (class) - 1 example import violation(s)
-- `src/Dock.events.ts:371` `SplitResizedEvent` (class) - 1 example import violation(s)
-- `src/Dock.events.ts:398` `WorkspaceClearedEvent` (class) - 1 example import violation(s)
-- `src/Dock.events.ts:424` `WorkspaceRestoredEvent` (class) - 1 example import violation(s)
-- `src/Dock.events.ts:452` `GroupMaximizedEvent` (class) - 1 example import violation(s)
-- `src/Dock.events.ts:473` `GroupRestoredEvent` (class) - 1 example import violation(s)
-- `src/Dock.events.ts:493` `GroupFloatedEvent` (class) - 1 example import violation(s)
-- `src/Dock.events.ts:513` `GroupDockedEvent` (class) - 1 example import violation(s)
-- `src/Dock.events.ts:533` `FloatingGroupMovedEvent` (class) - 1 example import violation(s)
-- `src/Dock.events.ts:578` `DockEvent` (const) - 1 example import violation(s)
-- `src/Dock.events.ts:623` `DockEvent` (type) - 1 example import violation(s)
-- `src/Dock.ids.ts:30` `PanelId` (const) - 1 example import violation(s)
-- `src/Dock.ids.ts:51` `PanelId` (type) - 1 example import violation(s)
-- `src/Dock.ids.ts:69` `GroupId` (const) - 1 example import violation(s)
-- `src/Dock.ids.ts:90` `GroupId` (type) - 1 example import violation(s)
-- `src/Dock.ids.ts:108` `SplitId` (const) - 1 example import violation(s)
-- `src/Dock.ids.ts:129` `SplitId` (type) - 1 example import violation(s)
-- `src/Dock.ids.ts:147` `CommandId` (const) - 1 example import violation(s)
-- `src/Dock.ids.ts:168` `CommandId` (type) - 1 example import violation(s)
-- `src/Dock.ids.ts:186` `RendererKey` (const) - 1 example import violation(s)
-- `src/Dock.ids.ts:207` `RendererKey` (type) - 1 example import violation(s)
-- `src/Dock.ids.ts:225` `SplitRatio` (const) - 1 example import violation(s)
-- `src/Dock.ids.ts:254` `SplitRatio` (type) - 1 example import violation(s)
-- `src/Dock.models-tree.ts:49` `PanelRenderMode` (const) - 1 example import violation(s)
-- `src/Dock.models-tree.ts:69` `PanelRenderMode` (type) - 1 example import violation(s)
-- `src/Dock.models-tree.ts:86` `PanelParameterValue` (const) - 1 example import violation(s)
-- `src/Dock.models-tree.ts:106` `PanelParameterValue` (type) - 1 example import violation(s)
-- `src/Dock.models-tree.ts:123` `PanelParameters` (const) - 1 example import violation(s)
-- `src/Dock.models-tree.ts:143` `PanelParameters` (type) - 1 example import violation(s)
-- `src/Dock.models-tree.ts:160` `ComponentPanelView` (class) - 1 example import violation(s)
-- `src/Dock.models-tree.ts:187` `TextPanelView` (class) - 1 example import violation(s)
-- `src/Dock.models-tree.ts:213` `PanelView` (const) - 1 example import violation(s)
-- `src/Dock.models-tree.ts:234` `PanelView` (type) - 1 example import violation(s)
-- `src/Dock.models-tree.ts:263` `PanelConstraints` (class) - 1 example import violation(s)
-- `src/Dock.models-tree.ts:291` `Panel` (class) - 1 example import violation(s)
-- `src/Dock.models-tree.ts:343` `PanelPatch` (class) - 1 example import violation(s)
-- `src/Dock.models-tree.ts:376` `GroupLockedMode` (const) - 1 example import violation(s)
-- `src/Dock.models-tree.ts:394` `GroupLockedMode` (type) - 1 example import violation(s)
-- `src/Dock.models-tree.ts:411` `GroupHeaderPosition` (const) - 1 example import violation(s)
-- `src/Dock.models-tree.ts:429` `GroupHeaderPosition` (type) - 1 example import violation(s)
-- `src/Dock.models-tree.ts:446` `GroupMetadata` (class) - 1 example import violation(s)
-- `src/Dock.models-tree.ts:477` `GroupPatch` (class) - 1 example import violation(s)
-- `src/Dock.models-tree.ts:515` `TabsNode` (class) - 1 example import violation(s)
-- `src/Dock.models-tree.ts:681` `HorizontalSplitLayout` (class) - 1 example import violation(s)
-- `src/Dock.models-tree.ts:711` `VerticalSplitLayout` (class) - 1 example import violation(s)
-- `src/Dock.models-tree.ts:743` `SplitLayout` (const) - 1 example import violation(s)
-- `src/Dock.models-tree.ts:810` `SplitLayout` (type) - 1 example import violation(s)
-- `src/Dock.models-tree.ts:829` `SplitNode` (class) - 1 example import violation(s)
-- `src/Dock.models-tree.ts:922` `DockNode` (const) - 1 example import violation(s)
-- `src/Dock.models-tree.ts:1067` `DockNode` (type) - 1 example import violation(s)
-- `src/Dock.models-tree.ts:1110` `DockNode` (namespace) - 1 example import violation(s)
-- `src/Dock.models-tree.ts:1180` `FloatingMember` (class) - 1 example import violation(s)
-- `src/Dock.models-tree.ts:1201` `EmptyWorkspace` (class) - 1 example import violation(s)
-- `src/Dock.models-tree.ts:1230` `PopulatedWorkspace` (class) - 1 example import violation(s)
-- `src/Dock.models-tree.ts:1311` `DockWorkspace` (const) - 1 example import violation(s)
-- `src/Dock.models-tree.ts:1529` `DockWorkspace` (type) - 1 example import violation(s)
-- `src/Dock.models-tree.ts:1546` `DockSnapshot` (class) - 1 example import violation(s)
-- `src/Dock.outcomes.ts:32` `DockUnchangedReason` (const) - 1 example import violation(s)
-- `src/Dock.outcomes.ts:63` `DockUnchangedReason` (type) - 1 example import violation(s)
-- `src/Dock.outcomes.ts:81` `DockChanged` (class) - 1 example import violation(s)
-- `src/Dock.outcomes.ts:109` `DockUnchanged` (class) - 1 example import violation(s)
-- `src/Dock.outcomes.ts:136` `DockMutationResult` (const) - 1 example import violation(s)
-- `src/Dock.outcomes.ts:158` `DockMutationResult` (type) - 1 example import violation(s)
-- `src/Dock.outcomes.ts:176` `DockMutationOutcome` (class) - 1 example import violation(s)
-- `src/Dock.placement.ts:31` `RootPlacement` (class) - 1 example import violation(s)
-- `src/Dock.placement.ts:57` `TabPlacement` (class) - 1 example import violation(s)
-- `src/Dock.placement.ts:85` `DockSide` (const) - 1 example import violation(s)
-- `src/Dock.placement.ts:105` `DockSide` (type) - 1 example import violation(s)
-- `src/Dock.placement.ts:122` `SplitPlacement` (class) - 1 example import violation(s)
-- `src/Dock.placement.ts:157` `RootSplitPlacement` (class) - 1 example import violation(s)
-- `src/Dock.placement.ts:186` `GroupSplitPlacement` (class) - 1 example import violation(s)
-- `src/Dock.placement.ts:215` `GroupRootSplitPlacement` (class) - 1 example import violation(s)
-- `src/Dock.placement.ts:245` `DockPlacement` (const) - 1 example import violation(s)
-- `src/Dock.placement.ts:268` `DockPlacement` (type) - 1 example import violation(s)
-- `src/Dock.placement.ts:285` `DockMoveTarget` (const) - 1 example import violation(s)
-- `src/Dock.placement.ts:306` `DockMoveTarget` (type) - 1 example import violation(s)
-- `src/Dock.placement.ts:323` `DockGroupMoveTarget` (const) - 1 example import violation(s)
-- `src/Dock.placement.ts:344` `DockGroupMoveTarget` (type) - 1 example import violation(s)
-- `src/Dock.protocol.ts:38` `DispatchDockCommand` (class) - 1 example import violation(s)
-- `src/Dock.protocol.ts:64` `DispatchUnknownDockCommand` (class) - 1 example import violation(s)
-- `src/Dock.protocol.ts:93` `SaveDockSnapshot` (class) - 1 example import violation(s)
-- `src/Dock.protocol.ts:118` `RestoreDockSnapshot` (class) - 1 example import violation(s)
-- `src/Dock.protocol.ts:144` `DockAtomOperationKind` (const) - 1 example import violation(s)
-- `src/Dock.protocol.ts:169` `DockAtomOperationKind` (type) - 1 example import violation(s)
-- `src/Dock.protocol.ts:186` `DockAtomOperation` (const) - 1 example import violation(s)
-- `src/Dock.protocol.ts:214` `DockAtomOperation` (type) - 1 example import violation(s)
-- `src/Dock.protocol.ts:232` `DockMutationCompleted` (class) - 1 example import violation(s)
-- `src/Dock.protocol.ts:258` `DockSnapshotSaved` (class) - 1 example import violation(s)
-- `src/Dock.protocol.ts:286` `DockAtomOperationOutcome` (const) - 1 example import violation(s)
-- `src/Dock.protocol.ts:309` `DockAtomOperationOutcome` (type) - 1 example import violation(s)
-- `src/Dock.protocol.ts:326` `DockAtomSessionError` (const) - 1 example import violation(s)
-- `src/Dock.protocol.ts:353` `DockAtomSessionError` (type) - 1 example import violation(s)
-- `src/Dock.protocol.ts:371` `DockAtomFeedSuccess` (class) - 1 example import violation(s)
-- `src/Dock.protocol.ts:399` `DockAtomFeedFailure` (class) - 1 example import violation(s)
-- `src/Dock.protocol.ts:427` `DockAtomFeedEntry` (const) - 1 example import violation(s)
-- `src/Dock.protocol.ts:449` `DockAtomFeedEntry` (type) - 1 example import violation(s)
-- `src/DockEngine.service.ts:93` `DockEngineShape` (interface) - 2 example import violation(s)
-- `src/DockEngine.service.ts:134` `DockEngine` (class) - 1 example import violation(s)
-- `src/DockEngine.service.ts:169` `DockEngineLive` (const) - 1 example import violation(s)
-- `src/DockEngine.service.ts:192` `DockSnapshotStoreShape` (interface) - 1 example import violation(s)
-- `src/DockEngine.service.ts:216` `DockSnapshotStore` (class) - 1 example import violation(s)
-- `src/DockEngine.service.ts:242` `makeDockSnapshotStoreMemory` (const) - 2 example import violation(s)
-- `src/DockEngine.service.ts:273` `requireSnapshot` (const) - 1 example import violation(s)
-- `src/DockPolicy.ts:46` `DockCommandPolicy` (type) - 2 example import violation(s)
-- `src/DockPolicy.ts:124` `lockedGroupsPolicy` (const) - 1 example import violation(s)
-- `src/DockPolicy.ts:204` `makePolicyDockEngineLayer` (const) - 1 example import violation(s)
-- `src/Geometry.models.ts:40` `Extent` (const) - 1 example import violation(s)
-- `src/Geometry.models.ts:64` `DockBox` (class) - 1 example import violation(s)
-- `src/Geometry.models.ts:88` `GroupGeometry` (class) - 1 example import violation(s)
-- `src/Geometry.models.ts:109` `SashGeometry` (class) - 1 example import violation(s)
-- `src/Geometry.models.ts:130` `FloatingGeometry` (class) - 1 example import violation(s)
-- `src/Geometry.models.ts:151` `DockGeometry` (class) - 1 example import violation(s)
-- `src/Geometry.models.ts:190` `resolveAnchoredBox` (const) - 1 example import violation(s)
-- `src/Geometry.models.ts:233` `GeometryOptions` (class) - 1 example import violation(s)
-- `src/Geometry.models.ts:268` `GroupMinimumLookup` (type) - 2 example import violation(s)
-- `src/Geometry.models.ts:285` `GroupMinimaRecord` (type) - 1 example import violation(s)
-- `src/Minima.ts:66` `TabChrome` (class) - 1 example import violation(s)
-- `src/Minima.ts:90` `titleWords` (const) - 1 example import violation(s)
-- `src/Minima.ts:142` `titleMinima` (const) - 1 example import violation(s)
-- `src/Minima.ts:201` `makeTitleMinimaAtom` (const) - 1 example import violation(s)
-- `src/Recency.ts:42` `touchedGroupsInEvents` (const) - 1 example import violation(s)
-- `src/Recency.ts:82` `touchedGroups` (const) - 1 example import violation(s)
-- `src/Recency.ts:131` `makeMruGroupsAtom` (const) - 1 example import violation(s)
 
 ### @beep/lexical-schema
 

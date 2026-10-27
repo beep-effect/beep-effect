@@ -330,7 +330,10 @@ const projectNode = (
  * **Example** (Project split into boxes)
  *
  * ```ts
- * import { DockBox, GeometryOptions, GroupId, Panel, PanelId, SplitId, SplitLayout, SplitNode, TabsNode, TextPanelView, project } from "@beep/dock"
+ * import { DockBox, GeometryOptions, project } from "@beep/dock/Dock.geometry"
+ * import { GroupId, PanelId, SplitId } from "@beep/dock/Dock.ids"
+ * import { Panel, TextPanelView } from "@beep/dock/Dock.models"
+ * import { SplitLayout, SplitNode, TabsNode } from "@beep/dock/Dock.tree"
  *
  * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) })
  * const tabs = TabsNode.make({ groupId: GroupId.make("group-one"), active: panel })
@@ -356,7 +359,8 @@ export const project: Dual2<DockNode, GeometryProjectionContext, DockGeometry> =
  * **Example** (Project empty workspace geometry)
  *
  * ```ts
- * import { DockBox, DockWorkspace, projectWorkspace } from "@beep/dock"
+ * import { DockBox, projectWorkspace } from "@beep/dock/Dock.geometry"
+ * import { DockWorkspace } from "@beep/dock/Dock.tree"
  *
  * const geometry = projectWorkspace(DockWorkspace.empty, { container: DockBox.make({ width: 800, height: 600 }) })
  * console.log(geometry.groups.length)
@@ -448,7 +452,10 @@ export const rows = (node: DockNode): ReadonlyArray<DockRow> =>
  * **Example** (Reactive geometry from atoms)
  *
  * ```ts
- * import { DockBox, GroupId, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView, makeDockGeometryAtoms } from "@beep/dock"
+ * import { DockBox, makeDockGeometryAtoms } from "@beep/dock/Dock.geometry"
+ * import { GroupId, PanelId } from "@beep/dock/Dock.ids"
+ * import { Panel, TextPanelView } from "@beep/dock/Dock.models"
+ * import { PopulatedWorkspace, TabsNode } from "@beep/dock/Dock.tree"
  * import * as Atom from "effect/reactivity/Atom";
  * import * as AtomRegistry from "effect/reactivity/AtomRegistry";
  * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) })
