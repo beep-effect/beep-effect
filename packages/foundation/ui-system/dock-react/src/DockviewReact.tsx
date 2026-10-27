@@ -219,8 +219,11 @@ const DockviewRoot = (
  * **Example** (Create DockviewReact from workspace)
  *
  * ```ts
- * import { GroupId, makeDockAtoms, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView } from "@beep/dock"
- * import { DockviewReact } from "@beep/dock-react"
+ * import { GroupId, PanelId } from "@beep/dock/Dock.ids"
+ * import { makeDockAtoms } from "@beep/dock/Dock.atoms"
+ * import { Panel, TextPanelView } from "@beep/dock/Dock.models"
+ * import { PopulatedWorkspace, TabsNode } from "@beep/dock/Dock.tree"
+ * import { DockviewReact } from "@beep/dock-react/DockviewReact"
  * import * as Effect from "effect/Effect";
  * import { createElement } from "react"
  *

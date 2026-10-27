@@ -2,6 +2,8 @@
  * Lexical commands the {@link ChatComposer} dispatches so consumers can wire
  * send/stop without the foundation knowing about turns, drafts, or transport.
  *
+ * **Details**
+ *
  * The send button click and the Enter-to-send key handler both dispatch
  * {@link SEND_MESSAGE_COMMAND}. A consumer handles it either by passing an
  * `onSend` prop (the composer registers a low-priority handler) or by

@@ -1,6 +1,8 @@
 /**
  * AnnotatedTextGraph - text graphs enriched with linguistic-annotation nodes.
  *
+ * **Details**
+ *
  * Extends the structural text graph with annotation strata produced by an
  * {@link Backend.NLPBackend}: {@link POSNode} (part-of-speech),
  * {@link EntityNode} (named entities), {@link LemmaNode} (lemmas),
