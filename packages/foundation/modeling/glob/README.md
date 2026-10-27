@@ -132,7 +132,7 @@ Each ported file carries its notice, and the real minimatch is used as the test 
 Run these from `packages/foundation/modeling/glob`:
 
 ```bash
-bun run check              # tsc-rs over src and test
+bun run check              # tsrs over src and test
 bun run lint               # biome
 bun run test               # unit, property and compliance suites (minimatch oracle)
 bun run docgen             # JSDoc examples typecheck

@@ -60,7 +60,7 @@ const writeFile = Effect.fn("BuildTurboOutputsTest.writeFile")(function* (root: 
 
 const compile = Effect.fn("BuildTurboOutputsTest.compile")(function* (repoRoot: string, cwd: string) {
   const run = yield* StepExec.runCaptured({
-    command: `${repoRoot}/node_modules/.bin/tsc-rs`,
+    command: `${repoRoot}/node_modules/.bin/tsrs`,
     args: ["-p", "tsconfig.json"],
     cwd,
     source: "all",

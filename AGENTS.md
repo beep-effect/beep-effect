@@ -273,7 +273,7 @@ needed only for the escalation list below.
   package or app. Never `mkdir` one, copy a sibling, or hand-write its
   manifest: the command emits the generated scripts block, tsconfig overlays,
   identity registration, and the per-package `turbo.json` that a `noEmit`
-  build (`tsc-rs -p tsconfig.check.json`) needs so Turbo stops warning
+  build (`tsrs -p tsconfig.check.json`) needs so Turbo stops warning
   "no output files found". `bun run beep lint package-scripts` rejects a
   package missing that override; repair it with the command, not by hand.
 
@@ -443,7 +443,7 @@ If you touch this, load or run this first. Do not hand-author around it.
 | JSDoc on exports | `.patterns/jsdoc-documentation.md` |
 | Gesture-bearing UI | browser-qa-loop skill |
 | Tailwind className / style props in UI code | bun run lint:shadcn (strict @shadcn/lint; policy .oxlintrc.shadcn.json, runbook docs/runbooks/design-system-lint.md) |
-| `@effect/tsgo` / `tsc-rs` / `@typescript/native` bumps | [TypeScript toolchain runbook](docs/runbooks/typescript-toolchain.md) |
+| `@effect/tsgo` / `tsrs` / `@typescript/native` bumps | [TypeScript toolchain runbook](docs/runbooks/typescript-toolchain.md) |
 | PR publish / checks | yeet skill |
 | Any stopping point (done, blocked, merge-ready, retired) | closeout skill |
 

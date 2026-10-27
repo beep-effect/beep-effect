@@ -264,8 +264,8 @@ export class SchemaTagIdiomsExecutionError extends S.TaggedError<
  * ```ts
  * import { MarkdownFencesExecutionError } from "@beep/repo-cli/commands/Laws/Laws.errors"
  *
- * const error = MarkdownFencesExecutionError.new("tsc-rs exited 1 without a fence diagnostic.")
- * console.log(error.message) // "tsc-rs exited 1 without a fence diagnostic."
+ * const error = MarkdownFencesExecutionError.new("tsrs exited 1 without a fence diagnostic.")
+ * console.log(error.message) // "tsrs exited 1 without a fence diagnostic."
  * ```
  *
  * @category errors
@@ -296,7 +296,7 @@ export class MarkdownFencesExecutionError extends S.TaggedError<
  *
  * **Details**
  *
- * `exit-without-diagnostics`: `tsc-rs` exited nonzero but printed no
+ * `exit-without-diagnostics`: `tsrs` exited nonzero but printed no
  * diagnostic of a staged fence (a crash, a kill or a panic).
  * `unattributed-diagnostics`: the output holds an `error TS` line that maps to
  * no staged fence (a tsconfig or dependency error, or unparseable output).
@@ -353,7 +353,7 @@ export type MarkdownFencesCompilerFailureReason = typeof MarkdownFencesCompilerF
  *   outputTail: "thread 'main' panicked",
  *   unattributedDiagnostics: [],
  *   unattributedDiagnosticCount: 0,
- *   message: "tsc-rs exited 134 without a fence diagnostic.",
+ *   message: "tsrs exited 134 without a fence diagnostic.",
  * })
  * console.log(error.reason) // "exit-without-diagnostics"
  * ```

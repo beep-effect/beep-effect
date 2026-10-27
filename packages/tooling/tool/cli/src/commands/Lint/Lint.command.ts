@@ -1152,7 +1152,7 @@ export const lintPackageScriptsCommand = Command.make(
   })
 ).pipe(
   Command.withDescription(
-    "Check or repair canonical workspace scripts; impl differences from scaffold defaults are advisory (counted on the summary line; --impl-drift lists them), except that beep:build, beep:check and beep:check:* must type-check with tsc-rs unless checkerEngineExemptions lists the script. --write seeds missing impls and preserves existing values; --json includes implDrift."
+    "Check or repair canonical workspace scripts; impl differences from scaffold defaults are advisory (counted on the summary line; --impl-drift lists them), except that beep:build, beep:check and beep:check:* must type-check with tsrs unless checkerEngineExemptions lists the script. --write seeds missing impls and preserves existing values; --json includes implDrift."
   )
 );
 
