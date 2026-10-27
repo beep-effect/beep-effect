@@ -54,7 +54,7 @@ interface MakeTitleMinimaAtomInput {
  * **Example** (Make tab chrome allowances)
  *
  * ```ts
- * import { TabChrome } from "@beep/dock"
+ * import { TabChrome } from "@beep/dock/Minima"
  *
  * const chrome = TabChrome.make({ perTab: 7, strip: 11 })
  * console.log(chrome.strip)
@@ -76,7 +76,10 @@ export class TabChrome extends S.Opaque<TabChrome, { readonly brand: unique symb
  * **Example** (Collect distinct title words)
  *
  * ```ts
- * import { GroupId, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView, titleWords } from "@beep/dock"
+ * import { GroupId, PanelId } from "@beep/dock/Dock.ids"
+ * import { Panel, TextPanelView } from "@beep/dock/Dock.models"
+ * import { PopulatedWorkspace, TabsNode } from "@beep/dock/Dock.tree"
+ * import { titleWords } from "@beep/dock/Minima"
  *
  * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "The dragon", view: TextPanelView.make({ text: "one" }) })
  * const workspace = PopulatedWorkspace.make({ root: TabsNode.make({ groupId: GroupId.make("group-one"), active: panel }) })
@@ -106,7 +109,10 @@ export const titleWords = (workspace: DockWorkspace): ReadonlyArray<string> =>
  * **Example** (Compute group title floors)
  *
  * ```ts
- * import { GroupId, Panel, PanelId, PopulatedWorkspace, TabChrome, TabsNode, TextPanelView, titleMinima } from "@beep/dock"
+ * import { GroupId, PanelId } from "@beep/dock/Dock.ids"
+ * import { Panel, TextPanelView } from "@beep/dock/Dock.models"
+ * import { PopulatedWorkspace, TabsNode } from "@beep/dock/Dock.tree"
+ * import { TabChrome, titleMinima } from "@beep/dock/Minima"
  * import { EngineProfile, FontMetrics } from "@beep/pretext"
  * import * as O from "effect/Option"
  *
@@ -172,7 +178,10 @@ export const titleMinima: Dual3<FontMetrics, DockWorkspace, TabChrome, GroupMini
  * **Example** (Reactive title minima atom)
  *
  * ```ts
- * import { GroupId, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView, makeTitleMinimaAtom } from "@beep/dock"
+ * import { GroupId, PanelId } from "@beep/dock/Dock.ids"
+ * import { Panel, TextPanelView } from "@beep/dock/Dock.models"
+ * import { PopulatedWorkspace, TabsNode } from "@beep/dock/Dock.tree"
+ * import { makeTitleMinimaAtom } from "@beep/dock/Minima"
  * import { PretextCaptureFixture } from "@beep/pretext"
  * import * as Effect from "effect/Effect";
  * import * as Layer from "effect/Layer"

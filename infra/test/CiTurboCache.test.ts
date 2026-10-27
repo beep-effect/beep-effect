@@ -4,6 +4,7 @@ import {
   CiTurboCacheRemediation,
   loadCiTurboCacheConfig,
   resolveTurboCacheLabBuckets,
+  TurboCacheLabBucketsInput,
 } from "@beep/infra";
 import { it } from "@beep/test-runner";
 import { assert, describe, expect } from "@effect/vitest";
@@ -307,19 +308,27 @@ describe("@beep/infra CiTurboCache throttle alarms", { concurrent: false }, () =
 
 describe("@beep/infra resolveTurboCacheLabBuckets", () => {
   it("derives the lab component prefix and the evolved bucket", () => {
-    expect(resolveTurboCacheLabBuckets({ epoch: "c1023a", bucketName: "beep-tcl-c1023a-123456789012" })).toEqual({
+    expect(
+      resolveTurboCacheLabBuckets(
+        TurboCacheLabBucketsInput.make({ epoch: "c1023a", bucketName: "beep-tcl-c1023a-123456789012" })
+      )
+    ).toEqual({
       componentPrefix: "beep-tcl-c1023a",
       evolvedBucket: "beep-tcl-c1023a-evo-123456789012",
     });
   });
 
   it("rejects a malformed epoch and a bucket outside the lab prefix", () => {
-    expect(() => resolveTurboCacheLabBuckets({ epoch: "C1", bucketName: "beep-tcl-C1-123456789012" })).toThrow(
-      "turboCacheLab:epoch"
-    );
-    expect(() => resolveTurboCacheLabBuckets({ epoch: "c1023a", bucketName: "beep-turbo-cache-123456789012" })).toThrow(
-      "lab prefix"
-    );
+    expect(() =>
+      resolveTurboCacheLabBuckets(
+        TurboCacheLabBucketsInput.make({ epoch: "C1", bucketName: "beep-tcl-C1-123456789012" })
+      )
+    ).toThrow("turboCacheLab:epoch");
+    expect(() =>
+      resolveTurboCacheLabBuckets(
+        TurboCacheLabBucketsInput.make({ epoch: "c1023a", bucketName: "beep-turbo-cache-123456789012" })
+      )
+    ).toThrow("lab prefix");
   });
 });
 
