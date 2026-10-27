@@ -5,9 +5,9 @@ Lane `rsc-vitest-w10` (overnight lane C), branch `test/residue-vitest-canon-wave
 18 EV010, one EV004 in `@beep/workspace-server` and one EV014 in `@beep/practice-kg-mcp`.
 This wave changes no detector and adds no exception. No `src/` file is edited.
 
-## Census at `77edd3db28`
+## Census at the lane base `77edd3db28` (historical snapshot)
 
-The inventory holds 712 rows: 465 exceptions and 247 open. EV010 holds 264 rows (127
+The lane branched from `77edd3db28`; the PR's merge base is `190572531f` (see "Against the PR merge base" below). At the lane base the inventory holds 712 rows: 465 exceptions and 247 open. EV010 holds 264 rows (127
 open), EV004 139 (50 open), EV014 1 (1 open). The 20 rows of this lane are all open.
 
 | Package | Rule | Open at base | Retired | Open after |
@@ -126,6 +126,28 @@ Against `77edd3db28`, paired by `(ruleId, file, occurrence)` as a multiset:
 That reconciles exactly: 247 − 4 = 243 open, 712 − 4 = 708 rows, and exceptions stay at
 465. EV010 open falls from 127 to 125, EV004 open from 50 to 49, and EV014 from 1 to 0.
 
+## Against the PR merge base `190572531f`
+
+Waves 8 (#2281, 77 rows), 9 (#2278, 32 rows) and #1855 wave 7 (#2282, 17 rows) merged while
+this PR was open, so main was merged in and the inventory regenerated twice, byte-stable.
+Those three waves account for the 126-row difference between the lane base (712) and the
+merge base (586). One of them touches this lane's scope: #2282's detector repair retired the
+open `OutboxAuditLog.test.ts` (m365-mcp) EV010 row, so `@beep/m365-mcp` holds 2 open rows at
+the merge base, not 3.
+
+Paired by `(ruleId, file, occurrence)` against `190572531f`:
+
+| | Rows |
+| --- | ---: |
+| Base | 586 (536 exceptions, 50 open) |
+| Gone | 4 (the same four rows) |
+| New | 0 |
+| Status changed | 0 |
+| After | 582 (536 exceptions, 46 open) |
+
+That reconciles: 50 − 4 = 46 open, 586 − 4 = 582 rows, exceptions unchanged at 536.
+EV010 open falls from 38 to 36, EV004 from 10 to 9, and EV014 from 1 to 0.
+
 ## Verification
 
 Route: S39/S41 Claude chain, `claude-opus-5-5` child, no cross-provider lane. Every heavy
@@ -154,5 +176,7 @@ command ran alone through `beep-heavy` with stdin from `/dev/null`.
 
 Revert the PR. The four test files return to `Effect.scoped`, the untimed outer block and
 `NodeServices.layer`; the two devDependencies, tsconfig references, fallow allow-list
-entries and cache baseline reviews go away with it. The inventory returns to the base:
-712 rows, 465 exceptions, 247 open (EV010 127, EV004 50, EV014 1 open).
+entries and cache baseline reviews go away with it. The inventory returns to the merge base
+`190572531f`: 586 rows, 536 exceptions, 50 open (EV010 38, EV004 10, EV014 1 open). The
+712-row lane base above is a historical snapshot; reverting does not undo waves 8, 9 or
+#1855 wave 7.
