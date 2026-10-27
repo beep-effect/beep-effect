@@ -416,7 +416,7 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
             const bindError = yield* sql
               .unsafe("insert into tx_bind values (?)", [Symbol("unbindable")])
               .pipe(Effect.flip, Effect.orDie);
-            expect(bindError.reason.message.startsWith("Failed to bind statement parameters:")).toBe(true);
+            expect(Str.startsWith("Failed to bind statement parameters:")(bindError.reason.message)).toBe(true);
           })
         );
         expect(yield* countRows(sql, "tx_bind")).toBe(1);

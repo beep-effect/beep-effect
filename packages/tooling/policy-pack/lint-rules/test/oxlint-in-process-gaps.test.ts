@@ -1,6 +1,7 @@
 import plugin from "@beep/lint-rules/oxlint";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as P from "effect/Predicate";
 
 type RuleName = keyof typeof plugin.rules;
@@ -79,7 +80,7 @@ const computedMember = (object: unknown, property: string) => ({
   type: "MemberExpression",
 });
 const params = (...names: ReadonlyArray<string>) =>
-  ({ params: [{ type: "ObjectPattern" }, ...names.map(identifier)], type: "FunctionDeclaration" }) as never;
+  ({ params: [{ type: "ObjectPattern" }, ...A.map(names, identifier)], type: "FunctionDeclaration" }) as never;
 const declarator = (id: unknown) => ({ id, type: "VariableDeclarator" }) as never;
 const processExit = () => call(member(identifier("process"), "exit"));
 
