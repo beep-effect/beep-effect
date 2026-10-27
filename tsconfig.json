@@ -2421,6 +2421,9 @@
       ],
       "@beep/brand/Brand.tokens": [
         "./packages/foundation/ui-system/brand/src/Brand.tokens.ts"
+      ],
+      "@beep/file-processing/SecretScrub": [
+        "./packages/foundation/capability/file-processing/src/SecretScrub/index.ts"
       ]
     }
   }

@@ -26,7 +26,7 @@ const PromptText: S.brand<S.String, "FileProcessingPromptAdmissibleText"> = S.St
  * The schema constructor is private to preserve the mint boundary.
  * **Example** (Use the capability type)
  * ```ts import.meta.vitest name="Use the capability type"
- * import type { SecretScrub } from "@beep/file-processing"
+ * import type * as SecretScrub from "@beep/file-processing/SecretScrub"
  * const acceptExcerpt = (text: SecretScrub.PromptAdmissibleText) => text.length
  * console.log(acceptExcerpt)
  * ```
@@ -39,7 +39,7 @@ export type PromptAdmissibleText = typeof PromptText.Type;
  * Mint prompt text only from a true result with known/clear status and independently rechecked sanitized bytes.
  * **Example** (Mint from a scrub result)
  * ```ts import.meta.vitest name="Mint from a scrub result"
- * import { SecretScrub } from "@beep/file-processing"
+ * import * as SecretScrub from "@beep/file-processing/SecretScrub"
  * import * as Effect from "effect/Effect"
  * const result = await Effect.runPromise(SecretScrub.scrubSecretText(SecretScrub.SecretScrubInput.make({ text: "public text" })))
  * console.log(SecretScrub.promptTextFromScrub(result))
@@ -59,7 +59,7 @@ export const promptTextFromScrub = (result: SecretScrubResult): O.Option<PromptA
  * Compute the ratified deadline; audit uses twelve calendar months rather than a fixed day approximation.
  * **Example** (Compute a raw deadline)
  * ```ts import.meta.vitest name="Compute a raw deadline"
- * import { SecretScrub } from "@beep/file-processing"
+ * import * as SecretScrub from "@beep/file-processing/SecretScrub"
  * const record = SecretScrub.SecretRetentionRecord.make({ retentionClass: "transient-raw", createdAtEpochMillis: 0, purposeResolved: false, pinned: false })
  * console.log(SecretScrub.secretRetentionDeadline(record))
  * ```
@@ -77,7 +77,7 @@ export const secretRetentionDeadline = (record: SecretRetentionRecord): number =
  * Decide purge eligibility without I/O: raw resolves immediately; only unresolved-review proof may be pinned.
  * **Example** (Purge resolved raw metadata)
  * ```ts import.meta.vitest name="Purge resolved raw metadata"
- * import { SecretScrub } from "@beep/file-processing"
+ * import * as SecretScrub from "@beep/file-processing/SecretScrub"
  * const record = SecretScrub.SecretRetentionRecord.make({ retentionClass: "transient-raw", createdAtEpochMillis: 0, purposeResolved: true, pinned: false })
  * console.log(SecretScrub.isSecretPurgeEligible(record, 0))
  * ```
