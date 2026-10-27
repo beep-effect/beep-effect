@@ -26,7 +26,7 @@ import type { BrandIdentity } from "./Brand.schema.ts";
  * **Example** (Detect a generated stylesheet)
  *
  * ```ts
- * import { GENERATED_CSS_BANNER } from "@beep/brand"
+ * import { GENERATED_CSS_BANNER } from "@beep/brand/Brand.css"
  *
  * console.log(GENERATED_CSS_BANNER.startsWith("/*"))
  * ```
@@ -72,7 +72,8 @@ const quoteFamily = (family: string): string => (isGenericFontFamily(family) ? f
  * **Example** (Render a sans font stack)
  *
  * ```ts
- * import { FontStack, fontStack } from "@beep/brand"
+ * import { FontStack } from "@beep/brand/Brand.schema"
+ * import { fontStack } from "@beep/brand/Brand.css"
  *
  * const sans = FontStack.make({ family: "Inter Variable", fallbacks: ["ui-sans-serif", "sans-serif"] })
  *
@@ -144,7 +145,8 @@ const schemeLines = (scheme: ColorScheme): ReadonlyArray<string> =>
  * **Example** (Render the beep theme)
  *
  * ```ts
- * import { beep, renderThemeCss } from "@beep/brand"
+ * import { beep } from "@beep/brand/Brand.tokens"
+ * import { renderThemeCss } from "@beep/brand/Brand.css"
  *
  * const css = renderThemeCss(beep)
  * console.log(css.includes("--color-brand-500"))
