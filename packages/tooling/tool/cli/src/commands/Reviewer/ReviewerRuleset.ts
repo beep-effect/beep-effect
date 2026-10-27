@@ -167,6 +167,35 @@ const api = Effect.fn("Reviewer.ghApi")(function* (path: string) {
   );
 });
 
+// Rewrites only the beep-reviewer entry; every other rule, parameter, and bypass actor is preserved.
+const rewriteReviewerChecks = Effect.fnUntraced(function* (
+  value: unknown,
+  reviewer: ReadonlyArray<typeof RequiredCheck.Encoded>
+) {
+  const original = yield* decodeObject(value);
+  const rules = yield* decodeObjects(original.rules);
+  const target = A.filter(rules, (rule) => rule.type === "required_status_checks");
+  if (target.length !== 1)
+    return yield* fail("Expected exactly one required_status_checks rule; refusing an ambiguous update.");
+  const updated = yield* Effect.forEach(
+    rules,
+    Effect.fn("Reviewer.updateRule")(function* (rule) {
+      if (rule.type !== "required_status_checks") return rule;
+      const parameters = yield* decodeObject(rule.parameters);
+      const checks = yield* decodeObjects(parameters.required_status_checks);
+      const others = A.filter(checks, (check) => check.context !== "beep-reviewer");
+      return {
+        ...rule,
+        parameters: {
+          ...parameters,
+          required_status_checks: [...others, ...reviewer],
+        },
+      };
+    })
+  );
+  return yield* decodeObject({ ...original, rules: updated });
+});
+
 /**
  * Adds one App-bound context while preserving all other rules, parameters, and bypass actors.
  *
@@ -181,52 +210,35 @@ const api = Effect.fn("Reviewer.ghApi")(function* (path: string) {
  * @since 0.0.0
  */
 export const requireReviewerInRuleset = Effect.fn("Reviewer.requireInRuleset")(
-  function* (value: unknown, appId: number) {
-    const original = yield* decodeObject(value);
-    const rules = yield* decodeObjects(original.rules);
-    const target = A.filter(rules, (rule) => rule.type === "required_status_checks");
-    if (target.length !== 1)
-      return yield* fail("Expected exactly one required_status_checks rule; refusing an ambiguous update.");
-    const updated = yield* Effect.forEach(
-      rules,
-      Effect.fn("Reviewer.updateRule")(function* (rule) {
-        if (rule.type !== "required_status_checks") return rule;
-        const parameters = yield* decodeObject(rule.parameters);
-        const checks = yield* decodeObjects(parameters.required_status_checks);
-        const others = A.filter(checks, (check) => check.context !== "beep-reviewer");
-        return {
-          ...rule,
-          parameters: {
-            ...parameters,
-            required_status_checks: [...others, { context: "beep-reviewer", integration_id: appId }],
-          },
-        };
-      })
-    );
-    return yield* decodeObject({ ...original, rules: updated });
-  },
+  (value: unknown, appId: number) =>
+    rewriteReviewerChecks(value, [{ context: "beep-reviewer", integration_id: appId }]),
   Effect.mapError(() => fail("Cannot safely update this ruleset."))
 );
 
 /**
- * Prints a default-branch ruleset diff; only an explicit apply sends the human-authenticated PUT.
+ * Removes the beep-reviewer context while preserving all other rules, parameters, and bypass actors.
  *
  * **Details**
- * A ruleset id can disambiguate multiple active repository rulesets. Inherited organization rules
- * are never edited. A second read rejects concurrent edits before writing.
+ * Without the context, the shared merge gate is inactive and reviews become advisory.
  *
- * **Example** (Compose a dry run)
+ * **Example** (Make the reviewer advisory)
  * ```ts
- * import { requireReviewerRuleset } from "@beep/repo-cli/commands/Reviewer";
+ * import { releaseReviewerInRuleset } from "@beep/repo-cli/commands/Reviewer";
  * import * as Effect from "effect/Effect";
- * console.log(Effect.isEffect(requireReviewerRuleset(42, false, undefined)));
+ * console.log(Effect.isEffect(releaseReviewerInRuleset({ rules: [] })));
  * ```
  *
- * @category workflows
+ * @category policies
  * @since 0.0.0
  */
-export const requireReviewerRuleset = Effect.fn("Reviewer.requireRuleset")(function* (
-  appId: number,
+export const releaseReviewerInRuleset = Effect.fn("Reviewer.releaseInRuleset")(
+  (value: unknown) => rewriteReviewerChecks(value, []),
+  Effect.mapError(() => fail("Cannot safely update this ruleset."))
+);
+
+// Selects the default branch's repository ruleset, prints the diff, and PUTs only on an explicit apply.
+const updateReviewerRuleset = Effect.fnUntraced(function* (
+  transform: (value: unknown) => Effect.Effect<typeof ObjectRecord.Type, ReviewerError>,
   apply: boolean,
   rulesetId: number | undefined
 ) {
@@ -259,7 +271,7 @@ export const requireReviewerRuleset = Effect.fn("Reviewer.requireRuleset")(funct
   if (O.isNone(selected)) return yield* fail("No ruleset selected.");
   const path = `${ROOT}/rulesets/${selected.value.id}`;
   const original = yield* api(path);
-  const updated = yield* requireReviewerInRuleset(original, appId);
+  const updated = yield* transform(original);
   const before = yield* encodeJson(original);
   const after = yield* encodeJson(updated);
   yield* Console.log(`--- ruleset ${selected.value.id}\n- ${before}\n+ ${after}`);
@@ -276,6 +288,56 @@ export const requireReviewerRuleset = Effect.fn("Reviewer.requireRuleset")(funct
     rules: updated.rules,
   });
   yield* reviewerGh(["api", "--method", "PUT", path, "--input", "-"], payload);
+});
+
+/**
+ * Prints a default-branch ruleset diff that requires the reviewer; only an explicit apply sends the PUT.
+ *
+ * **Details**
+ * A ruleset id can disambiguate multiple active repository rulesets. Inherited organization rules
+ * are never edited. A second read rejects concurrent edits before writing.
+ *
+ * **Example** (Compose a dry run)
+ * ```ts
+ * import { requireReviewerRuleset } from "@beep/repo-cli/commands/Reviewer";
+ * import * as Effect from "effect/Effect";
+ * console.log(Effect.isEffect(requireReviewerRuleset(42, false, undefined)));
+ * ```
+ *
+ * @category workflows
+ * @since 0.0.0
+ */
+export const requireReviewerRuleset = Effect.fn("Reviewer.requireRuleset")(function* (
+  appId: number,
+  apply: boolean,
+  rulesetId: number | undefined
+) {
+  return yield* updateReviewerRuleset((value) => requireReviewerInRuleset(value, appId), apply, rulesetId);
+});
+
+/**
+ * Prints a default-branch ruleset diff that drops the reviewer requirement; only an explicit apply sends the PUT.
+ *
+ * **Details**
+ * Use when the reviewer cannot run (for example, its model quota is exhausted). The merge gate
+ * follows the ruleset, so `yeet merge` and `yeet merge-gate` stop waiting for a review once applied.
+ * Restore enforcement with `beep reviewer ruleset require --apply`.
+ *
+ * **Example** (Compose a dry run)
+ * ```ts
+ * import { releaseReviewerRuleset } from "@beep/repo-cli/commands/Reviewer";
+ * import * as Effect from "effect/Effect";
+ * console.log(Effect.isEffect(releaseReviewerRuleset(false, undefined)));
+ * ```
+ *
+ * @category workflows
+ * @since 0.0.0
+ */
+export const releaseReviewerRuleset = Effect.fn("Reviewer.releaseRuleset")(function* (
+  apply: boolean,
+  rulesetId: number | undefined
+) {
+  return yield* updateReviewerRuleset(releaseReviewerInRuleset, apply, rulesetId);
 });
 
 /**
