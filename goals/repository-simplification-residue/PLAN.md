@@ -61,6 +61,7 @@ Wave 3 ruled FP-2 and FP-6 and retired 192 rows with no row or allowlist entry a
 Wave 4 repaired the EV015 single-test-block, EV006 browser-project and EV002 repeated-lifecycle classes, retiring 79 rows and converting 7 to owner/exit exceptions (`history/receipts/detectors-wave-4.md`); waves 5-9 are the EV003 process-state ruling, the EV014 named test layers and the 693-row owner/exit register.
 Wave 5 ruled EV003 process-state wrappers a judgment class, repaired the EV003 layer-factory and two EV008 classes, retiring 22 rows and converting 13 to owner/exit exceptions (`history/receipts/detectors-wave-5.md`); wave 6 is the EV014 named test layers.
 Wave 6 closed EV014 by resolving imported test layers across files, ruling hermetic in-memory acquisitions acquisition-free and giving the 39 remaining layers an explicit 30 s hook timeout, retiring 233 exceptions with none added (`history/receipts/detectors-wave-6.md`); wave 7 is the EV010 owner/exit register.
+Wave 7 repaired three EV010 false-positive classes (native FileSystem layers proven by link or mode operations, a runtime Node/Bun bundle choice, a bundle whose FileSystem a later memory layer replaces), retiring 17 rows, converted 80 open live-resource rows to owner/exit exceptions and rewrote all 128 surviving EV010 exceptions to owner/exit form (`history/receipts/detectors-wave-7.md`); the owner/exit register for the 298 other-rule exceptions remains.
 #1875 `residue-vitest-canon` is in progress after wave 1, which leaves 689 open rows
 (`history/receipts/vitest-canon-wave-1.md`).
 Wave 2 retired every open EV009 and EV014 row and left 26 EV015 rows for #1855
@@ -73,6 +74,8 @@ The EV012 seams lane retired the three no-seam module mocks through production s
 Wave 6 retired 116 repo-cli EV002 rows and handed 19 to #1855
 (`history/receipts/vitest-canon-wave-6.md`); waves 5 and 7 are EV004/EV003 and EV010.
 Wave 7 moved portable-filesystem EV010 tests in 17 files to the memory filesystem, retiring 16 rows, and handed 127 live-resource rows to #1855 in eight evidence classes (`history/receipts/vitest-canon-wave-7.md`); wave 8 is the deferred `step-capture-lifecycle` rows and the wave 5 families.
+Wave 9 dropped 32 redundant `Effect.scoped` wrappers in 12 repo-cli tests and kept 9 whose close is observed, with the 12 lane EV010 rows confirmed live-resource (`history/receipts/vitest-canon-wave-9.md`).
+Wave 8 lane A retired 77 of the 84 open EV002, EV004, EV010 and EV015 rows in 11 repo-cli files with no row or exception added, and left 7 live-resource or cwd-seam rows open (`history/receipts/vitest-canon-wave-8.md`).
 #1876 `residue-rdf-pacer` is complete (`history/receipts/rdf-pacer-ports.md`): the
 RDF failure assertions and the Pacer logout witness are ported, and every export
 hunk has a disposition.

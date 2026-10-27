@@ -194,6 +194,37 @@ const TurboCacheLabEpoch = S.String.check(
 ).pipe($I.annoteSchema("TurboCacheLabEpoch", { description: "Disposable conformance-lab epoch identifier." }));
 
 /**
+ * Input to {@link resolveTurboCacheLabBuckets}: a lab stack's raw epoch and bucket name.
+ *
+ * **Details**
+ *
+ * Both fields stay plain strings: the resolver validates them itself so an
+ * invalid value surfaces as a Pulumi `RunError` with the stack-config message.
+ *
+ * **Example** (Describe a lab stack)
+ *
+ * ```ts
+ * import { TurboCacheLabBucketsInput } from "@beep/infra"
+ *
+ * const input = TurboCacheLabBucketsInput.make({ epoch: "c1023a", bucketName: "beep-tcl-c1023a-123456789012" })
+ * console.assert(input.epoch === "c1023a")
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class TurboCacheLabBucketsInput extends S.Opaque<TurboCacheLabBucketsInput, { readonly brand: unique symbol }>()(
+  S.Struct({
+    epoch: S.String.annotateKey({ description: "The `turboCacheLab:epoch` stack config value." }),
+    bucketName: S.String.annotateKey({ description: "The lab incumbent's configured bucket name." }),
+  }).pipe(
+    $I.annoteSchema("TurboCacheLabBucketsInput", {
+      description: "Raw lab epoch and incumbent bucket name, validated by resolveTurboCacheLabBuckets.",
+    })
+  )
+) {}
+
+/**
  * Validate a disposable lab's epoch and bucket name and derive its resource names.
  *
  * **Details**
@@ -206,9 +237,11 @@ const TurboCacheLabEpoch = S.String.check(
  * **Example** (Derive lab names)
  *
  * ```ts
- * import { resolveTurboCacheLabBuckets } from "@beep/infra"
+ * import { resolveTurboCacheLabBuckets, TurboCacheLabBucketsInput } from "@beep/infra"
  *
- * const names = resolveTurboCacheLabBuckets({ epoch: "c1023a", bucketName: "beep-tcl-c1023a-123456789012" })
+ * const names = resolveTurboCacheLabBuckets(
+ *   TurboCacheLabBucketsInput.make({ epoch: "c1023a", bucketName: "beep-tcl-c1023a-123456789012" })
+ * )
  * console.assert(names.evolvedBucket === "beep-tcl-c1023a-evo-123456789012")
  * ```
  *
@@ -217,13 +250,7 @@ const TurboCacheLabEpoch = S.String.check(
  * @category configuration
  * @since 0.0.0
  */
-export const resolveTurboCacheLabBuckets = ({
-  epoch,
-  bucketName,
-}: {
-  readonly epoch: string;
-  readonly bucketName: string;
-}) => {
+export const resolveTurboCacheLabBuckets = ({ epoch, bucketName }: TurboCacheLabBucketsInput) => {
   if (!S.is(TurboCacheLabEpoch)(epoch)) {
     throw new pulumi.RunError("turboCacheLab:epoch must be 4-16 lowercase alphanumerics");
   }

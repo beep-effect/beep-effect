@@ -9,8 +9,10 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { Git } from "@beep/git/Git";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
+import { thunkTrue } from "@beep/utils";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Console from "effect/Console";
@@ -50,6 +52,10 @@ import type { PrSessionRegistryShape } from "./PrSessionRegistry.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/ProvenanceFooter");
 const repositoryPattern = /github\.com[/:]([^/]+)\/([^/]+?)(?:\.git)?$/u;
+
+// One `git config --get <key>` read through `@beep/git`: `None` when the key is unset, trimmed otherwise.
+const readGitConfig = (cwd: string, key: string) =>
+  Git.use((git) => git.configGet(cwd, key)).pipe(Effect.provideServiceEffect(Git, Git.make));
 
 /**
  * Stamp outcomes that do not confirm the expected footer on the pull request.
@@ -606,6 +612,36 @@ export const persistPrSessionRecord = Effect.fn("ProvenanceFooter.persistRecord"
 });
 
 /**
+ * Read whether the provenance footer carries its labels in this checkout.
+ *
+ * **Details**
+ *
+ * Reads `git config --get beep.provenance.labels` through `@beep/git`. Only
+ * the value `off` (git trims surrounding whitespace, the comparison is
+ * case-sensitive) turns the labels off; an unset key, any other value, or a
+ * failed read keeps them on.
+ *
+ * **Example** (Read the labels switch)
+ *
+ * ```ts
+ * import { readProvenanceLabels } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect";
+ * const labels = readProvenanceLabels("/worktrees/beep-effect10")
+ * console.log(Effect.isEffect(labels)) // true
+ * ```
+ *
+ * @param repoRoot - Checkout whose git config holds `beep.provenance.labels`.
+ * @returns `false` only when the key reads `off`.
+ * @category detection
+ * @since 0.0.0
+ */
+export const readProvenanceLabels = (repoRoot: string) =>
+  readGitConfig(repoRoot, "beep.provenance.labels").pipe(
+    Effect.map(O.match({ onNone: thunkTrue, onSome: (value) => value !== "off" })),
+    Effect.orElseSucceed(thunkTrue)
+  );
+
+/**
  * Resolve the current GitHub repository from the origin URL.
  *
  * **Example** (Build repository detection)
@@ -623,8 +659,12 @@ export const persistPrSessionRecord = Effect.fn("ProvenanceFooter.persistRecord"
  * @since 0.0.0
  */
 export const detectPrRepository = Effect.fn("ProvenanceFooter.detectRepository")(function* (cwd: string) {
-  const origin = Str.trim(yield* runGitOutput(cwd, ["config", "--get", "remote.origin.url"]));
-  const match = Str.match(repositoryPattern)(origin);
+  const origin = yield* readGitConfig(cwd, "remote.origin.url").pipe(
+    Effect.mapError(
+      YeetCommandError.new("Failed to read the origin URL.", { command: "git config --get remote.origin.url" })
+    )
+  );
+  const match = O.flatMap(origin, Str.match(repositoryPattern));
   if (O.isNone(match) || match.value[1] === undefined || match.value[2] === undefined) {
     return yield* YeetCommandError.make({ message: "Expected a github.com origin URL." });
   }
@@ -828,10 +868,7 @@ export const ensureProvenanceFooter = Effect.fn("ProvenanceFooter.ensure")(funct
       yield* Console.warn(warning);
       return skippedStamp(warning);
     }
-    const labels = yield* runGitOutput(context.repoRoot, ["config", "--get", "beep.provenance.labels"]).pipe(
-      Effect.map((value) => Str.trim(value) !== "off"),
-      Effect.orElseSucceed(() => true)
-    );
+    const labels = yield* readProvenanceLabels(context.repoRoot);
     const publicValue = toPublicPrProvenance(rows, O.some(prNumber), labels);
     const rendered = renderPrProvenance(publicValue);
     const body = yield* readPrBody(capture, context, prNumber);

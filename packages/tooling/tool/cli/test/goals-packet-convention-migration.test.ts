@@ -861,8 +861,7 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
             )
           ),
           Layer.build,
-          Effect.map((context) => Context.get(context, PacketForkRepairApplier)),
-          Effect.scoped
+          Effect.map((context) => Context.get(context, PacketForkRepairApplier))
         );
 
       const stagingPacketPath = `${root}/staging/forked`;
@@ -927,8 +926,7 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
           )
         ),
         Layer.build,
-        Effect.map((context) => Context.get(context, PacketForkRepairApplier)),
-        Effect.scoped
+        Effect.map((context) => Context.get(context, PacketForkRepairApplier))
       );
       const exit = yield* Effect.exit(applier.apply(locator));
       exit.pipe(Exit.isFailure, assertTrue);
@@ -964,8 +962,7 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
             )
           ),
           Layer.build,
-          Effect.map((context) => Context.get(context, PacketForkRepairApplier)),
-          Effect.scoped
+          Effect.map((context) => Context.get(context, PacketForkRepairApplier))
         );
       const failureMessage = (exit: Exit.Exit<unknown, unknown>): string =>
         Exit.isFailure(exit) ? exit.cause.toString() : "";

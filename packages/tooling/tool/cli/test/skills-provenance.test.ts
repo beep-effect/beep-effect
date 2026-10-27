@@ -1154,48 +1154,46 @@ layer(TestLayer, { timeout: "60 seconds" })("skills provenance service", (it) =>
   );
 
   it.effect("records symlinks as mode 120000 link text instead of following them", () =>
-    Effect.scoped(
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const repoRoot = yield* fs.makeTempDirectoryScoped({ prefix: "skills-provenance-symlink-" });
-        const skillText = yield* readFixtureText("shadcn/upstream/SKILL.md");
-        const compositionText = yield* readFixtureText("shadcn/upstream/rules/composition.md");
-        const source = yield* makeStubSource([
-          SkillUpstreamContentFile.make({ path: "SKILL.md", mode: "100644", bytes: textEncoder.encode(skillText) }),
-          SkillUpstreamContentFile.make({ path: "entry.md", mode: "120000", bytes: textEncoder.encode("SKILL.md") }),
-          SkillUpstreamContentFile.make({ path: "mirror", mode: "120000", bytes: textEncoder.encode("rules") }),
-          SkillUpstreamContentFile.make({
-            path: "rules/composition.md",
-            mode: "100644",
-            bytes: textEncoder.encode(compositionText),
-          }),
-        ]);
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* fs.makeTempDirectoryScoped({ prefix: "skills-provenance-symlink-" });
+      const skillText = yield* readFixtureText("shadcn/upstream/SKILL.md");
+      const compositionText = yield* readFixtureText("shadcn/upstream/rules/composition.md");
+      const source = yield* makeStubSource([
+        SkillUpstreamContentFile.make({ path: "SKILL.md", mode: "100644", bytes: textEncoder.encode(skillText) }),
+        SkillUpstreamContentFile.make({ path: "entry.md", mode: "120000", bytes: textEncoder.encode("SKILL.md") }),
+        SkillUpstreamContentFile.make({ path: "mirror", mode: "120000", bytes: textEncoder.encode("rules") }),
+        SkillUpstreamContentFile.make({
+          path: "rules/composition.md",
+          mode: "100644",
+          bytes: textEncoder.encode(compositionText),
+        }),
+      ]);
 
-        yield* writeFixtureFile(repoRoot, ".claude/skills/shadcn/SKILL.md", textEncoder.encode(skillText));
-        yield* writeFixtureFile(
-          repoRoot,
-          ".claude/skills/shadcn/rules/composition.md",
-          textEncoder.encode(compositionText)
-        );
-        yield* fs.symlink("SKILL.md", path.join(repoRoot, ".claude/skills/shadcn/entry.md"));
-        yield* fs.symlink("rules", path.join(repoRoot, ".claude/skills/shadcn/mirror"));
-        yield* linkAgentsTarget(repoRoot);
+      yield* writeFixtureFile(repoRoot, ".claude/skills/shadcn/SKILL.md", textEncoder.encode(skillText));
+      yield* writeFixtureFile(
+        repoRoot,
+        ".claude/skills/shadcn/rules/composition.md",
+        textEncoder.encode(compositionText)
+      );
+      yield* fs.symlink("SKILL.md", path.join(repoRoot, ".claude/skills/shadcn/entry.md"));
+      yield* fs.symlink("rules", path.join(repoRoot, ".claude/skills/shadcn/mirror"));
+      yield* linkAgentsTarget(repoRoot);
 
-        const report = yield* resolveSkillProvenance("shadcn", repoRoot).pipe(
-          Effect.provideService(SkillUpstreamContentSource, source)
-        );
+      const report = yield* resolveSkillProvenance("shadcn", repoRoot).pipe(
+        Effect.provideService(SkillUpstreamContentSource, source)
+      );
 
-        // Following the file link would hash SKILL.md's bytes under mode 100644, and walking
-        // the directory link would add `mirror/composition.md` while losing `mirror` itself;
-        // either one shows up here as drift against the pinned tree.
-        expect(report.driftPaths).toEqual([]);
-        expect(report.entry.provenance.matchedFileCount).toBe(4);
-        expect(report.entry.provenance.upstreamFileCount).toBe(4);
-        expect(report.entry.effective.treeHash).toBe(report.entry.snapshot.treeHash);
-        expect(report.entry.patches.required).toBe(false);
-      })
-    )
+      // Following the file link would hash SKILL.md's bytes under mode 100644, and walking
+      // the directory link would add `mirror/composition.md` while losing `mirror` itself;
+      // either one shows up here as drift against the pinned tree.
+      expect(report.driftPaths).toEqual([]);
+      expect(report.entry.provenance.matchedFileCount).toBe(4);
+      expect(report.entry.provenance.upstreamFileCount).toBe(4);
+      expect(report.entry.effective.treeHash).toBe(report.entry.snapshot.treeHash);
+      expect(report.entry.patches.required).toBe(false);
+    })
   );
 
   it.effect("renders header-only patch sections for empty added and deleted files", () =>
@@ -1287,70 +1285,65 @@ layer(TestLayer, { timeout: "60 seconds" })("skills provenance service", (it) =>
   );
 
   it.effect("executes the adapter sandbox trust and output containment checks", () =>
-    Effect.scoped(
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const repoRoot = yield* findRepoRoot();
-        const fixtureRoot = yield* fs.makeTempDirectoryScoped({ prefix: "adapter-sandbox-" });
-        const auditedRepo = path.join(fixtureRoot, "repo");
-        const trustedDirectory = path.join(fixtureRoot, "trusted");
-        const adapter = path.join(trustedDirectory, "adapter.py");
-        const binDirectory = path.join(fixtureRoot, "bin");
-        const capturePath = path.join(fixtureRoot, "bwrap.argv");
-        const outsideDirectory = path.join(fixtureRoot, "outside");
-        yield* Effect.forEach(
-          [auditedRepo, trustedDirectory, binDirectory, outsideDirectory],
-          (directory) => fs.makeDirectory(directory, { recursive: true, mode: 0o700 }),
-          { discard: true }
-        );
-        yield* fs.writeFileString(adapter, "#!/usr/bin/env python3\n");
-        yield* fs.chmod(adapter, 0o644);
-        const writeExecutable = Effect.fnUntraced(function* (filePath: string, source: string) {
-          yield* fs.writeFileString(filePath, source);
-          yield* fs.chmod(filePath, 0o755);
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* findRepoRoot();
+      const fixtureRoot = yield* fs.makeTempDirectoryScoped({ prefix: "adapter-sandbox-" });
+      const auditedRepo = path.join(fixtureRoot, "repo");
+      const trustedDirectory = path.join(fixtureRoot, "trusted");
+      const adapter = path.join(trustedDirectory, "adapter.py");
+      const binDirectory = path.join(fixtureRoot, "bin");
+      const capturePath = path.join(fixtureRoot, "bwrap.argv");
+      const outsideDirectory = path.join(fixtureRoot, "outside");
+      yield* Effect.forEach(
+        [auditedRepo, trustedDirectory, binDirectory, outsideDirectory],
+        (directory) => fs.makeDirectory(directory, { recursive: true, mode: 0o700 }),
+        { discard: true }
+      );
+      yield* fs.writeFileString(adapter, "#!/usr/bin/env python3\n");
+      yield* fs.chmod(adapter, 0o644);
+      const writeExecutable = Effect.fnUntraced(function* (filePath: string, source: string) {
+        yield* fs.writeFileString(filePath, source);
+        yield* fs.chmod(filePath, 0o755);
+      });
+      yield* writeExecutable(
+        path.join(binDirectory, "prlimit"),
+        '#!/bin/sh\nwhile [ "$#" -gt 0 ] && [ "$1" != "--" ]; do shift; done\n[ "$#" -gt 0 ] || exit 64\nshift\nexec "$@"\n'
+      );
+      yield* writeExecutable(path.join(binDirectory, "bwrap"), '#!/bin/sh\nprintf "%s\\n" "$@" > "$BWRAP_CAPTURE"\n');
+      const runner = path.join(repoRoot, ".claude/skills/ontology-foundational-auditor/scripts/run_adapter_sandbox.sh");
+      const run = (target: string) =>
+        Bun.spawnSync([runner, adapter, auditedRepo, "observe", target], {
+          cwd: auditedRepo,
+          env: {
+            ...Bun.env,
+            BWRAP_CAPTURE: capturePath,
+            PATH: `${binDirectory}:${Bun.env.PATH ?? ""}`,
+          },
+          stderr: "pipe",
+          stdout: "pipe",
         });
-        yield* writeExecutable(
-          path.join(binDirectory, "prlimit"),
-          '#!/bin/sh\nwhile [ "$#" -gt 0 ] && [ "$1" != "--" ]; do shift; done\n[ "$#" -gt 0 ] || exit 64\nshift\nexec "$@"\n'
-        );
-        yield* writeExecutable(path.join(binDirectory, "bwrap"), '#!/bin/sh\nprintf "%s\\n" "$@" > "$BWRAP_CAPTURE"\n');
-        const runner = path.join(
-          repoRoot,
-          ".claude/skills/ontology-foundational-auditor/scripts/run_adapter_sandbox.sh"
-        );
-        const run = (target: string) =>
-          Bun.spawnSync([runner, adapter, auditedRepo, "observe", target], {
-            cwd: auditedRepo,
-            env: {
-              ...Bun.env,
-              BWRAP_CAPTURE: capturePath,
-              PATH: `${binDirectory}:${Bun.env.PATH ?? ""}`,
-            },
-            stderr: "pipe",
-            stdout: "pipe",
-          });
 
-        yield* fs.chmod(adapter, 0o666);
-        expect(run(path.join(auditedRepo, "writable-adapter-output")).exitCode).toBe(65);
-        yield* fs.chmod(adapter, 0o644);
+      yield* fs.chmod(adapter, 0o666);
+      expect(run(path.join(auditedRepo, "writable-adapter-output")).exitCode).toBe(65);
+      yield* fs.chmod(adapter, 0o644);
 
-        const outsideOutput = path.join(outsideDirectory, "must-not-be-created");
-        expect(run(outsideOutput).exitCode).toBe(65);
-        expect(yield* fs.exists(outsideOutput)).toBe(false);
+      const outsideOutput = path.join(outsideDirectory, "must-not-be-created");
+      expect(run(outsideOutput).exitCode).toBe(65);
+      expect(yield* fs.exists(outsideOutput)).toBe(false);
 
-        const linkedOutput = path.join(auditedRepo, "linked-output");
-        yield* fs.symlink(outsideDirectory, linkedOutput);
-        expect(run(linkedOutput).exitCode).toBe(65);
+      const linkedOutput = path.join(auditedRepo, "linked-output");
+      yield* fs.symlink(outsideDirectory, linkedOutput);
+      expect(run(linkedOutput).exitCode).toBe(65);
 
-        const validOutput = path.join(auditedRepo, "observations");
-        expect(run(validOutput).exitCode).toBe(0);
-        expect(yield* fs.exists(validOutput)).toBe(true);
-        const bwrapArguments = yield* fs.readFileString(capturePath);
-        expect(bwrapArguments).toContain(`${validOutput}\n/out\n`);
-        expect(bwrapArguments).toContain(`${auditedRepo}\n/repo\n`);
-      })
-    )
+      const validOutput = path.join(auditedRepo, "observations");
+      expect(run(validOutput).exitCode).toBe(0);
+      expect(yield* fs.exists(validOutput)).toBe(true);
+      const bwrapArguments = yield* fs.readFileString(capturePath);
+      expect(bwrapArguments).toContain(`${validOutput}\n/out\n`);
+      expect(bwrapArguments).toContain(`${auditedRepo}\n/repo\n`);
+    })
   );
 });
 
