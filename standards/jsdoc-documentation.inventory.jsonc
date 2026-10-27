@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-27T02:14:31.618Z",
+  "generatedAt": "2026-10-27T12:20:13.323Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -62,23 +62,23 @@
   },
   "totals": {
     "packages": 183,
-    "cleanPackages": 102,
+    "cleanPackages": 103,
     "packagesWithoutPublicSrcSurface": 2,
-    "packagesNeedingRemediation": 79,
+    "packagesNeedingRemediation": 78,
     "publicModules": 3547,
-    "publicExports": 25290,
-    "openModules": 403,
-    "openExports": 1382,
+    "publicExports": 25292,
+    "openModules": 398,
+    "openExports": 1328,
     "missingExportExamples": 7,
     "missingExportCategories": 0,
     "missingExportSince": 0,
     "forbiddenTagFindings": 0,
     "malformedConditionalTagFindings": 0,
-    "exampleImportFindings": 1351,
+    "exampleImportFindings": 1296,
     "unsafeExampleFindings": 0,
     "schemaAnnotationFindings": 0,
-    "undescribed-see": 11,
-    "multiple-description-paragraphs": 425,
+    "undescribed-see": 10,
+    "multiple-description-paragraphs": 412,
     "leading-blank": 0,
     "trailing-blank": 0,
     "invalid-heading": 1,
@@ -91,7 +91,7 @@
     "duplicate-example": 0,
     "loose-ts-fence": 0,
     "forbidden-remarks": 0,
-    "no-root-package-import": 1330,
+    "no-root-package-import": 1275,
     "rootPolicyOpen": 0
   },
   "packages": [
@@ -363966,8 +363966,8 @@
           "exportKind": "class",
           "filePath": "src/PackageManagerInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/PackageManagerInstaller.ts",
-          "line": 94,
-          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-94-packagemanagerinstallererror",
+          "line": 95,
+          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-95-packagemanagerinstallererror",
           "currentTags": [
             "@public",
             "@category",
@@ -363989,8 +363989,8 @@
           "exportKind": "class",
           "filePath": "src/PackageManagerInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/PackageManagerInstaller.ts",
-          "line": 243,
-          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-243-packagemanagerinstalloptions",
+          "line": 244,
+          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-244-packagemanagerinstalloptions",
           "currentTags": [
             "@public",
             "@category",
@@ -364012,8 +364012,8 @@
           "exportKind": "namespace",
           "filePath": "src/PackageManagerInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/PackageManagerInstaller.ts",
-          "line": 379,
-          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-379-packagemanagerinstalloptions",
+          "line": 380,
+          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-380-packagemanagerinstalloptions",
           "currentTags": [
             "@category",
             "@since"
@@ -364034,8 +364034,8 @@
           "exportKind": "class",
           "filePath": "src/PackageManagerInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/PackageManagerInstaller.ts",
-          "line": 423,
-          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-423-ambientpackagemanager",
+          "line": 424,
+          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-424-ambientpackagemanager",
           "currentTags": [
             "@public",
             "@category",
@@ -364057,8 +364057,8 @@
           "exportKind": "namespace",
           "filePath": "src/PackageManagerInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/PackageManagerInstaller.ts",
-          "line": 461,
-          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-461-ambientpackagemanager",
+          "line": 462,
+          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-462-ambientpackagemanager",
           "currentTags": [
             "@category",
             "@since"
@@ -364079,8 +364079,8 @@
           "exportKind": "class",
           "filePath": "src/PackageManagerInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/PackageManagerInstaller.ts",
-          "line": 510,
-          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-510-cachedpackagemanager",
+          "line": 511,
+          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-511-cachedpackagemanager",
           "currentTags": [
             "@public",
             "@category",
@@ -364102,8 +364102,8 @@
           "exportKind": "namespace",
           "filePath": "src/PackageManagerInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/PackageManagerInstaller.ts",
-          "line": 560,
-          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-560-cachedpackagemanager",
+          "line": 561,
+          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-561-cachedpackagemanager",
           "currentTags": [
             "@category",
             "@since"
@@ -364124,8 +364124,8 @@
           "exportKind": "const",
           "filePath": "src/PackageManagerInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/PackageManagerInstaller.ts",
-          "line": 603,
-          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-603-installedpackagemanager",
+          "line": 604,
+          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-604-installedpackagemanager",
           "currentTags": [
             "@public",
             "@category",
@@ -364147,8 +364147,8 @@
           "exportKind": "type",
           "filePath": "src/PackageManagerInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/PackageManagerInstaller.ts",
-          "line": 618,
-          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-618-installedpackagemanager",
+          "line": 619,
+          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-619-installedpackagemanager",
           "currentTags": [
             "@public",
             "@category",
@@ -364170,8 +364170,8 @@
           "exportKind": "interface",
           "filePath": "src/PackageManagerInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/PackageManagerInstaller.ts",
-          "line": 628,
-          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-628-packagemanagerinstallershape",
+          "line": 629,
+          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-629-packagemanagerinstallershape",
           "currentTags": [
             "@public",
             "@category",
@@ -364193,8 +364193,8 @@
           "exportKind": "class",
           "filePath": "src/PackageManagerInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/PackageManagerInstaller.ts",
-          "line": 1851,
-          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-1851-packagemanagerinstaller",
+          "line": 1854,
+          "anchor": "packages-drivers-github-actions-src-packagemanagerinstaller-ts-1854-packagemanagerinstaller",
           "currentTags": [
             "@public",
             "@category",
@@ -364239,8 +364239,8 @@
           "exportKind": "class",
           "filePath": "src/ToolInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/ToolInstaller.ts",
-          "line": 54,
-          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-54-toolinstallererror",
+          "line": 55,
+          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-55-toolinstallererror",
           "currentTags": [
             "@public",
             "@category",
@@ -364262,8 +364262,8 @@
           "exportKind": "class",
           "filePath": "src/ToolInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/ToolInstaller.ts",
-          "line": 177,
-          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-177-extractoptions",
+          "line": 178,
+          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-178-extractoptions",
           "currentTags": [
             "@public",
             "@category",
@@ -364285,8 +364285,8 @@
           "exportKind": "namespace",
           "filePath": "src/ToolInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/ToolInstaller.ts",
-          "line": 217,
-          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-217-extractoptions",
+          "line": 218,
+          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-218-extractoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -364307,8 +364307,8 @@
           "exportKind": "class",
           "filePath": "src/ToolInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/ToolInstaller.ts",
-          "line": 243,
-          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-243-tooldownloadoptions",
+          "line": 244,
+          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-244-tooldownloadoptions",
           "currentTags": [
             "@public",
             "@category",
@@ -364330,8 +364330,8 @@
           "exportKind": "namespace",
           "filePath": "src/ToolInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/ToolInstaller.ts",
-          "line": 272,
-          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-272-tooldownloadoptions",
+          "line": 273,
+          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-273-tooldownloadoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -364352,8 +364352,8 @@
           "exportKind": "class",
           "filePath": "src/ToolInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/ToolInstaller.ts",
-          "line": 301,
-          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-301-provisionfileoptions",
+          "line": 302,
+          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-302-provisionfileoptions",
           "currentTags": [
             "@public",
             "@category",
@@ -364375,8 +364375,8 @@
           "exportKind": "namespace",
           "filePath": "src/ToolInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/ToolInstaller.ts",
-          "line": 335,
-          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-335-provisionfileoptions",
+          "line": 336,
+          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-336-provisionfileoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -364397,8 +364397,8 @@
           "exportKind": "class",
           "filePath": "src/ToolInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/ToolInstaller.ts",
-          "line": 371,
-          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-371-provisionedfile",
+          "line": 372,
+          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-372-provisionedfile",
           "currentTags": [
             "@public",
             "@category",
@@ -364420,8 +364420,8 @@
           "exportKind": "namespace",
           "filePath": "src/ToolInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/ToolInstaller.ts",
-          "line": 396,
-          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-396-provisionedfile",
+          "line": 397,
+          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-397-provisionedfile",
           "currentTags": [
             "@category",
             "@since"
@@ -364442,8 +364442,8 @@
           "exportKind": "interface",
           "filePath": "src/ToolInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/ToolInstaller.ts",
-          "line": 414,
-          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-414-toolinstallershape",
+          "line": 415,
+          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-415-toolinstallershape",
           "currentTags": [
             "@public",
             "@category",
@@ -364465,8 +364465,8 @@
           "exportKind": "class",
           "filePath": "src/ToolInstaller.ts",
           "repoPath": "packages/drivers/github-actions/src/ToolInstaller.ts",
-          "line": 923,
-          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-923-toolinstaller",
+          "line": 927,
+          "anchor": "packages-drivers-github-actions-src-toolinstaller-ts-927-toolinstaller",
           "currentTags": [
             "@public",
             "@category",
@@ -454204,7 +454204,7 @@
       "packageName": "@beep/ontology",
       "packagePath": "packages/foundation/modeling/ontology",
       "topoOrder": 133,
-      "status": "needs-remediation",
+      "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
         "sourceFileCount": 15,
@@ -454218,20 +454218,20 @@
         "enforceVersion": true
       },
       "counts": {
-        "openModules": 5,
-        "openExports": 54,
+        "openModules": 0,
+        "openExports": 0,
         "missingExportExamples": 0,
         "missingExportCategories": 0,
         "missingExportSince": 0,
         "missingExportSummaries": 0,
         "forbiddenTagFindings": 0,
         "malformedConditionalTagFindings": 0,
-        "exampleImportFindings": 55,
+        "exampleImportFindings": 0,
         "unsafeExampleFindings": 0,
         "schemaAnnotationFindings": 0,
         "documentationRuleFindings": {
-          "undescribed-see": 1,
-          "multiple-description-paragraphs": 13,
+          "undescribed-see": 0,
+          "multiple-description-paragraphs": 0,
           "leading-blank": 0,
           "trailing-blank": 0,
           "invalid-heading": 0,
@@ -454244,7 +454244,7 @@
           "duplicate-example": 0,
           "loose-ts-fence": 0,
           "forbidden-remarks": 0,
-          "no-root-package-import": 55
+          "no-root-package-import": 0
         }
       },
       "modules": [
@@ -454310,13 +454310,9 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
+          "documentationShapeViolations": [],
           "exportCount": 2,
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "packageDocumentation",
@@ -454336,13 +454332,9 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
+          "documentationShapeViolations": [],
           "exportCount": 4,
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "packageDocumentation",
@@ -454362,13 +454354,9 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
+          "documentationShapeViolations": [],
           "exportCount": 29,
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "packageDocumentation",
@@ -454388,13 +454376,9 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
+          "documentationShapeViolations": [],
           "exportCount": 8,
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "packageDocumentation",
@@ -454415,14 +454399,9 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "undescribed-see",
-              "detail": "https://folio.openlegalstandard.org/openapi.json"
-            }
-          ],
+          "documentationShapeViolations": [],
           "exportCount": 21,
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "packageDocumentation",
@@ -455116,8 +455095,8 @@
           "exportKind": "type",
           "filePath": "src/Fold.assembly.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.assembly.ts",
-          "line": 68,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-assembly-ts-68-boundcomposer",
+          "line": 72,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-assembly-ts-72-boundcomposer",
           "currentTags": [
             "@category",
             "@since"
@@ -455126,30 +455105,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
-          "remediationStatus": "open"
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "fold",
           "exportKind": "const",
           "filePath": "src/Fold.assembly.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.assembly.ts",
-          "line": 887,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-assembly-ts-887-fold",
+          "line": 893,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-assembly-ts-893-fold",
           "currentTags": [
             "@category",
             "@since"
@@ -455158,30 +455127,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
-          "remediationStatus": "open"
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "MarkdownLinkMode",
           "exportKind": "const",
           "filePath": "src/Fold.markdown.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.markdown.ts",
-          "line": 46,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-markdown-ts-46-markdownlinkmode",
+          "line": 48,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-markdown-ts-48-markdownlinkmode",
           "currentTags": [
             "@category",
             "@since"
@@ -455190,26 +455149,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "MarkdownLinkMode",
           "exportKind": "type",
           "filePath": "src/Fold.markdown.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.markdown.ts",
-          "line": 67,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-markdown-ts-67-markdownlinkmode",
+          "line": 69,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-markdown-ts-69-markdownlinkmode",
           "currentTags": [
             "@category",
             "@since"
@@ -455218,26 +455171,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "MarkdownOptions",
           "exportKind": "class",
           "filePath": "src/Fold.markdown.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.markdown.ts",
-          "line": 84,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-markdown-ts-84-markdownoptions",
+          "line": 86,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-markdown-ts-86-markdownoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -455246,26 +455193,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "toMarkdown",
           "exportKind": "const",
           "filePath": "src/Fold.markdown.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.markdown.ts",
-          "line": 296,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-markdown-ts-296-tomarkdown",
+          "line": 299,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-markdown-ts-299-tomarkdown",
           "currentTags": [
             "@category",
             "@since"
@@ -455274,26 +455215,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "AbsoluteIri",
           "exportKind": "type",
           "filePath": "src/Fold.models.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.models.ts",
-          "line": 40,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-40-absoluteiri",
+          "line": 42,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-42-absoluteiri",
           "currentTags": [
             "@category",
             "@since"
@@ -455302,26 +455237,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "SchemaHandle",
           "exportKind": "type",
           "filePath": "src/Fold.models.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.models.ts",
-          "line": 65,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-65-schemahandle",
+          "line": 69,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-69-schemahandle",
           "currentTags": [
             "@category",
             "@since"
@@ -455330,30 +455259,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
-          "remediationStatus": "open"
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "Subject",
           "exportKind": "type",
           "filePath": "src/Fold.models.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.models.ts",
-          "line": 81,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-81-subject",
+          "line": 85,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-85-subject",
           "currentTags": [
             "@category",
             "@since"
@@ -455362,26 +455281,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "LiteralScalar",
           "exportKind": "type",
           "filePath": "src/Fold.models.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.models.ts",
-          "line": 97,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-97-literalscalar",
+          "line": 101,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-101-literalscalar",
           "currentTags": [
             "@category",
             "@since"
@@ -455390,26 +455303,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "TypedLiteral",
           "exportKind": "type",
           "filePath": "src/Fold.models.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.models.ts",
-          "line": 116,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-116-typedliteral",
+          "line": 122,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-122-typedliteral",
           "currentTags": [
             "@category",
             "@since"
@@ -455418,30 +455325,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
-          "remediationStatus": "open"
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "TupleObject",
           "exportKind": "type",
           "filePath": "src/Fold.models.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.models.ts",
-          "line": 136,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-136-tupleobject",
+          "line": 142,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-142-tupleobject",
           "currentTags": [
             "@category",
             "@since"
@@ -455450,26 +455347,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "Triple",
           "exportKind": "type",
           "filePath": "src/Fold.models.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.models.ts",
-          "line": 156,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-156-triple",
+          "line": 164,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-164-triple",
           "currentTags": [
             "@category",
             "@since"
@@ -455478,30 +455369,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
-          "remediationStatus": "open"
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "OntologyFoldInput",
           "exportKind": "type",
           "filePath": "src/Fold.models.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.models.ts",
-          "line": 172,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-172-ontologyfoldinput",
+          "line": 180,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-180-ontologyfoldinput",
           "currentTags": [
             "@category",
             "@since"
@@ -455510,26 +455391,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "isSchemaHandle",
           "exportKind": "const",
           "filePath": "src/Fold.models.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.models.ts",
-          "line": 203,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-203-isschemahandle",
+          "line": 211,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-211-isschemahandle",
           "currentTags": [
             "@category",
             "@since"
@@ -455538,26 +455413,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "TripleValue",
           "exportKind": "const",
           "filePath": "src/Fold.models.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.models.ts",
-          "line": 285,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-285-triplevalue",
+          "line": 295,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-295-triplevalue",
           "currentTags": [
             "@category",
             "@since"
@@ -455566,30 +455435,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
-          "remediationStatus": "open"
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "TripleValue",
           "exportKind": "type",
           "filePath": "src/Fold.models.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.models.ts",
-          "line": 305,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-305-triplevalue",
+          "line": 315,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-315-triplevalue",
           "currentTags": [
             "@category",
             "@since"
@@ -455598,26 +455457,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "SkosClassification",
           "exportKind": "const",
           "filePath": "src/Fold.models.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.models.ts",
-          "line": 321,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-321-skosclassification",
+          "line": 331,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-331-skosclassification",
           "currentTags": [
             "@category",
             "@since"
@@ -455626,26 +455479,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "SkosClassification",
           "exportKind": "type",
           "filePath": "src/Fold.models.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.models.ts",
-          "line": 341,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-341-skosclassification",
+          "line": 351,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-351-skosclassification",
           "currentTags": [
             "@category",
             "@since"
@@ -455654,26 +455501,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "AssembledPredicateKind",
           "exportKind": "const",
           "filePath": "src/Fold.models.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.models.ts",
-          "line": 360,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-360-assembledpredicatekind",
+          "line": 372,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-372-assembledpredicatekind",
           "currentTags": [
             "@category",
             "@since"
@@ -455682,30 +455523,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
-          "remediationStatus": "open"
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "AssembledPredicateKind",
           "exportKind": "type",
           "filePath": "src/Fold.models.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.models.ts",
-          "line": 380,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-380-assembledpredicatekind",
+          "line": 392,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-392-assembledpredicatekind",
           "currentTags": [
             "@category",
             "@since"
@@ -455714,26 +455545,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "FactLiteral",
           "exportKind": "class",
           "filePath": "src/Fold.models.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.models.ts",
-          "line": 397,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-397-factliteral",
+          "line": 409,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-409-factliteral",
           "currentTags": [
             "@category",
             "@since"
@@ -455742,26 +455567,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "FactObject",
           "exportKind": "const",
           "filePath": "src/Fold.models.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.models.ts",
-          "line": 423,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-423-factobject",
+          "line": 435,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-435-factobject",
           "currentTags": [
             "@category",
             "@since"
@@ -455770,26 +455589,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "FactObject",
           "exportKind": "type",
           "filePath": "src/Fold.models.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.models.ts",
-          "line": 445,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-445-factobject",
+          "line": 457,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-457-factobject",
           "currentTags": [
             "@category",
             "@since"
@@ -455798,31 +455611,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            },
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "AssembledFact",
           "exportKind": "class",
           "filePath": "src/Fold.models.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.models.ts",
-          "line": 471,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-471-assembledfact",
+          "line": 485,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-485-assembledfact",
           "currentTags": [
             "@category",
             "@since"
@@ -455831,30 +455633,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
-          "remediationStatus": "open"
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "AssembledPredicate",
           "exportKind": "class",
           "filePath": "src/Fold.models.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.models.ts",
-          "line": 505,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-505-assembledpredicate",
+          "line": 519,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-519-assembledpredicate",
           "currentTags": [
             "@category",
             "@since"
@@ -455863,26 +455655,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "AssembledClass",
           "exportKind": "class",
           "filePath": "src/Fold.models.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.models.ts",
-          "line": 542,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-542-assembledclass",
+          "line": 556,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-556-assembledclass",
           "currentTags": [
             "@category",
             "@since"
@@ -455891,26 +455677,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "OntologyWarningCode",
           "exportKind": "const",
           "filePath": "src/Fold.models.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.models.ts",
-          "line": 571,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-571-ontologywarningcode",
+          "line": 585,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-585-ontologywarningcode",
           "currentTags": [
             "@category",
             "@since"
@@ -455919,26 +455699,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "OntologyWarningCode",
           "exportKind": "type",
           "filePath": "src/Fold.models.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.models.ts",
-          "line": 595,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-595-ontologywarningcode",
+          "line": 609,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-609-ontologywarningcode",
           "currentTags": [
             "@category",
             "@since"
@@ -455947,26 +455721,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "OntologyValidationWarning",
           "exportKind": "class",
           "filePath": "src/Fold.models.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.models.ts",
-          "line": 618,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-618-ontologyvalidationwarning",
+          "line": 634,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-634-ontologyvalidationwarning",
           "currentTags": [
             "@category",
             "@since"
@@ -455975,30 +455743,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "documentationShapeViolations": [
-            {
-              "rule": "multiple-description-paragraphs"
-            }
-          ],
-          "remediationStatus": "open"
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "AssembledOntology",
           "exportKind": "class",
           "filePath": "src/Fold.models.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.models.ts",
-          "line": 653,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-653-assembledontology",
+          "line": 669,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-669-assembledontology",
           "currentTags": [
             "@category",
             "@since"
@@ -456007,26 +455765,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "OntologyAssemblyErrorReason",
           "exportKind": "const",
           "filePath": "src/Fold.models.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.models.ts",
-          "line": 682,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-682-ontologyassemblyerrorreason",
+          "line": 698,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-698-ontologyassemblyerrorreason",
           "currentTags": [
             "@category",
             "@since"
@@ -456035,26 +455787,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "OntologyAssemblyErrorReason",
           "exportKind": "type",
           "filePath": "src/Fold.models.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.models.ts",
-          "line": 711,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-711-ontologyassemblyerrorreason",
+          "line": 727,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-727-ontologyassemblyerrorreason",
           "currentTags": [
             "@category",
             "@since"
@@ -456063,26 +455809,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "OntologyAssemblyError",
           "exportKind": "class",
           "filePath": "src/Fold.models.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.models.ts",
-          "line": 736,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-736-ontologyassemblyerror",
+          "line": 752,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-752-ontologyassemblyerror",
           "currentTags": [
             "@category",
             "@since"
@@ -456091,26 +455831,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "isFactLiteral",
           "exportKind": "const",
           "filePath": "src/Fold.models.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.models.ts",
-          "line": 770,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-770-isfactliteral",
+          "line": 786,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-models-ts-786-isfactliteral",
           "currentTags": [
             "@category",
             "@since"
@@ -456119,26 +455853,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "JsonLdTerm",
           "exportKind": "type",
           "filePath": "src/Fold.projections.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.projections.ts",
-          "line": 46,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-projections-ts-46-jsonldterm",
+          "line": 48,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-projections-ts-48-jsonldterm",
           "currentTags": [
             "@category",
             "@since"
@@ -456147,26 +455875,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "JsonLdContext",
           "exportKind": "type",
           "filePath": "src/Fold.projections.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.projections.ts",
-          "line": 71,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-projections-ts-71-jsonldcontext",
+          "line": 73,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-projections-ts-73-jsonldcontext",
           "currentTags": [
             "@category",
             "@since"
@@ -456175,26 +455897,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "JsonLdNodeValue",
           "exportKind": "type",
           "filePath": "src/Fold.projections.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.projections.ts",
-          "line": 88,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-projections-ts-88-jsonldnodevalue",
+          "line": 90,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-projections-ts-90-jsonldnodevalue",
           "currentTags": [
             "@category",
             "@since"
@@ -456203,26 +455919,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "JsonLdNode",
           "exportKind": "type",
           "filePath": "src/Fold.projections.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.projections.ts",
-          "line": 112,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-projections-ts-112-jsonldnode",
+          "line": 114,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-projections-ts-114-jsonldnode",
           "currentTags": [
             "@category",
             "@since"
@@ -456231,26 +455941,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "JsonLdDocument",
           "exportKind": "type",
           "filePath": "src/Fold.projections.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.projections.ts",
-          "line": 133,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-projections-ts-133-jsonlddocument",
+          "line": 135,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-projections-ts-135-jsonlddocument",
           "currentTags": [
             "@category",
             "@since"
@@ -456259,26 +455963,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "toContext",
           "exportKind": "const",
           "filePath": "src/Fold.projections.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.projections.ts",
-          "line": 239,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-projections-ts-239-tocontext",
+          "line": 242,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-projections-ts-242-tocontext",
           "currentTags": [
             "@category",
             "@since"
@@ -456287,26 +455985,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "toJsonLd",
           "exportKind": "const",
           "filePath": "src/Fold.projections.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.projections.ts",
-          "line": 392,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-projections-ts-392-tojsonld",
+          "line": 396,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-projections-ts-396-tojsonld",
           "currentTags": [
             "@category",
             "@since"
@@ -456315,26 +456007,20 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "toTurtle",
           "exportKind": "const",
           "filePath": "src/Fold.projections.ts",
           "repoPath": "packages/foundation/modeling/ontology/src/Fold.projections.ts",
-          "line": 635,
-          "anchor": "packages-foundation-modeling-ontology-src-fold-projections-ts-635-toturtle",
+          "line": 640,
+          "anchor": "packages-foundation-modeling-ontology-src-fold-projections-ts-640-toturtle",
           "currentTags": [
             "@category",
             "@since"
@@ -456343,18 +456029,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/ontology package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "SourceType",
@@ -456987,18 +456667,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/rdf package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "TaxonomyConcept",
@@ -457015,18 +456689,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/rdf package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "FilingRootKind",
@@ -457087,18 +456755,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/rdf package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "TaxonomySeed",
@@ -457313,18 +456975,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/rdf package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "VendorConceptSlice",
@@ -457341,18 +456997,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/rdf package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "TaxonomyManifestReadError",
@@ -457523,18 +457173,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/rdf package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "VendorAlignmentTargetNotFound",
@@ -457551,18 +457195,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/rdf package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "VendorAssetManifestRow",
@@ -457711,18 +457349,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/rdf package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "FilingPath",
@@ -457783,18 +457415,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/rdf package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "UnsupportedDocumentClass",
@@ -457811,18 +457437,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/rdf package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "runLibrarianLoop",
@@ -457839,18 +457459,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/rdf package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "VocabularySchemeKind",
@@ -458426,7 +458040,7 @@
         "srcDir": "src",
         "sourceFileCount": 475,
         "publicModuleCount": 473,
-        "publicExportCount": 4451
+        "publicExportCount": 4453
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -467267,7 +466881,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 8,
+          "exportCount": 10,
           "remediationStatus": "resolved"
         },
         {
@@ -482755,8 +482369,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiGovernance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts",
-          "line": 564,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-564-reviewerappintegrationmatches",
+          "line": 568,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-568-reviewerappintegrationmatches",
           "currentTags": [
             "@param",
             "@returns",
@@ -482779,8 +482393,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiGovernance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts",
-          "line": 760,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-760-cigovernancecommands",
+          "line": 766,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-766-cigovernancecommands",
           "currentTags": [
             "@category",
             "@since"
@@ -521668,8 +521282,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Laws/AllowlistCheck.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/AllowlistCheck.ts",
-          "line": 45,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-allowlistcheck-ts-45-allowlist-path",
+          "line": 44,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-allowlistcheck-ts-44-allowlist-path",
           "currentTags": [
             "@category",
             "@since"
@@ -521690,8 +521304,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Laws/AllowlistCheck.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/AllowlistCheck.ts",
-          "line": 132,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-allowlistcheck-ts-132-allowlistcheckoptions",
+          "line": 131,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-allowlistcheck-ts-131-allowlistcheckoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -521712,8 +521326,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Laws/AllowlistCheck.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/AllowlistCheck.ts",
-          "line": 154,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-allowlistcheck-ts-154-allowlistchecksummary",
+          "line": 153,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-allowlistcheck-ts-153-allowlistchecksummary",
           "currentTags": [
             "@category",
             "@since"
@@ -521734,8 +521348,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Laws/AllowlistCheck.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/AllowlistCheck.ts",
-          "line": 303,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-allowlistcheck-ts-303-runallowlistcheck",
+          "line": 302,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-allowlistcheck-ts-302-runallowlistcheck",
           "currentTags": [
             "@category",
             "@since"
@@ -521756,8 +521370,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Laws/AllowlistCheck.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/AllowlistCheck.ts",
-          "line": 373,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-allowlistcheck-ts-373-reportallowlistchecksummary",
+          "line": 372,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-allowlistcheck-ts-372-reportallowlistchecksummary",
           "currentTags": [
             "@category",
             "@since"
@@ -550809,8 +550423,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Reviewer/ReviewerCommand.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerCommand.ts",
-          "line": 195,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewercommand-ts-195-reviewercommand",
+          "line": 205,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewercommand-ts-205-reviewercommand",
           "currentTags": [
             "@category",
             "@since"
@@ -551095,8 +550709,30 @@
           "exportKind": "const",
           "filePath": "src/commands/Reviewer/ReviewerRuleset.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerRuleset.ts",
-          "line": 183,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-183-requirereviewerinruleset",
+          "line": 212,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-212-requirereviewerinruleset",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "releaseReviewerInRuleset",
+          "exportKind": "const",
+          "filePath": "src/commands/Reviewer/ReviewerRuleset.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerRuleset.ts",
+          "line": 234,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-234-releasereviewerinruleset",
           "currentTags": [
             "@category",
             "@since"
@@ -551117,8 +550753,30 @@
           "exportKind": "const",
           "filePath": "src/commands/Reviewer/ReviewerRuleset.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerRuleset.ts",
-          "line": 228,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-228-requirereviewerruleset",
+          "line": 310,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-310-requirereviewerruleset",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "releaseReviewerRuleset",
+          "exportKind": "const",
+          "filePath": "src/commands/Reviewer/ReviewerRuleset.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerRuleset.ts",
+          "line": 336,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-336-releasereviewerruleset",
           "currentTags": [
             "@category",
             "@since"
@@ -551139,8 +550797,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Reviewer/ReviewerRuleset.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerRuleset.ts",
-          "line": 293,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-293-reviewerchecksatisfied",
+          "line": 355,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-355-reviewerchecksatisfied",
           "currentTags": [
             "@category",
             "@since"
@@ -551161,8 +550819,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Reviewer/ReviewerRuleset.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerRuleset.ts",
-          "line": 330,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-330-reviewerdocsonly",
+          "line": 392,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-392-reviewerdocsonly",
           "currentTags": [
             "@param",
             "@returns",
@@ -551185,8 +550843,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Reviewer/ReviewerRuleset.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerRuleset.ts",
-          "line": 388,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-388-enforcereviewergate",
+          "line": 450,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-450-enforcereviewergate",
           "currentTags": [
             "@category",
             "@since"
@@ -608452,8 +608110,8 @@
           "exportKind": "type",
           "filePath": "src/rules/utils.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-          "line": 99,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-99-astnode",
+          "line": 104,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-104-astnode",
           "currentTags": [
             "@category",
             "@since"
@@ -608474,8 +608132,8 @@
           "exportKind": "type",
           "filePath": "src/rules/utils.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-          "line": 124,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-124-maybenode",
+          "line": 129,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-129-maybenode",
           "currentTags": [
             "@category",
             "@since"
@@ -608496,8 +608154,8 @@
           "exportKind": "const",
           "filePath": "src/rules/utils.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-          "line": 165,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-165-unwrapexpression",
+          "line": 170,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-170-unwrapexpression",
           "currentTags": [
             "@param",
             "@returns",
@@ -608520,8 +608178,8 @@
           "exportKind": "type",
           "filePath": "src/rules/utils.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-          "line": 194,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-194-memberaccess",
+          "line": 199,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-199-memberaccess",
           "currentTags": [
             "@category",
             "@since"
@@ -608542,8 +608200,8 @@
           "exportKind": "const",
           "filePath": "src/rules/utils.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-          "line": 219,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-219-unwrapmemberexpression",
+          "line": 224,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-224-unwrapmemberexpression",
           "currentTags": [
             "@param",
             "@returns",
@@ -608566,8 +608224,8 @@
           "exportKind": "const",
           "filePath": "src/rules/utils.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-          "line": 255,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-255-getpropertyname",
+          "line": 260,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-260-getpropertyname",
           "currentTags": [
             "@param",
             "@returns",
@@ -608590,8 +608248,8 @@
           "exportKind": "const",
           "filePath": "src/rules/utils.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-          "line": 277,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-277-isidentifier",
+          "line": 282,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-282-isidentifier",
           "currentTags": [
             "@param",
             "@returns",
@@ -608614,8 +608272,8 @@
           "exportKind": "const",
           "filePath": "src/rules/utils.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-          "line": 310,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-310-literalstringvalue",
+          "line": 315,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-315-literalstringvalue",
           "currentTags": [
             "@param",
             "@returns",
@@ -608638,8 +608296,8 @@
           "exportKind": "const",
           "filePath": "src/rules/utils.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-          "line": 333,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-333-identifiername",
+          "line": 338,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-338-identifiername",
           "currentTags": [
             "@param",
             "@returns",
@@ -608662,8 +608320,8 @@
           "exportKind": "const",
           "filePath": "src/rules/utils.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-          "line": 383,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-383-importbinding",
+          "line": 388,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-388-importbinding",
           "currentTags": [
             "@category",
             "@since"
@@ -608684,8 +608342,8 @@
           "exportKind": "type",
           "filePath": "src/rules/utils.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-          "line": 407,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-407-importbinding",
+          "line": 412,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-412-importbinding",
           "currentTags": [
             "@category",
             "@since"
@@ -608706,8 +608364,8 @@
           "exportKind": "const",
           "filePath": "src/rules/utils.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-          "line": 446,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-446-classifyimportspecifier",
+          "line": 451,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-451-classifyimportspecifier",
           "currentTags": [
             "@param",
             "@returns",
@@ -608730,8 +608388,8 @@
           "exportKind": "const",
           "filePath": "src/rules/utils.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-          "line": 486,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-486-torepopath",
+          "line": 491,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-491-torepopath",
           "currentTags": [
             "@param",
             "@returns",
@@ -608754,8 +608412,8 @@
           "exportKind": "const",
           "filePath": "src/rules/utils.ts",
           "repoPath": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-          "line": 516,
-          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-516-pathmatchessuffix",
+          "line": 521,
+          "anchor": "packages-tooling-policy-pack-lint-rules-src-rules-utils-ts-521-pathmatchessuffix",
           "currentTags": [
             "@param",
             "@returns",

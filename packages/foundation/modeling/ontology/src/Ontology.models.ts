@@ -1,7 +1,7 @@
 /**
  * FOLIO OpenAPI component schemas modeled with Effect Schema.
  *
- * @see https://folio.openlegalstandard.org/openapi.json
+ * @see {@link https://folio.openlegalstandard.org/openapi.json} FOLIO OpenAPI document these schemas model.
  * @packageDocumentation
  * @since 0.0.0
  */

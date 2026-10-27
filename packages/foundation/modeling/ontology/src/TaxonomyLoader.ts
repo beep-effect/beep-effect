@@ -201,7 +201,7 @@ export class VendorManifestEntry extends S.Class<VendorManifestEntry, { readonly
  * ```ts
  * import { $SemanticFoundationId } from "@beep/identity/packages"
  * import { VendorAlignmentManifestEntry } from "@beep/ontology/TaxonomyLoader"
- * import { IRIReference } from "@beep/rdf"
+ * import { IRIReference } from "@beep/rdf/Iri"
  *
  * const entry = VendorAlignmentManifestEntry.make({
  *   conceptIri: IRIReference.make("https://folio.openlegalstandard.org/example"),
@@ -266,7 +266,7 @@ const VendorAlignmentManifestEntryBoundary = VendorAlignmentManifestEntry.check(
  *
  * ```ts
  * import { VendorConceptSlice } from "@beep/ontology/TaxonomyLoader"
- * import { IRIReference } from "@beep/rdf"
+ * import { IRIReference } from "@beep/rdf/Iri"
  *
  * const slice = VendorConceptSlice.make({
  *   "@id": IRIReference.make("https://folio.openlegalstandard.org/example"),
@@ -476,7 +476,7 @@ export class VendorSlicePathEscape extends S.TaggedError<VendorSlicePathEscape, 
  *
  * ```ts
  * import { VendorSliceConceptMismatch } from "@beep/ontology/TaxonomyLoader"
- * import { IRIReference } from "@beep/rdf"
+ * import { IRIReference } from "@beep/rdf/Iri"
  *
  * const error = VendorSliceConceptMismatch.make({
  *   actualConceptIri: IRIReference.make("https://folio.openlegalstandard.org/actual"),
@@ -514,7 +514,7 @@ export class VendorSliceConceptMismatch extends S.TaggedError<
  * ```ts
  * import { $SemanticFoundationId } from "@beep/identity/packages"
  * import { VendorAlignmentTargetNotFound } from "@beep/ontology/TaxonomyLoader"
- * import { IRIReference } from "@beep/rdf"
+ * import { IRIReference } from "@beep/rdf/Iri"
  *
  * const error = VendorAlignmentTargetNotFound.make({
  *   id: "folio-example",
