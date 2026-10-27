@@ -37,7 +37,7 @@ const PanelViewKind = LiteralKit(["component", "text"]);
  * **Example** (Make always render mode)
  *
  * ```ts
- * import { PanelRenderMode } from "@beep/dock"
+ * import { PanelRenderMode } from "@beep/dock/Dock.models"
  *
  * const mode = PanelRenderMode.make("always")
  * console.log(mode)
@@ -57,7 +57,7 @@ export const PanelRenderMode = LiteralKit(["onlyWhenVisible", "always"]).pipe(
  * **Example** (Type onlyWhenVisible mode)
  *
  * ```ts
- * import { PanelRenderMode } from "@beep/dock"
+ * import { PanelRenderMode } from "@beep/dock/Dock.models"
  *
  * const mode: PanelRenderMode = PanelRenderMode.make("onlyWhenVisible")
  * console.log(mode)
@@ -74,7 +74,7 @@ export type PanelRenderMode = typeof PanelRenderMode.Type;
  * **Example** (Make string parameter value)
  *
  * ```ts
- * import { PanelParameterValue } from "@beep/dock"
+ * import { PanelParameterValue } from "@beep/dock/Dock.models"
  *
  * const value = PanelParameterValue.make("dark")
  * console.log(value)
@@ -94,7 +94,7 @@ export const PanelParameterValue = S.Union([S.String, S.Finite, S.Boolean]).pipe
  * **Example** (Type boolean parameter value)
  *
  * ```ts
- * import { PanelParameterValue } from "@beep/dock"
+ * import { PanelParameterValue } from "@beep/dock/Dock.models"
  *
  * const value: PanelParameterValue = PanelParameterValue.make(true)
  * console.log(value)
@@ -111,7 +111,7 @@ export type PanelParameterValue = typeof PanelParameterValue.Type;
  * **Example** (Make theme parameter record)
  *
  * ```ts
- * import { PanelParameters } from "@beep/dock"
+ * import { PanelParameters } from "@beep/dock/Dock.models"
  *
  * const input = PanelParameters.make({ theme: "dark", compact: true })
  * console.log(input.theme)
@@ -131,7 +131,7 @@ export const PanelParameters = S.Record(S.String, PanelParameterValue).pipe(
  * **Example** (Type count parameter record)
  *
  * ```ts
- * import { PanelParameters } from "@beep/dock"
+ * import { PanelParameters } from "@beep/dock/Dock.models"
  *
  * const input: PanelParameters = PanelParameters.make({ count: 3 })
  * console.log(input.count)
@@ -148,7 +148,8 @@ export type PanelParameters = typeof PanelParameters.Type;
  * **Example** (Make markdown component view)
  *
  * ```ts
- * import { ComponentPanelView, RendererKey } from "@beep/dock"
+ * import { ComponentPanelView } from "@beep/dock/Dock.models"
+ * import { RendererKey } from "@beep/dock/Dock.ids"
  *
  * const view = ComponentPanelView.make({ renderer: RendererKey.make("markdown"), input: { source: "# Title" } })
  * console.log(view.kind)
@@ -175,7 +176,7 @@ export class ComponentPanelView extends S.Opaque<ComponentPanelView, { readonly 
  * **Example** (Make text panel view)
  *
  * ```ts
- * import { TextPanelView } from "@beep/dock"
+ * import { TextPanelView } from "@beep/dock/Dock.models"
  *
  * const view = TextPanelView.make({ text: "one" })
  * console.log(view.kind)
@@ -201,7 +202,7 @@ export class TextPanelView extends S.Opaque<TextPanelView, { readonly brand: uni
  * **Example** (Make text kind view)
  *
  * ```ts
- * import { PanelView } from "@beep/dock"
+ * import { PanelView } from "@beep/dock/Dock.models"
  *
  * const view = PanelView.make({ kind: "text", text: "one" })
  * console.log(view.kind)
@@ -222,7 +223,7 @@ export const PanelView = PanelViewKind.mapMembers(Tuple.evolve([() => ComponentP
  * **Example** (Assign text view type)
  *
  * ```ts
- * import { PanelView, TextPanelView } from "@beep/dock"
+ * import { PanelView, TextPanelView } from "@beep/dock/Dock.models"
  *
  * const view: PanelView = TextPanelView.make({ text: "one" })
  * console.log(view.kind)
@@ -250,7 +251,7 @@ const PositiveFiniteExtent = S.Finite.check(S.isGreaterThan(0)).pipe(
  * **Example** (Make partial panel constraints)
  *
  * ```ts
- * import { PanelConstraints } from "@beep/dock"
+ * import { PanelConstraints } from "@beep/dock/Dock.models"
  * import * as O from "effect/Option"
  *
  * const constraints = PanelConstraints.make({ minWidth: O.some(240), maxHeight: O.some(720) })
@@ -279,7 +280,8 @@ export class PanelConstraints extends S.Opaque<PanelConstraints, { readonly bran
  * **Example** (Make text panel instance)
  *
  * ```ts
- * import { Panel, PanelId, TextPanelView } from "@beep/dock"
+ * import { Panel, TextPanelView } from "@beep/dock/Dock.models"
+ * import { PanelId } from "@beep/dock/Dock.ids"
  *
  * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) })
  * console.log(panel.title)
@@ -330,7 +332,7 @@ export class Panel extends S.Opaque<Panel, { readonly brand: unique symbol }>()(
  * **Example** (Make title panel patch)
  *
  * ```ts
- * import { PanelPatch } from "@beep/dock"
+ * import { PanelPatch } from "@beep/dock/Dock.models"
  * import * as O from "effect/Option"
  *
  * const patch = PanelPatch.make({ title: O.some("Renamed") })
@@ -364,7 +366,7 @@ export class PanelPatch extends S.Opaque<PanelPatch, { readonly brand: unique sy
  * **Example** (Make locked group mode)
  *
  * ```ts
- * import { GroupLockedMode } from "@beep/dock"
+ * import { GroupLockedMode } from "@beep/dock/Dock.models"
  *
  * const mode = GroupLockedMode.make("locked")
  * console.log(mode)
@@ -382,7 +384,7 @@ export const GroupLockedMode = LiteralKit(["unlocked", "locked", "no-drop-target
  * **Example** (Type no-drop-target mode)
  *
  * ```ts
- * import { GroupLockedMode } from "@beep/dock"
+ * import { GroupLockedMode } from "@beep/dock/Dock.models"
  *
  * const mode: GroupLockedMode = GroupLockedMode.make("no-drop-target")
  * console.log(mode)
@@ -399,7 +401,7 @@ export type GroupLockedMode = typeof GroupLockedMode.Type;
  * **Example** (Make bottom header position)
  *
  * ```ts
- * import { GroupHeaderPosition } from "@beep/dock"
+ * import { GroupHeaderPosition } from "@beep/dock/Dock.models"
  *
  * const position = GroupHeaderPosition.make("bottom")
  * console.log(position)
@@ -417,7 +419,7 @@ export const GroupHeaderPosition = LiteralKit(["top", "bottom"]).pipe(
  * **Example** (Type top header position)
  *
  * ```ts
- * import { GroupHeaderPosition } from "@beep/dock"
+ * import { GroupHeaderPosition } from "@beep/dock/Dock.models"
  *
  * const position: GroupHeaderPosition = GroupHeaderPosition.make("top")
  * console.log(position)
@@ -434,7 +436,7 @@ export type GroupHeaderPosition = typeof GroupHeaderPosition.Type;
  * **Example** (Make locked group metadata)
  *
  * ```ts
- * import { GroupMetadata } from "@beep/dock"
+ * import { GroupMetadata } from "@beep/dock/Dock.models"
  *
  * const metadata = GroupMetadata.make({ locked: "locked", headerPosition: "bottom" })
  * console.log(metadata.visible)
@@ -464,7 +466,7 @@ export class GroupMetadata extends S.Opaque<GroupMetadata, { readonly brand: uni
  * **Example** (Make visibility group patch)
  *
  * ```ts
- * import { GroupPatch } from "@beep/dock"
+ * import { GroupPatch } from "@beep/dock/Dock.models"
  * import * as O from "effect/Option"
  *
  * const patch = GroupPatch.make({ visible: O.some(false), locked: O.some("locked") })
@@ -502,7 +504,9 @@ type SplitPosition = Pick<SplitPlacement, "side" | "splitId" | "newGroupRatio">;
  * **Example** (Make single-panel tabs node)
  *
  * ```ts
- * import { GroupId, Panel, PanelId, TabsNode, TextPanelView } from "@beep/dock"
+ * import { GroupId, PanelId } from "@beep/dock/Dock.ids"
+ * import { Panel, TextPanelView } from "@beep/dock/Dock.models"
+ * import { TabsNode } from "@beep/dock/Dock.tree"
  *
  * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) })
  * const tabs = TabsNode.make({ groupId: GroupId.make("group-one"), active: panel })
@@ -667,7 +671,9 @@ const DefaultSplitRatio = S.toType(SplitRatio).pipe(S.withConstructorDefault(Eff
  * **Example** (Make horizontal split layout)
  *
  * ```ts
- * import { GroupId, HorizontalSplitLayout, Panel, PanelId, TabsNode, TextPanelView } from "@beep/dock"
+ * import { GroupId, PanelId } from "@beep/dock/Dock.ids"
+ * import { HorizontalSplitLayout, TabsNode } from "@beep/dock/Dock.tree"
+ * import { Panel, TextPanelView } from "@beep/dock/Dock.models"
  *
  * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) })
  * const tabs = TabsNode.make({ groupId: GroupId.make("group-one"), active: panel })
@@ -697,7 +703,9 @@ export class HorizontalSplitLayout extends S.Opaque<HorizontalSplitLayout, { rea
  * **Example** (Make vertical split layout)
  *
  * ```ts
- * import { GroupId, Panel, PanelId, TabsNode, TextPanelView, VerticalSplitLayout } from "@beep/dock"
+ * import { GroupId, PanelId } from "@beep/dock/Dock.ids"
+ * import { Panel, TextPanelView } from "@beep/dock/Dock.models"
+ * import { TabsNode, VerticalSplitLayout } from "@beep/dock/Dock.tree"
  *
  * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) })
  * const tabs = TabsNode.make({ groupId: GroupId.make("group-one"), active: panel })
@@ -729,7 +737,9 @@ type SplitLayoutShape = HorizontalSplitLayout | VerticalSplitLayout;
  * **Example** (Make horizontal split case)
  *
  * ```ts
- * import { GroupId, Panel, PanelId, SplitLayout, TabsNode, TextPanelView } from "@beep/dock"
+ * import { GroupId, PanelId } from "@beep/dock/Dock.ids"
+ * import { Panel, TextPanelView } from "@beep/dock/Dock.models"
+ * import { SplitLayout, TabsNode } from "@beep/dock/Dock.tree"
  *
  * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) })
  * const tabs = TabsNode.make({ groupId: GroupId.make("group-one"), active: panel })
@@ -796,7 +806,9 @@ export const SplitLayout = S.Union([HorizontalSplitLayout, VerticalSplitLayout])
  * **Example** (Type horizontal split layout)
  *
  * ```ts
- * import { GroupId, HorizontalSplitLayout, Panel, PanelId, SplitLayout, TabsNode, TextPanelView } from "@beep/dock"
+ * import { GroupId, PanelId } from "@beep/dock/Dock.ids"
+ * import { HorizontalSplitLayout, SplitLayout, TabsNode } from "@beep/dock/Dock.tree"
+ * import { Panel, TextPanelView } from "@beep/dock/Dock.models"
  *
  * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) })
  * const tabs = TabsNode.make({ groupId: GroupId.make("group-one"), active: panel })
@@ -815,7 +827,9 @@ export type SplitLayout = typeof SplitLayout.Type;
  * **Example** (Make horizontal split node)
  *
  * ```ts
- * import { GroupId, Panel, PanelId, SplitId, SplitLayout, SplitNode, TabsNode, TextPanelView } from "@beep/dock"
+ * import { GroupId, PanelId, SplitId } from "@beep/dock/Dock.ids"
+ * import { Panel, TextPanelView } from "@beep/dock/Dock.models"
+ * import { SplitLayout, SplitNode, TabsNode } from "@beep/dock/Dock.tree"
  *
  * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) })
  * const tabs = TabsNode.make({ groupId: GroupId.make("group-one"), active: panel })
@@ -909,7 +923,9 @@ const DockNodeBase = S.Union([TabsNode, SplitNode]).pipe(
  * **Example** (Count panels in tabs node)
  *
  * ```ts
- * import { DockNode, GroupId, Panel, PanelId, TabsNode, TextPanelView } from "@beep/dock"
+ * import { DockNode, TabsNode } from "@beep/dock/Dock.tree"
+ * import { GroupId, PanelId } from "@beep/dock/Dock.ids"
+ * import { Panel, TextPanelView } from "@beep/dock/Dock.models"
  *
  * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) })
  * const node = TabsNode.make({ groupId: GroupId.make("group-one"), active: panel })
@@ -1054,7 +1070,9 @@ export const DockNode = DockNodeBase.pipe(
  * **Example** (Type tabs as dock node)
  *
  * ```ts
- * import { DockNode, GroupId, Panel, PanelId, TabsNode, TextPanelView } from "@beep/dock"
+ * import { DockNode, TabsNode } from "@beep/dock/Dock.tree"
+ * import { GroupId, PanelId } from "@beep/dock/Dock.ids"
+ * import { Panel, TextPanelView } from "@beep/dock/Dock.models"
  *
  * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) })
  * const node: DockNode = TabsNode.make({ groupId: GroupId.make("group-one"), active: panel })
@@ -1097,7 +1115,9 @@ type DockNodeEncoded = TabsNodeEncoded | SplitNodeEncoded;
  * **Example** (Type DockNode.Type alias)
  *
  * ```ts
- * import { DockNode, GroupId, Panel, PanelId, TabsNode, TextPanelView } from "@beep/dock"
+ * import { DockNode, TabsNode } from "@beep/dock/Dock.tree"
+ * import { GroupId, PanelId } from "@beep/dock/Dock.ids"
+ * import { Panel, TextPanelView } from "@beep/dock/Dock.models"
  *
  * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) })
  * const node: DockNode.Type = TabsNode.make({ groupId: GroupId.make("group-one"), active: panel })
@@ -1114,7 +1134,9 @@ export declare namespace DockNode {
    * **Example** (Assign DockNode.Type value)
    *
    * ```ts
-   * import { DockNode, GroupId, Panel, PanelId, TabsNode, TextPanelView } from "@beep/dock"
+   * import { DockNode, TabsNode } from "@beep/dock/Dock.tree"
+   * import { GroupId, PanelId } from "@beep/dock/Dock.ids"
+   * import { Panel, TextPanelView } from "@beep/dock/Dock.models"
    *
    * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) })
    * const node: DockNode.Type = TabsNode.make({ groupId: GroupId.make("group-one"), active: panel })
@@ -1131,7 +1153,9 @@ export declare namespace DockNode {
    * **Example** (Build encoded tabs node)
    *
    * ```ts
-   * import { DockNode, GroupId, Panel, PanelId, TabsNode, TextPanelView } from "@beep/dock"
+   * import { DockNode, TabsNode } from "@beep/dock/Dock.tree"
+   * import { GroupId, PanelId } from "@beep/dock/Dock.ids"
+   * import { Panel, TextPanelView } from "@beep/dock/Dock.models"
    *
    * const encoded: DockNode.Encoded = {
    *   _tag: "Tabs",
@@ -1166,7 +1190,10 @@ export declare namespace DockNode {
  * **Example** (Make floating member box)
  *
  * ```ts
- * import { FloatingMember, GroupId, Panel, PanelId, TabsNode, TextPanelView, TopLeftAnchoredBox } from "@beep/dock"
+ * import { FloatingMember, TabsNode } from "@beep/dock/Dock.tree"
+ * import { GroupId, PanelId } from "@beep/dock/Dock.ids"
+ * import { Panel, TextPanelView } from "@beep/dock/Dock.models"
+ * import { TopLeftAnchoredBox } from "@beep/dock/AnchoredBox"
  *
  * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) })
  * const root = TabsNode.make({ groupId: GroupId.make("group-one"), active: panel })
@@ -1189,7 +1216,7 @@ export class FloatingMember extends S.Opaque<FloatingMember, { readonly brand: u
  * **Example** (Make empty workspace)
  *
  * ```ts
- * import { EmptyWorkspace } from "@beep/dock"
+ * import { EmptyWorkspace } from "@beep/dock/Dock.tree"
  *
  * const workspace = EmptyWorkspace.make({})
  * console.log(workspace.kind)
@@ -1216,7 +1243,9 @@ export class EmptyWorkspace extends S.Opaque<EmptyWorkspace, { readonly brand: u
  * **Example** (Make populated workspace)
  *
  * ```ts
- * import { GroupId, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView } from "@beep/dock"
+ * import { GroupId, PanelId } from "@beep/dock/Dock.ids"
+ * import { Panel, TextPanelView } from "@beep/dock/Dock.models"
+ * import { PopulatedWorkspace, TabsNode } from "@beep/dock/Dock.tree"
  *
  * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) })
  * const root = TabsNode.make({ groupId: GroupId.make("group-one"), active: panel })
@@ -1299,7 +1328,7 @@ const DockWorkspaceGlobalIdentityCheck = S.makeFilter<typeof DockWorkspaceBase.T
  * **Example** (Use empty dock workspace)
  *
  * ```ts
- * import { DockWorkspace } from "@beep/dock"
+ * import { DockWorkspace } from "@beep/dock/Dock.tree"
  *
  * const workspace = DockWorkspace.empty
  * console.log(DockWorkspace.groupCount(workspace))
@@ -1517,7 +1546,7 @@ export const DockWorkspace = DockWorkspaceBase.pipe(
  * **Example** (Type empty dock workspace)
  *
  * ```ts
- * import { DockWorkspace } from "@beep/dock"
+ * import { DockWorkspace } from "@beep/dock/Dock.tree"
  *
  * const workspace: DockWorkspace = DockWorkspace.empty
  * console.log(workspace.kind)
@@ -1534,7 +1563,7 @@ export type DockWorkspace = typeof DockWorkspace.Type;
  * **Example** (Make versioned dock snapshot)
  *
  * ```ts
- * import { DockSnapshot, DockWorkspace } from "@beep/dock"
+ * import { DockSnapshot, DockWorkspace } from "@beep/dock/Dock.tree"
  *
  * const snapshot = DockSnapshot.make({ workspace: DockWorkspace.empty })
  * console.log(snapshot.version)
