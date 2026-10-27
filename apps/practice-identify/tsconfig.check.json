@@ -16,6 +16,9 @@
     },
     {
       "path": "../../packages/law-practice/use-cases/tsconfig.json"
+    },
+    {
+      "path": "../../packages/tooling/test-kit/memfs/tsconfig.json"
     }
   ],
   "compilerOptions": {
