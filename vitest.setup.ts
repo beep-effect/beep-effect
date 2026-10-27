@@ -148,6 +148,7 @@ type BunTestShim = {
   readonly markdown: {
     readonly html: (content: string, options?: BunMarkdownOptions) => string;
   };
+  readonly shimPortLockDirectory: string;
   readonly serve: (options: BunServeOptions) => {
     readonly hostname: string;
     readonly port: number;
@@ -713,8 +714,6 @@ const renderMarkdownHtml = (content: string, options?: BunMarkdownOptions): stri
 };
 
 if (!isBunTestShim(Reflect.get(globalThis, "Bun"))) {
-  // Tests of the shim itself find its port reservations here; real Bun leaves this unset.
-  process.env.BEEP_BUN_SERVE_SHIM_PORT_LOCKS = shimPortLockDirectory;
   Reflect.set(globalThis, "Bun", {
     CryptoHasher: CryptoHasherShim,
     Glob: GlobShim,
@@ -730,6 +729,8 @@ if (!isBunTestShim(Reflect.get(globalThis, "Bun"))) {
       html: renderMarkdownHtml,
     },
     serve,
+    // Shim-only: tests of the shim find its port reservations here; real Bun has no such property.
+    shimPortLockDirectory,
     sleep: (milliseconds: number) => new Promise((resolve) => setTimeout(resolve, milliseconds)),
     spawn,
     spawnSync,

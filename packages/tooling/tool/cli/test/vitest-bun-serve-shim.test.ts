@@ -2,12 +2,14 @@ import { assert, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
+import * as P from "effect/Predicate";
 
 // These cases exercise the Bun.serve shim that vitest.setup.ts installs for Node runs, which names
-// its port lock directory in this variable; real Bun binds port 0 itself and leaves it unset. The
-// reserved range sits below the Linux ephemeral floor of 32768. Lock files are read and written
-// through Bun.file and Bun.write, which the shim provides too.
-const lockDirectory = process.env.BEEP_BUN_SERVE_SHIM_PORT_LOCKS ?? "";
+// its port lock directory on the Bun global; real Bun binds port 0 itself and has no such property.
+// The reserved range sits below the Linux ephemeral floor of 32768. Lock files are read and
+// written through Bun.file and Bun.write, which the shim provides too.
+const shimLockDirectory: unknown = Reflect.get(Bun, "shimPortLockDirectory");
+const lockDirectory = P.isString(shimLockDirectory) ? shimLockDirectory : "";
 const shimActive = lockDirectory !== "";
 const shimPortFloor = 20_000;
 const ephemeralPortFloor = 32_768;
