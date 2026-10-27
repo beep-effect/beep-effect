@@ -23,7 +23,7 @@ const predicateTypeEquivalence = S.toEquivalence(EvidencePredicateType);
  * **Example** (Inspect receipt reference fields)
  *
  * ```ts import.meta.vitest name="Inspect receipt reference fields"
- * import { EvidenceReceiptReference } from "@beep/skill-contract"
+ * import { EvidenceReceiptReference } from "@beep/skill-contract/EvidenceLadder"
  *
  * EvidenceReceiptReference.fields.predicateType !== undefined // => true
  * ```
@@ -49,7 +49,7 @@ export class EvidenceReceiptReference extends S.Opaque<EvidenceReceiptReference,
  * **Example** (Inspect ladder receipt bindings)
  *
  * ```ts import.meta.vitest name="Inspect ladder receipt bindings"
- * import { EvidenceLadderReceiptTypes } from "@beep/skill-contract"
+ * import { EvidenceLadderReceiptTypes } from "@beep/skill-contract/EvidenceLadder"
  *
  * EvidenceLadderReceiptTypes.fields.semanticallyApplied !== undefined // => true
  * ```
@@ -79,7 +79,7 @@ export class EvidenceLadderReceiptTypes extends S.Opaque<
  * **Example** (Inspect accepted evidence)
  *
  * ```ts import.meta.vitest name="Inspect accepted evidence"
- * import { Accepted } from "@beep/skill-contract"
+ * import { Accepted } from "@beep/skill-contract/EvidenceLadder"
  *
  * Accepted.fields.accepted !== undefined // => true
  * ```
@@ -106,7 +106,7 @@ export class Accepted extends S.Opaque<Accepted, { readonly brand: unique symbol
  * **Example** (Inspect persistence evidence)
  *
  * ```ts import.meta.vitest name="Inspect persistence evidence"
- * import { Persisted } from "@beep/skill-contract"
+ * import { Persisted } from "@beep/skill-contract/EvidenceLadder"
  *
  * Persisted.fields.persisted !== undefined // => true
  * ```
@@ -134,7 +134,7 @@ export class Persisted extends S.Opaque<Persisted, { readonly brand: unique symb
  * **Example** (Inspect delivery evidence)
  *
  * ```ts import.meta.vitest name="Inspect delivery evidence"
- * import { Delivered } from "@beep/skill-contract"
+ * import { Delivered } from "@beep/skill-contract/EvidenceLadder"
  *
  * Delivered.fields.delivered !== undefined // => true
  * ```
@@ -163,7 +163,7 @@ export class Delivered extends S.Opaque<Delivered, { readonly brand: unique symb
  * **Example** (Inspect semantic-application evidence)
  *
  * ```ts import.meta.vitest name="Inspect semantic-application evidence"
- * import { SemanticallyApplied } from "@beep/skill-contract"
+ * import { SemanticallyApplied } from "@beep/skill-contract/EvidenceLadder"
  *
  * SemanticallyApplied.fields.semanticallyApplied !== undefined // => true
  * ```
@@ -193,7 +193,7 @@ export class SemanticallyApplied extends S.Opaque<SemanticallyApplied, { readonl
  * **Example** (Inspect evidence rungs)
  *
  * ```ts
- * import { EvidenceLadderState } from "@beep/skill-contract"
+ * import { EvidenceLadderState } from "@beep/skill-contract/EvidenceLadder"
  *
  * console.log(EvidenceLadderState.discriminants)
  * ```
@@ -243,7 +243,11 @@ const ladderMatchesReceiptTypes = (types: EvidenceLadderReceiptTypes, state: Evi
  * **Example** (Bind ladder receipt identities)
  *
  * ```ts import.meta.vitest name="Bind ladder receipt identities"
- * import { EvidenceLadderReceiptTypes, EvidencePredicateType, evidenceLadderFor } from "@beep/skill-contract"
+ * import {
+ *   EvidenceLadderReceiptTypes,
+ *   evidenceLadderFor
+ * } from "@beep/skill-contract/EvidenceLadder"
+ * import { EvidencePredicateType } from "@beep/skill-contract/Gate"
  *
  * const type = EvidencePredicateType.make("https://example.test/evidence/rung/v1")
  * const Ladder = evidenceLadderFor(EvidenceLadderReceiptTypes.make({
@@ -287,7 +291,7 @@ export const evidenceLadderFor = (types: EvidenceLadderReceiptTypes) => {
  * **Example** (Map transport completion to the lowest rung)
  *
  * ```ts import.meta.vitest name="Map transport completion to the lowest rung"
- * import { transportCompleted } from "@beep/skill-contract"
+ * import { transportCompleted } from "@beep/skill-contract/EvidenceLadder"
  *
  * typeof transportCompleted // => "function"
  * ```
@@ -306,7 +310,7 @@ export const transportCompleted = (evidence: EvidenceReceiptReference): Accepted
  * **Example** (Inspect persistence transition)
  *
  * ```ts import.meta.vitest name="Inspect persistence transition"
- * import { advanceToPersisted } from "@beep/skill-contract"
+ * import { advanceToPersisted } from "@beep/skill-contract/EvidenceLadder"
  *
  * typeof advanceToPersisted // => "function"
  * ```
@@ -332,7 +336,7 @@ export const advanceToPersisted: {
  * **Example** (Inspect delivery transition)
  *
  * ```ts import.meta.vitest name="Inspect delivery transition"
- * import { advanceToDelivered } from "@beep/skill-contract"
+ * import { advanceToDelivered } from "@beep/skill-contract/EvidenceLadder"
  *
  * typeof advanceToDelivered // => "function"
  * ```
@@ -358,7 +362,7 @@ export const advanceToDelivered: {
  * **Example** (Inspect semantic transition)
  *
  * ```ts import.meta.vitest name="Inspect semantic transition"
- * import { advanceToSemanticallyApplied } from "@beep/skill-contract"
+ * import { advanceToSemanticallyApplied } from "@beep/skill-contract/EvidenceLadder"
  *
  * typeof advanceToSemanticallyApplied // => "function"
  * ```
