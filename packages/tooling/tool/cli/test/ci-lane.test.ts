@@ -352,15 +352,11 @@ describe("CI lane descriptors", () => {
   it("enumerates every check.yml lane exactly once", () => {
     const ids = A.map(CI_LANE_DESCRIPTORS, (descriptor) => descriptor.id);
     expect(A.length(A.dedupe(ids))).toBe(A.length(ids));
-    expect(A.length(CI_LANE_DESCRIPTORS)).toBe(27);
+    expect(A.length(CI_LANE_DESCRIPTORS)).toBe(26);
   });
 
-  it("dispatches independent diagnostics with affected PR and full main shapes", () => {
-    const pr = ciLaneStepsForTesting(REPO_ROOT, "effect-diagnostics", prShapeOptions);
-    const full = ciLaneStepsForTesting(REPO_ROOT, "effect-diagnostics", baseOptions);
-    expect(pr).toHaveLength(1);
-    expect(pr[0]?.args).toEqual(["run", "beep", "quality", "effect-diagnostics", "--base", prShapeOptions.base]);
-    expect(full[0]?.args).toEqual(["run", "beep", "quality", "effect-diagnostics"]);
+  it("retires the standalone Effect diagnostics lane", () => {
+    expect(A.map(CI_LANE_DESCRIPTORS, (descriptor) => descriptor.id)).not.toContain("effect-diagnostics");
   });
 
   it("covers every runnable lane id", () => {
