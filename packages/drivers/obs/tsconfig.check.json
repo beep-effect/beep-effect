@@ -3,6 +3,9 @@
   "extends": "./tsconfig.json",
   "references": [
     {
+      "path": "../commands/tsconfig.json"
+    },
+    {
       "path": "../../foundation/modeling/identity/tsconfig.json"
     },
     {

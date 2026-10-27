@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-10-27T18:53:50.867Z
+Generated: 2026-10-27T20:09:37.840Z
 
 ## Scope
 
@@ -11,23 +11,23 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | Metric | Count |
 |---|---:|
 | packages | 183 |
-| cleanPackages | 117 |
+| cleanPackages | 118 |
 | packagesWithoutPublicSrcSurface | 2 |
-| packagesNeedingRemediation | 64 |
+| packagesNeedingRemediation | 63 |
 | publicModules | 3546 |
-| publicExports | 25241 |
-| openModules | 348 |
-| openExports | 483 |
+| publicExports | 25242 |
+| openModules | 344 |
+| openExports | 396 |
 | missingExportExamples | 7 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
 | forbiddenTagFindings | 0 |
 | malformedConditionalTagFindings | 0 |
-| exampleImportFindings | 406 |
+| exampleImportFindings | 318 |
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
 | undescribed-see | 10 |
-| multiple-description-paragraphs | 383 |
+| multiple-description-paragraphs | 379 |
 | leading-blank | 0 |
 | trailing-blank | 0 |
 | invalid-heading | 1 |
@@ -40,7 +40,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | duplicate-example | 0 |
 | loose-ts-fence | 0 |
 | forbidden-remarks | 0 |
-| no-root-package-import | 400 |
+| no-root-package-import | 312 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -78,7 +78,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 20 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 65 | 646 | 17 | 0 |
 | 21 | `@beep/markdown` | `packages/foundation/modeling/markdown` | clean | 16 | 92 | 0 | 0 |
 | 22 | `@beep/html` | `packages/foundation/modeling/html` | needs-remediation | 15 | 544 | 9 | 28 |
-| 23 | `@beep/md` | `packages/foundation/modeling/md` | needs-remediation | 11 | 311 | 4 | 87 |
+| 23 | `@beep/md` | `packages/foundation/modeling/md` | clean | 11 | 311 | 0 | 0 |
 | 24 | `@beep/shared-domain` | `packages/shared/domain` | needs-remediation | 106 | 374 | 3 | 5 |
 | 25 | `@beep/provenance` | `packages/foundation/modeling/provenance` | needs-remediation | 4 | 28 | 1 | 0 |
 | 26 | `@beep/runtime-env` | `packages/foundation/capability/runtime-env` | clean | 6 | 31 | 0 | 0 |
@@ -117,49 +117,49 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 59 | `@beep/sbom` | `packages/foundation/modeling/sbom` | clean | 9 | 75 | 0 | 0 |
 | 60 | `@beep/chalk` | `packages/foundation/capability/chalk` | clean | 1 | 35 | 0 | 0 |
 | 61 | `@beep/acp` | `packages/drivers/acp` | clean | 15 | 1047 | 0 | 0 |
-| 62 | `@beep/tsconfig` | `packages/foundation/modeling/tsconfig` | clean | 8 | 61 | 0 | 0 |
-| 63 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | needs-remediation | 31 | 588 | 0 | 2 |
-| 64 | `@beep/technical-drawing` | `packages/foundation/capability/technical-drawing` | clean | 19 | 224 | 0 | 0 |
-| 65 | `@beep/ffmpeg` | `packages/drivers/ffmpeg` | clean | 5 | 111 | 0 | 0 |
-| 66 | `@beep/pretext` | `packages/drivers/pretext` | needs-remediation | 6 | 36 | 6 | 0 |
-| 67 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | needs-remediation | 23 | 217 | 1 | 3 |
-| 68 | `@beep/cosmos` | `packages/drivers/cosmos` | clean | 6 | 22 | 0 | 0 |
-| 69 | `@beep/agents-client` | `packages/agents/client` | needs-remediation | 6 | 39 | 2 | 5 |
-| 70 | `@beep/documents-domain` | `packages/documents/domain` | clean | 26 | 81 | 0 | 0 |
-| 71 | `@beep/architecture-lab-domain` | `packages/architecture-lab/domain` | clean | 15 | 47 | 0 | 0 |
-| 72 | `@beep/uspto` | `packages/drivers/uspto` | clean | 5 | 25 | 0 | 0 |
-| 73 | `@beep/law-practice-tables` | `packages/law-practice/tables` | needs-remediation | 34 | 88 | 1 | 0 |
-| 74 | `@beep/law-practice-use-cases` | `packages/law-practice/use-cases` | needs-remediation | 103 | 651 | 4 | 4 |
-| 75 | `@beep/tika` | `packages/drivers/tika` | needs-remediation | 8 | 33 | 3 | 4 |
-| 76 | `@beep/libpff` | `packages/drivers/libpff` | needs-remediation | 7 | 42 | 4 | 2 |
-| 77 | `@beep/box` | `packages/drivers/box` | needs-remediation | 7 | 878 | 0 | 2 |
-| 78 | `@beep/epistemic-server` | `packages/epistemic/server` | needs-remediation | 24 | 56 | 8 | 4 |
-| 79 | `@beep/m365` | `packages/drivers/m365` | needs-remediation | 8 | 166 | 2 | 0 |
-| 80 | `@beep/nlp-processing` | `packages/foundation/capability/nlp-processing` | clean | 48 | 312 | 0 | 0 |
-| 81 | `@beep/epistemic-client` | `packages/epistemic/client` | clean | 4 | 24 | 0 | 0 |
-| 82 | `@beep/ui` | `packages/foundation/ui-system/ui` | clean | 132 | 557 | 0 | 0 |
-| 83 | `@beep/t3-code` | `packages/drivers/t3-code` | clean | 4 | 17 | 0 | 0 |
-| 84 | `@beep/github-reporting` | `packages/foundation/modeling/github-reporting` | clean | 5 | 40 | 0 | 0 |
-| 85 | `@beep/github-actions` | `packages/drivers/github-actions` | clean | 24 | 162 | 0 | 0 |
-| 86 | `@beep/poppler` | `packages/drivers/poppler` | clean | 3 | 9 | 0 | 0 |
-| 87 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 10 | 103 | 0 | 0 |
-| 88 | `@beep/repo-docgen` | `packages/tooling/tool/docgen` | needs-remediation | 10 | 94 | 0 | 3 |
-| 89 | `@beep/ai-provider-cli` | `packages/drivers/ai-provider-cli` | needs-remediation | 17 | 91 | 3 | 0 |
-| 90 | `@beep/skill-contract` | `packages/foundation/modeling/skill-contract` | needs-remediation | 9 | 113 | 0 | 79 |
-| 91 | `@beep/exiftool` | `packages/drivers/exiftool` | needs-remediation | 5 | 55 | 1 | 0 |
-| 92 | `@beep/repo-tsconfig` | `packages/tooling/library/repo-tsconfig` | clean | 4 | 15 | 0 | 0 |
-| 93 | `@beep/palantiri` | `packages/tooling/library/palantiri` | clean | 20 | 156 | 0 | 0 |
-| 94 | `@beep/pdf-tools` | `packages/drivers/pdf-tools` | clean | 4 | 38 | 0 | 0 |
-| 95 | `@beep/runpod` | `packages/drivers/runpod` | clean | 7 | 204 | 0 | 0 |
-| 96 | `@beep/tesseract` | `packages/drivers/tesseract` | clean | 3 | 15 | 0 | 0 |
-| 97 | `@beep/obs` | `packages/drivers/obs` | needs-remediation | 6 | 73 | 3 | 0 |
-| 98 | `@beep/lockfiles` | `packages/foundation/modeling/lockfiles` | clean | 14 | 47 | 0 | 0 |
-| 99 | `@beep/repo-configs` | `packages/tooling/policy-pack/repo-configs` | needs-remediation | 24 | 197 | 0 | 1 |
-| 100 | `@beep/occt` | `packages/drivers/occt` | clean | 4 | 13 | 0 | 0 |
-| 101 | `@beep/git` | `packages/drivers/git` | clean | 5 | 44 | 0 | 0 |
-| 102 | `@beep/qa-capture` | `packages/tooling/library/qa-capture` | needs-remediation | 11 | 155 | 10 | 0 |
-| 103 | `@beep/dock` | `packages/foundation/ui-system/dock` | clean | 20 | 212 | 0 | 0 |
-| 104 | `@beep/commands` | `packages/drivers/commands` | clean | 8 | 58 | 0 | 0 |
+| 62 | `@beep/commands` | `packages/drivers/commands` | clean | 8 | 58 | 0 | 0 |
+| 63 | `@beep/tsconfig` | `packages/foundation/modeling/tsconfig` | clean | 8 | 61 | 0 | 0 |
+| 64 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | needs-remediation | 31 | 588 | 0 | 2 |
+| 65 | `@beep/technical-drawing` | `packages/foundation/capability/technical-drawing` | clean | 19 | 224 | 0 | 0 |
+| 66 | `@beep/ffmpeg` | `packages/drivers/ffmpeg` | clean | 5 | 111 | 0 | 0 |
+| 67 | `@beep/pretext` | `packages/drivers/pretext` | needs-remediation | 6 | 36 | 6 | 0 |
+| 68 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | needs-remediation | 23 | 217 | 1 | 3 |
+| 69 | `@beep/cosmos` | `packages/drivers/cosmos` | clean | 6 | 22 | 0 | 0 |
+| 70 | `@beep/agents-client` | `packages/agents/client` | needs-remediation | 6 | 39 | 2 | 5 |
+| 71 | `@beep/documents-domain` | `packages/documents/domain` | clean | 26 | 81 | 0 | 0 |
+| 72 | `@beep/architecture-lab-domain` | `packages/architecture-lab/domain` | clean | 15 | 47 | 0 | 0 |
+| 73 | `@beep/uspto` | `packages/drivers/uspto` | clean | 5 | 25 | 0 | 0 |
+| 74 | `@beep/law-practice-tables` | `packages/law-practice/tables` | needs-remediation | 34 | 88 | 1 | 0 |
+| 75 | `@beep/law-practice-use-cases` | `packages/law-practice/use-cases` | needs-remediation | 103 | 651 | 4 | 4 |
+| 76 | `@beep/tika` | `packages/drivers/tika` | needs-remediation | 8 | 33 | 3 | 4 |
+| 77 | `@beep/libpff` | `packages/drivers/libpff` | needs-remediation | 7 | 42 | 4 | 2 |
+| 78 | `@beep/box` | `packages/drivers/box` | needs-remediation | 7 | 878 | 0 | 2 |
+| 79 | `@beep/epistemic-server` | `packages/epistemic/server` | needs-remediation | 24 | 56 | 8 | 4 |
+| 80 | `@beep/m365` | `packages/drivers/m365` | needs-remediation | 8 | 166 | 2 | 0 |
+| 81 | `@beep/nlp-processing` | `packages/foundation/capability/nlp-processing` | clean | 48 | 312 | 0 | 0 |
+| 82 | `@beep/epistemic-client` | `packages/epistemic/client` | clean | 4 | 24 | 0 | 0 |
+| 83 | `@beep/ui` | `packages/foundation/ui-system/ui` | clean | 132 | 557 | 0 | 0 |
+| 84 | `@beep/t3-code` | `packages/drivers/t3-code` | clean | 4 | 17 | 0 | 0 |
+| 85 | `@beep/github-reporting` | `packages/foundation/modeling/github-reporting` | clean | 5 | 40 | 0 | 0 |
+| 86 | `@beep/github-actions` | `packages/drivers/github-actions` | clean | 24 | 162 | 0 | 0 |
+| 87 | `@beep/poppler` | `packages/drivers/poppler` | clean | 3 | 9 | 0 | 0 |
+| 88 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 10 | 103 | 0 | 0 |
+| 89 | `@beep/repo-docgen` | `packages/tooling/tool/docgen` | needs-remediation | 10 | 94 | 0 | 3 |
+| 90 | `@beep/ai-provider-cli` | `packages/drivers/ai-provider-cli` | needs-remediation | 17 | 91 | 3 | 0 |
+| 91 | `@beep/skill-contract` | `packages/foundation/modeling/skill-contract` | needs-remediation | 9 | 113 | 0 | 79 |
+| 92 | `@beep/exiftool` | `packages/drivers/exiftool` | needs-remediation | 5 | 55 | 1 | 0 |
+| 93 | `@beep/repo-tsconfig` | `packages/tooling/library/repo-tsconfig` | clean | 4 | 15 | 0 | 0 |
+| 94 | `@beep/palantiri` | `packages/tooling/library/palantiri` | clean | 20 | 156 | 0 | 0 |
+| 95 | `@beep/pdf-tools` | `packages/drivers/pdf-tools` | clean | 4 | 38 | 0 | 0 |
+| 96 | `@beep/runpod` | `packages/drivers/runpod` | clean | 7 | 204 | 0 | 0 |
+| 97 | `@beep/tesseract` | `packages/drivers/tesseract` | clean | 3 | 15 | 0 | 0 |
+| 98 | `@beep/obs` | `packages/drivers/obs` | needs-remediation | 6 | 73 | 3 | 0 |
+| 99 | `@beep/lockfiles` | `packages/foundation/modeling/lockfiles` | clean | 14 | 47 | 0 | 0 |
+| 100 | `@beep/repo-configs` | `packages/tooling/policy-pack/repo-configs` | needs-remediation | 24 | 197 | 0 | 1 |
+| 101 | `@beep/occt` | `packages/drivers/occt` | clean | 4 | 13 | 0 | 0 |
+| 102 | `@beep/git` | `packages/drivers/git` | clean | 5 | 44 | 0 | 0 |
+| 103 | `@beep/qa-capture` | `packages/tooling/library/qa-capture` | needs-remediation | 11 | 155 | 10 | 0 |
+| 104 | `@beep/dock` | `packages/foundation/ui-system/dock` | clean | 20 | 212 | 0 | 0 |
 | 105 | `@beep/agents-tables` | `packages/agents/tables` | clean | 7 | 15 | 0 | 0 |
 | 106 | `@beep/anthropic` | `packages/drivers/anthropic` | clean | 6 | 31 | 0 | 0 |
 | 107 | `@beep/lexical-schema` | `packages/foundation/modeling/lexical` | needs-remediation | 6 | 124 | 4 | 7 |
@@ -189,7 +189,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 131 | `@beep/epistemic-ui` | `packages/epistemic/ui` | clean | 6 | 14 | 0 | 0 |
 | 132 | `@beep/graph-3d` | `packages/drivers/graph-3d` | needs-remediation | 7 | 17 | 2 | 0 |
 | 133 | `@beep/ontology` | `packages/foundation/modeling/ontology` | needs-remediation | 15 | 157 | 5 | 54 |
-| 134 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 473 | 4453 | 47 | 35 |
+| 134 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 473 | 4454 | 47 | 35 |
 | 135 | `@beep/dock-react` | `packages/foundation/ui-system/dock-react` | clean | 3 | 12 | 0 | 0 |
 | 136 | `@beep/drizzle` | `packages/drivers/drizzle` | clean | 3 | 11 | 0 | 0 |
 | 137 | `@beep/repo-workspaces` | `packages/tooling/library/repo-workspaces` | clean | 27 | 244 | 0 | 0 |
@@ -442,105 +442,6 @@ Export findings:
 - `src/Html.serialize.ts:708` `untrustedHtmlValue` (const) - 1 example import violation(s)
 - `src/Html.serialize.ts:741` `safeHtmlValue` (const) - 1 example import violation(s)
 - `src/Html.source-size.ts:831` `inspectSourceSizeList` (const) - 1 documentation section/link violation(s)
-
-### @beep/md
-
-Path: `packages/foundation/modeling/md`
-
-Module findings:
-- `src/Md.behavior.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/Md.escape.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/Md.html.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/Md.safe.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-
-Export findings:
-- `src/Md.behavior.ts:97` `segmentInlineRuns` (const) - 1 example import violation(s)
-- `src/Md.behavior.ts:133` `renderPlainTextInline` (const) - 1 example import violation(s)
-- `src/Md.behavior.ts:150` `renderPlainTextBlock` (const) - 1 example import violation(s)
-- `src/Md.behavior.ts:167` `renderPlainTextBlocks` (const) - 1 example import violation(s)
-- `src/Md.conformance.ts:402` `refineStrictMarkdownDocument` (const) - 1 example import violation(s)
-- `src/Md.conformance.ts:486` `inspectMarkdownSpecificationConformance` (const) - 1 example import violation(s)
-- `src/Md.escape.ts:717` `maxBackticks` (const) - 1 example import violation(s)
-- `src/Md.escape.ts:786` `renderFencedCode` (const) - 1 example import violation(s)
-- `src/Md.html.ts:42` `renderSafeHtml` (const) - 1 example import violation(s)
-- `src/Md.render.ts:884` `renderMarkdownInline` (function) - 1 example import violation(s)
-- `src/Md.render.ts:943` `renderHtmlInline` (function) - 1 example import violation(s)
-- `src/Md.render.ts:962` `renderMarkdownBlock` (const) - 1 example import violation(s)
-- `src/Md.render.ts:997` `renderHtmlBlock` (const) - 1 example import violation(s)
-- `src/Md.render.ts:1032` `renderMarkdownBlocks` (const) - 1 example import violation(s)
-- `src/Md.render.ts:1052` `renderHtmlBlocks` (const) - 1 example import violation(s)
-- `src/Md.render.ts:1077` `renderUnsafe` (const) - 1 example import violation(s)
-- `src/Md.render.ts:1098` `renderHtmlUnsafe` (const) - 1 example import violation(s)
-- `src/Md.render.ts:1119` `renderPlainTextUnsafe` (const) - 1 example import violation(s)
-- `src/Md.render.ts:1164` `renderWithUnsafe` (const) - 1 example import violation(s)
-- `src/Md.render.ts:1199` `renderEffectWithUnsafe` (const) - 1 example import violation(s)
-- `src/Md.render.ts:1241` `renderEffectWith` (const) - 1 example import violation(s)
-- `src/Md.render.ts:1634` `makeMarkdownAdapter` (const) - 1 example import violation(s)
-- `src/Md.render.ts:1662` `makeHtmlFragmentAdapter` (const) - 1 example import violation(s)
-- `src/Md.render.ts:1688` `MarkdownAdapter` (const) - 1 example import violation(s)
-- `src/Md.render.ts:1712` `HtmlFragmentAdapter` (const) - 1 example import violation(s)
-- `src/Md.render.ts:1731` `PlainTextAdapter` (const) - 1 example import violation(s)
-- `src/Md.render.ts:1758` `renderWith` (const) - 1 example import violation(s)
-- `src/Md.render.ts:1792` `render` (const) - 1 example import violation(s)
-- `src/Md.render.ts:1817` `renderHtml` (const) - 1 example import violation(s)
-- `src/Md.render.ts:1842` `renderPlainText` (const) - 1 example import violation(s)
-- `src/Md.safe.ts:750` `documentSafetyIssues` (const) - 1 example import violation(s)
-- `src/Md.safe.ts:776` `inlineSafetyIssuesAtRoot` (const) - 1 example import violation(s)
-- `src/Md.safe.ts:968` `refineSafeDocument` (const) - 1 example import violation(s)
-- `src/Md.ts:124` `InlineContent` (type) - 1 example import violation(s)
-- `src/Md.ts:180` `BlockContent` (type) - 1 example import violation(s)
-- `src/Md.ts:203` `BlockTemplateValue` (type) - 1 example import violation(s)
-- `src/Md.ts:242` `ListItemChildInput` (type) - 1 example import violation(s)
-- `src/Md.ts:260` `ListItemContent` (type) - 1 example import violation(s)
-- `src/Md.ts:299` `ListItemInput` (type) - 1 example import violation(s)
-- `src/Md.ts:334` `TableRowInput` (type) - 1 example import violation(s)
-- `src/Md.ts:544` `text` (const) - 1 example import violation(s)
-- `src/Md.ts:561` `rawMarkdown` (const) - 1 example import violation(s)
-- `src/Md.ts:582` `rawHtml` (const) - 1 example import violation(s)
-- `src/Md.ts:599` `strong` (const) - 1 example import violation(s)
-- `src/Md.ts:616` `em` (const) - 1 example import violation(s)
-- `src/Md.ts:633` `del` (const) - 1 example import violation(s)
-- `src/Md.ts:650` `code` (const) - 1 example import violation(s)
-- `src/Md.ts:667` `a` (const) - 1 example import violation(s)
-- `src/Md.ts:696` `img` (const) - 1 example import violation(s)
-- `src/Md.ts:719` `br` (const) - 1 example import violation(s)
-- `src/Md.ts:736` `inlineMath` (const) - 1 example import violation(s)
-- `src/Md.ts:753` `footnoteRef` (const) - 1 example import violation(s)
-- `src/Md.ts:771` `h1` (const) - 1 example import violation(s)
-- `src/Md.ts:788` `h2` (const) - 1 example import violation(s)
-- `src/Md.ts:805` `h3` (const) - 1 example import violation(s)
-- `src/Md.ts:822` `h4` (const) - 1 example import violation(s)
-- `src/Md.ts:839` `h5` (const) - 1 example import violation(s)
-- `src/Md.ts:856` `h6` (const) - 1 example import violation(s)
-- `src/Md.ts:873` `p` (const) - 1 example import violation(s)
-- `src/Md.ts:890` `li` (const) - 1 example import violation(s)
-- `src/Md.ts:907` `ul` (const) - 1 example import violation(s)
-- `src/Md.ts:924` `ol` (const) - 1 example import violation(s)
-- `src/Md.ts:953` `taskItem` (const) - 1 example import violation(s)
-- `src/Md.ts:983` `taskListFromItems` (const) - 1 example import violation(s)
-- `src/Md.ts:1000` `blockquote` (const) - 1 example import violation(s)
-- `src/Md.ts:1017` `pre` (const) - 1 example import violation(s)
-- `src/Md.ts:1041` `tableCell` (const) - 1 example import violation(s)
-- `src/Md.ts:1058` `tableRow` (const) - 1 example import violation(s)
-- `src/Md.ts:1076` `table` (const) - 1 example import violation(s)
-- `src/Md.ts:1113` `mathBlock` (const) - 1 example import violation(s)
-- `src/Md.ts:1130` `footnoteDef` (const) - 1 example import violation(s)
-- `src/Md.ts:1154` `admonition` (const) - 1 example import violation(s)
-- `src/Md.ts:1178` `embed` (const) - 1 example import violation(s)
-- `src/Md.ts:1225` `youtube` (const) - 1 example import violation(s)
-- `src/Md.ts:1244` `youtubeEffect` (const) - 1 example import violation(s)
-- `src/Md.ts:1267` `youtubeUnsafe` (const) - 1 example import violation(s)
-- `src/Md.ts:1283` `hr` (const) - 1 example import violation(s)
-- `src/Md.ts:1300` `make` (const) - 1 example import violation(s)
-- `src/Md.ts:1333` `Md` (const) - 1 example import violation(s)
-- `src/index.ts:23` `export * from "./Md.behavior.ts";` (re-export) - 2 example import violation(s)
-- `src/index.ts:39` `export * from "./Md.conformance.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:54` `export * from "./Md.escape.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:70` `export * from "./Md.html.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:85` `export * from "./Md.model.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:100` `export * from "./Md.render.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:115` `export * from "./Md.safe.ts";` (re-export) - 1 example import violation(s)
-- `src/index.ts:131` `export * from "./Md.ts";` (re-export) - 1 example import violation(s)
 
 ### @beep/shared-domain
 
