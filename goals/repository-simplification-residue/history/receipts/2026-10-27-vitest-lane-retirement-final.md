@@ -6,6 +6,7 @@ Run from the owning clone `~/YeeBois/projects/beep-effect2` (on `main`) with the
 
 ## Preconditions, re-checked before the apply
 
+- Owner confirmation: the operator, who owns all three lanes (their goal is the operator-paused `effect-vitest-canon`), confirmed in-session on 2026-10-27 that all three should be archive-retired, after being shown each lane's unpushed commit count, continuation's staged files and the "User-paused goal; await explicit resume" ledger row. The Codex sessions that wrote the 2026-10-06 rows are not running, so no other owner holds them.
 - No process had a cwd at or below any of the three lanes (`/proc/*/cwd` scan).
 - Their newest session-ledger rows were `open` from 2026-10-06, written by Codex sessions that are no longer running. Their last commits are from the same day.
 - Every remote tip still equaled the 2026-10-22 inventory (`git ls-remote origin`).
@@ -29,6 +30,8 @@ The 33 local branches of the 30 lanes retired on 2026-10-23 and the three lanes 
 ## Remote branches
 
 All 22 remote branches in the 2026-10-22 inventory were deleted through `DELETE repos/beep-effect/beep-effect/git/refs/heads/<branch>`. Before the delete, every tip equaled the inventoried head and had a local archive ref in `beep-effect2`. For 21 of them, `refs/pull/<n>/head` also points at the same tip. The exception is `codex/effect-vitest-wave-d-cosmos` (PR #1258's head is `04dbe47df2925636d4cb52505d07a2b9edb0a3d7`), whose tip `d4ef8af2e6f8feae3a0008638f2c15724be8c560` survives as `refs/archive/worktrees/effect-vitest-wave-d-cosmos/20261023-205621`. Afterwards no `codex/effect-vitest-*` or `fix/vitest-alias-dock-css` branch remains on `origin`.
+
+Deviation: this was a raw REST deletion with a separate tip check run beforehand, not the leased path the standard requires (`git push --force-with-lease=<branch>:<expected-tip> origin :<branch>`, as `yeet sweep` does). A lease rejects the delete if the remote tip moves after the check; the REST call does not. The gap between check and delete was a few minutes, and each tip had been unchanged since the 2026-10-22 inventory. Every checked tip has a local archive ref, but a push landing inside that gap would not have been caught. Use the leased path for any rerun or future remote retirement.
 
 ## Restore
 
