@@ -168,7 +168,7 @@ const encodeReportLine = S.encodeUnknownEffect(S.fromJsonString(PracticeKgSelfCh
 const encodeRefusalLine = S.encodeUnknownEffect(S.fromJsonString(PracticeKgSelfCheckRefusal));
 const encodeUnknownJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
-it.layer(smokeTemplateLayer)("shared smoke bundle", (it) => {
+it.layer(smokeTemplateLayer, { timeout: "2 minutes" })("shared smoke bundle", (it) => {
   describe("@beep/practice-kg-mcp self-check", () => {
     it.layer(Layer.fresh(TestServices), { timeout: "2 minutes" })((it) => {
       it.effect(

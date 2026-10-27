@@ -4,7 +4,7 @@
  * **Example** (Negate a boolean value)
  *
  * ```ts
- * import { Bool } from "@beep/utils"
+ * import * as Bool from "@beep/utils/Bool"
  *
  * const toggled = Bool.not(true)
  * // false

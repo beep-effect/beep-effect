@@ -322,8 +322,7 @@ describe("runner image manifest checks", () => {
             Effect.provideServiceEffect(
               RunnersService,
               testLayer.pipe(Layer.fresh, Layer.build, Effect.map(Context.get(RunnersService)))
-            ),
-            Effect.scoped
+            )
           );
           expect(A.dedupe(yield* Ref.get(commands))).toEqual(["git"]);
         })
@@ -532,8 +531,7 @@ describe("runner bake planning and argv", () => {
         Effect.provideServiceEffect(
           RunnersService,
           testLayer.pipe(Layer.fresh, Layer.build, Effect.map(Context.get(RunnersService)))
-        ),
-        Effect.scoped
+        )
       );
 
       expect(currentPlan.requiredFlags).toStrictEqual(["--region", "--subnet", "--security-group"]);
@@ -581,8 +579,7 @@ describe("runner bake planning and argv", () => {
             Effect.provideServiceEffect(
               RunnersService,
               testLayer.pipe(Layer.fresh, Layer.build, Effect.map(Context.get(RunnersService)))
-            ),
-            Effect.scoped
+            )
           );
           const captured = yield* Ref.get(commands);
           const runInstances = yield* A.findFirst(captured, A.contains("run-instances")).pipe(
@@ -710,8 +707,7 @@ describe("runner bake planning and argv", () => {
             Effect.provideServiceEffect(
               RunnersService,
               testLayer.pipe(Layer.fresh, Layer.build, Effect.map(Context.get(RunnersService)))
-            ),
-            Effect.scoped
+            )
           );
           expect(error.message).toContain("No Git remote points at github.com/beep-effect/beep-effect");
           // The guard must refuse before any AWS call reaches the spawner.
@@ -745,8 +741,7 @@ describe("runner bake planning and argv", () => {
             Effect.provideServiceEffect(
               RunnersService,
               testLayer.pipe(Layer.fresh, Layer.build, Effect.map(Context.get(RunnersService)))
-            ),
-            Effect.scoped
+            )
           );
           expect(error.message).toContain("is not reachable from any github.com/beep-effect/beep-effect remote branch");
           expect(A.some(yield* Ref.get(commands), A.contains("aws"))).toBe(false);
@@ -782,8 +777,7 @@ describe("runner bake planning and argv", () => {
             Effect.provideServiceEffect(
               RunnersService,
               testLayer.pipe(Layer.fresh, Layer.build, Effect.map(Context.get(RunnersService)))
-            ),
-            Effect.scoped
+            )
           );
 
           expect(error.message).toContain("stopped without the BEEP_RUNNERS_BAKE_COMPLETE success marker");
@@ -820,8 +814,7 @@ describe("runner bake planning and argv", () => {
         Effect.provideServiceEffect(
           RunnersService,
           testLayer.pipe(Layer.fresh, Layer.build, Effect.map(Context.get(RunnersService)))
-        ),
-        Effect.scoped
+        )
       );
 
       expect(error.message).toBe(
