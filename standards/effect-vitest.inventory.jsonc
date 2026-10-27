@@ -3389,13 +3389,13 @@
       "reason": "Prepends a bin directory of ssh and rsync shims to PATH for one `mirror sync` call. The real ChildProcessSpawner resolves those executables through the inherited process PATH, and it.layer would leak the PATH change across the block. Owner: @beep/repo-cli. Exit: the mirror sync resolves ssh and rsync through Config or an injected executable path, so the test provides the shim paths instead. #1855 wave 5 register."
     },
     {
-      "id": "EV003:packages/tooling/tool/cli/test/ci-lane.test.ts:1836:withEnvVarEffect@6#1",
+      "id": "EV003:packages/tooling/tool/cli/test/ci-lane.test.ts:1831:withEnvVarEffect@6#1",
       "lens": "detector",
       "ruleId": "EV003",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/ci-lane.test.ts",
-      "line": 1836,
-      "endLine": 1845,
+      "line": 1831,
+      "endLine": 1840,
       "symbol": "withEnvVarEffect",
       "occurrence": "v2:22ab9b8e9a72bdaabc0a13aa41228277902d21a8b3e1eda9a9d6f689b5e23f2c",
       "class": "resource-wrapper",
@@ -4753,13 +4753,13 @@
       "reason": "These intentional inner scopes close the collector before on-disk drain and successor-ownership assertions, or bound the native child handle through stderr drain and exit. Outer test-owned temporary directories use scoped cleanup. Preserve the lifetime transition; deleting these scopes would change the regression subject."
     },
     {
-      "id": "EV004:packages/tooling/policy-pack/repo-configs/test/EffectTsgoEffectFnPolicy.test.ts:122:scoped@16#1",
+      "id": "EV004:packages/tooling/policy-pack/repo-configs/test/EffectTsgoEffectFnPolicy.test.ts:123:scoped@16#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/repo-configs",
       "file": "packages/tooling/policy-pack/repo-configs/test/EffectTsgoEffectFnPolicy.test.ts",
-      "line": 122,
-      "endLine": 143,
+      "line": 123,
+      "endLine": 144,
       "symbol": "scoped",
       "occurrence": "v2:b4338fce0dee923e6c84171c77b22d6b132772243f9b041aedc98dd4c0e6461a",
       "class": "inner-helper-scope-lifetime-review",
@@ -6770,27 +6770,6 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "The inner scope deliberately closes the native child and unique fixture before post-scope cleanup assertions. Removing it changes the observed lifetime. Normal, failure and interruption controls verify cleanup."
-    },
-    {
-      "id": "EV004:packages/workspace/server/test/ThreadStore.test.ts:301:scoped@8#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/workspace-server",
-      "file": "packages/workspace/server/test/ThreadStore.test.ts",
-      "line": 301,
-      "endLine": 301,
-      "symbol": "scoped",
-      "occurrence": "v2:ad5fd0d5b7555bdf7b390377aa7a9ccdb993d94f34a2be89f498ac71595e052c",
-      "class": "inner-helper-scope-lifetime-review",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
     },
     {
       "id": "EV005:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:327:result@32#1",
@@ -9212,27 +9191,6 @@
       "reason": "Native Bun/EYE child processes, bounded stdout/stderr, cancellation and post-close PGlite recovery are subjects; a fake spawner or MemoryFS cannot prove them."
     },
     {
-      "id": "EV010:apps/practice-identify/test/PracticeIdentify.command.test.ts:1:@effect/platform-node/NodeServices@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/practice-identify",
-      "file": "apps/practice-identify/test/PracticeIdentify.command.test.ts",
-      "line": 1,
-      "endLine": 1,
-      "symbol": "@effect/platform-node/NodeServices",
-      "occurrence": "v2:fb7d6bba929488197f859519d08aea3efcf9ac097f647f2bbff02362d70850d7",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import * as NodeServices from \"@effect/platform-node/NodeServices\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV010:apps/practice-identify/test/PracticeIdentify.runtime.test.ts:2:@effect/platform-node/NodeServices@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -10069,27 +10027,6 @@
       "file": "packages/drivers/occt/test/Shading.test.ts",
       "line": 31,
       "endLine": 31,
-      "symbol": "@effect/platform-node",
-      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV010:packages/drivers/pdf-tools/test/PdfTools.service.test.ts:22:@effect/platform-node@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/pdf-tools",
-      "file": "packages/drivers/pdf-tools/test/PdfTools.service.test.ts",
-      "line": 22,
-      "endLine": 22,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
@@ -11803,13 +11740,13 @@
       "status": "open"
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/ci-command.test.ts:4:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/ci-command.test.ts:6:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/ci-command.test.ts",
-      "line": 4,
-      "endLine": 4,
+      "line": 6,
+      "endLine": 6,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
@@ -11825,13 +11762,13 @@
       "reason": "NodeServices supplies the real filesystem and process services for a native Git exit-128 test; replacing them with MemoryFileSystem would change the subject. Each scenario acquires a scoped layer and its own TestConsole."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/ci-heavy-admission.test.ts:19:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/ci-heavy-admission.test.ts:22:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/ci-heavy-admission.test.ts",
-      "line": 19,
-      "endLine": 19,
+      "line": 22,
+      "endLine": 22,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
@@ -11888,13 +11825,13 @@
       "status": "open"
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/ci-rerun-runner-loss.test.ts:28:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/ci-rerun-runner-loss.test.ts:30:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/ci-rerun-runner-loss.test.ts",
-      "line": 28,
-      "endLine": 28,
+      "line": 30,
+      "endLine": 30,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
@@ -14476,13 +14413,13 @@
       "reason": "The real native filesystem/process is the subject: compiler execution, proof-manifest bytes/digests, or module-relative package identity. MemoryFS would erase that boundary; no live provider or container is used."
     },
     {
-      "id": "EV010:packages/tooling/tool/docgen/test/version.test.ts:3:@effect/platform-bun/BunServices@0#1",
+      "id": "EV010:packages/tooling/tool/docgen/test/version.test.ts:4:@effect/platform-bun/BunServices@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-docgen",
       "file": "packages/tooling/tool/docgen/test/version.test.ts",
-      "line": 3,
-      "endLine": 3,
+      "line": 4,
+      "endLine": 4,
       "symbol": "@effect/platform-bun/BunServices",
       "occurrence": "v2:30f5ad27b3466e9087faebe94dfc83f5ea9ae5070b9af25a085792eb5bd68f2c",
       "class": "platform-resource-provenance-review",
@@ -14674,27 +14611,6 @@
       "reason": "The retained hoisted mock controls the plain findRepoRoot module function used by command dispatch; it is not a Context.Service replaceable with Layer.mock. Selection resets and real-child cases preserve both boundaries. See goals/effect-vitest-canon/research/cli-lint-workers-package-proof.json."
     },
     {
-      "id": "EV014:apps/practice-kg-mcp/test/Host.test.ts:171:it.layer@0#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/practice-kg-mcp",
-      "file": "apps/practice-kg-mcp/test/Host.test.ts",
-      "line": 171,
-      "endLine": 171,
-      "symbol": "it.layer",
-      "occurrence": "v2:5a5a447463c6805099149640057cd180399dc45315231f51f1a63f500cf443af",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer(smokeTemplateLayer)",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV015:packages/drivers/ai-provider-cli/test/AiProviderCliSession.test.ts:854:TestClock.adjust@44#1",
       "lens": "resource",
       "ruleId": "EV015",
@@ -14761,13 +14677,13 @@
       "reason": "Owner: epistemic-contradiction-detection. Serial, fork-free TestClock advancement proves detector clock independence; no forked work or other test shares the advancement. Reconsider when the Effect/Vitest canon offers a serial-clock helper."
     },
     {
-      "id": "EV015:packages/tooling/library/ai-metrics/test/ingest.test.ts:2727:TestClock.adjust@19#1",
+      "id": "EV015:packages/tooling/library/ai-metrics/test/ingest.test.ts:2759:TestClock.adjust@19#1",
       "lens": "resource",
       "ruleId": "EV015",
       "package": "@beep/repo-ai-metrics",
       "file": "packages/tooling/library/ai-metrics/test/ingest.test.ts",
-      "line": 2727,
-      "endLine": 2727,
+      "line": 2759,
+      "endLine": 2759,
       "symbol": "TestClock.adjust",
       "occurrence": "v2:03aaf4b51725765be97b93d273b745f8307daa44e866c57fdf7247278d683b04",
       "class": "shared-test-clock-adjustment",

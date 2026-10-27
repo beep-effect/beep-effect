@@ -962,11 +962,11 @@
       }
     },
     "@beep/pdf-tools": {
-      "reviewer": "Claude Fable 5.1 (tsrs-gates, feat/tsrs-gates)",
-      "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (rsc residue #1875 wave 10, test/residue-vitest-canon-wave10)",
+      "reason": "Record the new @beep/pdf-tools -> @beep/memfs and @beep/practice-identify -> @beep/memfs devDependency edges; commands and cache settings are unchanged and no qualification is granted.",
       "basis": {
-        "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
+        "path": "goals/repository-simplification-residue/research/cache-baseline-review-vitest-canon-wave-10.md",
+        "sha256": "1e22b7dd91ed09027f5f78765395502af61176dfb375c2e18c97772e9e71f71f"
       }
     },
     "@beep/pglite": {
@@ -1018,11 +1018,11 @@
       }
     },
     "@beep/practice-identify": {
-      "reviewer": "Claude Fable 5.1 (tsrs-gates, feat/tsrs-gates)",
-      "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (rsc residue #1875 wave 10, test/residue-vitest-canon-wave10)",
+      "reason": "Record the new @beep/pdf-tools -> @beep/memfs and @beep/practice-identify -> @beep/memfs devDependency edges; commands and cache settings are unchanged and no qualification is granted.",
       "basis": {
-        "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
+        "path": "goals/repository-simplification-residue/research/cache-baseline-review-vitest-canon-wave-10.md",
+        "sha256": "1e22b7dd91ed09027f5f78765395502af61176dfb375c2e18c97772e9e71f71f"
       }
     },
     "@beep/practice-kg-mcp": {
@@ -83625,6 +83625,7 @@
         "commandDigest": "a7d2eefb880f01b11ba058983ae917eef5b17aae18fc3d541960077fa1d91222",
         "dependencies": [
           "@beep/identity#audit",
+          "@beep/memfs#audit",
           "@beep/schema#audit",
           "@beep/test-runner#audit",
           "@beep/utils#audit"
@@ -83690,6 +83691,7 @@
         "commandDigest": "a7d2eefb880f01b11ba058983ae917eef5b17aae18fc3d541960077fa1d91222",
         "dependencies": [
           "@beep/identity#build",
+          "@beep/memfs#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/utils#build"
@@ -83744,6 +83746,7 @@
         "commandDigest": "a7d2eefb880f01b11ba058983ae917eef5b17aae18fc3d541960077fa1d91222",
         "dependencies": [
           "@beep/identity#build",
+          "@beep/memfs#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/utils#build"
@@ -83785,6 +83788,7 @@
         "commandDigest": "a7d2eefb880f01b11ba058983ae917eef5b17aae18fc3d541960077fa1d91222",
         "dependencies": [
           "@beep/identity#build",
+          "@beep/memfs#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/utils#build"
@@ -83911,6 +83915,7 @@
         "dependencies": [
           "//#lint:policy-fingerprint",
           "@beep/identity#transit",
+          "@beep/memfs#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/utils#transit"
@@ -84115,6 +84120,7 @@
         "commandDigest": "a7d2eefb880f01b11ba058983ae917eef5b17aae18fc3d541960077fa1d91222",
         "dependencies": [
           "@beep/identity#transit",
+          "@beep/memfs#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/utils#transit"
@@ -84159,6 +84165,7 @@
         "commandDigest": "a7d2eefb880f01b11ba058983ae917eef5b17aae18fc3d541960077fa1d91222",
         "dependencies": [
           "@beep/identity#transit",
+          "@beep/memfs#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/utils#transit",
@@ -84209,6 +84216,7 @@
         "commandDigest": "a7d2eefb880f01b11ba058983ae917eef5b17aae18fc3d541960077fa1d91222",
         "dependencies": [
           "@beep/identity#build",
+          "@beep/memfs#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/utils#build"
@@ -84251,6 +84259,7 @@
         "commandDigest": "a7d2eefb880f01b11ba058983ae917eef5b17aae18fc3d541960077fa1d91222",
         "dependencies": [
           "@beep/identity#build",
+          "@beep/memfs#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/utils#build"
@@ -88270,6 +88279,7 @@
           "@beep/identity#audit",
           "@beep/law-practice-server#audit",
           "@beep/law-practice-use-cases#audit",
+          "@beep/memfs#audit",
           "@beep/schema#audit",
           "@beep/uspto#audit"
         ],
@@ -88336,6 +88346,7 @@
           "@beep/identity#build",
           "@beep/law-practice-server#build",
           "@beep/law-practice-use-cases#build",
+          "@beep/memfs#build",
           "@beep/schema#build",
           "@beep/uspto#build"
         ],
@@ -88378,6 +88389,7 @@
           "@beep/identity#build",
           "@beep/law-practice-server#build",
           "@beep/law-practice-use-cases#build",
+          "@beep/memfs#build",
           "@beep/schema#build",
           "@beep/uspto#build"
         ],
@@ -88420,6 +88432,7 @@
           "@beep/identity#build",
           "@beep/law-practice-server#build",
           "@beep/law-practice-use-cases#build",
+          "@beep/memfs#build",
           "@beep/schema#build",
           "@beep/uspto#build"
         ],
@@ -88508,6 +88521,7 @@
           "@beep/identity#transit",
           "@beep/law-practice-server#transit",
           "@beep/law-practice-use-cases#transit",
+          "@beep/memfs#transit",
           "@beep/schema#transit",
           "@beep/uspto#transit"
         ],
@@ -88713,6 +88727,7 @@
           "@beep/identity#transit",
           "@beep/law-practice-server#transit",
           "@beep/law-practice-use-cases#transit",
+          "@beep/memfs#transit",
           "@beep/schema#transit",
           "@beep/uspto#transit"
         ],
@@ -88758,6 +88773,7 @@
           "@beep/identity#transit",
           "@beep/law-practice-server#transit",
           "@beep/law-practice-use-cases#transit",
+          "@beep/memfs#transit",
           "@beep/schema#transit",
           "@beep/uspto#transit",
           "@beep/utils#transit"
