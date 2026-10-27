@@ -1,7 +1,7 @@
 import * as NodeURL from "node:url";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
+import { WorkspacesField } from "@beep/package-json/ManifestFields";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
-import { WorkspacesObject } from "@beep/repo-utils/schemas/PackageJson";
 import {
   getWorkspaceDir,
   resolveWorkspaceDirs,
@@ -19,6 +19,7 @@ import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as S from "effect/Schema";
 
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const TestLayer = FsUtilsLive.pipe(Layer.provideMerge(PlatformLayer));
@@ -339,7 +340,7 @@ rootIt.layer(TestLayer, { timeout: "10 seconds" })("Workspaces", (it) => {
 
   describe("resolveWorkspacePackages", () => {
     it.effect(
-      "should resolve each package with its dir, decoded manifest, and scripts",
+      "should resolve each package with its dir and decoded manifest",
       Effect.fn(function* () {
         const packages = yield* resolveWorkspacePackages(MOCK_ROOT);
         expect(HashMap.size(packages)).toBe(3);
@@ -349,8 +350,8 @@ rootIt.layer(TestLayer, { timeout: "10 seconds" })("Workspaces", (it) => {
         if (O.isSome(pkgA)) {
           expect(pkgA.value.dir).toContain("packages/pkg-a");
           expect(pkgA.value.manifest.name).toBe("@mock/pkg-a");
-          // The mock manifest declares no scripts, so the flattened record is empty.
-          expect(pkgA.value.scripts).toEqual({});
+          // The mock manifest declares no scripts; the kit field defaults to an empty HashMap.
+          pkgA.value.manifest.scripts.pipe(HashMap.isEmpty, assertTrue);
         }
       })
     );
@@ -360,21 +361,30 @@ rootIt.layer(TestLayer, { timeout: "10 seconds" })("Workspaces", (it) => {
     it.effect(
       "should return the array form of workspace globs unchanged",
       Effect.fn(function* () {
-        expect(workspaceGlobsFrom(O.some(["packages/*", "apps/*"]))).toEqual(["packages/*", "apps/*"]);
+        expect(workspaceGlobsFrom(["packages/*", "apps/*"])).toEqual(["packages/*", "apps/*"]);
       })
     );
 
     it.effect(
-      "should return an empty array when workspaces is None",
+      "should return an empty array when workspaces is absent",
       Effect.fn(function* () {
-        expect(workspaceGlobsFrom(O.none())).toEqual([]);
+        expect(workspaceGlobsFrom(undefined)).toEqual([]);
       })
     );
 
     it.effect(
-      "should treat a Yarn-style workspace object without packages as empty",
+      "should treat a workspace object without packages as empty",
       Effect.fn(function* () {
-        expect(workspaceGlobsFrom(O.some(WorkspacesObject.make({})))).toEqual([]);
+        const workspaces = yield* S.decodeEffect(WorkspacesField)({ catalog: { effect: "4.0.6" } });
+        expect(workspaceGlobsFrom(workspaces)).toEqual([]);
+      })
+    );
+
+    it.effect(
+      "should read the packages of a workspace object",
+      Effect.fn(function* () {
+        const workspaces = yield* S.decodeEffect(WorkspacesField)({ packages: ["packages/*"], nohoist: ["x"] });
+        expect(workspaceGlobsFrom(workspaces)).toEqual(["packages/*"]);
       })
     );
   });

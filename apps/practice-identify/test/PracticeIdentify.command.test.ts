@@ -1,4 +1,8 @@
-import * as NodeServices from "@effect/platform-node/NodeServices";
+import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
+import * as NodeChildProcessSpawner from "@effect/platform-node/NodeChildProcessSpawner";
+import * as NodePath from "@effect/platform-node/NodePath";
+import * as NodeStdio from "@effect/platform-node/NodeStdio";
+import * as NodeTerminal from "@effect/platform-node/NodeTerminal";
 import { expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Command from "effect/cli/Command";
@@ -7,6 +11,11 @@ import * as Layer from "effect/Layer";
 import { makePracticeIdentifyCommand } from "@/PracticeIdentify.command";
 import { IdentificationStages, IdentificationStagesShape } from "@/PracticeIdentify.config";
 
+// The command environment the CLI needs, over an in-memory volume: no case reads a file.
+const CommandEnvironment = Layer.provideMerge(
+  NodeChildProcessSpawner.layer,
+  Layer.mergeAll(MemoryFileSystem.layer, NodePath.layer, NodeStdio.layer, NodeTerminal.layer)
+);
 const fixture = () => {
   const calls: Array<{ stage: string; input: unknown }> = [];
   const stage = (name: string) => (input: unknown) =>
@@ -85,7 +94,7 @@ const cases = [
     "/private/report.json",
   ],
 ];
-it.layer(NodeServices.layer, { timeout: "30 seconds" })("practice-identify command wiring", (it) => {
+it.layer(CommandEnvironment, { timeout: "30 seconds" })("practice-identify command wiring", (it) => {
   it.effect.each(cases)("routes %s with explicit private flags", (args) =>
     Effect.gen(function* () {
       const f = fixture();

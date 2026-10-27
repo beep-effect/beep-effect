@@ -1152,6 +1152,9 @@ it.layer(platform)("B7 remaining boundaries", (test) => {
       })
     )
   );
+});
+
+it.layer(platform)("B7 remaining boundaries", (test) => {
   test.effect("counts a post-closeout reread failure without repeating the successful closeout", () =>
     fixture((root) =>
       Effect.gen(function* () {
@@ -1171,6 +1174,7 @@ it.layer(platform)("B7 remaining boundaries", (test) => {
       })
     )
   );
+
   test.effect("accepts an operator merge under until-ready and sweeps once", () =>
     fixture((root) =>
       Effect.gen(function* () {

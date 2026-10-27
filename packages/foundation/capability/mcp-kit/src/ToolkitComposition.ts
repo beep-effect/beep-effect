@@ -1,6 +1,8 @@
 /**
  * Credential-keyed toolkit composition.
  *
+ * **Details**
+ *
  * Build-time helper that folds a set of {@link SourceAuth.SourceAuthRegistration}-tagged
  * layers into a single layer, applying the hybrid gate policy from
  * `SourceAuth`: `hard`-gated layers vanish from the fold entirely when their
@@ -34,8 +36,8 @@ import type { SourceAuthRegistration } from "./SourceAuth.ts";
  *
  * ```ts
  * import * as Layer from "effect/Layer";
- * import type { GatedLayer } from "@beep/mcp-kit"
- * import { SourceAuthRegistration } from "@beep/mcp-kit"
+ * import type { GatedLayer } from "@beep/mcp-kit/ToolkitComposition"
+ * import { SourceAuthRegistration } from "@beep/mcp-kit/SourceAuth"
  *
  * const registration = SourceAuthRegistration.make({
  *   name: "Example",
@@ -71,7 +73,8 @@ export interface GatedLayer<ROut, E, RIn> {
  * ```ts
  * import * as Layer from "effect/Layer";
  * import * as O from "effect/Option"
- * import { gatedLayer, SourceAuthRegistration } from "@beep/mcp-kit"
+ * import { gatedLayer } from "@beep/mcp-kit/ToolkitComposition"
+ * import { SourceAuthRegistration } from "@beep/mcp-kit/SourceAuth"
  *
  * const registration = SourceAuthRegistration.make({
  *   name: "Example",
@@ -105,7 +108,7 @@ export const gatedLayer: {
  *
  * **When to use**
  *
- * Use at MCP host composition time to build one `McpServer`-mountable layer
+ * Use when composing an MCP host to build one `McpServer`-mountable layer
  * from several credential-gated source toolkits, so a missing hard-gated
  * credential removes that source's tools entirely rather than registering
  * broken tools.
@@ -116,7 +119,8 @@ export const gatedLayer: {
  * import * as Effect from "effect/Effect";
  * import * as Layer from "effect/Layer";
  * import * as O from "effect/Option"
- * import { composeGatedLayers, gatedLayer, SourceAuthRegistration } from "@beep/mcp-kit"
+ * import { composeGatedLayers, gatedLayer } from "@beep/mcp-kit/ToolkitComposition"
+ * import { SourceAuthRegistration } from "@beep/mcp-kit/SourceAuth"
  *
  * const hardGated = SourceAuthRegistration.make({
  *   name: "Example",

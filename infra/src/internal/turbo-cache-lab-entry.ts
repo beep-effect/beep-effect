@@ -20,13 +20,16 @@ import {
   CiTurboCacheRemediation,
   loadCiTurboCacheConfig,
   resolveTurboCacheLabBuckets,
+  TurboCacheLabBucketsInput,
 } from "../CiTurboCache.ts";
 
 const config = loadCiTurboCacheConfig();
-const names = resolveTurboCacheLabBuckets({
-  epoch: new pulumi.Config("turboCacheLab").require("epoch"),
-  bucketName: config.bucketName,
-});
+const names = resolveTurboCacheLabBuckets(
+  TurboCacheLabBucketsInput.make({
+    epoch: new pulumi.Config("turboCacheLab").require("epoch"),
+    bucketName: config.bucketName,
+  })
+);
 
 const incumbent = new CiTurboCache(names.componentPrefix, { config });
 

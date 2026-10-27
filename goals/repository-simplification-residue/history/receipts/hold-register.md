@@ -54,6 +54,15 @@ Each row was due to expire on 2026-10-30. One is resolved; the other two are ren
 | GHSA-vfj7-8cjw-p6xm (CVE-2026-93687) | `braces` 3.0.3 | **Renewed to 2027-01-14** (89 days). Owner `@beep/storybook`. | npm latest is 3.0.3, inside the range. micromatch/braces#70 is open. Real lock parents (bun.lock): `fast-glob` 3.3.3 only, under `shadcn`, `@shadcn/registry` and shadcn's nested `@ts-morph/common` 0.27.0. `bun audit`'s extra `@beep/box > ts-morph` path is name-based: `@ts-morph/common` 0.29.0 has no fast-glob. The globs are shadcn CLI patterns over local files, never untrusted input. Exit: a fixed braces release passes install and OSV, or the shadcn path is removed. |
 | GHSA-hp3w-g68c-fv3c (CVE-2026-97058) | `sprintf-js` 1.0.3 | **Renewed to 2027-01-14.** Owners `@beep/doc-text` and `@beep/repo-docgen`. | npm latest is 1.1.3, also affected (OSV). alexei/sprintf.js#237 is open. The only parent is `argparse` 1.0.10, under the `mammoth` and `remarkable` CLIs and now also gray-matter's `js-yaml` 3.15.2 CLI (see the js-yaml removal). The advisory needs attacker-controlled format strings. Those templates are package-authored constants, and the library entrypoints never load argparse (`rg argparse node_modules/gray-matter/node_modules/js-yaml` hits only `bin/` and `package.json`). js-yaml 4/5 and sql-formatter use argparse 2, which has no sprintf-js. Exit: a fixed sprintf-js passes consumers and OSV, or every argparse 1 path is removed. |
 
+**2026-10-27 update.** OSV scanner reported the two advisory-wide
+`[[IgnoredVulns]]` mirrors of these exceptions (GHSA-vfj7-8cjw-p6xm,
+GHSA-hp3w-g68c-fv3c) as unused: the exact `[[PackageOverrides]]` for
+`braces` 3.0.3 and `sprintf-js` 1.0.3 already filter them, and both are still
+the only locked resolutions (`bun why braces`, `bun why sprintf-js`). The local
+Bun audit wrapper derives the same ids from those exact overrides while every
+resolution matches, so the mirrors were removed and the overrides, expiry and
+exits above are unchanged.
+
 Fresh scans after the change: OSV scanner v2.3.3 through
 `bun run beep ci lane security`: 3,281 packages, no issues, two exceptions
 filtered. `bun run repo-sanity:bun-audit`: no vulnerabilities. Raw `bun audit`:

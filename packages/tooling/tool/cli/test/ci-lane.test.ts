@@ -48,7 +48,6 @@ import * as PlatformError from "effect/PlatformError";
 import * as P from "effect/Predicate";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
@@ -316,7 +315,7 @@ const liveTaskPackages = Effect.fn(function* (task: "lint" | "test") {
     A.fromIterable(HashMap.entries(workspaces)),
     A.filter(([, workspace]) => {
       const relativeDir = Str.replace(/\\/g, "/")(path.relative(repoRoot, workspace.dir));
-      return !isLabsWorkspaceDir(relativeDir) && R.has(workspace.scripts, task);
+      return !isLabsWorkspaceDir(relativeDir) && HashMap.has(workspace.manifest.scripts, task);
     }),
     A.map(([name]) => name),
     A.sort(Order.String)
@@ -847,7 +846,7 @@ describe("CI lane partitions", () => {
             workspaceEntries,
             A.filter(([, workspace]) => {
               const relativeDir = Str.replace(/\\/g, "/")(path.relative(repoRoot, workspace.dir));
-              return !isLabsWorkspaceDir(relativeDir) && R.has(workspace.scripts, task);
+              return !isLabsWorkspaceDir(relativeDir) && HashMap.has(workspace.manifest.scripts, task);
             }),
             A.map(([name]) => name),
             A.sort(Order.String)

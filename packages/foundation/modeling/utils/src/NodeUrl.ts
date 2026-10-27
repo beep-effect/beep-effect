@@ -1,6 +1,8 @@
 /**
  * Node URL helpers wrapped in `Effect`.
  *
+ * **Details**
+ *
  * Provides typed wrappers around Node's file URL conversion utilities so
  * path and `file:` URL conversions can participate in Effect workflows.
  *

@@ -872,7 +872,7 @@ function renderMarkdownInlineForLinkLabel(inline: Inline): string {
  * **Example** (Rendering strong as Markdown)
  *
  * ```ts import.meta.vitest name="Rendering strong as Markdown"
- * import { Md } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
  * import { renderMarkdownInline } from "@beep/md/Md.render"
  *
  * renderMarkdownInline(Md.strong("beep")) // => "**beep**"
@@ -898,7 +898,7 @@ const renderHtmlOptionalAttribute: {
  * **Example** (Rendering emphasis as HTML)
  *
  * ```ts
- * import { Md } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
  * import { renderHtmlInline } from "@beep/md/Md.render"
  *
  * console.log(renderHtmlInline(Md.em("beep"))) // "<em>beep</em>"
@@ -931,7 +931,7 @@ const renderHtmlInlineMatcher = Match.typeTags<Inline>()({
  * **Example** (Rendering emphasis as HTML)
  *
  * ```ts
- * import { Md } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
  * import { renderHtmlInline } from "@beep/md/Md.render"
  *
  * console.log(renderHtmlInline(Md.em("beep"))) // "<em>beep</em>"
@@ -950,7 +950,7 @@ export function renderHtmlInline(inline: Inline): string {
  * **Example** (Rendering heading as Markdown)
  *
  * ```ts import.meta.vitest name="Rendering heading as Markdown"
- * import { Md } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
  * import { renderMarkdownBlock } from "@beep/md/Md.render"
  *
  * renderMarkdownBlock(Md.h1("Hello")) // => "# Hello"
@@ -985,7 +985,7 @@ export const renderMarkdownBlock: (block: Block) => string = Match.typeTags<Bloc
  * **Example** (Rendering paragraph as HTML)
  *
  * ```ts
- * import { Md } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
  * import { renderHtmlBlock } from "@beep/md/Md.render"
  *
  * console.log(renderHtmlBlock(Md.p("Hello"))) // "<p>Hello</p>"
@@ -1020,7 +1020,7 @@ export const renderHtmlBlock: (block: Block) => string = Match.typeTags<Block>()
  * **Example** (Rendering multiple Markdown blocks)
  *
  * ```ts
- * import { Md } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
  * import { renderMarkdownBlocks } from "@beep/md/Md.render"
  *
  * console.log(renderMarkdownBlocks([Md.h1("Hello"), Md.p("World")]))
@@ -1040,7 +1040,7 @@ export const renderMarkdownBlocks = (blocks: ReadonlyArray<Block>): Markdown =>
  * **Example** (Rendering multiple HTML blocks)
  *
  * ```ts
- * import { Md } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
  * import { renderHtmlBlocks } from "@beep/md/Md.render"
  *
  * console.log(renderHtmlBlocks([Md.p("Hello")])) // "<p>Hello</p>"
@@ -1065,7 +1065,7 @@ export const renderHtmlBlocks: (blocks: ReadonlyArray<Block>) => HtmlFragment = 
  * **Example** (Rendering Markdown unsafely)
  *
  * ```ts import.meta.vitest name="Rendering Markdown unsafely"
- * import { Md } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
  * import { renderUnsafe } from "@beep/md/Md.render"
  *
  * renderUnsafe(Md.make([Md.h1("Hello")])) // => "# Hello"
@@ -1086,7 +1086,7 @@ export const renderUnsafe = (document: Document): Markdown => renderWithUnsafe(M
  * **Example** (Rendering HTML unsafely)
  *
  * ```ts
- * import { Md } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
  * import { renderHtmlUnsafe } from "@beep/md/Md.render"
  *
  * console.log(renderHtmlUnsafe(Md.make([Md.p("Hello")]))) // "<p>Hello</p>"
@@ -1107,7 +1107,7 @@ export const renderHtmlUnsafe = (document: Document): HtmlFragment => renderWith
  * **Example** (Rendering plain text unsafely)
  *
  * ```ts import.meta.vitest name="Rendering plain text unsafely"
- * import { Md } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
  * import { renderPlainTextUnsafe } from "@beep/md/Md.render"
  *
  * renderPlainTextUnsafe(Md.make([Md.h1("Hello")])) // => "Hello"
@@ -1151,7 +1151,7 @@ export type RenderOutputOf<Output> = Output extends unknown ? Output : never;
  * **Example** (Rendering with custom adapter)
  *
  * ```ts import.meta.vitest name="Rendering with custom adapter"
- * import { Md } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
  * import { MarkdownAdapter, renderWithUnsafe } from "@beep/md/Md.render"
  *
  * const output = renderWithUnsafe(MarkdownAdapter, Md.make([Md.p("Hello")]))
@@ -1182,7 +1182,7 @@ export const renderWithUnsafe: {
  *
  * ```ts
  * import * as Effect from "effect/Effect";
- * import { Md } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
  * import { renderEffectWithUnsafe } from "@beep/md/Md.render"
  *
  * const adapter = {
@@ -1224,7 +1224,7 @@ export const renderEffectWithUnsafe: {
  *
  * ```ts
  * import * as Effect from "effect/Effect";
- * import { Md } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
  * import { renderEffectWith } from "@beep/md/Md.render"
  *
  * const adapter = {
@@ -1620,7 +1620,7 @@ const renderHtmlDocumentWithPolicy = (policy: UrlPolicySpec, document: Document)
  * **Example** (Markdown adapter with URL policy)
  *
  * ```ts import.meta.vitest name="Markdown adapter with URL policy"
- * import { Md } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
  * import { BrowserSafeUrlPolicySpec } from "@beep/md/Md.escape"
  * import { makeMarkdownAdapter, renderWithUnsafe, UrlRenderOptions } from "@beep/md/Md.render"
  *
@@ -1648,7 +1648,7 @@ export const makeMarkdownAdapter = (
  * **Example** (HTML adapter with URL policy)
  *
  * ```ts
- * import { Md } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
  * import { StrictWebUrlPolicySpec } from "@beep/md/Md.escape"
  * import { makeHtmlFragmentAdapter, renderWithUnsafe, UrlRenderOptions } from "@beep/md/Md.render"
  *
@@ -1676,7 +1676,7 @@ export const makeHtmlFragmentAdapter = (
  * **Example** (Using built-in Markdown adapter)
  *
  * ```ts import.meta.vitest name="Using built-in Markdown adapter"
- * import { Md } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
  * import { MarkdownAdapter } from "@beep/md/Md.render"
  *
  * MarkdownAdapter.render(Md.make([Md.h1("Hello")])) // => "# Hello"
@@ -1700,7 +1700,7 @@ export const MarkdownAdapter: PureRenderAdapter<Markdown> = {
  * **Example** (Using built-in HTML adapter)
  *
  * ```ts
- * import { Md } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
  * import { HtmlFragmentAdapter } from "@beep/md/Md.render"
  *
  * console.log(HtmlFragmentAdapter.render(Md.make([Md.p("Hello")]))) // "<p>Hello</p>"
@@ -1719,7 +1719,7 @@ export const HtmlFragmentAdapter: PureRenderAdapter<HtmlFragment> = {
  * **Example** (Using built-in plain-text adapter)
  *
  * ```ts import.meta.vitest name="Using built-in plain-text adapter"
- * import { Md } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
  * import { PlainTextAdapter } from "@beep/md/Md.render"
  *
  * PlainTextAdapter.render(Md.make([Md.h1("Hello")])) // => "Hello"
@@ -1745,7 +1745,7 @@ export const PlainTextAdapter: PureRenderAdapter<string> = {
  *
  * ```ts import.meta.vitest name="Rendering with Result capture"
  * import * as Result from "effect/Result";
- * import { Md } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
  * import { MarkdownAdapter, renderWith } from "@beep/md/Md.render"
  *
  * const output = renderWith(MarkdownAdapter, Md.make([Md.p("Hello")]))
@@ -1779,7 +1779,7 @@ export const renderWith: {
  *
  * ```ts import.meta.vitest name="Rendering Markdown with Result"
  * import * as Result from "effect/Result";
- * import { Md } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
  * import { render } from "@beep/md/Md.render"
  *
  * const output = render(Md.make([Md.h1("Hello")]))
@@ -1804,7 +1804,7 @@ export const render = (document: Document): Result.Result<Markdown, RenderError>
  *
  * ```ts
  * import * as Result from "effect/Result";
- * import { Md } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
  * import { renderHtml } from "@beep/md/Md.render"
  *
  * const output = renderHtml(Md.make([Md.p("Hello")]))
@@ -1829,7 +1829,7 @@ export const renderHtml = (document: Document): Result.Result<HtmlFragment, Rend
  *
  * ```ts import.meta.vitest name="Rendering plain text with Result"
  * import * as Result from "effect/Result";
- * import { Md } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
  * import { renderPlainText } from "@beep/md/Md.render"
  *
  * const output = renderPlainText(Md.make([Md.h1("Hello")]))

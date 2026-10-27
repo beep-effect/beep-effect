@@ -27,7 +27,7 @@ const $I = $TechnicalDrawingId.create("Geometry.schemas");
  * **Example** (Make a vector)
  *
  * ```ts
- * import { Vec3 } from "@beep/technical-drawing"
+ * import { Vec3 } from "@beep/technical-drawing/Geometry.schemas"
  *
  * const v = Vec3.make([1, 2, 3])
  * console.log(v)
@@ -48,7 +48,7 @@ export const Vec3 = S.Tuple([S.Finite, S.Finite, S.Finite]).pipe(
  * **Example** (Annotate a vector)
  *
  * ```ts
- * import type { Vec3 } from "@beep/technical-drawing"
+ * import type { Vec3 } from "@beep/technical-drawing/Geometry.schemas"
  *
  * const origin: Vec3 = [0, 0, 0]
  * console.log(origin)
@@ -65,7 +65,7 @@ export type Vec3 = typeof Vec3.Type;
  * **Example** (Make a length)
  *
  * ```ts
- * import { PositiveLength } from "@beep/technical-drawing"
+ * import { PositiveLength } from "@beep/technical-drawing/Geometry.schemas"
  *
  * console.log(PositiveLength.make(12.5))
  * ```
@@ -94,7 +94,7 @@ export const PositiveLength = S.Finite.check(
  * **Example** (Annotate a length)
  *
  * ```ts
- * import { PositiveLength } from "@beep/technical-drawing"
+ * import { PositiveLength } from "@beep/technical-drawing/Geometry.schemas"
  *
  * const r: PositiveLength = PositiveLength.make(3)
  * console.log(r)
@@ -111,7 +111,7 @@ export type PositiveLength = typeof PositiveLength.Type;
  * **Example** (Rotate 90° about Z through the origin)
  *
  * ```ts
- * import { Rotation } from "@beep/technical-drawing"
+ * import { Rotation } from "@beep/technical-drawing/Geometry.schemas"
  *
  * const r = Rotation.make({ axis: [0, 0, 1], degrees: 90 })
  * console.log(r.origin)
@@ -233,7 +233,7 @@ const primitiveFields = {
  * **Example** (A 40 × 30 × 20 box on the XY plane)
  *
  * ```ts
- * import { Box } from "@beep/technical-drawing"
+ * import { Box } from "@beep/technical-drawing/Geometry.schemas"
  *
  * const box = Box.make({ min: [0, 0, 0], max: [40, 30, 20] })
  * console.log(box.kind)
@@ -283,7 +283,7 @@ export class Box extends S.Opaque<Box, { readonly brand: unique symbol }>()(
  * **Example** (A triangular wedge)
  *
  * ```ts
- * import { Prism } from "@beep/technical-drawing"
+ * import { Prism } from "@beep/technical-drawing/Geometry.schemas"
  *
  * const wedge = Prism.make({
  *   profile: [[0, 0, 0], [20, 0, 0], [0, 0, 15]],
@@ -331,7 +331,7 @@ export class Prism extends S.Opaque<Prism, { readonly brand: unique symbol }>()(
  * **Example** (A peg)
  *
  * ```ts
- * import { Cylinder } from "@beep/technical-drawing"
+ * import { Cylinder } from "@beep/technical-drawing/Geometry.schemas"
  *
  * const peg = Cylinder.make({ base: [5, 5, 0], axis: [0, 0, 1], radius: 2, height: 8 })
  * console.log(peg.radius)
@@ -361,7 +361,7 @@ export class Cylinder extends S.Opaque<Cylinder, { readonly brand: unique symbol
  * **Example** (Branch on a primitive)
  *
  * ```ts
- * import { Box, Primitive } from "@beep/technical-drawing"
+ * import { Box, Primitive } from "@beep/technical-drawing/Geometry.schemas"
  * import * as S from "effect/Schema"
  *
  * const p = Box.make({ min: [0, 0, 0], max: [1, 1, 1] })
@@ -384,8 +384,8 @@ export const Primitive = S.Union([Box, Prism, Cylinder]).pipe(
  * **Example** (Annotate a primitive)
  *
  * ```ts
- * import { Box } from "@beep/technical-drawing"
- * import type { Primitive } from "@beep/technical-drawing"
+ * import { Box } from "@beep/technical-drawing/Geometry.schemas"
+ * import type { Primitive } from "@beep/technical-drawing/Geometry.schemas"
  *
  * const p: Primitive = Box.make({ min: [0, 0, 0], max: [1, 1, 1] })
  * console.log(p.kind)
@@ -419,7 +419,7 @@ export type Primitive = typeof Primitive.Type;
  * **Example** (A plate with a hole)
  *
  * ```ts
- * import { Box, Cylinder, Part } from "@beep/technical-drawing"
+ * import { Box, Cylinder, Part } from "@beep/technical-drawing/Geometry.schemas"
  *
  * const plate = Part.make({
  *   name: "plate",
@@ -614,7 +614,7 @@ const LengthUnitBase = LiteralKit(["mm", "in"]);
  * **Example** (Read the units)
  *
  * ```ts
- * import { LengthUnit } from "@beep/technical-drawing"
+ * import { LengthUnit } from "@beep/technical-drawing/Geometry.schemas"
  *
  * console.log(LengthUnit.literals)
  * ```
@@ -635,7 +635,7 @@ export const LengthUnit = LengthUnitBase.pipe(
  * **Example** (Annotate a unit)
  *
  * ```ts
- * import type { LengthUnit } from "@beep/technical-drawing"
+ * import type { LengthUnit } from "@beep/technical-drawing/Geometry.schemas"
  *
  * const unit: LengthUnit = "mm"
  * console.log(unit)
@@ -657,7 +657,7 @@ export type LengthUnit = typeof LengthUnit.Type;
  * **Example** (A one-part model)
  *
  * ```ts
- * import { Box, Part, ModelSpec } from "@beep/technical-drawing"
+ * import { Box, Part, ModelSpec } from "@beep/technical-drawing/Geometry.schemas"
  *
  * const spec = ModelSpec.make({
  *   parts: [Part.make({ name: "body", add: [Box.make({ min: [0, 0, 0], max: [40, 30, 20] })] })]
@@ -793,7 +793,7 @@ const hiddenLinePassAboutKey = S.optionalKey(HiddenLinePassAbout).pipe(
  * **Example** (Front orthographic and an upper-left perspective)
  *
  * ```ts
- * import { Camera } from "@beep/technical-drawing"
+ * import { Camera } from "@beep/technical-drawing/Geometry.schemas"
  * import * as O from "effect/Option"
  *
  * const front = Camera.make({ eye: [0, -1, 0], up: [0, 0, 1] })
@@ -839,7 +839,7 @@ export class Camera extends S.Opaque<Camera, { readonly brand: unique symbol }>(
  * **Example** (Make a segment)
  *
  * ```ts
- * import { Segment2 } from "@beep/technical-drawing"
+ * import { Segment2 } from "@beep/technical-drawing/Geometry.schemas"
  *
  * console.log(Segment2.make([0, 0, 10, 0]))
  * ```
@@ -859,7 +859,7 @@ export const Segment2 = S.Tuple([S.Finite, S.Finite, S.Finite, S.Finite]).pipe(
  * **Example** (Annotate a segment)
  *
  * ```ts
- * import type { Segment2 } from "@beep/technical-drawing"
+ * import type { Segment2 } from "@beep/technical-drawing/Geometry.schemas"
  *
  * const s: Segment2 = [0, 0, 1, 1]
  * console.log(s)
@@ -898,7 +898,7 @@ const ShadingSkipReasonBase = LiteralKit([
  * **Example** (Read the reasons)
  *
  * ```ts
- * import { ShadingSkipReason } from "@beep/technical-drawing"
+ * import { ShadingSkipReason } from "@beep/technical-drawing/Geometry.schemas"
  *
  * console.log(ShadingSkipReason.literals)
  * ```
@@ -920,7 +920,7 @@ export const ShadingSkipReason = ShadingSkipReasonBase.pipe(
  * **Example** (Annotate a reason)
  *
  * ```ts
- * import type { ShadingSkipReason } from "@beep/technical-drawing"
+ * import type { ShadingSkipReason } from "@beep/technical-drawing/Geometry.schemas"
  *
  * const reason: ShadingSkipReason = "sliver"
  * console.log(reason)
@@ -937,7 +937,7 @@ export type ShadingSkipReason = typeof ShadingSkipReason.Type;
  * **Example** (Three back faces)
  *
  * ```ts
- * import { ShadingSkip } from "@beep/technical-drawing"
+ * import { ShadingSkip } from "@beep/technical-drawing/Geometry.schemas"
  *
  * console.log(ShadingSkip.make({ reason: "back-facing", faces: 3 }).faces)
  * ```
@@ -1070,7 +1070,7 @@ export class ShadingStretchSkip extends S.Opaque<ShadingStretchSkip, { readonly 
  * **Example** (Five shaded faces, one sliver)
  *
  * ```ts
- * import { ShadingCoverage, ShadingSkip } from "@beep/technical-drawing"
+ * import { ShadingCoverage, ShadingSkip } from "@beep/technical-drawing/Geometry.schemas"
  *
  * const coverage = ShadingCoverage.make({
  *   shadedFaces: 5,
@@ -1144,7 +1144,7 @@ export class ShadingCoverage extends S.Opaque<ShadingCoverage, { readonly brand:
  * **Example** (A band of three strokes on the view's first planned face)
  *
  * ```ts
- * import { ShadingBand } from "@beep/technical-drawing"
+ * import { ShadingBand } from "@beep/technical-drawing/Geometry.schemas"
  *
  * console.log(ShadingBand.make({ face: 0, strokes: [0, 2, 5] }).strokes.length) // 3
  * ```
@@ -1186,7 +1186,7 @@ export class ShadingBand extends S.Opaque<ShadingBand, { readonly brand: unique 
  * **Example** (An empty edge set)
  *
  * ```ts
- * import { EdgeSet } from "@beep/technical-drawing"
+ * import { EdgeSet } from "@beep/technical-drawing/Geometry.schemas"
  *
  * console.log(EdgeSet.make({ visible: [], hidden: [] }).visible.length)
  * ```
@@ -1255,7 +1255,7 @@ const ShadingStyleBase = LiteralKit(["uniform", "graded"]);
  * **Example** (Read the styles)
  *
  * ```ts
- * import { ShadingStyle } from "@beep/technical-drawing"
+ * import { ShadingStyle } from "@beep/technical-drawing/Geometry.schemas"
  *
  * console.log(ShadingStyle.literals)
  * ```
@@ -1276,7 +1276,7 @@ export const ShadingStyle = ShadingStyleBase.pipe(
  * **Example** (Annotate a style)
  *
  * ```ts
- * import type { ShadingStyle } from "@beep/technical-drawing"
+ * import type { ShadingStyle } from "@beep/technical-drawing/Geometry.schemas"
  *
  * const style: ShadingStyle = "graded"
  * console.log(style)
@@ -1305,7 +1305,7 @@ const HatchAxisBase = LiteralKit(["longest-edge", "surface-class"]);
  * **Example** (Read the axes)
  *
  * ```ts
- * import { HatchAxis } from "@beep/technical-drawing"
+ * import { HatchAxis } from "@beep/technical-drawing/Geometry.schemas"
  *
  * console.log(HatchAxis.literals)
  * ```
@@ -1326,7 +1326,7 @@ export const HatchAxis = HatchAxisBase.pipe(
  * **Example** (Annotate an axis)
  *
  * ```ts
- * import type { HatchAxis } from "@beep/technical-drawing"
+ * import type { HatchAxis } from "@beep/technical-drawing/Geometry.schemas"
  *
  * const axis: HatchAxis = "surface-class"
  * console.log(axis)
@@ -1378,7 +1378,7 @@ const ExposureThreshold = S.Finite.check(
  * **Example** (A plan in millimetres)
  *
  * ```ts
- * import { ShadingPlan } from "@beep/technical-drawing"
+ * import { ShadingPlan } from "@beep/technical-drawing/Geometry.schemas"
  *
  * const plan = ShadingPlan.make({ minPitch: 0.6, maxPitch: 2.4 })
  * console.log(plan.litThreshold)
@@ -1471,7 +1471,7 @@ export class ShadingPlan extends S.Opaque<ShadingPlan, { readonly brand: unique 
  * **Example** (Make a bounding box)
  *
  * ```ts
- * import { BoundingBox } from "@beep/technical-drawing"
+ * import { BoundingBox } from "@beep/technical-drawing/Geometry.schemas"
  *
  * console.log(BoundingBox.make({ min: [0, 0, 0], max: [1, 2, 3] }).max)
  * ```
@@ -1502,7 +1502,7 @@ export class BoundingBox extends S.Opaque<BoundingBox, { readonly brand: unique 
  * **Example** (Make a summary)
  *
  * ```ts
- * import { BoundingBox, ModelSummary } from "@beep/technical-drawing"
+ * import { BoundingBox, ModelSummary } from "@beep/technical-drawing/Geometry.schemas"
  *
  * const summary = ModelSummary.make({
  *   boundingBox: BoundingBox.make({ min: [0, 0, 0], max: [1, 1, 1] }),

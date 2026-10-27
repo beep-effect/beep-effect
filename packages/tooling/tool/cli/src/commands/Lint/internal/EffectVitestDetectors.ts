@@ -33,6 +33,7 @@ import type { LazyArg } from "effect/Function";
 import type {
   CallExpression,
   ClassDeclaration,
+  ConditionalExpression,
   ExportDeclaration,
   Expression,
   Identifier,
@@ -1392,12 +1393,49 @@ const isContextProvision = (
   seen: ReadonlyArray<string> = []
 ): boolean => {
   if (Node.isCallExpression(expression)) {
-    return isProvenanceCall(expression, imports, CONTEXT_MODULES, "Context", ["make", "empty", "add", "merge"]);
+    return (
+      isProvenanceCall(expression, imports, CONTEXT_MODULES, "Context", ["make", "empty", "add", "merge"]) ||
+      isContextPipe(expression, imports, seen) ||
+      isContextFactoryCall(expression, imports, seen)
+    );
   }
   if (!Node.isIdentifier(expression) || A.contains(seen, expression.getText())) return false;
   return O.exists(localInitializer(expression, imports), (initializer) =>
     isContextProvision(initializer, imports, [...seen, expression.getText()])
   );
+};
+
+// `Context.make(...).pipe(Context.add(...))` stays a Context when every stage is a data-last Context combinator.
+const isContextPipe = (call: CallExpression, imports: EffectVitestImports, seen: ReadonlyArray<string>): boolean => {
+  const callee = call.getExpression();
+  return (
+    Node.isPropertyAccessExpression(callee) &&
+    callee.getName() === "pipe" &&
+    isContextProvision(callee.getExpression(), imports, seen) &&
+    A.every(
+      call.getArguments(),
+      (stage) =>
+        Node.isCallExpression(stage) && isProvenanceCall(stage, imports, CONTEXT_MODULES, "Context", ["add", "merge"])
+    )
+  );
+};
+
+// A call of a same-file function is a Context when every value that function returns is one.
+const isContextFactoryCall = (
+  call: CallExpression,
+  imports: EffectVitestImports,
+  seen: ReadonlyArray<string>
+): boolean => {
+  const callee = call.getExpression();
+  if (!Node.isIdentifier(callee) || A.contains(seen, callee.getText())) return false;
+  return O.exists(imports.resolveBinding(callee), (declaration) => {
+    const definition = Node.isVariableDeclaration(declaration) ? declaration.getInitializer() : declaration;
+    const returns = definition !== undefined && isLayerFunctionNode(definition) ? layerFunctionReturns(definition) : [];
+    return (
+      A.isReadonlyArrayNonEmpty(returns) &&
+      A.every(returns, (value) => isContextProvision(value, imports, [...seen, callee.getText()]))
+    );
+  });
 };
 
 const isResourceExpression = (
@@ -2157,6 +2195,12 @@ const platformResourceReview = (moduleName: string, members: ReadonlyArray<strin
   (A.contains(platformServicesModules, moduleName) && A.contains(members, "layer"));
 
 const servicesBundleNames = ["NodeServices", "BunServices"];
+const fileSystemLayerModules = [
+  "@effect/platform-bun/BunFileSystem",
+  "@effect/platform-node/NodeFileSystem",
+  "@effect/platform-node-shared/NodeFileSystem",
+];
+const memoryFileSystemModules = ["@beep/memfs", "@beep/memfs/MemoryFileSystem"];
 // Results of these operations are POSIX link resolution or inode metadata.
 const nativeFileSystemOperations = ["chmod", "chown", "link", "readLink", "realPath", "symlink", "utimes"];
 const testKitModules = ["@beep/test-utils", "@beep/test-runner"];
@@ -2202,15 +2246,20 @@ const memberAccess = (node: MorphNode, member: string): O.Option<MorphNode> => {
     : O.none();
 };
 
-const isBundleBinding = (imported: string, subpath: boolean): boolean =>
-  imported === "*" || (subpath ? imported === "layer" : A.contains(servicesBundleNames, imported));
+// A platform layer module: its subpath modules export `layer`, and its roots export the named bundles.
+type PlatformBundle = { readonly subpathModules: ReadonlyArray<string>; readonly names: ReadonlyArray<string> };
+const servicesBundle: PlatformBundle = { subpathModules: platformServicesModules, names: servicesBundleNames };
+const fileSystemBundle: PlatformBundle = { subpathModules: fileSystemLayerModules, names: [] };
+
+const isBundleBinding = (imported: string, subpath: boolean, names: ReadonlyArray<string>): boolean =>
+  imported === "*" || (subpath ? imported === "layer" : A.contains(names, imported));
 
 // Some(None) skips a non-bundle namespace member; None makes the provenance opaque.
-const namespaceBundleMember = (reference: Identifier): O.Option<O.Option<MorphNode>> => {
+const namespaceBundleMember = (reference: Identifier, names: ReadonlyArray<string>): O.Option<O.Option<MorphNode>> => {
   const member = platformReferenceMember(reference);
-  if (O.exists(member, (name) => name !== "opaque" && !A.contains(servicesBundleNames, name))) return O.some(O.none());
+  if (O.exists(member, (name) => name !== "opaque" && !A.contains(names, name))) return O.some(O.none());
   const parent = reference.getParent();
-  return O.exists(member, (name) => A.contains(servicesBundleNames, name)) && parent !== undefined
+  return O.exists(member, (name) => A.contains(names, name)) && parent !== undefined
     ? O.some(O.some(parent))
     : O.none();
 };
@@ -2219,10 +2268,11 @@ const namespaceBundleMember = (reference: Identifier): O.Option<O.Option<MorphNo
 const bundleReferenceLayers = (
   reference: Identifier,
   imported: string,
-  namespacedBundle: boolean
+  namespacedBundle: boolean,
+  names: ReadonlyArray<string>
 ): O.Option<ReadonlyArray<MorphNode>> =>
   O.flatMap(
-    namespacedBundle ? namespaceBundleMember(reference) : O.some(O.some<MorphNode>(reference)),
+    namespacedBundle ? namespaceBundleMember(reference, names) : O.some(O.some<MorphNode>(reference)),
     O.match({
       onNone: () => O.some(A.empty<MorphNode>()),
       onSome: (node) => (imported === "layer" ? O.some(A.of(node)) : O.map(memberAccess(node, "layer"), A.of)),
@@ -2230,20 +2280,21 @@ const bundleReferenceLayers = (
   );
 
 // None means a bundle reference that is not a `layer` value, so provenance stays opaque.
-const servicesBundleLayers = (
+const platformBundleLayers = (
   declaration: ImportDeclaration,
-  imports: EffectVitestImports
+  imports: EffectVitestImports,
+  bundle: PlatformBundle
 ): O.Option<ReadonlyArray<MorphNode>> => {
-  const subpath = A.contains(platformServicesModules, declaration.getModuleSpecifierValue());
+  const subpath = A.contains(bundle.subpathModules, declaration.getModuleSpecifierValue());
   const bundles = A.filter(
     imports.bindings,
-    (candidate) => candidate.declaration === declaration && isBundleBinding(candidate.imported, subpath)
+    (candidate) => candidate.declaration === declaration && isBundleBinding(candidate.imported, subpath, bundle.names)
   );
   return O.map(
     O.all(
       A.flatMap(bundles, (binding) =>
         A.map(bindingReferences(declaration, binding.local, imports), (reference) =>
-          bundleReferenceLayers(reference, binding.imported, binding.imported === "*" && !subpath)
+          bundleReferenceLayers(reference, binding.imported, binding.imported === "*" && !subpath, bundle.names)
         )
       )
     ),
@@ -2313,6 +2364,82 @@ const suppliesSubject = (parent: CallExpression, current: MorphNode, imports: Ef
   isProvenanceCall(parent, imports, LAYER_MODULES, "Layer", ["provide", "provideMerge"]) &&
   O.exists(providerTarget(parent, current, imports), (target) => providesWorkspaceSubject(target, imports));
 
+// `MemoryFileSystem.layer`, `layerWith(...)` or `layerFaulty(...)` from `@beep/memfs`, imported
+// by name or reached through a namespace import of either module.
+const memoryFileSystemMembers = (members: ReadonlyArray<string>): ReadonlyArray<string> => [
+  ...members,
+  ...A.map(members, (member) => `MemoryFileSystem.${member}`),
+];
+const isMemoryFileSystemLayer = (node: MorphNode, imports: EffectVitestImports): boolean =>
+  Node.isCallExpression(node)
+    ? isProvenanceCall(
+        node,
+        imports,
+        memoryFileSystemModules,
+        "MemoryFileSystem",
+        memoryFileSystemMembers(["layerWith", "layerFaulty"])
+      )
+    : Node.isPropertyAccessExpression(node) &&
+      isProvenanceExpression(
+        node,
+        imports,
+        memoryFileSystemModules,
+        "MemoryFileSystem",
+        memoryFileSystemMembers(["layer"])
+      );
+
+// A merge builds its operands into one context where a later service replaces an earlier one,
+// so a memory filesystem operand after the bundle replaces the bundle's FileSystem.
+const memoryReplacesFileSystem = (
+  parent: CallExpression,
+  current: MorphNode,
+  imports: EffectVitestImports
+): boolean => {
+  const operands = parent.getArguments();
+  return (
+    operands.length >= 2 &&
+    isProvenanceCall(parent, imports, LAYER_MODULES, "Layer", ["merge", "mergeAll"]) &&
+    O.exists(
+      A.findFirstIndex(operands, (operand) => operand === current),
+      (index) => A.some(A.drop(operands, index + 1), (operand) => isMemoryFileSystemLayer(operand, imports))
+    )
+  );
+};
+
+// `NodeServices.layer`, `BunServices.layer` or a services subpath `layer`, uncalled.
+const isServicesBundleLayer = (node: MorphNode, imports: EffectVitestImports): boolean =>
+  (Node.isIdentifier(node) || Node.isPropertyAccessExpression(node)) &&
+  (A.some(servicesBundleNames, (name) => isProvenanceExpression(node, imports, platformRoots, name, ["layer"])) ||
+    isProvenanceExpression(node, imports, platformServicesModules, "Services", ["layer"]));
+
+// A runtime choice between the Node and Bun bundles: either branch may be the value, so the
+// chosen bundle reaches every harness the conditional reaches. Any other branch stays opaque.
+const runtimeBundleChoice = (
+  conditional: ConditionalExpression,
+  current: MorphNode,
+  imports: EffectVitestImports
+): boolean => {
+  const branches = [conditional.getWhenTrue(), conditional.getWhenFalse()];
+  return (
+    A.some(branches, (branch) => branch === current) &&
+    A.every(branches, (branch) => isServicesBundleLayer(branch, imports))
+  );
+};
+
+// One step through a Layer combinator call that takes the current layer as an argument.
+const compositionStep = (
+  parent: CallExpression,
+  current: MorphNode,
+  imports: EffectVitestImports,
+  provided: boolean
+): FlowStep => {
+  // The bundle's FileSystem reaches no harness; its other services are not filesystem provenance.
+  if (memoryReplacesFileSystem(parent, current, imports)) return done(O.some([]));
+  if (isDataLastLayerStage(current, imports) && isLayerPipe(parent, imports)) return climb(provided);
+  if (!isPreservingLayerCall(parent, imports)) return done(O.none());
+  return climb(provided || suppliesSubject(parent, current, imports));
+};
+
 const callStep = (
   parent: CallExpression,
   current: MorphNode,
@@ -2322,9 +2449,7 @@ const callStep = (
   if (!isArgumentOf(parent, current)) return done(O.none());
   if (isHarnessMethodCall(parent, imports, "layer"))
     return done(parent.getArguments()[0] === current ? O.some([{ harness: parent, subject: provided }]) : O.none());
-  if (isDataLastLayerStage(current, imports) && isLayerPipe(parent, imports)) return climb(provided);
-  if (!isPreservingLayerCall(parent, imports)) return done(O.none());
-  return climb(provided || suppliesSubject(parent, current, imports));
+  return compositionStep(parent, current, imports, provided);
 };
 
 const isFollowableBinding = (
@@ -2364,6 +2489,7 @@ const parentStep = (
   visited: FlowCache
 ): FlowStep => {
   if (Node.isParenthesizedExpression(parent)) return climb(provided);
+  if (Node.isConditionalExpression(parent) && runtimeBundleChoice(parent, current, imports)) return climb(provided);
   if (Node.isCallExpression(parent)) return callStep(parent, current, imports, provided);
   if (Node.isVariableDeclaration(parent))
     return done(declarationFlows(parent, current, imports, seen, provided, visited));
@@ -2397,8 +2523,9 @@ const bindingFlows = (
   visited: FlowCache
 ): O.Option<ReadonlyArray<HarnessFlow>> => {
   const flows = A.empty<HarnessFlow>();
+  const references = bindingReferences(declaration, declaration.getName(), imports);
   let opaque = false;
-  for (const reference of bindingReferences(declaration, declaration.getName(), imports)) {
+  for (const reference of references) {
     const reached = harnessFlows(reference, imports, seen, false, visited);
     if (O.isNone(reached)) {
       opaque = true;
@@ -2406,7 +2533,8 @@ const bindingFlows = (
     }
     flows.push(...reached.value);
   }
-  const result = opaque || A.isReadonlyArrayEmpty(flows) ? O.none() : O.some(flows);
+  // An unused binding stays opaque; references whose FileSystem is replaced contribute no flows.
+  const result = opaque || A.isReadonlyArrayEmpty(references) ? O.none() : O.some(flows);
   MutableHashMap.set(visited, declaration.getStart(), result);
   return result;
 };
@@ -2869,7 +2997,7 @@ const harnessHasOpaquePlatformReferences = (harness: CallExpression, imports: Ef
 // A services bundle used only by the shared harness is not filesystem evidence.
 // Keep portable filesystem candidates unless the existing native-subject proof succeeds.
 const canonicalPlatformIntegration = (declaration: ImportDeclaration, imports: EffectVitestImports): boolean =>
-  O.exists(servicesBundleLayers(declaration, imports), (layers) => {
+  O.exists(platformBundleLayers(declaration, imports, servicesBundle), (layers) => {
     const visited: FlowCache = MutableHashMap.empty();
     return O.exists(O.all(A.map(layers, (layer) => harnessFlows(layer, imports, [], false, visited))), (nested) => {
       const flows = A.flatten(nested);
@@ -2885,8 +3013,9 @@ const canonicalPlatformIntegration = (declaration: ImportDeclaration, imports: E
           (!Node.isIdentifier(node) || !isNamePosition(node)) &&
           isProvenanceExpression(node, imports, ["effect", "effect/FileSystem"], "FileSystem", ["FileSystem"])
       );
+      // Every reached layer either flows to these harnesses or has its FileSystem replaced by memory.
       return (
-        !A.isReadonlyArrayEmpty(harnesses) &&
+        !A.isReadonlyArrayEmpty(layers) &&
         A.every(
           harnesses,
           (harness) =>
@@ -2898,6 +3027,21 @@ const canonicalPlatformIntegration = (declaration: ImportDeclaration, imports: E
               imports
             )
         )
+      );
+    });
+  });
+
+// A native FileSystem layer stays a memory filesystem candidate unless every harness it reaches
+// calls a link or inode operation on the FileSystem it binds; a provided subject is not enough here.
+const nativeFileSystemLayerIntegration = (declaration: ImportDeclaration, imports: EffectVitestImports): boolean =>
+  A.contains(fileSystemLayerModules, declaration.getModuleSpecifierValue()) &&
+  O.exists(platformBundleLayers(declaration, imports, fileSystemBundle), (layers) => {
+    const visited: FlowCache = MutableHashMap.empty();
+    return O.exists(O.all(A.map(layers, (layer) => harnessFlows(layer, imports, [], false, visited))), (nested) => {
+      const flows = A.flatten(nested);
+      return (
+        !A.isReadonlyArrayEmpty(flows) &&
+        A.every(flows, ({ harness }) => harnessProvesNativeFileSystem({ harness, subject: false }, imports))
       );
     });
   });
@@ -3971,10 +4115,23 @@ const testerConfinedTo = (registration: CallExpression, block: EffectVitestFunct
     );
   });
 
+// A nested `it.layer` builds `Layer.provideMerge(nested, parentEnv)`, whose later context wins, so a direct
+// `TestClock.layer()` argument (a new layer object, built once in the forked memo map) replaces the parent clock.
+const installsFreshTestClock = (block: EffectVitestFunctionNode, imports: EffectVitestImports): boolean => {
+  const registration = block.getParent();
+  const builder = Node.isCallExpression(registration) ? registration.getExpression() : undefined;
+  const layer = Node.isCallExpression(builder) ? builder.getArguments()[0] : undefined;
+  return Node.isCallExpression(layer) && isProvenanceCall(layer, imports, TEST_CLOCK_MODULES, "TestClock", ["layer"]);
+};
+
 // `@effect/vitest` builds every top-level `it.layer` in a fresh memo map, so its TestClock is the block's
-// own. Nested blocks fork the parent's memo map and share its TestClock, so they never qualify.
+// own. Nested blocks fork the parent's memo map and share its TestClock unless their own layer installs a
+// fresh one.
 const ownsUnsharedTestClock = (block: EffectVitestFunctionNode, adjust: CallExpression, state: DetectorState) =>
-  O.isNone(state.harness.enclosingLayerBlock(block)) &&
+  O.match(state.harness.enclosingLayerBlock(block), {
+    onNone: constTrue,
+    onSome: () => installsFreshTestClock(block, state.imports),
+  }) &&
   A.match(
     A.filter(callbackCalls(block), (call) => O.isSome(classifyHarnessCall(call, state.imports))),
     {
@@ -4208,12 +4365,13 @@ const emitPlatformFinding = (
   members: ReadonlyArray<string>,
   osTemp: boolean,
   nativeFileSystem: LazyArg<boolean>,
+  nativeFileSystemLayer: LazyArg<boolean>,
   state: DetectorState
 ): void => {
   const { makeFinding, findings, file, owner } = state;
   const filesystemMember = moduleName === "@effect/platform-bun" ? "BunFileSystem" : "NodeFileSystem";
   const filesystem = platformFileSystemImport(moduleName) || osTemp || A.contains(members, filesystemMember);
-  if (!filesystem && (!platformResourceReview(moduleName, members) || nativeFileSystem())) return;
+  if (filesystem ? nativeFileSystemLayer() : !platformResourceReview(moduleName, members) || nativeFileSystem()) return;
   const review = filesystem
     ? {}
     : {
@@ -4241,6 +4399,7 @@ const detectPlatformImport = (declaration: ImportDeclaration, state: DetectorSta
     members,
     osTemp,
     () => canonicalPlatformIntegration(declaration, imports),
+    () => nativeFileSystemLayerIntegration(declaration, imports),
     state
   );
 };
@@ -4291,7 +4450,7 @@ const detectPlatformRequire = (call: CallExpression, state: DetectorState): void
   const moduleName = argument.getLiteralValue();
   const osTemp = A.contains(["node:os", "os"], moduleName) && requiredOsTemp(call, declaration, state);
   const members = A.contains(platformMemberModules, moduleName) ? platformRequiredMembers(call, state.imports) : [];
-  emitPlatformFinding(declaration, moduleName, members, osTemp, constFalse, state);
+  emitPlatformFinding(declaration, moduleName, members, osTemp, constFalse, constFalse, state);
 };
 
 const detectResourceDefinition = (

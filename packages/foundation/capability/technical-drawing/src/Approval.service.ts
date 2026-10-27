@@ -35,7 +35,7 @@ const encoder = new TextEncoder();
  * **Example** (An email confirmation)
  *
  * ```ts
- * import { ConfirmationSource } from "@beep/technical-drawing"
+ * import { ConfirmationSource } from "@beep/technical-drawing/Approval.service"
  *
  * console.log(ConfirmationSource.cases.email.make({ messageId: "AAMk" })._tag)
  * ```
@@ -69,8 +69,8 @@ export const ConfirmationSource = S.Union([
  * **Example** (Annotate a source)
  *
  * ```ts
- * import { ConfirmationSource } from "@beep/technical-drawing"
- * import type { ConfirmationSource as Source } from "@beep/technical-drawing"
+ * import { ConfirmationSource } from "@beep/technical-drawing/Approval.service"
+ * import type { ConfirmationSource as Source } from "@beep/technical-drawing/Approval.service"
  *
  * const source: Source = ConfirmationSource.cases.email.make({ messageId: "AAMk" })
  * console.log(source._tag)
@@ -87,7 +87,7 @@ export type ConfirmationSource = typeof ConfirmationSource.Type;
  * **Example** (Sign from an email reply)
  *
  * ```ts
- * import { ConfirmationSource, SignRequest } from "@beep/technical-drawing"
+ * import { ConfirmationSource, SignRequest } from "@beep/technical-drawing/Approval.service"
  *
  * const request = SignRequest.make({
  *   manifestPath: "out/manifest.json",
@@ -119,7 +119,7 @@ export class SignRequest extends S.Opaque<SignRequest, { readonly brand: unique 
  * **Example** (Stub service)
  *
  * ```ts
- * import type { SheetSetApprovalShape } from "@beep/technical-drawing"
+ * import type { SheetSetApprovalShape } from "@beep/technical-drawing/Approval.service"
  * import * as Effect from "effect/Effect";
  * const service: SheetSetApprovalShape = {
  *   statement: () => Effect.die("not implemented"),
@@ -249,7 +249,7 @@ const makeService = Effect.fn("SheetSetApproval.makeService")(function* () {
  * **Example** (Reference the service)
  *
  * ```ts
- * import { SheetSetApproval } from "@beep/technical-drawing"
+ * import { SheetSetApproval } from "@beep/technical-drawing/Approval.service"
  *
  * console.log(SheetSetApproval)
  * ```
@@ -264,7 +264,7 @@ export class SheetSetApproval extends Context.Service<SheetSetApproval, SheetSet
    * **Example** (Reference the layer)
    *
    * ```ts
-   * import { SheetSetApproval } from "@beep/technical-drawing"
+   * import { SheetSetApproval } from "@beep/technical-drawing/Approval.service"
    *
    * console.log(SheetSetApproval.layer)
    * ```

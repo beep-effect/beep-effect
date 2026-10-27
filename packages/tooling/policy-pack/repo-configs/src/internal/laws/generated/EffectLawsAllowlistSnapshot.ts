@@ -8,7 +8,7 @@ export const ALLOWLIST_SNAPSHOT = {
       "rule": "beep-laws/no-native-runtime",
       "file": "packages/foundation/capability/observability/src/server/DevTools.ts",
       "kind": "new-map-set",
-      "reason": "Effect DevToolsSchema.Span requires ReadonlyMap attributes at the protocol boundary. Tracer spans expose iterable attributes, so copying them to a native Map preserves the upstream wire contract without changing domain collection policy.",
+      "reason": "Effect DevToolsSchema.Span types attributes as ReadonlyMap at the protocol boundary, and Tracer.Span exposes the live span's mutable attribute map. Copying into a native Map snapshots the attributes at publish time, the same copy upstream effect/devtools DevToolsClient makes; no Effect collection satisfies the ReadonlyMap wire type.",
       "owner": "@beep/observability",
       "issue": "OBSERVABILITY-DEVTOOLS-READONLYMAP-BOUNDARY"
     },
@@ -192,7 +192,7 @@ export const ALLOWLIST_SNAPSHOT = {
       "rule": "beep-laws/no-native-runtime",
       "file": "packages/foundation/ui-system/dock-react/src/internal/ResizeObserverHarness.ts",
       "kind": "new-map-set",
-      "reason": "The controllable jsdom harness mirrors the native ResizeObserver contract (observer registry and per-observer Element targets) so tests drive resize callbacks exactly as the DOM would.",
+      "reason": "The controllable jsdom harness mirrors the native ResizeObserver contract (observer registry and per-observer Element targets) so tests drive resize callbacks exactly as the DOM would. Observers and DOM Elements must be keyed by reference; Effect MutableHashSet keys through Equal, which compares plain objects structurally in v4 and so does not guarantee per-node identity.",
       "owner": "@beep/dock-react",
       "issue": "DOCK-REACT-RESIZE-HARNESS-DOM-CONTRACT"
     },

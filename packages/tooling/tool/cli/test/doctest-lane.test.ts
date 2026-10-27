@@ -1,7 +1,14 @@
 import * as NodeURL from "node:url";
 import { doctestFenceInfo, doctestSourceMarker, isDoctestSourcePath } from "@beep/repo-cli/test/Docgen";
 import { StepExec } from "@beep/repo-cli/test/PackageScripts";
-import { FsUtils, FsUtilsLive, findRepoRoot, readPackageJsonFile, resolveWorkspacePackages } from "@beep/repo-utils";
+import {
+  FsUtils,
+  FsUtilsLive,
+  findRepoRoot,
+  readPackageJsonFile,
+  resolveWorkspacePackages,
+  toSortedRecord,
+} from "@beep/repo-utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -155,7 +162,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("doctest l
       for (const [name, workspace] of workspaces) {
         const dir = workspace.dir;
         const manifest = yield* readPackageJsonFile(path.join(dir, "package.json"));
-        const scripts: Readonly<Record<string, string>> = O.getOrElse(manifest.scripts, () => ({}));
+        const scripts: Readonly<Record<string, string>> = toSortedRecord(manifest.scripts);
         if (!isDoctestOwner(scripts)) continue;
         owners++;
         const config = yield* resolvedConfig(dir, true);

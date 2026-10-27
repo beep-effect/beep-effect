@@ -17,9 +17,9 @@ import { extractWorkspaceDependencies } from "./Dependencies.ts";
 import { DomainError } from "./errors/index.ts";
 import { FsUtils } from "./FsUtils.ts";
 import { decodePackageJsonEffect } from "./schemas/PackageJson.ts";
+import { WorkspaceDeps } from "./schemas/WorkspaceDeps.ts";
 import { resolveWorkspaceDirs } from "./Workspaces.ts";
 import type { NoSuchFileError } from "./errors/index.ts";
-import type { WorkspaceDeps } from "./schemas/WorkspaceDeps.ts";
 
 /**
  * The root package identifier used in the returned HashMap.
@@ -80,7 +80,7 @@ export const buildRepoDependencyIndex: (
       Effect.mapError(DomainError.newCause(`Failed to decode root package.json at "${rootPkgPath}"`))
     );
     const rootDeps = extractWorkspaceDependencies(rootPkg, workspaceNames);
-    result = HashMap.set(result, ROOT_KEY, { ...rootDeps, packageName: ROOT_KEY });
+    result = HashMap.set(result, ROOT_KEY, WorkspaceDeps.make({ ...rootDeps, packageName: ROOT_KEY }));
 
     // Process each workspace package.json
     for (const [name, dir] of workspaces) {

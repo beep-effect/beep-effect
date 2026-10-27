@@ -37,7 +37,7 @@ import * as N from "effect/Number";
  *
  * @param u - The value to check.
  * @returns True if the value is a number and is positive, false otherwise.
- * @see N.isGreaterThanOrEqualTo for comparison implementation details.
+ * @see {@link N.isGreaterThanOrEqualTo} for comparison implementation details.
  * @category validation
  * @since 0.0.0
  */
@@ -66,7 +66,7 @@ export * from "effect/Number";
  * **Example** (Check integer type guard)
  *
  * ```ts
- * import { N } from "@beep/utils"
+ * import * as N from "@beep/utils/Number"
  *
  * const whole = N.isInteger(42)
  * // true

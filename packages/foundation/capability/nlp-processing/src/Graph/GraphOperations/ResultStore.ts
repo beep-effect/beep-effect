@@ -1,6 +1,8 @@
 /**
  * GraphOperations/ResultStore - caching of operation results.
  *
+ * **Details**
+ *
  * Caches {@link OperationResult}s keyed by operation name + node id so
  * expensive operations are not recomputed. The default implementation is an
  * in-memory `Ref<HashMap>`.

@@ -231,7 +231,7 @@ function EditorReadOnlyFallback({
  *
  * ```tsx
  * import { EditorViewer } from "@beep/editor/viewer"
- * import type { SerializedEditorState } from "@beep/lexical-schema"
+ * import type { SerializedEditorState } from "@beep/lexical-schema/Lexical.model"
  *
  * function ReadOnlyPreview({ state }: { readonly state: SerializedEditorState.Type }) {
  *   return <EditorViewer state={state} className="prose max-w-none" />
