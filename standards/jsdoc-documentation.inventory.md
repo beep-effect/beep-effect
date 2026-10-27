@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-10-27T19:34:48.745Z
+Generated: 2026-10-27T20:37:12.169Z
 
 ## Scope
 
@@ -11,19 +11,19 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | Metric | Count |
 |---|---:|
 | packages | 183 |
-| cleanPackages | 116 |
+| cleanPackages | 117 |
 | packagesWithoutPublicSrcSurface | 2 |
-| packagesNeedingRemediation | 65 |
+| packagesNeedingRemediation | 64 |
 | publicModules | 3546 |
 | publicExports | 25242 |
 | openModules | 344 |
-| openExports | 458 |
+| openExports | 379 |
 | missingExportExamples | 7 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
 | forbiddenTagFindings | 0 |
 | malformedConditionalTagFindings | 0 |
-| exampleImportFindings | 380 |
+| exampleImportFindings | 301 |
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
 | undescribed-see | 10 |
@@ -40,7 +40,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | duplicate-example | 0 |
 | loose-ts-fence | 0 |
 | forbidden-remarks | 0 |
-| no-root-package-import | 374 |
+| no-root-package-import | 295 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -117,49 +117,49 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 59 | `@beep/sbom` | `packages/foundation/modeling/sbom` | clean | 9 | 75 | 0 | 0 |
 | 60 | `@beep/chalk` | `packages/foundation/capability/chalk` | clean | 1 | 35 | 0 | 0 |
 | 61 | `@beep/acp` | `packages/drivers/acp` | clean | 15 | 1047 | 0 | 0 |
-| 62 | `@beep/tsconfig` | `packages/foundation/modeling/tsconfig` | clean | 8 | 61 | 0 | 0 |
-| 63 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | needs-remediation | 31 | 588 | 0 | 2 |
-| 64 | `@beep/technical-drawing` | `packages/foundation/capability/technical-drawing` | clean | 19 | 224 | 0 | 0 |
-| 65 | `@beep/ffmpeg` | `packages/drivers/ffmpeg` | clean | 5 | 111 | 0 | 0 |
-| 66 | `@beep/pretext` | `packages/drivers/pretext` | needs-remediation | 6 | 36 | 6 | 0 |
-| 67 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | needs-remediation | 23 | 217 | 1 | 3 |
-| 68 | `@beep/cosmos` | `packages/drivers/cosmos` | clean | 6 | 22 | 0 | 0 |
-| 69 | `@beep/agents-client` | `packages/agents/client` | needs-remediation | 6 | 39 | 2 | 5 |
-| 70 | `@beep/documents-domain` | `packages/documents/domain` | clean | 26 | 81 | 0 | 0 |
-| 71 | `@beep/architecture-lab-domain` | `packages/architecture-lab/domain` | clean | 15 | 47 | 0 | 0 |
-| 72 | `@beep/uspto` | `packages/drivers/uspto` | clean | 5 | 25 | 0 | 0 |
-| 73 | `@beep/law-practice-tables` | `packages/law-practice/tables` | needs-remediation | 34 | 88 | 1 | 0 |
-| 74 | `@beep/law-practice-use-cases` | `packages/law-practice/use-cases` | needs-remediation | 103 | 651 | 4 | 4 |
-| 75 | `@beep/tika` | `packages/drivers/tika` | needs-remediation | 8 | 33 | 3 | 4 |
-| 76 | `@beep/libpff` | `packages/drivers/libpff` | needs-remediation | 7 | 42 | 4 | 2 |
-| 77 | `@beep/box` | `packages/drivers/box` | needs-remediation | 7 | 878 | 0 | 2 |
-| 78 | `@beep/epistemic-server` | `packages/epistemic/server` | needs-remediation | 24 | 56 | 8 | 4 |
-| 79 | `@beep/m365` | `packages/drivers/m365` | needs-remediation | 8 | 166 | 2 | 0 |
-| 80 | `@beep/nlp-processing` | `packages/foundation/capability/nlp-processing` | clean | 48 | 312 | 0 | 0 |
-| 81 | `@beep/epistemic-client` | `packages/epistemic/client` | clean | 4 | 24 | 0 | 0 |
-| 82 | `@beep/ui` | `packages/foundation/ui-system/ui` | clean | 132 | 557 | 0 | 0 |
-| 83 | `@beep/t3-code` | `packages/drivers/t3-code` | clean | 4 | 17 | 0 | 0 |
-| 84 | `@beep/github-reporting` | `packages/foundation/modeling/github-reporting` | clean | 5 | 40 | 0 | 0 |
-| 85 | `@beep/github-actions` | `packages/drivers/github-actions` | clean | 24 | 162 | 0 | 0 |
-| 86 | `@beep/poppler` | `packages/drivers/poppler` | clean | 3 | 9 | 0 | 0 |
-| 87 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 10 | 103 | 0 | 0 |
-| 88 | `@beep/repo-docgen` | `packages/tooling/tool/docgen` | needs-remediation | 10 | 94 | 0 | 3 |
-| 89 | `@beep/ai-provider-cli` | `packages/drivers/ai-provider-cli` | needs-remediation | 17 | 91 | 3 | 0 |
-| 90 | `@beep/skill-contract` | `packages/foundation/modeling/skill-contract` | needs-remediation | 9 | 113 | 0 | 79 |
-| 91 | `@beep/exiftool` | `packages/drivers/exiftool` | needs-remediation | 5 | 55 | 1 | 0 |
-| 92 | `@beep/repo-tsconfig` | `packages/tooling/library/repo-tsconfig` | clean | 4 | 15 | 0 | 0 |
-| 93 | `@beep/palantiri` | `packages/tooling/library/palantiri` | clean | 20 | 156 | 0 | 0 |
-| 94 | `@beep/pdf-tools` | `packages/drivers/pdf-tools` | clean | 4 | 38 | 0 | 0 |
-| 95 | `@beep/runpod` | `packages/drivers/runpod` | clean | 7 | 204 | 0 | 0 |
-| 96 | `@beep/tesseract` | `packages/drivers/tesseract` | clean | 3 | 15 | 0 | 0 |
-| 97 | `@beep/obs` | `packages/drivers/obs` | needs-remediation | 6 | 73 | 3 | 0 |
-| 98 | `@beep/lockfiles` | `packages/foundation/modeling/lockfiles` | clean | 14 | 47 | 0 | 0 |
-| 99 | `@beep/repo-configs` | `packages/tooling/policy-pack/repo-configs` | needs-remediation | 24 | 197 | 0 | 1 |
-| 100 | `@beep/occt` | `packages/drivers/occt` | clean | 4 | 13 | 0 | 0 |
-| 101 | `@beep/git` | `packages/drivers/git` | clean | 5 | 44 | 0 | 0 |
-| 102 | `@beep/qa-capture` | `packages/tooling/library/qa-capture` | needs-remediation | 11 | 155 | 10 | 0 |
-| 103 | `@beep/dock` | `packages/foundation/ui-system/dock` | clean | 20 | 212 | 0 | 0 |
-| 104 | `@beep/commands` | `packages/drivers/commands` | clean | 8 | 58 | 0 | 0 |
+| 62 | `@beep/commands` | `packages/drivers/commands` | clean | 8 | 58 | 0 | 0 |
+| 63 | `@beep/tsconfig` | `packages/foundation/modeling/tsconfig` | clean | 8 | 61 | 0 | 0 |
+| 64 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | needs-remediation | 31 | 588 | 0 | 2 |
+| 65 | `@beep/technical-drawing` | `packages/foundation/capability/technical-drawing` | clean | 19 | 224 | 0 | 0 |
+| 66 | `@beep/ffmpeg` | `packages/drivers/ffmpeg` | clean | 5 | 111 | 0 | 0 |
+| 67 | `@beep/pretext` | `packages/drivers/pretext` | needs-remediation | 6 | 36 | 6 | 0 |
+| 68 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | needs-remediation | 23 | 217 | 1 | 3 |
+| 69 | `@beep/cosmos` | `packages/drivers/cosmos` | clean | 6 | 22 | 0 | 0 |
+| 70 | `@beep/agents-client` | `packages/agents/client` | needs-remediation | 6 | 39 | 2 | 5 |
+| 71 | `@beep/documents-domain` | `packages/documents/domain` | clean | 26 | 81 | 0 | 0 |
+| 72 | `@beep/architecture-lab-domain` | `packages/architecture-lab/domain` | clean | 15 | 47 | 0 | 0 |
+| 73 | `@beep/uspto` | `packages/drivers/uspto` | clean | 5 | 25 | 0 | 0 |
+| 74 | `@beep/law-practice-tables` | `packages/law-practice/tables` | needs-remediation | 34 | 88 | 1 | 0 |
+| 75 | `@beep/law-practice-use-cases` | `packages/law-practice/use-cases` | needs-remediation | 103 | 651 | 4 | 4 |
+| 76 | `@beep/tika` | `packages/drivers/tika` | needs-remediation | 8 | 33 | 3 | 4 |
+| 77 | `@beep/libpff` | `packages/drivers/libpff` | needs-remediation | 7 | 42 | 4 | 2 |
+| 78 | `@beep/box` | `packages/drivers/box` | needs-remediation | 7 | 878 | 0 | 2 |
+| 79 | `@beep/epistemic-server` | `packages/epistemic/server` | needs-remediation | 24 | 56 | 8 | 4 |
+| 80 | `@beep/m365` | `packages/drivers/m365` | needs-remediation | 8 | 166 | 2 | 0 |
+| 81 | `@beep/nlp-processing` | `packages/foundation/capability/nlp-processing` | clean | 48 | 312 | 0 | 0 |
+| 82 | `@beep/epistemic-client` | `packages/epistemic/client` | clean | 4 | 24 | 0 | 0 |
+| 83 | `@beep/ui` | `packages/foundation/ui-system/ui` | clean | 132 | 557 | 0 | 0 |
+| 84 | `@beep/t3-code` | `packages/drivers/t3-code` | clean | 4 | 17 | 0 | 0 |
+| 85 | `@beep/github-reporting` | `packages/foundation/modeling/github-reporting` | clean | 5 | 40 | 0 | 0 |
+| 86 | `@beep/github-actions` | `packages/drivers/github-actions` | clean | 24 | 162 | 0 | 0 |
+| 87 | `@beep/poppler` | `packages/drivers/poppler` | clean | 3 | 9 | 0 | 0 |
+| 88 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 10 | 103 | 0 | 0 |
+| 89 | `@beep/repo-docgen` | `packages/tooling/tool/docgen` | needs-remediation | 10 | 94 | 0 | 3 |
+| 90 | `@beep/ai-provider-cli` | `packages/drivers/ai-provider-cli` | needs-remediation | 17 | 91 | 3 | 0 |
+| 91 | `@beep/skill-contract` | `packages/foundation/modeling/skill-contract` | clean | 9 | 113 | 0 | 0 |
+| 92 | `@beep/exiftool` | `packages/drivers/exiftool` | needs-remediation | 5 | 55 | 1 | 0 |
+| 93 | `@beep/repo-tsconfig` | `packages/tooling/library/repo-tsconfig` | clean | 4 | 15 | 0 | 0 |
+| 94 | `@beep/palantiri` | `packages/tooling/library/palantiri` | clean | 20 | 156 | 0 | 0 |
+| 95 | `@beep/pdf-tools` | `packages/drivers/pdf-tools` | clean | 4 | 38 | 0 | 0 |
+| 96 | `@beep/runpod` | `packages/drivers/runpod` | clean | 7 | 204 | 0 | 0 |
+| 97 | `@beep/tesseract` | `packages/drivers/tesseract` | clean | 3 | 15 | 0 | 0 |
+| 98 | `@beep/obs` | `packages/drivers/obs` | needs-remediation | 6 | 73 | 3 | 0 |
+| 99 | `@beep/lockfiles` | `packages/foundation/modeling/lockfiles` | clean | 14 | 47 | 0 | 0 |
+| 100 | `@beep/repo-configs` | `packages/tooling/policy-pack/repo-configs` | needs-remediation | 24 | 197 | 0 | 1 |
+| 101 | `@beep/occt` | `packages/drivers/occt` | clean | 4 | 13 | 0 | 0 |
+| 102 | `@beep/git` | `packages/drivers/git` | clean | 5 | 44 | 0 | 0 |
+| 103 | `@beep/qa-capture` | `packages/tooling/library/qa-capture` | needs-remediation | 11 | 155 | 10 | 0 |
+| 104 | `@beep/dock` | `packages/foundation/ui-system/dock` | clean | 20 | 212 | 0 | 0 |
 | 105 | `@beep/agents-tables` | `packages/agents/tables` | clean | 7 | 15 | 0 | 0 |
 | 106 | `@beep/anthropic` | `packages/drivers/anthropic` | clean | 6 | 31 | 0 | 0 |
 | 107 | `@beep/lexical-schema` | `packages/foundation/modeling/lexical` | needs-remediation | 6 | 124 | 4 | 7 |
@@ -782,91 +782,6 @@ Module findings:
 - `src/AiProviderCliHome.errors.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/AiProviderCliHome.models.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/AiProviderCliHome.service.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-
-### @beep/skill-contract
-
-Path: `packages/foundation/modeling/skill-contract`
-
-Export findings:
-- `src/EvidenceLadder.ts:34` `EvidenceReceiptReference` (class) - 1 example import violation(s)
-- `src/EvidenceLadder.ts:60` `EvidenceLadderReceiptTypes` (class) - 1 example import violation(s)
-- `src/EvidenceLadder.ts:90` `Accepted` (class) - 1 example import violation(s)
-- `src/EvidenceLadder.ts:117` `Persisted` (class) - 1 example import violation(s)
-- `src/EvidenceLadder.ts:145` `Delivered` (class) - 1 example import violation(s)
-- `src/EvidenceLadder.ts:174` `SemanticallyApplied` (class) - 1 example import violation(s)
-- `src/EvidenceLadder.ts:204` `EvidenceLadderState` (const) - 1 example import violation(s)
-- `src/EvidenceLadder.ts:263` `evidenceLadderFor` (const) - 1 example import violation(s)
-- `src/EvidenceLadder.ts:300` `transportCompleted` (const) - 1 example import violation(s)
-- `src/EvidenceLadder.ts:320` `advanceToPersisted` (const) - 1 example import violation(s)
-- `src/EvidenceLadder.ts:346` `advanceToDelivered` (const) - 1 example import violation(s)
-- `src/EvidenceLadder.ts:372` `advanceToSemanticallyApplied` (const) - 1 example import violation(s)
-- `src/EvidenceReceipt.ts:42` `EvidenceDigest` (class) - 1 example import violation(s)
-- `src/EvidenceReceipt.ts:75` `EvidenceSubject` (class) - 1 example import violation(s)
-- `src/EvidenceReceipt.ts:133` `EvidenceReceipt` (const) - 1 example import violation(s)
-- `src/EvidenceReceipt.ts:159` `AttestationResource` (class) - 1 example import violation(s)
-- `src/EvidenceReceipt.ts:184` `GateSummaryVerifier` (class) - 1 example import violation(s)
-- `src/EvidenceReceipt.ts:209` `GateVerificationResult` (const) - 1 example import violation(s)
-- `src/EvidenceReceipt.ts:237` `GateVerifiedLevel` (const) - 1 example import violation(s)
-- `src/EvidenceReceipt.ts:284` `GateResultSummary` (class) - 1 example import violation(s)
-- `src/EvidenceReceipt.ts:361` `GateSummary` (class) - 1 example import violation(s)
-- `src/EvidenceReceipt.ts:383` `GateSummaryPredicateType` (const) - 1 example import violation(s)
-- `src/EvidenceReceipt.ts:401` `GateSummaryReceipt` (const) - 1 example import violation(s)
-- `src/Gate.ts:41` `GateId` (const) - 1 example import violation(s)
-- `src/Gate.ts:80` `makeGateId` (const) - 1 example import violation(s)
-- `src/Gate.ts:103` `GateSeverity` (const) - 1 example import violation(s)
-- `src/Gate.ts:131` `GateApplicabilityKind` (const) - 1 example import violation(s)
-- `src/Gate.ts:159` `AlwaysGateApplicability` (class) - 1 example import violation(s)
-- `src/Gate.ts:191` `ConditionalGateApplicability` (class) - 1 example import violation(s)
-- `src/Gate.ts:225` `GateApplicability` (const) - 1 example import violation(s)
-- `src/Gate.ts:257` `EvidencePredicateType` (const) - 1 example import violation(s)
-- `src/Gate.ts:289` `GateEvidenceRequirement` (class) - 1 example import violation(s)
-- `src/Gate.ts:330` `GateDeclaration` (class) - 1 example import violation(s)
-- `src/Gate.ts:384` `GateRegistry` (class) - 1 example import violation(s)
-- `src/Gate.ts:406` `GateOutcome` (const) - 1 example import violation(s)
-- `src/Gate.ts:529` `GateAuditRecord` (const) - 1 example import violation(s)
-- `src/Gate.ts:595` `GateVerdict` (const) - 1 example import violation(s)
-- `src/Recovery.ts:68` `BudgetDuration` (const) - 1 example import violation(s)
-- `src/Recovery.ts:96` `RecoveryBudget` (class) - 1 example import violation(s)
-- `src/Recovery.ts:123` `RecoveryBudgetConsumed` (class) - 1 example import violation(s)
-- `src/Recovery.ts:149` `RecoveryAttemptOutcome` (const) - 1 example import violation(s)
-- `src/Recovery.ts:177` `RecoveryAttemptReceipt` (class) - 1 example import violation(s)
-- `src/Recovery.ts:207` `FailureTerminalReason` (const) - 1 example import violation(s)
-- `src/Recovery.ts:318` `FailureReceiptPredicate` (class) - 1 example import violation(s)
-- `src/Recovery.ts:340` `FailurePredicateType` (const) - 1 example import violation(s)
-- `src/Recovery.ts:356` `FailureReceipt` (const) - 1 example import violation(s)
-- `src/Recovery.ts:380` `NoRecoveryPolicy` (class) - 1 example import violation(s)
-- `src/Recovery.ts:404` `BoundedRecoveryPolicy` (class) - 1 example import violation(s)
-- `src/Recovery.ts:436` `RecoveryPolicy` (const) - 1 example import violation(s)
-- `src/SchemaReference.ts:27` `SchemaReferenceId` (const) - 1 example import violation(s)
-- `src/SchemaReference.ts:64` `SchemaReference` (class) - 1 example import violation(s)
-- `src/SkillCompletion.ts:61` `SkillCompletionReceipt` (class) - 1 example import violation(s)
-- `src/SkillCompletion.ts:118` `SkillCompletion` (const) - 1 example import violation(s)
-- `src/SkillCompletion.ts:145` `toSkillCompletionReceipt` (const) - 1 example import violation(s)
-- `src/SkillCompletion.ts:168` `EvaluateSkillCompletionInput` (class) - 1 example import violation(s)
-- `src/SkillCompletion.ts:198` `CompletionInvariantReason` (const) - 1 example import violation(s)
-- `src/SkillCompletion.ts:237` `CompletionInvariantError` (class) - 1 example import violation(s)
-- `src/SkillCompletion.ts:266` `CompletionAllowed` (class) - 1 example import violation(s)
-- `src/SkillCompletion.ts:293` `CompletionDenied` (class) - 1 example import violation(s)
-- `src/SkillCompletion.ts:320` `CompletionEvaluation` (const) - 1 example import violation(s)
-- `src/SkillCompletion.ts:403` `evaluateSkillCompletion` (const) - 1 example import violation(s)
-- `src/SkillCompletion.ts:470` `LiveVerified` (class) - 1 example import violation(s)
-- `src/SkillCompletion.ts:497` `DeployableBlocked` (class) - 1 example import violation(s)
-- `src/SkillCompletion.ts:526` `FailedWithPartialEffects` (class) - 1 example import violation(s)
-- `src/SkillCompletion.ts:555` `SkillTerminal` (const) - 1 example import violation(s)
-- `src/SkillContract.ts:33` `SkillContractId` (const) - 1 example import violation(s)
-- `src/SkillContract.ts:62` `ReceiptTypeBindings` (class) - 1 example import violation(s)
-- `src/SkillContract.ts:95` `SkillContract` (class) - 1 example import violation(s)
-- `src/SkillProjection.ts:65` `SkillMarkdownProjection` (class) - 1 example import violation(s)
-- `src/SkillProjection.ts:92` `SkillArtifactDenialReason` (const) - 1 example import violation(s)
-- `src/SkillProjection.ts:130` `SkillArtifactCheck` (class) - 1 example import violation(s)
-- `src/SkillProjection.ts:180` `SkillArtifactAllowed` (class) - 1 example import violation(s)
-- `src/SkillProjection.ts:207` `SkillArtifactDenied` (class) - 1 example import violation(s)
-- `src/SkillProjection.ts:235` `SkillArtifactVerdict` (const) - 1 example import violation(s)
-- `src/SkillProjection.ts:266` `VerifySkillArtifactInput` (class) - 1 example import violation(s)
-- `src/SkillProjection.ts:373` `projectSkillDocument` (const) - 1 example import violation(s)
-- `src/SkillProjection.ts:405` `renderSkillMarkdown` (const) - 1 example import violation(s)
-- `src/SkillProjection.ts:448` `decodeSkillFrontmatter` (const) - 1 example import violation(s)
-- `src/SkillProjection.ts:549` `verifySkillArtifact` (const) - 1 example import violation(s)
 
 ### @beep/exiftool
 

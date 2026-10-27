@@ -27,7 +27,7 @@ const $I = $SkillContractId.create("EvidenceReceipt");
  * **Example** (Bind a SHA-256 digest)
  *
  * ```ts import.meta.vitest name="Bind a SHA-256 digest"
- * import { EvidenceDigest } from "@beep/skill-contract"
+ * import { EvidenceDigest } from "@beep/skill-contract/EvidenceReceipt"
  * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const digest = EvidenceDigest.make({
@@ -57,7 +57,7 @@ export class EvidenceDigest extends S.Opaque<EvidenceDigest, { readonly brand: u
  * **Example** (Describe a receipt subject)
  *
  * ```ts
- * import { EvidenceDigest, EvidenceSubject } from "@beep/skill-contract"
+ * import { EvidenceDigest, EvidenceSubject } from "@beep/skill-contract/EvidenceReceipt"
  * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const subject = EvidenceSubject.make({
@@ -114,7 +114,8 @@ const evidenceReceiptImpl = <const Type extends EvidencePredicateType, Predicate
  * **Example** (Build a typed receipt schema)
  *
  * ```ts
- * import { EvidencePredicateType, EvidenceReceipt } from "@beep/skill-contract"
+ * import { EvidencePredicateType } from "@beep/skill-contract/Gate"
+ * import { EvidenceReceipt } from "@beep/skill-contract/EvidenceReceipt"
  * import * as S from "effect/Schema"
  *
  * const ArtifactCheckReceipt = EvidenceReceipt(
@@ -148,7 +149,7 @@ export const EvidenceReceipt: {
  * **Example** (Inspect attestation resource fields)
  *
  * ```ts import.meta.vitest name="Inspect attestation resource fields"
- * import { AttestationResource } from "@beep/skill-contract"
+ * import { AttestationResource } from "@beep/skill-contract/EvidenceReceipt"
  *
  * AttestationResource.fields.uri !== undefined // => true
  * ```
@@ -173,7 +174,7 @@ export class AttestationResource extends S.Opaque<AttestationResource, { readonl
  * **Example** (Inspect verifier fields)
  *
  * ```ts import.meta.vitest name="Inspect verifier fields"
- * import { GateSummaryVerifier } from "@beep/skill-contract"
+ * import { GateSummaryVerifier } from "@beep/skill-contract/EvidenceReceipt"
  *
  * GateSummaryVerifier.fields.version !== undefined // => true
  * ```
@@ -198,7 +199,7 @@ export class GateSummaryVerifier extends S.Opaque<GateSummaryVerifier, { readonl
  * **Example** (Inspect verification results)
  *
  * ```ts import.meta.vitest name="Inspect verification results"
- * import { GateVerificationResult } from "@beep/skill-contract"
+ * import { GateVerificationResult } from "@beep/skill-contract/EvidenceReceipt"
  *
  * GateVerificationResult.literals // => ["PASSED", "FAILED"]
  * ```
@@ -226,7 +227,7 @@ export type GateVerificationResult = typeof GateVerificationResult.Type;
  * **Example** (Inspect verified levels)
  *
  * ```ts
- * import { GateVerifiedLevel } from "@beep/skill-contract"
+ * import { GateVerifiedLevel } from "@beep/skill-contract/EvidenceReceipt"
  *
  * console.log(GateVerifiedLevel.literals)
  * ```
@@ -273,7 +274,7 @@ const AllowedGateEvidenceCheck = S.makeFilter(
  * **Example** (Inspect gate result fields)
  *
  * ```ts import.meta.vitest name="Inspect gate result fields"
- * import { GateResultSummary } from "@beep/skill-contract"
+ * import { GateResultSummary } from "@beep/skill-contract/EvidenceReceipt"
  *
  * GateResultSummary.fields.gateId !== undefined // => true
  * ```
@@ -350,7 +351,7 @@ const GateSummaryCoherenceCheck = S.makeFilter(
  * **Example** (Inspect gate summary fields)
  *
  * ```ts import.meta.vitest name="Inspect gate summary fields"
- * import { GateSummary } from "@beep/skill-contract"
+ * import { GateSummary } from "@beep/skill-contract/EvidenceReceipt"
  *
  * GateSummary.fields.verificationResult !== undefined // => true
  * ```
@@ -372,7 +373,7 @@ export class GateSummary extends S.Opaque<GateSummary, { readonly brand: unique 
  * **Example** (Inspect gate summary predicate identity)
  *
  * ```ts
- * import { GateSummaryPredicateType } from "@beep/skill-contract"
+ * import { GateSummaryPredicateType } from "@beep/skill-contract/EvidenceReceipt"
  *
  * console.log(GateSummaryPredicateType)
  * ```
@@ -390,7 +391,7 @@ export const GateSummaryPredicateType = EvidencePredicateType.make(
  * **Example** (Inspect the pinned predicate field)
  *
  * ```ts import.meta.vitest name="Inspect the pinned predicate field"
- * import { GateSummaryReceipt } from "@beep/skill-contract"
+ * import { GateSummaryReceipt } from "@beep/skill-contract/EvidenceReceipt"
  *
  * GateSummaryReceipt.fields.predicateType !== undefined // => true
  * ```

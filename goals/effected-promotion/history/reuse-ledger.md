@@ -201,6 +201,23 @@ pick what the kit picks.
 | repo-utils `schemas/PackageJson.ts` version fields | #243 | adopted in 3-A3 | `version` is the kit `SemVer.FromString` and `packageManager` the kit `PackageManagerRange`; no tracked manifest changes verdict. |
 | repo-cli `EffectResolver` `VERSION_SPECIFIER_PATTERN`, `TurboResolver` `STABLE_VERSION_PATTERN` | - | excluded | Shape checks on a specifier or schema URL; neither parses nor orders versions. |
 
+## `@beep/commands` drivers (roadmap R9, SPEC W4-l)
+
+R9 moves four drivers' hand-rolled child-process folds onto `@beep/commands`, each with the kit option the map
+names, and retires the `effect-child-process-hardening` Exception Ledger row "Driver-local output folds" (D-03).
+Parity: each driver's existing suite is unchanged and passes under Bun and Node, plus one reason-map test per
+driver (`test/*.reason-map.test.ts`). Every reason-map case for a failure class the old fold could report also
+passes against the old sources (the driver `src` restored from main); the only case that fails there is the
+capture bound, which the old fold did not have.
+
+| Site | Map id | Status | Notes |
+| --- | --- | --- | --- |
+| exiftool `runProcess`, `collectText`, `ProcessResult` | #114 | adopted (R9) | `Run.collect`. A spawn or stream failure keeps the platform failure as the `ExiftoolError` cause (the kit's `CommandFailedError` is unwrapped); a non-zero exit keeps its message, exit code and trimmed streams. |
+| pdf-tools `run`, `collectText` | #116 | adopted (R9) | `Run.collect` with `RunOptions.timeout` and `Run.extendEnv`; `forceKillAfter` stays on the command. Spawn and stream failures map to `tool-unavailable` with the platform message, a timeout to `tool-failed` with the old message and no cause, a non-zero exit to `tool-failed` with the trimmed stderr. |
+| tailscale `readTailscaleStatus`, `runTailscaleCommand`, `collectStdout`/`collectStderr` | #298 | adopted (R9) | `Run.collect`; the outer `Effect.timeout` stays so the timeout cause is still a `TimeoutError`. The kit folds spawn and read failures into one `CommandFailedError` kind, so the driver splits them by the platform failure's `method`: a stream read or write, the exit wait or a kill (only possible once the handle exists) is an output error, and any other method (`spawn`, or the spawner's working-directory `access` check) a spawn error, as under the old fold. The exit error keeps the `stdoutLength`/`stderrLength` privacy projection. |
+| obs `spawnObsDetached` | #299 | adopted (R9) | `Run.detach`, which unrefs before its scope closes; a spawn or unref failure keeps its platform failure as the `ObsError` cause. |
+| Capture bound (all three `Run.collect` drivers) | - | new behaviour (R9) | Captured output is now bounded per stream, chosen per driver: exiftool passes `maxOutputBytes` 128 MiB (`-j` readTags batches), pdf-tools 256 MiB (`pdftotext -bbox-layout` XHTML on long PDFs), and tailscale keeps the kit's 16 MiB default (`DEFAULT_MAX_OUTPUT_BYTES`), since its status JSON and serve stderr are kilobytes. Each reason map reports the new `CommandOutputError` kind `tooLarge`: exiftool as its run failure, pdf-tools as `tool-failed`, tailscale as an output error. |
+
 ## Backfill of the remaining map sites (R0, W4-k)
 
 Every confirmed and partial site of the map that had no row above (the earlier `2d-later` rows now carry their plan PR or exclusion too), so each one is migrated, queued under a
@@ -335,12 +352,12 @@ A row naming two PRs is split between them; #143 also appears above for its pack
 | repo-cli Observability/Observability.render.ts | #90 | partial | queued: R8 | Observability render onto `@beep/managed-section`. |
 | repo-cli Models/Models.render.ts, Observability/Observability.render.ts | #260 | partial | queued: R8 | Models.render and Observability splice sites. |
 | repo-cli commands | #311 | partial | queued: R8 | Observability half; LabIdentitySegment is excluded (#88). |
-| exiftool Exiftool.service.ts | #114 | confirmed | queued: R9 | Driver onto `@beep/commands` `Run.collect`; retires the D-03 Driver-local output folds row. |
-| pdf-tools PdfTools.service.ts | #116 | confirmed | queued: R9 | Driver onto `@beep/commands` `Run.collect`; retires the D-03 Driver-local output folds row. |
-| drivers tesseract, poppler, exiftool, pdf-tools, onepassword-cli, tailscale, ffmpeg, openclaw | #253 | partial | queued: R9 | Umbrella: R9 moves exiftool, pdf-tools, obs and tailscale; the other drivers are excluded below. |
-| drivers | #278 | partial | queued: R9 | Umbrella: R9 moves exiftool, pdf-tools, obs and tailscale; the other drivers are excluded below. |
-| tailscale Tailscale.service.ts | #298 | partial | queued: R9 | Driver onto `@beep/commands` `Run.collect`; retires the D-03 Driver-local output folds row. |
-| obs Obs.service.ts | #299 | confirmed | queued: R9 | Driver onto `@beep/commands` `Run.collect`; retires the D-03 Driver-local output folds row. |
+| exiftool Exiftool.service.ts | #114 | confirmed | migrated (R9, W4-l) | `Run.collect`; `ProcessResult`, `collectText` and the scoped spawn block deleted, `ProcessExitCode` kept. Migrated in R9; see the `@beep/commands` drivers section above. |
+| pdf-tools PdfTools.service.ts | #116 | confirmed | migrated (R9, W4-l) | `Run.collect` with `RunOptions.timeout` and `Run.extendEnv`; `collectText` and the hand-rolled timeout deleted. Migrated in R9; see the `@beep/commands` drivers section above. |
+| drivers tesseract, poppler, exiftool, pdf-tools, onepassword-cli, tailscale, ffmpeg, openclaw | #253 | partial | migrated (R9, W4-l); excluded | Umbrella, split: the R9 part (exiftool, pdf-tools, obs, tailscale) is migrated; the remainder stays excluded below (#115, #117 to #122, #283), each waiting for its named kit option, so this row is not done as a whole. |
+| drivers | #278 | partial | migrated (R9, W4-l); excluded | Umbrella, split: the R9 part (exiftool, pdf-tools, obs, tailscale) is migrated; the remainder stays excluded below (#115, #117 to #122, #283), each waiting for its named kit option, so this row is not done as a whole. |
+| tailscale Tailscale.service.ts | #298 | partial | migrated (R9, W4-l) | `Run.collect` for both runners; `collectStdout`/`collectStderr` and both spawn blocks deleted, the `stdoutLength` privacy projection kept. Migrated in R9; see the `@beep/commands` drivers section above. |
+| obs Obs.service.ts | #299 | confirmed | migrated (R9, W4-l) | `Run.detach` (the map's named option); the scoped spawn-then-unref block deleted. Migrated in R9; see the `@beep/commands` drivers section above. |
 
 ### Wave 5 (`@beep/github-actions`)
 

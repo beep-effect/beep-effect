@@ -50,7 +50,7 @@ const evidenceSubjectSetEquivalence = (
  * **Example** (Inspect completion receipt fields)
  *
  * ```ts import.meta.vitest name="Inspect completion receipt fields"
- * import { SkillCompletionReceipt } from "@beep/skill-contract"
+ * import { SkillCompletionReceipt } from "@beep/skill-contract/SkillCompletion"
  *
  * SkillCompletionReceipt.fields.gateSummary !== undefined // => true
  * ```
@@ -106,7 +106,7 @@ export type SkillCompletion = SkillCompletionValue;
  * **Example** (Reject structural completion data)
  *
  * ```ts import.meta.vitest name="Reject structural completion data"
- * import { SkillCompletion } from "@beep/skill-contract"
+ * import { SkillCompletion } from "@beep/skill-contract/SkillCompletion"
  * import * as S from "effect/Schema"
  *
  * S.is(SkillCompletion)({ receipt: {} }) // => false
@@ -132,7 +132,7 @@ export const SkillCompletion = S.declare<SkillCompletion>(SkillCompletionValue.i
  * **Example** (Inspect projection function)
  *
  * ```ts import.meta.vitest name="Inspect projection function"
- * import { toSkillCompletionReceipt } from "@beep/skill-contract"
+ * import { toSkillCompletionReceipt } from "@beep/skill-contract/SkillCompletion"
  *
  * typeof toSkillCompletionReceipt // => "function"
  * ```
@@ -157,7 +157,7 @@ export const toSkillCompletionReceipt = (completion: SkillCompletion): SkillComp
  * **Example** (Inspect completion evaluator inputs)
  *
  * ```ts import.meta.vitest name="Inspect completion evaluator inputs"
- * import { EvaluateSkillCompletionInput } from "@beep/skill-contract"
+ * import { EvaluateSkillCompletionInput } from "@beep/skill-contract/SkillCompletion"
  *
  * EvaluateSkillCompletionInput.fields.contract !== undefined // => true
  * ```
@@ -187,7 +187,7 @@ export class EvaluateSkillCompletionInput extends S.Opaque<
  * **Example** (Inspect invariant reasons)
  *
  * ```ts
- * import { CompletionInvariantReason } from "@beep/skill-contract"
+ * import { CompletionInvariantReason } from "@beep/skill-contract/SkillCompletion"
  *
  * console.log(CompletionInvariantReason.literals)
  * ```
@@ -222,7 +222,7 @@ export type CompletionInvariantReason = typeof CompletionInvariantReason.Type;
  * **Example** (Construct an invariant error)
  *
  * ```ts
- * import { CompletionInvariantError } from "@beep/skill-contract"
+ * import { CompletionInvariantError } from "@beep/skill-contract/SkillCompletion"
  *
  * const error = CompletionInvariantError.make({
  *   message: "Gate summary predicate type does not match the contract binding.",
@@ -255,7 +255,7 @@ export class CompletionInvariantError extends S.TaggedError<
  * **Example** (Inspect allowed completion fields)
  *
  * ```ts import.meta.vitest name="Inspect allowed completion fields"
- * import { CompletionAllowed } from "@beep/skill-contract"
+ * import { CompletionAllowed } from "@beep/skill-contract/SkillCompletion"
  *
  * CompletionAllowed.fields.completion !== undefined // => true
  * ```
@@ -282,7 +282,7 @@ export class CompletionAllowed extends S.Opaque<CompletionAllowed, { readonly br
  * **Example** (Inspect denied completion fields)
  *
  * ```ts import.meta.vitest name="Inspect denied completion fields"
- * import { CompletionDenied } from "@beep/skill-contract"
+ * import { CompletionDenied } from "@beep/skill-contract/SkillCompletion"
  *
  * CompletionDenied.fields.gateSummary !== undefined // => true
  * ```
@@ -309,7 +309,7 @@ export class CompletionDenied extends S.Opaque<CompletionDenied, { readonly bran
  * **Example** (Inspect completion verdicts)
  *
  * ```ts import.meta.vitest name="Inspect completion verdicts"
- * import { CompletionEvaluation } from "@beep/skill-contract"
+ * import { CompletionEvaluation } from "@beep/skill-contract/SkillCompletion"
  *
  * CompletionEvaluation.discriminants // => ["allowed", "denied"]
  * ```
@@ -389,7 +389,7 @@ const hasUnverifiedBlockingConditionalGate = (input: EvaluateSkillCompletionInpu
  * **Example** (Inspect completion evaluator)
  *
  * ```ts import.meta.vitest name="Inspect completion evaluator"
- * import { evaluateSkillCompletion } from "@beep/skill-contract"
+ * import { evaluateSkillCompletion } from "@beep/skill-contract/SkillCompletion"
  *
  * typeof evaluateSkillCompletion // => "function"
  * ```
@@ -459,7 +459,7 @@ export const evaluateSkillCompletion = Effect.fn("SkillCompletion.evaluate")(fun
  * **Example** (Inspect live terminal fields)
  *
  * ```ts import.meta.vitest name="Inspect live terminal fields"
- * import { LiveVerified } from "@beep/skill-contract"
+ * import { LiveVerified } from "@beep/skill-contract/SkillCompletion"
  *
  * LiveVerified.fields.completion !== undefined // => true
  * ```
@@ -486,7 +486,7 @@ export class LiveVerified extends S.Opaque<LiveVerified, { readonly brand: uniqu
  * **Example** (Inspect blocked terminal fields)
  *
  * ```ts import.meta.vitest name="Inspect blocked terminal fields"
- * import { DeployableBlocked } from "@beep/skill-contract"
+ * import { DeployableBlocked } from "@beep/skill-contract/SkillCompletion"
  *
  * DeployableBlocked.fields.reason !== undefined // => true
  * ```
@@ -515,7 +515,7 @@ export class DeployableBlocked extends S.Opaque<DeployableBlocked, { readonly br
  * **Example** (Inspect partial-failure fields)
  *
  * ```ts import.meta.vitest name="Inspect partial-failure fields"
- * import { FailedWithPartialEffects } from "@beep/skill-contract"
+ * import { FailedWithPartialEffects } from "@beep/skill-contract/SkillCompletion"
  *
  * FailedWithPartialEffects.fields.highestRung !== undefined // => true
  * ```
@@ -544,7 +544,7 @@ export class FailedWithPartialEffects extends S.Opaque<FailedWithPartialEffects,
  * **Example** (Inspect terminal variants)
  *
  * ```ts
- * import { SkillTerminal } from "@beep/skill-contract"
+ * import { SkillTerminal } from "@beep/skill-contract/SkillCompletion"
  *
  * console.log(SkillTerminal.discriminants)
  * ```

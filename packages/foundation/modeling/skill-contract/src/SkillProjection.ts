@@ -54,7 +54,7 @@ const contractEquivalence = S.toEquivalence(SkillContract);
  * **Example** (Construct a projection model)
  *
  * ```ts import.meta.vitest name="Construct a projection model"
- * import { SkillMarkdownProjection } from "@beep/skill-contract"
+ * import { SkillMarkdownProjection } from "@beep/skill-contract/SkillProjection"
  *
  * SkillMarkdownProjection.fields.contract !== undefined // => true
  * ```
@@ -81,7 +81,7 @@ const encodeUnknownSkillMarkdownProjectionResult = S.encodeUnknownResult(SkillMa
  * **Example** (Inspect denial reasons)
  *
  * ```ts
- * import { SkillArtifactDenialReason } from "@beep/skill-contract"
+ * import { SkillArtifactDenialReason } from "@beep/skill-contract/SkillProjection"
  *
  * console.log(SkillArtifactDenialReason.literals)
  * ```
@@ -114,7 +114,7 @@ export type SkillArtifactDenialReason = typeof SkillArtifactDenialReason.Type;
  * **Example** (Record a successful check)
  *
  * ```ts import.meta.vitest name="Record a successful check"
- * import { SkillArtifactCheck } from "@beep/skill-contract"
+ * import { SkillArtifactCheck } from "@beep/skill-contract/SkillProjection"
  *
  * const check = SkillArtifactCheck.make({
  *   check: "rerender-byte-equality",
@@ -169,7 +169,7 @@ const DeniedChecksRecordAFailure = S.makeFilter(
  * **Example** (Inspect allowed verdict fields)
  *
  * ```ts import.meta.vitest name="Inspect allowed verdict fields"
- * import { SkillArtifactAllowed } from "@beep/skill-contract"
+ * import { SkillArtifactAllowed } from "@beep/skill-contract/SkillProjection"
  *
  * SkillArtifactAllowed.fields.checks !== undefined // => true
  * ```
@@ -196,7 +196,7 @@ export class SkillArtifactAllowed extends S.Opaque<SkillArtifactAllowed, { reado
  * **Example** (Inspect denied verdict fields)
  *
  * ```ts import.meta.vitest name="Inspect denied verdict fields"
- * import { SkillArtifactDenied } from "@beep/skill-contract"
+ * import { SkillArtifactDenied } from "@beep/skill-contract/SkillProjection"
  *
  * SkillArtifactDenied.fields.reasons !== undefined // => true
  * ```
@@ -224,7 +224,7 @@ export class SkillArtifactDenied extends S.Opaque<SkillArtifactDenied, { readonl
  * **Example** (Inspect verdict cases)
  *
  * ```ts import.meta.vitest name="Inspect verdict cases"
- * import { SkillArtifactVerdict } from "@beep/skill-contract"
+ * import { SkillArtifactVerdict } from "@beep/skill-contract/SkillProjection"
  *
  * SkillArtifactVerdict.discriminants // => ["allowed", "denied"]
  * ```
@@ -255,7 +255,7 @@ export type SkillArtifactVerdict = typeof SkillArtifactVerdict.Type;
  * **Example** (Inspect verification input fields)
  *
  * ```ts import.meta.vitest name="Inspect verification input fields"
- * import { VerifySkillArtifactInput } from "@beep/skill-contract"
+ * import { VerifySkillArtifactInput } from "@beep/skill-contract/SkillProjection"
  *
  * VerifySkillArtifactInput.fields.committed !== undefined // => true
  * ```
@@ -360,7 +360,7 @@ const projectionBlocks = (contract: SkillContract) =>
  * **Example** (Project a contract)
  *
  * ```ts import.meta.vitest name="Project a contract"
- * import { projectSkillDocument } from "@beep/skill-contract"
+ * import { projectSkillDocument } from "@beep/skill-contract/SkillProjection"
  *
  * typeof projectSkillDocument // => "function"
  * ```
@@ -392,7 +392,7 @@ export const projectSkillDocument = (contract: SkillContract): Result.Result<Doc
  * **Example** (Render a contract Result)
  *
  * ```ts import.meta.vitest name="Render a contract Result"
- * import { renderSkillMarkdown } from "@beep/skill-contract"
+ * import { renderSkillMarkdown } from "@beep/skill-contract/SkillProjection"
  *
  * typeof renderSkillMarkdown // => "function"
  * ```
@@ -435,7 +435,7 @@ const frontmatterDenied = (
  * **Example** (Reject missing frontmatter)
  *
  * ```ts import.meta.vitest name="Reject missing frontmatter"
- * import { decodeSkillFrontmatter } from "@beep/skill-contract"
+ * import { decodeSkillFrontmatter } from "@beep/skill-contract/SkillProjection"
  * import * as Result from "effect/Result";
  * Result.isFailure(decodeSkillFrontmatter("# no frontmatter")) // => true
  * ```
@@ -536,7 +536,7 @@ const checkForFrontmatter = (
  * **Example** (Build an artifact verification Effect)
  *
  * ```ts import.meta.vitest name="Build an artifact verification Effect"
- * import { verifySkillArtifact } from "@beep/skill-contract"
+ * import { verifySkillArtifact } from "@beep/skill-contract/SkillProjection"
  *
  * typeof verifySkillArtifact // => "function"
  * ```
