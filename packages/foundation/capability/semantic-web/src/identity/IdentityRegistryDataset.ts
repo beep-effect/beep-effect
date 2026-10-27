@@ -30,7 +30,8 @@ type IdentityRegistryDatasetLayer = Layer.Layer<
  * **Example** (Build an empty dataset registry)
  *
  * ```ts
- * import { DefaultIdentityRdfBinding, layerDataset } from "@beep/semantic-web"
+ * import { DefaultIdentityRdfBinding } from "@beep/semantic-web/identity/IdentityRdfBinding"
+ * import { layerDataset } from "@beep/semantic-web/identity/IdentityRegistryDataset"
  * import { makeDataset } from "@beep/rdf/Rdf"
  *
  * const layer = layerDataset(DefaultIdentityRdfBinding, makeDataset([]))
