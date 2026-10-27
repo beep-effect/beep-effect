@@ -473,10 +473,9 @@ const buildFoundationRootMappings = Effect.fn("EffectImports.buildFoundationRoot
   for (const rootIndex of foundationRootIndexes) {
     const packageDirectory = path.dirname(path.dirname(rootIndex.getFilePath()));
     const manifest = yield* readPackageJsonFile(path.join(packageDirectory, "package.json"));
-    const workspaceExports = pipe(manifest.exports, O.flatMap(flatExportsFrom));
+    const workspaceExports = pipe(O.fromUndefinedOr(manifest.exports), O.flatMap(flatExportsFrom));
     const configuredPublishExports = pipe(
-      manifest.publishConfig,
-      O.flatMap((publishConfig) => O.fromUndefinedOr(publishConfig.exports)),
+      O.fromUndefinedOr(manifest.publishConfig?.exports),
       O.flatMap(flatExportsFrom)
     );
     const publishedExports = configuredPublishExports;
