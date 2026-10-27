@@ -316,18 +316,16 @@ export class OpenclawVersionInfo extends S.Opaque<OpenclawVersionInfo, { readonl
  * @category models
  * @since 0.0.0
  */
-export class OpenclawConfigValid extends S.TaggedClass<OpenclawConfigValid, { readonly brand: unique symbol }>(
-  $I`OpenclawConfigValid`
-)(
-  "Valid",
-  {
+export class OpenclawConfigValid extends S.Opaque<OpenclawConfigValid, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("Valid", {
     output: OpenclawDiagnosticText.annotateKey({
       description: "Trimmed capped validator output.",
     }),
-  },
-  $I.annote("OpenclawConfigValid", {
-    description: "Successful `config validate` outcome.",
-  })
+  }).pipe(
+    $I.annoteSchema("OpenclawConfigValid", {
+      description: "Successful `config validate` outcome.",
+    })
+  )
 ) {}
 
 /**
@@ -351,21 +349,19 @@ export class OpenclawConfigValid extends S.TaggedClass<OpenclawConfigValid, { re
  * @category models
  * @since 0.0.0
  */
-export class OpenclawConfigInvalid extends S.TaggedClass<OpenclawConfigInvalid, { readonly brand: unique symbol }>(
-  $I`OpenclawConfigInvalid`
-)(
-  "Invalid",
-  {
+export class OpenclawConfigInvalid extends S.Opaque<OpenclawConfigInvalid, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("Invalid", {
     diagnostics: OpenclawDiagnosticText.annotateKey({
       description: "Trimmed capped validator diagnostics.",
     }),
     exitCode: OpenclawExitCode.annotateKey({
       description: "Nonzero validate process exit status.",
     }),
-  },
-  $I.annote("OpenclawConfigInvalid", {
-    description: "Failed `config validate` outcome with capped diagnostics.",
-  })
+  }).pipe(
+    $I.annoteSchema("OpenclawConfigInvalid", {
+      description: "Failed `config validate` outcome with capped diagnostics.",
+    })
+  )
 ) {}
 
 /**
@@ -493,18 +489,16 @@ export class OpenclawSecretsReloadOutput extends S.Opaque<
  * @category models
  * @since 0.0.0
  */
-export class OpenclawSecretsReloaded extends S.TaggedClass<OpenclawSecretsReloaded, { readonly brand: unique symbol }>(
-  $I`OpenclawSecretsReloaded`
-)(
-  "Reloaded",
-  {
+export class OpenclawSecretsReloaded extends S.Opaque<OpenclawSecretsReloaded, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("Reloaded", {
     warningCount: S.Natural.annotateKey({
       description: "Number of warnings emitted during the reload.",
     }),
-  },
-  $I.annote("OpenclawSecretsReloaded", {
-    description: "Successful secrets reload outcome.",
-  })
+  }).pipe(
+    $I.annoteSchema("OpenclawSecretsReloaded", {
+      description: "Successful secrets reload outcome.",
+    })
+  )
 ) {}
 
 /**
@@ -529,22 +523,22 @@ export class OpenclawSecretsReloaded extends S.TaggedClass<OpenclawSecretsReload
  * @category models
  * @since 0.0.0
  */
-export class OpenclawSecretsReloadDegraded extends S.TaggedClass<
+export class OpenclawSecretsReloadDegraded extends S.Opaque<
   OpenclawSecretsReloadDegraded,
   { readonly brand: unique symbol }
->($I`OpenclawSecretsReloadDegraded`)(
-  "Degraded",
-  {
+>()(
+  S.TaggedStruct("Degraded", {
     diagnostics: OpenclawDiagnosticText.annotateKey({
       description: "Trimmed capped CLI diagnostics; causal detail lives in the gateway log.",
     }),
     exitCode: OpenclawExitCode.annotateKey({
       description: "Nonzero reload process exit status.",
     }),
-  },
-  $I.annote("OpenclawSecretsReloadDegraded", {
-    description: "Degraded secrets reload outcome with capped CLI diagnostics.",
-  })
+  }).pipe(
+    $I.annoteSchema("OpenclawSecretsReloadDegraded", {
+      description: "Degraded secrets reload outcome with capped CLI diagnostics.",
+    })
+  )
 ) {}
 
 /**

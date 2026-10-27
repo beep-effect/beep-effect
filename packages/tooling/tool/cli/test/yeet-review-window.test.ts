@@ -193,7 +193,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("review window read", (i
       expect((yield* readWith(answers)).window).toMatchObject({ _tag: "elapsed", anchor: "head-push" });
     }).pipe(noOverride)
   );
+});
 
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("review window read", (it) => {
   it.effect("a new push to the head restarts a window that had elapsed", () =>
     Effect.gen(function* () {
       yield* TestClock.setTime(millis("2026-10-06T10:21:00Z"));
@@ -490,7 +492,9 @@ it.layer(statusPlatform, { timeout: "30 seconds" })("status read with the review
       expect(ready.snapshot.nextCommand).toContain("re-read the review threads");
     }).pipe(noOverride)
   );
+});
 
+it.layer(statusPlatform, { timeout: "30 seconds" })("status read with the review window", (it) => {
   it.effect("reads a failed timeline query as unknown and stays not ready", () =>
     Effect.gen(function* () {
       yield* writeBoundCloseout;

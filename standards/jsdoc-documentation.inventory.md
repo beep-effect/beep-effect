@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-10-27T13:14:38.141Z
+Generated: 2026-10-27T15:09:35.788Z
 
 ## Scope
 
@@ -15,7 +15,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 77 |
 | publicModules | 3547 |
-| publicExports | 25292 |
+| publicExports | 25293 |
 | openModules | 401 |
 | openExports | 995 |
 | missingExportExamples | 7 |
@@ -156,10 +156,10 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 98 | `@beep/lockfiles` | `packages/foundation/modeling/lockfiles` | clean | 14 | 47 | 0 | 0 |
 | 99 | `@beep/repo-configs` | `packages/tooling/policy-pack/repo-configs` | needs-remediation | 24 | 197 | 0 | 1 |
 | 100 | `@beep/occt` | `packages/drivers/occt` | clean | 4 | 13 | 0 | 0 |
-| 101 | `@beep/qa-capture` | `packages/tooling/library/qa-capture` | needs-remediation | 11 | 155 | 10 | 0 |
-| 102 | `@beep/dock` | `packages/foundation/ui-system/dock` | clean | 20 | 212 | 0 | 0 |
-| 103 | `@beep/commands` | `packages/drivers/commands` | clean | 8 | 58 | 0 | 0 |
-| 104 | `@beep/git` | `packages/drivers/git` | clean | 5 | 44 | 0 | 0 |
+| 101 | `@beep/git` | `packages/drivers/git` | clean | 5 | 44 | 0 | 0 |
+| 102 | `@beep/qa-capture` | `packages/tooling/library/qa-capture` | needs-remediation | 11 | 155 | 10 | 0 |
+| 103 | `@beep/dock` | `packages/foundation/ui-system/dock` | clean | 20 | 212 | 0 | 0 |
+| 104 | `@beep/commands` | `packages/drivers/commands` | clean | 8 | 58 | 0 | 0 |
 | 105 | `@beep/agents-tables` | `packages/agents/tables` | clean | 7 | 15 | 0 | 0 |
 | 106 | `@beep/anthropic` | `packages/drivers/anthropic` | clean | 6 | 31 | 0 | 0 |
 | 107 | `@beep/lexical-schema` | `packages/foundation/modeling/lexical` | needs-remediation | 6 | 124 | 4 | 7 |
@@ -229,7 +229,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 171 | `@beep/professional-desktop` | `apps/professional-desktop` | needs-remediation | 65 | 241 | 25 | 0 |
 | 172 | `@beep/jsonl` | `packages/foundation/modeling/jsonl` | clean | 8 | 60 | 0 | 0 |
 | 173 | `@beep/practice-identify` | `apps/practice-identify` | clean | 3 | 10 | 0 | 0 |
-| 174 | `@beep/infra` | `infra` | needs-remediation | 11 | 108 | 3 | 22 |
+| 174 | `@beep/infra` | `infra` | needs-remediation | 11 | 109 | 3 | 22 |
 | 175 | `@beep/practice-setup` | `apps/practice-setup` | clean | 6 | 38 | 0 | 0 |
 | 176 | `@beep/box-provisioning` | `packages/drivers/box-provisioning` | needs-remediation | 15 | 184 | 0 | 21 |
 | 177 | `@beep/freshbooks` | `packages/drivers/freshbooks` | needs-remediation | 6 | 49 | 5 | 3 |
@@ -537,13 +537,13 @@ Export findings:
 - `src/Html.form-control.ts:231` `ButtonState` (const) - 1 example import violation(s)
 - `src/Html.form-control.ts:303` `resolveButtonState` (const) - 1 example import violation(s)
 - `src/Html.meta.ts:607` `HTML_GLOBAL_ATTRIBUTE_NAMES` (const) - 1 documentation section/link violation(s)
-- `src/Html.policy.ts:511` `SafeHtmlAst` (const) - 1 example import violation(s)
-- `src/Html.policy.ts:536` `SafeHtmlAst` (type) - 1 example import violation(s)
-- `src/Html.policy.ts:558` `SafeHtmlNode` (const) - 1 example import violation(s)
-- `src/Html.policy.ts:813` `inspectSafeHtml` (const) - 1 example import violation(s)
-- `src/Html.policy.ts:842` `enforceSafeHtml` (const) - 1 example import violation(s)
-- `src/Html.policy.ts:868` `safeHtmlAstConformant` (const) - 1 example import violation(s)
-- `src/Html.policy.ts:896` `safeHtmlAstRoot` (const) - 1 example import violation(s)
+- `src/Html.policy.ts:512` `SafeHtmlAst` (const) - 1 example import violation(s)
+- `src/Html.policy.ts:537` `SafeHtmlAst` (type) - 1 example import violation(s)
+- `src/Html.policy.ts:559` `SafeHtmlNode` (const) - 1 example import violation(s)
+- `src/Html.policy.ts:814` `inspectSafeHtml` (const) - 1 example import violation(s)
+- `src/Html.policy.ts:843` `enforceSafeHtml` (const) - 1 example import violation(s)
+- `src/Html.policy.ts:869` `safeHtmlAstConformant` (const) - 1 example import violation(s)
+- `src/Html.policy.ts:897` `safeHtmlAstRoot` (const) - 1 example import violation(s)
 - `src/Html.script.ts:44` `HtmlMimeType` (const) - 1 example import violation(s)
 - `src/Html.script.ts:86` `JavaScriptMimeTypeEssence` (const) - 1 example import violation(s)
 - `src/Html.script.ts:140` `ScriptDataBlockMimeType` (const) - 1 example import violation(s)
@@ -1770,10 +1770,10 @@ Export findings:
 - `src/SemanticFoundation.models.ts:191` `ConceptAlignment` (class) - 1 example import violation(s)
 - `src/SemanticFoundation.models.ts:224` `TaxonomyConcept` (class) - 1 example import violation(s)
 - `src/SemanticFoundation.models.ts:293` `FilingRoot` (class) - 1 example import violation(s)
-- `src/TaxonomyLoader.ts:224` `VendorAlignmentManifestEntry` (class) - 1 example import violation(s)
-- `src/TaxonomyLoader.ts:283` `VendorConceptSlice` (class) - 1 example import violation(s)
-- `src/TaxonomyLoader.ts:493` `VendorSliceConceptMismatch` (class) - 1 example import violation(s)
-- `src/TaxonomyLoader.ts:529` `VendorAlignmentTargetNotFound` (class) - 1 example import violation(s)
+- `src/TaxonomyLoader.ts:223` `VendorAlignmentManifestEntry` (class) - 1 example import violation(s)
+- `src/TaxonomyLoader.ts:282` `VendorConceptSlice` (class) - 1 example import violation(s)
+- `src/TaxonomyLoader.ts:492` `VendorSliceConceptMismatch` (class) - 1 example import violation(s)
+- `src/TaxonomyLoader.ts:528` `VendorAlignmentTargetNotFound` (class) - 1 example import violation(s)
 - `src/TaxonomyRegistry.ts:36` `LibrarianInput` (class) - 1 example import violation(s)
 - `src/TaxonomyRegistry.ts:110` `TaxonomyConceptNotFound` (class) - 1 example import violation(s)
 - `src/TaxonomyRegistry.ts:134` `UnsupportedDocumentClass` (class) - 1 example import violation(s)
@@ -1990,14 +1990,14 @@ Module findings:
 Export findings:
 - `src/Openclaw.models.ts:123` `OpenclawDiagnosticText` (const) - 1 documentation section/link violation(s)
 - `src/Openclaw.models.ts:177` `OpenclawProcessRequest` (class) - 1 documentation section/link violation(s)
-- `src/Openclaw.models.ts:354` `OpenclawConfigInvalid` (class) - 1 documentation section/link violation(s)
-- `src/Openclaw.models.ts:427` `OpenclawDoctorReport` (class) - 1 documentation section/link violation(s)
-- `src/Openclaw.models.ts:463` `OpenclawSecretsReloadOutput` (class) - 1 documentation section/link violation(s)
-- `src/Openclaw.models.ts:532` `OpenclawSecretsReloadDegraded` (class) - 1 documentation section/link violation(s)
-- `src/Openclaw.models.ts:1233` `OpenclawInvocationContext` (class) - 1 documentation section/link violation(s)
-- `src/Openclaw.models.ts:1337` `OpenclawSystemdUnitState` (class) - 1 documentation section/link violation(s)
-- `src/Openclaw.models.ts:1426` `OpenclawHttpProbe` (class) - 1 documentation section/link violation(s)
-- `src/Openclaw.models.ts:1498` `OpenclawSchemaPlaceholderFinding` (class) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:352` `OpenclawConfigInvalid` (class) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:423` `OpenclawDoctorReport` (class) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:459` `OpenclawSecretsReloadOutput` (class) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:526` `OpenclawSecretsReloadDegraded` (class) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:1227` `OpenclawInvocationContext` (class) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:1331` `OpenclawSystemdUnitState` (class) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:1420` `OpenclawHttpProbe` (class) - 1 documentation section/link violation(s)
+- `src/Openclaw.models.ts:1492` `OpenclawSchemaPlaceholderFinding` (class) - 1 documentation section/link violation(s)
 - `src/OpenclawCli.service.ts:457` `OpenclawCliRunner` (type) - 1 documentation section/link violation(s)
 - `src/OpenclawIntent.models.ts:54` `OpenclawSecretReference` (const) - 1 documentation section/link violation(s)
 - `src/OpenclawIntent.models.ts:101` `OpenclawTargetVersion` (const) - 1 documentation section/link violation(s)

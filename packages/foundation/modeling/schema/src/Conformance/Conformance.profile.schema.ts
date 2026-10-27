@@ -62,11 +62,10 @@ const ConformanceProfileValue = ConformanceProfileFields.check(ConformanceProfil
  * @category specifications
  * @since 0.0.0
  */
-export class ConformanceProfile extends S.Class<ConformanceProfile, { readonly brand: unique symbol }>(
-  $I`ConformanceProfile`
-)(
-  ConformanceProfileValue,
-  $I.annote("ConformanceProfile", {
-    description: "Versioned set of sources and invariants implemented as one conformance profile.",
-  })
+export class ConformanceProfile extends S.Opaque<ConformanceProfile, { readonly brand: unique symbol }>()(
+  ConformanceProfileValue.pipe(
+    $I.annoteSchema("ConformanceProfile", {
+      description: "Versioned set of sources and invariants implemented as one conformance profile.",
+    })
+  )
 ) {}
