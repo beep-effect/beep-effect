@@ -29,7 +29,7 @@ const DrawingErrorReasonBase = LiteralKit([
  * **Example** (Read the reasons)
  *
  * ```ts
- * import { DrawingErrorReason } from "@beep/technical-drawing"
+ * import { DrawingErrorReason } from "@beep/technical-drawing/TechnicalDrawing.errors"
  *
  * console.log(DrawingErrorReason.literals)
  * ```
@@ -51,7 +51,7 @@ export const DrawingErrorReason = DrawingErrorReasonBase.pipe(
  * **Example** (Annotate a reason)
  *
  * ```ts
- * import type { DrawingErrorReason } from "@beep/technical-drawing"
+ * import type { DrawingErrorReason } from "@beep/technical-drawing/TechnicalDrawing.errors"
  *
  * const reason: DrawingErrorReason = "omission"
  * console.log(reason)
@@ -75,7 +75,7 @@ const isDrawingError = (cause: unknown): cause is DrawingError => S.is(DrawingEr
  * **Example** (Create an error from an unknown cause)
  *
  * ```ts
- * import { DrawingError } from "@beep/technical-drawing"
+ * import { DrawingError } from "@beep/technical-drawing/TechnicalDrawing.errors"
  *
  * const error = DrawingError.fromUnknown("pdf", "Conversion failed.", new Error("rsvg"))
  * console.log(error.reason, error.cause)
@@ -105,7 +105,7 @@ export class DrawingError extends S.TaggedError<DrawingError, { readonly brand: 
    * **Example** (Wrap a port error)
    *
    * ```ts
-   * import { DrawingError } from "@beep/technical-drawing"
+   * import { DrawingError } from "@beep/technical-drawing/TechnicalDrawing.errors"
    *
    * console.log(DrawingError.fromUnknown("projection", "HLR failed.", "kernel message").cause)
    * ```

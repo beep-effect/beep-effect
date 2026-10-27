@@ -1,6 +1,8 @@
 /**
  * Progressive field-tier projector and columnar reshaper.
  *
+ * **Details**
+ *
  * Large MCP tool results (a USPTO `documentBag`-shaped response is the
  * canonical example) blow past client output ceilings when returned in full.
  * This module names three progressive-disclosure field tiers —
@@ -37,7 +39,7 @@ const $I = $McpKitId.create("FieldTier");
  * **Example** (Access minimal enum value)
  *
  * ```ts
- * import { FieldTierName } from "@beep/mcp-kit"
+ * import { FieldTierName } from "@beep/mcp-kit/FieldTier"
  *
  * const tier = FieldTierName.Enum.minimal
  * console.log(tier)
@@ -59,7 +61,7 @@ export const FieldTierName = LiteralKit(["minimal", "balanced", "complete"]).pip
  * **Example** (Satisfy FieldTierName type)
  *
  * ```ts
- * import type { FieldTierName } from "@beep/mcp-kit"
+ * import type { FieldTierName } from "@beep/mcp-kit/FieldTier"
  *
  * const tier = "balanced" satisfies FieldTierName
  * console.log(tier)
@@ -79,7 +81,7 @@ export type FieldTierName = typeof FieldTierName.Type;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import type { FieldTierSet } from "@beep/mcp-kit"
+ * import type { FieldTierSet } from "@beep/mcp-kit/FieldTier"
  *
  * const tiers = {
  *   minimal: S.Struct({ id: S.String }),
@@ -113,7 +115,7 @@ export interface FieldTierSet<
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { defineFieldTiers } from "@beep/mcp-kit"
+ * import { defineFieldTiers } from "@beep/mcp-kit/FieldTier"
  *
  * const tiers = defineFieldTiers({
  *   minimal: S.Struct({ id: S.String, title: S.String }),
@@ -144,7 +146,7 @@ const fieldNamesOf = (struct: S.Struct<S.Struct.Fields>): ReadonlyArray<string> 
  * **Example** (Strip nullish record keys)
  *
  * ```ts
- * import { stripNulls } from "@beep/mcp-kit"
+ * import { stripNulls } from "@beep/mcp-kit/FieldTier"
  *
  * const stripped = stripNulls({ a: 1, b: null, c: undefined, d: 0 })
  * console.log(stripped)
@@ -170,7 +172,7 @@ const pickFields = (value: Record<string, unknown>, fields: ReadonlyArray<string
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { defineFieldTiers, projectFieldTier } from "@beep/mcp-kit"
+ * import { defineFieldTiers, projectFieldTier } from "@beep/mcp-kit/FieldTier"
  *
  * const tiers = defineFieldTiers({
  *   minimal: S.Struct({ id: S.String }),
@@ -220,7 +222,7 @@ const jsonSizeEncoder = new TextEncoder();
  * **Example** (Measure object JSON size)
  *
  * ```ts
- * import { estimateJsonSize } from "@beep/mcp-kit"
+ * import { estimateJsonSize } from "@beep/mcp-kit/FieldTier"
  *
  * console.log(estimateJsonSize({ a: 1 }))
  * // 7
@@ -244,7 +246,7 @@ const TIER_ORDER: ReadonlyArray<FieldTierName> = A.reverse(FieldTierName.literal
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { OversizedFieldProjection } from "@beep/mcp-kit"
+ * import { OversizedFieldProjection } from "@beep/mcp-kit/FieldTier"
  *
  * const oversized = OversizedFieldProjection.make({
  *   value: { id: "doc-1" },
@@ -281,7 +283,7 @@ export class OversizedFieldProjection extends S.Opaque<OversizedFieldProjection,
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { FetchableHandle } from "@beep/mcp-kit"
+ * import { FetchableHandle } from "@beep/mcp-kit/FieldTier"
  *
  * const handle = FetchableHandle.make({
  *   handleId: "5b1d6a3e-8f3e-4a1a-9c1e-2e6b7a2f9c10",
@@ -328,7 +330,7 @@ export class FetchableHandle extends S.Opaque<FetchableHandle, { readonly brand:
  * **Example** (Make inline projection outcome)
  *
  * ```ts
- * import { FieldProjectionOutcome } from "@beep/mcp-kit"
+ * import { FieldProjectionOutcome } from "@beep/mcp-kit/FieldTier"
  *
  * const outcome = FieldProjectionOutcome.make({
  *   _tag: "Inline",
@@ -364,8 +366,8 @@ export const FieldProjectionOutcome = LiteralKit(["Inline", "Fetchable"])
  * **Example** (Type FieldProjectionOutcome value)
  *
  * ```ts
- * import { FieldProjectionOutcome as FieldProjectionOutcomeValue } from "@beep/mcp-kit"
- * import type { FieldProjectionOutcome } from "@beep/mcp-kit"
+ * import { FieldProjectionOutcome as FieldProjectionOutcomeValue } from "@beep/mcp-kit/FieldTier"
+ * import type { FieldProjectionOutcome } from "@beep/mcp-kit/FieldTier"
  *
  * const outcome: FieldProjectionOutcome = FieldProjectionOutcomeValue.make({
  *   _tag: "Inline",
@@ -403,7 +405,7 @@ type ProjectWithinBudgetOptions = {
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { defineFieldTiers, FetchableHandle, projectWithinBudget } from "@beep/mcp-kit"
+ * import { defineFieldTiers, FetchableHandle, projectWithinBudget } from "@beep/mcp-kit/FieldTier"
  *
  * const tiers = defineFieldTiers({
  *   minimal: S.Struct({ id: S.String }),
@@ -459,7 +461,7 @@ export const projectWithinBudget: {
  * **Example** (Make columnar envelope)
  *
  * ```ts
- * import { ColumnarEnvelope } from "@beep/mcp-kit"
+ * import { ColumnarEnvelope } from "@beep/mcp-kit/FieldTier"
  *
  * const envelope = ColumnarEnvelope.make({ columns: ["id", "title"], rows: [["doc-1", "Title"]] })
  * console.log(envelope.columns)
@@ -505,7 +507,7 @@ export class ColumnarEnvelope extends S.Opaque<ColumnarEnvelope, { readonly bran
  * **Example** (Reshape rows to columnar)
  *
  * ```ts
- * import { toColumnarEnvelope } from "@beep/mcp-kit"
+ * import { toColumnarEnvelope } from "@beep/mcp-kit/FieldTier"
  *
  * const envelope = toColumnarEnvelope([{ title: "A" }, { id: "2", title: "B" }])
  * console.log(envelope.columns)

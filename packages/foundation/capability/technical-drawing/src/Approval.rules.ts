@@ -40,7 +40,7 @@ const isBoundary = (line: string): boolean => A.some(BOUNDARY_PATTERNS, (pattern
  * **Example** (CRLF and trailing spaces)
  *
  * ```ts
- * import { textLines } from "@beep/technical-drawing"
+ * import { textLines } from "@beep/technical-drawing/Approval.rules"
  *
  * console.log(textLines("a  \r\n  b\n")) // ["a", "  b", ""]
  * ```
@@ -57,7 +57,7 @@ export const textLines = (text: string): ReadonlyArray<string> =>
  * **Example** (Drop a quoted thread)
  *
  * ```ts
- * import { authoredLines } from "@beep/technical-drawing"
+ * import { authoredLines } from "@beep/technical-drawing/Approval.rules"
  *
  * console.log(authoredLines("Approved.\n\nOn Mon, A wrote:\n> request"))
  * ```
@@ -103,7 +103,9 @@ const statementCheck = (text: string, statement: string, scoped: boolean): O.Opt
  * **Example** (A matching reply)
  *
  * ```ts
- * import { approvalStatement, EmailAddress, EmailConfirmation, Sha256Hex, verifyConfirmation } from "@beep/technical-drawing"
+ * import { approvalStatement, EmailAddress, EmailConfirmation } from "@beep/technical-drawing/Approval.schemas"
+ * import { Sha256Hex } from "@beep/technical-drawing/Manifest.schemas"
+ * import { verifyConfirmation } from "@beep/technical-drawing/Approval.rules"
  *
  * const hash = Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
  * const reply = EmailConfirmation.make({

@@ -20,7 +20,7 @@ const $I = $TechnicalDrawingId.create("Validation.schemas");
  * **Example** (Letter)
  *
  * ```ts
- * import { PdfPageSize } from "@beep/technical-drawing"
+ * import { PdfPageSize } from "@beep/technical-drawing/Validation.schemas"
  *
  * console.log(PdfPageSize.make({ widthPt: 612, heightPt: 792 }))
  * ```
@@ -45,7 +45,7 @@ export class PdfPageSize extends S.Opaque<PdfPageSize, { readonly brand: unique 
  * **Example** (An unembedded base font)
  *
  * ```ts
- * import { PdfFontFact } from "@beep/technical-drawing"
+ * import { PdfFontFact } from "@beep/technical-drawing/Validation.schemas"
  *
  * console.log(PdfFontFact.make({ name: "Helvetica", embedded: false }))
  * ```
@@ -68,7 +68,7 @@ export class PdfFontFact extends S.Class<PdfFontFact, { readonly brand: unique s
    * **Example** (A subset font)
    *
    * ```ts
-   * import { PdfFontFact } from "@beep/technical-drawing"
+   * import { PdfFontFact } from "@beep/technical-drawing/Validation.schemas"
    *
    * console.log(PdfFontFact.make({ name: "ABCDEF+ArialMT", embedded: true }).baseName) // "ArialMT"
    * ```
@@ -171,7 +171,7 @@ export type PdfStreamCheck = typeof PdfStreamCheck.Type;
  * **Example** (A clean two-page file)
  *
  * ```ts
- * import { PdfFacts, PdfPageSize } from "@beep/technical-drawing"
+ * import { PdfFacts, PdfPageSize } from "@beep/technical-drawing/Validation.schemas"
  *
  * const facts = PdfFacts.make({
  *   headerVersion: "1.6",
@@ -231,7 +231,7 @@ export class PdfFacts extends S.Opaque<PdfFacts, { readonly brand: unique symbol
  * **Example** (Make bounds)
  *
  * ```ts
- * import { InkBounds } from "@beep/technical-drawing"
+ * import { InkBounds } from "@beep/technical-drawing/Validation.schemas"
  *
  * console.log(InkBounds.make({ minX: 10, minY: 10, maxX: 90, maxY: 90 }))
  * ```
@@ -258,7 +258,7 @@ export class InkBounds extends S.Opaque<InkBounds, { readonly brand: unique symb
  * **Example** (A blank page)
  *
  * ```ts
- * import { PageMetrics } from "@beep/technical-drawing"
+ * import { PageMetrics } from "@beep/technical-drawing/Validation.schemas"
  * import * as O from "effect/Option"
  *
  * const metrics = PageMetrics.make({
@@ -323,7 +323,7 @@ const FindingCodeBase = LiteralKit([
  * **Example** (Read the codes)
  *
  * ```ts
- * import { FindingCode } from "@beep/technical-drawing"
+ * import { FindingCode } from "@beep/technical-drawing/Validation.schemas"
  *
  * console.log(FindingCode.literals.length)
  * ```
@@ -344,7 +344,7 @@ export const FindingCode = FindingCodeBase.pipe(
  * **Example** (Annotate a code)
  *
  * ```ts
- * import type { FindingCode } from "@beep/technical-drawing"
+ * import type { FindingCode } from "@beep/technical-drawing/Validation.schemas"
  *
  * const code: FindingCode = "margin-top"
  * console.log(code)
@@ -361,7 +361,7 @@ export type FindingCode = typeof FindingCode.Type;
  * **Example** (A margin finding)
  *
  * ```ts
- * import { SheetFinding } from "@beep/technical-drawing"
+ * import { SheetFinding } from "@beep/technical-drawing/Validation.schemas"
  * import * as O from "effect/Option"
  *
  * const finding = SheetFinding.make({ code: "margin-top", page: O.some(3), message: "Top margin 2.1 cm is under 2.5 cm." })
@@ -431,7 +431,7 @@ export type SheetLabel = typeof SheetLabel.Type;
  * **Example** (Defaults for an eight-sheet set)
  *
  * ```ts
- * import { ValidationOptions } from "@beep/technical-drawing"
+ * import { ValidationOptions } from "@beep/technical-drawing/Validation.schemas"
  * import * as O from "effect/Option"
  *
  * console.log(ValidationOptions.make({ expectedPages: O.some(8) }).maxSolidBlackMm)
@@ -527,7 +527,7 @@ export class ValidationOptions extends S.Opaque<ValidationOptions, { readonly br
  * **Example** (A clean report)
  *
  * ```ts
- * import { ValidationReport } from "@beep/technical-drawing"
+ * import { ValidationReport } from "@beep/technical-drawing/Validation.schemas"
  *
  * const report = ValidationReport.make({ pdfSha256: "00", pageCount: 8, findings: [] })
  * console.log(report.ok)
@@ -554,7 +554,7 @@ export class ValidationReport extends S.Class<ValidationReport, { readonly brand
    * **Example** (Check a report)
    *
    * ```ts
-   * import { ValidationReport } from "@beep/technical-drawing"
+   * import { ValidationReport } from "@beep/technical-drawing/Validation.schemas"
    *
    * console.log(ValidationReport.make({ pdfSha256: "00", pageCount: 1, findings: [] }).ok)
    * ```

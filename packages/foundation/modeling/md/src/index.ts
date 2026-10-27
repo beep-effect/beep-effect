@@ -11,8 +11,8 @@
  * **Example** (Render plain-text heading)
  *
  * ```ts import.meta.vitest name="Render plain-text heading"
- * import { Md } from "@beep/md"
- * import { renderPlainTextBlocks } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
+ * import { renderPlainTextBlocks } from "@beep/md/Md.behavior"
  *
  * renderPlainTextBlocks([Md.h1("Hello")]) // => "Hello"
  * ```
@@ -27,7 +27,8 @@ export * from "./Md.behavior.ts";
  * **Example** (Inspect CommonMark conformance)
  *
  * ```ts import.meta.vitest name="Inspect CommonMark conformance"
- * import { inspectMarkdownDocumentLosslessly, MarkdownConformanceProfile, Md } from "@beep/md"
+ * import { inspectMarkdownDocumentLosslessly, MarkdownConformanceProfile } from "@beep/md/Md.conformance"
+ * import { Md } from "@beep/md/Md"
  *
  * const report = inspectMarkdownDocumentLosslessly(Md.make([Md.p("Hello")]), MarkdownConformanceProfile.Enum["commonmark-0.31.2"])
  * report.issues.length // => 0
@@ -43,7 +44,7 @@ export * from "./Md.conformance.ts";
  * **Example** (Escape markdown hash)
  *
  * ```ts import.meta.vitest name="Escape markdown hash"
- * import { escapeMarkdownText } from "@beep/md"
+ * import { escapeMarkdownText } from "@beep/md/Md.escape"
  *
  * escapeMarkdownText("#") // => "\\#"
  * ```
@@ -58,7 +59,8 @@ export * from "./Md.escape.ts";
  * **Example** (Render safe HTML paragraph)
  *
  * ```ts
- * import { Md, renderSafeHtml, safeHtmlValue } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
+ * import { renderSafeHtml, safeHtmlValue } from "@beep/md/Md.html"
  * import * as Result from "effect/Result";
  * const document = Result.getOrThrow(Md.refineSafeDocument(Md.make([Md.p("Hello")])))
  * console.log(safeHtmlValue(renderSafeHtml(document))) // "<p>Hello</p>"
@@ -74,7 +76,7 @@ export * from "./Md.html.ts";
  * **Example** (Create empty Document)
  *
  * ```ts import.meta.vitest name="Create empty Document"
- * import { Document } from "@beep/md"
+ * import { Document } from "@beep/md/Md.model"
  *
  * Document.make({ children: [] })._tag // => "document"
  * ```
@@ -89,7 +91,8 @@ export * from "./Md.model.ts";
  * **Example** (Render via MarkdownAdapter)
  *
  * ```ts import.meta.vitest name="Render via MarkdownAdapter"
- * import { Md, MarkdownAdapter } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
+ * import { MarkdownAdapter } from "@beep/md/Md.render"
  *
  * MarkdownAdapter.render(Md.make([Md.p`Hello`])) // => "Hello"
  * ```
@@ -104,7 +107,8 @@ export * from "./Md.render.ts";
  * **Example** (Refine safe document success)
  *
  * ```ts import.meta.vitest name="Refine safe document success"
- * import { Md, refineSafeDocument } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
+ * import { refineSafeDocument } from "@beep/md/Md.safe"
  * import * as Result from "effect/Result";
  * Result.isSuccess(refineSafeDocument(Md.make([Md.p("Hello")]))) // => true
  * ```
@@ -119,7 +123,7 @@ export * from "./Md.safe.ts";
  * **Example** (Build and render heading)
  *
  * ```ts import.meta.vitest name="Build and render heading"
- * import { Md } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
  * import * as Result from "effect/Result";
  * const markdown = Md.render(Md.make([Md.h1`Hello`]))
  * Result.getOrThrow(markdown) // => "# Hello"
