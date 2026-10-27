@@ -1,5 +1,5 @@
 {
-  "previous": "12c2cfd6558044ef925e714eefa4df1883e0c1a1bfbb10a28fda5d91f4622ee9",
+  "previous": "589731f556842b3db55eb8c7e024af6e236edc7d6b26cbc3483c4e0b2e6d1c40",
   "review": {
     "reviewer": "Claude Opus 5.5 (effected-promotion roadmap R9, refactor/drivers-run-collect)",
     "reason": "Record the R9 manifest edits that add the @beep/commands workspace dependency to @beep/exiftool, @beep/obs, @beep/pdf-tools and @beep/tailscale (Run.collect and Run.detach) and the root policy-fingerprint input that follows from repo-cli reaching @beep/commands; the turbo coupling is measured in the review; no qualification is granted.",

@@ -1043,6 +1043,48 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("coverage artifact integ
         expect(yield* f.fs.exists(f.path.join(f.packageRoot, "coverage"))).toBe(false);
       })
     );
+
+    // A pinned base judges against the floors committed at that base, so the comparison has to
+    // read them there; it never falls back to the checkout's own rows.
+    it.effect("reads the floors from the pinned base instead of the checkout", () =>
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        yield* f.write(1);
+        yield* f.write(2);
+        const snapshots = yield* collectCoverageProducerArtifacts(f.root, f.options);
+        const first = snapshots[0];
+        if (first === undefined) return yield* Effect.die("Expected validated snapshot");
+        yield* f.fs.makeDirectory(f.path.join(f.root, "standards"));
+        yield* f.fs.writeFileString(
+          f.path.join(f.root, "standards/coverage.regression-baseline.jsonc"),
+          yield* encode(
+            CoverageRegressionBaseline.make({
+              schema_version: 2,
+              generated_at: "fixture",
+              git_sha: f.identity.executionSha,
+              command: "fixture",
+              epsilon: 0.001,
+              minimum: {
+                lines: first.baseline.lines,
+                statements: first.baseline.statements,
+                functions: first.baseline.functions,
+                branches: first.baseline.branches,
+              },
+              exemptions: {},
+              follow_ups: {},
+              packages: { "@beep/example": first.baseline },
+            })
+          )
+        );
+        const failure = yield* compareCoverageProducerArtifacts(f.root, {
+          ...f.options,
+          base: "refs/heads/missing-base",
+        }).pipe(Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({})), Effect.flip);
+        expect(failure.message).toContain(
+          "Failed to read the coverage comparison baseline from refs/heads/missing-base"
+        );
+      })
+    );
   });
   describe("checkout and source identity", () => {
     it.effect("keeps the explicit run base and scope stable when origin main advances", () =>

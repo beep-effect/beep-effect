@@ -3814,6 +3814,7 @@
         "allow": [
           "@beep/commands",
           "@beep/identity",
+          "@beep/memfs",
           "@beep/pdf-tools",
           "@beep/schema",
           "@beep/test-runner",
@@ -3822,6 +3823,7 @@
         "allowTypeOnly": [
           "@beep/commands",
           "@beep/identity",
+          "@beep/memfs",
           "@beep/pdf-tools",
           "@beep/schema",
           "@beep/test-runner",
@@ -3972,6 +3974,7 @@
           "@beep/identity",
           "@beep/law-practice-server",
           "@beep/law-practice-use-cases",
+          "@beep/memfs",
           "@beep/practice-identify",
           "@beep/schema",
           "@beep/uspto"
@@ -3980,6 +3983,7 @@
           "@beep/identity",
           "@beep/law-practice-server",
           "@beep/law-practice-use-cases",
+          "@beep/memfs",
           "@beep/practice-identify",
           "@beep/schema",
           "@beep/uspto"

@@ -3020,6 +3020,112 @@ it.layer(NodeServices.layer)((it) => {
     })
   );
 
+  // #1855 wave 7, H1: a later memory filesystem operand replaces the bundle's FileSystem in the merged context.
+  it.effect.each([
+    { root: "@effect/platform-node", services: "NodeServices" },
+    { root: "@effect/platform-bun", services: "BunServices" },
+  ])("clears a $services bundle whose FileSystem a later memory layer replaces", ({ root, services }) =>
+    Effect.gen(function* () {
+      const bundle = `import { ${services} } from "${root}";`;
+      const memory = 'import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";';
+      const suite =
+        '((it) => { it.effect("reads", () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.readFileString("fixture"); })); });';
+      for (const body of [
+        `${bundle} ${memory} it.layer(L.mergeAll(${services}.layer, MemoryFileSystem.layer))${suite}`,
+        `${bundle} ${memory} it.layer(L.merge(${services}.layer, MemoryFileSystem.layer))${suite}`,
+        `${bundle} import { MemoryFileSystem as Memory } from "@beep/memfs"; const platform = L.mergeAll(${services}.layer, Memory.layer); it.layer(platform)${suite}`,
+        `${bundle} import * as Memfs from "@beep/memfs"; it.layer(L.mergeAll(${services}.layer, Memfs.MemoryFileSystem.layerWith({ "/a": "a" })))${suite}`,
+        `${bundle} ${memory} import { SubjectLive } from "@beep/example/Subject"; const live = SubjectLive.pipe(L.provideMerge(L.mergeAll(${services}.layer, MemoryFileSystem.layer))); it.layer(live)${suite}`,
+      ])
+        assertFalse(yield* hasRule(body, "EV010"), body);
+      for (const body of [
+        `${bundle} ${memory} it.layer(L.mergeAll(MemoryFileSystem.layer, ${services}.layer))${suite}`,
+        `${bundle} ${memory} it.layer(L.merge(MemoryFileSystem.layer, ${services}.layer))${suite}`,
+        `${bundle} import { MemoryFileSystem } from "./memory.ts"; it.layer(L.mergeAll(${services}.layer, MemoryFileSystem.layer))${suite}`,
+        `${bundle} ${memory} it.layer(L.mergeAll(${services}.layer, MemoryFileSystem.makeVolume))${suite}`,
+        `${bundle} ${memory} it.layer(L.provideMerge(${services}.layer, MemoryFileSystem.layer))${suite}`,
+        `${bundle} ${memory} it.layer(L.mergeAll(${services}.layer, MemoryFileSystem.layer))${suite} it.layer(${services}.layer)${suite}`,
+      ])
+        assertTrue(yield* hasRule(body, "EV010"), body);
+    })
+  );
+
+  // #1855 wave 7, H6: a native filesystem layer whose every harness exercises a native link operation.
+  it.effect.each([
+    { module: "@effect/platform-node/NodeFileSystem" },
+    { module: "@effect/platform-bun/BunFileSystem" },
+    { module: "@effect/platform-node-shared/NodeFileSystem" },
+  ])("clears a $module layer only when every harness proves native links", ({ module }) =>
+    Effect.gen(function* () {
+      const native =
+        '((it) => { it.effect("links", () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.symlink("target", "link"); })); });';
+      const portable =
+        '((it) => { it.effect("reads", () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.readFileString("fixture"); })); });';
+      for (const body of [
+        `import * as NodeFileSystem from "${module}"; it.layer(NodeFileSystem.layer)${native}`,
+        `import { layer as fileSystem } from "${module}"; const platform = L.mergeAll(fileSystem, Paths.layer); it.layer(platform)${native} it.layer(platform)${native}`,
+        `import * as NodeFileSystem from "${module}"; const link = () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.realPath("link"); }); it.layer(NodeFileSystem.layer)((it) => { it.effect("helper", () => link()); });`,
+      ])
+        assertFalse(yield* hasRule(body, "EV010"), body);
+      for (const body of [
+        `import * as NodeFileSystem from "${module}"; it.layer(NodeFileSystem.layer)${portable}`,
+        `import * as NodeFileSystem from "${module}"; it.layer(NodeFileSystem.layer)${native} it.layer(NodeFileSystem.layer)${portable}`,
+        `import * as NodeFileSystem from "${module}"; it.layer(NodeFileSystem.layer)${native} it.effect("x", () => program.pipe(Fx.provide(NodeFileSystem.layer)));`,
+        `import * as NodeFileSystem from "${module}"; import { SubjectLive } from "@beep/example/Subject"; it.layer(SubjectLive.pipe(L.provide(NodeFileSystem.layer)))${portable}`,
+        `import * as NodeFileSystem from "${module}"; it.layer(NodeFileSystem.layer)((it) => { it.effect("other", () => Fx.sync(() => other.symlink("target", "link"))); });`,
+        `import * as NodeFileSystem from "${module}"; import * as os from "node:os"; os.tmpdir(); it.layer(NodeFileSystem.layer)${native}`,
+      ])
+        assertTrue(yield* hasRule(body, "EV010"), body);
+      assertTrue(
+        yield* hasRule(
+          `import * as NodeFS from "node:fs"; it.layer(Platform.layer)${native} NodeFS.existsSync("x");`,
+          "EV010"
+        )
+      );
+    })
+  );
+
+  // #1855 wave 7, H6: a runtime choice between bundles keeps the chosen layer's harness flows.
+  it.effect("follows both branches of a conditional platform bundle", () =>
+    Effect.gen(function* () {
+      const imports =
+        'import { BunServices } from "@effect/platform-bun"; import { NodeServices } from "@effect/platform-node";';
+      const native =
+        '((it) => { it.effect("links", () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.symlink("target", "link"); })); });';
+      const portable =
+        '((it) => { it.effect("reads", () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.readFileString("fixture"); })); });';
+      assertFalse(
+        yield* hasRule(
+          `${imports} const platform = process.versions.bun === undefined ? NodeServices.layer : BunServices.layer; it.layer(platform)${native}`,
+          "EV010"
+        )
+      );
+      assertFalse(
+        yield* hasRule(
+          `${imports} it.layer(L.mergeAll(Subject.layer).pipe(L.provideMerge(isBun ? BunServices.layer : NodeServices.layer)))${native}`,
+          "EV010"
+        )
+      );
+      deepStrictEqual(
+        A.length(
+          A.filter(
+            yield* findings(
+              `${imports} const platform = process.versions.bun === undefined ? NodeServices.layer : BunServices.layer; it.layer(platform)${portable}`
+            ),
+            (row) => row.ruleId === "EV010"
+          )
+        ),
+        2
+      );
+      assertTrue(
+        yield* hasRule(
+          `${imports} const platform = NodeServices.layer ? BunServices.layer : Fallback.layer; it.layer(platform)${native}`,
+          "EV010"
+        )
+      );
+    })
+  );
+
   it.effect.each([
     { root: "@effect/platform-node", services: "NodeServices", path: "NodePath", spawner: "NodeChildProcessSpawner" },
     { root: "@effect/platform-bun", services: "BunServices", path: "BunPath", spawner: "BunChildProcessSpawner" },
