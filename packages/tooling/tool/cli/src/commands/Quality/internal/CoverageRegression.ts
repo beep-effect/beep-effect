@@ -2145,14 +2145,18 @@ const readBaseline = Effect.fn("CoverageRegression.readBaseline")(function* (
   });
 });
 
+// An explicit base wins; otherwise TURBO_SCM_BASE pins it, as the affected coverage lanes set it.
 const readComparisonBaseline = Effect.fn("CoverageRegression.readComparisonBaseline")(function* (
-  repoRoot: string
+  repoRoot: string,
+  baseOverride?: string
 ): Effect.fn.Return<
   CoverageComparisonBaselines,
   CoverageRegressionError,
   FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
-  const configuredBase = yield* configStringOption("TURBO_SCM_BASE");
+  const configuredBase = yield* baseOverride === undefined
+    ? configStringOption("TURBO_SCM_BASE")
+    : Effect.succeedSome(baseOverride);
   return yield* O.match(configuredBase, {
     onNone: () => readBaseline(repoRoot).pipe(Effect.map(baseOnlyComparison)),
     onSome: Effect.fn("CoverageRegression.readBaseComparisonBaseline")(function* (base) {
@@ -4169,6 +4173,8 @@ export const renderCoverageRemediation = (result: CoverageComparisonResult): Rea
  * @param scoped - Whether the coverage run was intentionally filtered or affected-scoped.
  * @param expectedPackageNames - Exact scoped package names that must emit summaries.
  * @param validatedActuals - Sealed artifact snapshots; omission reads package-local coverage reports.
+ * @param base - Base the comparison pins; omission falls back to `TURBO_SCM_BASE`, and neither
+ *   judges every row at the committed floors.
  * @category use-cases
  * @since 0.0.0
  */
@@ -4177,13 +4183,14 @@ export const compareCoverageRegressionBaseline = Effect.fn("CoverageRegression.c
     repoRoot: string,
     scoped: boolean,
     expectedPackageNames: ReadonlyArray<string> = A.empty<string>(),
-    validatedActuals?: ReadonlyArray<CoverageSnapshotEntry>
+    validatedActuals?: ReadonlyArray<CoverageSnapshotEntry>,
+    base?: string
   ): Effect.fn.Return<
     void,
     CoverageRegressionError | QualityTaskFailed,
     FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
   > {
-    const baselines = yield* readComparisonBaseline(repoRoot);
+    const baselines = yield* readComparisonBaseline(repoRoot, base);
     const baseline = baselines.baseline;
     const actuals = validatedActuals ?? (yield* collectCoverageSnapshot(repoRoot));
     const result = compareCoverage(baselines, actuals, scoped, expectedPackageNames);

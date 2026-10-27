@@ -18,7 +18,7 @@ export { dual, flip, flow, identity, pipe } from "effect/Function";
  * **Example** (Make readonly non-empty array)
  *
  * ```ts
- * import { A } from "@beep/utils"
+ * import * as A from "@beep/utils/Array"
  *
  * const values = A.makeReadonly("beep")
  * console.log(values)
@@ -34,7 +34,7 @@ export * as A from "./Array.ts";
  * **Example** (Import Boolean utilities)
  *
  * ```ts
- * import { Bool } from "@beep/utils"
+ * import * as Bool from "@beep/utils/Bool"
  *
  * console.log(Bool)
  * ```
@@ -49,7 +49,7 @@ export * as Bool from "./Bool.ts";
  * **Example** (List struct object keys)
  *
  * ```ts
- * import { Data } from "@beep/utils"
+ * import * as Data from "@beep/utils/Data"
  *
  * class MyClass extends Data.TaggedClass("MyClass")<{ readonly id: number }> {}
  *
@@ -67,7 +67,7 @@ export * as Data from "./Data.ts";
  * **Example** (Import DateTime utilities)
  *
  * ```ts
- * import { DateTime } from "@beep/utils"
+ * import * as DateTime from "@beep/utils/DateTime"
  *
  * console.log(DateTime)
  * ```
@@ -94,7 +94,7 @@ export * from "./DrainableWorker.ts";
  * **Example** (Compare values for equality)
  *
  * ```ts
- * import { Eq } from "@beep/utils"
+ * import * as Eq from "@beep/utils/Equal"
  *
  * const equals = Eq.equals(42)(42)
  * console.log(equals)
@@ -110,7 +110,7 @@ export * as Eq from "./Equal.ts";
  * **Example** (Map failure to custom error)
  *
  * ```ts
- * import { Err } from "@beep/utils"
+ * import * as Err from "@beep/utils/Errors"
  * import * as Effect from "effect/Effect";
  *
  * class MyError {
@@ -140,7 +140,7 @@ export * as Err from "./Errors.ts";
  *
  * ```ts
  * import * as Effect from "effect/Effect";
- * import { FileSystem } from "@beep/utils"
+ * import * as FileSystem from "@beep/utils/FileSystem"
  *
  * console.log(Effect.runSync(FileSystem.existsSync(".")))
  * ```
@@ -162,7 +162,7 @@ export * from "./GlobalValue.ts";
  * **Example** (Read the current platform)
  *
  * ```ts
- * import { currentHostPlatform } from "@beep/utils"
+ * import { currentHostPlatform } from "@beep/utils/HostProcess"
  *
  * console.log(typeof currentHostPlatform) // "string"
  * ```
@@ -177,7 +177,7 @@ export * from "./HostProcess.ts";
  * **Example** (Escape HTML special characters)
  *
  * ```ts
- * import { Html } from "@beep/utils"
+ * import * as Html from "@beep/utils/Html"
  *
  * const escaped = Html.escapeHtml("<strong>beep</strong>")
  * console.log(escaped)
@@ -193,7 +193,7 @@ export * as Html from "./Html.ts";
  * **Example** (Check integer number)
  *
  * ```ts
- * import { N } from "@beep/utils"
+ * import * as N from "@beep/utils/Number"
  *
  * const whole = N.isInteger(42)
  * console.log(whole)
@@ -209,7 +209,7 @@ export * as N from "./Number.ts";
  * **Example** (Create Option some value)
  *
  * ```ts
- * import { O } from "@beep/utils"
+ * import * as O from "@beep/utils/Option"
  *
  * const value = O.some("beep")
  * console.log(value)
@@ -225,7 +225,7 @@ export * as O from "./Option.ts";
  * **Example** (Join path segments)
  *
  * ```ts
- * import { Path } from "@beep/utils"
+ * import * as Path from "@beep/utils/Path"
  *
  * console.log(Path.join("a", "b"))
  * ```
@@ -240,7 +240,7 @@ export * as Path from "./Path.ts";
  * **Example** (Test object predicate)
  *
  * ```ts
- * import { P } from "@beep/utils"
+ * import * as P from "@beep/utils/Predicate"
  *
  * const object = P.isObject({ ok: true })
  * console.log(object)
@@ -256,7 +256,7 @@ export * as P from "./Predicate.ts";
  * **Example** (Access default RandomValues)
  *
  * ```ts
- * import { RandomValues } from "@beep/utils"
+ * import { RandomValues } from "@beep/utils/Random"
  *
  * console.log(RandomValues.Default)
  * ```
@@ -271,7 +271,7 @@ export * from "./Random.ts";
  * **Example** (Convert record to entries)
  *
  * ```ts
- * import { R } from "@beep/utils"
+ * import * as R from "@beep/utils/Record"
  *
  * const entries = R.toEntries({ id: 1, name: "Ada" })
  * console.log(entries)
@@ -287,7 +287,7 @@ export * as R from "./Record.ts";
  * **Example** (Convert string to slug)
  *
  * ```ts
- * import { Str } from "@beep/utils"
+ * import * as Str from "@beep/utils/Str"
  *
  * const slug = Str.toSlug("Hello, Beep Effect!")
  * console.log(slug)
@@ -303,7 +303,7 @@ export * as Str from "./Str.ts";
  * **Example** (Import Stream utilities)
  *
  * ```ts
- * import { Stream } from "@beep/utils"
+ * import * as Stream from "@beep/utils/Stream"
  *
  * console.log(Stream)
  * ```
@@ -318,7 +318,7 @@ export * as Stream from "./Stream.ts";
  * **Example** (List struct object keys)
  *
  * ```ts
- * import { Struct } from "@beep/utils"
+ * import * as Struct from "@beep/utils/Struct"
  *
  * const keys = Struct.keys({ id: 1, name: "Ada" })
  * console.log(keys)
@@ -334,7 +334,7 @@ export * as Struct from "./Struct.ts";
  * **Example** (Join lines of text)
  *
  * ```ts
- * import { Text } from "@beep/utils"
+ * import * as Text from "@beep/utils/Text"
  *
  * const text = Text.joinLines(["alpha", "beta"])
  * console.log(text)
@@ -350,7 +350,7 @@ export * as Text from "./Text.ts";
  * **Example** (Call thunkTrue constant)
  *
  * ```ts
- * import { thunkTrue } from "@beep/utils"
+ * import { thunkTrue } from "@beep/utils/thunk"
  *
  * const value = thunkTrue()
  * console.log(value)

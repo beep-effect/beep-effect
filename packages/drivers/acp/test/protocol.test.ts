@@ -1885,6 +1885,93 @@ const serveTypedRequests = Effect.fnUntraced(function* (transport: AcpProtocol.A
 });
 
 it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol hardening", (it) => {
+  // A child's stdin pipe breaks when it exits, so the writer can fail before the ended stdout
+  // reports the exit status. The writer fails first here and the exit status arrives later.
+  it.effect(
+    "ends with the peer's exit when the output writer fails before the exit status arrives",
+    Effect.fnUntraced(function* () {
+      const classifying = yield* Deferred.make<void>();
+      const exitReported = yield* Deferred.make<void>();
+      const terminated = yield* Deferred.make<AcpError.AcpError>();
+      const transport = yield* AcpProtocol.makeAcpPatchedProtocol({
+        stdio: Stdio.make({
+          args: Effect.succeed([]),
+          stdin: Stream.never,
+          stdout: () => Sink.forEach(() => Effect.die("stdin pipe closed")),
+          stderr: () => Sink.drain,
+        }),
+        terminationError: Deferred.succeed(classifying, undefined).pipe(
+          Effect.andThen(Deferred.await(exitReported)),
+          Effect.as(AcpError.AcpProcessExitedError.make({ code: O.some(3) }))
+        ),
+        serverRequestMethods: HashSet.empty(),
+        onTermination: (error) => Deferred.succeed(terminated, error).pipe(Effect.asVoid),
+      });
+
+      yield* transport.notify("x/test", 1).pipe(Effect.ignore, Effect.forkScoped);
+      yield* Deferred.await(classifying);
+      yield* Deferred.succeed(exitReported, undefined);
+
+      const error = yield* Deferred.await(terminated);
+      if (error._tag !== "AcpProcessExitedError") {
+        return assert.fail(`expected a process exit error, got ${error._tag}`);
+      }
+      assertSome(error.code, 3);
+    })
+  );
+
+  it.effect(
+    "keeps the output writer's transport failure when the classifier reports no exit",
+    Effect.fnUntraced(function* () {
+      const terminated = yield* Deferred.make<AcpError.AcpError>();
+      const transport = yield* AcpProtocol.makeAcpPatchedProtocol({
+        stdio: Stdio.make({
+          args: Effect.succeed([]),
+          stdin: Stream.never,
+          stdout: () => Sink.forEach(() => Effect.die("stdin pipe closed")),
+          stderr: () => Sink.drain,
+        }),
+        terminationError: Effect.succeed(
+          AcpError.AcpTransportError.make({ operation: O.some("read-process-exit-status") })
+        ),
+        serverRequestMethods: HashSet.empty(),
+        onTermination: (error) => Deferred.succeed(terminated, error).pipe(Effect.asVoid),
+      });
+
+      yield* transport.notify("x/test", 1).pipe(Effect.ignore, Effect.forkScoped);
+
+      const error = yield* Deferred.await(terminated);
+      if (error._tag !== "AcpTransportError") {
+        return assert.fail(`expected a transport error, got ${error._tag}`);
+      }
+      assertSome(error.detail, "Failed to write an outgoing ACP message");
+    })
+  );
+
+  it.effect(
+    "ends with the peer's exit when the input stream fails instead of ending",
+    Effect.fnUntraced(function* () {
+      const terminated = yield* Deferred.make<AcpError.AcpError>();
+      yield* AcpProtocol.makeAcpPatchedProtocol({
+        stdio: Stdio.make({
+          args: Effect.succeed([]),
+          stdin: Stream.fromEffect(Effect.die("stdout pipe broke")),
+          stdout: () => Sink.drain,
+          stderr: () => Sink.drain,
+        }),
+        terminationError: Effect.succeed(AcpError.AcpProcessExitedError.make({ code: O.some(9) })),
+        serverRequestMethods: HashSet.empty(),
+        onTermination: (error) => Deferred.succeed(terminated, error).pipe(Effect.asVoid),
+      });
+
+      const error = yield* Deferred.await(terminated);
+      if (error._tag !== "AcpProcessExitedError") {
+        return assert.fail(`expected a process exit error, got ${error._tag}`);
+      }
+      assertSome(error.code, 9);
+    })
+  );
+
   it.effect(
     "fails senders parked on the full output queue when the stdout writer fails",
     Effect.fnUntraced(function* () {

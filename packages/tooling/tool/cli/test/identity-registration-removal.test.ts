@@ -190,14 +190,15 @@ describe("identity registration removal", () => {
     })
   );
 
-  it.effect("regenerates the empty labs state after the last lab is gone from the catalog", () =>
-    withTempWorkingDirectory(
+  it.layer(removalLayer, { timeout: "30 seconds" })((it) => {
+    it.effect("regenerates the empty labs state after the last lab is gone from the catalog", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        yield* fs.writeFileString("bun.lock", "");
+        const root = yield* fs.makeTempDirectoryScoped();
+        yield* fs.writeFileString(path.join(root, "bun.lock"), "");
         yield* fs.writeFileString(
-          "package.json",
+          path.join(root, "package.json"),
           `${encodeJson({
             name: "fixture-root",
             private: true,
@@ -205,15 +206,15 @@ describe("identity registration removal", () => {
             workspaces: ["packages/*", "apps/labs/*"],
           })}\n`
         );
-        yield* fs.makeDirectory(path.join("packages", "identity", "src"), { recursive: true });
+        yield* fs.makeDirectory(path.join(root, "packages", "identity", "src"), { recursive: true });
         yield* fs.writeFileString(
-          path.join("packages", "identity", "package.json"),
+          path.join(root, "packages", "identity", "package.json"),
           `${encodeJson({ name: "@beep/identity", version: "0.0.0", type: "module" })}\n`
         );
-        yield* fs.writeFileString(path.join("packages", "identity", "src", "packages.ts"), REGISTRY_FIXTURE);
+        yield* fs.writeFileString(path.join(root, "packages", "identity", "src", "packages.ts"), REGISTRY_FIXTURE);
 
-        const result = yield* LabIdentitySegment.syncLabIdentitySegment(".");
-        const next = yield* fs.readFileString(path.join("packages", "identity", "src", "packages.ts"));
+        const result = yield* LabIdentitySegment.syncLabIdentitySegment(root);
+        const next = yield* fs.readFileString(path.join(root, "packages", "identity", "src", "packages.ts"));
 
         expect(result.changed).toBe(true);
         expect(result.state.expectedSlugs).toEqual([]);
@@ -223,8 +224,8 @@ describe("identity registration removal", () => {
         expect(Str.includes(LAB_COMPOSERS_START_MARKER)(next)).toBe(true);
         expect(Str.includes(LAB_EXPORTS_END_MARKER)(next)).toBe(true);
       })
-    ).pipe(provideScopedLayer(removalLayer))
-  );
+    );
+  });
 
   it("filters slugs missing a compose segment or dedicated export", () => {
     expect(
@@ -238,16 +239,21 @@ describe("identity registration removal", () => {
     expect(pattern.test("export const $OtherId")).toBe(false);
   });
 
-  it.effect("fails to resolve the registry path when no identity workspace exists", () =>
-    withTempWorkingDirectory(
+  it.layer(removalLayer, { timeout: "30 seconds" })((it) => {
+    it.effect("fails to resolve the registry path when no identity workspace exists", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        yield* fs.writeFileString("bun.lock", "");
-        yield* fs.writeFileString("package.json", '{ "name": "fixture", "private": true, "workspaces": [] }\n');
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped();
+        yield* fs.writeFileString(path.join(root, "bun.lock"), "");
+        yield* fs.writeFileString(
+          path.join(root, "package.json"),
+          '{ "name": "fixture", "private": true, "workspaces": [] }\n'
+        );
 
-        const exit = yield* Effect.exit(CreatePackageIdentityRegistration.resolveIdentityPackagesFilePath("."));
+        const exit = yield* Effect.exit(CreatePackageIdentityRegistration.resolveIdentityPackagesFilePath(root));
         expect(exit._tag).toBe("Failure");
       })
-    ).pipe(provideScopedLayer(removalLayer))
-  );
+    );
+  });
 });

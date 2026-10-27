@@ -13,42 +13,27 @@ import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
-import * as O from "effect/Option";
 import * as Order from "effect/Order";
-import * as R from "effect/Record";
 import { topologicalSort } from "./Graph.ts";
 import { WorkspaceDeps } from "./schemas/WorkspaceDeps.ts";
 import type { CyclicDependencyError } from "./errors/index.ts";
 import type { PackageJson } from "./schemas/PackageJson.ts";
-import type { DependencyRecord } from "./schemas/WorkspaceDeps.ts";
+import type { DependencyMap } from "./schemas/WorkspaceDeps.ts";
 
 /**
- * Classify a single dependency record into workspace and npm buckets.
+ * Split one dependency map into workspace and npm buckets.
  *
- * @param record - Dependency record keyed by package name.
+ * @param dependencies - Dependency map keyed by package name.
  * @param workspaceNames - Set of package names that belong to local workspaces.
- * @returns Classified dependency maps for workspace and npm packages.
+ * @returns The entries naming a local workspace, and the rest.
  */
-const classifyRecord = (
-  record: PackageJson["dependencies"] | Readonly<Record<string, string>> | undefined,
+const classifyDependencies = (
+  dependencies: HashMap.HashMap<string, string>,
   workspaceNames: HashSet.HashSet<string>
-): { readonly workspace: DependencyRecord; readonly npm: DependencyRecord } => {
-  const workspace = R.empty<string, string>();
-  const npm = R.empty<string, string>();
-  const presentRecord = O.isOption(record) ? (O.isSome(record) ? record.value : undefined) : record;
-
-  if (presentRecord !== undefined) {
-    for (const [name, version] of R.toEntries(presentRecord)) {
-      if (HashSet.has(workspaceNames, name)) {
-        workspace[name] = version;
-      } else {
-        npm[name] = version;
-      }
-    }
-  }
-
-  return { workspace, npm };
-};
+): { readonly workspace: DependencyMap; readonly npm: DependencyMap } => ({
+  workspace: HashMap.filter(dependencies, (_, name) => HashSet.has(workspaceNames, name)),
+  npm: HashMap.filter(dependencies, (_, name) => !HashSet.has(workspaceNames, name)),
+});
 
 /**
  * Extract and classify dependencies from a decoded `PackageJson`.
@@ -63,18 +48,17 @@ const classifyRecord = (
  *
  * ```typescript
  * import * as HashSet from "effect/HashSet";
- * import * as O from "effect/Option"
  * import { extractWorkspaceDependencies } from "@beep/repo-utils/Dependencies"
  * import { decodePackageJson } from "@beep/repo-utils/schemas/PackageJson"
  *
  * const pkg = decodePackageJson({
- *
- *
+ *   name: "@my/pkg",
+ *   dependencies: { "@my/other": "workspace:*", lodash: "^4.0.0" },
  * })
  * const deps = extractWorkspaceDependencies(pkg, HashSet.make("@my/other", "@my/another"))
  * console.log(deps)
- * // deps.workspace.dependencies -> { "@my/other": "workspace:*" }
- * // deps.npm.dependencies -> { "lodash": "^4.0.0" }
+ * // deps.workspace.dependencies -> HashMap { "@my/other" => "workspace:*" }
+ * // deps.npm.dependencies -> HashMap { "lodash" => "^4.0.0" }
  * ```
  *
  * @param packageJson - A decoded PackageJson object.
@@ -87,10 +71,10 @@ export const extractWorkspaceDependencies: {
   (workspaceNames: HashSet.HashSet<string>): (packageJson: PackageJson) => WorkspaceDeps;
   (packageJson: PackageJson, workspaceNames: HashSet.HashSet<string>): WorkspaceDeps;
 } = dual(2, (packageJson: PackageJson, workspaceNames: HashSet.HashSet<string>): WorkspaceDeps => {
-  const deps = classifyRecord(packageJson.dependencies, workspaceNames);
-  const devDeps = classifyRecord(packageJson.devDependencies, workspaceNames);
-  const peerDeps = classifyRecord(packageJson.peerDependencies, workspaceNames);
-  const optDeps = classifyRecord(packageJson.optionalDependencies, workspaceNames);
+  const deps = classifyDependencies(packageJson.dependencies, workspaceNames);
+  const devDeps = classifyDependencies(packageJson.devDependencies, workspaceNames);
+  const peerDeps = classifyDependencies(packageJson.peerDependencies, workspaceNames);
+  const optDeps = classifyDependencies(packageJson.optionalDependencies, workspaceNames);
 
   return WorkspaceDeps.make({
     packageName: packageJson.name,
@@ -147,10 +131,10 @@ const uniqueSorted = (values: ReadonlyArray<string>): ReadonlyArray<string> =>
  */
 export const workspaceDependencyNames = (workspaceDeps: WorkspaceDeps): ReadonlyArray<string> =>
   uniqueSorted([
-    ...R.keys(workspaceDeps.workspace.dependencies),
-    ...R.keys(workspaceDeps.workspace.devDependencies),
-    ...R.keys(workspaceDeps.workspace.peerDependencies),
-    ...R.keys(workspaceDeps.workspace.optionalDependencies),
+    ...HashMap.keys(workspaceDeps.workspace.dependencies),
+    ...HashMap.keys(workspaceDeps.workspace.devDependencies),
+    ...HashMap.keys(workspaceDeps.workspace.peerDependencies),
+    ...HashMap.keys(workspaceDeps.workspace.optionalDependencies),
   ]);
 
 /**

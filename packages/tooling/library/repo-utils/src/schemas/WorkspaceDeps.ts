@@ -8,48 +8,51 @@
  * @since 0.0.0
  */
 import { $RepoUtilsId } from "@beep/identity/packages";
+import * as HashMap from "effect/HashMap";
 import * as S from "effect/Schema";
-import { NonEmptyStringValue, NpmPackageName, RepoPackageName } from "./PackageJson.ts";
+import { NonEmptyStringValue, RepoPackageName } from "./PackageJson.ts";
 
 const $I = $RepoUtilsId.create("schemas/WorkspaceDeps");
 
 /**
- * A record mapping package names to version specifiers.
+ * A map from dependency package names to version specifiers.
  *
- * **Example** (Import and log schema)
+ * **Example** (Check a dependency map value)
  *
  * ```ts
- * import { DependencyRecord } from "@beep/repo-utils/schemas/WorkspaceDeps"
- * const isRecord = DependencyRecord
- * console.log(isRecord)
+ * import * as HashMap from "effect/HashMap"
+ * import * as S from "effect/Schema"
+ * import { DependencyMap } from "@beep/repo-utils/schemas/WorkspaceDeps"
+ *
+ * console.log(S.is(DependencyMap)(HashMap.make(["effect", "^4.0.0"]))) // true
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const DependencyRecord = S.Record(NpmPackageName, NonEmptyStringValue).pipe(
-  $I.annoteSchema("DependencyRecord", {
-    description: "A mapping of npm-compatible dependency package names to non-empty version specifiers.",
+export const DependencyMap = S.HashMap(RepoPackageName, NonEmptyStringValue).pipe(
+  $I.annoteSchema("DependencyMap", {
+    description: "A HashMap of repo dependency package names to non-empty version specifiers.",
   })
 );
 
 /**
- * A record mapping package names to version specifiers.
+ * A map from dependency package names to version specifiers.
  *
  * **Example** (Type a dependency map)
  *
  * ```ts
- * import type { DependencyRecord } from "@beep/repo-utils/schemas/WorkspaceDeps"
- * const deps: DependencyRecord = {
- *   effect: "^4.0.0"
- * }
- * console.log(deps)
+ * import * as HashMap from "effect/HashMap"
+ * import type { DependencyMap } from "@beep/repo-utils/schemas/WorkspaceDeps"
+ *
+ * const deps: DependencyMap = HashMap.make(["effect", "^4.0.0"])
+ * console.log(HashMap.size(deps)) // 1
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export type DependencyRecord = typeof DependencyRecord.Type;
+export type DependencyMap = typeof DependencyMap.Type;
 
 /**
  * Runtime dependency package names mapped to version specifiers.
@@ -59,16 +62,16 @@ export type DependencyRecord = typeof DependencyRecord.Type;
  */
 class WorkspaceDependencyBuckets extends S.Opaque<WorkspaceDependencyBuckets, { readonly brand: unique symbol }>()(
   S.Struct({
-    dependencies: DependencyRecord.annotateKey({
+    dependencies: DependencyMap.annotateKey({
       description: "Runtime dependency package names mapped to version specifiers.",
     }),
-    devDependencies: DependencyRecord.annotateKey({
+    devDependencies: DependencyMap.annotateKey({
       description: "Development dependency package names mapped to version specifiers.",
     }),
-    peerDependencies: DependencyRecord.annotateKey({
+    peerDependencies: DependencyMap.annotateKey({
       description: "Peer dependency package names mapped to version specifiers.",
     }),
-    optionalDependencies: DependencyRecord.annotateKey({
+    optionalDependencies: DependencyMap.annotateKey({
       description: "Optional dependency package names mapped to version specifiers.",
     }),
   }).pipe(
@@ -123,9 +126,10 @@ export class WorkspaceDeps extends S.Opaque<WorkspaceDeps, { readonly brand: uni
  * **Example** (Initialize empty deps structure)
  *
  * ```ts
+ * import * as HashMap from "effect/HashMap"
  * import { emptyWorkspaceDeps } from "@beep/repo-utils/schemas/WorkspaceDeps"
  * const deps = emptyWorkspaceDeps("@beep/example")
- * console.log(deps.workspace.dependencies)
+ * console.log(HashMap.isEmpty(deps.workspace.dependencies)) // true
  * ```
  *
  * @param packageName - Package name to initialize.
@@ -137,15 +141,15 @@ export const emptyWorkspaceDeps = (packageName: string): WorkspaceDeps =>
   WorkspaceDeps.make({
     packageName,
     workspace: WorkspaceDependencyBuckets.make({
-      dependencies: {},
-      devDependencies: {},
-      peerDependencies: {},
-      optionalDependencies: {},
+      dependencies: HashMap.empty(),
+      devDependencies: HashMap.empty(),
+      peerDependencies: HashMap.empty(),
+      optionalDependencies: HashMap.empty(),
     }),
     npm: WorkspaceDependencyBuckets.make({
-      dependencies: {},
-      devDependencies: {},
-      peerDependencies: {},
-      optionalDependencies: {},
+      dependencies: HashMap.empty(),
+      devDependencies: HashMap.empty(),
+      peerDependencies: HashMap.empty(),
+      optionalDependencies: HashMap.empty(),
     }),
   });

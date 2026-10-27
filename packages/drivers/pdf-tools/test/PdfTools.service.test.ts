@@ -1,4 +1,5 @@
 import * as NodeZlib from "node:zlib";
+import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   FontFamilyAlias,
   InkCoverageRequest,
@@ -19,7 +20,7 @@ import {
 } from "@beep/pdf-tools";
 import { it } from "@beep/test-runner";
 import { Str } from "@beep/utils";
-import { NodeServices } from "@effect/platform-node";
+import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect } from "@effect/vitest";
 import { assertInstanceOf, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -398,6 +399,9 @@ const makeFakeSpawnerLayer = (
     })
   );
 
+// The fake tools write every file the subject reads, so each block runs on its own in-memory volume.
+const PlatformLayer = Layer.mergeAll(MemoryFileSystem.layer, NodePath.layer);
+
 // A tool that starts and never exits.
 const HangingSpawner = Layer.succeed(
   ChildProcessSpawner.ChildProcessSpawner,
@@ -430,7 +434,7 @@ const makeLayer = (
 ) =>
   PdfTools.makeLayer(config).pipe(
     Layer.provide(makeFakeSpawnerLayer(commands, exitCode, fontconfigs)),
-    Layer.provideMerge(NodeServices.layer)
+    Layer.provideMerge(PlatformLayer)
   );
 
 describe("@beep/pdf-tools service", () => {
@@ -1363,7 +1367,7 @@ describe("@beep/pdf-tools service", () => {
   describe("when the tool never exits", () => {
     const HangingLayer = PdfTools.makeLayer(PdfToolsConfig.make({ timeoutMillis: 5_000 })).pipe(
       Layer.provide(HangingSpawner),
-      Layer.provideMerge(NodeServices.layer)
+      Layer.provideMerge(PlatformLayer)
     );
     it.layer(HangingLayer, { timeout: "30 seconds" })((it) => {
       it.effect(

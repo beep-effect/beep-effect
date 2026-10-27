@@ -25,7 +25,7 @@ import type * as Order from "effect/Order";
  * **Example** (Non-empty vs empty arrays)
  *
  * ```ts
- * import { A } from "@beep/utils"
+ * import * as A from "@beep/utils/Array"
  *
  * const hasItems = A.matchToBoolean([1, 2, 3])
  * // true
@@ -60,7 +60,7 @@ const NonEmptyArraySchema = NonEmptyReadonlyArraySchema.pipe(S.mutable);
  * **Example** (Assert and narrow mutable)
  *
  * ```ts
- * import { A } from "@beep/utils"
+ * import * as A from "@beep/utils/Array"
  *
  * const items: unknown = [1, 2, 3]
  * A.assertNonEmptyArray(items)
@@ -83,7 +83,7 @@ export const assertNonEmptyArray: (input: unknown) => asserts input is A.NonEmpt
  * **Example** (Assert and narrow readonly)
  *
  * ```ts
- * import { A } from "@beep/utils"
+ * import * as A from "@beep/utils/Array"
  *
  * const items: unknown = ["a", "b"]
  * A.assertNonEmptyReadonlyArray(items)
@@ -118,7 +118,7 @@ function asNonEmptyReadonlyArray<T>(out: ReadonlyArray<T>): A.NonEmptyReadonlyAr
  *
  * ```ts
  * import { pipe } from "effect/Function";
- * import { A } from "@beep/utils"
+ * import * as A from "@beep/utils/Array"
  *
  * const items: A.NonEmptyReadonlyArray<number> = [1, 2, 3]
  *
@@ -157,7 +157,7 @@ export const mapNonEmpty: {
  *
  * ```ts
  * import { pipe } from "effect/Function";
- * import { A } from "@beep/utils"
+ * import * as A from "@beep/utils/Array"
  *
  * const items: A.NonEmptyReadonlyArray<number> = [1, 2, 3]
  *
@@ -198,7 +198,7 @@ export const flatMapNonEmpty: {
  *
  * ```ts
  * import { pipe } from "effect/Function";
- * import { A } from "@beep/utils"
+ * import * as A from "@beep/utils/Array"
  *
  * const items: A.NonEmptyReadonlyArray<string> = ["a", "b", "c"]
  *
@@ -237,7 +237,7 @@ export const mapNonEmptyReadonly: {
  *
  * ```ts
  * import { pipe } from "effect/Function";
- * import { A } from "@beep/utils"
+ * import * as A from "@beep/utils/Array"
  *
  * const items: A.NonEmptyReadonlyArray<string> = ["hi", "bye"]
  *
@@ -309,7 +309,8 @@ const optionFromNativeIndex = (index: number): O.Option<number> => (index === -1
  *
  * ```ts
  * import { pipe } from "effect/Function";
- * import { A, O } from "@beep/utils"
+ * import * as A from "@beep/utils/Array"
+ * import * as O from "@beep/utils/Option"
  *
  * const index = pipe(["alpha", "beta"], A.indexOf("beta"))
  * console.log(O.getOrUndefined(index))
@@ -341,7 +342,8 @@ export const indexOf: IndexLookupSignature = dual(
  *
  * ```ts
  * import { pipe } from "effect/Function";
- * import { A, O } from "@beep/utils"
+ * import * as A from "@beep/utils/Array"
+ * import * as O from "@beep/utils/Option"
  *
  * const index = pipe(["a", "b", "a"], A.lastIndexOf("a"))
  * console.log(O.getOrUndefined(index))
@@ -374,7 +376,7 @@ export const lastIndexOf: IndexLookupSignature = dual(
  *
  * ```ts
  * import { pipe } from "effect/Function";
- * import { A } from "@beep/utils"
+ * import * as A from "@beep/utils/Array"
  *
  * const middle = pipe([1, 2, 3, 4], A.slice({ start: 1, end: 3 }))
  * console.log(middle)
@@ -398,7 +400,7 @@ export const slice: {
  * **Example** (Index-value entry pairs)
  *
  * ```ts
- * import { A } from "@beep/utils"
+ * import * as A from "@beep/utils/Array"
  *
  * const indexed = A.entries(["x", "y"])
  * const first = indexed[0]
@@ -418,7 +420,7 @@ export const entries = <T>(self: ReadonlyArray<T>): Array<readonly [number, T]> 
  * **Example** (Materialize numeric indexes)
  *
  * ```ts
- * import { A } from "@beep/utils"
+ * import * as A from "@beep/utils/Array"
  *
  * const indexes = A.keys(["x", "y"])
  * console.log(indexes)
@@ -435,7 +437,7 @@ export const keys = (self: ReadonlyArray<unknown>): Array<number> => A.makeBy(se
  * **Example** (Shallow immutable value copy)
  *
  * ```ts
- * import { A } from "@beep/utils"
+ * import * as A from "@beep/utils/Array"
  *
  * const source = ["x", "y"]
  * const copy = A.values(source)
@@ -461,7 +463,7 @@ export const values = <T>(self: ReadonlyArray<T>): Array<T> => A.copy(self);
  * **Example** (Mutating append same reference)
  *
  * ```ts
- * import { A } from "@beep/utils"
+ * import * as A from "@beep/utils/Array"
  *
  * const values = [1, 2]
  * const same = A.appendInPlace(values, 3)
@@ -492,7 +494,7 @@ export const appendInPlace: {
  * **Example** (Mutating append multiple values)
  *
  * ```ts
- * import { A } from "@beep/utils"
+ * import * as A from "@beep/utils/Array"
  *
  * const values = ["a"]
  * A.appendAllInPlace(values, ["b", "c"])
@@ -524,7 +526,7 @@ export const appendAllInPlace: {
  * **Example** (In-place sort with Order)
  *
  * ```ts
- * import { A } from "@beep/utils"
+ * import * as A from "@beep/utils/Array"
  * import * as Order from "effect/Order"
  *
  * const values = [3, 1, 2]
@@ -560,7 +562,7 @@ export const sortInPlace: {
  * **Example** (In-place splice with options)
  *
  * ```ts
- * import { A } from "@beep/utils"
+ * import * as A from "@beep/utils/Array"
  *
  * const values = ["a", "b", "c"]
  * const removed = A.spliceInPlace(values, { start: 1, deleteCount: 1, items: ["x"] })
@@ -602,7 +604,7 @@ export const spliceInPlace: {
  * **Example** (Re-export makeReadonly usage)
  *
  * ```ts
- * import { A } from "@beep/utils"
+ * import * as A from "@beep/utils/Array"
  *
  * const values = A.makeReadonly("beep")
  * console.log(values)
@@ -624,7 +626,7 @@ export * from "effect/Array";
  * **Example** (Normalize value or array)
  *
  * ```ts
- * import { A } from "@beep/utils"
+ * import * as A from "@beep/utils/Array"
  *
  * const single = A.makeReadonly("hello")
  * // ["hello"]
@@ -651,7 +653,7 @@ export const makeReadonly = <T>(a: T | Array<T>): ReadonlyArray<T> => A.ensure(a
  * **Example** (Non-empty from Set iterable)
  *
  * ```ts
- * import { A } from "@beep/utils"
+ * import * as A from "@beep/utils/Array"
  *
  * const fromSet = A.fromIterableNonEmpty(new Set([1, 2, 3]))
  * // [1, 2, 3] narrowed to NonEmptyReadonlyArray<number>
@@ -675,7 +677,7 @@ export const fromIterableNonEmpty = <const TArray>(collection: Iterable<TArray>)
  * **Example** (Typed empty readonly array)
  *
  * ```ts
- * import { A } from "@beep/utils"
+ * import * as A from "@beep/utils/Array"
  *
  * const result = A.emptyReadonly<number>()
  * console.log(result) // []
