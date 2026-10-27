@@ -19,7 +19,8 @@ const $I = $DockId.create("Dock.events");
  * **Example** (Make panel opened event)
  *
  * ```ts
- * import { GroupId, PanelId, PanelOpenedEvent } from "@beep/dock"
+ * import { GroupId, PanelId } from "@beep/dock/Dock.ids"
+ * import { PanelOpenedEvent } from "@beep/dock/Dock.events"
  *
  * const event = PanelOpenedEvent.make({ panelId: PanelId.make("panel-one"), groupId: GroupId.make("group-one") })
  * console.log(event.kind)
@@ -46,7 +47,8 @@ export class PanelOpenedEvent extends S.Opaque<PanelOpenedEvent, { readonly bran
  * **Example** (Make panel activated event)
  *
  * ```ts
- * import { GroupId, PanelActivatedEvent, PanelId } from "@beep/dock"
+ * import { GroupId, PanelId } from "@beep/dock/Dock.ids"
+ * import { PanelActivatedEvent } from "@beep/dock/Dock.events"
  *
  * const event = PanelActivatedEvent.make({ panelId: PanelId.make("panel-one"), groupId: GroupId.make("group-one") })
  * console.log(event.kind)
@@ -73,7 +75,8 @@ export class PanelActivatedEvent extends S.Opaque<PanelActivatedEvent, { readonl
  * **Example** (Make title changed event)
  *
  * ```ts
- * import { GroupId, PanelId, PanelTitleChangedEvent } from "@beep/dock"
+ * import { GroupId, PanelId } from "@beep/dock/Dock.ids"
+ * import { PanelTitleChangedEvent } from "@beep/dock/Dock.events"
  *
  * const event = PanelTitleChangedEvent.make({ panelId: PanelId.make("panel-one"), groupId: GroupId.make("group-one"), title: "Renamed" })
  * console.log(event.kind)
@@ -94,7 +97,9 @@ export class PanelTitleChangedEvent extends S.Opaque<PanelTitleChangedEvent, { r
  * **Example** (Make view changed event)
  *
  * ```ts
- * import { GroupId, PanelId, PanelViewChangedEvent, TextPanelView } from "@beep/dock"
+ * import { GroupId, PanelId } from "@beep/dock/Dock.ids"
+ * import { PanelViewChangedEvent } from "@beep/dock/Dock.events"
+ * import { TextPanelView } from "@beep/dock/Dock.models"
  *
  * const event = PanelViewChangedEvent.make({ panelId: PanelId.make("panel-one"), groupId: GroupId.make("group-one"), view: TextPanelView.make({ text: "updated" }) })
  * console.log(event.kind)
@@ -115,7 +120,8 @@ export class PanelViewChangedEvent extends S.Opaque<PanelViewChangedEvent, { rea
  * **Example** (Make render mode event)
  *
  * ```ts
- * import { GroupId, PanelId, PanelRenderModeChangedEvent } from "@beep/dock"
+ * import { GroupId, PanelId } from "@beep/dock/Dock.ids"
+ * import { PanelRenderModeChangedEvent } from "@beep/dock/Dock.events"
  *
  * const event = PanelRenderModeChangedEvent.make({ panelId: PanelId.make("panel-one"), groupId: GroupId.make("group-one"), renderMode: "always" })
  * console.log(event.kind)
@@ -142,7 +148,8 @@ export class PanelRenderModeChangedEvent extends S.Opaque<
  * **Example** (Clear panel tab component)
  *
  * ```ts
- * import { GroupId, PanelId, PanelTabComponentChangedEvent } from "@beep/dock"
+ * import { GroupId, PanelId } from "@beep/dock/Dock.ids"
+ * import { PanelTabComponentChangedEvent } from "@beep/dock/Dock.events"
  * import * as O from "effect/Option"
  *
  * const event = PanelTabComponentChangedEvent.make({ panelId: PanelId.make("panel-one"), groupId: GroupId.make("group-one"), tabComponent: O.none() })
@@ -174,7 +181,9 @@ export class PanelTabComponentChangedEvent extends S.Opaque<
  * **Example** (Update panel size constraints)
  *
  * ```ts
- * import { GroupId, PanelConstraints, PanelConstraintsChangedEvent, PanelId } from "@beep/dock"
+ * import { GroupId, PanelId } from "@beep/dock/Dock.ids"
+ * import { PanelConstraints } from "@beep/dock/Dock.models"
+ * import { PanelConstraintsChangedEvent } from "@beep/dock/Dock.events"
  * import * as O from "effect/Option"
  *
  * const event = PanelConstraintsChangedEvent.make({
@@ -210,7 +219,8 @@ export class PanelConstraintsChangedEvent extends S.Opaque<
  * **Example** (Move panel across groups)
  *
  * ```ts
- * import { GroupId, PanelId, PanelMovedEvent } from "@beep/dock"
+ * import { GroupId, PanelId } from "@beep/dock/Dock.ids"
+ * import { PanelMovedEvent } from "@beep/dock/Dock.events"
  *
  * const event = PanelMovedEvent.make({ panelId: PanelId.make("panel-one"), fromGroupId: GroupId.make("group-one"), toGroupId: GroupId.make("group-two") })
  * console.log(event.kind)
@@ -239,7 +249,8 @@ export class PanelMovedEvent extends S.Opaque<PanelMovedEvent, { readonly brand:
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { GroupId, PanelId, PanelReorderedEvent } from "@beep/dock"
+ * import { GroupId, PanelId } from "@beep/dock/Dock.ids"
+ * import { PanelReorderedEvent } from "@beep/dock/Dock.events"
  *
  * const event = PanelReorderedEvent.make({ panelId: PanelId.make("panel-one"), groupId: GroupId.make("group-one"), index: S.Natural.make(1) })
  * console.log(event.kind)
@@ -260,7 +271,8 @@ export class PanelReorderedEvent extends S.Opaque<PanelReorderedEvent, { readonl
  * **Example** (Merge groups in order)
  *
  * ```ts
- * import { GroupId, GroupMergedEvent, PanelId } from "@beep/dock"
+ * import { GroupId, PanelId } from "@beep/dock/Dock.ids"
+ * import { GroupMergedEvent } from "@beep/dock/Dock.events"
  *
  * const event = GroupMergedEvent.make({ fromGroupId: GroupId.make("group-one"), toGroupId: GroupId.make("group-two"), panelIds: [PanelId.make("panel-one")] })
  * console.log(event.kind)
@@ -288,7 +300,8 @@ export class GroupMergedEvent extends S.Opaque<GroupMergedEvent, { readonly bran
  * **Example** (Move group into split)
  *
  * ```ts
- * import { GroupId, GroupMovedEvent, SplitId } from "@beep/dock"
+ * import { GroupId, SplitId } from "@beep/dock/Dock.ids"
+ * import { GroupMovedEvent } from "@beep/dock/Dock.events"
  *
  * const event = GroupMovedEvent.make({ groupId: GroupId.make("group-one"), splitId: SplitId.make("split-one") })
  * console.log(event.kind)
@@ -311,7 +324,8 @@ export class GroupMovedEvent extends S.Opaque<GroupMovedEvent, { readonly brand:
  * **Example** (Update group metadata)
  *
  * ```ts
- * import { GroupId, GroupUpdatedEvent } from "@beep/dock"
+ * import { GroupId } from "@beep/dock/Dock.ids"
+ * import { GroupUpdatedEvent } from "@beep/dock/Dock.events"
  *
  * const event = GroupUpdatedEvent.make({ groupId: GroupId.make("group-one") })
  * console.log(event.kind)
@@ -332,7 +346,8 @@ export class GroupUpdatedEvent extends S.Opaque<GroupUpdatedEvent, { readonly br
  * **Example** (Close panel with collapse)
  *
  * ```ts
- * import { GroupId, PanelClosedEvent, PanelId } from "@beep/dock"
+ * import { GroupId, PanelId } from "@beep/dock/Dock.ids"
+ * import { PanelClosedEvent } from "@beep/dock/Dock.events"
  *
  * const event = PanelClosedEvent.make({ panelId: PanelId.make("panel-one"), groupId: GroupId.make("group-one") })
  * console.log(event.kind)
@@ -359,7 +374,8 @@ export class PanelClosedEvent extends S.Opaque<PanelClosedEvent, { readonly bran
  * **Example** (Resize split by ratio)
  *
  * ```ts
- * import { SplitId, SplitRatio, SplitResizedEvent } from "@beep/dock"
+ * import { SplitId, SplitRatio } from "@beep/dock/Dock.ids"
+ * import { SplitResizedEvent } from "@beep/dock/Dock.events"
  *
  * const event = SplitResizedEvent.make({ splitId: SplitId.make("split-one"), ratio: SplitRatio.make(6_000) })
  * console.log(event.kind)
@@ -386,7 +402,7 @@ export class SplitResizedEvent extends S.Opaque<SplitResizedEvent, { readonly br
  * **Example** (Clear the workspace)
  *
  * ```ts
- * import { WorkspaceClearedEvent } from "@beep/dock"
+ * import { WorkspaceClearedEvent } from "@beep/dock/Dock.events"
  *
  * const event = WorkspaceClearedEvent.make({})
  * console.log(event.kind)
@@ -412,7 +428,7 @@ export class WorkspaceClearedEvent extends S.Opaque<WorkspaceClearedEvent, { rea
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { WorkspaceRestoredEvent } from "@beep/dock"
+ * import { WorkspaceRestoredEvent } from "@beep/dock/Dock.events"
  *
  * const event = WorkspaceRestoredEvent.make({ sourceRevision: S.Natural.make(3), installedRevision: S.Natural.make(8) })
  * console.log(event.kind)
@@ -440,7 +456,8 @@ export class WorkspaceRestoredEvent extends S.Opaque<WorkspaceRestoredEvent, { r
  * **Example** (Maximize a group)
  *
  * ```ts
- * import { GroupId, GroupMaximizedEvent } from "@beep/dock"
+ * import { GroupId } from "@beep/dock/Dock.ids"
+ * import { GroupMaximizedEvent } from "@beep/dock/Dock.events"
  *
  * const event = GroupMaximizedEvent.make({ groupId: GroupId.make("group-one") })
  * console.log(event.kind)
@@ -461,7 +478,8 @@ export class GroupMaximizedEvent extends S.Opaque<GroupMaximizedEvent, { readonl
  * **Example** (Restore maximized group)
  *
  * ```ts
- * import { GroupId, GroupRestoredEvent } from "@beep/dock"
+ * import { GroupId } from "@beep/dock/Dock.ids"
+ * import { GroupRestoredEvent } from "@beep/dock/Dock.events"
  *
  * const event = GroupRestoredEvent.make({ groupId: GroupId.make("group-one") })
  * console.log(event.kind)
@@ -481,7 +499,8 @@ export class GroupRestoredEvent extends S.Opaque<GroupRestoredEvent, { readonly 
  * **Example** (Float a docked group)
  *
  * ```ts
- * import { GroupFloatedEvent, GroupId } from "@beep/dock"
+ * import { GroupFloatedEvent } from "@beep/dock/Dock.events"
+ * import { GroupId } from "@beep/dock/Dock.ids"
  *
  * const event = GroupFloatedEvent.make({ groupId: GroupId.make("group-one") })
  * console.log(event.kind)
@@ -501,7 +520,8 @@ export class GroupFloatedEvent extends S.Opaque<GroupFloatedEvent, { readonly br
  * **Example** (Dock a floating group)
  *
  * ```ts
- * import { GroupDockedEvent, GroupId } from "@beep/dock"
+ * import { GroupDockedEvent } from "@beep/dock/Dock.events"
+ * import { GroupId } from "@beep/dock/Dock.ids"
  *
  * const event = GroupDockedEvent.make({ groupId: GroupId.make("group-one") })
  * console.log(event.kind)
@@ -521,7 +541,8 @@ export class GroupDockedEvent extends S.Opaque<GroupDockedEvent, { readonly bran
  * **Example** (Move floating group)
  *
  * ```ts
- * import { FloatingGroupMovedEvent, GroupId } from "@beep/dock"
+ * import { FloatingGroupMovedEvent } from "@beep/dock/Dock.events"
+ * import { GroupId } from "@beep/dock/Dock.ids"
  *
  * const event = FloatingGroupMovedEvent.make({ groupId: GroupId.make("group-one") })
  * console.log(event.kind)
@@ -566,7 +587,7 @@ const DockEventKind = LiteralKit([
  * **Example** (Create tagged dock event)
  *
  * ```ts
- * import { DockEvent, WorkspaceClearedEvent } from "@beep/dock"
+ * import { DockEvent, WorkspaceClearedEvent } from "@beep/dock/Dock.events"
  *
  * const event = WorkspaceClearedEvent.make({})
  * console.log(event.kind)
@@ -611,7 +632,7 @@ export const DockEvent = DockEventKind.mapMembers(
  * **Example** (Annotate dock event type)
  *
  * ```ts
- * import { DockEvent, WorkspaceClearedEvent } from "@beep/dock"
+ * import { DockEvent, WorkspaceClearedEvent } from "@beep/dock/Dock.events"
  *
  * const event: DockEvent = WorkspaceClearedEvent.make({})
  * console.log(event.kind)

@@ -20,7 +20,7 @@ const $I = $DockId.create("Dock.outcomes");
  * **Example** (Make unchanged reason value)
  *
  * ```ts
- * import { DockUnchangedReason } from "@beep/dock"
+ * import { DockUnchangedReason } from "@beep/dock/Dock.outcomes"
  *
  * const value = DockUnchangedReason.make("panel-already-active")
  * console.log(value)
@@ -51,7 +51,7 @@ export const DockUnchangedReason = LiteralKit([
  * **Example** (Type annotated unchanged reason)
  *
  * ```ts
- * import { DockUnchangedReason } from "@beep/dock"
+ * import { DockUnchangedReason } from "@beep/dock/Dock.outcomes"
  *
  * const value: DockUnchangedReason = DockUnchangedReason.make("panel-already-active")
  * console.log(value)
@@ -69,7 +69,9 @@ export type DockUnchangedReason = typeof DockUnchangedReason.Type;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { DockChanged, DockWorkspace, WorkspaceClearedEvent } from "@beep/dock"
+ * import { DockChanged } from "@beep/dock/Dock.outcomes"
+ * import { DockWorkspace } from "@beep/dock/Dock.tree"
+ * import { WorkspaceClearedEvent } from "@beep/dock/Dock.events"
  *
  * const value = DockChanged.make({ previousRevision: S.Natural.make(0), state: DockWorkspace.empty, events: [WorkspaceClearedEvent.make({})] })
  * console.log(value)
@@ -97,7 +99,7 @@ export class DockChanged extends S.Opaque<DockChanged, { readonly brand: unique 
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { DockUnchanged } from "@beep/dock"
+ * import { DockUnchanged } from "@beep/dock/Dock.outcomes"
  *
  * const value = DockUnchanged.make({ revision: S.Natural.make(3), reason: "panel-already-active" })
  * console.log(value)
@@ -124,7 +126,7 @@ export class DockUnchanged extends S.Opaque<DockUnchanged, { readonly brand: uni
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { DockMutationResult, DockUnchanged } from "@beep/dock"
+ * import { DockMutationResult, DockUnchanged } from "@beep/dock/Dock.outcomes"
  *
  * const value = DockUnchanged.make({ revision: S.Natural.make(3), reason: "panel-already-active" })
  * console.log(value)
@@ -146,7 +148,7 @@ export const DockMutationResult = S.Union([DockChanged, DockUnchanged]).pipe(
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { DockMutationResult, DockUnchanged } from "@beep/dock"
+ * import { DockMutationResult, DockUnchanged } from "@beep/dock/Dock.outcomes"
  *
  * const value: DockMutationResult = DockUnchanged.make({ revision: S.Natural.make(3), reason: "panel-already-active" })
  * console.log(value)
@@ -164,7 +166,9 @@ export type DockMutationResult = typeof DockMutationResult.Type;
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { ApiCommandOrigin, CommandId, DockMutationOutcome, DockUnchanged } from "@beep/dock"
+ * import { ApiCommandOrigin } from "@beep/dock/Dock.commands"
+ * import { CommandId } from "@beep/dock/Dock.ids"
+ * import { DockMutationOutcome, DockUnchanged } from "@beep/dock/Dock.outcomes"
  *
  * const value = DockMutationOutcome.make({ commandId: CommandId.make("command-activate"), origin: ApiCommandOrigin.make({ requestId: "request-one" }), result: DockUnchanged.make({ revision: S.Natural.make(3), reason: "panel-already-active" }) })
  * console.log(value.commandId)
