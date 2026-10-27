@@ -137,7 +137,7 @@ describe("package scripts policy", () => {
         expect(drift).toContainEqual({ _tag: "missing-impl", name: "beep:check" });
         const record = yield* O.getOrThrow(R.get(codecs, "lab")).encode(expected);
         expect(record["lint:jsdoc"]).toBeUndefined();
-        expect(record["beep:check"]).toBe("tsc-rs -p tsconfig.check.json");
+        expect(record["beep:check"]).toBe("tsrs -p tsconfig.check.json");
       })
     );
   });
@@ -185,7 +185,7 @@ describe("package scripts policy", () => {
     it.effect(
       "requires a turbo.json build.outputs override for noEmit builds",
       Effect.fnUntraced(function* () {
-        const noEmit = { ...base, "beep:build": "tsc-rs -p tsconfig.check.json" };
+        const noEmit = { ...base, "beep:build": "tsrs -p tsconfig.check.json" };
         const root = yield* fixture({
           "package.json": { name: "root", workspaces: ["apps/*"] },
           "apps/bare/package.json": { name: "@beep/bare", scripts: noEmit },
@@ -231,7 +231,7 @@ describe("package scripts policy", () => {
           file,
           yield* jsonStringifyPretty({
             name: "@beep/a",
-            scripts: { ...manifest.scripts, "beep:check": "tsc-rs -p tsconfig.check.json" },
+            scripts: { ...manifest.scripts, "beep:check": "tsrs -p tsconfig.check.json" },
           })
         );
         const before = yield* fs.readFileString(file);
@@ -241,8 +241,8 @@ describe("package scripts policy", () => {
           assertSome(HashMap.get(report.implDrift, "packages/a/package.json"), [
             ImplScriptDrift.make({
               name: "beep:check",
-              actual: "tsc-rs -p tsconfig.check.json",
-              expected: "tsc-rs -p tsconfig.check.json && bun run beep:check:tests",
+              actual: "tsrs -p tsconfig.check.json",
+              expected: "tsrs -p tsconfig.check.json && bun run beep:check:tests",
             }),
           ]);
           expect(HashSet.size(report.written)).toBe(0);
@@ -270,9 +270,9 @@ describe("package scripts policy", () => {
     const customized = {
       coverage: "owned coverage",
       "beep:build": "vite build",
-      "beep:check": "tsc-rs -p tsconfig.check.json && bunx --bun --no-install tsc-rs -p scripts/tsconfig.json",
-      "beep:check:stories": "tsc-rs -p tsconfig.stories.json --noEmit",
-      "beep:check:pinned": "bunx tsc-rs@0.8.0 -p tsconfig.json && node node_modules/tsc-rs/bin/tsc-rs.js -p a.json",
+      "beep:check": "tsrs -p tsconfig.check.json && bunx --bun --no-install tsrs -p scripts/tsconfig.json",
+      "beep:check:stories": "tsrs -p tsconfig.stories.json --noEmit",
+      "beep:check:pinned": "bunx tsrs@0.8.0 -p tsconfig.json && node node_modules/tsrs/bin/tsrs.js -p a.json",
       "typecheck:legacy": "tsgo -p tsconfig.json",
     };
     const checkerFixture = () =>
@@ -304,7 +304,7 @@ describe("package scripts policy", () => {
     const checkerRows = (report: { readonly drift: HashMap.HashMap<string, ReadonlyArray<unknown>> }) =>
       HashMap.get(report.drift, "packages/regressed/package.json").pipe(O.getOrElse(() => []));
     it.effect(
-      "fails beep:build and beep:check scripts that run a checker other than tsc-rs",
+      "fails beep:build and beep:check scripts that run a checker other than tsrs",
       Effect.fnUntraced(function* () {
         const root = yield* checkerFixture();
         const policy = yield* PackageScriptsPolicy.make(root);
@@ -316,7 +316,7 @@ describe("package scripts policy", () => {
       })
     );
     it.effect(
-      "accepts a non-tsc-rs checker only through a matching exemption row",
+      "accepts a non-tsrs checker only through a matching exemption row",
       Effect.fnUntraced(function* () {
         const root = yield* checkerFixture();
         const exemptions = [
@@ -324,7 +324,7 @@ describe("package scripts policy", () => {
             manifest: "packages/regressed/package.json",
             script: "beep:check",
             engine: "tsgo",
-            reason: "tsc-rs rejects a valid program in this package",
+            reason: "tsrs rejects a valid program in this package",
           }),
           CheckerEngineExemption.make({
             manifest: "packages/regressed/package.json",

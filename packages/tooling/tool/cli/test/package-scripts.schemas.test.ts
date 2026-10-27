@@ -122,7 +122,7 @@ describe("canonical package scripts schemas", () => {
         drift: { "apps/a/package.json": [{ _tag: "missing-task", name: "lint:laws" }] },
         implDrift: {
           "apps/a/package.json": [
-            { name: "beep:check", actual: "custom check", expected: "tsc-rs -p tsconfig.check.json" },
+            { name: "beep:check", actual: "custom check", expected: "tsrs -p tsconfig.check.json" },
           ],
         },
         written: ["apps/a/package.json"],
@@ -162,8 +162,8 @@ describe("canonical package scripts schemas", () => {
       false,
     ]);
     expect(NonCanonicalChecker.literals).toEqual(["tsgo", "tsc"]);
-    const row = { manifest: "packages/a/package.json", script: "beep:check", engine: "tsgo", reason: "tsc-rs defect" };
-    const rows = [row, { ...row, engine: "tsc-rs" }, { ...row, reason: "" }, { ...row, script: "beep:lint" }];
+    const row = { manifest: "packages/a/package.json", script: "beep:check", engine: "tsgo", reason: "tsrs defect" };
+    const rows = [row, { ...row, engine: "tsrs" }, { ...row, reason: "" }, { ...row, script: "beep:lint" }];
     expect(A.map(rows, S.is(CheckerEngineExemption))).toEqual([true, false, false, false]);
     expect(checkerEngineExemptions).toEqual([]);
   });

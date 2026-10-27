@@ -1,8 +1,11 @@
-import { appendTurboSummary, ciLaneCommand, runCiLocal } from "@beep/repo-cli/commands/Ci";
+import { ActionOutputs } from "@beep/github-actions/ActionOutputs";
+import { appendTurboSummary, CiRunnerOutputsLive, ciLaneCommand, runCiLocal } from "@beep/repo-cli/commands/Ci";
 import { FsUtilsLive } from "@beep/repo-utils";
+import { provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import * as ConfigProvider from "effect/ConfigProvider";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -163,12 +166,30 @@ describe("CI commands", () => {
             })
           );
 
-          yield* appendTurboSummary(O.some(summaryPath));
+          const recording = ActionOutputs.recording();
+          yield* appendTurboSummary(O.some(summaryPath)).pipe(provideScopedLayer(recording.layer));
 
           const output = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
           expect(output).toContain("## Turbo Summary");
           expect(output).toContain("Attempted tasks: 1");
           expect(output).toContain("`@beep/repo-cli#test`");
+          // Off a runner the summary is printed, never published.
+          expect(recording.entries()).toEqual([]);
+
+          // On a runner it is appended after what the file already holds, the
+          // bytes the old read-then-write produced: `${previous}${rendered}`.
+          const stepSummary = path.join(root, "step-summary.md");
+          yield* fs.writeFileString(stepSummary, "prior\n");
+          const onRunner = Effect.provideService(
+            ConfigProvider.ConfigProvider,
+            ConfigProvider.fromUnknown({ GITHUB_STEP_SUMMARY: stepSummary })
+          );
+          const published = ActionOutputs.recording();
+          yield* appendTurboSummary(O.some(summaryPath)).pipe(provideScopedLayer(published.layer), onRunner);
+          const rendered = A.map(published.entries(), (entry) => entry.value);
+          expect(A.length(rendered)).toBe(1);
+          yield* appendTurboSummary(O.some(summaryPath)).pipe(provideScopedLayer(CiRunnerOutputsLive), onRunner);
+          expect(yield* fs.readFileString(stepSummary)).toBe(`prior\n${rendered[0] ?? ""}`);
         })
       )
     );
@@ -204,7 +225,7 @@ describe("CI commands", () => {
             )
           );
 
-          yield* appendTurboSummary(O.none(), true);
+          yield* appendTurboSummary(O.none(), true).pipe(provideScopedLayer(ActionOutputs.recording().layer));
 
           const output = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
           expect(O.getOrNull(Str.match(/## Turbo Summary/gu)(output)) ?? []).toHaveLength(2);

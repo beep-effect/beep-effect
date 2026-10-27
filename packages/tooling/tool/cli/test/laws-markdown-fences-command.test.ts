@@ -46,7 +46,7 @@ const compilerHandle = (output: string, exitCode: number) =>
     unref: Effect.succeed(Effect.void),
   });
 
-/** Replaces only the `tsc-rs` spawn with a stub; git and every other command still run. */
+/** Replaces only the `tsrs` spawn with a stub; git and every other command still run. */
 const withStubCompiler =
   (output: string, exitCode: number) =>
   <A, E, R>(self: Effect.Effect<A, E, R>) =>
@@ -55,7 +55,7 @@ const withStubCompiler =
         self,
         ChildProcessSpawner.ChildProcessSpawner,
         ChildProcessSpawner.make((command) =>
-          ChildProcess.isStandardCommand(command) && Str.endsWith("tsc-rs")(command.command)
+          ChildProcess.isStandardCommand(command) && Str.endsWith("tsrs")(command.command)
             ? Effect.succeed(compilerHandle(output, exitCode))
             : real.spawn(command)
         )
@@ -164,8 +164,8 @@ const makeFixtureCheckout = Effect.fn("MarkdownFencesCommandTest.makeFixtureChec
   yield* writeRepoFile(root, "goals/demo/SPEC.md", brokenHistory);
   yield* fs.makeDirectory(path.join(root, "node_modules", ".bin"), { recursive: true });
   yield* fs.symlink(
-    path.join(repoRoot, "node_modules", ".bin", "tsc-rs"),
-    path.join(root, "node_modules", ".bin", "tsc-rs")
+    path.join(repoRoot, "node_modules", ".bin", "tsrs"),
+    path.join(root, "node_modules", ".bin", "tsrs")
   );
   yield* runGit(root, ["init", "--quiet"]);
   yield* runGit(root, ["add", "bun.lock", "tsconfig.json", "docs", "packages", "goals"]);

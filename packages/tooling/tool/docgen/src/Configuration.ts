@@ -8,6 +8,7 @@
 import { ConfigFile } from "@beep/config-file/ConfigFile";
 import { JsoncCodec } from "@beep/config-file/JsoncCodec";
 import { $RepoDocgenId } from "@beep/identity/packages";
+import { PackageJsonFile } from "@beep/package-json/PackageJsonFile";
 import { decodeTSConfigFromJsoncTextEffect, TSConfigCompilerOptions } from "@beep/repo-utils";
 import { ArrayKeyDefaultEmpty } from "@beep/schema/SchemaUtils/withKeyDefaults";
 import { A } from "@beep/utils";
@@ -389,13 +390,6 @@ export const defaultCompilerOptions = {
   target: "es2022",
 } as const satisfies typeof CompilerOptionsShape.Type;
 
-class PackageJsonSchema extends S.Opaque<PackageJsonSchema, { readonly brand: unique symbol }>()(
-  S.Struct({
-    homepage: S.String,
-    name: S.String,
-  }).pipe($I.annoteSchema("PackageJsonSchema"))
-) {}
-
 const readJsoncFile = Effect.fn("readJsonCFile")(function* <A, I>(
   filePath: string,
   schema: ConfigReadSchema<A, I>
@@ -423,7 +417,85 @@ const readJsoncFile = Effect.fn("readJsonCFile")(function* <A, I>(
   );
 });
 
-const readPackageJson = (filePath: string) => readJsoncFile(filePath, PackageJsonSchema);
+/**
+ * The `name` and `homepage` docgen reads from its package's `package.json`.
+ *
+ * **Example** (Construct a package identity)
+ *
+ * ```ts
+ * import { DocgenPackageIdentity } from "@beep/repo-docgen/Configuration"
+ *
+ * const identity = DocgenPackageIdentity.make({ name: "@beep/demo", homepage: "https://example.com" })
+ * console.log(identity.name) // @beep/demo
+ * ```
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
+export class DocgenPackageIdentity extends S.Opaque<DocgenPackageIdentity, { readonly brand: unique symbol }>()(
+  S.Struct({
+    name: S.String,
+    homepage: S.String,
+  }).pipe(
+    $I.annoteSchema("DocgenPackageIdentity", {
+      description: "The package name and homepage docgen reads from the documented package's package.json.",
+    })
+  )
+) {}
+
+/**
+ * Reads a package's `name` and `homepage` through the presence-lenient
+ * `PackageManifest` tier.
+ *
+ * **Details**
+ *
+ * Every present field must satisfy its `PackageManifest` codec, and docgen
+ * needs `name` and `homepage` on top of that. Strict JSON only: JSONC text
+ * fails. `DocgenError` carries only a message, so the kit error's text is
+ * kept in it.
+ *
+ * **Example** (Read this package's identity)
+ *
+ * ```ts
+ * import { BunServices } from "@effect/platform-bun"
+ * import * as Effect from "effect/Effect"
+ * import { readPackageJson } from "../../src/Configuration.ts"
+ *
+ * const identity = await Effect.runPromise(
+ *   readPackageJson("package.json").pipe(Effect.provide(BunServices.layer))
+ * )
+ * console.log(identity.name)
+ * ```
+ *
+ * @param filePath - Path of the `package.json` to read.
+ * @returns The package's name and homepage.
+ * @internal
+ * @category configuration
+ * @since 0.0.0
+ */
+export const readPackageJson = Effect.fn("Configuration.readPackageJson")(function* (
+  filePath: string
+): Effect.fn.Return<DocgenPackageIdentity, Domain.DocgenError, FileSystem.FileSystem | Path.Path> {
+  const fail = (step: string, detail: string, cause?: unknown) =>
+    Domain.DocgenError.make({
+      message: `[Configuration.readPackageJson] Failed to ${step} '${filePath}'\n${detail}`,
+      ...(P.isUndefined(cause) ? {} : { cause }),
+    });
+  const files = yield* PackageJsonFile.make;
+  const manifest = yield* files.readManifest(filePath).pipe(
+    Effect.catchTags({
+      PackageJsonNotFoundError: (error) => Effect.fail(fail("read", "The file does not exist.", error)),
+      PackageJsonReadError: (error) => Effect.fail(fail("read", String(error.cause), error)),
+      PackageJsonParseError: (error) => Effect.fail(fail("parse", String(error.cause), error)),
+      PackageDecodeError: (error) => Effect.fail(fail("decode", String(error.cause), error)),
+    })
+  );
+  if (P.isUndefined(manifest.name) || P.isUndefined(manifest.homepage)) {
+    return yield* fail("decode", "package.json must declare both `name` and `homepage`.");
+  }
+  return DocgenPackageIdentity.make({ name: manifest.name, homepage: manifest.homepage });
+});
 
 const readDocgenConfig = Effect.fn("Configuration.readDocgenConfig")(function* (
   filePath: string

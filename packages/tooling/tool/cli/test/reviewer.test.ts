@@ -8,6 +8,7 @@ import {
   ReviewerLive,
   ReviewerResult,
   ReviewerReview,
+  releaseReviewerInRuleset,
   requireReviewerInRuleset,
   reviewerCheckExternalId,
   reviewerCheckSatisfied,
@@ -549,6 +550,45 @@ describe("lossless required check update", () => {
         ],
       });
       expect(yield* requireReviewerInRuleset(updated, 42)).toEqual(updated);
+      const released = yield* releaseReviewerInRuleset(updated);
+      expect(released).toEqual({
+        ...original,
+        rules: [
+          original.rules[0],
+          {
+            ...original.rules[1],
+            parameters: {
+              ...original.rules[1]?.parameters,
+              required_status_checks: [{ context: "CI", integration_id: 15368 }],
+            },
+          },
+        ],
+      });
+      expect(yield* releaseReviewerInRuleset(released)).toEqual(released);
+      expect(yield* requireReviewerInRuleset(released, 42)).toEqual(updated);
+    })
+  );
+
+  it.effect("refuses malformed rulesets in both require and release without losing the policy error", () =>
+    Effect.gen(function* () {
+      for (const value of [
+        null,
+        { rules: "invalid" },
+        { rules: [{ type: "required_status_checks", parameters: {} }] },
+      ]) {
+        const required = yield* requireReviewerInRuleset(value, 42).pipe(Effect.flip);
+        const released = yield* releaseReviewerInRuleset(value).pipe(Effect.flip);
+        expect(required.message).toBe("Cannot safely update this ruleset.");
+        expect(released.message).toBe("Cannot safely update this ruleset.");
+      }
+    })
+  );
+
+  it.effect("refuses an ambiguous release", () =>
+    Effect.gen(function* () {
+      const checks = { type: "required_status_checks", parameters: { required_status_checks: [] } };
+      const result = yield* releaseReviewerInRuleset({ rules: [checks, checks] }).pipe(Effect.result);
+      expect(result._tag).toBe("Failure");
     })
   );
 });

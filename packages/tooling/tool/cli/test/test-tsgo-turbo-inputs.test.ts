@@ -6,7 +6,7 @@ import {
   testTsgoPrograms,
 } from "@beep/repo-cli/test/Quality";
 import { TsconfigLoader } from "@beep/repo-tsconfig/TsconfigLoader";
-import { FsUtilsLive, readPackageJsonFile } from "@beep/repo-utils";
+import { FsUtilsLive, readPackageJsonFile, toSortedRecord } from "@beep/repo-utils";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { resolveWorkspacePackages } from "@beep/repo-utils/Workspaces";
 import { it } from "@beep/test-runner";
@@ -277,7 +277,7 @@ const checkInvocations = (scripts: Readonly<Record<string, string>>, root: boole
     invocations = A.appendAll(
       invocations,
       A.filter(Str.split(command, /&&|\|\||[;|]/u), (invocation) =>
-        O.isSome(Str.match(/(?:^|\s)(?:tsc-rs|tsgo)\s/u)(invocation))
+        O.isSome(Str.match(/(?:^|\s)(?:tsrs|tsgo)\s/u)(invocation))
       )
     );
     const words = Str.split(command, /\s+/u);
@@ -357,9 +357,9 @@ it.layer(FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer)), { timeout: "6
           const manifests = A.append(
             A.map(
               HashMap.toEntries(workspaces),
-              ([name, workspace]) => [name, workspace.dir, workspace.scripts] as const
+              ([name, workspace]) => [name, workspace.dir, toSortedRecord(workspace.manifest.scripts)] as const
             ),
-            [manifest.name, root, O.getOrElse(manifest.scripts, () => ({}))] as const
+            [manifest.name, root, toSortedRecord(manifest.scripts)] as const
           );
           for (const [name, dir, scripts] of manifests) {
             const scripted = yield* expectedOwnerProjects(dir, scripts, dir === root);

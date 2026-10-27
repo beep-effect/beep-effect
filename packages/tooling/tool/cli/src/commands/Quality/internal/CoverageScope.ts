@@ -19,8 +19,8 @@ import * as S from "effect/Schema";
 import { globMatches } from "../../../internal/GlobPattern.ts";
 import { QualityTaskConfigurationError } from "../Quality.errors.ts";
 import { discoverWorkspacePackages } from "./QualityArtifactSupport.ts";
+import type { LenientManifest } from "@beep/package-json/LenientManifest";
 import type * as FileSystem from "effect/FileSystem";
-import type { PackageJson } from "./QualityArtifactSupport.ts";
 
 const $I = $RepoCliId.create("commands/Quality/internal/CoverageScope");
 
@@ -329,7 +329,7 @@ const PACKAGE_JSON_DEPENDENCY_BUCKETS = [
 // workspace packages. Bucket kind is irrelevant to coverage: a devDependency
 // can change a dependent's measured behaviour exactly like a runtime one.
 const workspaceDependencyNames = (
-  packageJson: PackageJson,
+  packageJson: LenientManifest,
   workspaceNames: MutableHashSet.MutableHashSet<string>
 ): ReadonlyArray<string> =>
   pipe(

@@ -4,6 +4,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { ActionOutputs } from "@beep/github-actions/ActionOutputs";
+import { WorkflowCommand } from "@beep/github-commands/WorkflowCommand";
 import { GitHubMarkdown } from "@beep/github-reporting/GitHubMarkdown";
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils/Root";
@@ -11,7 +13,6 @@ import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Console from "effect/Console";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -38,6 +39,8 @@ import {
   CiResourceSample,
   ciOperationalPatterns,
 } from "./CiOperational.schemas.ts";
+import { CiRunnerOutputsLive } from "./CiRunnerOutputs.ts";
+import type * as Crypto from "effect/Crypto";
 import type * as Scope from "effect/Scope";
 
 const $I = $RepoCliId.create("commands/Ci/CiOperational.service");
@@ -59,7 +62,9 @@ const environmentEntry = S.Tuple([S.String, S.Redacted(S.String)]);
 const decodeNumber = S.decodeUnknownEffect(S.FiniteFromString);
 const decodeSample = S.decodeUnknownEffect(CiResourceSample);
 const encodePatterns = S.encodeEffect(S.fromJsonString(CiOperationalPatterns, { space: 2 }));
-const unavailable = Console.error("::warning::Runner resource measurement unavailable; lane exit status is preserved.");
+const unavailable = Console.error(
+  WorkflowCommand.warning("Runner resource measurement unavailable; lane exit status is preserved.")
+);
 
 /**
  * CI operational contract, with platform dependencies supplied by its live layer.
@@ -106,7 +111,7 @@ export const CiOperationalLive = Layer.effect(
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const crypto = yield* Crypto.Crypto;
+    const outputs = yield* ActionOutputs;
     const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
     const context = yield* Effect.context<Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>();
     const append = (target: string, body: string) => fs.writeFileString(target, body, { flag: "a" });
@@ -194,15 +199,13 @@ export const CiOperationalLive = Layer.effect(
       );
       return CiEnvironmentSelection.make({ mode: trusted ? "exported (trusted push)" : "blank", entries });
     });
-    const renderEnvironmentEntry = Effect.fn("Ci.renderEnvironmentEntry")(function* ([name, value]: readonly [
-      string,
-      Redacted.Redacted<string>,
-    ]) {
-      const raw = Redacted.value(value);
-      let delimiter = `beep_ci_env_${yield* crypto.randomUUIDv4()}`;
-      while (A.contains(Str.split(raw, /\r?\n/u), delimiter)) delimiter = `beep_ci_env_${yield* crypto.randomUUIDv4()}`;
-      return `${name}<<${delimiter}\n${raw}\n${delimiter}\n`;
-    });
+    // `ActionOutputs` frames each entry as a `GITHUB_ENV` heredoc block whose
+    // delimiter is derived from the value, so no value can close its block early.
+    // Entries append one at a time, in order: a runner-file write failure fails
+    // the step with the earlier entries written, and no later step reads them
+    // (reuse-ledger #93).
+    const exportEnvironmentEntry = ([name, value]: readonly [string, Redacted.Redacted<string>]) =>
+      outputs.exportVariable(name, Redacted.value(value));
     const jobEnvironment = Effect.gen(function* () {
       const target = yield* text("GITHUB_ENV");
       if (Str.isEmpty(target)) return yield* CiCommandError.make({ message: "ci-job-env: GITHUB_ENV is not set" });
@@ -213,10 +216,10 @@ export const CiOperationalLive = Layer.effect(
       const same = event === "pull_request" && Str.isNonEmpty(repo) && repo === head;
       const turbo = yield* turboEnvironment(trusted, same);
       const app = yield* applicationEnvironment(trusted);
-      const rendered = yield* Effect.forEach(A.appendAll(turbo.entries, app.entries), renderEnvironmentEntry, {
+      yield* Effect.forEach(A.appendAll(turbo.entries, app.entries), exportEnvironmentEntry, {
         concurrency: 1,
+        discard: true,
       });
-      yield* append(target, A.join(rendered, ""));
       yield* Console.log(`ci-job-env: turbo remote cache ${turbo.mode}; application secrets ${app.mode}`);
     }).pipe(
       Effect.mapError(CiCommandError.new("Failed to export the CI job environment.")),
@@ -342,7 +345,7 @@ export const CiOperationalLive = Layer.effect(
             yield* fs.writeFileString(summaryPath, summary);
             yield* Console.log(summary);
             const target = yield* text("GITHUB_STEP_SUMMARY");
-            if (Str.isNonEmpty(target)) yield* append(target, summary).pipe(Effect.catch(() => unavailable));
+            if (Str.isNonEmpty(target)) yield* outputs.summary(summary).pipe(Effect.catch(() => unavailable));
           }).pipe(Effect.catch(() => unavailable));
         }
         return status;
@@ -351,4 +354,4 @@ export const CiOperationalLive = Layer.effect(
     );
     return { patterns, changeProfile, jobEnvironment, runnerResources };
   })
-);
+).pipe(Layer.provide(CiRunnerOutputsLive));

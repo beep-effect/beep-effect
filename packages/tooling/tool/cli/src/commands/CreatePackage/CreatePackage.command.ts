@@ -17,6 +17,7 @@ import {
   encodePackageJsonCanonicalPrettyEffect,
   findRepoRoot,
   readPackageJsonFile,
+  workspaceGlobsFrom,
 } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { today } from "@beep/schema/LocalDate";
@@ -401,7 +402,7 @@ const REAL_APP_DOC_TEMPLATE_PAIRS: ReadonlyArray<TemplateSpecPair> = [
 
 const CHECK_TSCONFIG_TEMPLATE_PAIR: TemplateSpecPair = ["tsconfig.check.json.hbs", "tsconfig.check.json"];
 
-// Scaffolds whose `build` is the `noEmit` check (`tsc-rs -p tsconfig.check.json`)
+// Scaffolds whose `build` is the `noEmit` check (`tsrs -p tsconfig.check.json`)
 // write nothing to disk, so they declare `build.outputs: []`; otherwise Turbo
 // warns "no output files found" on every root build.
 const NOEMIT_TURBO_TEMPLATE_PAIR: TemplateSpecPair = ["app-noemit-turbo.json.hbs", "turbo.json"];
@@ -845,35 +846,6 @@ const readRootPackageJsonDocument = Effect.fn(function* (repoRoot: string) {
   } as const;
 });
 
-const workspacePatternsFromPackageJson = (
-  workspaces: O.Option<
-    | ReadonlyArray<string>
-    | {
-        readonly packages?: ReadonlyArray<string>;
-      }
-  >
-): ReadonlyArray<string> => {
-  if (O.isNone(workspaces)) {
-    return A.empty();
-  }
-
-  const value: unknown = workspaces.value;
-  if (A.isArray(value) && A.every(value, P.isString)) {
-    return value;
-  }
-
-  if (
-    P.isObject(value) &&
-    P.hasProperty(value, "packages") &&
-    A.isArray(value.packages) &&
-    A.every(value.packages, P.isString)
-  ) {
-    return value.packages;
-  }
-
-  return A.empty();
-};
-
 const pathSegments: (value: string) => ReadonlyArray<string> = flow(Str.split("/"), A.filter(Str.isNonEmpty));
 
 const matchesWorkspacePattern: {
@@ -948,13 +920,13 @@ const appendWorkspaceEntry = (content: string, currentWorkspaces: unknown, packa
 const ensureRootWorkspaceEntry = Effect.fn(function* (repoRoot: string, packagePath: string) {
   const fs = yield* FileSystem.FileSystem;
   const { content, filePath, packageJson } = yield* readRootPackageJsonDocument(repoRoot);
-  const workspacePatterns = workspacePatternsFromPackageJson(packageJson.workspaces);
+  const workspacePatterns = workspaceGlobsFrom(packageJson.workspaces);
 
   if (isPathCoveredByWorkspacePatterns(workspacePatterns, packagePath)) {
     return false;
   }
 
-  const currentWorkspaces: unknown = O.getOrUndefined(packageJson.workspaces);
+  const currentWorkspaces: unknown = packageJson.workspaces;
 
   const nextContent = appendWorkspaceEntry(content, currentWorkspaces, packagePath);
 
@@ -970,7 +942,7 @@ const ensureRootWorkspaceEntry = Effect.fn(function* (repoRoot: string, packageP
 
 const rootWorkspaceEntryNeeded = Effect.fn(function* (repoRoot: string, packagePath: string) {
   const { packageJson } = yield* readRootPackageJsonDocument(repoRoot);
-  return !isPathCoveredByWorkspacePatterns(workspacePatternsFromPackageJson(packageJson.workspaces), packagePath);
+  return !isPathCoveredByWorkspacePatterns(workspaceGlobsFrom(packageJson.workspaces), packagePath);
 });
 
 /**
@@ -1570,10 +1542,7 @@ export const createPackageCommand = Command.make(
     let ecosystemEffectPeerVersion = O.none<string>();
     if (O.isSome(ecosystemMetadata)) {
       const { packageJson: rootPackageJson } = yield* readRootPackageJsonDocument(repoRoot);
-      ecosystemEffectPeerVersion = pipe(
-        rootPackageJson.catalog,
-        O.flatMap((catalog) => R.get(catalog, "effect"))
-      );
+      ecosystemEffectPeerVersion = pipe(O.fromUndefinedOr(rootPackageJson.catalog), O.flatMap(R.get("effect")));
       if (O.isNone(ecosystemEffectPeerVersion)) {
         return yield* DomainError.make({
           message: `Root package.json catalog must define an exact effect version before creating an ecosystem package.`,
@@ -1914,7 +1883,7 @@ const serviceAppManifest: AppManifestBuilder = ({ baseManifest, lab, portlessLab
   ...baseManifest,
   scripts: appBaseScripts(
     portlessDev(portlessLabel, "sh -c 'bun --watch src/main.ts'"),
-    "tsc-rs -p tsconfig.check.json",
+    "tsrs -p tsconfig.check.json",
     lab
   ),
   dependencies: {
@@ -1978,11 +1947,11 @@ type PackageScriptsKind = Exclude<ScriptsPackageKind, "lab">;
 const packageScripts = (kind: PackageScriptsKind, withStoriesTsconfig: boolean) => ({
   ...scaffoldPackageScripts(kind, ["lint:fix", "test:integration", "docgen"]),
   babel: "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
-  "beep:check:tests": "tsc-rs -p tsconfig.test.json --noEmit",
+  "beep:check:tests": "tsrs -p tsconfig.test.json --noEmit",
   ...(withStoriesTsconfig
     ? {
-        "beep:check": "tsc-rs -p tsconfig.check.json && bun run beep:check:tests && bun run beep:check:stories",
-        "beep:check:stories": "tsc-rs -p tsconfig.stories.json --noEmit",
+        "beep:check": "tsrs -p tsconfig.check.json && bun run beep:check:tests && bun run beep:check:stories",
+        "beep:check:stories": "tsrs -p tsconfig.stories.json --noEmit",
       }
     : {}),
   coverage: "bunx vitest run --coverage --exclude=test/integration/**",
@@ -1995,8 +1964,8 @@ const packageScripts = (kind: PackageScriptsKind, withStoriesTsconfig: boolean) 
  *
  * ```ts
  * import { CreatePackageScripts } from "@beep/repo-cli/commands/CreatePackage"
- * const scripts = CreatePackageScripts.app("portless api.beep bun src/main.ts", "tsc-rs -p tsconfig.check.json", false)
- * console.log(scripts["beep:build"]) // "tsc-rs -p tsconfig.check.json"
+ * const scripts = CreatePackageScripts.app("portless api.beep bun src/main.ts", "tsrs -p tsconfig.check.json", false)
+ * console.log(scripts["beep:build"]) // "tsrs -p tsconfig.check.json"
  * ```
  *
  * @internal

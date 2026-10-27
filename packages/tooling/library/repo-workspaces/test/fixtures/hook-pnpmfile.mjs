@@ -6,12 +6,13 @@
 // detectable side effect proving it executed, and injects DISTINCT catalog
 // entries — so a test can prove the `.mjs` was the file actually loaded, not a
 // stray `.cjs` sibling.
-import { writeFileSync } from "node:fs";
+import * as NodeFS from "node:fs";
 
 export const hooks = {
   updateConfig(config) {
+    // biome-ignore lint/suspicious/noUndeclaredEnvVars: pnpm executes this fixture pnpmfile from a temp tree outside any Turbo task; the test sets HOOK_MARKER via vi.stubEnv. Owner: @beep/repo-workspaces. Exit: the hook-replay tests pass the marker path through pnpm config instead of the environment.
     const marker = process.env.HOOK_MARKER;
-    if (marker) writeFileSync(marker, "loaded-mjs");
+    if (marker) NodeFS.writeFileSync(marker, "loaded-mjs");
     return {
       ...config,
       catalog: { ...(config.catalog ?? {}), "mjs-dep": "^2.0.0" },

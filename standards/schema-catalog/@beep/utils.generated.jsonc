@@ -9,6 +9,8 @@
     {"file":"packages/foundation/modeling/utils/src/FileSystem.ts","symbol":"RmSyncOptions","kind":"struct-const","owner":"@beep/utils","identity":"RmSyncOptions","description":"Options accepted by rmSync."},
     {"file":"packages/foundation/modeling/utils/src/Stream.ts","symbol":"streamFilterJson","kind":"codec","owner":"@beep/utils"},
     {"file":"packages/foundation/modeling/utils/src/Struct.ts","symbol":"EmptyStructError","kind":"tagged-error","owner":"@beep/utils","identity":"EmptyStructError"},
+    {"file":"packages/foundation/modeling/utils/src/TestDouble.ts","symbol":"UnstubbedMemberError","kind":"tagged-error","owner":"@beep/utils","identity":"UnstubbedMemberError"},
+    {"file":"packages/foundation/modeling/utils/src/TestDouble.ts","symbol":"UnstubbedTarget","kind":"struct-const","owner":"@beep/utils","identity":"UnstubbedTarget","description":"The test double a synchronous unstubbed thrower reports for."},
     {"file":"packages/foundation/modeling/utils/src/internal/StructPath.ts","symbol":"PathInput","kind":"union","owner":"@beep/utils","identity":"PathInput","description":"Dot-delimited or segment-array path accepted by struct lookup helpers."}
   ]
 }

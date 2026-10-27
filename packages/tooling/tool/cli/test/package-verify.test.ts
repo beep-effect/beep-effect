@@ -384,6 +384,12 @@ export const invalidCategory = 1;
 
           expect(error.message).toContain(`Failed to decode ${path.join(packageDir, "package.json")}`);
 
+          // The retired projection required `name`; the lenient read keeps that verdict.
+          yield* fs.writeFileString(path.join(packageDir, "package.json"), yield* encodeJson({ private: true }));
+          const nameless = yield* readPackageWorkspaceForTesting("@beep/demo", packageDir).pipe(Effect.flip);
+          expect(nameless.message).toContain(`Failed to decode ${path.join(packageDir, "package.json")}`);
+          expect(String(nameless.cause)).toContain("does not declare a package name");
+
           yield* fs.writeFileString(path.join(packageDir, "package.json"), yield* encodeJson({ name: "@beep/demo" }));
           const workspace = yield* readPackageWorkspaceForTesting("@beep/demo", packageDir);
           expect(workspace.scripts).toEqual({});

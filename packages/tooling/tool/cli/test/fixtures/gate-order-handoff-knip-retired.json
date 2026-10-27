@@ -344,19 +344,6 @@
         "precisionBasis": "No environment-only or indirect A4 attribution is assigned to this terminal red."
       },
       {
-        "laneId": "quality:effect-diagnostics",
-        "laneClass": "heavy",
-        "laneClassBasis": "SPEC B3 heavy partition; this lane performs build, test, or documentation work.",
-        "costP50Seconds": 1497.811,
-        "redProbability": 0,
-        "precision": "precise",
-        "durationBasis": "H2 2026-10-14 eight-CPU serial full sweep: 1497.811s wall over 291 projects (goals/effect-rules-diagnostics-lane/SPEC.md). Conservative single-run proxy, not an observed hosted P50; reseed after hosted history exists.",
-        "durationPointer": "/hosted/laneRows",
-        "firstRedBasis": "The lane postdates the A1 window; the share is 0 by absence, not by observation.",
-        "firstRedPointer": "/firstFailure/actionableLaneMix",
-        "precisionBasis": "No environment-only or indirect A4 attribution is assigned to this terminal red."
-      },
-      {
         "laneId": "fallow:audit",
         "laneClass": "policy-preflight",
         "laneClassBasis": "SPEC B3 policy/preflight partition; this lane is a preflight policy gate.",
@@ -453,7 +440,7 @@
     {
       "rank": 0,
       "laneId": "fallow:audit",
-      "declarationIndex": 26,
+      "declarationIndex": 25,
       "decidedBy": null,
       "redScheduling": "stop-after-red",
       "costBasis": "a1-proxy-row",
@@ -465,7 +452,7 @@
     {
       "rank": 1,
       "laneId": "fallow:dead-code",
-      "declarationIndex": 27,
+      "declarationIndex": 26,
       "decidedBy": "first-red-share",
       "redScheduling": "stop-after-red",
       "costBasis": "a1-proxy-row",
@@ -477,7 +464,7 @@
     {
       "rank": 2,
       "laneId": "fallow:health",
-      "declarationIndex": 28,
+      "declarationIndex": 27,
       "decidedBy": "first-red-share",
       "redScheduling": "stop-after-red",
       "costBasis": "a1-proxy-row",
@@ -489,7 +476,7 @@
     {
       "rank": 3,
       "laneId": "quality:shadcn-lint",
-      "declarationIndex": 15,
+      "declarationIndex": 14,
       "decidedBy": "cost-p50",
       "redScheduling": "stop-after-red",
       "costBasis": "external-run",
@@ -501,7 +488,7 @@
     {
       "rank": 4,
       "laneId": "quality:security",
-      "declarationIndex": 30,
+      "declarationIndex": 29,
       "decidedBy": "cost-p50",
       "redScheduling": "continue-after-imprecise-red",
       "costBasis": "a1-lane-row",
@@ -513,7 +500,7 @@
     {
       "rank": 5,
       "laneId": "quality:secrets",
-      "declarationIndex": 29,
+      "declarationIndex": 28,
       "decidedBy": "cost-p50",
       "redScheduling": "stop-after-red",
       "costBasis": "a1-lane-row",
@@ -525,7 +512,7 @@
     {
       "rank": 6,
       "laneId": "quality:commitlint",
-      "declarationIndex": 21,
+      "declarationIndex": 20,
       "decidedBy": "cost-p50",
       "redScheduling": "stop-after-red",
       "costBasis": "a1-lane-row",
@@ -537,7 +524,7 @@
     {
       "rank": 7,
       "laneId": "quality:sast",
-      "declarationIndex": 31,
+      "declarationIndex": 30,
       "decidedBy": "cost-p50",
       "redScheduling": "continue-after-imprecise-red",
       "costBasis": "a1-lane-row",
@@ -561,7 +548,7 @@
     {
       "rank": 9,
       "laneId": "quality:nix",
-      "declarationIndex": 32,
+      "declarationIndex": 31,
       "decidedBy": "cost-p50",
       "redScheduling": "continue-after-imprecise-red",
       "costBasis": "a1-lane-row",
@@ -573,7 +560,7 @@
     {
       "rank": 10,
       "laneId": "quality:codegen",
-      "declarationIndex": 20,
+      "declarationIndex": 19,
       "decidedBy": "cost-p50",
       "redScheduling": "stop-after-red",
       "costBasis": "a1-lane-row",
@@ -705,7 +692,7 @@
     {
       "rank": 21,
       "laneId": "quality:desktop-ipc",
-      "declarationIndex": 22,
+      "declarationIndex": 21,
       "decidedBy": "cost-p50",
       "redScheduling": "stop-after-red",
       "costBasis": "a1-lane-row",
@@ -717,7 +704,7 @@
     {
       "rank": 22,
       "laneId": "quality:jsdoc-ratchet",
-      "declarationIndex": 16,
+      "declarationIndex": 15,
       "decidedBy": "cost-p50",
       "redScheduling": "stop-after-red",
       "costBasis": "a1-proxy-row",
@@ -729,7 +716,7 @@
     {
       "rank": 23,
       "laneId": "quality:doctest",
-      "declarationIndex": 18,
+      "declarationIndex": 17,
       "decidedBy": "declaration-index",
       "redScheduling": "stop-after-red",
       "costBasis": "a1-lane-row",
@@ -741,7 +728,7 @@
     {
       "rank": 24,
       "laneId": "quality:docgen",
-      "declarationIndex": 17,
+      "declarationIndex": 16,
       "decidedBy": "cost-p50",
       "redScheduling": "stop-after-red",
       "costBasis": "a1-lane-row",
@@ -753,7 +740,7 @@
     {
       "rank": 25,
       "laneId": "quality:test-integration",
-      "declarationIndex": 24,
+      "declarationIndex": 23,
       "decidedBy": "cost-p50",
       "redScheduling": "stop-after-red",
       "costBasis": "a1-lane-row",
@@ -789,7 +776,7 @@
     {
       "rank": 28,
       "laneId": "quality:check",
-      "declarationIndex": 14,
+      "declarationIndex": 13,
       "decidedBy": "cost-p50",
       "redScheduling": "stop-after-red",
       "costBasis": "a1-lane-row",
@@ -801,7 +788,7 @@
     {
       "rank": 29,
       "laneId": "quality:test-unit",
-      "declarationIndex": 23,
+      "declarationIndex": 22,
       "decidedBy": "cost-p50",
       "redScheduling": "stop-after-red",
       "costBasis": "a1-lane-row",
@@ -813,7 +800,7 @@
     {
       "rank": 30,
       "laneId": "quality:storybook",
-      "declarationIndex": 25,
+      "declarationIndex": 24,
       "decidedBy": "cost-p50",
       "redScheduling": "stop-after-red",
       "costBasis": "external-run",
@@ -825,25 +812,13 @@
     {
       "rank": 31,
       "laneId": "quality:coverage",
-      "declarationIndex": 19,
+      "declarationIndex": 18,
       "decidedBy": "cost-p50",
       "redScheduling": "continue-after-imprecise-red",
       "costBasis": "a1-lane-row",
       "durationSourceKey": "Heavy / Coverage Regression",
       "durationP50Ms": 603000,
       "durationP95Ms": 928000,
-      "firstRedSourceLane": null
-    },
-    {
-      "rank": 32,
-      "laneId": "quality:effect-diagnostics",
-      "declarationIndex": 13,
-      "decidedBy": "cost-p50",
-      "redScheduling": "stop-after-red",
-      "costBasis": "external-run",
-      "durationSourceKey": null,
-      "durationP50Ms": null,
-      "durationP95Ms": null,
       "firstRedSourceLane": null
     }
   ]

@@ -1,3 +1,4 @@
+import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   defaultPersonMatchBackendForPlatform,
   MatchPersonOptions,
@@ -11,7 +12,6 @@ import {
 import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
-import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -21,6 +21,8 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import type { PersonMatchWorkerErrorCode } from "@beep/repo-cli/test/Files";
+
+const PlatformLayer = Layer.mergeAll(MemoryFileSystem.layer, Path.layer);
 
 const makePersonMatchOptions = (
   backend: "buffalo-l" | "adaface-kprpe",
@@ -80,7 +82,7 @@ describe("person-match backend portability", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: "5 seconds" })((it) => {
+  it.layer(PlatformLayer, { timeout: "5 seconds" })((it) => {
     it.effect("keeps physical model verification fail-closed by default", () =>
       Effect.gen(function* () {
         const verifier = yield* PersonMatchModelArtifactVerifier;

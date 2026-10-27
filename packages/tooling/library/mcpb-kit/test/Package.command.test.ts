@@ -8,6 +8,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as Queue from "effect/Queue";
 import * as S from "effect/Schema";
 import * as Stdio from "effect/Stdio";
 import * as Terminal from "effect/Terminal";
@@ -80,18 +81,37 @@ it.layer(commandEnvironment, { concurrent: false, timeout: "5 seconds" })("MCPB 
     );
     yield* fs.writeFileString(`${nativeDir}/duckdb.node`, "synthetic native sidecar");
     yield* fs.makeDirectory(output, { recursive: true });
-    const runPromise = Effect.runPromiseWith(yield* Effect.context<never>());
+    // `Bun.spawn` is a plain function, so it hands each synthetic archive write to
+    // a fiber of the test, which writes it to the in-memory filesystem and then
+    // settles the process's `exited` promise.
+    const archiveWrites = yield* Queue.unbounded<{
+      readonly path: string;
+      readonly exitCode: number;
+      readonly exited: PromiseWithResolvers<number>;
+    }>();
+    yield* Queue.take(archiveWrites).pipe(
+      Effect.flatMap((write) =>
+        fs
+          .writeFileString(write.path, "synthetic archive")
+          .pipe(Effect.andThen(Effect.sync(() => write.exited.resolve(write.exitCode))))
+      ),
+      Effect.forever,
+      Effect.forkChild
+    );
+    const offerArchiveWrite = (path: string, exitCode: number): Promise<number> => {
+      const exited = Promise.withResolvers<number>();
+      Queue.offerUnsafe(archiveWrites, { path, exitCode, exited });
+      return exited.promise;
+    };
     const calls: Array<ReadonlyArray<string>> = [];
     Object.defineProperty(Bun, "spawn", {
       value: (args: ReadonlyArray<string>) => {
         calls.push(args);
         if (options.rejectLaunch === true) throw new Error("synthetic process start failure");
         const exitCode = options.exitCode ?? 0;
-        // `Bun.spawn` is a plain function, so the synthetic archive is written by
-        // running the in-memory filesystem's own effect outside the test fiber.
         const exited =
           args[0] === "zip" && options.noArchive !== true
-            ? runPromise(Effect.as(fs.writeFileString(args[3] ?? archive, "synthetic archive"), exitCode))
+            ? offerArchiveWrite(args[3] ?? archive, exitCode)
             : Promise.resolve(exitCode);
         return {
           stdout: new Blob([options.listing ?? inventory]).stream(),

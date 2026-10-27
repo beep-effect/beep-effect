@@ -1,3 +1,4 @@
+import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { QualityTaskLaneRun, QualityTaskLaneRunReport } from "@beep/repo-cli/test/Quality";
 import {
   artifactDirForContext,
@@ -14,16 +15,19 @@ import {
   TurboPlanSnapshot,
 } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
-import { NodeServices } from "@effect/platform-node";
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import type { QualityIssue } from "@beep/repo-cli/test/Yeet";
+
+const PlatformLayer = Layer.mergeAll(MemoryFileSystem.layer, Path.layer, NodeCrypto.layer);
 
 const OSV_HINT = "Inspect the OSV finding and rerun `bun run beep quality github-checks security`.";
 const CHANGESET_HINT_PREFIX = "Run `bun run beep quality changeset-status --since origin/main`.";
@@ -328,7 +332,7 @@ const withTempRepo = <Result, Error, Requirements>(
     use,
     (repoRoot) =>
       Effect.flatMap(FileSystem.FileSystem, (fs) => fs.remove(repoRoot, { recursive: true }).pipe(Effect.orDie))
-  ).pipe(provideScopedLayer(NodeServices.layer));
+  ).pipe(provideScopedLayer(PlatformLayer));
 
 const readIssueIndex = Effect.fn("YeetPacketIssueLaneRecordTest.readIssueIndex")(function* (
   repoContext: RepoRunContext

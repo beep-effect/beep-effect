@@ -180,6 +180,7 @@ export {
   defaultTestTypecheckBaselinePath,
   lintPackageTestTypecheckCommand,
   PackageTestTypecheckOptions,
+  readTestTypecheckManifest,
   runPackageTestTypecheckLint,
   TestTypecheckBlindSpot,
   TestTypecheckBlindSpotBaseline,

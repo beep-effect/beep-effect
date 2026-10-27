@@ -73,7 +73,7 @@ describe("@beep/xdg root closure walker", () => {
       expect(specifiersOf(source)).toEqual(["./side.ts", "../up.ts"]);
       expect(resolveRelative("internal/x.ts", "../XdgConfig.ts")).toBe("XdgConfig.ts");
       expect(resolveRelative("internal/x.ts", "./y.ts")).toBe("internal/y.ts");
-      expect(resolveRelative("Xdg.ts", "./internal/absolute.ts")).toBe("internal/absolute.ts");
+      expect(resolveRelative("Xdg.ts", "./Absolute.ts")).toBe("Absolute.ts");
     })
   );
 

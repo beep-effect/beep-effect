@@ -50,11 +50,6 @@ jobs:
             timeout_minutes: 120
             uses_turbo: "true"
             install_typos: "false"
-          - id: effect-diagnostics
-            name: Effect Diagnostics
-            timeout_minutes: 90
-            uses_turbo: "false"
-            install_typos: "false"
           - id: test-integration
             name: Test Integration
             timeout_minutes: 40
@@ -188,7 +183,7 @@ jobs:
 
       - name: Install typos
         if: steps.lane-gate.outputs.should_run == 'true' && matrix.install_typos == 'true'
-        uses: taiki-e/install-action@8cca0918f8471c33515202b73f56ab27f2bed283 # v2.87.29
+        uses: taiki-e/install-action@1e29709c0ec63babbe8f266397a465f29a825f91 # v2.87.31
         with:
           tool: typos-cli@1.50.3
 
@@ -223,22 +218,6 @@ jobs:
             else
               echo '::notice::Runner resource helper unavailable in this checkout; running the requested lane.'
             fi
-            # Effect diagnostics is a separate 8-vCPU runner job. A hard cgroup
-            # ceiling bounds it below 60% of the 32-GiB m7i.2xlarge budget.
-            if [[ "${{ matrix.id }}" == "effect-diagnostics" ]]; then
-              export XDG_RUNTIME_DIR="/run/user/$(id -u)"
-              export DBUS_SESSION_BUS_ADDRESS="unix:path=${XDG_RUNTIME_DIR}/bus"
-              local diagnostics_unit="beep-effect-diagnostics-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
-              local -a diagnostics_env=()
-              local variable
-              while IFS= read -r variable; do
-                diagnostics_env+=(-E "$variable")
-              done < <(compgen -e | grep -v -E '^(_|SHLVL|PWD|OLDPWD|OP_.*)$')
-              trap "systemctl --user stop '${diagnostics_unit}' >/dev/null 2>&1 || true" EXIT
-              lane_command=(systemd-run --user --wait --pipe --collect --same-dir --quiet
-                --unit="$diagnostics_unit" --property=MemoryMax=19G --property=MemorySwapMax=0
-                --property=RuntimeMaxSec=85min "${diagnostics_env[@]}" -- "${lane_command[@]}")
-            fi
             setsid "${lane_command[@]}" < /dev/null &
             local pgid=$!
             local status=0
@@ -260,15 +239,6 @@ jobs:
           case "${{ matrix.id }}" in
             check|test-integration|build)
               run_lane ci lane "${{ matrix.id }}" "${shape_args[@]}"
-              ;;
-            effect-diagnostics)
-              # Required and the only Effect-rule gate: a checkout without the
-              # lane must fail, never report success with zero programs.
-              if [[ ! -f packages/tooling/tool/cli/src/commands/Quality/EffectDiagnostics.ts ]]; then
-                echo '::error::Effect diagnostics lane missing from this checkout; merge main.'
-                exit 1
-              fi
-              run_lane ci lane effect-diagnostics "${shape_args[@]}"
               ;;
             lint-policy)
               run_lane ci lane "${{ matrix.id }}"

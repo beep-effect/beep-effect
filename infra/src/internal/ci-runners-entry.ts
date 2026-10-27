@@ -6,10 +6,14 @@
  */
 
 import * as pulumi from "@pulumi/pulumi";
-import { AccountCostControls, loadAccountCostControlsConfig } from "../AccountCostControls.ts";
+import {
+  AccountCostControls,
+  decodeNotificationRecipients,
+  loadAccountCostControlsConfig,
+} from "../AccountCostControls.ts";
 import { CiFleetController, loadCiFleetControllerConfig } from "../CiFleetController.ts";
 import { CiRunnersStack, loadCiRunnersStackArgs } from "../CiRunners.ts";
-import { CiTurboCache, loadCiTurboCacheConfig } from "../CiTurboCache.ts";
+import { CiTurboCache, CiTurboCacheRemediation, loadCiTurboCacheConfig } from "../CiTurboCache.ts";
 
 const stack = new CiRunnersStack("ci-runners", loadCiRunnersStackArgs());
 const controller = new CiFleetController("ci-fleet-controller", {
@@ -25,11 +29,24 @@ const controller = new CiFleetController("ci-fleet-controller", {
   vpcId: stack.vpcId,
   workerSecurityGroupId: stack.workerSecurityGroupId,
 });
-const turboCache = new CiTurboCache("ci-turbo-cache", { config: loadCiTurboCacheConfig() });
+const accountCostControlsConfig = new pulumi.Config("accountCostControls");
+// Read reserved concurrency 20 equalled the observed peak and throttled 25,760
+// reads in 30 days; 60/30/60 passed the lab's 1.5x load envelope.
+const turboCache = new CiTurboCache("ci-turbo-cache", {
+  config: loadCiTurboCacheConfig(),
+  remediation: CiTurboCacheRemediation.make({
+    authorizerReservedConcurrency: 60,
+    readReservedConcurrency: 60,
+    writeReservedConcurrency: 30,
+  }),
+  throttleAlarmRecipients: decodeNotificationRecipients(
+    accountCostControlsConfig.requireObject<unknown>("notificationEmailAddresses")
+  ),
+});
 new AccountCostControls(
   "account-cost-controls",
   loadAccountCostControlsConfig(),
-  new pulumi.Config("accountCostControls").requireSecretObject<unknown>("notificationEmailAddresses")
+  accountCostControlsConfig.requireSecretObject<unknown>("notificationEmailAddresses")
 );
 
 /**

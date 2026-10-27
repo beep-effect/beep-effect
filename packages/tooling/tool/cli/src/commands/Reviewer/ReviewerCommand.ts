@@ -19,7 +19,7 @@ import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { GitHubAppAuth, GitHubAppAuthLive } from "./GitHubAppAuth.ts";
 import { ReviewerError } from "./ReviewerErrors.ts";
 import { reviewerWire } from "./ReviewerModels.ts";
-import { enforceReviewerGate, requireReviewerRuleset } from "./ReviewerRuleset.ts";
+import { enforceReviewerGate, releaseReviewerRuleset, requireReviewerRuleset } from "./ReviewerRuleset.ts";
 import { Reviewer, ReviewerLive } from "./ReviewerService.ts";
 
 const authLayer = ReviewerLive.pipe(Layer.provideMerge(GitHubAppAuthLive));
@@ -149,6 +149,16 @@ const rulesetCommand = Command.make("ruleset").pipe(
             );
           })
         )
+    ),
+    Command.make(
+      "release",
+      {
+        dryRun: Flag.Boolean("dry-run").pipe(Flag.optional),
+        apply: Flag.Boolean("apply").pipe(Flag.withDefault(false)),
+        rulesetId: number("ruleset-id").pipe(Flag.optional),
+      },
+      ({ apply, dryRun, rulesetId }) =>
+        boundary(releaseReviewerRuleset(apply && !O.getOrElse(dryRun, () => false), O.getOrUndefined(rulesetId)))
     ),
   ])
 );
