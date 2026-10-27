@@ -19,7 +19,8 @@ const $I = $DockId.create("Dock.placement");
  * **Example** (Create first tab group)
  *
  * ```ts
- * import { GroupId, RootPlacement } from "@beep/dock"
+ * import { GroupId } from "@beep/dock/Dock.ids"
+ * import { RootPlacement } from "@beep/dock/Dock.placement"
  *
  * const placement = RootPlacement.make({ groupId: GroupId.make("group-one") })
  * console.log(placement.kind)
@@ -45,7 +46,8 @@ export class RootPlacement extends S.Opaque<RootPlacement, { readonly brand: uni
  * **Example** (Insert into tab group)
  *
  * ```ts
- * import { GroupId, TabPlacement } from "@beep/dock"
+ * import { GroupId } from "@beep/dock/Dock.ids"
+ * import { TabPlacement } from "@beep/dock/Dock.placement"
  *
  * const placement = TabPlacement.make({ groupId: GroupId.make("group-one") })
  * console.log(placement.activate)
@@ -73,7 +75,7 @@ export class TabPlacement extends S.Opaque<TabPlacement, { readonly brand: uniqu
  * **Example** (Make docking side)
  *
  * ```ts
- * import { DockSide } from "@beep/dock"
+ * import { DockSide } from "@beep/dock/Dock.placement"
  *
  * const side = DockSide.make("right")
  * console.log(side)
@@ -93,7 +95,7 @@ export const DockSide = LiteralKit(["left", "right", "top", "bottom"]).pipe(
  * **Example** (Type docking side)
  *
  * ```ts
- * import { DockSide } from "@beep/dock"
+ * import { DockSide } from "@beep/dock/Dock.placement"
  *
  * const side: DockSide = DockSide.make("left")
  * console.log(side)
@@ -110,7 +112,8 @@ export type DockSide = typeof DockSide.Type;
  * **Example** (Create sibling split group)
  *
  * ```ts
- * import { GroupId, SplitId, SplitPlacement } from "@beep/dock"
+ * import { GroupId, SplitId } from "@beep/dock/Dock.ids"
+ * import { SplitPlacement } from "@beep/dock/Dock.placement"
  *
  * const placement = SplitPlacement.make({ referenceGroupId: GroupId.make("group-one"), newGroupId: GroupId.make("group-two"), splitId: SplitId.make("split-one"), side: "right" })
  * console.log(placement.newGroupRatio)
@@ -145,7 +148,8 @@ export class SplitPlacement extends S.Opaque<SplitPlacement, { readonly brand: u
  * **Example** (Split against docked root)
  *
  * ```ts
- * import { GroupId, RootSplitPlacement, SplitId } from "@beep/dock"
+ * import { GroupId, SplitId } from "@beep/dock/Dock.ids"
+ * import { RootSplitPlacement } from "@beep/dock/Dock.placement"
  *
  * const placement = RootSplitPlacement.make({ newGroupId: GroupId.make("group-two"), splitId: SplitId.make("split-one"), side: "left" })
  * console.log(placement.kind)
@@ -174,7 +178,8 @@ export class RootSplitPlacement extends S.Opaque<RootSplitPlacement, { readonly 
  * **Example** (Relocate group beside group)
  *
  * ```ts
- * import { GroupId, GroupSplitPlacement, SplitId } from "@beep/dock"
+ * import { GroupId, SplitId } from "@beep/dock/Dock.ids"
+ * import { GroupSplitPlacement } from "@beep/dock/Dock.placement"
  *
  * const placement = GroupSplitPlacement.make({ referenceGroupId: GroupId.make("group-one"), splitId: SplitId.make("split-one"), side: "bottom" })
  * console.log(placement.kind)
@@ -203,7 +208,8 @@ export class GroupSplitPlacement extends S.Opaque<GroupSplitPlacement, { readonl
  * **Example** (Relocate group to root)
  *
  * ```ts
- * import { GroupRootSplitPlacement, SplitId } from "@beep/dock"
+ * import { GroupRootSplitPlacement } from "@beep/dock/Dock.placement"
+ * import { SplitId } from "@beep/dock/Dock.ids"
  *
  * const placement = GroupRootSplitPlacement.make({ splitId: SplitId.make("split-one"), side: "top" })
  * console.log(placement.kind)
@@ -233,7 +239,8 @@ const DockPlacementKind = LiteralKit(["root", "tab", "split", "rootSplit"]);
  * **Example** (Make panel destination)
  *
  * ```ts
- * import { DockPlacement, GroupId } from "@beep/dock"
+ * import { DockPlacement } from "@beep/dock/Dock.placement"
+ * import { GroupId } from "@beep/dock/Dock.ids"
  *
  * const placement = DockPlacement.make({ kind: "root", groupId: GroupId.make("group-one") })
  * console.log(placement.kind)
@@ -256,7 +263,8 @@ export const DockPlacement = DockPlacementKind.mapMembers(
  * **Example** (Type panel destination)
  *
  * ```ts
- * import { DockPlacement, GroupId, RootPlacement } from "@beep/dock"
+ * import { DockPlacement, RootPlacement } from "@beep/dock/Dock.placement"
+ * import { GroupId } from "@beep/dock/Dock.ids"
  *
  * const placement: DockPlacement = RootPlacement.make({ groupId: GroupId.make("group-one") })
  * console.log(placement.kind)
@@ -273,7 +281,8 @@ export type DockPlacement = typeof DockPlacement.Type;
  * **Example** (Make panel move target)
  *
  * ```ts
- * import { DockMoveTarget, GroupId, TabPlacement } from "@beep/dock"
+ * import { DockMoveTarget, TabPlacement } from "@beep/dock/Dock.placement"
+ * import { GroupId } from "@beep/dock/Dock.ids"
  *
  * const target = TabPlacement.make({ groupId: GroupId.make("group-one") })
  * console.log(target.kind)
@@ -294,7 +303,8 @@ export const DockMoveTarget = S.Union([TabPlacement, SplitPlacement, RootSplitPl
  * **Example** (Type panel move target)
  *
  * ```ts
- * import { DockMoveTarget, GroupId, TabPlacement } from "@beep/dock"
+ * import { DockMoveTarget, TabPlacement } from "@beep/dock/Dock.placement"
+ * import { GroupId } from "@beep/dock/Dock.ids"
  *
  * const target: DockMoveTarget = TabPlacement.make({ groupId: GroupId.make("group-one") })
  * console.log(target.kind)
@@ -311,7 +321,8 @@ export type DockMoveTarget = typeof DockMoveTarget.Type;
  * **Example** (Make group move target)
  *
  * ```ts
- * import { DockGroupMoveTarget, GroupId, TabPlacement } from "@beep/dock"
+ * import { DockGroupMoveTarget, TabPlacement } from "@beep/dock/Dock.placement"
+ * import { GroupId } from "@beep/dock/Dock.ids"
  *
  * const target = TabPlacement.make({ groupId: GroupId.make("group-one") })
  * console.log(target.kind)
@@ -332,7 +343,8 @@ export const DockGroupMoveTarget = S.Union([TabPlacement, GroupSplitPlacement, G
  * **Example** (Type group move target)
  *
  * ```ts
- * import { DockGroupMoveTarget, GroupId, TabPlacement } from "@beep/dock"
+ * import { DockGroupMoveTarget, TabPlacement } from "@beep/dock/Dock.placement"
+ * import { GroupId } from "@beep/dock/Dock.ids"
  *
  * const target: DockGroupMoveTarget = TabPlacement.make({ groupId: GroupId.make("group-one") })
  * console.log(target.kind)

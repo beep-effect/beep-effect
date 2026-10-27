@@ -40,7 +40,7 @@ import type { DockEngine } from "./DockEngine.service.ts";
  * **Example** (Installing console observability)
  *
  * ```ts
- * import { DockAtomObservabilityLive } from "@beep/dock"
+ * import { DockAtomObservabilityLive } from "@beep/dock/Dock.atoms"
  * import * as Effect from "effect/Effect";
  * import * as Layer from "effect/Layer";
  * const status = Effect.runSync(
@@ -192,7 +192,11 @@ interface DockAtomsSessionEffect<E> extends ReturnType<typeof makeDockAtomsWithI
  * **Example** (Building a session with services)
  *
  * ```ts
- * import { DockEngineLive, GroupId, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView, makeDockAtomsWith, makeDockSnapshotStoreMemory } from "@beep/dock"
+ * import { DockEngineLive, makeDockSnapshotStoreMemory } from "@beep/dock/DockEngine.service"
+ * import { GroupId, PanelId } from "@beep/dock/Dock.ids"
+ * import { Panel, TextPanelView } from "@beep/dock/Dock.models"
+ * import { PopulatedWorkspace, TabsNode } from "@beep/dock/Dock.tree"
+ * import { makeDockAtomsWith } from "@beep/dock/Dock.atoms"
  * import * as Effect from "effect/Effect";
  * import * as Layer from "effect/Layer";
  * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) })
@@ -226,7 +230,10 @@ export const makeDockAtomsWith: {
  * **Example** (Building an in-memory session)
  *
  * ```ts
- * import { GroupId, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView, makeDockAtoms } from "@beep/dock"
+ * import { GroupId, PanelId } from "@beep/dock/Dock.ids"
+ * import { Panel, TextPanelView } from "@beep/dock/Dock.models"
+ * import { PopulatedWorkspace, TabsNode } from "@beep/dock/Dock.tree"
+ * import { makeDockAtoms } from "@beep/dock/Dock.atoms"
  * import * as Effect from "effect/Effect";
  * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) })
  * const workspace = PopulatedWorkspace.make({ root: TabsNode.make({ groupId: GroupId.make("group-one"), active: panel }) })
