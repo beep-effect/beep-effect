@@ -22,7 +22,7 @@ const $I = $DockId.create("Dock.commands");
  * **Example** (Make user gesture origin)
  *
  * ```ts
- * import { UserCommandOrigin } from "@beep/dock"
+ * import { UserCommandOrigin } from "@beep/dock/Dock.commands"
  *
  * const command = UserCommandOrigin.make({ interactionId: "drag-one" })
  * console.log(command.kind)
@@ -48,7 +48,7 @@ export class UserCommandOrigin extends S.Opaque<UserCommandOrigin, { readonly br
  * **Example** (Make API command origin)
  *
  * ```ts
- * import { ApiCommandOrigin } from "@beep/dock"
+ * import { ApiCommandOrigin } from "@beep/dock/Dock.commands"
  *
  * const command = ApiCommandOrigin.make({ requestId: "request-one" })
  * console.log(command.kind)
@@ -76,7 +76,7 @@ const CommandOriginKind = LiteralKit(["user", "api"]);
  * **Example** (Build tagged command origin)
  *
  * ```ts
- * import { ApiCommandOrigin, CommandOrigin } from "@beep/dock"
+ * import { ApiCommandOrigin, CommandOrigin } from "@beep/dock/Dock.commands"
  *
  * const command = ApiCommandOrigin.make({ requestId: "request-one" })
  * console.log(command.kind)
@@ -99,7 +99,7 @@ export const CommandOrigin = CommandOriginKind.mapMembers(
  * **Example** (Type decoded command origin)
  *
  * ```ts
- * import { ApiCommandOrigin, CommandOrigin } from "@beep/dock"
+ * import { ApiCommandOrigin, CommandOrigin } from "@beep/dock/Dock.commands"
  *
  * const command: CommandOrigin = ApiCommandOrigin.make({ requestId: "request-one" })
  * console.log(command.kind)
@@ -116,7 +116,10 @@ export type CommandOrigin = typeof CommandOrigin.Type;
  * **Example** (Open panel at placement)
  *
  * ```ts
- * import { GroupId, OpenPanelCommand, Panel, PanelId, RootPlacement, TextPanelView } from "@beep/dock"
+ * import { GroupId, PanelId } from "@beep/dock/Dock.ids"
+ * import { OpenPanelCommand } from "@beep/dock/Dock.commands"
+ * import { Panel, TextPanelView } from "@beep/dock/Dock.models"
+ * import { RootPlacement } from "@beep/dock/Dock.placement"
  *
  * const command = OpenPanelCommand.make({ panel: Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) }), placement: RootPlacement.make({ groupId: GroupId.make("group-one") }) })
  * console.log(command.kind)
@@ -143,7 +146,8 @@ export class OpenPanelCommand extends S.Opaque<OpenPanelCommand, { readonly bran
  * **Example** (Activate panel by id)
  *
  * ```ts
- * import { ActivatePanelCommand, PanelId } from "@beep/dock"
+ * import { ActivatePanelCommand } from "@beep/dock/Dock.commands"
+ * import { PanelId } from "@beep/dock/Dock.ids"
  *
  * const command = ActivatePanelCommand.make({ panelId: PanelId.make("panel-one") })
  * console.log(command.kind)
@@ -169,7 +173,9 @@ export class ActivatePanelCommand extends S.Opaque<ActivatePanelCommand, { reado
  * **Example** (Patch panel title facet)
  *
  * ```ts
- * import { PanelId, PanelPatch, UpdatePanelCommand } from "@beep/dock"
+ * import { PanelId } from "@beep/dock/Dock.ids"
+ * import { PanelPatch } from "@beep/dock/Dock.models"
+ * import { UpdatePanelCommand } from "@beep/dock/Dock.commands"
  * import * as O from "effect/Option"
  *
  * const command = UpdatePanelCommand.make({ panelId: PanelId.make("panel-one"), patch: PanelPatch.make({ title: O.some("Renamed") }) })
@@ -191,7 +197,9 @@ export class UpdatePanelCommand extends S.Opaque<UpdatePanelCommand, { readonly 
  * **Example** (Move panel to tab)
  *
  * ```ts
- * import { GroupId, MovePanelCommand, PanelId, TabPlacement } from "@beep/dock"
+ * import { GroupId, PanelId } from "@beep/dock/Dock.ids"
+ * import { MovePanelCommand } from "@beep/dock/Dock.commands"
+ * import { TabPlacement } from "@beep/dock/Dock.placement"
  *
  * const command = MovePanelCommand.make({ panelId: PanelId.make("panel-one"), target: TabPlacement.make({ groupId: GroupId.make("group-two") }) })
  * console.log(command.kind)
@@ -218,7 +226,9 @@ export class MovePanelCommand extends S.Opaque<MovePanelCommand, { readonly bran
  * **Example** (Relocate complete tab group)
  *
  * ```ts
- * import { GroupId, MoveGroupCommand, TabPlacement } from "@beep/dock"
+ * import { GroupId } from "@beep/dock/Dock.ids"
+ * import { MoveGroupCommand } from "@beep/dock/Dock.commands"
+ * import { TabPlacement } from "@beep/dock/Dock.placement"
  *
  * const command = MoveGroupCommand.make({ groupId: GroupId.make("group-one"), target: TabPlacement.make({ groupId: GroupId.make("group-two") }) })
  * console.log(command.kind)
@@ -241,7 +251,9 @@ export class MoveGroupCommand extends S.Opaque<MoveGroupCommand, { readonly bran
  * **Example** (Patch group visibility)
  *
  * ```ts
- * import { GroupId, GroupPatch, UpdateGroupCommand } from "@beep/dock"
+ * import { GroupId } from "@beep/dock/Dock.ids"
+ * import { GroupPatch } from "@beep/dock/Dock.models"
+ * import { UpdateGroupCommand } from "@beep/dock/Dock.commands"
  * import * as O from "effect/Option"
  *
  * const command = UpdateGroupCommand.make({ groupId: GroupId.make("group-one"), patch: GroupPatch.make({ visible: O.some(false) }) })
@@ -265,7 +277,8 @@ export class UpdateGroupCommand extends S.Opaque<UpdateGroupCommand, { readonly 
  * **Example** (Close panel by id)
  *
  * ```ts
- * import { ClosePanelCommand, PanelId } from "@beep/dock"
+ * import { ClosePanelCommand } from "@beep/dock/Dock.commands"
+ * import { PanelId } from "@beep/dock/Dock.ids"
  *
  * const command = ClosePanelCommand.make({ panelId: PanelId.make("panel-one") })
  * console.log(command.kind)
@@ -291,7 +304,8 @@ export class ClosePanelCommand extends S.Opaque<ClosePanelCommand, { readonly br
  * **Example** (Change bounded split ratio)
  *
  * ```ts
- * import { ResizeSplitCommand, SplitId, SplitRatio } from "@beep/dock"
+ * import { ResizeSplitCommand } from "@beep/dock/Dock.commands"
+ * import { SplitId, SplitRatio } from "@beep/dock/Dock.ids"
  *
  * const command = ResizeSplitCommand.make({ splitId: SplitId.make("split-one"), ratio: SplitRatio.make(6_000) })
  * console.log(command.kind)
@@ -318,7 +332,7 @@ export class ResizeSplitCommand extends S.Opaque<ResizeSplitCommand, { readonly 
  * **Example** (Clear entire workspace)
  *
  * ```ts
- * import { ClearWorkspaceCommand } from "@beep/dock"
+ * import { ClearWorkspaceCommand } from "@beep/dock/Dock.commands"
  *
  * const command = ClearWorkspaceCommand.make({})
  * console.log(command.kind)
@@ -343,7 +357,8 @@ export class ClearWorkspaceCommand extends S.Opaque<ClearWorkspaceCommand, { rea
  * **Example** (Maximize group by id)
  *
  * ```ts
- * import { GroupId, MaximizeGroupCommand } from "@beep/dock"
+ * import { GroupId } from "@beep/dock/Dock.ids"
+ * import { MaximizeGroupCommand } from "@beep/dock/Dock.commands"
  *
  * const command = MaximizeGroupCommand.make({ groupId: GroupId.make("group-one") })
  * console.log(command.kind)
@@ -364,7 +379,7 @@ export class MaximizeGroupCommand extends S.Opaque<MaximizeGroupCommand, { reado
  * **Example** (Leave maximized mode)
  *
  * ```ts
- * import { RestoreMaximizedCommand } from "@beep/dock"
+ * import { RestoreMaximizedCommand } from "@beep/dock/Dock.commands"
  *
  * const command = RestoreMaximizedCommand.make({})
  * console.log(command.kind)
@@ -385,7 +400,9 @@ export class RestoreMaximizedCommand extends S.Opaque<RestoreMaximizedCommand, {
  * **Example** (Float group with box)
  *
  * ```ts
- * import { FloatGroupCommand, GroupId, TopLeftAnchoredBox } from "@beep/dock"
+ * import { FloatGroupCommand } from "@beep/dock/Dock.commands"
+ * import { GroupId } from "@beep/dock/Dock.ids"
+ * import { TopLeftAnchoredBox } from "@beep/dock/AnchoredBox"
  *
  * const command = FloatGroupCommand.make({ groupId: GroupId.make("group-one"), anchoredBox: TopLeftAnchoredBox.make({ left: 20, top: 12, width: 640, height: 480 }) })
  * console.log(command.kind)
@@ -405,7 +422,9 @@ export class FloatGroupCommand extends S.Opaque<FloatGroupCommand, { readonly br
  * **Example** (Dock floating group)
  *
  * ```ts
- * import { DockFloatingGroupCommand, GroupId, TabPlacement } from "@beep/dock"
+ * import { DockFloatingGroupCommand } from "@beep/dock/Dock.commands"
+ * import { GroupId } from "@beep/dock/Dock.ids"
+ * import { TabPlacement } from "@beep/dock/Dock.placement"
  *
  * const command = DockFloatingGroupCommand.make({ groupId: GroupId.make("group-one"), target: TabPlacement.make({ groupId: GroupId.make("group-two") }) })
  * console.log(command.kind)
@@ -425,7 +444,9 @@ export class DockFloatingGroupCommand extends S.Opaque<DockFloatingGroupCommand,
  * **Example** (Reposition floating group)
  *
  * ```ts
- * import { GroupId, MoveFloatingGroupCommand, TopLeftAnchoredBox } from "@beep/dock"
+ * import { GroupId } from "@beep/dock/Dock.ids"
+ * import { MoveFloatingGroupCommand } from "@beep/dock/Dock.commands"
+ * import { TopLeftAnchoredBox } from "@beep/dock/AnchoredBox"
  *
  * const command = MoveFloatingGroupCommand.make({ groupId: GroupId.make("group-one"), anchoredBox: TopLeftAnchoredBox.make({ left: 30, top: 24, width: 640, height: 480 }) })
  * console.log(command.kind)
@@ -465,7 +486,7 @@ const DockCommandKind = LiteralKit([
  * **Example** (Use dock command codec)
  *
  * ```ts
- * import { ClearWorkspaceCommand, DockCommand } from "@beep/dock"
+ * import { ClearWorkspaceCommand, DockCommand } from "@beep/dock/Dock.commands"
  *
  * const command = ClearWorkspaceCommand.make({})
  * console.log(command.kind)
@@ -503,7 +524,7 @@ export const DockCommand = DockCommandKind.mapMembers(
  * **Example** (Type decoded dock command)
  *
  * ```ts
- * import { ClearWorkspaceCommand, DockCommand } from "@beep/dock"
+ * import { ClearWorkspaceCommand, DockCommand } from "@beep/dock/Dock.commands"
  *
  * const command: DockCommand = ClearWorkspaceCommand.make({})
  * console.log(command.kind)
@@ -520,7 +541,8 @@ export type DockCommand = typeof DockCommand.Type;
  * **Example** (Wrap command in envelope)
  *
  * ```ts
- * import { ApiCommandOrigin, ClearWorkspaceCommand, CommandId, DockCommandEnvelope } from "@beep/dock"
+ * import { ApiCommandOrigin, ClearWorkspaceCommand, DockCommandEnvelope } from "@beep/dock/Dock.commands"
+ * import { CommandId } from "@beep/dock/Dock.ids"
  *
  * const command = DockCommandEnvelope.make({ commandId: CommandId.make("command-clear"), origin: ApiCommandOrigin.make({ requestId: "request-one" }), command: ClearWorkspaceCommand.make({}) })
  * console.log(command.commandId)
@@ -547,7 +569,8 @@ export class DockCommandEnvelope extends S.Opaque<DockCommandEnvelope, { readonl
  * **Example** (List permitted renderer keys)
  *
  * ```ts
- * import { AllowedRenderers, RendererKey } from "@beep/dock"
+ * import { AllowedRenderers } from "@beep/dock/Dock.commands"
+ * import { RendererKey } from "@beep/dock/Dock.ids"
  *
  * const allowed = AllowedRenderers.make([RendererKey.make("editor")])
  * console.log(allowed.length)
@@ -570,7 +593,8 @@ export const AllowedRenderers = RendererKey.pipe(
  * **Example** (Type allowed renderers list)
  *
  * ```ts
- * import { AllowedRenderers, RendererKey } from "@beep/dock"
+ * import { AllowedRenderers } from "@beep/dock/Dock.commands"
+ * import { RendererKey } from "@beep/dock/Dock.ids"
  *
  * const allowed: AllowedRenderers = AllowedRenderers.make([RendererKey.make("editor")])
  * console.log(allowed[0])
@@ -587,7 +611,8 @@ export type AllowedRenderers = typeof AllowedRenderers.Type;
  * **Example** (Make restore snapshot request)
  *
  * ```ts
- * import { ApiCommandOrigin, CommandId, RestoreSnapshotRequest } from "@beep/dock"
+ * import { ApiCommandOrigin, RestoreSnapshotRequest } from "@beep/dock/Dock.commands"
+ * import { CommandId } from "@beep/dock/Dock.ids"
  *
  * const command = RestoreSnapshotRequest.make({ commandId: CommandId.make("command-restore"), origin: ApiCommandOrigin.make({ requestId: "request-one" }) })
  * console.log(command.commandId)
