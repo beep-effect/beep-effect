@@ -3809,6 +3809,7 @@
         "from": "@beep/pdf-tools",
         "allow": [
           "@beep/identity",
+          "@beep/memfs",
           "@beep/pdf-tools",
           "@beep/schema",
           "@beep/test-runner",
@@ -3816,6 +3817,7 @@
         ],
         "allowTypeOnly": [
           "@beep/identity",
+          "@beep/memfs",
           "@beep/pdf-tools",
           "@beep/schema",
           "@beep/test-runner",
@@ -3966,6 +3968,7 @@
           "@beep/identity",
           "@beep/law-practice-server",
           "@beep/law-practice-use-cases",
+          "@beep/memfs",
           "@beep/practice-identify",
           "@beep/schema",
           "@beep/uspto"
@@ -3974,6 +3977,7 @@
           "@beep/identity",
           "@beep/law-practice-server",
           "@beep/law-practice-use-cases",
+          "@beep/memfs",
           "@beep/practice-identify",
           "@beep/schema",
           "@beep/uspto"
@@ -4566,6 +4570,7 @@
           "@beep/glob",
           "@beep/identity",
           "@beep/memfs",
+          "@beep/package-json",
           "@beep/repo-utils",
           "@beep/schema",
           "@beep/test-runner",
@@ -4577,6 +4582,7 @@
           "@beep/glob",
           "@beep/identity",
           "@beep/memfs",
+          "@beep/package-json",
           "@beep/repo-utils",
           "@beep/schema",
           "@beep/test-runner",

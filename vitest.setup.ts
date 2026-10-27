@@ -16,7 +16,7 @@
 // - asyncFunction: Bun.file().text(), Bun.write, Bun.serve fetch handlers are async by contract
 // - newPromise: Bun.spawn().exited, Bun.sleep, and server.stop are Promises by contract
 // - globalTimers: Bun.sleep is a plain setTimeout promise
-// - globalRandom: Bun.serve port selection has no Effect Random service at setup time
+// - globalRandom: Bun.serve picks its first candidate port with no Effect Random service at setup time
 // @effect-diagnostics nodeBuiltinImport:skip-file
 // @effect-diagnostics asyncFunction:skip-file
 // @effect-diagnostics newPromise:skip-file
@@ -28,10 +28,12 @@ import * as NodeCrypto from "node:crypto";
 import * as NodeFS from "node:fs";
 import * as NodeFSP from "node:fs/promises";
 import * as NodeHttp from "node:http";
+import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
 import * as NodeStream from "node:stream";
 import { A, O, P, R } from "@beep/utils";
 import { addEqualityTesters } from "@effect/vitest";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as Str from "effect/String";
 import { micromark } from "micromark";
 import { gfm, gfmHtml } from "micromark-extension-gfm";
@@ -146,6 +148,7 @@ type BunTestShim = {
   readonly markdown: {
     readonly html: (content: string, options?: BunMarkdownOptions) => string;
   };
+  readonly shimPortLockDirectory: string;
   readonly serve: (options: BunServeOptions) => {
     readonly hostname: string;
     readonly port: number;
@@ -348,8 +351,95 @@ const writeResponse = async (nodeResponse: NodeHttp.ServerResponse, response: Re
   nodeResponse.end(Buffer.from(await response.arrayBuffer()));
 };
 
+// Bun.serve binds before it returns, so its `port` is the bound port. node:http binds
+// asynchronously, so the shim names the port before it listens, and BunHttpServer reads it at
+// once. A random port inside the kernel's ephemeral range (32768 and up on Linux) could lose that
+// bind after `serve` returned; the caller's requests then reached whichever process held the port.
+// Port 0 therefore draws from below the ephemeral range, where no outgoing socket or port-0 bind
+// lands, and each port is reserved across test processes by an exclusive lock file naming its
+// owner, removed when the server stops or the process exits.
+const shimPortFloor = 20_000;
+const shimPortCount = 12_000;
+const shimPortLockDirectory = NodePath.join(NodeOS.tmpdir(), "beep-vitest-bun-serve-ports");
+const ownedShimPorts = MutableHashSet.empty<number>();
+let nextShimPortOffset = Math.floor(Math.random() * shimPortCount);
+
+const shimPortLockPath = (port: number): string => NodePath.join(shimPortLockDirectory, `${port}.lock`);
+
+const errnoCode = (cause: unknown): unknown =>
+  P.isError(cause) && P.hasProperty(cause, "code") ? cause.code : undefined;
+
+// EPERM still means the process exists; only ESRCH proves the owner is gone.
+const isLiveProcess = (pid: number): boolean => {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (cause) {
+    return errnoCode(cause) !== "ESRCH";
+  }
+};
+
+// The pid is written to a private staging file first and hard-linked into place, so a lock never
+// exists without its owner's pid and the link fails if the lock already exists.
+const createShimPortLock = (port: number): boolean => {
+  const staging = NodePath.join(shimPortLockDirectory, `${port}.${process.pid}.${Math.random()}.tmp`);
+  NodeFS.writeFileSync(staging, `${process.pid}`);
+  try {
+    NodeFS.linkSync(staging, shimPortLockPath(port));
+    return true;
+  } catch (cause) {
+    if (errnoCode(cause) !== "EEXIST") throw cause;
+    return false;
+  } finally {
+    NodeFS.rmSync(staging, { force: true });
+  }
+};
+
+// A lock whose owner exited, or one without a pid (never written by this shim), is reclaimed once.
+// Two processes reclaiming the same abandoned lock at the same instant could both succeed; that
+// needs a crashed owner and an exact collision, and a live owner is never displaced.
+const lockShimPort = (port: number): boolean => {
+  if (createShimPortLock(port)) return true;
+  let owner: number;
+  try {
+    owner = Number.parseInt(NodeFS.readFileSync(shimPortLockPath(port), "utf8"), 10);
+  } catch (cause) {
+    if (errnoCode(cause) === "ENOENT") return createShimPortLock(port);
+    throw cause;
+  }
+  if (Number.isInteger(owner) && isLiveProcess(owner)) return false;
+  NodeFS.rmSync(shimPortLockPath(port), { force: true });
+  return createShimPortLock(port);
+};
+
+const claimShimPort = (): number => {
+  NodeFS.mkdirSync(shimPortLockDirectory, { recursive: true });
+  for (let attempt = 0; attempt < shimPortCount; attempt++) {
+    const offset = (nextShimPortOffset + attempt) % shimPortCount;
+    const port = shimPortFloor + offset;
+    if (lockShimPort(port)) {
+      nextShimPortOffset = (offset + 1) % shimPortCount;
+      MutableHashSet.add(ownedShimPorts, port);
+      return port;
+    }
+  }
+  throw new Error(
+    `Bun.serve shim: every port in ${shimPortFloor}-${shimPortFloor + shimPortCount - 1} is reserved (${shimPortLockDirectory})`
+  );
+};
+
+const releaseShimPort = (port: number): void => {
+  if (!MutableHashSet.has(ownedShimPorts, port)) return;
+  MutableHashSet.remove(ownedShimPorts, port);
+  NodeFS.rmSync(shimPortLockPath(port), { force: true });
+};
+
+process.once("exit", () => {
+  for (const port of ownedShimPorts) NodeFS.rmSync(shimPortLockPath(port), { force: true });
+});
+
 const listenPort = (requestedPort: number | undefined): number =>
-  requestedPort === undefined || requestedPort === 0 ? 30_000 + Math.floor(Math.random() * 20_000) : requestedPort;
+  requestedPort === undefined || requestedPort === 0 ? claimShimPort() : requestedPort;
 
 const collectRequestBody = (
   request: NodeHttp.IncomingMessage,
@@ -433,7 +523,8 @@ const serve = (options: BunServeOptions): ReturnType<BunTestShim["serve"]> => {
       }
       handler = options.fetch;
     },
-    stop: () => (bindFailed ? Promise.resolve() : (stopped ??= stopServer(server))),
+    stop: () =>
+      (bindFailed ? Promise.resolve() : (stopped ??= stopServer(server))).finally(() => releaseShimPort(port)),
   };
   return handle;
 };
@@ -638,6 +729,8 @@ if (!isBunTestShim(Reflect.get(globalThis, "Bun"))) {
       html: renderMarkdownHtml,
     },
     serve,
+    // Shim-only: tests of the shim find its port reservations here; real Bun has no such property.
+    shimPortLockDirectory,
     sleep: (milliseconds: number) => new Promise((resolve) => setTimeout(resolve, milliseconds)),
     spawn,
     spawnSync,

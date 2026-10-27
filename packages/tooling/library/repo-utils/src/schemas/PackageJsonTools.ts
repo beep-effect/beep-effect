@@ -6,6 +6,8 @@
  */
 
 import { $RepoUtilsId } from "@beep/identity/packages";
+import { BrowserField, TypesVersionsField } from "@beep/package-json/ManifestFields";
+import { PeerDependenciesMetaField } from "@beep/package-json/Package";
 import { A } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as Effect from "effect/Effect";
@@ -17,23 +19,21 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
+import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import { DomainError } from "../errors/index.ts";
 import { jsonStringifyPretty } from "../JsonUtils.ts";
 import {
-  Browser,
   decodePackageJsonEffect,
   encodePackageJsonEffect,
-  NpmPackageJson,
   PackageExports,
   PackageImports,
   PackageJson,
-  PeerDependenciesMeta,
   PublishConfig,
-  TypesVersions,
 } from "./PackageJson.ts";
 import type { StandardSchemaV1 } from "@standard-schema/spec";
 import type * as JsonPatch from "effect/JsonPatch";
+import type * as JsonSchema from "effect/JsonSchema";
 
 const $I = $RepoUtilsId.create("schemas/PackageJsonTools");
 
@@ -93,9 +93,6 @@ const canonicalizeUnknownValue = (value: unknown): unknown => {
   return value;
 };
 
-const isKnownPublishConfigKey = (key: string): boolean =>
-  key === "access" || key === "tag" || key === "registry" || key === "provenance" || key === "bin" || key === "exports";
-
 const canonicalizePublishConfigValue = (key: string, value: unknown): unknown => {
   if (key === "bin" && isStringRecord(value)) {
     return sortStringRecord(value, identity);
@@ -106,32 +103,49 @@ const canonicalizePublishConfigValue = (key: string, value: unknown): unknown =>
   return value;
 };
 
-const canonicalizePublishConfig = (
-  value: NonNullable<PackageJson.Encoded["publishConfig"]>
-): NonNullable<PackageJson.Encoded["publishConfig"]> => {
-  if (!isStringRecord(value)) {
-    return value;
-  }
-
+// Lay out a JSON object with its documented keys first, in `keyOrder`, then every other key sorted, with
+// `canonicalizeKnown` applied to the documented values and the unknown values canonicalized recursively.
+const orderObjectKeys = (
+  value: Readonly<Record<string, unknown>>,
+  keyOrder: ReadonlyArray<string>,
+  canonicalizeKnown: (key: string, value: unknown) => unknown
+): Record<string, unknown> => {
   let out = R.empty<string, unknown>();
-  for (const key of publishConfigKeyOrder) {
+  for (const key of keyOrder) {
     if (R.has(key)(value)) {
-      out = R.set(out, key, canonicalizePublishConfigValue(key, O.getOrUndefined(R.get(value, key))));
+      out = R.set(out, key, canonicalizeKnown(key, O.getOrUndefined(R.get(value, key))));
     }
   }
-
   const remaining = pipe(
     R.toEntries(value),
-    A.filter(([key]) => !isKnownPublishConfigKey(key)),
+    A.filter(([key]) => !A.contains(keyOrder, key)),
     A.sort(Order.mapInput(Order.String, ([key]: [string, unknown]) => key))
   );
-
   for (const [key, entryValue] of remaining) {
     out = R.set(out, key, canonicalizeUnknownValue(entryValue));
   }
-
-  return Result.getOrThrow(S.decodeUnknownResult(PublishConfig)(out));
+  return out;
 };
+
+const canonicalizePublishConfig = (
+  value: NonNullable<PackageJson.Encoded["publishConfig"]>
+): NonNullable<PackageJson.Encoded["publishConfig"]> =>
+  isStringRecord(value)
+    ? Result.getOrThrow(
+        S.decodeUnknownResult(PublishConfig)(
+          orderObjectKeys(value, publishConfigKeyOrder, canonicalizePublishConfigValue)
+        )
+      )
+    : value;
+
+const repositoryKeyOrder = A.make("type", "url", "directory");
+
+// The kit replays a repository object in its source key order; the canonical form orders the documented keys
+// (`type`, `url`, `directory`) first and sorts any others after them.
+const canonicalizeRepository = (
+  value: NonNullable<PackageJson.Encoded["repository"]>
+): NonNullable<PackageJson.Encoded["repository"]> =>
+  P.isString(value) ? value : orderObjectKeys(value, repositoryKeyOrder, (_, entry) => entry);
 
 const canonicalizePackageJsonEncoded = (encoded: PackageJson.Encoded): PackageJson.Encoded =>
   ({
@@ -145,7 +159,7 @@ const canonicalizePackageJsonEncoded = (encoded: PackageJson.Encoded): PackageJs
     ...O.getSomesStruct({ packageManager: O.fromUndefinedOr(encoded.packageManager) }),
     ...O.getSomesStruct({ workspaces: O.fromUndefinedOr(encoded.workspaces) }),
     ...O.getSomesStruct({ homepage: O.fromUndefinedOr(encoded.homepage) }),
-    ...O.getSomesStruct({ repository: O.fromUndefinedOr(encoded.repository) }),
+    ...O.getSomesStruct({ repository: O.map(O.fromUndefinedOr(encoded.repository), canonicalizeRepository) }),
     ...O.getSomesStruct({ beep: O.fromUndefinedOr(encoded.beep) }),
     ...O.getSomesStruct({ bugs: O.fromUndefinedOr(encoded.bugs) }),
     ...O.getSomesStruct({ author: O.fromUndefinedOr(encoded.author) }),
@@ -173,10 +187,13 @@ const canonicalizePackageJsonEncoded = (encoded: PackageJson.Encoded): PackageJs
       browser: O.map(O.fromUndefinedOr(encoded.browser), (browser) =>
         P.isString(browser)
           ? browser
-          : Result.getOrThrow(S.decodeUnknownResult(Browser)(canonicalizeUnknownValue(browser)))
+          : Result.getOrThrow(S.decodeUnknownResult(BrowserField)(canonicalizeUnknownValue(browser)))
       ),
     }),
-    ...O.getSomesStruct({ bin: O.fromUndefinedOr(encoded.bin) }),
+    // The kit decodes a `bin` map to a HashMap, which keeps no source order, so the canonical form sorts it.
+    ...O.getSomesStruct({
+      bin: O.map(O.fromUndefinedOr(encoded.bin), (bin) => (P.isString(bin) ? bin : sortStringRecord(bin, identity))),
+    }),
     ...O.getSomesStruct({ man: O.fromUndefinedOr(encoded.man) }),
     ...O.getSomesStruct({ directories: O.fromUndefinedOr(encoded.directories) }),
     ...O.getSomesStruct({ files: O.fromUndefinedOr(encoded.files) }),
@@ -204,7 +221,9 @@ const canonicalizePackageJsonEncoded = (encoded: PackageJson.Encoded): PackageJs
     }),
     ...O.getSomesStruct({
       peerDependenciesMeta: O.map(O.fromUndefinedOr(encoded.peerDependenciesMeta), (peerDependenciesMeta) =>
-        Result.getOrThrow(S.decodeUnknownResult(PeerDependenciesMeta)(canonicalizeUnknownValue(peerDependenciesMeta)))
+        Result.getOrThrow(
+          S.decodeUnknownResult(PeerDependenciesMetaField)(canonicalizeUnknownValue(peerDependenciesMeta))
+        )
       ),
     }),
     ...O.getSomesStruct({
@@ -238,7 +257,7 @@ const canonicalizePackageJsonEncoded = (encoded: PackageJson.Encoded): PackageJs
     ...O.getSomesStruct({ readme: O.fromUndefinedOr(encoded.readme) }),
     ...O.getSomesStruct({
       typesVersions: O.map(O.fromUndefinedOr(encoded.typesVersions), (typesVersions) =>
-        Result.getOrThrow(S.decodeUnknownResult(TypesVersions)(canonicalizeUnknownValue(typesVersions)))
+        Result.getOrThrow(S.decodeUnknownResult(TypesVersionsField)(canonicalizeUnknownValue(typesVersions)))
       ),
     }),
   }) satisfies PackageJson.Encoded;
@@ -288,8 +307,39 @@ export class PackageJsonValidationIssue extends S.Opaque<
   )
 ) {}
 
+// `rest` is the closed model's guard (an optional key whose schema admits nothing), not a manifest field: drop it from
+// the emitted root definition so editors do not offer it in completion.
+const withoutClosedRest = (document: JsonSchema.Document<"draft-2020-12">): JsonSchema.Document<"draft-2020-12"> => {
+  const rootName = pipe(
+    O.liftPredicate(document.schema.$ref, P.isString),
+    O.flatMap(O.liftPredicate(Str.startsWith("#/$defs/"))),
+    O.map(flow(Str.slice("#/$defs/".length), JsonPointer.unescapeToken))
+  );
+  return O.match(rootName, {
+    onNone: () => document,
+    onSome: (name) =>
+      O.match(
+        R.modify(document.definitions, name, (definition) =>
+          P.isObject(definition.properties)
+            ? {
+                ...definition,
+                properties: R.remove(definition.properties as Readonly<Record<string, unknown>>, "rest"),
+              }
+            : definition
+        ),
+        { onNone: () => document, onSome: (definitions) => ({ ...document, definitions }) }
+      ),
+  });
+};
+
 /**
  * Draft 2020-12 JSON Schema document for the repo-aware package.json schema.
+ *
+ * **Details**
+ *
+ * The closed `rest` key of the model is left out of the root definition: it
+ * guards against a literal `rest` key and is not a field a manifest carries.
+ * `additionalProperties: false` still rejects it.
  *
  * **Example** (Access package JSON schema)
  *
@@ -302,23 +352,9 @@ export class PackageJsonValidationIssue extends S.Opaque<
  * @category utilities
  * @since 0.0.0
  */
-export const packageJsonJsonSchema = S.toJsonSchemaDocument(PackageJson, { onExcessProperty: "error" });
-
-/**
- * Draft 2020-12 JSON Schema document for the npm-only package.json schema.
- *
- * **Example** (Access npm JSON schema)
- *
- * ```ts
- * import { npmPackageJsonJsonSchema } from "@beep/repo-utils/schemas/PackageJsonTools"
- * const schema = npmPackageJsonJsonSchema
- * console.log(schema)
- * ```
- *
- * @category utilities
- * @since 0.0.0
- */
-export const npmPackageJsonJsonSchema = S.toJsonSchemaDocument(NpmPackageJson, { onExcessProperty: "error" });
+export const packageJsonJsonSchema: JsonSchema.Document<"draft-2020-12"> = withoutClosedRest(
+  S.toJsonSchemaDocument(PackageJson, { onExcessProperty: "error" })
+);
 
 /**
  * Normalize an unknown package.json value into a canonical encoded object.
