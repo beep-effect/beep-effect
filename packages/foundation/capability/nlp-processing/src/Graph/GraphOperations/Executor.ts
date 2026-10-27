@@ -1,6 +1,8 @@
 /**
  * GraphOperations/Executor - the graph-operation execution engine.
  *
+ * **Details**
+ *
  * Applies a {@link GraphOperation} to every leaf node of an
  * {@link EffectGraph}, collecting the new nodes, per-node errors, and
  * aggregated {@link Types.ExecutionMetrics}, with optional result caching via the

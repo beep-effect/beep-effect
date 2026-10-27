@@ -27,7 +27,7 @@ const ObservabilityCoreConfigFields = {
  * **Example** (Creating a core config)
  *
  * ```ts import.meta.vitest name="Creating a core config"
- * import { ObservabilityCoreConfig } from "@beep/observability"
+ * import { ObservabilityCoreConfig } from "@beep/observability/CoreConfig"
  *
  * const config: ObservabilityCoreConfig = {
  *   serviceName: "todox-web",
@@ -57,7 +57,7 @@ export const ObservabilityCoreConfig = S.Struct({
  * **Example** (Typing a config parameter)
  *
  * ```typescript
- * import type { ObservabilityCoreConfig } from "@beep/observability"
+ * import type { ObservabilityCoreConfig } from "@beep/observability/CoreConfig"
  *
  * const serviceName = (config: ObservabilityCoreConfig) => config.serviceName
  * console.log(serviceName)
