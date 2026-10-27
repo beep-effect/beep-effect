@@ -1,3 +1,4 @@
+import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { QualityTaskFailed, QualityTaskLaneRun, QualityTaskLaneRunReport } from "@beep/repo-cli/commands/Quality";
 import {
   closeTurboLaneLedger,
@@ -39,10 +40,8 @@ import {
   YeetAttemptStarted,
   YeetProofReportOptions,
 } from "@beep/repo-cli/test/Yeet";
-import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
-import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
@@ -61,7 +60,7 @@ import * as TestConsole from "effect/testing/TestConsole";
 
 const encodeSummary = S.encodeEffect(S.fromJsonString(TurboRunSummary));
 
-const PlatformLayer = Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, NodePath.layer);
+const PlatformLayer = Layer.mergeAll(NodeCrypto.layer, MemoryFileSystem.layer, NodePath.layer);
 
 const facts = (overrides: Partial<ProofShadowAttemptFacts> = {}): ProofShadowAttemptFacts =>
   ProofShadowAttemptFacts.make({
@@ -140,29 +139,34 @@ const report = (lanes: ReadonlyArray<QualityTaskLaneRun>): QualityTaskLaneRunRep
 
 // The epoch collector reads six root files; a temp checkout carrying them is the
 // smallest repo the shadow pass can run against.
+const makeTempCheckout = Effect.gen(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const root = yield* fs.makeTempDirectory();
+  const policyPackDir = path.join(root, "packages", "tooling", "policy-pack", "lint-rules");
+  yield* fs.makeDirectory(policyPackDir, { recursive: true });
+  yield* fs.writeFileString(path.join(root, "bun.lock"), "lockfile\n");
+  yield* fs.writeFileString(path.join(root, ".bun-version"), "1.4.0\n");
+  yield* fs.writeFileString(path.join(root, ".nvmrc"), "24\n");
+  yield* fs.writeFileString(path.join(root, "turbo.json"), "{}\n");
+  yield* fs.writeFileString(path.join(root, "tsconfig.base.json"), "{}\n");
+  yield* fs.writeFileString(path.join(policyPackDir, "package.json"), '{"version":"9.8.7"}\n');
+  return root;
+});
+
+const removeTempCheckout = (root: string) =>
+  FileSystem.FileSystem.pipe(Effect.flatMap((fs) => Effect.ignore(fs.remove(root, { recursive: true }))));
+
+// One checkout owned by the test that yields it: the test's own scope removes it.
+const tempCheckout = Effect.acquireRelease(makeTempCheckout, removeTempCheckout).pipe(
+  Effect.withSpan("ProofShadowTest.tempCheckout")
+);
+
+// A checkout that lives only as long as `use`, for a test that needs several in turn.
 const inTempCheckout = Effect.fn("ProofShadowTest.inTempCheckout")(function* <Value, Failure, Requirements>(
   use: (root: string) => Effect.Effect<Value, Failure, Requirements>
 ) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  return yield* Effect.acquireUseRelease(
-    fs.makeTempDirectory().pipe(
-      Effect.tap((root) =>
-        Effect.gen(function* () {
-          const policyPackDir = path.join(root, "packages", "tooling", "policy-pack", "lint-rules");
-          yield* fs.makeDirectory(policyPackDir, { recursive: true });
-          yield* fs.writeFileString(path.join(root, "bun.lock"), "lockfile\n");
-          yield* fs.writeFileString(path.join(root, ".bun-version"), "1.4.0\n");
-          yield* fs.writeFileString(path.join(root, ".nvmrc"), "24\n");
-          yield* fs.writeFileString(path.join(root, "turbo.json"), "{}\n");
-          yield* fs.writeFileString(path.join(root, "tsconfig.base.json"), "{}\n");
-          yield* fs.writeFileString(path.join(policyPackDir, "package.json"), '{"version":"9.8.7"}\n');
-        })
-      )
-    ),
-    use,
-    (root) => Effect.ignore(fs.remove(root, { recursive: true }))
-  );
+  return yield* Effect.acquireUseRelease(makeTempCheckout, use, removeTempCheckout);
 });
 
 describe("proof shadow mode", () => {
@@ -215,20 +219,20 @@ describe("proof shadow mode", () => {
     expect(A.map(selected, (entry) => entry.observed)).toStrictEqual(["passed", "failed"]);
   });
 
-  it.effect("records nothing and touches no ledger when the attempt has no shadowable lanes", () =>
-    inTempCheckout((root) =>
+  it.layer(PlatformLayer, { timeout: "30 seconds" })((it) => {
+    it.effect("records nothing and touches no ledger when the attempt has no shadowable lanes", () =>
       Effect.gen(function* () {
+        const root = yield* tempCheckout;
         const fs = yield* FileSystem.FileSystem;
         const summary = yield* recordProofShadowForAttempt(root, facts(), [report([])], changedNone());
         expect(summary).toMatchObject({ recorded: 0, wouldReuse: 0, disagreements: 0, undeclared: 0 });
         expect(yield* fs.exists(yield* proofLedgerPathForCheckout(root))).toBe(false);
       })
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
+    );
 
-  it.effect("shadows a first attempt as misses and records one fact per lane", () =>
-    inTempCheckout((root) =>
+    it.effect("shadows a first attempt as misses and records one fact per lane", () =>
       Effect.gen(function* () {
+        const root = yield* tempCheckout;
         const summary = yield* recordProofShadowForAttempt(
           root,
           facts(),
@@ -261,12 +265,11 @@ describe("proof shadow mode", () => {
         expect(yield* ledger.facts).toBe(3);
         expect(yield* ledger.malformedRows).toBe(0);
       })
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
+    );
 
-  it.effect("reports a would-reuse hit on the next attempt and a disagreement when that lane fails", () =>
-    inTempCheckout((root) =>
+    it.effect("reports a would-reuse hit on the next attempt and a disagreement when that lane fails", () =>
       Effect.gen(function* () {
+        const root = yield* tempCheckout;
         const lanes = [
           lane("quality:coverage", "passed", O.some("digest-a"), 600_000),
           lane("quality:check", "failed", O.some("digest-b")),
@@ -326,12 +329,11 @@ describe("proof shadow mode", () => {
           Str.includes("pre-push, local): not ready — attempts 2/200, branches 2/10, disagreements 1/0")(text)
         ).toBe(true);
       })
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
+    );
 
-  it.effect("keeps a lane with undeclared inputs from ever becoming a hit", () =>
-    inTempCheckout((root) =>
+    it.effect("keeps a lane with undeclared inputs from ever becoming a hit", () =>
       Effect.gen(function* () {
+        const root = yield* tempCheckout;
         const undeclared = [lane("quality:labs", "passed", O.none())];
         yield* recordProofShadowForAttempt(root, facts(), [report(undeclared)], changedNone());
         const second = yield* recordProofShadowForAttempt(
@@ -351,14 +353,13 @@ describe("proof shadow mode", () => {
         const contents = yield* (yield* FileSystem.FileSystem).readFileString(ledgerPath);
         expect(Str.includes(`"inputDigest":"${UNDECLARED_INPUT_DIGEST}"`)(contents)).toBe(true);
       })
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
+    );
 
-  // C5 must-fail fixture (ruling 4): a lockfile change starts a new epoch, and a
-  // passed fact from the old epoch never satisfies the same lane again.
-  it.effect("must fail: an epoch change refuses the passed fact it would otherwise reuse", () =>
-    inTempCheckout((root) =>
+    // C5 must-fail fixture (ruling 4): a lockfile change starts a new epoch, and a
+    // passed fact from the old epoch never satisfies the same lane again.
+    it.effect("must fail: an epoch change refuses the passed fact it would otherwise reuse", () =>
       Effect.gen(function* () {
+        const root = yield* tempCheckout;
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const lanes = [lane("quality:coverage", "passed", O.some("digest-a"), 600_000)];
@@ -386,14 +387,13 @@ describe("proof shadow mode", () => {
           A.map(rows, (row) => (row.decision.kind === "miss" ? row.decision.reason : row.decision.kind))
         ).toStrictEqual(["no-fact", "hit", "epoch-changed"]);
       })
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
+    );
 
-  // C5 must-fail fixture (rulings 1, 2, 63): a merged-preview fact recorded under the
-  // PR posture never satisfies the same lane in pre-push under the local profile.
-  it.effect("must fail: a fact from another env profile never satisfies the pre-push lookup", () =>
-    inTempCheckout((root) =>
+    // C5 must-fail fixture (rulings 1, 2, 63): a merged-preview fact recorded under the
+    // PR posture never satisfies the same lane in pre-push under the local profile.
+    it.effect("must fail: a fact from another env profile never satisfies the pre-push lookup", () =>
       Effect.gen(function* () {
+        const root = yield* tempCheckout;
         const lanes = [lane("quality:coverage", "passed", O.some("digest-a"), 600_000)];
         yield* recordProofShadowForAttempt(
           root,
@@ -419,15 +419,14 @@ describe("proof shadow mode", () => {
           "pre-push/local",
         ]);
       })
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
+    );
 
-  // C5 must-fail fixture (ruling 70): a lane whose package scope intersects the attempt's
-  // changed packages is refused before any fact is read, even though its digest, epoch,
-  // command and profile all still match the fact recorded a moment earlier.
-  it.effect("must fail: a changed package in a lane's scope refuses the digest that would have matched", () =>
-    inTempCheckout((root) =>
+    // C5 must-fail fixture (ruling 70): a lane whose package scope intersects the attempt's
+    // changed packages is refused before any fact is read, even though its digest, epoch,
+    // command and profile all still match the fact recorded a moment earlier.
+    it.effect("must fail: a changed package in a lane's scope refuses the digest that would have matched", () =>
       Effect.gen(function* () {
+        const root = yield* tempCheckout;
         const lanes = [lane("quality:check", "passed", O.some("d1"), 300_000, ["@beep/x"])];
         const first = yield* recordProofShadowForAttempt(root, facts(), [report(lanes)], changedKnown([]));
         expect(first).toMatchObject({ recorded: 1, wouldReuse: 0, tripped: 0 });
@@ -462,14 +461,13 @@ describe("proof shadow mode", () => {
           ["changed-package-tripwire", 1],
         ]);
       })
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
+    );
 
-  // C5 fixture (ruling 70): a root-task-only lane records no package scope, so its digest
-  // decides alone — a repo-wide lane is not refused just because some package changed.
-  it.effect("keeps a root-task-only lane decided by its digest while packages change around it", () =>
-    inTempCheckout((root) =>
+    // C5 fixture (ruling 70): a root-task-only lane records no package scope, so its digest
+    // decides alone — a repo-wide lane is not refused just because some package changed.
+    it.effect("keeps a root-task-only lane decided by its digest while packages change around it", () =>
       Effect.gen(function* () {
+        const root = yield* tempCheckout;
         const lanes = [lane("cheap-gates:lint-policy", "passed", O.some("d-root"), 5_000)];
         yield* recordProofShadowForAttempt(root, facts(), [report(lanes)], changedKnown(["@beep/x"]));
         const second = yield* recordProofShadowForAttempt(
@@ -480,14 +478,13 @@ describe("proof shadow mode", () => {
         );
         expect(second).toMatchObject({ recorded: 1, wouldReuse: 1, tripped: 0 });
       })
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
+    );
 
-  // C5 fixture (ruling 70): the ledger refuses an undeclared lane before the tripwire runs,
-  // so a scoped-but-undeclared lane is named `undeclared-inputs`, never the tripwire.
-  it.effect("names an undeclared lane's own refusal rather than the tripwire", () =>
-    inTempCheckout((root) =>
+    // C5 fixture (ruling 70): the ledger refuses an undeclared lane before the tripwire runs,
+    // so a scoped-but-undeclared lane is named `undeclared-inputs`, never the tripwire.
+    it.effect("names an undeclared lane's own refusal rather than the tripwire", () =>
       Effect.gen(function* () {
+        const root = yield* tempCheckout;
         const lanes = [lane("quality:labs", "passed", O.none(), 1_000, ["@beep/x"])];
         yield* recordProofShadowForAttempt(root, facts(), [report(lanes)], changedKnown(["@beep/x"]));
         const second = yield* recordProofShadowForAttempt(
@@ -503,15 +500,14 @@ describe("proof shadow mode", () => {
           A.map(rows, (row) => (row.decision.kind === "miss" ? row.decision.reason : row.decision.kind))
         ).toStrictEqual(["undeclared-inputs", "undeclared-inputs"]);
       })
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
+    );
 
-  // Review round 1, kriegcloud P2: a failed lane resolves no Turbo digest, so it
-  // carries no package scope either. That costs the tripwire nothing, because the
-  // ledger refuses an undeclared key before the tripwire is ever consulted.
-  it.effect("refuses a failed scoped lane as undeclared-inputs rather than the tripwire", () =>
-    inTempCheckout((root) =>
+    // Review round 1, kriegcloud P2: a failed lane resolves no Turbo digest, so it
+    // carries no package scope either. That costs the tripwire nothing, because the
+    // ledger refuses an undeclared key before the tripwire is ever consulted.
+    it.effect("refuses a failed scoped lane as undeclared-inputs rather than the tripwire", () =>
       Effect.gen(function* () {
+        const root = yield* tempCheckout;
         const lanes = [lane("quality:check", "failed", O.none(), 1_000, ["@beep/x"])];
         const summary = yield* recordProofShadowForAttempt(
           root,
@@ -526,15 +522,14 @@ describe("proof shadow mode", () => {
           A.map(rows, (row) => (row.decision.kind === "miss" ? row.decision.reason : row.decision.kind))
         ).toStrictEqual(["undeclared-inputs"]);
       })
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
+    );
 
-  // C5 fixture (ruling 69): an unreadable changed set fails the tripwire closed — every
-  // scoped lane is refused, and only a lane with no scope at all is still decided by
-  // its digest.
-  it.effect("fails the tripwire closed when the changed package set is unavailable", () =>
-    inTempCheckout((root) =>
+    // C5 fixture (ruling 69): an unreadable changed set fails the tripwire closed — every
+    // scoped lane is refused, and only a lane with no scope at all is still decided by
+    // its digest.
+    it.effect("fails the tripwire closed when the changed package set is unavailable", () =>
       Effect.gen(function* () {
+        const root = yield* tempCheckout;
         const lanes = [
           lane("quality:check", "passed", O.some("d1"), 300_000, ["@beep/x"]),
           lane("cheap-gates:lint-policy", "passed", O.some("d-root"), 5_000),
@@ -553,8 +548,8 @@ describe("proof shadow mode", () => {
           A.map(rows, (row) => (row.decision.kind === "miss" ? row.decision.reason : row.decision.kind))
         ).toStrictEqual(["no-fact", "no-fact", "changed-package-tripwire", "hit"]);
       })
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
+    );
+  });
 
   it("declares enforcement ready only when the bar is met with zero disagreements", () => {
     const empty = buildProofShadowReport(emptyInput());
@@ -655,9 +650,10 @@ describe("proof shadow mode", () => {
     })
   );
 
-  it.effect("never lets merged-preview rows satisfy the pre-push bar", () =>
-    inTempCheckout((root) =>
+  it.layer(PlatformLayer, { timeout: "30 seconds" })((it) => {
+    it.effect("never lets merged-preview rows satisfy the pre-push bar", () =>
       Effect.gen(function* () {
+        const root = yield* tempCheckout;
         const lanes = [lane("quality:coverage", "passed", O.some("digest-a"))];
         yield* recordProofShadowForAttempt(
           root,
@@ -714,12 +710,13 @@ describe("proof shadow mode", () => {
           enforcementReady: true,
         });
       })
-    ).pipe(provideScopedLayer(PlatformLayer))
-  );
+    );
+  });
 
-  it.effect("prints the report as text or JSON from the checkout the locator names", () =>
-    inTempCheckout((root) =>
+  it.layer(Layer.mergeAll(PlatformLayer, TestConsole.layer), { timeout: "30 seconds" })((it) => {
+    it.effect("prints the report as text or JSON from the checkout the locator names", () =>
       Effect.gen(function* () {
+        const root = yield* tempCheckout;
         yield* recordProofShadowForAttempt(
           root,
           facts(),
@@ -735,8 +732,8 @@ describe("proof shadow mode", () => {
         const decoded = yield* ProofShadowReportJson.decode(String(lines[1]));
         expect(decoded).toMatchObject({ shadowRows: 1, attempts: 1, branches: 1, enforcementReady: false });
       })
-    ).pipe(provideScopedLayer(Layer.mergeAll(PlatformLayer, TestConsole.layer)))
-  );
+    );
+  });
 
   // TTC ruling 72: a red run records its input digest as an observation, through the same
   // wrapper-ledger path a pass takes, so a failed lane can be decided against a passed fact.

@@ -713,7 +713,9 @@ it.layer(platform, { timeout: "30 seconds" })("B7 merge-loop timing", (layerIt) 
         })
       )
   );
+});
 
+it.layer(platform, { timeout: "30 seconds" })("B7 merge-loop timing", (layerIt) => {
   layerIt.effect(
     "holds an unlabelled head past the budget, admits on the label within one poll, and reaches ready",
     () =>
@@ -833,7 +835,9 @@ it.layer(platform, { timeout: "30 seconds" })("B7 merge-loop timing", (layerIt) 
         })
       )
   );
+});
 
+it.layer(platform, { timeout: "30 seconds" })("B7 merge-loop timing", (layerIt) => {
   layerIt.effect("re-reads once for a new head, stamps settled/closeout/ready once, and sweeps only on merge", () =>
     temporary((root) =>
       Effect.gen(function* () {
@@ -895,7 +899,9 @@ it.layer(platform, { timeout: "30 seconds" })("B7 merge-loop timing", (layerIt) 
       })
     )
   );
+});
 
+describe("B7 merge-loop timing", () => {
   it("keeps first timeline stamps and renders missing or invalid push times", () => {
     const timeline = YeetHeadTimeline.make({ headSha: "abc", firstObservedAt: at, pushedAt: O.some(at) });
     const stamped = yeetHeadTimelineStamp(timeline, "readyAt", "2026-09-16T00:01:00.000Z");
@@ -1279,6 +1285,9 @@ it.layer(platform, { timeout: "30 seconds" })("B7 sleep after a spent registrati
       })
     )
   );
+});
+
+it.layer(platform, { timeout: "30 seconds" })("B7 sleep after a spent registration budget (ruling 49)", (layerIt) => {
   layerIt.effect("still clamps the sleep to the remaining budget while a context is missing", () =>
     temporary((root) =>
       Effect.gen(function* () {
