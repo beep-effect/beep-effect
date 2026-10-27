@@ -6,7 +6,7 @@
  */
 
 import { CacheTaskConfiguration } from "@beep/repo-configs/cache";
-import { FsUtils, GlobOptions, readPackageJsonFile, resolveWorkspacePackages } from "@beep/repo-utils";
+import { FsUtils, GlobOptions, readPackageJsonFile, resolveWorkspacePackages, toSortedRecord } from "@beep/repo-utils";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { HostProcessArchitecture, HostProcessPlatform } from "@beep/utils";
@@ -403,7 +403,7 @@ export const collectCacheTaskSelection = Effect.fn("Cache.collectTaskSelection")
     CacheCensusWorkspace.make({
       name: "//",
       directory: ".",
-      scripts: O.getOrElse(rootManifest.scripts, () => ({})),
+      scripts: toSortedRecord(rootManifest.scripts),
     }),
     ...pipe(
       workspaces,
@@ -412,7 +412,7 @@ export const collectCacheTaskSelection = Effect.fn("Cache.collectTaskSelection")
         CacheCensusWorkspace.make({
           name,
           directory: paths.relative(root, workspace.dir),
-          scripts: workspace.scripts,
+          scripts: toSortedRecord(workspace.manifest.scripts),
         })
       )
     ),
@@ -509,7 +509,7 @@ export const collectCacheCensus = Effect.fn("Cache.collectCacheCensus")(function
   let tasks = R.keys(rootConfig.tasks);
   let sourcePaths = ["turbo.json", "package.json", "bun.lock", ".bun-version", ".nvmrc"];
   let workspaceRows = [
-    CacheCensusWorkspace.make({ name: "//", directory: ".", scripts: O.getOrElse(rootManifest.scripts, () => ({})) }),
+    CacheCensusWorkspace.make({ name: "//", directory: ".", scripts: toSortedRecord(rootManifest.scripts) }),
   ];
   const collectChildConfigurations = Effect.fn("CacheCensus.collectChildConfigurations")(function* (
     name: string,
@@ -537,7 +537,10 @@ export const collectCacheCensus = Effect.fn("Cache.collectCacheCensus")(function
       Effect.fromOption(() => CacheCommandError.new("Workspace disappeared during discovery."))
     );
     const directory = paths.relative(root, workspace.dir);
-    workspaceRows = A.append(workspaceRows, CacheCensusWorkspace.make({ name, directory, scripts: workspace.scripts }));
+    workspaceRows = A.append(
+      workspaceRows,
+      CacheCensusWorkspace.make({ name, directory, scripts: toSortedRecord(workspace.manifest.scripts) })
+    );
     sourcePaths = A.append(sourcePaths, paths.join(directory, "package.json"));
     yield* collectChildConfigurations(name, directory);
   }
@@ -577,7 +580,7 @@ export const collectCacheCensus = Effect.fn("Cache.collectCacheCensus")(function
   return CacheCensusReport.make({
     revision: Str.trim(yield* capture(root, "git", ["rev-parse", "HEAD"])),
     turboVersion: Str.trim(yield* capture(root, turbo, ["--version"])),
-    rootScripts: O.getOrElse(rootManifest.scripts, () => ({})),
+    rootScripts: toSortedRecord(rootManifest.scripts),
     globalConfiguration: R.filter(rootJson, (_, key) => key !== "tasks" && key !== "$schema"),
     workspaces: workspaceRows,
     nodes: A.sort(

@@ -27,7 +27,8 @@ const $I = $TechnicalDrawingId.create("Approval.schemas");
  * **Example** (The statement for a hash)
  *
  * ```ts
- * import { approvalStatement, Sha256Hex } from "@beep/technical-drawing"
+ * import { approvalStatement } from "@beep/technical-drawing/Approval.schemas"
+ * import { Sha256Hex } from "@beep/technical-drawing/Manifest.schemas"
  *
  * console.log(approvalStatement(Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")))
  * ```
@@ -44,7 +45,7 @@ export const approvalStatement = (sheetSetSha256: Sha256Hex): string =>
  * **Example** (Normalise an address)
  *
  * ```ts
- * import { EmailAddress } from "@beep/technical-drawing"
+ * import { EmailAddress } from "@beep/technical-drawing/Approval.schemas"
  * import * as S from "effect/Schema"
  *
  * console.log(S.decodeUnknownSync(EmailAddress)("Attorney@Example.com"))
@@ -61,7 +62,7 @@ export const EmailAddress = EmailString;
  * **Example** (Annotate an address)
  *
  * ```ts
- * import { EmailAddress } from "@beep/technical-drawing"
+ * import { EmailAddress } from "@beep/technical-drawing/Approval.schemas"
  * import * as S from "effect/Schema"
  *
  * const approver: EmailAddress = S.decodeUnknownSync(EmailAddress)("attorney@example.com")
@@ -84,7 +85,7 @@ export type EmailAddress = typeof EmailAddress.Type;
  * **Example** (A reply)
  *
  * ```ts
- * import { EmailAddress, EmailConfirmation } from "@beep/technical-drawing"
+ * import { EmailAddress, EmailConfirmation } from "@beep/technical-drawing/Approval.schemas"
  *
  * const reply = EmailConfirmation.make({
  *   internetMessageId: "<a@b>",
@@ -120,7 +121,7 @@ export class EmailConfirmation extends S.Opaque<EmailConfirmation, { readonly br
  * **Example** (An initialed page)
  *
  * ```ts
- * import { EmailAddress, PdfConfirmation } from "@beep/technical-drawing"
+ * import { EmailAddress, PdfConfirmation } from "@beep/technical-drawing/Approval.schemas"
  *
  * const page = PdfConfirmation.make({
  *   path: "/corpus/matter/approval.pdf",
@@ -165,7 +166,7 @@ export class PdfConfirmation extends S.Opaque<PdfConfirmation, { readonly brand:
  * **Example** (Guard a confirmation)
  *
  * ```ts
- * import { Confirmation, EmailAddress, EmailConfirmation } from "@beep/technical-drawing"
+ * import { Confirmation, EmailAddress, EmailConfirmation } from "@beep/technical-drawing/Approval.schemas"
  * import * as S from "effect/Schema"
  *
  * const c = EmailConfirmation.make({ internetMessageId: "<a@b>", from: EmailAddress.make("a@b.co"), sender: EmailAddress.make("a@b.co"), receivedAt: "t", authoredText: "" })
@@ -188,8 +189,8 @@ export const Confirmation = S.Union([EmailConfirmation, PdfConfirmation]).pipe(
  * **Example** (Annotate a confirmation)
  *
  * ```ts
- * import { EmailAddress, EmailConfirmation } from "@beep/technical-drawing"
- * import type { Confirmation } from "@beep/technical-drawing"
+ * import { EmailAddress, EmailConfirmation } from "@beep/technical-drawing/Approval.schemas"
+ * import type { Confirmation } from "@beep/technical-drawing/Approval.schemas"
  *
  * const c: Confirmation = EmailConfirmation.make({ internetMessageId: "<a@b>", from: EmailAddress.make("a@b.co"), sender: EmailAddress.make("a@b.co"), receivedAt: "t", authoredText: "" })
  * console.log(c.kind)
@@ -213,7 +214,7 @@ const ApprovalRefusalReasonBase = LiteralKit([
  * **Example** (Read the reasons)
  *
  * ```ts
- * import { ApprovalRefusalReason } from "@beep/technical-drawing"
+ * import { ApprovalRefusalReason } from "@beep/technical-drawing/Approval.schemas"
  *
  * console.log(ApprovalRefusalReason.literals)
  * ```
@@ -235,7 +236,7 @@ export const ApprovalRefusalReason = ApprovalRefusalReasonBase.pipe(
  * **Example** (Annotate a reason)
  *
  * ```ts
- * import type { ApprovalRefusalReason } from "@beep/technical-drawing"
+ * import type { ApprovalRefusalReason } from "@beep/technical-drawing/Approval.schemas"
  *
  * const reason: ApprovalRefusalReason = "statement-only-quoted"
  * console.log(reason)
@@ -258,7 +259,7 @@ export type ApprovalRefusalReason = typeof ApprovalRefusalReason.Type;
  * **Example** (An email approval)
  *
  * ```ts
- * import { ApprovalRecord, EmailAddress } from "@beep/technical-drawing"
+ * import { ApprovalRecord, EmailAddress } from "@beep/technical-drawing/Approval.schemas"
  *
  * const record = ApprovalRecord.make({
  *   sheetSetSha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",

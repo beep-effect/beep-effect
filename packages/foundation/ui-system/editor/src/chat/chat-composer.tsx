@@ -7,6 +7,8 @@
  * editable surface, so the bare `EditorComposer` and existing consumers are
  * untouched — this is additive.
  *
+ * **Details**
+ *
  * Per the repo schema-first + atom-first laws the consumer passes plain
  * objects/functions and `ChatComposer` schematizes internally
  * ({@link ComposerFeatures.make} fills feature defaults), while all per-composer

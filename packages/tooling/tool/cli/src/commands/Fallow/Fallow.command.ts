@@ -6,7 +6,13 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { buildRepoDependencyIndex, findRepoRoot, jsonStringifyPretty, resolveWorkspaceDirs } from "@beep/repo-utils";
+import {
+  buildRepoDependencyIndex,
+  findRepoRoot,
+  jsonStringifyPretty,
+  resolveWorkspaceDirs,
+  workspaceDependencyNames,
+} from "@beep/repo-utils";
 import { A, Str } from "@beep/utils";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
@@ -18,7 +24,6 @@ import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { runCaptured } from "../../internal/process/StepExec.ts";
@@ -189,18 +194,6 @@ const resolveBoundaryWorkspaceEntries = Effect.fn("Fallow.resolveBoundaryWorkspa
     })
   );
 });
-
-const workspaceDependencyNames = (workspaceDeps: WorkspaceDeps): ReadonlyArray<string> =>
-  pipe(
-    [
-      ...R.keys(workspaceDeps.workspace.dependencies),
-      ...R.keys(workspaceDeps.workspace.devDependencies),
-      ...R.keys(workspaceDeps.workspace.peerDependencies),
-      ...R.keys(workspaceDeps.workspace.optionalDependencies),
-    ],
-    A.dedupe,
-    A.sort(Order.String)
-  );
 
 const findDoctrineManifestViolations = (
   dependencyIndex: HashMap.HashMap<string, WorkspaceDeps>,

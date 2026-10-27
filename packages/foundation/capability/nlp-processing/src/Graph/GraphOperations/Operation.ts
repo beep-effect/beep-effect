@@ -1,6 +1,8 @@
 /**
  * GraphOperations/Operation - the core graph-operation abstraction.
  *
+ * **Details**
+ *
  * A {@link GraphOperation} is a morphism in the category of graphs: it maps a
  * node of data `A` to an array of child nodes of data `B`, possibly requiring
  * context `R` and failing with `E`, alongside validation and cost-estimation.

@@ -28,7 +28,7 @@ const identity: FormatterType = String;
  * **Example** (Browser-safe bold formatting)
  *
  * ```ts import.meta.vitest name="Browser-safe bold formatting"
- * import { Colors, createColors } from "@beep/colors"
+ * import { Colors, createColors } from "@beep/colors/Colors"
  *
  * const colors = createColors(false)
  * const rendered = colors.bold("hello")
@@ -53,7 +53,7 @@ export class Colors extends S.Class<Colors, { readonly brand: unique symbol }>($
  * **Example** (Check isColorSupported type)
  *
  * ```ts import.meta.vitest name="Check isColorSupported type"
- * import { isColorSupported } from "@beep/colors"
+ * import { isColorSupported } from "@beep/colors/Colors"
  *
  * typeof isColorSupported // => "boolean"
  * ```
@@ -90,7 +90,7 @@ export const supportsColor = thunkFalse;
  * **Example** (Create formatters without ANSI)
  *
  * ```typescript
- * import { createColors } from "@beep/colors"
+ * import { createColors } from "@beep/colors/Colors"
  *
  * const colors = createColors(true)
  * const rendered = colors.red("error")
@@ -154,7 +154,7 @@ export const createColors = (_enabled?: undefined | boolean): Colors =>
  * **Example** (Default green string output)
  *
  * ```ts import.meta.vitest name="Default green string output"
- * import colors from "@beep/colors"
+ * import colors from "@beep/colors/Colors.browser"
  *
  * const rendered = colors.green("ok")
  * typeof rendered // => "string"
@@ -171,7 +171,7 @@ const colors = createColors();
  * **Example** (Use String as Formatter)
  *
  * ```ts import.meta.vitest name="Use String as Formatter"
- * import { type Formatter } from "@beep/colors"
+ * import type { Formatter } from "@beep/colors/Colors"
  *
  * const fmt: Formatter = String
  * fmt(42) // => "42"
@@ -188,7 +188,7 @@ export const Formatter = FormatterDefinition;
  * **Example** (Annotate Formatter type)
  *
  * ```typescript
- * import type { Formatter } from "@beep/colors"
+ * import type { Formatter } from "@beep/colors/Colors"
  *
  * const formatter: Formatter = String
  * console.log(formatter("ready"))

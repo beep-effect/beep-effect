@@ -1,6 +1,8 @@
 /**
  * `@beep/mcp-kit` — reusable MCP host-construction kit.
  *
+ * **Details**
+ *
  * Curated barrel for the seven kit deliverables: the {@link SourceAuth}
  * credential-gate registry, {@link ToolkitComposition} credential-keyed
  * layer composition, the {@link ApiKeyRequired} envelope, the

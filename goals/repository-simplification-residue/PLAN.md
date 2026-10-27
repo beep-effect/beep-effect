@@ -76,6 +76,7 @@ Wave 6 retired 116 repo-cli EV002 rows and handed 19 to #1855
 Wave 7 moved portable-filesystem EV010 tests in 17 files to the memory filesystem, retiring 16 rows, and handed 127 live-resource rows to #1855 in eight evidence classes (`history/receipts/vitest-canon-wave-7.md`); wave 8 is the deferred `step-capture-lifecycle` rows and the wave 5 families.
 Wave 9 dropped 32 redundant `Effect.scoped` wrappers in 12 repo-cli tests and kept 9 whose close is observed, with the 12 lane EV010 rows confirmed live-resource (`history/receipts/vitest-canon-wave-9.md`).
 Wave 8 lane A retired 77 of the 84 open EV002, EV004, EV010 and EV015 rows in 11 repo-cli files with no row or exception added, and left 7 live-resource or cwd-seam rows open (`history/receipts/vitest-canon-wave-8.md`).
+Wave 10 (overnight lane C) retired 4 of 20 open rows outside repo-cli (EV004 ThreadStore, EV014 practice-kg-mcp Host, EV010 PracticeIdentify.command and PdfTools.service on `@beep/memfs`) and left 16 EV010 rows open with per-file live-resource evidence (`history/receipts/vitest-canon-wave-10.md`).
 #1876 `residue-rdf-pacer` is complete (`history/receipts/rdf-pacer-ports.md`): the
 RDF failure assertions and the Pacer logout witness are ported, and every export
 hunk has a disposition.

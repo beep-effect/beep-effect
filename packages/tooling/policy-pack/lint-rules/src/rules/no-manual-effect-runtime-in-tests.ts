@@ -94,7 +94,6 @@ const LEGACY_BASELINE = HashMap.fromIterable<string, number>([
   ["packages/foundation/ui-system/editor/test/editor-nodes.test.ts", 1],
   ["packages/tooling/library/repo-utils/test/DependencyIndex.test.ts", 1],
   ["packages/tooling/library/repo-utils/test/TsConfig.test.ts", 1],
-  ["packages/tooling/library/repo-utils/test/UniqueDeps.test.ts", 1],
   ["packages/tooling/library/repo-utils/test/Workspaces.test.ts", 1],
   ["packages/tooling/policy-pack/lint-rules/test/oxlint-rules.test.ts", 1],
   ["packages/tooling/policy-pack/lint-rules/test/registry.test.ts", 1],

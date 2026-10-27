@@ -1,6 +1,8 @@
 /**
  * Sanitized-span wrapper.
  *
+ * **Details**
+ *
  * Upstream `Toolkit.ts:263-265` annotates the current span with the tool's
  * raw, undecoded call `parameters` before decoding or validation runs:
  * `Effect.annotateCurrentSpan({ tool: name, parameters: params })`. Doctrine
@@ -63,7 +65,7 @@ import type * as Tracer from "effect/Tracer";
  * **Example** (Log default sanitized keys)
  *
  * ```ts
- * import { defaultSanitizedSpanKeys } from "@beep/mcp-kit"
+ * import { defaultSanitizedSpanKeys } from "@beep/mcp-kit/SanitizedSpan"
  *
  * console.log(defaultSanitizedSpanKeys)
  * // ["parameters"]
@@ -83,7 +85,7 @@ export const defaultSanitizedSpanKeys: ReadonlyArray<string> = ["parameters"];
  *
  * ```ts
  * import * as Effect from "effect/Effect";
- * import { sanitizeTracerAttributes } from "@beep/mcp-kit"
+ * import { sanitizeTracerAttributes } from "@beep/mcp-kit/SanitizedSpan"
  *
  * const program = Effect.gen(function* () {
  *   const tracer = yield* Effect.tracer
@@ -169,15 +171,15 @@ export const sanitizeTracerAttributes: {
  *
  * **When to use**
  *
- * Wrap MCP `tools/call` dispatch (e.g. around `built.handle(name, params)`
- * or `McpServer.callTool(...)`) with this combinator so tool parameters
- * never reach exported span attributes.
+ * Use to wrap MCP `tools/call` dispatch (e.g. around
+ * `built.handle(name, params)` or `McpServer.callTool(...)`) so tool
+ * parameters never reach exported span attributes.
  *
  * **Example** (Run under sanitized span)
  *
  * ```ts import.meta.vitest name="Run under sanitized span"
  * import * as Effect from "effect/Effect";
- * import { withSanitizedToolSpan } from "@beep/mcp-kit"
+ * import { withSanitizedToolSpan } from "@beep/mcp-kit/SanitizedSpan"
  *
  * const program = withSanitizedToolSpan(Effect.annotateCurrentSpan({ parameters: { secret: "x" } }), "mcp.tool.call")
  * Effect.runSync(program) // => undefined
@@ -557,8 +559,8 @@ const registerSanitizedToolkit = Effect.fnUntraced(function* <Tools extends Reco
  *
  * **When to use**
  *
- * Drop-in replacement for `McpServer.toolkit(toolkit)` wherever a host wants
- * its tool dispatch spans sanitized; same signature, same registration
+ * Use as a drop-in replacement for `McpServer.toolkit(toolkit)` wherever a
+ * host wants its tool dispatch spans sanitized; same signature, same registration
  * semantics (wire tool shape with `inputSchema`/`outputSchema`, hint
  * annotations, strict decode, upstream failure classification), with the
  * exclusions listed below.
@@ -588,7 +590,7 @@ const registerSanitizedToolkit = Effect.fnUntraced(function* <Tools extends Reco
  * ```ts
  * import * as Effect from "effect/Effect";
  * import * as Layer from "effect/Layer";
- * import { sanitizedToolkit } from "@beep/mcp-kit"
+ * import { sanitizedToolkit } from "@beep/mcp-kit/SanitizedSpan"
  * import * as Tool from "effect/ai/Tool";
  * import * as Toolkit from "effect/ai/Toolkit";
  * import * as S from "effect/Schema"

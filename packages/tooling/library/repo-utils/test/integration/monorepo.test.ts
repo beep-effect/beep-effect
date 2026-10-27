@@ -12,18 +12,15 @@ import { buildRepoDependencyIndex } from "@beep/repo-utils/DependencyIndex";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { collectTsConfigPaths } from "@beep/repo-utils/TsConfig";
-import { collectUniqueNpmDependencies } from "@beep/repo-utils/UniqueDeps";
 import { resolveWorkspaceDirs } from "@beep/repo-utils/Workspaces";
-import { A, Str } from "@beep/utils";
+import { Str } from "@beep/utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as HashMap from "effect/HashMap";
-import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
-import * as Order from "effect/Order";
 
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const TestLayer = FsUtilsLive.pipe(Layer.provideMerge(PlatformLayer));
@@ -116,32 +113,6 @@ it.layer(TestLayer, { timeout: MONOREPO_INTEGRATION_TIMEOUT })("integration (rea
           expect(deps.npm).toHaveProperty("dependencies");
           expect(deps.npm).toHaveProperty("devDependencies");
         }
-      }),
-      MONOREPO_INTEGRATION_TIMEOUT
-    );
-  });
-
-  // ── collectUniqueNpmDependencies ─────────────────────────────────────
-  describe("collectUniqueNpmDependencies", () => {
-    it.effect(
-      "should list all NPM deps across the monorepo",
-      Effect.fn(function* () {
-        const root = yield* findRepoRoot();
-        const unique = yield* collectUniqueNpmDependencies(root);
-
-        // "effect" must be present as a runtime dependency
-        expect(unique.dependencies).toContain("effect");
-
-        // Both arrays must be sorted
-        const sortedDeps = A.sort(unique.dependencies, Order.String);
-        expect(unique.dependencies).toEqual(sortedDeps);
-
-        const sortedDevDeps = A.sort(unique.devDependencies, Order.String);
-        expect(unique.devDependencies).toEqual(sortedDevDeps);
-
-        // No duplicates within each array
-        expect(HashSet.size(HashSet.fromIterable(unique.dependencies))).toBe(unique.dependencies.length);
-        expect(HashSet.size(HashSet.fromIterable(unique.devDependencies))).toBe(unique.devDependencies.length);
       }),
       MONOREPO_INTEGRATION_TIMEOUT
     );
