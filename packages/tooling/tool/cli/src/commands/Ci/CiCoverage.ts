@@ -664,6 +664,9 @@ export const runCiCoverageComparison = Effect.fn("CiCoverage.compare")(function*
       artifactRoot: options.coverageInput ?? ".beep/ci-coverage-inputs",
       identity: plan.identity,
       scoped: plan.scoped,
+      // Affected (pull request) runs pin the base like every other affected coverage lane does
+      // through TURBO_SCM_BASE, so a row the pull request lowered is judged where it belongs.
+      ...(options.affected && Str.isNonEmpty(options.base) ? { base: options.base } : {}),
       expectedPartitions: A.append(
         expectedPartitions,
         CoverageProducerPartition.make({ partitionId: "labs", packages: labs })
