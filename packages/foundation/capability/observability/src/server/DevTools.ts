@@ -24,7 +24,7 @@ const $I = $ObservabilityId.create("server/DevTools");
  * **Example** (HTTP prefix span filter)
  *
  * ```typescript
- * import { Str } from "@beep/utils"
+ * import { Str } from "@beep/utils/index"
  * import type { DevToolsSpanFilter } from "@beep/observability/server"
  *
  * const filter: DevToolsSpanFilter = (name) => Str.startsWith(name, "Http.")
@@ -49,7 +49,7 @@ export const DevToolsSpanFilter = Fn({
  * **Example** (Typed HTTP span filter)
  *
  * ```typescript
- * import { Str } from "@beep/utils"
+ * import { Str } from "@beep/utils/index"
  * import type { DevToolsSpanFilter } from "@beep/observability/server"
  *
  * const filter: DevToolsSpanFilter = (name) => Str.startsWith(name, "Http.")
@@ -200,7 +200,7 @@ const makeFilteredDevToolsTracer = Effect.fnUntraced(function* (shouldPublish: D
  *
  * ```typescript
  * import { layerFilteredDevToolsTracer } from "@beep/observability/server"
- * import { Str } from "@beep/utils"
+ * import { Str } from "@beep/utils/index"
  * import * as DevToolsClient from "effect/devtools/DevToolsClient"
  * import * as Layer from "effect/Layer"
  *

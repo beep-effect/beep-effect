@@ -11,7 +11,7 @@
  * ```typescript
  * import * as Effect from "effect/Effect";
  * import * as Metric from "effect/Metric";
- * import { profilePhase } from "@beep/observability"
+ * import { profilePhase } from "@beep/observability/PhaseProfiler"
  *
  * const migrate = Effect.log("running migrations")
  *
@@ -60,7 +60,7 @@ const isProfilePhaseDataFirst = (args: IArguments): boolean => args.length >= 2 
  * **Example** (Return completed outcome)
  *
  * ```ts import.meta.vitest name="Return completed outcome"
- * import { PhaseOutcome, profilePhase } from "@beep/observability"
+ * import { PhaseOutcome, profilePhase } from "@beep/observability/PhaseProfiler"
  * import * as Effect from "effect/Effect";
  * const program = profilePhase(Effect.succeed(PhaseOutcome.Enum.completed), {
  *   phase: "startup"
@@ -84,7 +84,7 @@ export const PhaseOutcome = LiteralKit(["completed", "failed", "interrupted"]).p
  * **Example** (Annotate outcome type)
  *
  * ```typescript
- * import type { PhaseOutcome } from "@beep/observability"
+ * import type { PhaseOutcome } from "@beep/observability/PhaseProfiler"
  *
  * const outcome: PhaseOutcome = "completed"
  * console.log(outcome)
@@ -102,7 +102,7 @@ export type PhaseOutcome = typeof PhaseOutcome.Type;
  *
  * ```ts import.meta.vitest name="Construct a PhaseProfile"
  * import * as S from "effect/Schema"
- * import { PhaseProfile } from "@beep/observability"
+ * import { PhaseProfile } from "@beep/observability/PhaseProfiler"
  *
  * const durationMs = S.decodeUnknownSync(S.Natural)(42)
  * const profile = PhaseProfile.make({
@@ -208,7 +208,7 @@ const logPhaseProfile = <A, E>(profile: PhaseProfile, exit: Exit.Exit<A, E>): Ef
  * ```typescript
  * import * as Effect from "effect/Effect";
  * import * as Metric from "effect/Metric";
- * import { profilePhase } from "@beep/observability"
+ * import { profilePhase } from "@beep/observability/PhaseProfiler"
  *
  * const completed = Metric.counter("phase_completed_total")
  *
@@ -295,7 +295,7 @@ const profilePhaseImpl = Effect.fn("profilePhaseImpl")(function* <A, E, R>(
  *
  * ```typescript
  * import * as Effect from "effect/Effect";
- * import { profilePhase } from "@beep/observability"
+ * import { profilePhase } from "@beep/observability/PhaseProfiler"
  *
  * const program = profilePhase(Effect.succeed("ok"), { phase: "startup" })
  * console.log(Effect.runPromise(program))
