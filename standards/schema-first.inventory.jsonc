@@ -786,14 +786,6 @@
       "reason": "Native Arbitrary companion (Arbitrary.schema + combinators) colocated with its S.Class model for cross-field generation; it is a generator value, not an object schema."
     },
     {
-      "file": "packages/foundation/modeling/html/src/Html.policy.ts",
-      "symbol": "SafeHtmlAttributesStruct",
-      "kind": "plain-data-schema-class",
-      "status": "exception",
-      "owner": "@beep/html",
-      "reason": "Plain data whose fields come from a module-level struct const (SafeHtmlAttributes), which the schema-opaque-default codemod could not classify (keep reason fields-expression-unknown), so it stays a branded S.Class. Follow-up: convert by hand to a branded S.Opaque over that struct."
-    },
-    {
       "file": "packages/foundation/modeling/lexical/src/Lexical.model.ts",
       "symbol": "BaseNode",
       "kind": "unbranded-schema-class",
@@ -1104,22 +1096,6 @@
       "status": "exception",
       "owner": "@beep/ontology",
       "reason": "Pure projection wire shape over open-keyed JSON-LD nodes (predicate-open facts compact to arbitrary term keys), emitted by a total catamorphism from the schema-first AssembledOntology, which is the modeled truth. Round-trip/inverse parsing stays bounded to beep's own dialect per the exploration No-Go."
-    },
-    {
-      "file": "packages/foundation/modeling/ontology/src/TaxonomyLoader.ts",
-      "symbol": "VendorAlignmentManifestEntry",
-      "kind": "plain-data-schema-class",
-      "status": "exception",
-      "owner": "@beep/ontology",
-      "reason": "Plain data with a non-literal _tag field (_tag: S.tagDefaultOmit(...)) that the schema-opaque-default codemod cannot promote to S.TaggedStruct (keep reason tag-field), so it stays a branded S.Class. Follow-up: convert by hand to a branded S.Opaque over S.Struct/S.TaggedStruct."
-    },
-    {
-      "file": "packages/foundation/modeling/ontology/src/TaxonomyLoader.ts",
-      "symbol": "VendorManifestEntry",
-      "kind": "plain-data-schema-class",
-      "status": "exception",
-      "owner": "@beep/ontology",
-      "reason": "Plain data with a non-literal _tag field (_tag: S.tagDefaultOmit(...)) that the schema-opaque-default codemod cannot promote to S.TaggedStruct (keep reason tag-field), so it stays a branded S.Class. Follow-up: convert by hand to a branded S.Opaque over S.Struct/S.TaggedStruct."
     },
     {
       "file": "packages/foundation/modeling/ontology/src/internal/ClassificationXml.ts",
@@ -1482,22 +1458,6 @@
       "line": 60,
       "owner": "@beep/schema-org",
       "reason": "External protocol: schema.org `email` is a Text property, and node values are copied verbatim from upstream metadata (package manifests, author records) that may carry `mailto:` URIs or non-strict addresses; a strict email schema would reject valid JSON-LD. Surfaced, not introduced, by the exact-optional-keys migration (the detector did not read the previous `S.optional` spelling)."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Conformance/Conformance.invariant.schema.ts",
-      "symbol": "InvariantDescriptor",
-      "kind": "plain-data-schema-class",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Plain data whose fields come from a module-level checked struct const (InvariantDescriptorValue), which the schema-opaque-default codemod could not classify (keep reason fields-expression-unknown), so it stays a branded S.Class. Follow-up: convert by hand to a branded S.Opaque over that struct."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Conformance/Conformance.profile.schema.ts",
-      "symbol": "ConformanceProfile",
-      "kind": "plain-data-schema-class",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Plain data whose fields come from a module-level checked struct const (ConformanceProfileValue), which the schema-opaque-default codemod could not classify (keep reason fields-expression-unknown), so it stays a branded S.Class. Follow-up: convert by hand to a branded S.Opaque over that struct."
     },
     {
       "file": "packages/foundation/modeling/schema/src/SemanticVersion.ts",
