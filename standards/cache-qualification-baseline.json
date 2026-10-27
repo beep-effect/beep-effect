@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Opus 5.5 (effected-promotion wave 5, feat/effected-promotion-w5-github-actions)",
-      "reason": "Record the new wave-5 workspace @beep/github-actions scaffolded by create-package with the generated task set and its exact root catalog pins (re-recorded after the review fix dropped its @beep/github-reporting dependency for the @beep/utils/TestDouble leaf), the dependency-only drift of @beep/repo-cli for the runner-file adoptions, and the input-only growth of the root policy-fingerprint task, as measured in the review; no qualification is granted.",
+      "reviewer": "Codex GPT-6.1-Sol source review",
+      "reason": "Align only //#lint:effect-imports with its existing dist exclusion; generated outputs no longer invalidate an unchanged source scan. Real source edits still invalidate the task. No qualification is granted.",
       "basis": {
-        "path": "goals/effected-promotion/research/cache-baseline-review-w5.md",
-        "sha256": "82cc35a850e16864a9f147487e08a7c26d13601ec2f1a75a0a134299fb938c91"
+        "path": "infra/r2-cache/cache-input-review.md",
+        "sha256": "1a2d2e954172fead379e4fa8fca48578dab86fa6096f020451cf7e6ec0798d5c"
       }
     },
     "@beep/acp": {
@@ -2415,6 +2415,7 @@
         "configuration": {
           "cache": true,
           "inputs": [
+            "!**/dist/**",
             "!**/node_modules/**",
             "!packages/**/docs/**",
             "./.bun-version",
@@ -129837,7 +129838,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "894e05dc04cb8a58a4fcb50efa48239a7548959b0644c53a002fc686cc976178"
+        "sha256": "55fa7f616a7524fcd7ae5be047d5560a1af197f716e34b06cb6e3b025f65a0f4"
       }
     ]
   }
