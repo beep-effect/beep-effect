@@ -6,8 +6,8 @@ import * as Effect from "effect/Effect";
 it.effect("libc detection handles every report shape and probe failure", () =>
   Effect.sync(() => {
     const probe = (platform: string, report: unknown, expected: boolean) => {
-      vi.stubGlobal("process", { ...process, platform, report: { getReport: () => report } });
-      assert.strictEqual(detectMusl(), expected);
+      vi.stubGlobal("process", { ...process, report: { getReport: () => report } });
+      assert.strictEqual(detectMusl(platform), expected);
       vi.unstubAllGlobals();
     };
     try {
@@ -18,18 +18,17 @@ it.effect("libc detection handles every report shape and probe failure", () =>
       probe("linux", { header: { glibcVersionRuntime: undefined } }, true);
       probe("linux", { header: { glibcVersionRuntime: "" } }, true);
       probe("linux", { header: { glibcVersionRuntime: "2.40" } }, false);
-      vi.stubGlobal("process", { ...process, platform: "linux", report: undefined });
-      assert.strictEqual(detectMusl(), false);
+      vi.stubGlobal("process", { ...process, report: undefined });
+      assert.strictEqual(detectMusl("linux"), false);
       vi.stubGlobal("process", {
         ...process,
-        platform: "linux",
         report: {
           getReport: () => {
             throw new Error("probe");
           },
         },
       });
-      assert.strictEqual(detectMusl(), false);
+      assert.strictEqual(detectMusl("linux"), false);
     } finally {
       vi.unstubAllGlobals();
     }

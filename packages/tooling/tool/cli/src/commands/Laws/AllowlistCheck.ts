@@ -19,7 +19,6 @@ import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as Path from "effect/Path";
-import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { parse } from "jsonc-parser";
@@ -229,22 +228,22 @@ const validateEntriesStillMatchViolations = Effect.fn(function* (
   cwd: string,
   entries: ReadonlyArray<EffectLawsAllowlistEntry>
 ) {
+  const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const project = new Project({ skipAddingFilesFromTsConfig: true });
+  const project = new Project({ skipAddingFilesFromTsConfig: true, useInMemoryFileSystem: true });
   let index = 0;
   let diagnostics = A.empty<string>();
 
   for (const entry of entries) {
-    if (entry.rule !== NO_NATIVE_RUNTIME_RULE_ID) {
+    const absoluteEntryPath = path.resolve(cwd, entry.file);
+    if (entry.rule !== NO_NATIVE_RUNTIME_RULE_ID || !(yield* fs.exists(absoluteEntryPath))) {
       index += 1;
       continue;
     }
 
-    const sourceFile = project.addSourceFileAtPathIfExists(path.resolve(cwd, entry.file));
-    if (P.isUndefined(sourceFile)) {
-      index += 1;
-      continue;
-    }
+    // Read through the FileSystem service so the check honours the provided platform layer.
+    const sourceText = yield* fs.readFileString(absoluteEntryPath);
+    const sourceFile = project.createSourceFile(absoluteEntryPath, sourceText, { overwrite: true });
 
     const violationKeys = collectNativeRuntimeViolationKeys(
       sourceFile,

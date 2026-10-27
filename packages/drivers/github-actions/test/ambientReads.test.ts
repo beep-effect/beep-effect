@@ -195,26 +195,6 @@ const ALLOWED: ReadonlyArray<readonly [string, string, string]> = [
     "env: { ...(options.base ?? process.env), ...options.env },",
     "the `base` default — the one sanctioned ambient fallback, same class as ActionInput.provider's",
   ],
-  [
-    "PackageManagerInstaller.ts",
-    "O.match(found, { onNone: (): string => process.arch, onSome: archFromRunner })",
-    "the off-runner fallback for RUNNER_ARCH, selecting the native-binary target",
-  ],
-  [
-    "ToolInstaller.ts",
-    "ToolInstaller.cachePath({ root, tool, version, arch: process.arch })",
-    "the tool-cache layout's arch segment is Node's spelling by contract with the runner",
-  ],
-  [
-    "ToolInstaller.ts",
-    "ToolInstaller.cachePath({ root: testRoot(), tool, version, arch: process.arch })",
-    "makeTest's cachePath default — the same arch segment `make` writes, for the same reason",
-  ],
-  [
-    "internal/pnpmExe.ts",
-    'if (process.platform !== "linux") {',
-    "detectMusl: the host libc is a host fact no runner variable carries",
-  ],
 ];
 
 describe("ambient process reads", () => {

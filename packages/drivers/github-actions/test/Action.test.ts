@@ -1,4 +1,4 @@
-import { env as runnerEnvironment } from "node:process";
+import * as NodeProcess from "node:process";
 import {
   Action,
   ActionEnvironment,
@@ -29,6 +29,8 @@ import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { ActionEnvironmentError, ActionRunOptions, ActionServices } from "@beep/github-actions";
+
+const { env: runnerEnvironment } = NodeProcess;
 
 class Extra extends Context.Service<Extra, { readonly describe: Effect.Effect<string, ActionEnvironmentError> }>()(
   "@beep/github-actions/test/Action.test/Extra"

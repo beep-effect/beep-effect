@@ -9,6 +9,7 @@ const fs = require("node:fs");
 
 exports.hooks = {
   updateConfig(config) {
+    // biome-ignore lint/suspicious/noUndeclaredEnvVars: pnpm executes this fixture pnpmfile from a temp tree outside any Turbo task; the test sets HOOK_MARKER via vi.stubEnv. Owner: @beep/repo-workspaces. Exit: the hook-replay tests pass the marker path through pnpm config instead of the environment.
     const marker = process.env.HOOK_MARKER;
     if (marker) fs.writeFileSync(marker, "loaded");
     return {

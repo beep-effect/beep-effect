@@ -61,7 +61,7 @@ describe("rule registry", () => {
               );
               expect(result.exitCode, result.stderr.toString()).toBe(0);
               expect(result.stdout.toString()).toBe(
-                path.join(root, "rules/no-file-url-pathname.grit") + "\n" + path.join(root, "rules") + path.sep
+                `${path.join(root, "rules/no-file-url-pathname.grit")}\n${path.join(root, "rules")}${path.sep}`
               );
             }),
           (root) => fs.remove(root, { recursive: true, force: true }).pipe(Effect.orDie)
