@@ -1,0 +1,20 @@
+{
+  "previous": "63b3e44ab5626006919528ea472f62737e4a038c08327792a141ec1936d492d7",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (rsc residue #1875 wave 10, test/residue-vitest-canon-wave10)",
+    "reason": "Record the new @beep/pdf-tools -> @beep/memfs and @beep/practice-identify -> @beep/memfs devDependency edges; commands and cache settings are unchanged and no qualification is granted.",
+    "basis": {
+      "path": "goals/repository-simplification-residue/research/cache-baseline-review-vitest-canon-wave-10.md",
+      "sha256": "1e22b7dd91ed09027f5f78765395502af61176dfb375c2e18c97772e9e71f71f"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2",
+  "subjects": ["@beep/pdf-tools", "@beep/practice-identify"]
+}

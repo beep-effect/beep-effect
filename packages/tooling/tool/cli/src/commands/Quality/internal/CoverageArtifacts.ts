@@ -917,6 +917,7 @@ export const compareCoverageProducerArtifacts = Effect.fn("CoverageArtifacts.com
     sorted(
       A.flatMap(options.expectedPartitions, (partition) => A.map(partition.packages, (entry) => entry.packageName))
     ),
-    snapshots
+    snapshots,
+    options.base
   );
 });
