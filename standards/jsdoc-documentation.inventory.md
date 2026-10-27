@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-10-27T20:25:46.420Z
+Generated: 2026-10-27T21:06:19.844Z
 
 ## Scope
 
@@ -11,19 +11,19 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | Metric | Count |
 |---|---:|
 | packages | 183 |
-| cleanPackages | 117 |
+| cleanPackages | 120 |
 | packagesWithoutPublicSrcSurface | 2 |
-| packagesNeedingRemediation | 64 |
+| packagesNeedingRemediation | 61 |
 | publicModules | 3546 |
 | publicExports | 25242 |
 | openModules | 339 |
-| openExports | 404 |
+| openExports | 263 |
 | missingExportExamples | 7 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
 | forbiddenTagFindings | 0 |
 | malformedConditionalTagFindings | 0 |
-| exampleImportFindings | 325 |
+| exampleImportFindings | 184 |
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
 | undescribed-see | 9 |
@@ -40,7 +40,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | duplicate-example | 0 |
 | loose-ts-fence | 0 |
 | forbidden-remarks | 0 |
-| no-root-package-import | 319 |
+| no-root-package-import | 178 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -93,7 +93,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 35 | `@beep/workspace-use-cases` | `packages/workspace/use-cases` | needs-remediation | 12 | 45 | 1 | 0 |
 | 36 | `@beep/shared-use-cases` | `packages/shared/use-cases` | clean | 6 | 14 | 0 | 0 |
 | 37 | `@beep/nlp` | `packages/foundation/modeling/nlp` | needs-remediation | 28 | 313 | 9 | 9 |
-| 38 | `@beep/file-processing` | `packages/foundation/capability/file-processing` | needs-remediation | 34 | 183 | 0 | 19 |
+| 38 | `@beep/file-processing` | `packages/foundation/capability/file-processing` | clean | 34 | 183 | 0 | 0 |
 | 39 | `@beep/epistemic-domain` | `packages/epistemic/domain` | needs-remediation | 51 | 241 | 7 | 2 |
 | 40 | `@beep/codegen-kit` | `packages/tooling/library/codegen-kit` | clean | 6 | 45 | 0 | 0 |
 | 41 | `@beep/phoenix` | `packages/drivers/phoenix` | clean | 5 | 49 | 0 | 0 |
@@ -146,7 +146,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 88 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 10 | 103 | 0 | 0 |
 | 89 | `@beep/repo-docgen` | `packages/tooling/tool/docgen` | needs-remediation | 10 | 94 | 0 | 3 |
 | 90 | `@beep/ai-provider-cli` | `packages/drivers/ai-provider-cli` | needs-remediation | 17 | 91 | 3 | 0 |
-| 91 | `@beep/skill-contract` | `packages/foundation/modeling/skill-contract` | needs-remediation | 9 | 113 | 0 | 79 |
+| 91 | `@beep/skill-contract` | `packages/foundation/modeling/skill-contract` | clean | 9 | 113 | 0 | 0 |
 | 92 | `@beep/exiftool` | `packages/drivers/exiftool` | needs-remediation | 5 | 55 | 1 | 0 |
 | 93 | `@beep/repo-tsconfig` | `packages/tooling/library/repo-tsconfig` | clean | 4 | 15 | 0 | 0 |
 | 94 | `@beep/palantiri` | `packages/tooling/library/palantiri` | clean | 20 | 156 | 0 | 0 |
@@ -194,7 +194,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 136 | `@beep/drizzle` | `packages/drivers/drizzle` | clean | 3 | 11 | 0 | 0 |
 | 137 | `@beep/repo-workspaces` | `packages/tooling/library/repo-workspaces` | clean | 27 | 244 | 0 | 0 |
 | 138 | `@beep/github-references` | `packages/foundation/modeling/github-references` | clean | 4 | 28 | 0 | 0 |
-| 139 | `@beep/brand` | `packages/foundation/ui-system/brand` | needs-remediation | 7 | 50 | 0 | 43 |
+| 139 | `@beep/brand` | `packages/foundation/ui-system/brand` | clean | 7 | 50 | 0 | 0 |
 | 140 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 11 | 42 | 2 | 0 |
 | 141 | `@beep/editor` | `packages/foundation/ui-system/editor` | clean | 34 | 210 | 0 | 0 |
 | 142 | `@beep/ontology-server` | `packages/ontology/server` | clean | 8 | 23 | 0 | 0 |
@@ -513,31 +513,6 @@ Export findings:
 - `src/index.ts:132` `export * as QueryText from "./QueryText.ts";` (re-export) - 1 example import violation(s)
 - `src/index.ts:148` `export * as VariantText from "./VariantText.ts";` (re-export) - 1 example import violation(s)
 
-### @beep/file-processing
-
-Path: `packages/foundation/capability/file-processing`
-
-Export findings:
-- `src/SecretScrub/SecretScrub.policy.ts:36` `PromptAdmissibleText` (type) - 1 example import violation(s)
-- `src/SecretScrub/SecretScrub.policy.ts:50` `promptTextFromScrub` (const) - 1 example import violation(s)
-- `src/SecretScrub/SecretScrub.policy.ts:69` `secretRetentionDeadline` (const) - 1 example import violation(s)
-- `src/SecretScrub/SecretScrub.policy.ts:87` `isSecretPurgeEligible` (const) - 1 example import violation(s)
-- `src/SecretScrub/SecretScrub.schema.ts:26` `SecretCoverage` (const) - 1 example import violation(s)
-- `src/SecretScrub/SecretScrub.schema.ts:42` `SecretCoverage` (type) - 1 example import violation(s)
-- `src/SecretScrub/SecretScrub.schema.ts:53` `SecretResidue` (const) - 1 example import violation(s)
-- `src/SecretScrub/SecretScrub.schema.ts:69` `SecretResidue` (type) - 1 example import violation(s)
-- `src/SecretScrub/SecretScrub.schema.ts:80` `SecretRetentionClass` (const) - 1 example import violation(s)
-- `src/SecretScrub/SecretScrub.schema.ts:96` `SecretRetentionClass` (type) - 1 example import violation(s)
-- `src/SecretScrub/SecretScrub.schema.ts:110` `SecretRetentionRecord` (class) - 1 example import violation(s)
-- `src/SecretScrub/SecretScrub.schema.ts:133` `SecretCategoryCount` (class) - 1 example import violation(s)
-- `src/SecretScrub/SecretScrub.schema.ts:155` `SecretEvidence` (class) - 1 example import violation(s)
-- `src/SecretScrub/SecretScrub.schema.ts:184` `SecretScrubProof` (class) - 1 example import violation(s)
-- `src/SecretScrub/SecretScrub.schema.ts:209` `SecretScrubInput` (class) - 1 example import violation(s)
-- `src/SecretScrub/SecretScrub.schema.ts:233` `SecretScrubResult` (class) - 1 example import violation(s)
-- `src/SecretScrub/SecretScrub.service.ts:38` `SecretScrubService` (class) - 1 example import violation(s)
-- `src/SecretScrub/SecretScrub.service.ts:57` `scrubSecretText` (const) - 1 example import violation(s)
-- `src/SecretScrub/SecretScrub.service.ts:128` `SecretScrubLive` (const) - 1 example import violation(s)
-
 ### @beep/epistemic-domain
 
 Path: `packages/epistemic/domain`
@@ -782,91 +757,6 @@ Module findings:
 - `src/AiProviderCliHome.errors.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/AiProviderCliHome.models.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/AiProviderCliHome.service.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-
-### @beep/skill-contract
-
-Path: `packages/foundation/modeling/skill-contract`
-
-Export findings:
-- `src/EvidenceLadder.ts:34` `EvidenceReceiptReference` (class) - 1 example import violation(s)
-- `src/EvidenceLadder.ts:60` `EvidenceLadderReceiptTypes` (class) - 1 example import violation(s)
-- `src/EvidenceLadder.ts:90` `Accepted` (class) - 1 example import violation(s)
-- `src/EvidenceLadder.ts:117` `Persisted` (class) - 1 example import violation(s)
-- `src/EvidenceLadder.ts:145` `Delivered` (class) - 1 example import violation(s)
-- `src/EvidenceLadder.ts:174` `SemanticallyApplied` (class) - 1 example import violation(s)
-- `src/EvidenceLadder.ts:204` `EvidenceLadderState` (const) - 1 example import violation(s)
-- `src/EvidenceLadder.ts:263` `evidenceLadderFor` (const) - 1 example import violation(s)
-- `src/EvidenceLadder.ts:300` `transportCompleted` (const) - 1 example import violation(s)
-- `src/EvidenceLadder.ts:320` `advanceToPersisted` (const) - 1 example import violation(s)
-- `src/EvidenceLadder.ts:346` `advanceToDelivered` (const) - 1 example import violation(s)
-- `src/EvidenceLadder.ts:372` `advanceToSemanticallyApplied` (const) - 1 example import violation(s)
-- `src/EvidenceReceipt.ts:42` `EvidenceDigest` (class) - 1 example import violation(s)
-- `src/EvidenceReceipt.ts:75` `EvidenceSubject` (class) - 1 example import violation(s)
-- `src/EvidenceReceipt.ts:133` `EvidenceReceipt` (const) - 1 example import violation(s)
-- `src/EvidenceReceipt.ts:159` `AttestationResource` (class) - 1 example import violation(s)
-- `src/EvidenceReceipt.ts:184` `GateSummaryVerifier` (class) - 1 example import violation(s)
-- `src/EvidenceReceipt.ts:209` `GateVerificationResult` (const) - 1 example import violation(s)
-- `src/EvidenceReceipt.ts:237` `GateVerifiedLevel` (const) - 1 example import violation(s)
-- `src/EvidenceReceipt.ts:284` `GateResultSummary` (class) - 1 example import violation(s)
-- `src/EvidenceReceipt.ts:361` `GateSummary` (class) - 1 example import violation(s)
-- `src/EvidenceReceipt.ts:383` `GateSummaryPredicateType` (const) - 1 example import violation(s)
-- `src/EvidenceReceipt.ts:401` `GateSummaryReceipt` (const) - 1 example import violation(s)
-- `src/Gate.ts:41` `GateId` (const) - 1 example import violation(s)
-- `src/Gate.ts:80` `makeGateId` (const) - 1 example import violation(s)
-- `src/Gate.ts:103` `GateSeverity` (const) - 1 example import violation(s)
-- `src/Gate.ts:131` `GateApplicabilityKind` (const) - 1 example import violation(s)
-- `src/Gate.ts:159` `AlwaysGateApplicability` (class) - 1 example import violation(s)
-- `src/Gate.ts:191` `ConditionalGateApplicability` (class) - 1 example import violation(s)
-- `src/Gate.ts:225` `GateApplicability` (const) - 1 example import violation(s)
-- `src/Gate.ts:257` `EvidencePredicateType` (const) - 1 example import violation(s)
-- `src/Gate.ts:289` `GateEvidenceRequirement` (class) - 1 example import violation(s)
-- `src/Gate.ts:330` `GateDeclaration` (class) - 1 example import violation(s)
-- `src/Gate.ts:384` `GateRegistry` (class) - 1 example import violation(s)
-- `src/Gate.ts:406` `GateOutcome` (const) - 1 example import violation(s)
-- `src/Gate.ts:529` `GateAuditRecord` (const) - 1 example import violation(s)
-- `src/Gate.ts:595` `GateVerdict` (const) - 1 example import violation(s)
-- `src/Recovery.ts:68` `BudgetDuration` (const) - 1 example import violation(s)
-- `src/Recovery.ts:96` `RecoveryBudget` (class) - 1 example import violation(s)
-- `src/Recovery.ts:123` `RecoveryBudgetConsumed` (class) - 1 example import violation(s)
-- `src/Recovery.ts:149` `RecoveryAttemptOutcome` (const) - 1 example import violation(s)
-- `src/Recovery.ts:177` `RecoveryAttemptReceipt` (class) - 1 example import violation(s)
-- `src/Recovery.ts:207` `FailureTerminalReason` (const) - 1 example import violation(s)
-- `src/Recovery.ts:318` `FailureReceiptPredicate` (class) - 1 example import violation(s)
-- `src/Recovery.ts:340` `FailurePredicateType` (const) - 1 example import violation(s)
-- `src/Recovery.ts:356` `FailureReceipt` (const) - 1 example import violation(s)
-- `src/Recovery.ts:380` `NoRecoveryPolicy` (class) - 1 example import violation(s)
-- `src/Recovery.ts:404` `BoundedRecoveryPolicy` (class) - 1 example import violation(s)
-- `src/Recovery.ts:436` `RecoveryPolicy` (const) - 1 example import violation(s)
-- `src/SchemaReference.ts:27` `SchemaReferenceId` (const) - 1 example import violation(s)
-- `src/SchemaReference.ts:64` `SchemaReference` (class) - 1 example import violation(s)
-- `src/SkillCompletion.ts:61` `SkillCompletionReceipt` (class) - 1 example import violation(s)
-- `src/SkillCompletion.ts:118` `SkillCompletion` (const) - 1 example import violation(s)
-- `src/SkillCompletion.ts:145` `toSkillCompletionReceipt` (const) - 1 example import violation(s)
-- `src/SkillCompletion.ts:168` `EvaluateSkillCompletionInput` (class) - 1 example import violation(s)
-- `src/SkillCompletion.ts:198` `CompletionInvariantReason` (const) - 1 example import violation(s)
-- `src/SkillCompletion.ts:237` `CompletionInvariantError` (class) - 1 example import violation(s)
-- `src/SkillCompletion.ts:266` `CompletionAllowed` (class) - 1 example import violation(s)
-- `src/SkillCompletion.ts:293` `CompletionDenied` (class) - 1 example import violation(s)
-- `src/SkillCompletion.ts:320` `CompletionEvaluation` (const) - 1 example import violation(s)
-- `src/SkillCompletion.ts:403` `evaluateSkillCompletion` (const) - 1 example import violation(s)
-- `src/SkillCompletion.ts:470` `LiveVerified` (class) - 1 example import violation(s)
-- `src/SkillCompletion.ts:497` `DeployableBlocked` (class) - 1 example import violation(s)
-- `src/SkillCompletion.ts:526` `FailedWithPartialEffects` (class) - 1 example import violation(s)
-- `src/SkillCompletion.ts:555` `SkillTerminal` (const) - 1 example import violation(s)
-- `src/SkillContract.ts:33` `SkillContractId` (const) - 1 example import violation(s)
-- `src/SkillContract.ts:62` `ReceiptTypeBindings` (class) - 1 example import violation(s)
-- `src/SkillContract.ts:95` `SkillContract` (class) - 1 example import violation(s)
-- `src/SkillProjection.ts:65` `SkillMarkdownProjection` (class) - 1 example import violation(s)
-- `src/SkillProjection.ts:92` `SkillArtifactDenialReason` (const) - 1 example import violation(s)
-- `src/SkillProjection.ts:130` `SkillArtifactCheck` (class) - 1 example import violation(s)
-- `src/SkillProjection.ts:180` `SkillArtifactAllowed` (class) - 1 example import violation(s)
-- `src/SkillProjection.ts:207` `SkillArtifactDenied` (class) - 1 example import violation(s)
-- `src/SkillProjection.ts:235` `SkillArtifactVerdict` (const) - 1 example import violation(s)
-- `src/SkillProjection.ts:266` `VerifySkillArtifactInput` (class) - 1 example import violation(s)
-- `src/SkillProjection.ts:373` `projectSkillDocument` (const) - 1 example import violation(s)
-- `src/SkillProjection.ts:405` `renderSkillMarkdown` (const) - 1 example import violation(s)
-- `src/SkillProjection.ts:448` `decodeSkillFrontmatter` (const) - 1 example import violation(s)
-- `src/SkillProjection.ts:549` `verifySkillArtifact` (const) - 1 example import violation(s)
 
 ### @beep/exiftool
 
@@ -1159,55 +1049,6 @@ Export findings:
 - `src/commands/Skills/SkillsLock.schemas.ts:886` `SkillsLockWrittenFile` (class) - 1 example import violation(s)
 - `src/commands/Skills/SkillsLock.schemas.ts:921` `SkillsLockWriteReceipt` (class) - 1 example import violation(s)
 - `src/commands/Worktree/Fleet.service.ts:327` `parseProcStatStartTime` (const) - 1 example import violation(s)
-
-### @beep/brand
-
-Path: `packages/foundation/ui-system/brand`
-
-Export findings:
-- `src/Brand.assets.ts:31` `RenderedAsset` (class) - 1 example import violation(s)
-- `src/Brand.assets.ts:85` `renderBrandAssets` (const) - 1 example import violation(s)
-- `src/Brand.css.ts:37` `GENERATED_CSS_BANNER` (const) - 1 example import violation(s)
-- `src/Brand.css.ts:87` `fontStack` (const) - 1 example import violation(s)
-- `src/Brand.css.ts:158` `renderThemeCss` (const) - 1 example import violation(s)
-- `src/Brand.schema.ts:32` `PrintableText` (const) - 1 example import violation(s)
-- `src/Brand.schema.ts:62` `PrintableText` (type) - 1 example import violation(s)
-- `src/Brand.schema.ts:78` `ScaleStep` (const) - 1 example import violation(s)
-- `src/Brand.schema.ts:97` `ScaleStep` (type) - 1 example import violation(s)
-- `src/Brand.schema.ts:113` `SurfaceStep` (const) - 1 example import violation(s)
-- `src/Brand.schema.ts:132` `SurfaceStep` (type) - 1 example import violation(s)
-- `src/Brand.schema.ts:148` `ColorScale` (class) - 1 example import violation(s)
-- `src/Brand.schema.ts:177` `SurfaceScale` (class) - 1 example import violation(s)
-- `src/Brand.schema.ts:202` `Foreground` (class) - 1 example import violation(s)
-- `src/Brand.schema.ts:224` `Border` (class) - 1 example import violation(s)
-- `src/Brand.schema.ts:245` `Semantic` (class) - 1 example import violation(s)
-- `src/Brand.schema.ts:267` `Alpha` (const) - 1 example import violation(s)
-- `src/Brand.schema.ts:287` `Alpha` (type) - 1 example import violation(s)
-- `src/Brand.schema.ts:303` `GlowStop` (class) - 1 example import violation(s)
-- `src/Brand.schema.ts:324` `GlowLayer` (class) - 1 example import violation(s)
-- `src/Brand.schema.ts:345` `Glow` (class) - 1 example import violation(s)
-- `src/Brand.schema.ts:367` `ColorScheme` (class) - 1 example import violation(s)
-- `src/Brand.schema.ts:392` `SchemeName` (const) - 1 example import violation(s)
-- `src/Brand.schema.ts:411` `SchemeName` (type) - 1 example import violation(s)
-- `src/Brand.schema.ts:427` `FontStack` (class) - 1 example import violation(s)
-- `src/Brand.schema.ts:450` `Typography` (class) - 1 example import violation(s)
-- `src/Brand.schema.ts:471` `SvgPathData` (const) - 1 example import violation(s)
-- `src/Brand.schema.ts:508` `SvgPathData` (type) - 1 example import violation(s)
-- `src/Brand.schema.ts:524` `MarkPoint` (class) - 1 example import violation(s)
-- `src/Brand.schema.ts:545` `MarkRotation` (class) - 1 example import violation(s)
-- `src/Brand.schema.ts:566` `PixelGlasses` (class) - 1 example import violation(s)
-- `src/Brand.schema.ts:594` `BrandMark` (class) - 1 example import violation(s)
-- `src/Brand.schema.ts:622` `BrandIdentity` (class) - 1 example import violation(s)
-- `src/Brand.schema.ts:651` `SvgPaint` (const) - 1 example import violation(s)
-- `src/Brand.schema.ts:670` `SvgPaint` (type) - 1 example import violation(s)
-- `src/Brand.schema.ts:687` `MarkPaint` (class) - 1 example import violation(s)
-- `src/Brand.schema.ts:709` `MarkGround` (class) - 1 example import violation(s)
-- `src/Brand.schema.ts:737` `MarkSvgRequest` (class) - 1 example import violation(s)
-- `src/Brand.schema.ts:771` `WordmarkSvgRequest` (class) - 1 example import violation(s)
-- `src/Brand.svg.ts:46` `glassesTransform` (const) - 1 example import violation(s)
-- `src/Brand.svg.ts:115` `renderMarkSvg` (const) - 1 example import violation(s)
-- `src/Brand.svg.ts:153` `renderWordmarkSvg` (const) - 1 example import violation(s)
-- `src/Brand.tokens.ts:134` `beep` (const) - 1 example import violation(s)
 
 ### @beep/agents-server
 
