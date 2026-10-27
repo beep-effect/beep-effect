@@ -459,14 +459,18 @@ describe("restoration archive boundary helpers", () => {
         const layer = CorpusCommandServiceLive.pipe(
           Layer.provide(Layer.merge(NodeServices.layer, Layer.succeed(FileSystem.FileSystem, lateFileSystem)))
         );
-        (yield* preserveRestorationArchive(options).pipe(
+        // Name the late-appearance refusal: without the late write the same row fails
+        // earlier, on the present-row denominator, so a bare failure check proves nothing.
+        const error = yield* preserveRestorationArchive(options).pipe(
           Effect.provideServiceEffect(
             CorpusCommandService,
             layer.pipe(Layer.fresh, Layer.build, Effect.map(Context.get(CorpusCommandService)))
           ),
-          Effect.scoped,
-          Effect.exit
-        )).pipe(Exit.isFailure, assertTrue);
+          Effect.flip
+        );
+        expect(error.message).toContain(
+          "Inherited collector present destinations are not a subset of preservation files"
+        );
       })
     );
   });
@@ -540,7 +544,6 @@ describe("restoration archive boundary helpers", () => {
               CorpusCommandService,
               layer.pipe(Layer.fresh, Layer.build, Effect.map(Context.get(CorpusCommandService)))
             ),
-            Effect.scoped,
             Effect.exit
           )).pipe(Exit.isFailure, assertTrue);
         });
@@ -616,7 +619,6 @@ describe("restoration archive boundary helpers", () => {
             CorpusCommandService,
             layer.pipe(Layer.fresh, Layer.build, Effect.map(Context.get(CorpusCommandService)))
           ),
-          Effect.scoped,
           Effect.exit
         );
         expect(mutation).toBe(3);
@@ -1126,8 +1128,11 @@ describe("restoration archive boundary helpers", () => {
           sourceInfo
         ).pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
 
-        (yield* Effect.scoped(
-          RA.hashResumedArchivePrefix(sourcePath, object.expectedSizeBytes + 1, 2, RA.createStreamingSha256())
+        (yield* RA.hashResumedArchivePrefix(
+          sourcePath,
+          object.expectedSizeBytes + 1,
+          2,
+          RA.createStreamingSha256()
         ).pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
 
         const options = preserveOptions(sourceRoot, sourcePath, root, path.join(root, "collector.jsonl"));

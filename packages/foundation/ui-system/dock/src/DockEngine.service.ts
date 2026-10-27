@@ -74,8 +74,11 @@ const decodeSnapshot = Effect.fn("DockEngine.decodeSnapshot")(function* (input: 
  * **Example** (Encode workspace snapshot)
  *
  * ```ts
- * import { DockEngine, DockEngineLive, GroupId, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView } from "@beep/dock"
- * import type { DockEngineShape } from "@beep/dock"
+ * import { DockEngine, DockEngineLive } from "@beep/dock/DockEngine.service"
+ * import { GroupId, PanelId } from "@beep/dock/Dock.ids"
+ * import { Panel, TextPanelView } from "@beep/dock/Dock.models"
+ * import { PopulatedWorkspace, TabsNode } from "@beep/dock/Dock.tree"
+ * import type { DockEngineShape } from "@beep/dock/DockEngine.service"
  * import * as Effect from "effect/Effect";
  * const encode = (engine: DockEngineShape, workspace: PopulatedWorkspace) => engine.encodeSnapshot(workspace)
  * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) })
@@ -117,7 +120,10 @@ export interface DockEngineShape {
  * **Example** (Encode via DockEngine service)
  *
  * ```ts
- * import { DockEngine, DockEngineLive, GroupId, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView } from "@beep/dock"
+ * import { DockEngine, DockEngineLive } from "@beep/dock/DockEngine.service"
+ * import { GroupId, PanelId } from "@beep/dock/Dock.ids"
+ * import { Panel, TextPanelView } from "@beep/dock/Dock.models"
+ * import { PopulatedWorkspace, TabsNode } from "@beep/dock/Dock.tree"
  * import * as Effect from "effect/Effect";
  * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) })
  * const workspace = PopulatedWorkspace.make({ root: TabsNode.make({ groupId: GroupId.make("group-one"), active: panel }) })
@@ -152,7 +158,10 @@ const makeDockEngine = Effect.succeed(
  * **Example** (Provide live encode snapshot)
  *
  * ```ts
- * import { DockEngine, DockEngineLive, GroupId, Panel, PanelId, PopulatedWorkspace, TabsNode, TextPanelView } from "@beep/dock"
+ * import { DockEngine, DockEngineLive } from "@beep/dock/DockEngine.service"
+ * import { GroupId, PanelId } from "@beep/dock/Dock.ids"
+ * import { Panel, TextPanelView } from "@beep/dock/Dock.models"
+ * import { PopulatedWorkspace, TabsNode } from "@beep/dock/Dock.tree"
  * import * as Effect from "effect/Effect";
  * const panel = Panel.make({ id: PanelId.make("panel-one"), title: "Panel One", view: TextPanelView.make({ text: "one" }) })
  * const workspace = PopulatedWorkspace.make({ root: TabsNode.make({ groupId: GroupId.make("group-one"), active: panel }) })
@@ -174,7 +183,7 @@ export const DockEngineLive = Layer.effect(DockEngine, makeDockEngine);
  * **Example** (Implement store load save)
  *
  * ```ts
- * import type { DockSnapshotStoreShape } from "@beep/dock"
+ * import type { DockSnapshotStoreShape } from "@beep/dock/DockEngine.service"
  * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
@@ -200,7 +209,7 @@ export interface DockSnapshotStoreShape {
  * **Example** (Save and load snapshot)
  *
  * ```ts
- * import { DockSnapshotStore, makeDockSnapshotStoreMemory } from "@beep/dock"
+ * import { DockSnapshotStore, makeDockSnapshotStoreMemory } from "@beep/dock/DockEngine.service"
  * import * as Effect from "effect/Effect";
  * const program = Effect.gen(function* () {
  *   const store = yield* DockSnapshotStore
@@ -223,8 +232,8 @@ export class DockSnapshotStore extends Context.Service<DockSnapshotStore, DockSn
  * **Example** (Seeded memory store layer)
  *
  * ```ts
- * import { makeDockSnapshotStoreMemory } from "@beep/dock"
- * import { DockSnapshotStore } from "@beep/dock"
+ * import { makeDockSnapshotStoreMemory } from "@beep/dock/DockEngine.service"
+ * import { DockSnapshotStore } from "@beep/dock/DockEngine.service"
  * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *
@@ -259,7 +268,7 @@ export const makeDockSnapshotStoreMemory = (initial: O.Option<string> = O.none()
  * **Example** (Require present snapshot)
  *
  * ```ts
- * import { requireSnapshot } from "@beep/dock"
+ * import { requireSnapshot } from "@beep/dock/DockEngine.service"
  * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
  *

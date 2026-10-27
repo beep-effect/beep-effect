@@ -8,12 +8,12 @@ import {
   graftCommand,
 } from "@beep/repo-cli/commands/Graft";
 import { CommandJsonOutput } from "@beep/repo-cli/test/Cli";
-import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect, it, layer } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
+import * as Context from "effect/Context";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
@@ -21,6 +21,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
+import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -80,6 +81,51 @@ const decodePlanJson = S.decodeUnknownEffect(S.fromJsonString(GraftCacheSyncPlan
 const decodeReportJson = S.decodeUnknownEffect(S.fromJsonString(GraftCacheSyncReport));
 
 const testLayer = GraftCacheSyncLive.pipe(Layer.provideMerge(NodeServices.layer));
+
+// The filesystem operations a test swaps in under the subject once its fixture exists.
+// Only the subject sees them: the test's own `fs` stays native.
+class FileSystemOverrides extends Context.Service<FileSystemOverrides, Ref.Ref<Partial<FileSystem.FileSystem>>>()(
+  "@beep/repo-cli/test/graft-cache-sync.test/FileSystemOverrides"
+) {}
+
+const overriddenFileSystem = Layer.effect(
+  FileSystem.FileSystem,
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const overrides = yield* FileSystemOverrides;
+    return FileSystem.FileSystem.of({
+      ...fs,
+      readDirectory: Effect.fnUntraced(function* (name, options) {
+        return yield* ((yield* Ref.get(overrides)).readDirectory ?? fs.readDirectory)(name, options);
+      }),
+      realPath: Effect.fnUntraced(function* (name) {
+        return yield* ((yield* Ref.get(overrides)).realPath ?? fs.realPath)(name);
+      }),
+      rename: Effect.fnUntraced(function* (oldPath, newPath) {
+        return yield* ((yield* Ref.get(overrides)).rename ?? fs.rename)(oldPath, newPath);
+      }),
+      stat: Effect.fnUntraced(function* (name) {
+        return yield* ((yield* Ref.get(overrides)).stat ?? fs.stat)(name);
+      }),
+    });
+  })
+);
+
+// A fresh subject and override set per block, built over the overridden filesystem, as each
+// test used to rebuild `Layer.fresh(GraftCacheSyncLive)` over its own double. Building the
+// subject performs no filesystem operations, so nothing is observed before a test overrides.
+const overriddenSyncLayer = Layer.fresh(
+  GraftCacheSyncLive.pipe(
+    Layer.provide(overriddenFileSystem),
+    Layer.provideMerge(Layer.effect(FileSystemOverrides, Ref.make<Partial<FileSystem.FileSystem>>({})))
+  )
+);
+
+const overrideFileSystem = Effect.fn("GraftCacheSyncTest.overrideFileSystem")(function* (
+  overrides: Partial<FileSystem.FileSystem>
+) {
+  yield* Ref.set(yield* FileSystemOverrides, overrides);
+});
 
 const runCommand = Effect.fn("GraftCacheSyncTest.runCommand")(function* (args: ReadonlyArray<string>) {
   const current = yield* Console.Console;
@@ -149,93 +195,61 @@ layer(testLayer, { timeout: "30 seconds" })("Graft cache sync", (it) => {
     })
   );
 
-  it.effect(
-    "plans 25 populated clones with 300 root concepts with at most 104 directory reads",
-    Effect.fn(function* () {
-      const { fs, source, target, path, directory } = yield* fixture();
-      const targetCount = 25;
-      const conceptCount = 300;
-      // The shared fixture already has INDEX.md and two root concept nodes.
-      yield* Effect.forEach(
-        A.range(1, conceptCount - 3),
-        (index) => fs.writeFileString(path.join(source, "graft", `concept-${index}.md`), "# Concept\n"),
-        { concurrency: 16 }
-      );
-      const targets = A.prepend(
-        A.map(A.range(1, targetCount - 1), (index) => path.join(directory, `clone-${index}`)),
-        target
-      );
-      yield* Effect.forEach(
-        targets,
-        Effect.fn(function* (root) {
-          yield* fs.makeDirectory(root, { recursive: true });
-          yield* fs.writeFileString(path.join(root, ".git"), "gitdir: untouched\n");
-          yield* fs.copy(path.join(source, "graft"), path.join(root, "graft"));
-        }),
-        { concurrency: 4 }
-      );
-      let directoryReads = 0;
-      let realPaths = 0;
-      let stats = 0;
-      const countingFs = Layer.succeed(
-        FileSystem.FileSystem,
-        FileSystem.FileSystem.of({
-          "~effect/FileSystem": fs["~effect/FileSystem"],
-          access: fs.access,
-          copy: fs.copy,
-          copyFile: fs.copyFile,
-          chmod: fs.chmod,
-          chown: fs.chown,
-          glob: fs.glob,
-          exists: fs.exists,
-          link: fs.link,
-          lstat: fs.lstat,
-          makeDirectory: fs.makeDirectory,
-          makeTempDirectory: fs.makeTempDirectory,
-          makeTempDirectoryScoped: fs.makeTempDirectoryScoped,
-          makeTempFile: fs.makeTempFile,
-          makeTempFileScoped: fs.makeTempFileScoped,
-          open: fs.open,
+  it.layer(overriddenSyncLayer, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "plans 25 populated clones with 300 root concepts with at most 104 directory reads",
+      Effect.fn(function* () {
+        const { fs, source, target, path, directory } = yield* fixture();
+        const targetCount = 25;
+        const conceptCount = 300;
+        // The shared fixture already has INDEX.md and two root concept nodes.
+        yield* Effect.forEach(
+          A.range(1, conceptCount - 3),
+          (index) => fs.writeFileString(path.join(source, "graft", `concept-${index}.md`), "# Concept\n"),
+          { concurrency: 16 }
+        );
+        const targets = A.prepend(
+          A.map(A.range(1, targetCount - 1), (index) => path.join(directory, `clone-${index}`)),
+          target
+        );
+        yield* Effect.forEach(
+          targets,
+          Effect.fn(function* (root) {
+            yield* fs.makeDirectory(root, { recursive: true });
+            yield* fs.writeFileString(path.join(root, ".git"), "gitdir: untouched\n");
+            yield* fs.copy(path.join(source, "graft"), path.join(root, "graft"));
+          }),
+          { concurrency: 4 }
+        );
+        let directoryReads = 0;
+        let realPaths = 0;
+        let stats = 0;
+        yield* overrideFileSystem({
           readDirectory: Effect.fnUntraced(function* (name, options) {
             directoryReads += 1;
             return yield* fs.readDirectory(name, options);
           }),
-          readFile: fs.readFile,
-          readFileString: fs.readFileString,
-          readLink: fs.readLink,
           realPath: Effect.fnUntraced(function* (name) {
             realPaths += 1;
             return yield* fs.realPath(name);
           }),
-          remove: fs.remove,
-          rename: fs.rename,
-          sink: fs.sink,
           stat: Effect.fnUntraced(function* (name) {
             stats += 1;
             return yield* fs.stat(name);
           }),
-          stream: fs.stream,
-          symlink: fs.symlink,
-          truncate: fs.truncate,
-          utimes: fs.utimes,
-          watch: fs.watch,
-          writeFile: fs.writeFile,
-          writeFileString: fs.writeFileString,
-        })
-      );
-      const plan = yield* GraftCacheSync.use((sync) => sync.plan(source, targets)).pipe(
-        provideScopedLayer(Layer.fresh(GraftCacheSyncLive).pipe(Layer.provide(countingFs)))
-      );
-      expect(plan.entries).toHaveLength(targetCount * (conceptCount + 3));
-      expect(A.every(plan.entries, (entry) => entry.action === "copy")).toBe(true);
-      // Exactly root, graft, .cache and .graph once per clone, including source.
-      expect(directoryReads).toBe((targetCount + 1) * 4); // 104, independent of entry count.
-      // Each artifact and its three parents once, plus each clone's root/.git probe.
-      expect(realPaths).toBe((targetCount + 1) * (conceptCount + 7));
-      expect(stats).toBe(realPaths);
-    }),
-    15_000
-  );
+        });
+        const plan = yield* GraftCacheSync.use((sync) => sync.plan(source, targets));
+        expect(plan.entries).toHaveLength(targetCount * (conceptCount + 3));
+        expect(A.every(plan.entries, (entry) => entry.action === "copy")).toBe(true);
+        // Exactly root, graft, .cache and .graph once per clone, including source.
+        expect(directoryReads).toBe((targetCount + 1) * 4); // 104, independent of entry count.
+        // Each artifact and its three parents once, plus each clone's root/.git probe.
+        expect(realPaths).toBe((targetCount + 1) * (conceptCount + 7));
+        expect(stats).toBe(realPaths);
+      }),
+      15_000
+    );
+  });
 
   it.effect(
     "fails with GraftCacheSourceError when a source artifact directory cannot be listed",
@@ -390,96 +404,92 @@ layer(testLayer, { timeout: "30 seconds" })("Graft cache sync", (it) => {
     })
   );
 
-  it.effect(
-    "copies exact bytes with sibling-temp atomic replacement and preserves clone files and cards",
-    Effect.fn(function* () {
-      const { fs, source, target, path } = yield* fixture();
-      yield* fs.makeDirectory(path.join(target, "graft", "src"), { recursive: true });
-      yield* fs.writeFileString(path.join(target, "graft", "src", "existing.md"), "target card\n");
-      yield* fs.writeFileString(path.join(target, "graft", "INDEX.md"), "old index\n");
-      yield* fs.writeFileString(path.join(target, "graft", "manifest.json"), "old manifest\n");
-      const binary = new Uint8Array([0, 255, 1, 128, 10]);
-      yield* fs.writeFile(path.join(source, "graft", ".graph", "wiring.json"), binary);
-      let renames = 0;
-      const observedFs = FileSystem.FileSystem.of({
-        ...fs,
-        rename: Effect.fn("GraftCacheSyncTest.rename")(function* (temporary, destination) {
-          expect(path.dirname(temporary)).toBe(path.dirname(destination));
-          expect(Str.startsWith(".graft-cache-sync-")(path.basename(temporary))).toBe(true);
-          if (path.basename(destination) === "INDEX.md") {
-            expect(yield* fs.readFileString(destination)).toBe("old index\n");
-          }
-          if (Eq.equals(path.basename(destination), "manifest.json")) {
-            expect(yield* fs.readFileString(destination)).toBe("old manifest\n");
-          }
-          expect(yield* fs.readFile(temporary)).toEqual(
-            yield* fs.readFile(path.join(source, path.relative(target, destination)))
-          );
-          renames += 1;
-          yield* fs.rename(temporary, destination);
-        }),
-      });
-      const report = yield* GraftCacheSync.use(
-        Effect.fn(function* (sync) {
-          return yield* sync.apply(yield* sync.plan(source, [target]));
-        })
-      ).pipe(
-        provideScopedLayer(Layer.fresh(GraftCacheSyncLive)),
-        Effect.provideService(FileSystem.FileSystem, observedFs)
-      );
-      expect(report.copied).toBe(6);
-      expect(report.skipped).toBe(0);
-      expect(report.refused).toBe(0);
-      expect(renames).toBe(6);
-      let total = 0;
-      for (const relative of artifacts) {
-        const bytes = yield* fs.readFile(path.join(source, "graft", relative));
-        expect(yield* fs.readFile(path.join(target, "graft", relative))).toEqual(bytes);
-        total += bytes.byteLength;
-      }
-      expect(report.bytes).toBe(total);
-      const files = yield* fs.readDirectory(path.join(target, "graft"), { recursive: true });
-      expect(A.some(files, Str.includes(".tmp"))).toBe(false);
-      expect(yield* fs.exists(path.join(target, "graft", "src", "file.ts.md"))).toBe(false);
-      expect(yield* fs.readFileString(path.join(target, "graft", "src", "existing.md"))).toBe("target card\n");
-      expect(yield* fs.readFileString(path.join(target, ".git"))).toBe("gitdir: untouched\n");
-      expect(yield* fs.readFileString(path.join(target, "README.md"))).toBe("tracked content\n");
-    })
-  );
+  it.layer(overriddenSyncLayer, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "copies exact bytes with sibling-temp atomic replacement and preserves clone files and cards",
+      Effect.fn(function* () {
+        const { fs, source, target, path } = yield* fixture();
+        yield* fs.makeDirectory(path.join(target, "graft", "src"), { recursive: true });
+        yield* fs.writeFileString(path.join(target, "graft", "src", "existing.md"), "target card\n");
+        yield* fs.writeFileString(path.join(target, "graft", "INDEX.md"), "old index\n");
+        yield* fs.writeFileString(path.join(target, "graft", "manifest.json"), "old manifest\n");
+        const binary = new Uint8Array([0, 255, 1, 128, 10]);
+        yield* fs.writeFile(path.join(source, "graft", ".graph", "wiring.json"), binary);
+        let renames = 0;
+        yield* overrideFileSystem({
+          rename: Effect.fn("GraftCacheSyncTest.rename")(function* (temporary, destination) {
+            expect(path.dirname(temporary)).toBe(path.dirname(destination));
+            expect(Str.startsWith(".graft-cache-sync-")(path.basename(temporary))).toBe(true);
+            if (path.basename(destination) === "INDEX.md") {
+              expect(yield* fs.readFileString(destination)).toBe("old index\n");
+            }
+            if (Eq.equals(path.basename(destination), "manifest.json")) {
+              expect(yield* fs.readFileString(destination)).toBe("old manifest\n");
+            }
+            expect(yield* fs.readFile(temporary)).toEqual(
+              yield* fs.readFile(path.join(source, path.relative(target, destination)))
+            );
+            renames += 1;
+            yield* fs.rename(temporary, destination);
+          }),
+        });
+        const report = yield* GraftCacheSync.use(
+          Effect.fn(function* (sync) {
+            return yield* sync.apply(yield* sync.plan(source, [target]));
+          })
+        );
+        expect(report.copied).toBe(6);
+        expect(report.skipped).toBe(0);
+        expect(report.refused).toBe(0);
+        expect(renames).toBe(6);
+        let total = 0;
+        for (const relative of artifacts) {
+          const bytes = yield* fs.readFile(path.join(source, "graft", relative));
+          expect(yield* fs.readFile(path.join(target, "graft", relative))).toEqual(bytes);
+          total += bytes.byteLength;
+        }
+        expect(report.bytes).toBe(total);
+        const files = yield* fs.readDirectory(path.join(target, "graft"), { recursive: true });
+        expect(A.some(files, Str.includes(".tmp"))).toBe(false);
+        expect(yield* fs.exists(path.join(target, "graft", "src", "file.ts.md"))).toBe(false);
+        expect(yield* fs.readFileString(path.join(target, "graft", "src", "existing.md"))).toBe("target card\n");
+        expect(yield* fs.readFileString(path.join(target, ".git"))).toBe("gitdir: untouched\n");
+        expect(yield* fs.readFileString(path.join(target, "README.md"))).toBe("tracked content\n");
+      })
+    );
+  });
 
-  it.effect(
-    "cleans up a failed atomic replacement and preserves the previous destination",
-    Effect.fn(function* () {
-      const { fs, source, target, path } = yield* fixture();
-      yield* fs.makeDirectory(path.join(target, "graft", ".cache"), { recursive: true });
-      const destination = path.join(target, "graft", ".cache", "summaries.json");
-      yield* fs.writeFileString(destination, "previous summaries\n");
-      const failingFs = FileSystem.FileSystem.of({
-        ...fs,
-        rename: Effect.fn("GraftCacheSyncTest.failedRename")(() =>
-          Effect.fail(
-            PlatformError.badArgument({
-              module: "FileSystem",
-              method: "rename",
-              description: "injected rename failure",
-            })
-          )
-        ),
-      });
-      const failure = yield* GraftCacheSync.use(
-        Effect.fn(function* (sync) {
-          return yield* Effect.flip(sync.apply(yield* sync.plan(source, [target])));
-        })
-      ).pipe(
-        provideScopedLayer(Layer.fresh(GraftCacheSyncLive)),
-        Effect.provideService(FileSystem.FileSystem, failingFs)
-      );
-      expect(failure._tag).toBe("GraftCacheIoError");
-      expect(yield* fs.readFileString(destination)).toBe("previous summaries\n");
-      expect(yield* fs.readDirectory(path.dirname(destination))).toEqual(["summaries.json"]);
-      expect(yield* fs.readFileString(path.join(source, "graft", ".cache", "summaries.json"))).toBe(contents[0]);
-    })
-  );
+  it.layer(overriddenSyncLayer, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "cleans up a failed atomic replacement and preserves the previous destination",
+      Effect.fn(function* () {
+        const { fs, source, target, path } = yield* fixture();
+        yield* fs.makeDirectory(path.join(target, "graft", ".cache"), { recursive: true });
+        const destination = path.join(target, "graft", ".cache", "summaries.json");
+        yield* fs.writeFileString(destination, "previous summaries\n");
+        yield* overrideFileSystem({
+          rename: Effect.fn("GraftCacheSyncTest.failedRename")(() =>
+            Effect.fail(
+              PlatformError.badArgument({
+                module: "FileSystem",
+                method: "rename",
+                description: "injected rename failure",
+              })
+            )
+          ),
+        });
+        const failure = yield* GraftCacheSync.use(
+          Effect.fn(function* (sync) {
+            return yield* Effect.flip(sync.apply(yield* sync.plan(source, [target])));
+          })
+        );
+        expect(failure._tag).toBe("GraftCacheIoError");
+        expect(yield* fs.readFileString(destination)).toBe("previous summaries\n");
+        expect(yield* fs.readDirectory(path.dirname(destination))).toEqual(["summaries.json"]);
+        expect(yield* fs.readFileString(path.join(source, "graft", ".cache", "summaries.json"))).toBe(contents[0]);
+      })
+    );
+  });
 
   it.effect(
     "refuses symlinked graft directories and does not write into another clone",

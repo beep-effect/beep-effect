@@ -158,7 +158,7 @@ const iriReferenceValue = (iri: string): string =>
  *
  * ```ts import.meta.vitest name="Validate safe local name"
  * import * as S from "effect/Schema"
- * import { SafePnLocal } from "@beep/identity"
+ * import { SafePnLocal } from "@beep/identity/PnLocal"
  *
  * S.is(SafePnLocal)("prefLabel") // => true
  * ```
@@ -186,7 +186,7 @@ export const SafePnLocal = S.declare<string>(
  * **Example** (Type a safe local)
  *
  * ```ts
- * import type { SafePnLocal } from "@beep/identity"
+ * import type { SafePnLocal } from "@beep/identity/PnLocal"
  *
  * const local: SafePnLocal = "prefLabel"
  * console.log(local)
@@ -206,7 +206,7 @@ const isSafePnLocal = S.is(SafePnLocal);
  *
  * ```ts import.meta.vitest name="Validate safe prefix"
  * import * as S from "effect/Schema"
- * import { SafePnPrefix } from "@beep/identity"
+ * import { SafePnPrefix } from "@beep/identity/PnLocal"
  *
  * S.is(SafePnPrefix)("skos") // => true
  * ```
@@ -234,7 +234,7 @@ export const SafePnPrefix = S.declare<string>(
  * **Example** (Type a safe prefix)
  *
  * ```ts
- * import type { SafePnPrefix } from "@beep/identity"
+ * import type { SafePnPrefix } from "@beep/identity/PnLocal"
  *
  * const prefix: SafePnPrefix = "skos"
  * console.log(prefix)
@@ -253,7 +253,7 @@ const isSafePnPrefix = S.is(SafePnPrefix);
  * **Example** (Check safe local names)
  *
  * ```ts import.meta.vitest name="Check safe local names"
- * import { isSafeLocal } from "@beep/identity"
+ * import { isSafeLocal } from "@beep/identity/PnLocal"
  *
  * isSafeLocal("prefLabel") // => true
  * isSafeLocal("Ontology.models/HttpUrl") // => false
@@ -270,7 +270,7 @@ export const isSafeLocal = (local: string): boolean => isSafePnLocal(local);
  * **Example** (Check safe prefixes)
  *
  * ```ts import.meta.vitest name="Check safe prefixes"
- * import { isSafePrefix } from "@beep/identity"
+ * import { isSafePrefix } from "@beep/identity/PnLocal"
  *
  * isSafePrefix("skos") // => true
  * isSafePrefix("bad:prefix") // => false
@@ -364,7 +364,7 @@ const acceptsEscapedLocalInternal = (local: string): boolean =>
  *
  * ```ts import.meta.vitest name="Validate escaped local name"
  * import * as S from "effect/Schema"
- * import { EscapedPnLocal } from "@beep/identity"
+ * import { EscapedPnLocal } from "@beep/identity/PnLocal"
  *
  * S.is(EscapedPnLocal)("Ontology.models\\/HttpUrl") // => true
  * ```
@@ -392,7 +392,7 @@ export const EscapedPnLocal = S.declare<string>(
  * **Example** (Type an escaped local)
  *
  * ```ts
- * import type { EscapedPnLocal } from "@beep/identity"
+ * import type { EscapedPnLocal } from "@beep/identity/PnLocal"
  *
  * const local: EscapedPnLocal = "Ontology.models\\/HttpUrl"
  * console.log(local)
@@ -411,7 +411,7 @@ const isEscapedPnLocal = S.is(EscapedPnLocal);
  * **Example** (Accept escaped local name)
  *
  * ```ts import.meta.vitest name="Accept escaped local name"
- * import { acceptsEscapedLocal } from "@beep/identity"
+ * import { acceptsEscapedLocal } from "@beep/identity/PnLocal"
  *
  * acceptsEscapedLocal("Ontology.models\\/HttpUrl") // => true
  * ```
@@ -427,7 +427,7 @@ export const acceptsEscapedLocal = (local: string): boolean => isEscapedPnLocal(
  * **Example** (Unescape local name)
  *
  * ```ts import.meta.vitest name="Unescape local name"
- * import { unescapeLocal } from "@beep/identity"
+ * import { unescapeLocal } from "@beep/identity/PnLocal"
  *
  * unescapeLocal("Ontology.models\\/HttpUrl") // => "Ontology.models/HttpUrl"
  * ```
@@ -449,7 +449,7 @@ export const unescapeLocal = (local: string): string => Str.replace(/\\([_~.\-!$
  * **Example** (Escape local name)
  *
  * ```ts import.meta.vitest name="Escape local name"
- * import { escapeLocal } from "@beep/identity"
+ * import { escapeLocal } from "@beep/identity/PnLocal"
  *
  * escapeLocal("Ontology.models/HttpUrl") // => "Ontology\\.models\\/HttpUrl"
  * ```
@@ -465,7 +465,7 @@ export const escapeLocal = (local: string): string => Str.replace(/[_~.\-!$&'()*
  * **Example** (Emit prefixed name or IRI)
  *
  * ```ts
- * import { prefixedNameOrIri } from "@beep/identity"
+ * import { prefixedNameOrIri } from "@beep/identity/PnLocal"
  *
  * const rendered = prefixedNameOrIri("Ontology.models/HttpUrl", {
  *   prefix: "beep",
