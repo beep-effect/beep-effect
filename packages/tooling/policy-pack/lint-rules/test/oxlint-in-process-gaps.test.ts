@@ -257,6 +257,56 @@ describe("oxlint rules in process", () => {
     expect(reports).toHaveLength(5);
   });
 
+  it("allows the host-boundary process io listed for a file and nothing else", () => {
+    const reports: Array<unknown> = [];
+    const rule = createOnceRule("no-direct-process-io", "/repo/packages/tooling/tool/cli/src/bin-main.ts", reports);
+
+    rule.CallExpression?.(processExit());
+    rule.CallExpression?.(call(member(member(identifier("process"), "stdout"), "write"), [literal("out")]));
+    rule.CallExpression?.(call(member(member(identifier("process"), "stderr"), "write"), [literal("err")]));
+
+    expect(reports).toHaveLength(1);
+  });
+
+  it("leaves test files alone", () => {
+    const reports: Array<unknown> = [];
+    const rule = createOnceRule("no-direct-process-io", "/repo/packages/example/test/fixture.test.ts", reports);
+
+    rule.CallExpression?.(processExit());
+    rule.AssignmentExpression?.({
+      left: member(identifier("process"), "exitCode"),
+      right: literal("1"),
+      type: "AssignmentExpression",
+    } as never);
+    rule.UpdateExpression?.({ argument: member(identifier("process"), "exitCode"), type: "UpdateExpression" } as never);
+
+    expect(reports).toHaveLength(0);
+  });
+
+  it("resolves globalThis.Bun and ignores non-stream and unresolvable receivers", () => {
+    const reports: Array<unknown> = [];
+    const rule = createOnceRule("no-direct-process-io", "/repo/packages/example/src/fixture.ts", reports);
+    const bun = identifier("Bun");
+    const unresolvableStream = {
+      computed: true,
+      object: identifier("process"),
+      optional: false,
+      property: identifier("name"),
+      type: "MemberExpression",
+    };
+
+    rule.CallExpression?.(call(member(member(identifier("globalThis"), "Bun"), "exit")));
+    rule.CallExpression?.(call(member(bun, "write"), [member(bun, "env"), literal("x")]));
+    rule.CallExpression?.(call(member(unresolvableStream, "write"), [literal("x")]));
+    rule.AssignmentExpression?.({
+      left: identifier("exitCode"),
+      right: literal("1"),
+      type: "AssignmentExpression",
+    } as never);
+
+    expect(reports).toHaveLength(1);
+  });
+
   it("resets shadowed scopes between files", () => {
     const reports: Array<unknown> = [];
     const rule = createOnceRule("no-global-process-runtime", "/repo/packages/example/src/fixture.ts", reports);
