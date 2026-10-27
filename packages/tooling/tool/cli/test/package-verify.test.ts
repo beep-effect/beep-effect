@@ -675,5 +675,39 @@ export const invalidCategory = 1;
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
+
+    it.effect("records the Turbo closure build in a quick check failure capsule", () =>
+      Effect.flatMap(temporaryDirectory, (tmpDir) =>
+        Effect.gen(function* () {
+          yield* recordPackageVerifyInboxForTesting(
+            PackageVerifyReport.make({
+              headSha: "abc123",
+              packageName: "@beep/demo",
+              packageDir: `${tmpDir}/packages/demo`,
+              quick: true,
+              repoRoot: tmpDir,
+              results: [
+                PackageVerifyStepResult.make({
+                  step: "check",
+                  script: "beep:check",
+                  skipped: false,
+                  ok: false,
+                  durationMillis: 20,
+                  exitCode: O.some(2),
+                  output: "type error",
+                }),
+              ],
+            })
+          );
+
+          const inbox = yield* loadYeetInboxView(tmpDir);
+          const row = inbox.entries[0]?.row;
+          expect(row?.kind).toBe("local-shard-failed");
+          if (row?.kind === "local-shard-failed") {
+            expect(row.capsule.command).toBe("bun x turbo run build --filter=@beep/demo^... && bun run beep:check");
+          }
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
   });
 });

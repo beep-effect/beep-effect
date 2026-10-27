@@ -625,6 +625,13 @@ const collectStepOutput = Effect.fn("PackageVerify.collectStepOutput")(function*
   );
 });
 
+// Both scripts typecheck against the dependencies' built declarations, which Turbo's own
+// `check` and `audit` tasks build first (`^build`). Running the bare script against a stale
+// or missing dependency build reports errors hosted Check never sees. The step plan and the
+// inbox capsule read this one rule, so the recorded command is the command that ran.
+const buildsUpstreamClosure = (step: PackageVerifyStepName): boolean =>
+  PackageVerifyStepName.is.audit(step) || PackageVerifyStepName.is.check(step);
+
 const packageVerifyStepPlan = (
   repoRoot: string,
   workspace: PackageVerifyWorkspace,
@@ -636,10 +643,7 @@ const packageVerifyStepPlan = (
     args: ["run", spec.script],
     cwd: workspace.dir,
   });
-  // Both scripts typecheck against the dependencies' built declarations, which Turbo's own
-  // `check` and `audit` tasks build first (`^build`). Running the bare script against a stale
-  // or missing dependency build reports errors hosted Check never sees.
-  return PackageVerifyStepName.is.audit(spec.step) || PackageVerifyStepName.is.check(spec.step)
+  return buildsUpstreamClosure(spec.step)
     ? [
         QualityTaskStep.make({
           label: `${spec.step}:build-closure`,
@@ -838,7 +842,7 @@ export const recordPackageVerifyInboxForTesting = Effect.fn("PackageVerify.recor
     recordYeetLocalShardOutcome(
       report.repoRoot,
       YeetLocalShardOutcome.make({
-        command: PackageVerifyStepName.is.audit(result.step)
+        command: buildsUpstreamClosure(result.step)
           ? `bun x turbo run build --filter=${report.packageName}^... && bun run ${result.script}`
           : `bun run ${result.script}`,
         exitCode: O.getOrElse(result.exitCode, () => (result.ok ? 0 : 1)),
