@@ -588,20 +588,18 @@ const CiRunnersSubnetsDisjointCheck = S.makeFilter<CiRunnersNetworkGeometry>(
  * @category models
  * @since 0.0.0
  */
-export class CiRunnersNetworkConfig extends S.Class<CiRunnersNetworkConfig, { readonly brand: unique symbol }>(
-  $I`CiRunnersNetworkConfig`
-)(
+export class CiRunnersNetworkConfig extends S.Opaque<CiRunnersNetworkConfig, { readonly brand: unique symbol }>()(
   ciRunnersNetworkConfigStruct.pipe(
     S.check(
       CiRunnersNetworkZonesWithinRegionCheck,
       CiRunnersNetworkZonesDistinctCheck,
       CiRunnersSubnetsWithinVpcCheck,
       CiRunnersSubnetsDisjointCheck
-    )
-  ),
-  $I.annote("CiRunnersNetworkConfig", {
-    description: "Dedicated egress-only VPC geometry for the CI runner fleet.",
-  })
+    ),
+    $I.annoteSchema("CiRunnersNetworkConfig", {
+      description: "Dedicated egress-only VPC geometry for the CI runner fleet.",
+    })
+  )
 ) {}
 
 /**

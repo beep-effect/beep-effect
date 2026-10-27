@@ -40,6 +40,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@beep/memfs": "workspace:^",
     "@effect/platform-node": "catalog:",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",

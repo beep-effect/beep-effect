@@ -52,6 +52,7 @@ const $I = $AcpId.create("protocol");
 
 const isAcpSchemaError = S.is(AcpSchema.Error);
 const isAcpError = S.is(AcpError.AcpError);
+const isProcessExited = S.is(AcpError.AcpProcessExitedError);
 // Typed Effect RPC ids are allocated as non-negative safe integers (effect's default counter starts
 // at 0, this package's at `RPC_REQUEST_ID_START`); anything else is not an RpcClient response.
 // effect's own encoder writes a server-level `Defect` with the id -32603.
@@ -620,7 +621,9 @@ export type AcpIncomingNotification = typeof AcpIncomingNotification.Type;
  * - `onOutgoingResponse` runs after a response was written to stdout;
  *   `onOutgoingResponseFailure` runs when a response could not be encoded or written.
  * - `terminationError` classifies an ended input stream; it defaults to
- *   `AcpInputStreamEndedError`.
+ *   `AcpInputStreamEndedError`. When it reports an `AcpProcessExitedError`, a broken stdin or
+ *   stdout pipe also ends the connection with that exit, since a child's pipes break when it
+ *   exits.
  *
  * **Example** (Inspect server request methods)
  *
@@ -868,7 +871,10 @@ const toAcpWireRequest: (message: AcpWireMessage) => AcpWireMessage = Match.type
  *   terminal error, pending extension requests fail with it, and running extension request
  *   handlers are interrupted. `terminationError` classifies the end; a classification still
  *   running after 5 seconds (a peer that closed stdout but has not exited) falls back to
- *   `AcpInputStreamEndedError`.
+ *   `AcpInputStreamEndedError`. A broken pipe (an output writer failure, or an input stream
+ *   failure that is not already an `AcpError`) is classified the same way: a reported process
+ *   exit wins, so a child that exits ends the connection with its exit status whichever pipe
+ *   noticed first; otherwise the pipe's `AcpTransportError` stands.
  * - A response acknowledges only after its bytes reach stdout; a writer failure fails every
  *   current, queued and future response and ends the connection. A send still waiting for room in
  *   the full output queue fails with the writer's error.
@@ -1150,12 +1156,12 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
       }),
     }).pipe(Effect.asVoid);
 
-  const classifyTermination = (classification: Effect.Effect<AcpError.AcpError>) =>
+  const classifyTermination = (classification: Effect.Effect<AcpError.AcpError>, fallback: AcpError.AcpError) =>
     Queue.offer(disconnects, ACP_STDIO_CLIENT_ID).pipe(
       Effect.andThen(classification),
       Effect.timeoutOrElse({
         duration: ACP_PROTOCOL_TERMINATION_CLASSIFICATION_TIMEOUT,
-        orElse: () => Effect.succeed(AcpError.AcpInputStreamEndedError.make({})),
+        orElse: () => Effect.succeed(fallback),
       })
     );
 
@@ -1169,20 +1175,22 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
   });
 
   const handleTermination = Effect.fn($I`handleTermination`)(function* (
-    classification: Effect.Effect<AcpError.AcpError>
+    classification: Effect.Effect<AcpError.AcpError>,
+    fallback: AcpError.AcpError = AcpError.AcpInputStreamEndedError.make({})
   ) {
     const first = yield* Ref.modify(terminationHandled, (handled) => [!handled, true] as const);
     if (!first) {
       return;
     }
     // Every later send waits on `terminationFailure`, so it settles even when this fiber is
-    // interrupted while classifying; the plain ended-input error then stands in.
+    // interrupted while classifying; the fallback (the plain ended-input error, or the transport
+    // failure that ended the connection) then stands in.
     yield* Effect.uninterruptibleMask((restore) =>
-      restore(classifyTermination(classification)).pipe(
+      restore(classifyTermination(classification, fallback)).pipe(
         Effect.exit,
         Effect.map(
           Exit.match({
-            onFailure: () => AcpError.AcpInputStreamEndedError.make({}),
+            onFailure: () => fallback,
             onSuccess: (error): AcpError.AcpError => error,
           })
         ),
@@ -1191,6 +1199,20 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
       )
     );
   });
+
+  // A child's pipes break when it exits, so the writer's stdin sink and the reader's stdout stream
+  // can fail before the ended stdout reports the exit status, and the first of them ends the
+  // connection. With a classifier, such a pipe failure therefore resolves to the peer's exit when
+  // the classifier reports one, so the terminal error does not depend on which side noticed first.
+  // Any other classification, and a classification past the timeout, keep the pipe failure.
+  const terminateWithPipeFailure = (failure: AcpError.AcpTransportError) =>
+    handleTermination(
+      O.match(O.fromUndefinedOr(options.terminationError), {
+        onNone: () => Effect.succeed<AcpError.AcpError>(failure),
+        onSome: Effect.map((classified): AcpError.AcpError => (isProcessExited(classified) ? classified : failure)),
+      }),
+      failure
+    );
 
   // --- Responses --------------------------------------------------------------------------------
 
@@ -1541,11 +1563,15 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
       Effect.flatMap((messages) => Effect.forEach(messages, routeDecodedMessage, { discard: true }))
     );
 
-  const classifyReaderFailure = (cause: Cause.Cause<unknown>): AcpError.AcpError => {
+  // An AcpError (one a stdout transform raised, for instance) ends the connection as it is; any
+  // other failure is a broken stdout pipe, which the peer's exit may explain.
+  const terminateReader = (cause: Cause.Cause<unknown>) => {
     const failure = O.getOrElse(Cause.findErrorOption(cause), () => Cause.squash(cause));
     return isAcpError(failure)
-      ? failure
-      : AcpError.AcpTransportError.make({ cause: O.some(failure), operation: O.some("read-input-stream") });
+      ? failure.pipe(Effect.succeed, handleTermination)
+      : terminateWithPipeFailure(
+          AcpError.AcpTransportError.make({ cause: O.some(failure), operation: O.some("read-input-stream") })
+        );
   };
 
   yield* options.stdio.stdin.pipe(
@@ -1553,7 +1579,7 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
     // Anything that ends the reader, including a defect in a callback it runs, terminates the
     // connection so pending requests fail instead of hanging.
     Effect.matchCauseEffect({
-      onFailure: (cause) => cause.pipe(classifyReaderFailure, Effect.succeed, handleTermination),
+      onFailure: terminateReader,
       onSuccess: () =>
         handleTermination(options.terminationError ?? Effect.succeed(AcpError.AcpInputStreamEndedError.make({}))),
     }),
@@ -1604,9 +1630,7 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
 
   const failWriter = (detail: string, cause: unknown, terminate: boolean) => {
     const error = AcpError.AcpTransportError.make({ cause: O.some(cause), detail: O.some(detail) });
-    return failOutgoingWrites(error).pipe(
-      Effect.andThen(terminate ? error.pipe(Effect.succeed, handleTermination) : Effect.void)
-    );
+    return failOutgoingWrites(error).pipe(Effect.andThen(terminate ? terminateWithPipeFailure(error) : Effect.void));
   };
 
   const handleWriterExit = (exit: Exit.Exit<void, unknown>) =>

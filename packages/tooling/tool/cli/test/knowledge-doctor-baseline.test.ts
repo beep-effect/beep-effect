@@ -844,7 +844,7 @@ describe("knowledge doctor sealed baseline", () => {
         const leases = yield* doctor.leases(KnowledgeDoctorLeasesOptions.make({ baseRef: "fixture-base", now: NOW }));
         assert.strictEqual(A.length(leases.leases), 1);
         assert.strictEqual(leases.leases[0]?.status, "active");
-      }, Effect.scoped)
+      })
     );
     it.effect(
       "turns the lease report into yeet warnings and never fails on an unreadable report",

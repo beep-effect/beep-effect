@@ -163,6 +163,9 @@ export class CoverageProducerCompareOptions extends S.Opaque<
     identity: CoverageProducerIdentity,
     expectedPartitions: S.Array(CoverageProducerPartition),
     scoped: S.Boolean,
+    // A pull request's comparison pins its base: lowered rows are then judged at the base floor
+    // unless the pull request could not have moved them.
+    base: S.optionalKey(S.NonEmptyString),
   }).pipe(
     $I.annoteSchema("CoverageProducerCompareOptions", {
       description: "Trusted execution identity and complete partition plan required before coverage comparison.",

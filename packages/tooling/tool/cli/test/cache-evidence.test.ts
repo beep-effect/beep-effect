@@ -44,7 +44,7 @@ it.layer(testLayer, { timeout: "5 seconds" })((it) => {
         (yield* readCacheExperimentBytes(root, "absent", 4).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
         yield* fs.symlink(path.join(root, "artifact"), path.join(root, "link"));
         (yield* readCacheExperimentBytes(root, "link", 4).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
-      }).pipe(Effect.scoped)
+      })
     );
 
     it.effect("binds executable identity to exact bytes without following a symlink", () =>
@@ -61,7 +61,7 @@ it.layer(testLayer, { timeout: "5 seconds" })((it) => {
           Result.isFailure,
           assertTrue
         );
-      }).pipe(Effect.scoped)
+      })
     );
   });
 });
