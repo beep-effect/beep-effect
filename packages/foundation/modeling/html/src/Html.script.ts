@@ -29,7 +29,7 @@ const htmlMimeTypePattern =
  * **Example** (Decode a MIME type)
  *
  * ```ts import.meta.vitest name="Decode a MIME type"
- * import { HtmlMimeType } from "@beep/html"
+ * import { HtmlMimeType } from "@beep/html/Html.script"
  * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
@@ -72,7 +72,7 @@ export type HtmlMimeType = typeof HtmlMimeType.Type;
  * **Example** (Recognize a legacy JavaScript essence)
  *
  * ```ts import.meta.vitest name="Recognize a legacy JavaScript essence"
- * import { JavaScriptMimeTypeEssence } from "@beep/html"
+ * import { JavaScriptMimeTypeEssence } from "@beep/html/Html.script"
  * import * as S from "effect/Schema"
  *
  * S.is(JavaScriptMimeTypeEssence)("text/javascript1.5") // => true
@@ -125,7 +125,7 @@ const isJavaScriptMimeTypeEssenceMatch = flow(toAsciiLowerCase, isJavaScriptMime
  * **Example** (Decode a script data-block MIME type)
  *
  * ```ts import.meta.vitest name="Decode a script data-block MIME type"
- * import { ScriptDataBlockMimeType } from "@beep/html"
+ * import { ScriptDataBlockMimeType } from "@beep/html/Html.script"
  * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
  *
@@ -181,7 +181,7 @@ const ScriptStateName = LiteralKit(["classic", "module", "importMap", "speculati
  * **Example** (Construct a module script state)
  *
  * ```ts import.meta.vitest name="Construct a module script state"
- * import { ScriptState } from "@beep/html"
+ * import { ScriptState } from "@beep/html/Html.script"
  *
  * const state = ScriptState.cases.module.make({})
  * state.state // => "module"
@@ -223,7 +223,7 @@ export type ScriptState = typeof ScriptState.Type;
  * **Example** (Construct an invalid script type error)
  *
  * ```ts import.meta.vitest name="Construct an invalid script type error"
- * import { InvalidScriptType } from "@beep/html"
+ * import { InvalidScriptType } from "@beep/html/Html.script"
  *
  * const error = InvalidScriptType.make({ value: "beep" })
  * error._tag // => "InvalidScriptType"
@@ -277,7 +277,7 @@ const resolveExplicitScriptType = (value: string): Result.Result<ScriptState, In
  * **Example** (Resolve a missing script type)
  *
  * ```ts import.meta.vitest name="Resolve a missing script type"
- * import { resolveScriptState } from "@beep/html"
+ * import { resolveScriptState } from "@beep/html/Html.script"
  * import { Script } from "@beep/html/Html.model"
  * import * as Result from "effect/Result";
  * const result = resolveScriptState(Script.make({ content: "" }))

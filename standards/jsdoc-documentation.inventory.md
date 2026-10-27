@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-10-27T02:14:31.618Z
+Generated: 2026-10-27T12:30:31.539Z
 
 ## Scope
 
@@ -11,23 +11,23 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | Metric | Count |
 |---|---:|
 | packages | 183 |
-| cleanPackages | 102 |
+| cleanPackages | 103 |
 | packagesWithoutPublicSrcSurface | 2 |
-| packagesNeedingRemediation | 79 |
+| packagesNeedingRemediation | 78 |
 | publicModules | 3547 |
-| publicExports | 25290 |
-| openModules | 403 |
-| openExports | 1382 |
+| publicExports | 25292 |
+| openModules | 394 |
+| openExports | 1354 |
 | missingExportExamples | 7 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
 | forbiddenTagFindings | 0 |
 | malformedConditionalTagFindings | 0 |
-| exampleImportFindings | 1351 |
+| exampleImportFindings | 1324 |
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
 | undescribed-see | 11 |
-| multiple-description-paragraphs | 425 |
+| multiple-description-paragraphs | 415 |
 | leading-blank | 0 |
 | trailing-blank | 0 |
 | invalid-heading | 1 |
@@ -40,7 +40,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | duplicate-example | 0 |
 | loose-ts-fence | 0 |
 | forbidden-remarks | 0 |
-| no-root-package-import | 1330 |
+| no-root-package-import | 1303 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -73,7 +73,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 15 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 10 | 3 | 0 |
 | 16 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 66 | 698 | 18 | 0 |
 | 17 | `@beep/markdown` | `packages/foundation/modeling/markdown` | clean | 16 | 92 | 0 | 0 |
-| 18 | `@beep/html` | `packages/foundation/modeling/html` | needs-remediation | 15 | 544 | 9 | 28 |
+| 18 | `@beep/html` | `packages/foundation/modeling/html` | clean | 15 | 544 | 0 | 0 |
 | 19 | `@beep/semver` | `packages/foundation/modeling/semver` | clean | 6 | 23 | 0 | 0 |
 | 20 | `@beep/md` | `packages/foundation/modeling/md` | needs-remediation | 11 | 311 | 4 | 87 |
 | 21 | `@beep/shared-domain` | `packages/shared/domain` | needs-remediation | 106 | 374 | 3 | 5 |
@@ -189,7 +189,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 131 | `@beep/epistemic-ui` | `packages/epistemic/ui` | clean | 6 | 14 | 0 | 0 |
 | 132 | `@beep/graph-3d` | `packages/drivers/graph-3d` | needs-remediation | 7 | 17 | 2 | 0 |
 | 133 | `@beep/ontology` | `packages/foundation/modeling/ontology` | needs-remediation | 15 | 157 | 5 | 54 |
-| 134 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 473 | 4451 | 47 | 35 |
+| 134 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 473 | 4453 | 47 | 35 |
 | 135 | `@beep/dock-react` | `packages/foundation/ui-system/dock-react` | needs-remediation | 3 | 12 | 0 | 10 |
 | 136 | `@beep/drizzle` | `packages/drivers/drizzle` | clean | 3 | 11 | 0 | 0 |
 | 137 | `@beep/repo-workspaces` | `packages/tooling/library/repo-workspaces` | clean | 27 | 244 | 0 | 0 |
@@ -721,51 +721,6 @@ Module findings:
 - `src/schemas/PackageJson.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/schemas/TSConfig.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/schemas/WorkspaceDeps.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-
-### @beep/html
-
-Path: `packages/foundation/modeling/html`
-
-Module findings:
-- `src/Html.attributes.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/Html.conformance.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/Html.contract.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/Html.meta.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/Html.model.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/Html.nodes.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/Html.policy.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/Html.serialize.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/index.ts:1` (packageDocumentation) - 1 example import violation(s)
-
-Export findings:
-- `src/Html.conformance.ts:222` `ConformantHtmlNode` (const) - 1 example import violation(s)
-- `src/Html.form-control.ts:43` `InputState` (const) - 1 example import violation(s)
-- `src/Html.form-control.ts:128` `resolveInputState` (const) - 1 example import violation(s)
-- `src/Html.form-control.ts:157` `inputStateAllowedAttributes` (const) - 1 example import violation(s)
-- `src/Html.form-control.ts:231` `ButtonState` (const) - 1 example import violation(s)
-- `src/Html.form-control.ts:303` `resolveButtonState` (const) - 1 example import violation(s)
-- `src/Html.meta.ts:607` `HTML_GLOBAL_ATTRIBUTE_NAMES` (const) - 1 documentation section/link violation(s)
-- `src/Html.policy.ts:511` `SafeHtmlAst` (const) - 1 example import violation(s)
-- `src/Html.policy.ts:536` `SafeHtmlAst` (type) - 1 example import violation(s)
-- `src/Html.policy.ts:558` `SafeHtmlNode` (const) - 1 example import violation(s)
-- `src/Html.policy.ts:813` `inspectSafeHtml` (const) - 1 example import violation(s)
-- `src/Html.policy.ts:842` `enforceSafeHtml` (const) - 1 example import violation(s)
-- `src/Html.policy.ts:868` `safeHtmlAstConformant` (const) - 1 example import violation(s)
-- `src/Html.policy.ts:896` `safeHtmlAstRoot` (const) - 1 example import violation(s)
-- `src/Html.script.ts:44` `HtmlMimeType` (const) - 1 example import violation(s)
-- `src/Html.script.ts:86` `JavaScriptMimeTypeEssence` (const) - 1 example import violation(s)
-- `src/Html.script.ts:140` `ScriptDataBlockMimeType` (const) - 1 example import violation(s)
-- `src/Html.script.ts:195` `ScriptState` (const) - 1 example import violation(s)
-- `src/Html.script.ts:236` `InvalidScriptType` (class) - 1 example import violation(s)
-- `src/Html.script.ts:293` `resolveScriptState` (const) - 1 example import violation(s)
-- `src/Html.serialize.ts:147` `SafeHtml` (const) - 1 example import violation(s)
-- `src/Html.serialize.ts:180` `SafeHtml` (type) - 1 example import violation(s)
-- `src/Html.serialize.ts:613` `serialize` (const) - 1 example import violation(s)
-- `src/Html.serialize.ts:638` `serializeConformant` (const) - 1 example import violation(s)
-- `src/Html.serialize.ts:687` `serializeSafe` (const) - 1 example import violation(s)
-- `src/Html.serialize.ts:708` `untrustedHtmlValue` (const) - 1 example import violation(s)
-- `src/Html.serialize.ts:741` `safeHtmlValue` (const) - 1 example import violation(s)
-- `src/Html.source-size.ts:831` `inspectSourceSizeList` (const) - 1 documentation section/link violation(s)
 
 ### @beep/md
 

@@ -1,6 +1,8 @@
 /**
  * Canonical role names for the public HTML AST contract.
  *
+ * **Details**
+ *
  * The generated model retains its historical short names for compatibility;
  * these aliases make container and child roles explicit at API boundaries.
  *

@@ -1,6 +1,8 @@
 /**
  * Canonical serialization for the schema-first HTML AST.
  *
+ * **Details**
+ *
  * The serializer escapes text and attributes, expands the modeled `dataset`
  * bag, emits HTML void elements without XML syntax, and rejects local
  * serialization hazards. It does not enforce the general HTML content model
@@ -127,7 +129,10 @@ const issueSafeHtml = (html: string): SafeHtmlValue => {
  * **Example** (Check SafeHtml provenance)
  *
  * ```ts import.meta.vitest name="Check SafeHtml provenance"
- * import { conform, enforceSafeHtml, Fragment, SafeHtml, serializeSafe } from "@beep/html"
+ * import { conform } from "@beep/html/Html.conformance"
+ * import { enforceSafeHtml } from "@beep/html/Html.policy"
+ * import { Fragment } from "@beep/html/Html.model"
+ * import { SafeHtml, serializeSafe } from "@beep/html/Html.serialize"
  * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
@@ -156,13 +161,10 @@ export const SafeHtml = S.declare(SafeHtmlValue.is).pipe(
  * **Example** (Producing SafeHtml value)
  *
  * ```ts import.meta.vitest name="Producing SafeHtml value"
- * import {
- *   conform,
- *   enforceSafeHtml,
- *   Fragment,
- *   safeHtmlValue,
- *   serializeSafe
- * } from "@beep/html"
+ * import { conform } from "@beep/html/Html.conformance"
+ * import { enforceSafeHtml } from "@beep/html/Html.policy"
+ * import { Fragment } from "@beep/html/Html.model"
+ * import { safeHtmlValue, serializeSafe } from "@beep/html/Html.serialize"
  * import type { SafeHtml } from "@beep/html/Html.serialize"
  * import * as Effect from "effect/Effect";
  * const html: SafeHtml = Effect.runSync(
@@ -598,7 +600,8 @@ const serializeRoot = Effect.fn("Html.serializeRoot")(function* (root: HtmlRoot.
  * **Example** (Serializing empty fragment)
  *
  * ```ts import.meta.vitest name="Serializing empty fragment"
- * import { Fragment, serialize, untrustedHtmlValue } from "@beep/html"
+ * import { Fragment } from "@beep/html/Html.model"
+ * import { serialize, untrustedHtmlValue } from "@beep/html/Html.serialize"
  * import * as Effect from "effect/Effect";
  * const html = Effect.runSync(serialize(Fragment.make({ children: [] })))
  * untrustedHtmlValue(html) // => ""
@@ -621,7 +624,9 @@ export const serialize: (root: HtmlRoot.Type) => Effect.Effect<UntrustedHtml, Ht
  * **Example** (Serializing conformance proof)
  *
  * ```ts import.meta.vitest name="Serializing conformance proof"
- * import { conform, Fragment, serializeConformant, untrustedHtmlValue } from "@beep/html"
+ * import { conform } from "@beep/html/Html.conformance"
+ * import { Fragment } from "@beep/html/Html.model"
+ * import { serializeConformant, untrustedHtmlValue } from "@beep/html/Html.serialize"
  * import * as Effect from "effect/Effect";
  * const html = Effect.runSync(
  *   conform(Fragment.make({ children: [] })).pipe(Effect.flatMap(serializeConformant))
@@ -661,13 +666,10 @@ const revalidateSafeHtmlAst = (value: SafeHtmlAst): Effect.Effect<HtmlRoot.Type,
  * **Example** (Issuing opaque SafeHtml)
  *
  * ```ts import.meta.vitest name="Issuing opaque SafeHtml"
- * import {
- *   conform,
- *   enforceSafeHtml,
- *   Fragment,
- *   safeHtmlValue,
- *   serializeSafe,
- * } from "@beep/html"
+ * import { conform } from "@beep/html/Html.conformance"
+ * import { enforceSafeHtml } from "@beep/html/Html.policy"
+ * import { Fragment } from "@beep/html/Html.model"
+ * import { safeHtmlValue, serializeSafe } from "@beep/html/Html.serialize"
  * import * as Effect from "effect/Effect";
  * const html = Effect.runSync(
  *   conform(Fragment.make({ children: [] })).pipe(
@@ -696,7 +698,8 @@ export const serializeSafe: (value: SafeHtmlAst) => Effect.Effect<SafeHtml, Html
  * **Example** (Extracting untrusted string)
  *
  * ```ts import.meta.vitest name="Extracting untrusted string"
- * import { Fragment, serialize, untrustedHtmlValue } from "@beep/html"
+ * import { Fragment } from "@beep/html/Html.model"
+ * import { serialize, untrustedHtmlValue } from "@beep/html/Html.serialize"
  * import * as Effect from "effect/Effect";
  * const html = Effect.runSync(serialize(Fragment.make({ children: [] })))
  * untrustedHtmlValue(html) // => ""
@@ -718,13 +721,10 @@ export const untrustedHtmlValue: (value: UntrustedHtml) => string = identity;
  * **Example** (Extracting safe HTML string)
  *
  * ```ts import.meta.vitest name="Extracting safe HTML string"
- * import {
- *   conform,
- *   enforceSafeHtml,
- *   Fragment,
- *   safeHtmlValue,
- *   serializeSafe,
- * } from "@beep/html"
+ * import { conform } from "@beep/html/Html.conformance"
+ * import { enforceSafeHtml } from "@beep/html/Html.policy"
+ * import { Fragment } from "@beep/html/Html.model"
+ * import { safeHtmlValue, serializeSafe } from "@beep/html/Html.serialize"
  * import * as Effect from "effect/Effect";
  * const html = Effect.runSync(
  *   conform(Fragment.make({ children: [] })).pipe(

@@ -1,6 +1,8 @@
 /**
  * Hand-authored non-element AST node classes.
  *
+ * **Details**
+ *
  * These are the leaf DOM node kinds that sit alongside element classes in the
  * {@link HtmlNode} union. Their `_tag` values use the DOM `nodeName` convention
  * (`#text`, `#comment`, `#doctype`) so they can never collide with element tag
