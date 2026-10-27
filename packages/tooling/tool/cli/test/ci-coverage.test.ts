@@ -261,6 +261,21 @@ it.layer(layer, { timeout: "10 seconds" })("CI coverage artifact orchestration",
     })
   );
 
+  // The comparison judges a row the pull request lowered against the base floor only when it
+  // knows the base; the other affected coverage lanes pass it through TURBO_SCM_BASE.
+  it.effect("pins the comparison to the base on affected runs only", () =>
+    Effect.gen(function* () {
+      const { root } = yield* fixture([owner()]);
+      yield* runCiCoverageComparison(root, options());
+      yield* runCiCoverageComparison(root, options({ affected: false }));
+      const [affected, full] = A.map(mocks.compare.mock.calls, (call) => call[1]);
+      assertDefined(affected);
+      assertDefined(full);
+      expect(affected.base).toBe("base-ref");
+      expect(full.base).toBeUndefined();
+    })
+  );
+
   it.effect("runs Labs checks separately and instruments only selected Labs tests", () =>
     Effect.gen(function* () {
       const entries = [owner(), owner("@beep/ciops", "apps/labs/ciops")];
