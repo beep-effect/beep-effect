@@ -210,7 +210,7 @@ const r3 = (value: number): string => {
  * **Example** (Width of `FIG. 1`)
  *
  * ```ts
- * import { labelWidthPt } from "@beep/technical-drawing"
+ * import { labelWidthPt } from "@beep/technical-drawing/Sheet.compose"
  *
  * console.log(labelWidthPt({ text: "FIG. 1", capHeightPt: 12.76 }))
  * ```
@@ -233,7 +233,7 @@ export const labelWidthPt = (input: { readonly text: string; readonly capHeightP
  * **Example** (Stroke a sheet number)
  *
  * ```ts
- * import { strokeLabel } from "@beep/technical-drawing"
+ * import { strokeLabel } from "@beep/technical-drawing/Sheet.compose"
  *
  * console.log(strokeLabel({ text: "1/8", x: 100, y: 100, capHeightPt: 12.76 }).length)
  * ```
@@ -323,7 +323,7 @@ const chainSegments = (lines: ReadonlyArray<Segment2>): ReadonlyArray<Polyline> 
  * **Example** (Extents of one segment)
  *
  * ```ts
- * import { viewExtents } from "@beep/technical-drawing"
+ * import { viewExtents } from "@beep/technical-drawing/Sheet.compose"
  *
  * console.log(viewExtents([[0, 0, 10, 5]]))
  * ```
@@ -462,7 +462,8 @@ const geometryOf = (options: SheetOptions, faces: SheetLabelFaces) => {
  * **Example** (Letter sight)
  *
  * ```ts
- * import { SheetOptions, sheetGeometry } from "@beep/technical-drawing"
+ * import { SheetOptions } from "@beep/technical-drawing/Sheet.schemas"
+ * import { sheetGeometry } from "@beep/technical-drawing/Sheet.compose"
  *
  * const g = sheetGeometry(SheetOptions.make({}))
  * console.log(g.sight.left, g.figure.top)
@@ -480,7 +481,8 @@ export const sheetGeometry = (options: SheetOptions) => geometryOf(options, NO_F
  * **Example** (Fit two views)
  *
  * ```ts
- * import { SheetOptions, commonScale } from "@beep/technical-drawing"
+ * import { SheetOptions } from "@beep/technical-drawing/Sheet.schemas"
+ * import { commonScale } from "@beep/technical-drawing/Sheet.compose"
  *
  * console.log(commonScale({ views: [[[0, 0, 40, 30]], [[0, 0, 20, 60]]], options: SheetOptions.make({}) }))
  * ```
@@ -639,7 +641,8 @@ const GAP_TOLERANCE_MM = 1e-9;
  * **Example** (A heavy weight widens the default gap)
  *
  * ```ts
- * import { SheetOptions, drawnBrokenGapMm } from "@beep/technical-drawing"
+ * import { SheetOptions } from "@beep/technical-drawing/Sheet.schemas"
+ * import { drawnBrokenGapMm } from "@beep/technical-drawing/Sheet.compose"
  *
  * console.log(drawnBrokenGapMm(SheetOptions.make({ lineWeightMm: 1.2 }))) // 1.6
  * console.log(drawnBrokenGapMm(SheetOptions.make({}))) // 1.5
@@ -692,7 +695,8 @@ export const drawnBrokenGapMm = (options: SheetOptions): number => {
  * **Example** (A sheet with a broken-line part)
  *
  * ```ts
- * import { SheetOptions, composeSheet } from "@beep/technical-drawing"
+ * import { SheetOptions } from "@beep/technical-drawing/Sheet.schemas"
+ * import { composeSheet } from "@beep/technical-drawing/Sheet.compose"
  *
  * const svg = composeSheet({
  *   segments: [[0, 0, 40, 0]], shading: [], broken: [[10, 5, 30, 5]],
@@ -704,7 +708,8 @@ export const drawnBrokenGapMm = (options: SheetOptions): number => {
  * **Example** (A sheet with an emphasis line)
  *
  * ```ts
- * import { SheetOptions, composeSheet } from "@beep/technical-drawing"
+ * import { SheetOptions } from "@beep/technical-drawing/Sheet.schemas"
+ * import { composeSheet } from "@beep/technical-drawing/Sheet.compose"
  *
  * const svg = composeSheet({
  *   segments: [[0, 0, 40, 0]], shading: [], emphasis: [[0, 0, 40, 0]],

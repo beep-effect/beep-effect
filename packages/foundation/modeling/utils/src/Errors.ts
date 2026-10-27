@@ -14,7 +14,7 @@ import * as P from "effect/Predicate";
  * **Example** (Map effect error to class)
  *
  * ```ts
- * import { Err } from "@beep/utils";
+ * import * as Err from "@beep/utils/Errors"
  * import * as Effect from "effect/Effect";
  *
  * class CommandError {
@@ -66,7 +66,7 @@ const isErrorBuilderFromInput = <Input, Error>(
  * **Example** (Preserve original failure as cause)
  *
  * ```ts
- * import { Err } from "@beep/utils";
+ * import * as Err from "@beep/utils/Errors"
  * import * as Effect from "effect/Effect";
  * import { pipe } from "effect/Function";
  *
@@ -123,7 +123,7 @@ export const mapCauseError = <Error, Args extends Array<unknown>>(
  * **Example** (Replace failure with target error)
  *
  * ```ts
- * import { Err } from "@beep/utils";
+ * import * as Err from "@beep/utils/Errors"
  * import * as Effect from "effect/Effect";
  * import { dual, pipe } from "effect/Function";
  *

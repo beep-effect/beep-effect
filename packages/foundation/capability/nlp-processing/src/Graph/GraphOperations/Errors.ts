@@ -1,6 +1,8 @@
 /**
  * GraphOperations/Errors - failures raised during graph-operation execution.
  *
+ * **Details**
+ *
  * Effect v4 `@beep/nlp` implementation notes:
  * each `Data.TaggedError` becomes `S.TaggedError` from `effect/Schema`, scoped
  * by a `$NlpProcessingId` composer, `unknown` cause fields become

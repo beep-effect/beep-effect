@@ -103,6 +103,10 @@
       "purpose": "Wave 4-W-a differential: @beep/repo-workspaces member set, edge set and topological order against bun.lock and raw package.json oracles."
     },
     {
+      "path": "ops/repo-utils-package-json-parity.ts",
+      "purpose": "Wave 3-A3 parity: the repo-utils package.json model and workspace dependency helpers recorded before the @beep/package-json re-base and compared at the head, with a mutation corpus."
+    },
+    {
       "path": "ops/sbom-corpus.ts",
       "purpose": "Wave 4-S oracle: @beep/sbom emits a CycloneDX document for every workspace manifest and validates each against the vendored full schema."
     },

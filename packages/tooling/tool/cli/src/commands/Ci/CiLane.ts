@@ -30,7 +30,6 @@ import * as Match from "effect/Match";
 import * as Num from "effect/Number";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import {
   isCiSync,
@@ -2206,7 +2205,7 @@ const runCiPartitionedLane = Effect.fn("CiLane.runCiPartitionedLane")(function* 
     workspaceEntries,
     A.filter(([, workspace]) => {
       const relativeDir = normalizeSlashes(path.relative(repoRoot, workspace.dir));
-      return !isLabsWorkspaceDir(relativeDir) && R.has(workspace.scripts, task);
+      return !isLabsWorkspaceDir(relativeDir) && HashMap.has(workspace.manifest.scripts, task);
     }),
     A.map(([name]) => name),
     A.sort(Order.String)

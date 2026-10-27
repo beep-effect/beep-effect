@@ -1,6 +1,8 @@
 /**
  * Reason-free egress denial vocabulary.
  *
+ * **Details**
+ *
  * A governed egress boundary that refuses a destination tells the caller only
  * THAT it refused, never WHY: a denial reason returned to an agent is a
  * payload-smuggling and probing channel, so the bounded reason lives with the
@@ -31,7 +33,7 @@ const $I = $ApiTransportId.create("EgressDenied");
  * **Example** (Make and is check)
  *
  * ```ts
- * import { EgressDenied } from "@beep/api-transport"
+ * import { EgressDenied } from "@beep/api-transport/EgressDenied"
  *
  * const denial = EgressDenied.make({})
  * console.log(denial._tag)

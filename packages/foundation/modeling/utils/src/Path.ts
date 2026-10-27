@@ -2,6 +2,8 @@
  * Path utilities wrapping `node:path`, mirroring effect's `Path` service
  * interface.
  *
+ * **Details**
+ *
  * The pure operations (`join`, `basename`, `parse`, ...) are plain synchronous
  * functions — they cannot fail on string input, matching effect's own sync
  * `Path` service. The `file:` URL conversions (`fromFileUrl`/`toFileUrl`) are
