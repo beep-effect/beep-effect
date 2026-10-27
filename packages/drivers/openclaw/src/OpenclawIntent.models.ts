@@ -540,19 +540,19 @@ export type OpenclawModelInputKind = typeof OpenclawModelInputKind.Type;
  * @category models
  * @since 0.0.0
  */
-export class OpenclawProviderApiKeySecretRef extends S.TaggedClass<
+export class OpenclawProviderApiKeySecretRef extends S.Opaque<
   OpenclawProviderApiKeySecretRef,
   { readonly brand: unique symbol }
->($I`OpenclawProviderApiKeySecretRef`)(
-  "SecretRef",
-  {
+>()(
+  S.TaggedStruct("SecretRef", {
     ref: OpenclawSecretReference.annotateKey({
       description: "op:// reference resolved at runtime into the provider API key.",
     }),
-  },
-  $I.annote("OpenclawProviderApiKeySecretRef", {
-    description: "Provider API key resolved from a 1Password secret reference.",
-  })
+  }).pipe(
+    $I.annoteSchema("OpenclawProviderApiKeySecretRef", {
+      description: "Provider API key resolved from a 1Password secret reference.",
+    })
+  )
 ) {}
 
 /**
@@ -569,19 +569,19 @@ export class OpenclawProviderApiKeySecretRef extends S.TaggedClass<
  * @category models
  * @since 0.0.0
  */
-export class OpenclawProviderApiKeyPlaceholder extends S.TaggedClass<
+export class OpenclawProviderApiKeyPlaceholder extends S.Opaque<
   OpenclawProviderApiKeyPlaceholder,
   { readonly brand: unique symbol }
->($I`OpenclawProviderApiKeyPlaceholder`)(
-  "Placeholder",
-  {
+>()(
+  S.TaggedStruct("Placeholder", {
     value: S.NonEmptyString.annotateKey({
       description: "Non-secret sentinel value accepted by the provider, e.g. 'ollama-local'.",
     }),
-  },
-  $I.annote("OpenclawProviderApiKeyPlaceholder", {
-    description: "Non-secret sentinel provider API key.",
-  })
+  }).pipe(
+    $I.annoteSchema("OpenclawProviderApiKeyPlaceholder", {
+      description: "Non-secret sentinel provider API key.",
+    })
+  )
 ) {}
 
 /**
