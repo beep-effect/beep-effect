@@ -17,6 +17,7 @@ import * as PlatformError from "effect/PlatformError";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Str from "effect/String";
+import { withAncestorsHidden } from "./support/CommandTest.ts";
 
 const PlatformLayer = FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer));
 const runInProcess = Command.runWith(lawsCommand, { version: "0.0.0" });
@@ -137,7 +138,7 @@ it.layer(PlatformLayer, { timeout: "60 seconds" })((it) => {
         yield* fs.writeFileString(path.join(notGit, "bun.lock"), "");
         const run = (cwd: string) => runSchemaTagIdioms(SchemaTagIdiomsOptions.make({ cwd, strictCheck: true }));
 
-        const noRoot = yield* run(bare).pipe(Effect.exit);
+        const noRoot = yield* run(bare).pipe(withAncestorsHidden(bare), Effect.exit);
         const noGit = yield* run(notGit).pipe(Effect.exit);
         const noSpawn = yield* run(notGit).pipe(
           Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawnFailure),
