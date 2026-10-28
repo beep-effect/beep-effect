@@ -30,7 +30,7 @@ class InfoBase extends S.Class<InfoBase, { readonly brand: unique symbol }>($I`I
  * ```ts import.meta.vitest name="Decode added file-diff"
  * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
- * import { FileDiff } from "@beep/schema"
+ * import * as FileDiff from "@beep/schema/FileDiff"
  *
  * const added = Effect.runSync(
  *   S.decodeUnknownEffect(FileDiff.Added)({
@@ -64,7 +64,7 @@ export class Added extends InfoBase.extend<Added>($I`Added`)(
  * ```ts import.meta.vitest name="Decode deleted file-diff"
  * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
- * import { FileDiff } from "@beep/schema"
+ * import * as FileDiff from "@beep/schema/FileDiff"
  *
  * const deleted = Effect.runSync(
  *   S.decodeUnknownEffect(FileDiff.Deleted)({
@@ -98,7 +98,7 @@ export class Deleted extends InfoBase.extend<Deleted>($I`Deleted`)(
  * ```ts import.meta.vitest name="Decode modified file-diff"
  * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
- * import { FileDiff } from "@beep/schema"
+ * import * as FileDiff from "@beep/schema/FileDiff"
  *
  * const modified = Effect.runSync(
  *   S.decodeUnknownEffect(FileDiff.Modified)({
@@ -133,7 +133,7 @@ export class Modified extends InfoBase.extend<Modified>($I`Modified`)(
  * ```ts import.meta.vitest name="Decode file-diff union"
  * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
- * import { FileDiff } from "@beep/schema"
+ * import * as FileDiff from "@beep/schema/FileDiff"
  *
  * const info = Effect.runSync(
  *   S.decodeUnknownEffect(FileDiff.Info)({
@@ -163,7 +163,7 @@ export const Info = S.Union([Added, Deleted, Modified]).pipe(
  * **Example** (Access Info status type)
  *
  * ```ts
- * import type { FileDiff } from "@beep/schema"
+ * import type * as FileDiff from "@beep/schema/FileDiff"
  *
  * const status: FileDiff.Info["status"] = "modified"
  * console.log(status)
@@ -180,7 +180,7 @@ export type Info = typeof Info.Type;
  * **Example** (Use Encoded Info type)
  *
  * ```ts
- * import type { FileDiff } from "@beep/schema"
+ * import type * as FileDiff from "@beep/schema/FileDiff"
  *
  * type EncodedInfo = FileDiff.Info.Encoded
  * const describe = (info: EncodedInfo): string => `${info.status}: ${info.file}`
@@ -197,7 +197,7 @@ export declare namespace Info {
    * **Example** (Assign encoded Info value)
    *
    * ```ts
-   * import type { FileDiff } from "@beep/schema"
+   * import type * as FileDiff from "@beep/schema/FileDiff"
    *
    * const encoded: FileDiff.Info.Encoded = {
    *   status: "deleted",

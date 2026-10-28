@@ -43,7 +43,7 @@ jobs:
           - id: lint-policy
             name: Lint Policy
             timeout_minutes: 50
-            uses_turbo: "false"
+            uses_turbo: "true"
             install_typos: "true"
           - id: check
             name: Check
@@ -58,7 +58,7 @@ jobs:
           - id: docgen
             name: Docgen
             timeout_minutes: 60
-            uses_turbo: "false"
+            uses_turbo: "true"
             install_typos: "false"
             docgen_concurrency: 6
           - id: doctest
@@ -139,6 +139,11 @@ jobs:
           turbo-team: ${{ vars.TURBO_TEAM }}
           turbo-token: ${{ github.event_name == 'push' && matrix.uses_turbo == 'true' && secrets.TURBO_TOKEN || '' }}
           turbo-read-token: ${{ secrets.TURBO_READ_TOKEN }}
+          r2-enabled: ${{ vars.TURBO_R2_ENABLED }}
+          r2-endpoint: ${{ vars.TURBO_R2_ENDPOINT }}
+          r2-bucket: ${{ vars.TURBO_R2_BUCKET }}
+          r2-access-key-id: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_ACCESS_KEY_ID || (github.event_name != 'push' && secrets.TURBO_R2_READ_ACCESS_KEY_ID || '') }}
+          r2-secret-access-key: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_SECRET_ACCESS_KEY || (github.event_name != 'push' && secrets.TURBO_R2_READ_SECRET_ACCESS_KEY || '') }}
           database-url: ${{ github.event_name == 'push' && secrets.DATABASE_URL || '' }}
           database-url-unpooled: ${{ github.event_name == 'push' && secrets.DATABASE_URL_UNPOOLED || '' }}
           email-resend-api-key: ${{ github.event_name == 'push' && secrets.EMAIL_RESEND_API_KEY || '' }}
@@ -147,26 +152,6 @@ jobs:
           better-auth-url: ${{ github.event_name == 'push' && secrets.BETTER_AUTH_URL || '' }}
           security-trusted-origins: ${{ github.event_name == 'push' && secrets.SECURITY_TRUSTED_ORIGINS || '' }}
           liveblocks-secret-key: ${{ github.event_name == 'push' && secrets.LIVEBLOCKS_SECRET_KEY || '' }}
-
-      - name: Start optional R2 cache adapter
-        if: >-
-          steps.lane-gate.outputs.should_run == 'true' && matrix.uses_turbo == 'true' &&
-          vars.TURBO_R2_ENABLED == 'true' &&
-          ((github.event_name == 'push' && github.ref == 'refs/heads/main') ||
-          (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository))
-        shell: bash
-        env:
-          R2_ENDPOINT: ${{ vars.TURBO_R2_ENDPOINT }}
-          R2_BUCKET: ${{ vars.TURBO_R2_BUCKET }}
-          R2_ACCESS_KEY_ID: ${{ github.event_name == 'push' && secrets.TURBO_R2_WRITE_ACCESS_KEY_ID || (github.event_name == 'pull_request' && secrets.TURBO_R2_READ_ACCESS_KEY_ID || '') }}
-          R2_SECRET_ACCESS_KEY: ${{ github.event_name == 'push' && secrets.TURBO_R2_WRITE_SECRET_ACCESS_KEY || (github.event_name == 'pull_request' && secrets.TURBO_R2_READ_SECRET_ACCESS_KEY || '') }}
-          R2_CACHE_MODE: ${{ github.event_name == 'push' && 'local:rw,remote:rw' || 'local:rw,remote:r' }}
-        run: |
-          if [[ -x infra/r2-cache/adapter.sh ]]; then
-            infra/r2-cache/adapter.sh start-ci
-          else
-            echo 'R2 helper absent in this checkout; retaining the existing cache posture.'
-          fi
 
       # PRs may restore the post-main local fallback without saving it. Same-
       # repository PRs can also read the remote cache; forks remain tokenless.
@@ -279,16 +264,12 @@ jobs:
           if-no-files-found: warn
 
       - name: Save post-lane Turbo fallback
-        if: github.event_name == 'push' && matrix.uses_turbo == 'true' && steps.lane-gate.outputs.should_run == 'true' && success()
+        if: github.event_name == 'push' && matrix.uses_turbo == 'true' && matrix.id != 'docgen' && steps.lane-gate.outputs.should_run == 'true' && success()
         continue-on-error: true
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .turbo/cache
           key: turbo-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ github.job }}-${{ matrix.id }}-${{ hashFiles('turbo.json', 'package.json', 'bun.lock') }}-${{ github.sha }}
-
-      - name: Append Turbo summary (docgen)
-        if: matrix.id == 'docgen' && steps.lane-gate.outputs.should_run == 'true' && always()
-        run: bun run beep ci append-turbo-summary
 
       - name: Skip lane
         if: steps.lane-gate.outputs.should_run != 'true'

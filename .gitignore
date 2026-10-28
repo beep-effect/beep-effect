@@ -169,3 +169,6 @@ explorations/beep-ci-operational-ontology/research/evidence/journal-snapshot-*/g
 # State written into the checkout by the GLOBAL Impeccable install (out of repo scope since
 # the repository copy was retired); never commit it.
 **/.impeccable/
+
+# Native fontconfig runtime artifacts created by tooling subprocesses.
+/packages/tooling/var/cache/fontconfig/

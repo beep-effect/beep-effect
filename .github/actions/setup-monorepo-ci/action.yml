@@ -49,6 +49,26 @@ inputs:
       Policy lives in beep ci job-env.
     required: false
     default: "false"
+  r2-enabled:
+    description: Opt in to the R2 adapter for this Turbo-backed job.
+    required: false
+    default: "false"
+  r2-endpoint:
+    description: Private bucket S3 endpoint (nonsecret).
+    required: false
+    default: ""
+  r2-bucket:
+    description: Private cache bucket name (nonsecret).
+    required: false
+    default: ""
+  r2-access-key-id:
+    description: Event-scoped R2 runtime key; protected writers or repository readers only.
+    required: false
+    default: ""
+  r2-secret-access-key:
+    description: Event-scoped R2 runtime secret, never exported to task environments.
+    required: false
+    default: ""
   app-secrets:
     description: >-
       Export the application secret block (DATABASE_URL, AUTH_SECRET, ...) on
@@ -299,6 +319,27 @@ runs:
         BEEP_CI_SECRET_LIVEBLOCKS_SECRET_KEY: ${{ inputs.liveblocks-secret-key }}
         BEEP_CI_HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
       run: bun run beep ci job-env
+
+    - name: Start optional R2 cache adapter
+      if: >-
+        inputs.turbo-remote-cache == 'true' && inputs.r2-enabled == 'true' &&
+        ((github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+        (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) ||
+        ((github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'))
+      shell: bash
+      env:
+        R2_ENDPOINT: ${{ inputs.r2-endpoint }}
+        R2_BUCKET: ${{ inputs.r2-bucket }}
+        R2_ACCESS_KEY_ID: ${{ inputs.r2-access-key-id }}
+        R2_SECRET_ACCESS_KEY: ${{ inputs.r2-secret-access-key }}
+        R2_CACHE_MODE: ${{ github.event_name == 'push' && 'local:rw,remote:rw' || 'local:rw,remote:r' }}
+        TURBO_TEAM: ${{ inputs.turbo-team }}
+      run: |
+        if [[ -x infra/r2-cache/adapter.sh ]]; then
+          infra/r2-cache/adapter.sh start-ci
+        else
+          echo 'R2 helper absent in this checkout; retaining the existing cache posture.'
+        fi
 
     - name: Restore Turbo cache (local fallback only)
       if: ${{ inputs.cache-turbo == 'true' && (env.TURBO_TOKEN == '' || env.TURBO_TEAM == '') }}

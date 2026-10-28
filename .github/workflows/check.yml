@@ -264,6 +264,11 @@ jobs:
           turbo-team: ${{ vars.TURBO_TEAM }}
           turbo-token: ${{ github.event_name == 'push' && matrix.uses_turbo == 'true' && secrets.TURBO_TOKEN || '' }}
           turbo-read-token: ${{ secrets.TURBO_READ_TOKEN }}
+          r2-enabled: ${{ vars.TURBO_R2_ENABLED }}
+          r2-endpoint: ${{ vars.TURBO_R2_ENDPOINT }}
+          r2-bucket: ${{ vars.TURBO_R2_BUCKET }}
+          r2-access-key-id: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_ACCESS_KEY_ID || (github.event_name != 'push' && secrets.TURBO_R2_READ_ACCESS_KEY_ID || '') }}
+          r2-secret-access-key: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_SECRET_ACCESS_KEY || (github.event_name != 'push' && secrets.TURBO_R2_READ_SECRET_ACCESS_KEY || '') }}
           database-url: ${{ github.event_name == 'push' && secrets.DATABASE_URL || '' }}
           database-url-unpooled: ${{ github.event_name == 'push' && secrets.DATABASE_URL_UNPOOLED || '' }}
           email-resend-api-key: ${{ github.event_name == 'push' && secrets.EMAIL_RESEND_API_KEY || '' }}
@@ -392,6 +397,14 @@ jobs:
             echo "::warning::Runner image provenance is stale or invalid. See docs/runbooks/aws-cost-operations.md before the next attended image refresh."
           fi
 
+      - name: Stop R2 cache adapter
+        if: always()
+        shell: bash
+        run: |
+          if [[ -x infra/r2-cache/adapter.sh ]]; then
+            infra/r2-cache/adapter.sh stop-ci
+          fi
+
   lint-shard:
     name: Lint (${{ matrix.partition }})
     runs-on: ubuntu-24.04
@@ -444,6 +457,11 @@ jobs:
           turbo-team: ${{ vars.TURBO_TEAM }}
           turbo-token: ${{ github.event_name == 'push' && secrets.TURBO_TOKEN || '' }}
           turbo-read-token: ${{ secrets.TURBO_READ_TOKEN }}
+          r2-enabled: ${{ vars.TURBO_R2_ENABLED }}
+          r2-endpoint: ${{ vars.TURBO_R2_ENDPOINT }}
+          r2-bucket: ${{ vars.TURBO_R2_BUCKET }}
+          r2-access-key-id: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_ACCESS_KEY_ID || (github.event_name != 'push' && secrets.TURBO_R2_READ_ACCESS_KEY_ID || '') }}
+          r2-secret-access-key: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_SECRET_ACCESS_KEY || (github.event_name != 'push' && secrets.TURBO_R2_READ_SECRET_ACCESS_KEY || '') }}
           database-url: ${{ github.event_name == 'push' && secrets.DATABASE_URL || '' }}
           database-url-unpooled: ${{ github.event_name == 'push' && secrets.DATABASE_URL_UNPOOLED || '' }}
           email-resend-api-key: ${{ github.event_name == 'push' && secrets.EMAIL_RESEND_API_KEY || '' }}
@@ -499,6 +517,14 @@ jobs:
       - name: Skip lane
         if: steps.lane-gate.outputs.should_run != 'true'
         run: echo "Skipping Lint (${{ matrix.partition }}) for this change set."
+
+      - name: Stop R2 cache adapter
+        if: always()
+        shell: bash
+        run: |
+          if [[ -x infra/r2-cache/adapter.sh ]]; then
+            infra/r2-cache/adapter.sh stop-ci
+          fi
 
   lint:
     name: Lint
@@ -569,6 +595,11 @@ jobs:
           turbo-team: ${{ vars.TURBO_TEAM }}
           turbo-token: ${{ github.event_name == 'push' && secrets.TURBO_TOKEN || '' }}
           turbo-read-token: ${{ secrets.TURBO_READ_TOKEN }}
+          r2-enabled: ${{ vars.TURBO_R2_ENABLED }}
+          r2-endpoint: ${{ vars.TURBO_R2_ENDPOINT }}
+          r2-bucket: ${{ vars.TURBO_R2_BUCKET }}
+          r2-access-key-id: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_ACCESS_KEY_ID || (github.event_name != 'push' && secrets.TURBO_R2_READ_ACCESS_KEY_ID || '') }}
+          r2-secret-access-key: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_SECRET_ACCESS_KEY || (github.event_name != 'push' && secrets.TURBO_R2_READ_SECRET_ACCESS_KEY || '') }}
           database-url: ${{ github.event_name == 'push' && secrets.DATABASE_URL || '' }}
           database-url-unpooled: ${{ github.event_name == 'push' && secrets.DATABASE_URL_UNPOOLED || '' }}
           email-resend-api-key: ${{ github.event_name == 'push' && secrets.EMAIL_RESEND_API_KEY || '' }}
@@ -644,6 +675,14 @@ jobs:
       - name: Skip lane
         if: steps.lane-gate.outputs.should_run != 'true'
         run: echo "Skipping Test Unit (${{ matrix.partition }}) for this change set."
+
+      - name: Stop R2 cache adapter
+        if: always()
+        shell: bash
+        run: |
+          if [[ -x infra/r2-cache/adapter.sh ]]; then
+            infra/r2-cache/adapter.sh stop-ci
+          fi
 
   test-unit:
     name: Test Unit
@@ -941,6 +980,11 @@ jobs:
           turbo-team: ${{ vars.TURBO_TEAM }}
           turbo-token: ${{ github.event_name == 'push' && secrets.TURBO_TOKEN || '' }}
           turbo-read-token: ${{ secrets.TURBO_READ_TOKEN }}
+          r2-enabled: ${{ vars.TURBO_R2_ENABLED }}
+          r2-endpoint: ${{ vars.TURBO_R2_ENDPOINT }}
+          r2-bucket: ${{ vars.TURBO_R2_BUCKET }}
+          r2-access-key-id: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_ACCESS_KEY_ID || (github.event_name != 'push' && secrets.TURBO_R2_READ_ACCESS_KEY_ID || '') }}
+          r2-secret-access-key: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_SECRET_ACCESS_KEY || (github.event_name != 'push' && secrets.TURBO_R2_READ_SECRET_ACCESS_KEY || '') }}
           database-url: ${{ github.event_name == 'push' && secrets.DATABASE_URL || '' }}
           database-url-unpooled: ${{ github.event_name == 'push' && secrets.DATABASE_URL_UNPOOLED || '' }}
           email-resend-api-key: ${{ github.event_name == 'push' && secrets.EMAIL_RESEND_API_KEY || '' }}
@@ -976,6 +1020,14 @@ jobs:
           path: .turbo/runs/*.json
           retention-days: 7
           if-no-files-found: warn
+
+      - name: Stop R2 cache adapter
+        if: always()
+        shell: bash
+        run: |
+          if [[ -x infra/r2-cache/adapter.sh ]]; then
+            infra/r2-cache/adapter.sh stop-ci
+          fi
 
   fallow-advisory:
     name: Fallow Advisory Envelopes
@@ -1027,6 +1079,11 @@ jobs:
           turbo-team: ${{ vars.TURBO_TEAM }}
           turbo-token: ${{ github.event_name == 'push' && secrets.TURBO_TOKEN || '' }}
           turbo-read-token: ${{ secrets.TURBO_READ_TOKEN }}
+          r2-enabled: ${{ vars.TURBO_R2_ENABLED }}
+          r2-endpoint: ${{ vars.TURBO_R2_ENDPOINT }}
+          r2-bucket: ${{ vars.TURBO_R2_BUCKET }}
+          r2-access-key-id: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_ACCESS_KEY_ID || (github.event_name != 'push' && secrets.TURBO_R2_READ_ACCESS_KEY_ID || '') }}
+          r2-secret-access-key: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_SECRET_ACCESS_KEY || (github.event_name != 'push' && secrets.TURBO_R2_READ_SECRET_ACCESS_KEY || '') }}
 
       - name: Run Fallow envelopes
         id: fallow
@@ -1086,6 +1143,14 @@ jobs:
           name: fallow-envelopes-${{ github.event_name }}-${{ github.run_attempt }}
           path: .beep/fallow/**
           if-no-files-found: error
+
+      - name: Stop R2 cache adapter
+        if: always()
+        shell: bash
+        run: |
+          if [[ -x infra/r2-cache/adapter.sh ]]; then
+            infra/r2-cache/adapter.sh stop-ci
+          fi
 
   jsdoc-ratchet:
     name: JSDoc Ratchet

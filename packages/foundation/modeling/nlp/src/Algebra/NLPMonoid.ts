@@ -1,6 +1,8 @@
 /**
  * Algebra/NLPMonoid - NLP-specific monoid structures.
  *
+ * **Details**
+ *
  * Defines monoid instances specifically for NLP data structures, building on
  * the general monoid framework in {@link Monoid}. These provide mathematically
  * sound aggregation for:
