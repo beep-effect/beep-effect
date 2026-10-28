@@ -121,18 +121,74 @@ export const resolveNativeAddon: {
   return exists(candidate) ? O.some(candidate) : O.none();
 });
 
-// Add a folder to the Windows DLL search path with `SetDllDirectoryW`. DuckDB 2's
-// Windows addon (`duckdb.node`) links against `duckdb.dll` in the same folder,
-// which Windows does not search; `bun:ffi` is loaded synchronously because the
-// resolver runs while modules are evaluated.
-const setDllDirectory = (directory: string): void => {
-  const ffi = NodeModule.createRequire(import.meta.url)("bun:ffi") as typeof import("bun:ffi");
-  const kernel32 = ffi.dlopen("kernel32.dll", { SetDllDirectoryW: { args: ["ptr"], returns: "i32" } });
-  const wide = Uint16Array.from(`${Str.replaceAll("/", "\\")(directory)}\0`, (char) =>
-    O.getOrElse(Str.charCodeAt(char, 0), () => 0)
+/**
+ * Encode a string as null-terminated UTF-16 code units for a Windows `W` API.
+ *
+ * **Details**
+ *
+ * Indexes code units rather than iterating code points, so a character
+ * outside the Basic Multilingual Plane keeps both of its surrogates.
+ *
+ * **Example** (Encode a folder for `SetDllDirectoryW`)
+ *
+ * ```ts
+ * import { toWideString } from "../../src/NativeAddon.ts"
+ *
+ * console.log(Array.from(toWideString("C:"))) // [67, 58, 0]
+ * ```
+ *
+ * @param value - The text to encode.
+ * @returns The UTF-16 code units followed by a 0 terminator.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const toWideString = (value: string): Uint16Array =>
+  Uint16Array.from({ length: Str.length(value) + 1 }, (_, index) => O.getOrElse(Str.charCodeAt(value, index), () => 0));
+
+/**
+ * Add a folder to the Windows DLL search path with `SetDllDirectoryW`.
+ *
+ * **Details**
+ *
+ * DuckDB 2's Windows addon (`duckdb.node`) links against `duckdb.dll` in the
+ * same folder, which Windows does not search. `bun:ffi` is loaded
+ * synchronously because the resolver runs while modules are evaluated. The
+ * call never throws: when `bun:ffi`, `kernel32` or the call itself fails it
+ * writes one line to stderr (without the folder, which names the user) and
+ * the addon load reports the missing DLL.
+ *
+ * **Example** (Register the addon folder)
+ *
+ * ```ts
+ * import { setDllDirectory } from "../../src/NativeAddon.ts"
+ *
+ * const registered: boolean = setDllDirectory("C:\\Ext\\node_modules\\@duckdb\\node-bindings-win32-x64\\")
+ * ```
+ *
+ * @param directory - The folder that holds the addon and its DLLs.
+ * @returns Whether Windows accepted the folder.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const setDllDirectory = (directory: string): boolean => {
+  const registered = O.getOrElse(
+    O.liftThrowable(() => {
+      const ffi = NodeModule.createRequire(import.meta.url)("bun:ffi") as typeof import("bun:ffi");
+      const kernel32 = ffi.dlopen("kernel32.dll", { SetDllDirectoryW: { args: ["ptr"], returns: "i32" } });
+      try {
+        return kernel32.symbols.SetDllDirectoryW(ffi.ptr(toWideString(Str.replaceAll("/", "\\")(directory)))) !== 0;
+      } finally {
+        kernel32.close();
+      }
+    })(),
+    () => false
   );
-  kernel32.symbols.SetDllDirectoryW(ffi.ptr(wide));
-  kernel32.close();
+  if (!registered) {
+    process.stderr.write(
+      "practice-kg-mcp: could not add the DuckDB addon folder to the DLL search path; duckdb.dll may fail to load.\n"
+    );
+  }
+  return registered;
 };
 
 type ResolveFilename = (this: unknown, request: string, ...rest: ReadonlyArray<unknown>) => string;
@@ -168,7 +224,7 @@ let dllDirectorySet = false;
  * @since 0.0.0
  */
 export const installNativeAddonResolver = (
-  registerDllDirectory: (directory: string) => void = setDllDirectory
+  registerDllDirectory: (directory: string) => unknown = setDllDirectory
 ): void => {
   if (installed) {
     return;

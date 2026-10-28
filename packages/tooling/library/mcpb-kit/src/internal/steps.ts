@@ -139,11 +139,12 @@ export const ensureWindowsBindings = Effect.fn("McpbPackage.ensureWindowsBinding
       message: `Installed DuckDB bindings ${installedManifest.version} differ from pinned ${DuckDbVersion}; update DuckDbVersion and WindowsBindingsSha512 together.`,
     });
   }
-  const packageDir = path.join(cacheDir, "node-bindings-win32-x64");
+  // Keyed by the pinned version, so an unpack left by an older pin is never reused.
+  const packageDir = path.join(cacheDir, `node-bindings-win32-x64-${DuckDbVersion}`);
   if (yield* fs.exists(path.join(packageDir, "duckdb.node"))) {
     return packageDir;
   }
-  const tarball = path.join(cacheDir, "node-bindings-win32-x64.tgz");
+  const tarball = path.join(cacheDir, `node-bindings-win32-x64-${DuckDbVersion}.tgz`);
   yield* fs.makeDirectory(packageDir, { recursive: true });
   yield* run(["curl", "--fail", "--location", "--silent", "--show-error", WindowsBindingsUrl, "--output", tarball]);
   const tarballBytes = yield* fs

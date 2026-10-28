@@ -10,6 +10,8 @@ import {
   installNativeAddonResolver,
   isNativeAddonRequest,
   resolveNativeAddon,
+  setDllDirectory,
+  toWideString,
 } from "../src/NativeAddon.ts";
 
 const addon = "@duckdb/node-bindings-win32-x64/duckdb.node";
@@ -65,6 +67,27 @@ describe("NativeAddon", () => {
 
   it("supports pipeable resolution and executable paths without separators", () => {
     expect(O.getOrNull(resolveNativeAddon("practice-kg-mcp", () => true)(addon))).toBe(`./node_modules/${addon}`);
+  });
+
+  it("encodes UTF-16 code units with a terminator, surrogate pairs intact", () => {
+    expect(Array.from(toWideString("C:\\"))).toEqual([67, 58, 92, 0]);
+    expect(Array.from(toWideString("a\u{1F600}"))).toEqual([97, 0xd83d, 0xde00, 0]);
+    expect(Array.from(toWideString(""))).toEqual([0]);
+  });
+
+  it("reports a failed DLL directory registration on stderr instead of throwing", () => {
+    const writes: Array<string> = [];
+    const write = process.stderr.write;
+    process.stderr.write = ((chunk: string) => writes.push(chunk) > 0) as typeof process.stderr.write;
+    try {
+      // Off Windows `bun:ffi` or `kernel32.dll` is unavailable, so registration fails.
+      expect(setDllDirectory("/opt/ext/node_modules/@duckdb/node-bindings-linux-x64/")).toBe(false);
+    } finally {
+      process.stderr.write = write;
+    }
+    expect(writes).toEqual([
+      "practice-kg-mcp: could not add the DuckDB addon folder to the DLL search path; duckdb.dll may fail to load.\n",
+    ]);
   });
 
   it("leaves other requests to the default resolution", () => {
