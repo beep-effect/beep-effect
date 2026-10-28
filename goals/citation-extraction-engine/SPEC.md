@@ -623,6 +623,17 @@ instead of silently splitting delivery or weakening scope.
   `history/evidence/2026-10-28-limits-isolation-contract.md`. Reverse only with
   a reviewed policy-version change and equivalent bounded execution proof.
 
+- **2026-10-28 portable gate composition:** the package command defaults to
+  completion mode and sends `--complete` to ledger and donor validators.
+  Explicit `--audit` checks the seven available evidence components without
+  asserting parity. Require four fixed repository verifier entrypoints for
+  divergences, regex benchmarks, supplemental probes and target parity; their
+  absence fails completion. Fixtures never supply executable commands. The
+  future entrypoints take `--fixtures` and `--evidence` paths, must independently
+  validate their full proof scope, and must reject absent or incomplete proof.
+  Their implementations remain open; adding files alone is not evidence.
+  Reverse by changing the fixed composition with equivalent rejection controls.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from
