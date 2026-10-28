@@ -1,6 +1,8 @@
 /**
  * Pure conformance checks for the generated HTML AST.
  *
+ * **Details**
+ *
  * The package validates already-constructed AST values. It deliberately does
  * not tokenize HTML source or repair trees like a WHATWG parser.
  *
@@ -208,7 +210,8 @@ export type ConformantHtml = typeof ConformantHtml.Type;
  * **Example** (Check a conformance-proven node)
  *
  * ```ts import.meta.vitest name="Check a conformance-proven node"
- * import { conform, ConformantHtmlNode, Fragment } from "@beep/html"
+ * import { conform, ConformantHtmlNode } from "@beep/html/Html.conformance"
+ * import { Fragment } from "@beep/html/Html.model"
  * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *

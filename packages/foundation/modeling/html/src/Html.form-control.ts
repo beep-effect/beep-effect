@@ -29,7 +29,7 @@ const $I = $HtmlId.create("Html.form-control");
  * **Example** (Construct a file input state)
  *
  * ```ts import.meta.vitest name="Construct a file input state"
- * import { InputState } from "@beep/html"
+ * import { InputState } from "@beep/html/Html.form-control"
  *
  * const state = InputState.cases.file.make({})
  * state.state // => "file"
@@ -114,7 +114,7 @@ const makeInputState: (state: HtmlInputStateName) => InputState = HtmlInputState
  * **Example** (Resolve the missing type default)
  *
  * ```ts import.meta.vitest name="Resolve the missing type default"
- * import { resolveInputState } from "@beep/html"
+ * import { resolveInputState } from "@beep/html/Html.form-control"
  * import { Input } from "@beep/html/Html.model"
  *
  * resolveInputState(Input.make({})).state // => "text"
@@ -143,7 +143,7 @@ export const resolveInputState = (input: Input.Type): InputState =>
  * **Example** (Read file-state attributes)
  *
  * ```ts import.meta.vitest name="Read file-state attributes"
- * import { inputStateAllowedAttributes, InputState } from "@beep/html"
+ * import { inputStateAllowedAttributes, InputState } from "@beep/html/Html.form-control"
  *
  * inputStateAllowedAttributes(InputState.cases.file.make({})).includes("accept") // => true
  * ```
@@ -217,7 +217,7 @@ const ButtonNonSubmitBasis = LiteralKit([
  * **Example** (Construct a contextual non-submit state)
  *
  * ```ts import.meta.vitest name="Construct a contextual non-submit state"
- * import { ButtonState } from "@beep/html"
+ * import { ButtonState } from "@beep/html/Html.form-control"
  *
  * const state = ButtonState.cases.nonSubmit.make({ basis: "auto-select-parent" })
  * state.state // => "nonSubmit"
@@ -287,7 +287,7 @@ const resolveAutoButtonState: {
  * **Example** (Resolve a select-owned auto button)
  *
  * ```ts import.meta.vitest name="Resolve a select-owned auto button"
- * import { resolveButtonState } from "@beep/html"
+ * import { resolveButtonState } from "@beep/html/Html.form-control"
  * import { Button } from "@beep/html/Html.model"
  * import * as O from "effect/Option"
  *
