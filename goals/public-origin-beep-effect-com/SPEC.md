@@ -251,7 +251,7 @@ D6  Migration posture: hard cut everywhere, one record, one gate.
 | 2026-10-20 | D5: fold the two drift authorities into `$I`; evidence predicate types bump to `/v2`. | Operator brief. Verbatim above; the changeset clause is superseded by I8. | Same as D1. |
 | 2026-10-20 | D6: hard cut everywhere, one record, one gate. | Operator brief. Verbatim above; I5 and I6 make the two law rules precise. | Same as D1. |
 
-### Agent rulings I1 to I20
+### Agent rulings I1 to I21
 
 Orchestrator rulings made while executing the brief. Each is agent-decided
 under the AGENTS.md autonomy charter. Unless a row says otherwise, reverse it
@@ -288,6 +288,10 @@ with `git revert` of the PR and a re-run of
 | Date | Decision | Reason | How to reverse |
 | --- | --- | --- | --- |
 | 2026-10-28 | I20: use the AGENTS.md ten-minute publication fallback and hosted CI after cancelling the local publish job. | The cheap-gates step exceeded ten minutes while regenerating the JSDoc inventory. Completed package audits and local gate results remain evidence; unfinished JSDoc regeneration and head-install preflight are disclosed in the PR. | Re-run the local publication preflight after capacity allows. |
+
+| Date | Decision | Reason | How to reverse |
+| --- | --- | --- | --- |
+| 2026-10-28 | I21: retain the completed full coverage receipt and disclose coverage proof reuse as a local skip for reviewer-request and packet-evidence-only successors; replay all other final-check gates and require fresh hosted readiness on the final head. | Full coverage passed on `5248ae2184`. The tool-owned S32 commit has the identical tree, and the review correction changes only packet evidence outside the coverage input set. The verification record lists the evidence and environment-specific audit failures. | Run coverage again on the final head and replace the disclosed skip with its actual result. |
 
 ## Exception Ledger
 

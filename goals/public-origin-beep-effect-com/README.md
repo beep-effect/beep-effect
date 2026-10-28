@@ -55,14 +55,22 @@ Closeout audit on 2026-10-28:
   Changeset graph has 189 workspaces, 0 notes and 0 missing references.
 - Full package audits and docgen pass for identity, public-site, ontology,
   skill-contract, all seven epistemic packages, exiftool, rdf and documents-domain.
-  The repo-cli package audit remains in progress.
+  Repo-cli docgen passes; its full audit completed with 7,930 passing tests
+  and six environment-specific assertion failures. The same six reproduce on
+  unchanged main when root `.env` is loaded; all 437 tests in those three files
+  pass on both base and closeout without that injection. See the retained
+  [verification record](history/2026-10-28-verification-recovery.md).
 - Law command and rule tests: 37 tests pass, including a seeded tracked
   violation that fails strict mode. Graft finds no retired hosts in 8,747
   indexed code files; the tracked-file law also covers unindexed prose/data.
 - Packet doctor: 0 new blocking findings. Knowledge refs: 0 live gated
   observations. Launcher size, manifest JSON and whitespace checks pass.
 - Publication uses the AGENTS.md ten-minute fallback after local JSDoc
-  regeneration did not finish. Fresh final-head hosted readiness is pending.
+  regeneration did not finish. The complete final-check on `5248ae2184` passed
+  all other gates, including full CLI coverage. Later pushes change only the
+  packet or reviewer-request metadata; local skips and retained proof are
+  declared in the PR body. Hosted readiness and merge evidence must verify
+  the final pushed head before completion refresh can promote this packet.
 
 Historical implementation evidence follows. It does not establish readiness
 of the fresh closeout head.
