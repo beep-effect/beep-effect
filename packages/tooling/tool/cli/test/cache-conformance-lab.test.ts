@@ -319,6 +319,8 @@ const makeNativeClient = (fs: FileSystem.FileSystem, path: Path.Path, client: Ht
     options: Parameters<typeof CacheRuntimeProcess.runCapturedStreams>[0]
   ) {
     expect(options.command).toBe("/usr/bin/bwrap");
+    expect(options.args).toContain("--skip-infer");
+    expect(options.args).toContain("--single-package");
     const run = simulatedRun(options);
     const { verified, stored } = yield* restore(run);
     // Restored from a verified remote hit, executed when allowed, or denied (exit 42).

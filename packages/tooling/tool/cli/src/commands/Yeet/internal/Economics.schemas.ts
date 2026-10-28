@@ -888,6 +888,7 @@ export class EconomicsScope extends S.Opaque<EconomicsScope, { readonly brand: u
  *   reviews: 3,
  *   heads: 2,
  *   unassignedReviews: 0,
+ *   authorReviews: 1,
  * })
  * console.log(pullRequest.rounds) // 2
  * ```
@@ -907,10 +908,11 @@ export class EconomicsReviewLanePullRequest extends S.Opaque<
     reviews: EconomicsCount,
     heads: EconomicsCount,
     unassignedReviews: EconomicsCount,
+    authorReviews: EconomicsCount,
   }).pipe(
     $I.annoteSchema("EconomicsReviewLanePullRequest", {
       description:
-        "One pull request's flip, merge-ready instant when reached, and the rounds, reviews, heads, and unassigned reviews inside that window.",
+        "One pull request's flip, merge-ready instant when reached, the rounds, reviews, heads, and unassigned reviews inside that window, and the author's own review submissions counted beside them.",
     })
   )
 ) {}
@@ -937,6 +939,7 @@ export class EconomicsReviewLanePullRequest extends S.Opaque<
  *   p95Rounds: O.none(),
  *   roundsMix: [],
  *   unassignedReviews: 0,
+ *   authorReviews: 0,
  *   pullRequests: [],
  * })
  * console.log(rounds.openPullRequests) // 1
@@ -953,11 +956,12 @@ export class EconomicsReviewLaneRounds extends S.Opaque<EconomicsReviewLaneRound
     p95Rounds: S.OptionFromNullOr(EconomicsCount),
     roundsMix: S.Array(EconomicsCountRow),
     unassignedReviews: EconomicsCount,
+    authorReviews: EconomicsCount,
     pullRequests: S.Array(EconomicsReviewLanePullRequest),
   }).pipe(
     $I.annoteSchema("EconomicsReviewLaneRounds", {
       description:
-        "Closed and open pull request counts, nearest-rank p50/p95 of rounds to ready over the closed ones, the rounds mix, and every pull request's facts.",
+        "Closed and open pull request counts, nearest-rank p50/p95 of rounds to ready over the closed ones, the rounds mix, the author review submissions counted beside the rounds, and every pull request's facts.",
     })
   )
 ) {}
