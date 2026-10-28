@@ -7,8 +7,8 @@ root="$(cd "$(dirname "$0")" && pwd)"
 python3 - "$root" <<'PY'
 import http.server,json,os,pathlib,re,shutil,socket,subprocess,sys,tarfile,tempfile,threading,time,uuid
 source=pathlib.Path(sys.argv[1]);parent=pathlib.Path.home()/'.cache/beep/r2-cache-check';parent.mkdir(parents=True,exist_ok=True)
-def run(args,env,ok=True):
-    p=subprocess.run(args,env=env,capture_output=True,text=True,timeout=30)
+def run(args,env,ok=True,cwd=None):
+    p=subprocess.run(args,env=env,capture_output=True,text=True,timeout=30,cwd=cwd)
     if ok and p.returncode:raise AssertionError('Subprocess failed: '+pathlib.Path(args[0]).name)
     return p
 with tempfile.TemporaryDirectory(dir=parent) as directory:
@@ -26,6 +26,28 @@ with tempfile.TemporaryDirectory(dir=parent) as directory:
     dotenv.write_text(enrolled+'LATER_EDIT=retained\n')
     run([str(source/'workstation.sh'),'rollback',str(checkout)],env)
     assert dotenv.read_text()==original+'LATER_EDIT=retained\n'
+    # The direct launcher keeps its own options before the task-argument boundary.
+    launcherbin=base/'launcher-bin';launcherbin.mkdir()
+    launcherop=launcherbin/'op';launcher_capture=base/'launcher-argv.json'
+    launcherop.write_text('#!/usr/bin/python3\nimport json,os,sys\nfrom pathlib import Path\nPath('+repr(str(launcher_capture))+').write_text(json.dumps({"args":sys.argv[1:],"unrelated_present":"APPLICATION_REFERENCE" in os.environ}))\n')
+    launcherop.chmod(0o700);(cfg/'client.env').write_text('TURBO_TOKEN=op://fixture/item/bearer\n')
+    run(['git','-C',str(checkout),'remote','add','origin','https://github.com/beep-effect/beep-effect.git'],env)
+    native=checkout/'node_modules/.bin/turbo';native.parent.mkdir(parents=True);native.write_text('inert fixture')
+    launcher_env={**env,'PATH':str(launcherbin)+os.pathsep+env['PATH'],'APPLICATION_REFERENCE':'op://fixture/app/secret','TURBO_CACHE_DIR':str(base/'shared cache')}
+    run([str(source/'turbo.sh'),'build','--','--task-flag'],launcher_env,cwd=checkout)
+    capture=json.loads(launcher_capture.read_text());assert not capture['unrelated_present']
+    assert capture['args'][-5:]==['build','--cache-dir='+str(base/'shared cache'),'--summarize','--','--task-flag']
+    assert capture['args'][capture['args'].index('--')+1]==str(native)
+    cli=checkout/'packages/tooling/tool/cli/src/bin.ts';cli.parent.mkdir(parents=True);cli.write_text('inert fixture')
+    runtime=cli.parent/'commands/Cache/Cache.runtime.ts';runtime.parent.mkdir(parents=True);runtime.write_text('inert fixture')
+    run([str(source/'turbo.sh'),'build','--cache-dir=explicit','--summarize=false','--','--cache-dir=task'],launcher_env,cwd=checkout)
+    modern=json.loads(launcher_capture.read_text())['args']
+    assert modern[modern.index('--')+1:][:7]==['bun','--no-env-file',str(cli),'cache','execute','--','run']
+    assert json.loads(launcher_capture.read_text())['args'][-5:]==['build','--cache-dir=explicit','--summarize=false','--','--cache-dir=task']
+    previous=launcher_capture.read_text()
+    run(['git','-C',str(checkout),'remote','set-url','origin','https://github.com/private/fork.git'],env)
+    assert run([str(source/'turbo.sh'),'build'],launcher_env,False,cwd=checkout).returncode!=0
+    assert launcher_capture.read_text()==previous
     exported=original.replace('TURBO_','export TURBO_').replace('export TURBO_API=','  export TURBO_API  =').replace('export TURBO_TOKEN=op://fixture/item/old','export TURBO_TOKEN="op://fixture/item/old" # retain reference comment')
     dotenv.write_text(exported)
     run([str(source/'workstation.sh'),'enable',str(checkout)],env)
@@ -39,6 +61,17 @@ with tempfile.TemporaryDirectory(dir=parent) as directory:
     assert run([str(source/'workstation.sh'),'enable',str(checkout)],env,False).returncode!=0
     dotenv.write_text(original.replace('op://fixture/item/old','fixture-raw-token'))
     assert run([str(source/'workstation.sh'),'enable',str(checkout)],env,False).returncode!=0
+    dotenv.write_text(original)
+    run([str(source/'workstation.sh'),'enable',str(checkout),'local:rw,remote:r'],env)
+    assert 'BEEP_TURBO_TRUSTED_WRITER=false' in dotenv.read_text()
+    assert 'TURBO_CACHE=local:rw,remote:r' in dotenv.read_text()
+    # Re-enrollment upgrades only cache fields and retains the original AWS rollback.
+    assert 'BEEP_TURBO_HOST_CACHE_MANAGED=true' in dotenv.read_text()
+    dotenv.write_text(dotenv.read_text()+'LATER_EDIT=retained\n')
+    run([str(source/'workstation.sh'),'enable',str(checkout)],env)
+    assert 'TURBO_CACHE=local:rw,remote:rw' in dotenv.read_text()
+    run([str(source/'workstation.sh'),'rollback',str(checkout)],env)
+    assert dotenv.read_text()==original+'LATER_EDIT=retained\n'
     # A failed CI bootstrap leaves the AWS environment file untouched.
     jobenv=base/'github.env';jobenv.write_text('ORIGINAL_CACHE=retained\n')
     ci={**os.environ,'GITHUB_ENV':str(jobenv),'RUNNER_TEMP':str(base)}
@@ -89,7 +122,7 @@ with tempfile.TemporaryDirectory(dir=parent) as directory:
     argsfile=base/'op-argv.jsonl';fakeop=fixturebin/'op';fakecontrol=fixturebin/'systemctl'
     fakeop.write_text('#!/usr/bin/python3\nimport json,sys\nfrom pathlib import Path\nwith Path('+repr(str(argsfile))+').open("a") as out:out.write(json.dumps(sys.argv[1:])+"\\n")\n')
     fakeop.chmod(0o700);fakecontrol.write_text('#!/bin/sh\nexit 0\n');fakecontrol.chmod(0o700)
-    install_env={**os.environ,'PATH':str(fixturebin)+os.pathsep+os.environ['PATH'],'XDG_CONFIG_HOME':str(cfgroot),'XDG_DATA_HOME':str(dataroot),'XDG_STATE_HOME':str(base/'install-state')}
+    install_env={**os.environ,'PATH':str(fixturebin)+os.pathsep+os.environ['PATH'],'XDG_CONFIG_HOME':str(cfgroot),'XDG_DATA_HOME':str(dataroot),'XDG_STATE_HOME':str(base/'install-state'),'BEEP_R2_BIN_HOME':str(base/'installed-bin')}
     run([str(source/'workstation.sh'),'install'],install_env)
     client=(fixturecfg.with_name('client.env')).read_text();assert 'R2_SECRET_ACCESS_KEY' not in client
     rendered=cfgroot/'systemd/user/beep-turbo-r2.service'

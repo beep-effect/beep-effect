@@ -16,6 +16,10 @@
  * 2. Bun's default resolution, which honours `NODE_PATH` (the manifest sets it
  *    for Claude Desktop) and finally the working directory.
  *
+ * On Windows the resolved addon's folder is also added to the DLL search
+ * path (`SetDllDirectoryW`), so the addon finds the `duckdb.dll` it links
+ * against.
+ *
  * Only `@duckdb/node-bindings-*` requests are touched; every other specifier
  * goes straight to the default resolution. When the host runs from source,
  * `process.execPath` is the `bun` binary, nothing sits beside it, and the
@@ -25,6 +29,8 @@
  * @since 0.0.0
  */
 import * as NodeModule from "node:module";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
@@ -117,6 +123,74 @@ export const resolveNativeAddon: {
   return exists(candidate) ? O.some(candidate) : O.none();
 });
 
+/**
+ * Encode a string as null-terminated UTF-16 code units for a Windows `W` API.
+ *
+ * **Details**
+ *
+ * Indexes code units rather than iterating code points, so a character
+ * outside the Basic Multilingual Plane keeps both of its surrogates.
+ *
+ * **Example** (Encode a folder for `SetDllDirectoryW`)
+ *
+ * ```ts
+ * import { toWideString } from "../../src/NativeAddon.ts"
+ *
+ * console.log(Array.from(toWideString("C:"))) // [67, 58, 0]
+ * ```
+ *
+ * @param value - The text to encode.
+ * @returns The UTF-16 code units followed by a 0 terminator.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const toWideString = (value: string): Uint16Array =>
+  Uint16Array.from({ length: Str.length(value) + 1 }, (_, index) => O.getOrElse(Str.charCodeAt(value, index), () => 0));
+
+/**
+ * Add a folder to the Windows DLL search path with `SetDllDirectoryW`.
+ *
+ * **Details**
+ *
+ * DuckDB 2's Windows addon (`duckdb.node`) links against `duckdb.dll` in the
+ * same folder, which Windows does not search. `bun:ffi` is loaded
+ * synchronously because the resolver runs while modules are evaluated. The
+ * call never fails: when `bun:ffi`, `kernel32` or the call itself fails it
+ * logs one line through `Console.error` (without the folder, which names the
+ * user) and the addon load then reports the missing DLL.
+ *
+ * **Example** (Register the addon folder)
+ *
+ * ```ts
+ * import { setDllDirectory } from "../../src/NativeAddon.ts"
+ * import * as Effect from "effect/Effect"
+ *
+ * const registered: boolean = Effect.runSync(
+ *   setDllDirectory("C:\\Ext\\node_modules\\@duckdb\\node-bindings-win32-x64\\")
+ * )
+ * ```
+ *
+ * @param directory - The folder that holds the addon and its DLLs.
+ * @returns Whether Windows accepted the folder.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const setDllDirectory = Effect.fnUntraced(function* (directory: string) {
+  const registered = yield* Effect.try(() => {
+    const ffi = NodeModule.createRequire(import.meta.url)("bun:ffi") as typeof import("bun:ffi");
+    const kernel32 = ffi.dlopen("kernel32.dll", { SetDllDirectoryW: { args: ["ptr"], returns: "i32" } });
+    try {
+      return kernel32.symbols.SetDllDirectoryW(ffi.ptr(toWideString(Str.replaceAll("/", "\\")(directory)))) !== 0;
+    } finally {
+      kernel32.close();
+    }
+  }).pipe(Effect.orElseSucceed(() => false));
+  yield* Console.error(
+    "practice-kg-mcp: could not add the DuckDB addon folder to the DLL search path; duckdb.dll may fail to load."
+  ).pipe(Effect.when(Effect.succeed(!registered)));
+  return registered;
+});
+
 type ResolveFilename = (this: unknown, request: string, ...rest: ReadonlyArray<unknown>) => string;
 
 type ModuleResolver = {
@@ -124,6 +198,7 @@ type ModuleResolver = {
 };
 
 let installed = false;
+let dllDirectorySet = false;
 
 /**
  * Route DuckDB native addon requests through {@link resolveNativeAddon}.
@@ -142,10 +217,15 @@ let installed = false;
  * installNativeAddonResolver()
  * ```
  *
+ * @param registerDllDirectory - Adds the resolved addon's folder to the
+ *   Windows DLL search path; `SetDllDirectoryW` through `bun:ffi` by default,
+ *   replaced in tests.
  * @category use-cases
  * @since 0.0.0
  */
-export const installNativeAddonResolver = (): void => {
+export const installNativeAddonResolver = (
+  registerDllDirectory: (directory: string) => Effect.Effect<unknown> = setDllDirectory
+): void => {
   if (installed) {
     return;
   }
@@ -154,9 +234,13 @@ export const installNativeAddonResolver = (): void => {
   const fallback = resolver._resolveFilename;
   const require = NodeModule.createRequire(import.meta.url);
   resolver._resolveFilename = function (this: unknown, request: string, ...rest: ReadonlyArray<unknown>) {
-    return O.getOrElse(
-      resolveNativeAddon(request, process.execPath, (path) => O.isSome(O.liftThrowable(require.resolve)(path))),
-      () => fallback.call(this, request, ...rest)
+    const resolved = resolveNativeAddon(request, process.execPath, (path) =>
+      O.isSome(O.liftThrowable(require.resolve)(path))
     );
+    if (O.isSome(resolved) && process.platform === "win32" && !dllDirectorySet) {
+      dllDirectorySet = true;
+      Effect.runSync(registerDllDirectory(executableDirectory(resolved.value)));
+    }
+    return O.getOrElse(resolved, () => fallback.call(this, request, ...rest));
   };
 };

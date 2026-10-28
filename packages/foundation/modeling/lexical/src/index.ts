@@ -14,7 +14,8 @@
  * ```ts import.meta.vitest name="Project linebreak to text"
  * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
- * import { LexicalNode, nodeToPlainText } from "@beep/lexical-schema"
+ * import { LexicalNode } from "@beep/lexical-schema/Lexical.model"
+ * import { nodeToPlainText } from "@beep/lexical-schema/Lexical.behavior"
  *
  * const result = S.decodeUnknownResult(LexicalNode)({ type: "linebreak", version: 1 })
  * Result.isSuccess(result) && nodeToPlainText(result.success) === "\n" // => true
@@ -30,7 +31,7 @@ export { editorStateToPlainText, nodeToPlainText } from "./Lexical.behavior.ts";
  * **Example** (Read artifact URI prefix)
  *
  * ```ts import.meta.vitest name="Read artifact URI prefix"
- * import { ARTIFACT_URI_PREFIX } from "@beep/lexical-schema"
+ * import { ARTIFACT_URI_PREFIX } from "@beep/lexical-schema/Lexical.codec"
  *
  * ARTIFACT_URI_PREFIX // => "artifact://"
  * ```
@@ -61,7 +62,7 @@ export { inspectEditorStateConformance, LexicalConformanceResult } from "./Lexic
  * ```ts import.meta.vitest name="Decode linebreak node"
  * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
- * import { LexicalNode } from "@beep/lexical-schema"
+ * import { LexicalNode } from "@beep/lexical-schema/Lexical.model"
  *
  * const result = S.decodeUnknownResult(LexicalNode)({ type: "linebreak", version: 1 })
  * Result.isSuccess(result) && result.success.type === "linebreak" // => true

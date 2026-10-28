@@ -21,11 +21,18 @@ import * as P from "effect/Predicate";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { isCi, isCiSync, readTurboCacheEnvironment } from "../../../internal/cli/EnvConfig.ts";
+import {
+  isCi,
+  isCiSync,
+  readTurboCacheEnvironment,
+  resolveTurboCacheStep,
+  turboEnvExtendsAmbient,
+  turboEnvOverrides,
+} from "../../../internal/cli/EnvConfig.ts";
 import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";
 import { printLines } from "../../../internal/cli/Printer.ts";
 import { resolveTurboCachePlan, turboCachePlanArgs } from "../../../internal/cli/TurboCache.ts";
-import { runCapturedStreams } from "../../../internal/process/StepExec.ts";
+import { QualityTaskStep, runCapturedStreams } from "../../../internal/process/StepExec.ts";
 import { collectChangedFiles } from "../../../internal/repo-run/ChangedFiles.ts";
 import {
   aggregateGeneratedDocs,
@@ -688,6 +695,17 @@ const logDocgenProcessTree = Effect.fn("DocgenLocal.logDocgenProcessTree")(funct
   );
 });
 
+const prepareDocgenStep = Effect.fn("DocgenLocal.prepareDocgenStep")(function* (
+  label: string,
+  command: string,
+  args: ReadonlyArray<string>,
+  cwd: string
+) {
+  const step = QualityTaskStep.make({ label, command, args, cwd });
+  if (command !== turboBinaryPath(cwd)) return step;
+  return yield* resolveTurboCacheStep(step);
+});
+
 const runStep = Effect.fn("DocgenLocal.runStep")(function* (
   label: string,
   command: string,
@@ -699,12 +717,16 @@ const runStep = Effect.fn("DocgenLocal.runStep")(function* (
     readonly timeoutReason: string;
   }
 ) {
-  const cmdTxt = commandText(command, args);
+  const step = yield* prepareDocgenStep(label, command, args, cwd);
+  const env = yield* turboEnvOverrides(step.command, step.args, Bun.env);
+  const cmdTxt = commandText(step.command, step.args);
   return yield* Effect.scoped(
     Effect.gen(function* () {
       yield* Console.log(`[docgen:local] ${label}: started: ${cmdTxt}`);
-      const handle = yield* ChildProcess.make(command, args, {
+      const handle = yield* ChildProcess.make(step.command, step.args, {
         cwd,
+        env: { ...env, ...(step.env ?? {}) },
+        extendEnv: turboEnvExtendsAmbient(step.command, step.args),
         stdin: "inherit",
         stdout: "inherit",
         stderr: "inherit",
@@ -737,11 +759,15 @@ const collectStepOutput = Effect.fn("DocgenLocal.collectStepOutput")(function* (
   args: ReadonlyArray<string>,
   cwd: string
 ) {
-  yield* Console.log(`[docgen:local] ${label}: ${commandText(command, args)}`);
+  const step = yield* prepareDocgenStep(label, command, args, cwd);
+  const env = yield* turboEnvOverrides(step.command, step.args, Bun.env);
+  yield* Console.log(`[docgen:local] ${label}: ${commandText(step.command, step.args)}`);
   const result = yield* runCapturedStreams({
-    command,
-    args,
+    command: step.command,
+    args: step.args,
     cwd,
+    env: { ...env, ...(step.env ?? {}) },
+    extendEnv: turboEnvExtendsAmbient(step.command, step.args),
   }).pipe(Effect.mapError(DomainError.newCause(`Failed to collect ${label} output.`)));
   if (result.exitCode !== 0) {
     const details = pipe([Str.trim(result.stdout), Str.trim(result.stderr)], A.filter(Str.isNonEmpty), A.join("\n"));

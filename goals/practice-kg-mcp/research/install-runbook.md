@@ -196,7 +196,11 @@ extension folder and `extensions-installations.json` were backed up, the
 unpacked package was mirrored in with `robocopy /MIR`, and the entry's
 `version`, `hash` and `manifest` were replaced. Both self-checks then passed from
 the installed folder, and Claude Desktop was relaunched into the desktop
-session with a one-shot interactive scheduled task.
+session with a one-shot interactive scheduled task. `0.5.1` followed on 2026-10-27 the
+same way (backup `ext-backup-0.5.0-2026-10-27`). It is the first build on
+DuckDB 2, whose Windows addon loads a separate `duckdb.dll`; the host adds the
+addon's folder to the DLL search path (`SetDllDirectoryW`) before loading it,
+so the executable now starts from any working directory.
 
 After any install, proof that it works is a tool call from a chat
 (`kg_provenance` with no arguments reporting the expected bundle version), not

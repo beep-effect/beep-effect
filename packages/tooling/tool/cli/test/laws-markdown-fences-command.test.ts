@@ -22,6 +22,7 @@ import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+import { withAncestorsHidden } from "./support/CommandTest.ts";
 
 const PlatformLayer = FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer));
 const TestLayer = MarkdownFenceTypechecker.layer.pipe(Layer.provideMerge(PlatformLayer));
@@ -272,7 +273,7 @@ it.layer(TestLayer, { timeout: "120 seconds" })((it) => {
         const noLock = yield* makeFixtureCheckout(false);
         const run = (cwd: string) => runMarkdownFences(MarkdownFencesOptions.make({ cwd, strictCheck: true }));
 
-        const noRoot = yield* run(bare).pipe(Effect.exit);
+        const noRoot = yield* run(bare).pipe(withAncestorsHidden(bare), Effect.exit);
         const missingLock = yield* run(noLock).pipe(Effect.exit);
 
         expect(failureText(noRoot)).toContain("Failed to locate the repository root");

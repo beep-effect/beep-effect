@@ -1,6 +1,8 @@
 /**
  * Ontology/Kind - Type-level ontology for text-processing categories.
  *
+ * **Details**
+ *
  * Makes the categorical structure explicit:
  * - {@link TextKind}: the objects in the category of discourse
  * - {@link TypedText}: payloads tagged with their ontological kind

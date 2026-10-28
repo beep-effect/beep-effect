@@ -1,6 +1,8 @@
 /**
  * TextAnchor - the canonical, domain-agnostic "where in the source text" value.
  *
+ * **Details**
+ *
  * A `TextAnchor` pins a piece of derived knowledge to a half-open character range
  * of a source document, plus the exact quoted substring. It is pure provenance
  * substrate: no confidence, no claim semantics, no judgement — those belong to
