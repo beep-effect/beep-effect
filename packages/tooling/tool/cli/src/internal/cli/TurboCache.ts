@@ -94,6 +94,58 @@ export const TurboCacheEnvName = LiteralKit(["TURBO_API", "TURBO_TOKEN", "TURBO_
  */
 export type TurboCacheEnvName = typeof TurboCacheEnvName.Type;
 
+const hostCacheReferenceFields = {
+  TURBO_API: S.String.check(S.isPattern(/^http:\/\/127\.0\.0\.1:\d{4,5}$/u)),
+  TURBO_TOKEN: S.String.check(S.isStartingWith("op://")),
+  TURBO_TEAM: S.String.check(S.isTrimmed(), S.isNonEmpty()),
+};
+
+/**
+ * Reference-only cache configuration installed on an enrolled trusted host.
+ *
+ * **Example** (Validate an enrolled writer)
+ *
+ * ```ts
+ * import { HostTurboCacheReferences } from "@beep/repo-cli/test/SharedInternals"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(HostTurboCacheReferences)({
+ *   TURBO_API: "http://127.0.0.1:9427",
+ *   TURBO_TOKEN: "op://fixture/cache/bearer",
+ *   TURBO_TEAM: "beep-effect",
+ *   TURBO_CACHE: "local:rw,remote:rw",
+ *   BEEP_TURBO_TRUSTED_WRITER: "true",
+ * })) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const HostTurboCacheReferences = S.Union([
+  S.Struct({
+    ...hostCacheReferenceFields,
+    TURBO_CACHE: S.tag("local:rw,remote:r"),
+    BEEP_TURBO_TRUSTED_WRITER: S.optionalKey(S.tag("false")),
+  }),
+  S.Struct({
+    ...hostCacheReferenceFields,
+    TURBO_CACHE: S.tag("local:rw,remote:rw"),
+    BEEP_TURBO_TRUSTED_WRITER: S.tag("true"),
+  }),
+]).pipe(
+  $I.annoteSchema("HostTurboCacheReferences", {
+    description: "Loopback-only remote cache configuration containing secret references and an explicit write posture.",
+  })
+);
+
+/**
+ * Reference-only cache configuration installed on an enrolled trusted host.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HostTurboCacheReferences = typeof HostTurboCacheReferences.Type;
+
 const TurboEnvironmentVariableName = S.String.check(
   S.isPattern(
     /^[A-Za-z_][A-Za-z0-9_]*$/u,

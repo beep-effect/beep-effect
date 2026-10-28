@@ -1041,6 +1041,42 @@ export const ProofFixture = 1;
     ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
+  it.effect("discovers scoped docgen through native Turbo and stops when its task graph is empty", () =>
+    Effect.gen(function* () {
+      yield* temporaryRepository;
+      yield* seedDocgenPackage();
+      const repoRoot = process.cwd();
+      const spawned = A.empty<string>();
+      const output = new TextEncoder().encode(yield* encodeJson({ tasks: [] }));
+      const spawner = ChildProcessSpawner.make((command) =>
+        Effect.sync(() => {
+          if (ChildProcess.isStandardCommand(command)) {
+            A.appendInPlace(spawned, A.join([command.command, ...command.args], " "));
+          }
+          return ChildProcessSpawner.makeHandle({ ...stubHandle, stdout: Stream.make(output) });
+        })
+      );
+      const plan = yield* runDocgenLocal({
+        allowFull: false,
+        base: "origin/main",
+        full: false,
+        head: "HEAD",
+        json: false,
+        packageSelector: O.some("@beep/schema"),
+        parallel: 6,
+        plan: false,
+      }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner));
+
+      expect(plan.mode).toBe("scoped");
+      expect(spawned).toEqual([
+        A.join([`${repoRoot}/node_modules/.bin/turbo`, ...A.drop(plan.turboArgs, 1), "--dry-run=json"], " "),
+      ]);
+      expect(A.join(A.filter(yield* TestConsole.logLines, isString), "\n")).toContain(
+        "docgen:local: no Turbo docgen tasks selected"
+      );
+    }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+  );
+
   it.effect("executes full docgen through direct Turbo and aggregate steps", () => {
     const spawned = A.empty<string>();
     return Effect.gen(function* () {

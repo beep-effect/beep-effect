@@ -42,16 +42,19 @@ const canUseQualityTaskFastPath = (argv: ReadonlyArray<string>): boolean =>
 const canUseCiFastPath = (argv: ReadonlyArray<string>): boolean => argv[0] === "ci" && !hasRootCliGlobalFlag(argv);
 
 const { BunCrypto, BunHttpClient, BunRuntime, BunServices } = await import("@effect/platform-bun");
-const [Console, Effect, Layer, Logger, Option, Runtime, { CliRuntime }, { renderCliFailure }] = await Promise.all([
-  import("effect/Console"),
-  import("effect/Effect"),
-  import("effect/Layer"),
-  import("effect/Logger"),
-  import("effect/Option"),
-  import("effect/Runtime"),
-  import("@beep/cli-kit/CliRuntime"),
-  import("./internal/cli/FailureRendering.ts"),
-]);
+const [ConfigProvider, Console, Effect, Layer, Logger, Option, R, Runtime, { CliRuntime }, { renderCliFailure }] =
+  await Promise.all([
+    import("effect/ConfigProvider"),
+    import("effect/Console"),
+    import("effect/Effect"),
+    import("effect/Layer"),
+    import("effect/Logger"),
+    import("effect/Option"),
+    import("effect/Record"),
+    import("effect/Runtime"),
+    import("@beep/cli-kit/CliRuntime"),
+    import("./internal/cli/FailureRendering.ts"),
+  ]);
 const { drainProcessStreams, ProcessStreamName, streamConsole, writeBestEffortLine } = await import(
   "./internal/cli/Stdout.ts"
 );
@@ -126,6 +129,40 @@ const restoreSharedTerminal = (): void => {
   }
 };
 
+// Environment mutation belongs to this process entry point. Libraries only return defaults.
+const applyHostTurboCacheDefaults = (defaults: Readonly<Record<string, string>>): void => {
+  for (const [name, value] of R.toEntries(defaults)) Bun.env[name] = value;
+};
+
+const currentGitOrigin = (): string =>
+  Result.getOrElse(
+    Result.map(
+      Result.try(() =>
+        Bun.spawnSync({ cmd: ["git", "remote", "get-url", "origin"], stdout: "pipe", stderr: "ignore" })
+      ),
+      (result) => (result.success ? Str.trim(result.stdout.toString()) : "")
+    ),
+    () => ""
+  );
+
+const withHostTurboCacheDefaults = Effect.fn("RepoCli.withHostTurboCacheDefaults")(function* <A, E, R>(
+  effect: import("effect/Effect").Effect<A, E, R>
+) {
+  const { configStringOption, isCiSync, loadHostTurboCacheDefaults } = yield* Effect.promise(
+    () => import("./internal/cli/EnvConfig.ts")
+  );
+  const defaults = yield* loadHostTurboCacheDefaults(Bun.env, isCiSync(), currentGitOrigin());
+  const configuredApi = yield* configStringOption("TURBO_API");
+  const configuredSummary = yield* configStringOption("TURBO_RUN_SUMMARY");
+  const selectedApi = O.orElse(O.fromUndefinedOr(defaults.TURBO_API), () => configuredApi);
+  const summarize = O.isNone(configuredSummary) && O.exists(selectedApi, Str.startsWith("http://127.0.0.1:"));
+  yield* Effect.sync(() =>
+    applyHostTurboCacheDefaults(summarize ? R.set(defaults, "TURBO_RUN_SUMMARY", "true") : defaults)
+  );
+  // Rebuild the provider trie after adding defaults so effectful readers see the new keys.
+  return yield* effect.pipe(Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnv()));
+});
+
 const runRepoCliMain = <E, A>(effect: import("effect/Effect").Effect<A, E>) =>
   BunRuntime.runMain(
     // The stream console wraps the whole run, so the failure report the kit
@@ -195,7 +232,10 @@ if (canUseQualityTaskFastPath(argv)) {
       Layer.build(BaseLayers).pipe(
         Effect.flatMap(
           Effect.fnUntraced(function* (context) {
-            return yield* runQualityTask(qualityTaskInvocation.value).pipe(Effect.provide(context));
+            return yield* runQualityTask(qualityTaskInvocation.value).pipe(
+              withHostTurboCacheDefaults,
+              Effect.provide(context)
+            );
           })
         )
       )
@@ -222,7 +262,10 @@ if (!handledByQualityFastPath && canUseCiFastPath(argv)) {
     Layer.build(CiLayers).pipe(
       Effect.flatMap(
         Effect.fnUntraced(function* (context) {
-          return yield* Command.run(ciRootCommand, { version: "0.0.0" }).pipe(Effect.provide(context));
+          return yield* Command.run(ciRootCommand, { version: "0.0.0" }).pipe(
+            withHostTurboCacheDefaults,
+            Effect.provide(context)
+          );
         })
       )
     )
@@ -244,7 +287,10 @@ if (!handledByQualityFastPath && !handledByCiFastPath) {
     Layer.build(DerivedLayers).pipe(
       Effect.flatMap(
         Effect.fnUntraced(function* (context) {
-          return yield* Command.run(rootCommand, { version: "0.0.0" }).pipe(Effect.provide(context));
+          return yield* Command.run(rootCommand, { version: "0.0.0" }).pipe(
+            withHostTurboCacheDefaults,
+            Effect.provide(context)
+          );
         })
       )
     )
