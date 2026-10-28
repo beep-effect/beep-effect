@@ -12,6 +12,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import { boundedText } from "../../../../internal/cli/Timing.ts";
+import { escapeRegExp } from "../../../Quality/internal/QualityArtifactSupport.ts";
 import { DocgenQualityFinding, DocgenQualityReview } from "./Quality.schemas.ts";
 import type { DocgenQualityFindingCode, DocgenQualitySubject, DocgenQualityTier } from "./Quality.schemas.ts";
 
@@ -45,8 +46,6 @@ const EMPTY_EFFECT_GEN_BODY_PATTERN =
 const EXCESSIVE_EXAMPLE_BLANK_LINES_PATTERN = /(?:^|\r?\n)(?:[ \t]*\r?\n){3,}/m;
 const SYMBOL_HANDLE_METADATA_PROPERTIES_PATTERN =
   /(?:ast|Encoded|fields|identifier|Type|TypeId|annotations|annotationsFromSelf)/;
-
-const escapeRegExp = (value: string): string => Str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")(value);
 
 const exampleOnlyVoidsResult = (example: string): boolean => {
   const code = exampleCodeText(example);

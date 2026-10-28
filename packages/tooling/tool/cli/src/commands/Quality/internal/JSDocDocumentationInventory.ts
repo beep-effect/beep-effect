@@ -329,8 +329,9 @@ const markdownAnchor = (value: string): string =>
 
 // docgen.json exclude patterns are developer configuration: a guard trip is a
 // wiring defect. The dot dialect keeps the previous matcher's behaviour, which
-// let `*` match a dot-leading segment.
-const excludeGlob = GlobPatternOptions.make({ dot: true });
+// let `*` match a dot-leading segment; negation and comment prefixes stay the
+// literal characters they were to it.
+const excludeGlob = GlobPatternOptions.make({ dot: true, nonegate: true, nocomment: true });
 const compileExcludePattern = (pattern: string): GlobPattern =>
   Result.getOrThrow(GlobPattern.compileResult(normalizeSlashes(Str.replace(/^\.\//, "")(pattern)), excludeGlob));
 

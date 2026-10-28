@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-28T08:03:37.777Z",
+  "generatedAt": "2026-10-28T20:34:02.951Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -466565,8 +466565,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.census.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts",
-          "line": 90,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-90-resolvecacheturbobinary",
+          "line": 91,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-91-resolvecacheturbobinary",
           "currentTags": [
             "@category",
             "@since"
@@ -466587,8 +466587,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.census.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts",
-          "line": 160,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-160-joincachecensusplan",
+          "line": 161,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-161-joincachecensusplan",
           "currentTags": [
             "@category",
             "@since"
@@ -466609,8 +466609,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.census.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts",
-          "line": 233,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-233-iscachetaskinspectionarg",
+          "line": 234,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-234-iscachetaskinspectionarg",
           "currentTags": [
             "@param",
             "@returns",
@@ -466633,8 +466633,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.census.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts",
-          "line": 259,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-259-cachetaskselectionargs",
+          "line": 260,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-260-cachetaskselectionargs",
           "currentTags": [
             "@category",
             "@since"
@@ -466655,8 +466655,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.census.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts",
-          "line": 405,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-405-collectcachetaskselection",
+          "line": 414,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-414-collectcachetaskselection",
           "currentTags": [
             "@category",
             "@since"
@@ -466677,8 +466677,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.census.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts",
-          "line": 484,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-484-collectcachecensus",
+          "line": 493,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-493-collectcachecensus",
           "currentTags": [
             "@category",
             "@since"
@@ -513403,8 +513403,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Laws/EffectImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-          "line": 1715,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-1715-discovereffectimportsourcefiles",
+          "line": 1720,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-1720-discovereffectimportsourcefiles",
           "currentTags": [
             "@param",
             "@returns",
@@ -513427,8 +513427,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Laws/EffectImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-          "line": 1755,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-1755-discovereffectimportmarkdownfiles",
+          "line": 1761,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-1761-discovereffectimportmarkdownfiles",
           "currentTags": [
             "@param",
             "@returns",
@@ -513451,8 +513451,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Laws/EffectImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-          "line": 1795,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-1795-runeffectimportrules",
+          "line": 1801,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-1801-runeffectimportrules",
           "currentTags": [
             "@category",
             "@since"

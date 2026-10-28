@@ -21,6 +21,7 @@ import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -318,13 +319,21 @@ export const cacheTaskSelectionArgs = Effect.fn("Cache.taskSelectionArgs")(funct
 });
 
 // Turbo env entries are glob patterns (`BEEP_*`). The dot dialect keeps the
-// previous matcher's behaviour, which never special-cased a leading dot.
-const turboEnvGlob = GlobPatternOptions.make({ dot: true });
+// previous matcher's behaviour, which never special-cased a leading dot, and a
+// `!` or `#` prefix stays a literal character to the compiler: Turbo's own
+// negation is read below, and Turbo has no comment entries.
+const turboEnvGlob = GlobPatternOptions.make({ dot: true, nonegate: true, nocomment: true });
+const isTurboEnvExclusion = Str.startsWith("!");
 
-// Whether some env or passThroughEnv entry forwards BIOME_CONFIG_PATH. An
-// entry the glob compiler rejects is a configuration failure, not a defect.
+// Whether some `env` or `passThroughEnv` entry forwards BIOME_CONFIG_PATH. A
+// `!`-prefixed entry is a Turbo exclusion: it forwards nothing, and it never
+// subtracts a positive match either, because the identity-profile gate rejects a
+// positive declaration conservatively even when a later negative would exclude
+// the profile (the previous matcher read the `!` as a literal, which matched no
+// env name, so the set of forwarding entries is unchanged). An entry the glob
+// compiler rejects is a configuration failure, not a defect.
 const forwardsBiomeConfigPath = Effect.fn("Cache.forwardsBiomeConfigPath")(function* (entries: ReadonlyArray<string>) {
-  const patterns = yield* Effect.forEach(entries, (entry) =>
+  const patterns = yield* Effect.forEach(A.filter(entries, P.not(isTurboEnvExclusion)), (entry) =>
     Effect.fromResult(GlobPattern.compileResult(entry, turboEnvGlob)).pipe(
       Effect.mapError((error) =>
         CacheCommandError.new(`Turbo env entry ${entry} is not a glob pattern: ${error.message}`)

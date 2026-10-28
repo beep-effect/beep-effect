@@ -25,6 +25,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { Node, Project } from "ts-morph";
 import { boundedText, firstLine } from "../../../../internal/cli/Timing.ts";
+import { escapeRegExp } from "../../../Quality/internal/QualityArtifactSupport.ts";
 import { DocgenConfigDocument } from "../../Docgen.schemas.ts";
 import { getDeclaredJsDocs } from "../JsDocNodes.ts";
 import { loadDocgenConfigDocument } from "../Workspace.ts";
@@ -72,12 +73,12 @@ const EXCLUDED_SOURCE_SEGMENTS = [
 const EXCLUDED_SOURCE_SUFFIXES = [".stories.ts", ".stories.tsx"] as const;
 
 const normalizeSlashes = (value: string): string => Str.replace(/\\/g, "/")(value);
-const escapeRegExp = (value: string): string => Str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")(value);
 
 // docgen.json exclude patterns are developer configuration: a guard trip is a
 // wiring defect. The dot dialect keeps the previous matcher's behaviour, which
-// let `*` match a dot-leading segment.
-const excludeGlob = GlobPatternOptions.make({ dot: true });
+// let `*` match a dot-leading segment; negation and comment prefixes stay the
+// literal characters they were to it.
+const excludeGlob = GlobPatternOptions.make({ dot: true, nonegate: true, nocomment: true });
 
 /**
  * Wall-clock budget used while collecting package quality subjects.

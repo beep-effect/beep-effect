@@ -762,8 +762,9 @@ const resolveNonAffectedCoverageTaskOptions = Effect.fn("QualityTasks.resolveNon
   }
 );
 
-// The dot dialect keeps the previous matcher's behaviour, which let `*` match a dot-leading segment.
-const coverageSelectorGlob = GlobPatternOptions.make({ dot: true });
+// The dot dialect keeps the previous matcher's behaviour, which let `*` match a dot-leading segment;
+// negation and comment prefixes stay the literal characters they were to it.
+const coverageSelectorGlob = GlobPatternOptions.make({ dot: true, nonegate: true, nocomment: true });
 
 const isResolvableCoverageSelector = S.is(
   S.String.check(S.isPattern(/^(?:\.\.\.\^?)?(?:\{\.\/[^{}![\]^]+\}|[^{}![\]^]+?)(?:\^?\.\.\.)?$/u))
