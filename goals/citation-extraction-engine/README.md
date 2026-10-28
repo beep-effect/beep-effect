@@ -12,8 +12,10 @@ The 2026-10-28 run passed the pinned official and authorized donor baselines;
 none unobserved. Those events now retain normalized operands and producer
 context alongside 8,488 traced iterations and 241 complete literal-loop runs.
 The public-operation corpus retains 826 observations and 2,811 coordinate
-records. Final semantic-case reconciliation, supplemental probes, vocabulary
-mapping, regex review, and hard safety limits remain open before P1.
+records. Donor accounting now binds 197 exports and 5,285 runtime cases to
+5,674 explicit disposition obligations. Supplemental probes, final gate
+integration, vocabulary mapping, regex review, and hard safety limits remain
+open before P1.
 
 Current evidence:
 
@@ -22,6 +24,7 @@ Current evidence:
 - [Operation corpus](./history/evidence/2026-10-28-operation-corpus.md)
 - [Assertion corpus](./history/evidence/2026-10-28-assertion-corpus.md)
 - [Source/case/regex ledgers](./history/evidence/2026-10-28-source-case-ledgers.md)
+- [Donor accounting](./history/evidence/2026-10-28-typescript-donor-accounting.md)
 
 ## Mission
 

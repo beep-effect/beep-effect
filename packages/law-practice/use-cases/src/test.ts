@@ -43,6 +43,13 @@ export { CitationOracleLedgers } from "./internal/citationOracleLedgers.ts";
  */
 export { CitationOracleOperations } from "./internal/citationOracleOperations.ts";
 /**
+ * Pinned TypeScript donor export/test accounting and disposition obligations.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export { CitationTypescriptDonors } from "./internal/citationTypescriptDonors.ts";
+/**
  * Port-output schema for the `Effect` a law-practice port method returns,
  * exported for package-local guard and codec tests.
  *

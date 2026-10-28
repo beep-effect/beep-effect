@@ -11,7 +11,7 @@
   "packetPath": "goals/citation-extraction-engine",
   "lifecycle": "active",
   "mission": "Deliver Effect-native observable capability parity with pinned official eyecite 2.7.6, exact verified source evidence, schema-first legal models, lawful transformations, and proven TypeScript-port extensions.",
-  "statusNote": "P0 pinned baselines and normalized observations reconcile into 372 source rows, 195 capability obligations, 1583 canonical assertion cases, 110 regex families and 13610 extractor instances. Projection audit passes; all target/safety proof remains audit and completion mode rejects it. Supplemental probes, donor dispositions, vocabulary mapping, limits/regex proof and final parity-gate integration remain before P1.",
+  "statusNote": "P0 source/case/regex projections and pinned donor export/test accounting pass portable audits. Donors retain 197 exports, 191 own public members, 5285 runtime cases and one classified unobserved branch with 5674 unfinished disposition obligations. Target/safety proof remains open. Supplemental probes, vocabulary mapping, limits/regex strategy and final parity-gate integration remain before P1.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -47,7 +47,8 @@
     "goals/citation-extraction-engine/history/evidence/prerequisite-compatibility.md",
     "goals/citation-extraction-engine/history/evidence/2026-10-28-operation-corpus.md",
     "goals/citation-extraction-engine/history/evidence/2026-10-28-assertion-corpus.md",
-    "goals/citation-extraction-engine/history/evidence/2026-10-28-source-case-ledgers.md"
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-source-case-ledgers.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-typescript-donor-accounting.md"
   ],
   "researchReports": [
     "research/EYECITE_BASELINE.md",
@@ -105,6 +106,7 @@
     "bun run goals/citation-extraction-engine/ops/check-operations.ts",
     "bun run goals/citation-extraction-engine/ops/check-assertions.ts",
     "bun run goals/citation-extraction-engine/ops/check-ledgers.ts",
+    "bun run goals/citation-extraction-engine/ops/check-typescript-donors.ts",
     "bun run beep goals doctor",
     "bunx markdownlint-cli2 'goals/citation-extraction-engine/**/*.md'",
     "git diff --check origin/main...HEAD -- goals/citation-extraction-engine goals/INDEX.md THIRD_PARTY_NOTICES.md",
