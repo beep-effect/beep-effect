@@ -64,3 +64,70 @@
   no source fix, baseline edit, or exception is warranted.
 - Would have prevented it: isolated build outputs or serialized compiler/Babel
   writers for package verification sharing one checkout.
+
+## 2026-10-28: declared completion evidence lost at retirement
+
+- Doing: resuming this goal and verifying PR #2145 completion.
+- Evidence: `beep goals completion refresh --slug exact-optional-keys` returns
+  `unknown`; the declared Yeet verdict is absent. The original retirement
+  manifest has no archived material. All 17 historical required contexts and
+  the passing merge-push rule suite are independently verified.
+- Response: preserve the historical gap and obtain a new closeout PR's retained
+  exact-head readiness evidence. Keep operative lifecycle active until verified.
+- Prevention: archive every declared local completion artifact before retirement.
+
+## 2026-10-28: conventional namespace fixtures missed import ownership defects
+
+- Doing: auditing EF-40 against the any-alias acceptance contract.
+- Evidence: the existing focused rule suite passed, but the real Biome harness
+  returned zero diagnostics for `Codec.optional` imported from `effect/Schema`
+  and one diagnostic for a local object named `S` with an `optional` method.
+- Fix: bind namespace references to their `effect/Schema` import and add recall
+  and precision fixtures for both cases before publishing the closeout PR.
+- Prevention: test arbitrary import aliases and unrelated conventional names
+  whenever a structural rule claims to recognize an imported API.
+
+## 2026-10-28: whole-import regex confused source exports with local names
+
+- Doing: completing precision checks on EF-40 before marking PR #2316 final.
+- Evidence: the rule flagged `optionalKey as optional` and a function parameter
+  named Codec shadowing an effect/Schema namespace. Both are unrelated to the
+  banned exports. A combined namespace import also escaped the initial fix.
+- Fix: match source specifier nodes, namespace import nodes, and lexical binding
+  scopes; add positive and negative fixtures, including type/value namespace
+  distinctions and sibling scopes.
+- Prevention: fixture both sides of aliased imports and re-exports, and test
+  imported APIs inside scopes that reuse the import's local name.
+
+## 2026-10-28: ambient cache configuration changes command-plan test expectations
+
+- Doing: full `quality package-verify @beep/repo-cli` for the migration's package matrix.
+- Evidence: 7,930 tests pass, but six unchanged command-plan assertions observe
+  `op run` wrappers and a cache-session probe. A focused replay reproduces all
+  six. Explicit blank Turbo credential variables and a local-only cache posture
+  make all six pass. Unsetting variables alone was insufficient.
+- Attribution: environment-dependent; the tests and cache-planner source match
+  main. The raw failure and isolated passing control remain separate evidence.
+- Prevention: use an explicit local-only posture for native-command assertions,
+  while testing secret-session wrappers in their dedicated configured cases.
+
+## 2026-10-28: scratchpad metadata baseline reproduced without migration changes
+
+- Doing: full workspace verification for the goal's package matrix.
+- Evidence: scratchpad docgen emits 443 metadata diagnostics on this branch and
+  on clean main, with identical sets and no scratchpad source diff.
+- Disposition: retain the existing inherited-gate disposition already recorded
+  above and the user goal's explicit unrelated-failure allowance. No new baseline,
+  suppression or expiring waiver is introduced.
+
+## 2026-10-28: recursive parameter matching hid outer Schema references
+
+- Doing: addressing the P2 review on PR #2316, discussion `4399481243`.
+- Evidence: callback parameter types, method-signature types and default arrows
+  contain nested `JsFormalParameter` nodes. The old `contains` test treated those
+  as outer shadows. Four new regression cases were missed before the fix.
+- Fix: match direct `JsParameters.items` with `some`, keeping the bare-arrow
+  parameter alternative. All 32 invalid references and allowed cases now pass;
+  full lint-rules audit and docgen pass.
+- Prevention: scope-sensitive predicates must traverse direct child lists,
+  with nested type/default-value counterexamples alongside true-shadow cases.

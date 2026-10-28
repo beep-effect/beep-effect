@@ -1,4 +1,5 @@
 import { Fmt } from "@beep/cli-kit/Fmt";
+import { TestTerminal } from "@beep/cli-kit/testing";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { accountsCommand } from "@beep/repo-cli";
 import {
@@ -82,8 +83,8 @@ import * as MutableRef from "effect/MutableRef";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
+import * as P from "effect/Predicate";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import * as Queue from "effect/Queue";
 import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as Ref from "effect/Ref";
@@ -92,7 +93,7 @@ import * as Str from "effect/String";
 import * as Terminal from "effect/Terminal";
 import * as Tracer from "effect/Tracer";
 import * as TestClock from "effect/testing/TestClock";
-import type * as Cause from "effect/Cause";
+import type { KeyInput } from "@beep/cli-kit/testing";
 import type * as HttpClientRequest from "effect/http/HttpClientRequest";
 
 const now = DateTime.makeUnsafe("2026-01-05T00:00:00.000Z");
@@ -943,24 +944,15 @@ describe("accounts command", () => {
   });
 });
 
-const keyPress = (name: string): Terminal.UserInput => ({
-  input: O.some(name),
-  key: { name, ctrl: false, meta: false, shift: false },
-});
+// A key the screen reads: a typed character, or a key press such as Ctrl+C.
+type ScreenKey = string | KeyInput.Encoded;
 
 const runScreen = Effect.fnUntraced(function* (
   usage: Effect.Effect<ReadonlyArray<AccountUsage>, AccountsError>,
-  keys: ReadonlyArray<Terminal.UserInput>
+  keys: ReadonlyArray<ScreenKey>
 ) {
-  const shown = yield* Ref.make(A.empty<string>());
-  const input = yield* Queue.unbounded<Terminal.UserInput, Cause.Done>();
-  const terminal = Terminal.make({
-    columns: Effect.succeed(90),
-    rows: Effect.succeed(40),
-    readInput: Effect.succeed(input),
-    readLine: Effect.succeed(""),
-    display: (text) => Ref.update(shown, A.append(text)),
-  });
+  const terminal = yield* TestTerminal.make({ columns: 90, rows: 40 });
+  const screenTerminal = Context.get(yield* Layer.build(terminal.layer), Terminal.Terminal);
   const poller = AccountsUsage.of({
     accounts: Effect.succeed([]),
     poll: Effect.fn("AccountsUsage.poll")(function* (ref: AccountRef) {
@@ -970,26 +962,29 @@ const runScreen = Effect.fnUntraced(function* (
     signedIn: Effect.succeed([]),
   });
   const screen = yield* watchAccounts(Duration.seconds(30)).pipe(
-    Effect.provideService(Terminal.Terminal, terminal),
+    Effect.provideService(Terminal.Terminal, screenTerminal),
     Effect.provideService(AccountsUsage, poller),
     Effect.forkChild
   );
   // Let a second of screen time pass before each key: the first poll lands,
   // and a poll asked for with `r` starts on the next tick.
-  yield* Effect.forEach(keys, (key) => TestClock.adjust("1 second").pipe(Effect.andThen(Queue.offer(input, key))), {
-    discard: true,
-  });
+  yield* Effect.forEach(
+    keys,
+    (key) =>
+      TestClock.adjust("1 second").pipe(Effect.andThen(P.isString(key) ? terminal.type(key) : terminal.input([key]))),
+    { discard: true }
+  );
   yield* Fiber.join(screen);
-  return A.join(yield* Ref.get(shown), "");
+  return yield* terminal.output;
 });
 
 describe("live accounts screen", () => {
   it.effect("draws the board, polls again on r, and restores the screen on q", () =>
     Effect.gen(function* () {
       const output = yield* runScreen(Effect.succeed([ok("me@example.com", [weekly(10, inHours(5))])]), [
-        keyPress("x"),
-        keyPress("r"),
-        keyPress("q"),
+        "x",
+        "r",
+        "q",
       ]);
       expect(Str.startsWith("\u001b[?1049h")(output)).toBe(true);
       expect(Str.endsWith("\u001b[?25h\u001b[?1049l")(output)).toBe(true);
@@ -1002,7 +997,7 @@ describe("live accounts screen", () => {
   it.effect("keeps waiting when a poll fails, and quits on Ctrl+C or a closed input", () =>
     Effect.gen(function* () {
       const output = yield* runScreen(Effect.fail(AccountsError.make({ reason: "io", message: "disk gone" })), [
-        { input: O.none(), key: { name: "c", ctrl: true, meta: false, shift: false } },
+        { name: "c", ctrl: true },
       ]);
       expect(output).toContain("polling every account");
       expect(output).toContain("poll failed: disk gone (showing the last reading)");
