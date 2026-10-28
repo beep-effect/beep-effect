@@ -28,3 +28,10 @@
   cache defaults. They were moved into the entry point's existing deferred module
   group; the allowlist expectation stayed unchanged. Entry-point edits should run
   the narrow startup-boundary contract in the focused proof before publication.
+- OpenSSH's ordinary multiplex client bypasses `LocalCommand`, which also removed
+  the explicit admin session's existing remote-sudo heads-up after quiet reuse was
+  enabled. The stronger fixture reproduced the omission in the installed wrapper.
+  Admin reuse now emits that heads-up directly; routine reuse and configuration
+  queries stay quiet. Fresh and reused hooks are modeled separately in the fixture.
+
+- Hosted coverage comparison passed all unit shards but identified unmeasured native-cache resolver and host-default branches plus a small Docgen line regression. The native integration fixture ran in a child process, outside the parent report. Add in-process tests for successful/denied cache-only sessions, literal/local bypass, absent host configuration and scoped native discovery; preserve the existing coverage floors.
