@@ -14,8 +14,9 @@ context alongside 8,488 traced iterations and 241 complete literal-loop runs.
 The public-operation corpus retains 826 observations and 2,811 coordinate
 records. Donor accounting now binds 197 exports and 5,285 runtime cases to
 5,674 explicit disposition obligations. Thirteen supplemental extraction/
-resolution probes add 57 coordinate slices and retain five open coverage
-families. Remaining supplemental probes, final gate
+resolution probes add 57 coordinate slices. Another 26 cleaning/annotation
+probes retain three expected failures and 23 coordinate records, including
+zero-width points. Five coverage families remain open. Remaining supplemental probes, final gate
 integration and regex review remain open before P1. The 29-field limit
 policy and process-isolation mechanism are now evidenced; runtime enforcement
 and family-level safety proof remain unfinished.
@@ -33,6 +34,7 @@ Current evidence:
 - [Evidence presence](./history/evidence/2026-10-28-evidence-presence-audit.md)
 - [Portable command integration](./history/evidence/2026-10-28-portable-parity-command.md)
 - [Supplemental extraction probes](./history/evidence/2026-10-28-supplemental-extraction.md)
+- [Cleaning/annotation probes](./history/evidence/2026-10-28-supplemental-text.md)
 
 ## Mission
 

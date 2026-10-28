@@ -8,6 +8,7 @@ import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import * as S from "effect/Schema";
 import { CitationOracleJson } from "./citationOracleJson.ts";
+import { CitationSupplementalTextCase } from "./citationSupplementalText.ts";
 
 const $I = $LawPracticeUseCasesId.create("internal/citationSupplementalExtraction");
 const Range = S.Tuple([S.Natural, S.Natural]).pipe(
@@ -40,7 +41,7 @@ const Observation = S.Struct({
 );
 
 /**
- * Portable supplemental extraction observations and unfinished target obligations.
+ * Portable supplemental observations and unfinished target obligations.
  *
  * **Example** (Select the codec)
  *
@@ -60,8 +61,10 @@ export class CitationSupplementalExtraction extends S.Opaque<
   { readonly brand: unique symbol }
 >()(
   S.Struct({
-    schemaVersion: S.tag("citation-supplemental-extraction/v1"),
-    scope: S.tag("Focused extraction/resolution projections; not exhaustive supplemental or target parity proof."),
+    schemaVersion: S.tag("citation-supplemental-extraction/v2"),
+    scope: S.tag(
+      "Focused extraction/resolution/cleaning/annotation projections; not exhaustive supplemental or target parity proof."
+    ),
     commit: S.tag("04d82c032ad5fd0f9ab72a61c87110c46ee8f52e"),
     tree: S.tag("a35a58fac03400f71a93a93485b77f1d56f2b02f"),
     license: S.tag("BSD-2-Clause"),
@@ -73,6 +76,9 @@ export class CitationSupplementalExtraction extends S.Opaque<
     dependencies: S.Record(S.String, S.NonEmptyString),
     exporterSha256: Sha256Hex,
     planSha256: Sha256Hex,
+    textPlanSha256: Sha256Hex,
+    observerSha256: Sha256Hex,
+    textCases: S.Array(CitationSupplementalTextCase),
     sourceHashes: S.Record(S.String, Sha256Hex),
     cases: S.Array(
       S.Struct({

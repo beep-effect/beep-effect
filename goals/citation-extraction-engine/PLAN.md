@@ -19,7 +19,10 @@ reconcile 372 source rows, 195 capability obligations, 1,583 assertion cases,
 110 regex families and 13,610 expanded extractor instances. All target/safety
 proof stays open. Donor discovery binds 197 exports, 191 own public class
 members, 5,285 runtime cases and one source-only branch to 5,674 disposition
-obligations. P0 still owes supplemental probes, donor decisions,
+obligations. Supplemental accounting now retains 13 extraction/resolution
+probes and 26 cleaning/annotation probes, with 80 coordinate records and five
+explicitly open coverage families. P0 still owes remaining supplemental proof,
+donor decisions,
 final parity-gate integration and regex-safety
 limits. Vocabulary mapping accounts for all 2,430 frozen publications, 2,533
 editions and 2,798 courts, with three reviewed case-reporter identity

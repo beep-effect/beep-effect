@@ -47,7 +47,7 @@ const program = Effect.gen(function* () {
     S.fromJsonString(
       S.Struct({
         schemaVersion: S.tag("citation-supplemental-extraction-plan/v1"),
-        scope: S.String,
+        scope: S.tag("Focused extraction/resolution projections; not exhaustive supplemental or target parity proof."),
         cases: S.Array(
           S.Struct({
             id: S.String,
@@ -64,7 +64,6 @@ const program = Effect.gen(function* () {
   if (
     hash(planRaw) !== report.planSha256 ||
     hash(producer) !== report.exporterSha256 ||
-    plan.scope !== report.scope ||
     !same(plan.remainingCoverage, report.remainingCoverage)
   )
     return yield* reject();
@@ -78,8 +77,16 @@ const program = Effect.gen(function* () {
   const operations = yield* read(file(fixtures, "operation-cases.json")).pipe(
     Effect.flatMap(S.decodeEffect(S.fromJsonString(S.Struct({ dependencies: S.Record(S.String, S.String) }))))
   );
-  if (!same(operations.dependencies, report.dependencies) || R.size(report.sourceHashes) !== 4) return yield* reject();
-  for (const path of ["eyecite/find.py", "eyecite/models.py", "eyecite/helpers.py", "eyecite/resolve.py"]) {
+  if (!same(operations.dependencies, report.dependencies) || R.size(report.sourceHashes) !== 7) return yield* reject();
+  for (const path of [
+    "eyecite/find.py",
+    "eyecite/models.py",
+    "eyecite/helpers.py",
+    "eyecite/resolve.py",
+    "eyecite/clean.py",
+    "eyecite/annotate.py",
+    "eyecite/utils.py",
+  ]) {
     if (!A.some(inventory.rows, (row) => row.path === path && row.sourceSha256 === report.sourceHashes[path]))
       return yield* reject();
   }
@@ -93,6 +100,16 @@ const program = Effect.gen(function* () {
     )
   )
     return yield* reject();
+  const verifyTarget = Effect.fn("CitationSupplemental.verifyTarget")(function* (
+    proof: (typeof report.cases)[number]["targetProof"]
+  ) {
+    if (proof === null) return;
+    const target = new URL(proof.path, root);
+    if (!Str.startsWith(root.href)(target.href)) return yield* reject();
+    const targetBytes = yield* Effect.tryPromise(() => Bun.file(target).bytes());
+    const targetText = new TextDecoder().decode(targetBytes);
+    if (hash(targetBytes) !== proof.evidenceSha256 || !Str.includes(proof.name)(targetText)) return yield* reject();
+  });
   let coordinates = 0;
   for (const row of report.cases) {
     const expected = A.findFirst(plan.cases, (item) => item.id === row.id);
@@ -108,14 +125,7 @@ const program = Effect.gen(function* () {
       !same(value.authorityGroups, expected.value.expectedAuthorityGroups)
     )
       return yield* reject();
-    if (row.targetProof !== null) {
-      const target = new URL(row.targetProof.path, root);
-      if (!Str.startsWith(root.href)(target.href)) return yield* reject();
-      const targetBytes = yield* Effect.tryPromise(() => Bun.file(target).bytes());
-      const targetText = new TextDecoder().decode(targetBytes);
-      if (hash(targetBytes) !== row.targetProof.evidenceSha256 || !Str.includes(row.targetProof.name)(targetText))
-        return yield* reject();
-    }
+    yield* verifyTarget(row.targetProof);
     const count = value.citations.length;
     if (value.equality.length !== count || A.some(value.equality, (matrixRow) => matrixRow.length !== count))
       return yield* reject();
@@ -144,6 +154,111 @@ const program = Effect.gen(function* () {
           return yield* reject();
         coordinates++;
       }
+  }
+  const textPlanRaw = yield* read(new URL("./supplemental-text-plan.json", import.meta.url));
+  const textPlan = yield* S.decodeEffect(
+    S.fromJsonString(
+      S.Struct({
+        schemaVersion: S.tag("citation-supplemental-text-plan/v1"),
+        cases: S.Array(
+          S.Struct({
+            id: S.NonEmptyString,
+            operation: S.Literals(["clean_text", "annotate_citations"]),
+            input: S.JsonObject,
+            expectedOutcome: S.JsonObject,
+            expectedMappingUpdates: S.Array(S.JsonObject),
+          })
+        ),
+      })
+    )
+  )(textPlanRaw);
+  const observer = yield* read(new URL("./observe-supplemental-text.py", import.meta.url));
+  const textIds = A.map(report.textCases, (row) => row.id);
+  if (
+    hash(textPlanRaw) !== report.textPlanSha256 ||
+    hash(observer) !== report.observerSha256 ||
+    textIds.length !== 26 ||
+    A.dedupe([...ids, ...textIds]).length !== 39 ||
+    !same(
+      textIds,
+      A.map(textPlan.cases, (row) => row.id)
+    )
+  )
+    return yield* reject();
+  let textCoordinates = 0;
+  for (const row of report.textCases) {
+    const expected = A.findFirst(textPlan.cases, (item) => item.id === row.id);
+    if (expected._tag === "None") return yield* reject();
+    const value = row.payload.value;
+    if (
+      hash(row.payload.raw) !== row.normalizedSha256 ||
+      row.operation !== expected.value.operation ||
+      !same(value.input, expected.value.input) ||
+      !same(value.outcome, expected.value.expectedOutcome) ||
+      !same(value.mappingUpdates, expected.value.expectedMappingUpdates)
+    )
+      return yield* reject();
+    yield* verifyTarget(row.targetProof);
+    if (row.operation === "clean_text") {
+      if (value.inputSpans.length > 0 || value.mappedSpans.length > 0 || value.mappingUpdates.length > 0)
+        return yield* reject();
+      continue;
+    }
+    const input = row.payload.value.input;
+    if (
+      value.inputSpans.length !== input.annotations.length ||
+      value.mappingUpdates.length !== value.mappedSpans.length * 2
+    )
+      return yield* reject();
+    for (let index = 0; index < value.inputSpans.length; index++) {
+      const span = value.inputSpans[index]!;
+      if (!same(span.python, input.annotations[index]![0])) return yield* reject();
+    }
+    for (let index = 0; index < value.mappedSpans.length; index++) {
+      const span = value.mappedSpans[index]!;
+      const start = value.mappingUpdates[index * 2];
+      const end = value.mappingUpdates[index * 2 + 1];
+      if (
+        start?.side !== "bisect_right" ||
+        end?.side !== "bisect_left" ||
+        !same(span.python, [start.result, end.result])
+      )
+        return yield* reject();
+    }
+    for (const [owner, spans] of [
+      [input.plain_text, value.inputSpans],
+      [input.source_text, value.mappedSpans],
+    ] as const) {
+      for (const span of spans) {
+        if (span.python[0] === span.python[1]) {
+          const offset = span.python[0];
+          const boundary =
+            offset === 0
+              ? 0
+              : (yield* convertTextOffsetRange(
+                  yield* S.decodeEffect(TextOffsetRange)({ start: 0, end: offset, unit: "unicode-code-point" }),
+                  owner
+                )).endChar;
+          if (span.utf16[0] !== boundary || span.utf16[1] !== boundary || span.text !== "") return yield* reject();
+        } else {
+          const converted = yield* convertTextOffsetRange(
+            yield* S.decodeEffect(TextOffsetRange)({
+              start: span.python[0],
+              end: span.python[1],
+              unit: "unicode-code-point",
+            }),
+            owner
+          );
+          if (
+            converted.startChar !== span.utf16[0] ||
+            converted.endChar !== span.utf16[1] ||
+            Str.slice(span.utf16[0], span.utf16[1])(owner) !== span.text
+          )
+            return yield* reject();
+        }
+        textCoordinates++;
+      }
+    }
   }
   const legacy = yield* read(file(evidence, "cit-identity-merger-probe.json")).pipe(
     Effect.flatMap(
@@ -191,11 +306,14 @@ const program = Effect.gen(function* () {
   if (
     !audit &&
     (report.remainingCoverage.length > 0 ||
-      A.some(report.cases, (row) => row.workflowState !== "complete" || row.targetProof === null))
+      A.some(
+        [...report.cases, ...report.textCases],
+        (row) => row.workflowState !== "complete" || row.targetProof === null
+      ))
   )
     return yield* reject();
   yield* Console.log(
-    `Supplemental extraction valid: 13 probes, ${coordinates} coordinate slices; ${report.remainingCoverage.length} coverage families and target proof remain open.`
+    `Supplemental extraction valid: 13 probes, ${coordinates} coordinate slices; 26 text probes, ${textCoordinates} text coordinate slices; ${report.remainingCoverage.length} coverage families and target proof remain open.`
   );
 });
 BunRuntime.runMain(program);

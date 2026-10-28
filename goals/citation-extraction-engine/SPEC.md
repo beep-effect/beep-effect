@@ -644,6 +644,16 @@ instead of silently splitting delivery or weakening scope.
   and exhaustive target verifiers remain absent. Reverse or expand this
   projection through the authored plan, schema and equivalent controls.
 
+- **2026-10-28 supplemental text revision:** advance the test-only bundle to
+  `citation-supplemental-extraction/v2` for 26 cleaning/annotation probes and
+  source-bound mapping traces. Preserve the 13 extraction probes. Zero-width
+  annotation points are validated through nonempty prefix conversion and are
+  never constructed as verified ranges. The oracle can choose a repeated
+  source occurrence or collapse a deleted occurrence to an empty insertion.
+  These results remain explicit fidelity/anchoring review obligations before
+  target readiness; no divergence or weakened raw-anchor contract is approved.
+  Reverse through a schema/version and corpus migration with equivalent proof.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from

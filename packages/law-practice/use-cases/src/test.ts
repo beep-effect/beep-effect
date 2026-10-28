@@ -57,7 +57,7 @@ export { CitationOracleOperations } from "./internal/citationOracleOperations.ts
  */
 export { CitationOracleVocabularyMapping } from "./internal/citationOracleVocabularyMapping.ts";
 /**
- * Focused supplemental extraction and resolution oracle evidence.
+ * Focused supplemental extraction, resolution, cleaning and annotation evidence.
  *
  * @category testing
  * @since 0.0.0

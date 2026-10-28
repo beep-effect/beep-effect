@@ -36,6 +36,13 @@ def main():
         row["payload"] = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
         row["normalizedSha256"] = hashlib.sha256(row["payload"].encode()).hexdigest()
 
+    def text_payload(report, case_id, mutate):
+        row = next(row for row in report["textCases"] if row["id"] == case_id)
+        value = json.loads(row["payload"])
+        mutate(value)
+        row["payload"] = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+        row["normalizedSha256"] = hashlib.sha256(row["payload"].encode()).hexdigest()
+
     controls = {
         "missing-case": lambda r: r["cases"].pop(),
         "duplicate-case": lambda r: r["cases"].append(r["cases"][0]),
@@ -63,6 +70,35 @@ def main():
         "hidden-open-coverage": lambda r: r.update(remainingCoverage=[]),
         "target-outside-repo": lambda r: r["cases"][0].update(targetProof={"path": "../../outside", "name": "probe", "evidenceSha256": "a" * 64}),
     }
+    controls.update({
+        "missing-text-case": lambda r: r["textCases"].pop(),
+        "duplicate-text-case": lambda r: r["textCases"].append(r["textCases"][0]),
+        "cross-projection-id": lambda r: r["textCases"][0].update(id=r["cases"][0]["id"]),
+        "missing-text-ledger": lambda r: r.pop("textCases"),
+        "missing-text-plan-hash": lambda r: r.pop("textPlanSha256"),
+        "stale-observer": lambda r: r.update(observerSha256="a" * 64),
+        "missing-observer-hash": lambda r: r.pop("observerSha256"),
+        "stale-text-plan": lambda r: r.update(textPlanSha256="a" * 64),
+        "missing-clean-source": lambda r: r["sourceHashes"].pop("eyecite/clean.py"),
+        "stale-annotation-source": lambda r: r["sourceHashes"].update({"eyecite/annotate.py": "a" * 64}),
+        "text-unknown-state": lambda r: r["textCases"][0].update(workflowState="deferred"),
+        "text-missing-proof": lambda r: r["textCases"][0].pop("targetProof"),
+        "failure-as-success": lambda r: text_payload(r, "clean-empty-html", lambda v: v.update(outcome={"kind": "success", "value": ""})),
+        "missing-exception-type": lambda r: text_payload(r, "clean-empty-html", lambda v: v["outcome"].pop("type")),
+        "wrong-exception-message": lambda r: text_payload(r, "annotation-invalid-mode", lambda v: v["outcome"].update(message="other")),
+        "reordered-cleaners": lambda r: text_payload(r, "clean-order-a", lambda v: v["input"]["steps"].reverse()),
+        "changed-diff-mode": lambda r: text_payload(r, "annotation-repeat-insert-builtin", lambda v: v["input"].update(use_dmp=True)),
+        "missing-diff-mode": lambda r: text_payload(r, "annotation-repeat-insert", lambda v: v["input"].pop("use_dmp")),
+        "wrong-bisect-side": lambda r: text_payload(r, "annotation-markup", lambda v: v["mappingUpdates"][0].update(side="bisect_left")),
+        "wrong-mapped-boundary": lambda r: text_payload(r, "annotation-markup", lambda v: v["mappingUpdates"][0].update(result=6)),
+        "missing-mapping-trace": lambda r: text_payload(r, "annotation-markup", lambda v: v.update(mappingUpdates=[])),
+        "wrong-source-coordinate": lambda r: text_payload(r, "annotation-markup", lambda v: v["mappedSpans"][0].update(utf16=[6, 17])),
+        "wrong-annotation-unit": lambda r: text_payload(r, "annotation-astral", lambda v: v["inputSpans"][0].update(utf16=[2, 10])),
+        "empty-point-with-text": lambda r: text_payload(r, "annotation-zero-width", lambda v: v["inputSpans"][0].update(text="c")),
+        "wrong-empty-point-offset": lambda r: text_payload(r, "annotation-repeat-delete", lambda v: v["mappedSpans"][0].update(utf16=[8, 8])),
+        "annotation-payload-as-cleaner": lambda r: next(row for row in r["textCases"] if row["id"] == "annotation-markup").update(operation="clean_text"),
+        "forged-text-target": lambda r: r["textCases"][0].update(targetProof={"path": "../../outside", "name": "probe", "evidenceSha256": "a" * 64}),
+    })
     args.scratch_root.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="supplemental-controls-", dir=args.scratch_root) as scratch:
         scratch = Path(scratch)

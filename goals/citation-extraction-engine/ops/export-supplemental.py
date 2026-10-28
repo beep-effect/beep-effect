@@ -66,17 +66,30 @@ def main():
     for case in cases:
         payload = json.dumps({key: case.pop(key) for key in ["text", "citations", "authorityGroups", "equality"]}, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
         case.update(payload=payload, normalizedSha256=sha(payload.encode()))
-    output = {"schemaVersion": "citation-supplemental-extraction/v1", "scope": plan["scope"],
+    text_plan_file = Path(__file__).with_name("supplemental-text-plan.json")
+    text_plan = json.loads(text_plan_file.read_text())
+    helper = importlib.import_module("observe-supplemental-text")
+    text_cases = []
+    for row, observed in zip(text_plan["cases"], helper.observe(text_plan["cases"]), strict=True):
+        if row["expectedOutcome"] != observed["outcome"] or row["expectedMappingUpdates"] != observed["mappingUpdates"]:
+            raise RuntimeError(f"text probe no longer exercises planned behavior: {row['id']}")
+        payload = json.dumps({key: observed[key] for key in ["input", "mappingUpdates", "inputSpans", "mappedSpans", "outcome"]}, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+        text_cases.append({"id": row["id"], "operation": row["operation"], "payload": payload,
+                           "normalizedSha256": sha(payload.encode()), "workflowState": "audit", "targetProof": None})
+    output = {"schemaVersion": "citation-supplemental-extraction/v2", "scope": "Focused extraction/resolution/cleaning/annotation projections; not exhaustive supplemental or target parity proof.",
               "commit": PIN, "tree": TREE, "license": "BSD-2-Clause",
               "licenseSha256": sha((root / "LICENSE").read_bytes()), "lockSha256": sha((root / "uv.lock").read_bytes()),
               "python": sys.version.split()[0], "hashSeed": "0", "clockDate": "2026-10-28",
               "dependencies": {name: importlib.metadata.version(name) for name in ["eyecite", "reporters-db", "courts-db", "regex", "lxml", "fast-diff-match-patch", "pyahocorasick"]},
               "exporterSha256": sha(Path(__file__).read_bytes()), "planSha256": sha(plan_file.read_bytes()),
-              "sourceHashes": {name: sha((root / name).read_bytes()) for name in ["eyecite/find.py", "eyecite/models.py", "eyecite/helpers.py", "eyecite/resolve.py"]},
-              "cases": cases, "remainingCoverage": plan["remainingCoverage"]}
+              "textPlanSha256": sha(text_plan_file.read_bytes()), "observerSha256": sha(Path(helper.__file__).read_bytes()),
+              "sourceHashes": {name: sha((root / name).read_bytes()) for name in ["eyecite/find.py", "eyecite/models.py", "eyecite/helpers.py", "eyecite/resolve.py", "eyecite/clean.py", "eyecite/annotate.py", "eyecite/utils.py"]},
+              "cases": cases, "textCases": text_cases, "remainingCoverage": plan["remainingCoverage"]}
+    if git("status", "--porcelain"):
+        raise SystemExit("oracle source changed during text execution")
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(output, ensure_ascii=False, indent=2) + "\n")
-    print(f"Supplemental extraction: {len(cases)} probes; target and remaining coverage proof still open.")
+    print(f"Supplemental probes: {len(cases)} extraction/resolution, {len(text_cases)} cleaning/annotation; target and remaining coverage proof still open.")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,482 @@
+{
+  "schemaVersion": "citation-supplemental-text-plan/v1",
+  "cases": [
+    {
+      "id": "clean-none",
+      "operation": "clean_text",
+      "input": {
+        "text": " \tfoo\r\nbar​ ",
+        "steps": []
+      },
+      "expectedOutcome": {
+        "kind": "success",
+        "value": " \tfoo\r\nbar​ "
+      },
+      "expectedMappingUpdates": []
+    },
+    {
+      "id": "clean-inline",
+      "operation": "clean_text",
+      "input": {
+        "text": " \tfoo\r\nbar​ ",
+        "steps": ["inline_whitespace"]
+      },
+      "expectedOutcome": {
+        "kind": "success",
+        "value": " foo\r\nbar​ "
+      },
+      "expectedMappingUpdates": []
+    },
+    {
+      "id": "clean-all",
+      "operation": "clean_text",
+      "input": {
+        "text": " \tfoo\r\nbar​ ",
+        "steps": ["all_whitespace"]
+      },
+      "expectedOutcome": {
+        "kind": "success",
+        "value": " foo bar "
+      },
+      "expectedMappingUpdates": []
+    },
+    {
+      "id": "clean-underscores",
+      "operation": "clean_text",
+      "input": {
+        "text": "a__b_c___",
+        "steps": ["underscores"]
+      },
+      "expectedOutcome": {
+        "kind": "success",
+        "value": "ab_c"
+      },
+      "expectedMappingUpdates": []
+    },
+    {
+      "id": "clean-xml-html",
+      "operation": "clean_text",
+      "input": {
+        "text": "<?xml version=\"1.0\"?><html><head><style>hidden</style></head><body><p>1 <b>U.S.</b> 1.</p><script>hidden</script><page-number>9</page-number><span class=\"star-pagination\">*2</span></body></html>",
+        "steps": ["xml", "html", "all_whitespace"]
+      },
+      "expectedOutcome": {
+        "kind": "success",
+        "value": "1 U.S. 1."
+      },
+      "expectedMappingUpdates": []
+    },
+    {
+      "id": "clean-html-entities",
+      "operation": "clean_text",
+      "input": {
+        "text": "<p>a&nbsp;<b>b</b>&amp;c</p>",
+        "steps": ["html"]
+      },
+      "expectedOutcome": {
+        "kind": "success",
+        "value": "a  b &c"
+      },
+      "expectedMappingUpdates": []
+    },
+    {
+      "id": "clean-empty-html",
+      "operation": "clean_text",
+      "input": {
+        "text": "",
+        "steps": ["html"]
+      },
+      "expectedOutcome": {
+        "kind": "failure",
+        "type": "lxml.etree.ParserError",
+        "message": "Document is empty"
+      },
+      "expectedMappingUpdates": []
+    },
+    {
+      "id": "clean-unknown",
+      "operation": "clean_text",
+      "input": {
+        "text": "text",
+        "steps": ["bogus"]
+      },
+      "expectedOutcome": {
+        "kind": "failure",
+        "type": "builtins.ValueError",
+        "message": "clean_text steps must be callable or one of ['html', 'inline_whitespace', 'all_whitespace', 'underscores', 'xml']"
+      },
+      "expectedMappingUpdates": []
+    },
+    {
+      "id": "clean-order-a",
+      "operation": "clean_text",
+      "input": {
+        "text": "a __ b",
+        "steps": ["underscores", "all_whitespace"]
+      },
+      "expectedOutcome": {
+        "kind": "success",
+        "value": "a b"
+      },
+      "expectedMappingUpdates": []
+    },
+    {
+      "id": "clean-order-b",
+      "operation": "clean_text",
+      "input": {
+        "text": "a __ b",
+        "steps": ["all_whitespace", "underscores"]
+      },
+      "expectedOutcome": {
+        "kind": "success",
+        "value": "a  b"
+      },
+      "expectedMappingUpdates": []
+    },
+    {
+      "id": "annotation-identity",
+      "operation": "annotate_citations",
+      "input": {
+        "plain_text": "x 1 U.S. 1.",
+        "annotations": [[[2, 10], "<a>", "</a>"]],
+        "source_text": "",
+        "unbalanced_tags": "unchecked",
+        "use_dmp": true
+      },
+      "expectedOutcome": {
+        "kind": "success",
+        "value": "x <a>1 U.S. 1</a>."
+      },
+      "expectedMappingUpdates": []
+    },
+    {
+      "id": "annotation-astral",
+      "operation": "annotate_citations",
+      "input": {
+        "plain_text": "😀 1 U.S. 1.",
+        "annotations": [[[2, 10], "<a>", "</a>"]],
+        "source_text": "",
+        "unbalanced_tags": "unchecked",
+        "use_dmp": true
+      },
+      "expectedOutcome": {
+        "kind": "success",
+        "value": "😀 <a>1 U.S. 1</a>."
+      },
+      "expectedMappingUpdates": []
+    },
+    {
+      "id": "annotation-markup",
+      "operation": "annotate_citations",
+      "input": {
+        "plain_text": "x 1 U.S. 1.",
+        "annotations": [[[2, 10], "<a>", "</a>"]],
+        "source_text": "x <i>1 U.S.</i> 1.",
+        "unbalanced_tags": "unchecked",
+        "use_dmp": true
+      },
+      "expectedOutcome": {
+        "kind": "success",
+        "value": "x <i><a>1 U.S.</i> 1</a>."
+      },
+      "expectedMappingUpdates": [
+        {
+          "offset": 2,
+          "side": "bisect_right",
+          "result": 5
+        },
+        {
+          "offset": 10,
+          "side": "bisect_left",
+          "result": 17
+        }
+      ]
+    },
+    {
+      "id": "annotation-unbalanced-unchecked",
+      "operation": "annotate_citations",
+      "input": {
+        "plain_text": "x 1 U.S. 1.",
+        "annotations": [[[2, 10], "<a>", "</a>"]],
+        "source_text": "x 1 U.S. <span>1 tail</span>",
+        "unbalanced_tags": "unchecked",
+        "use_dmp": true
+      },
+      "expectedOutcome": {
+        "kind": "success",
+        "value": "x <a>1 U.S. <span>1</a> tail</span>"
+      },
+      "expectedMappingUpdates": [
+        {
+          "offset": 2,
+          "side": "bisect_right",
+          "result": 2
+        },
+        {
+          "offset": 10,
+          "side": "bisect_left",
+          "result": 16
+        }
+      ]
+    },
+    {
+      "id": "annotation-unbalanced-skip",
+      "operation": "annotate_citations",
+      "input": {
+        "plain_text": "x 1 U.S. 1.",
+        "annotations": [[[2, 10], "<a>", "</a>"]],
+        "source_text": "x 1 U.S. <span>1 tail</span>",
+        "unbalanced_tags": "skip",
+        "use_dmp": true
+      },
+      "expectedOutcome": {
+        "kind": "success",
+        "value": "x 1 U.S. <span>1 tail</span>"
+      },
+      "expectedMappingUpdates": [
+        {
+          "offset": 2,
+          "side": "bisect_right",
+          "result": 2
+        },
+        {
+          "offset": 10,
+          "side": "bisect_left",
+          "result": 16
+        }
+      ]
+    },
+    {
+      "id": "annotation-unbalanced-wrap",
+      "operation": "annotate_citations",
+      "input": {
+        "plain_text": "x 1 U.S. 1.",
+        "annotations": [[[2, 10], "<a>", "</a>"]],
+        "source_text": "x 1 U.S. <span>1 tail</span>",
+        "unbalanced_tags": "wrap",
+        "use_dmp": true
+      },
+      "expectedOutcome": {
+        "kind": "success",
+        "value": "x <a>1 U.S. </a><span><a>1</a> tail</span>"
+      },
+      "expectedMappingUpdates": [
+        {
+          "offset": 2,
+          "side": "bisect_right",
+          "result": 2
+        },
+        {
+          "offset": 10,
+          "side": "bisect_left",
+          "result": 16
+        }
+      ]
+    },
+    {
+      "id": "annotation-repeat-insert",
+      "operation": "annotate_citations",
+      "input": {
+        "plain_text": "1 U.S. 1.",
+        "annotations": [[[0, 8], "<a>", "</a>"]],
+        "source_text": "1 U.S. 1. 1 U.S. 1.",
+        "unbalanced_tags": "unchecked",
+        "use_dmp": true
+      },
+      "expectedOutcome": {
+        "kind": "success",
+        "value": "<a>1 U.S. 1</a>. 1 U.S. 1."
+      },
+      "expectedMappingUpdates": [
+        {
+          "offset": 0,
+          "side": "bisect_right",
+          "result": 0
+        },
+        {
+          "offset": 8,
+          "side": "bisect_left",
+          "result": 8
+        }
+      ]
+    },
+    {
+      "id": "annotation-repeat-insert-builtin",
+      "operation": "annotate_citations",
+      "input": {
+        "plain_text": "1 U.S. 1.",
+        "annotations": [[[0, 8], "<a>", "</a>"]],
+        "source_text": "1 U.S. 1. 1 U.S. 1.",
+        "unbalanced_tags": "unchecked",
+        "use_dmp": false
+      },
+      "expectedOutcome": {
+        "kind": "success",
+        "value": "<a>1 U.S. 1</a>. 1 U.S. 1."
+      },
+      "expectedMappingUpdates": [
+        {
+          "offset": 0,
+          "side": "bisect_right",
+          "result": 0
+        },
+        {
+          "offset": 8,
+          "side": "bisect_left",
+          "result": 8
+        }
+      ]
+    },
+    {
+      "id": "annotation-repeat-delete",
+      "operation": "annotate_citations",
+      "input": {
+        "plain_text": "1 U.S. 1. 1 U.S. 1.",
+        "annotations": [[[10, 18], "<a>", "</a>"]],
+        "source_text": "1 U.S. 1.",
+        "unbalanced_tags": "unchecked",
+        "use_dmp": true
+      },
+      "expectedOutcome": {
+        "kind": "success",
+        "value": "1 U.S. 1.<a></a>"
+      },
+      "expectedMappingUpdates": [
+        {
+          "offset": 10,
+          "side": "bisect_right",
+          "result": 9
+        },
+        {
+          "offset": 18,
+          "side": "bisect_left",
+          "result": 9
+        }
+      ]
+    },
+    {
+      "id": "annotation-repeat-delete-builtin",
+      "operation": "annotate_citations",
+      "input": {
+        "plain_text": "1 U.S. 1. 1 U.S. 1.",
+        "annotations": [[[10, 18], "<a>", "</a>"]],
+        "source_text": "1 U.S. 1.",
+        "unbalanced_tags": "unchecked",
+        "use_dmp": false
+      },
+      "expectedOutcome": {
+        "kind": "success",
+        "value": "1 U.S. 1.<a></a>"
+      },
+      "expectedMappingUpdates": [
+        {
+          "offset": 10,
+          "side": "bisect_right",
+          "result": 9
+        },
+        {
+          "offset": 18,
+          "side": "bisect_left",
+          "result": 9
+        }
+      ]
+    },
+    {
+      "id": "annotation-overlap",
+      "operation": "annotate_citations",
+      "input": {
+        "plain_text": "abcdef",
+        "annotations": [[[0, 4], "<a>", "</a>"], [[2, 6], "<b>", "</b>"]],
+        "source_text": "",
+        "unbalanced_tags": "unchecked",
+        "use_dmp": true
+      },
+      "expectedOutcome": {
+        "kind": "success",
+        "value": "<a>abcd</a><b>ef</b>"
+      },
+      "expectedMappingUpdates": []
+    },
+    {
+      "id": "annotation-duplicate",
+      "operation": "annotate_citations",
+      "input": {
+        "plain_text": "abcdef",
+        "annotations": [[[0, 4], "<a>", "</a>"], [[0, 4], "<b>", "</b>"]],
+        "source_text": "",
+        "unbalanced_tags": "unchecked",
+        "use_dmp": true
+      },
+      "expectedOutcome": {
+        "kind": "success",
+        "value": "<a>abcd</a>ef"
+      },
+      "expectedMappingUpdates": []
+    },
+    {
+      "id": "annotation-zero-width",
+      "operation": "annotate_citations",
+      "input": {
+        "plain_text": "abcdef",
+        "annotations": [[[2, 2], "<a>", "</a>"]],
+        "source_text": "",
+        "unbalanced_tags": "unchecked",
+        "use_dmp": true
+      },
+      "expectedOutcome": {
+        "kind": "success",
+        "value": "ab<a></a>cdef"
+      },
+      "expectedMappingUpdates": []
+    },
+    {
+      "id": "annotation-invalid-mode",
+      "operation": "annotate_citations",
+      "input": {
+        "plain_text": "abcdef",
+        "annotations": [],
+        "source_text": "",
+        "unbalanced_tags": "bogus",
+        "use_dmp": true
+      },
+      "expectedOutcome": {
+        "kind": "failure",
+        "type": "builtins.ValueError",
+        "message": "Unknown option 'bogus"
+      },
+      "expectedMappingUpdates": []
+    },
+    {
+      "id": "annotation-empty",
+      "operation": "annotate_citations",
+      "input": {
+        "plain_text": "",
+        "annotations": [],
+        "source_text": "",
+        "unbalanced_tags": "unchecked",
+        "use_dmp": true
+      },
+      "expectedOutcome": {
+        "kind": "success",
+        "value": ""
+      },
+      "expectedMappingUpdates": []
+    },
+    {
+      "id": "annotation-no-spans-source",
+      "operation": "annotate_citations",
+      "input": {
+        "plain_text": "abc",
+        "annotations": [],
+        "source_text": "Xabc",
+        "unbalanced_tags": "unchecked",
+        "use_dmp": true
+      },
+      "expectedOutcome": {
+        "kind": "success",
+        "value": "Xabc"
+      },
+      "expectedMappingUpdates": []
+    }
+  ]
+}
