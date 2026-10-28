@@ -15,3 +15,7 @@
 - Native tooling left fontconfig runtime caches under `packages/tooling/var/cache/fontconfig/`,
   causing the source-only publish preflight to refuse. The exact artifact directory
   is now ignored; no authored files or recovery material were removed.
+- The repo-cli startup-boundary test caught two eager Effect imports added for host
+  cache defaults. They were moved into the entry point's existing deferred module
+  group; the allowlist expectation stayed unchanged. Entry-point edits should run
+  the narrow startup-boundary contract in the focused proof before publication.
