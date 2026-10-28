@@ -70,3 +70,18 @@ property test called `Arbitrary.checkEffect` directly. Converted it to the
 existing `it.effect.prop` registration with `Arbitrary.schema(Knows)`, retaining
 the generated round-trip assertion. Run both effect-vitest and schema-first
 checks together; satisfying one test policy does not establish the other.
+
+## 2026-10-28: interrupted monitor left merged readiness unrecorded
+
+The final implementation head passed every required hosted check and merged in
+#2315, but the local monitor stopped before readiness was recorded. A fresh
+completion refresh verified the hosted checks and merge-time inventory while
+reporting the declared verdict absent. Post-merge `yeet monitor --summary`
+refuses because the PR is merged. Establish a documentation-only final closeout
+PR and retain its real verdict before merging. Keeping the monitor alive or
+retaining the verdict in the merge path would have prevented this extra round.
+
+Review caught a truncated check census: GitHub's default first page contained
+30 runs, while `check-runs?per_page=100` reports all 34. The complete census has
+33 successful and one neutral run, all completed before the merge. Use explicit
+pagination for counts as well as failure searches.
