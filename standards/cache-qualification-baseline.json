@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Opus 5.5 (effected-promotion roadmap R9, refactor/drivers-run-collect)",
-      "reason": "Record the R9 manifest edits that add the @beep/commands workspace dependency to @beep/exiftool, @beep/obs, @beep/pdf-tools and @beep/tailscale (Run.collect and Run.detach) and the root policy-fingerprint input that follows from repo-cli reaching @beep/commands; the turbo coupling is measured in the review; no qualification is granted.",
+      "reviewer": "Claude Fable 5.1 (effected-promotion roadmap R2a, chore/vitest-setup-glob-shim-on-beep-glob)",
+      "reason": "Record the R2a root manifest edit (toml, picomatch and @types/picomatch leave devDependencies and the catalog; @beep/glob joins devDependencies for the vitest.setup.ts Bun.Glob shim) and the one-time cache-key move of the vitest.setup.ts global test input; the turbo coupling is measured in the review; no qualification is granted.",
       "basis": {
-        "path": "goals/effected-promotion/research/cache-baseline-review-r9.md",
-        "sha256": "ffe6422230b602e4868f45ceb9a5ed0e384a9fe75b195f8d7d560d047eea20ec"
+        "path": "goals/effected-promotion/research/cache-baseline-review-r2a.md",
+        "sha256": "ff7f9b8d0633fea24b5eed3a91d816d72c2ae2fff3d796624a0d48711134b465"
       }
     },
     "@beep/acp": {
