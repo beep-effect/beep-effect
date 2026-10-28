@@ -37,8 +37,8 @@ Use this command for execution-capable sessions:
 
 P0 to P3 shipped in PR #1946, merged on 2026-10-21. P4 is in progress.
 The 2026-10-28 completion refresh returned `unsatisfied`; merge-time required
-checks and readiness evidence do not prove completion. A fresh closeout branch
-rechecks the implementation and will bind a new final PR and retained verdict.
+checks and readiness evidence do not prove completion. Fresh closeout PR #2319
+rechecks the implementation and binds its retained final-head verdict.
 The operative lifecycle stays `active` until completion refresh verifies that PR.
 
 ## Latest Evidence
