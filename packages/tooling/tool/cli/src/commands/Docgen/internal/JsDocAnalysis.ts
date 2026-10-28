@@ -24,6 +24,7 @@ import {
   DocgenExportAnalysis,
   DocgenPackageAnalysis,
 } from "../Docgen.schemas.ts";
+import { getDeclaredJsDocs } from "./JsDocNodes.ts";
 import { loadDocgenConfigDocument } from "./Workspace.ts";
 import type { DomainError } from "@beep/repo-utils";
 import type * as FileSystem from "effect/FileSystem";
@@ -38,25 +39,14 @@ const relativePathWithinPackage = (absolutePackagePath: string, absoluteFilePath
   normalizeSlashes(path.relative(absolutePackagePath, absoluteFilePath));
 
 const getJsDocs = (node: Node): ReadonlyArray<JSDoc> => {
-  if (Node.isJSDocable(node)) {
-    return node.getJsDocs();
-  }
-
-  if (Node.isVariableDeclaration(node)) {
-    const statement = node.getVariableStatement();
-    if (statement !== undefined) {
-      return statement.getJsDocs();
-    }
+  if (Node.isJSDocable(node) || Node.isVariableDeclaration(node)) {
+    return getDeclaredJsDocs(node);
   }
 
   // `export default <expression>` resolves to the expression itself; its JSDoc
   // lives on the owning ExportAssignment statement.
   const parent = node.getParent();
-  if (parent !== undefined && Node.isExportAssignment(parent)) {
-    return parent.getJsDocs();
-  }
-
-  return A.empty();
+  return parent !== undefined && Node.isExportAssignment(parent) ? parent.getJsDocs() : A.empty();
 };
 
 const getOwningJsDocs = (node: Node): ReadonlyArray<JSDoc> => pipe(getJsDocs(node), A.last, O.toArray);

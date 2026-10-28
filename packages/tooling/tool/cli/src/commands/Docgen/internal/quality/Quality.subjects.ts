@@ -26,6 +26,7 @@ import * as S from "effect/Schema";
 import { Node, Project } from "ts-morph";
 import { boundedText, firstLine } from "../../../../internal/cli/Timing.ts";
 import { DocgenConfigDocument } from "../../Docgen.schemas.ts";
+import { getDeclaredJsDocs } from "../JsDocNodes.ts";
 import { loadDocgenConfigDocument } from "../Workspace.ts";
 import {
   DocgenQualityDiagnostic,
@@ -42,7 +43,6 @@ import type {
   ExportSpecifier,
   FunctionDeclaration,
   InterfaceDeclaration,
-  JSDoc,
   ModuleDeclaration,
   SourceFile,
   Statement,
@@ -235,24 +235,9 @@ const sourceFileMatchesExclude = (
   });
 };
 
-const getJsDocs = (node: Node): ReadonlyArray<JSDoc> => {
-  if (Node.isJSDocable(node)) {
-    return node.getJsDocs();
-  }
-
-  if (Node.isVariableDeclaration(node)) {
-    const statement = node.getVariableStatement();
-    if (statement !== undefined) {
-      return statement.getJsDocs();
-    }
-  }
-
-  return A.empty();
-};
-
 const getLastJsDocText = (node: Node): string =>
   pipe(
-    getJsDocs(node),
+    getDeclaredJsDocs(node),
     A.last,
     O.map((doc) => doc.getText()),
     O.getOrElse(thunkEmptyStr)
@@ -276,7 +261,8 @@ const isFileoverviewJsDoc = (rawJsDoc: string): boolean => /@(packageDocumentati
 
 const isInternalJsDoc = (rawJsDoc: string): boolean => /@internal\b/.test(rawJsDoc);
 
-const hasInternalJsDoc = (node: Node): boolean => A.some(getJsDocs(node), (doc) => isInternalJsDoc(doc.getText()));
+const hasInternalJsDoc = (node: Node): boolean =>
+  A.some(getDeclaredJsDocs(node), (doc) => isInternalJsDoc(doc.getText()));
 
 const normalizeTags = (rawJsDoc: string): Record<string, ReadonlyArray<string>> => {
   if (Str.trim(rawJsDoc).length === 0) {
