@@ -67,6 +67,7 @@ store/output, rebuild, and compare canonical bytes and query answers.
 | 2026-08-13 | Spin the optional lane now: mechanism now, policy-as-data behind calibration evidence, repo-native algorithm, agentmemory cite-only. |
 | 2026-08-13 | First slice is the standalone operator report plus delete/rebuild drill; RRF weights are a later integration. |
 | 2026-10-28 | Freeze read-only scoped snapshot, deterministic report/store and trusted calibration registry contract in history/2026-10-28-p0-contract.md; no policy defaults or registered production receipts. Reverse by removing consumers and disposable artifacts. |
+| 2026-10-28 | Use the standing hosted-CI fallback after the local pre-push run exceeded ten minutes. Full audits/docgen for the three packages and targeted policy/resource checks passed; preserve and disclose the unfinished local health gate. No quality baseline is weakened. Reverse by rerunning the parked local gates. |
 | Program | Product Postgres authority is immutable from this projection; retrieval consumers do not own truth. |
 
 ## Stop Conditions

@@ -66,3 +66,18 @@ that closes before the final authority reread, and EV010 is the native filesyste
 which is the chosen projection-store subject. Neither is an assertion migration
 or a policy waiver. Platform services are provided at the `it.layer` boundary;
 the database is seeded once and is read-only throughout generated rebuild cases.
+
+## Publication fallback
+
+The local Yeet pre-push run exceeded ten minutes. Its documentation regeneration
+passed after approximately 392 seconds. Schema-first, Effect test usage, aliases,
+span catalogs, reflection, and the other completed policy lanes passed. The only
+introduced dead-code/audit finding was the manually invoked report script; it is
+now declared as an entry point in `.fallowrc.jsonc`. The native CLI remains part
+of the product mechanism, not a dead file or an ignored source path.
+
+Per the standing constrained-compute rule, publication proceeds to hosted CI
+after the targeted Fallow checks. The local Fallow health scan was unfinished
+when this chat's run was stopped. Hosted checks, exact-head final-check with
+explicitly recorded local skips where needed, review resolution and the review
+window still gate completion. No other session's job was stopped.
