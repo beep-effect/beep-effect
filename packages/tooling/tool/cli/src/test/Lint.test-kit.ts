@@ -7,6 +7,13 @@
 
 export * from "@beep/repo-cli/commands/Lint";
 /**
+ * Schema-first inventory merge, exposed so tests can drive `--write` regeneration on fixture documents.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export { mergeSchemaFirstInventory } from "../commands/Lint/internal/SchemaFirstScan.ts";
+/**
  * Schema-class shape detectors (brand and plain-data kinds), exposed so tests can drive them on fixtures.
  *
  * @category testing
