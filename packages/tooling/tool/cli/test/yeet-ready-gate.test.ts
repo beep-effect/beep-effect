@@ -9,6 +9,9 @@ import {
   decideYeetReadyGate,
   deriveYeetMergeReady,
   FinalCheckReceipt,
+  FinalCheckRefreshOwnChange,
+  FinalCheckRefreshPass,
+  FinalCheckRefreshRefused,
   FinalCheckStepResult,
   flipPullRequestReady,
   ProofJobRecord,
@@ -505,6 +508,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet ready gate run", (
       const refuse = (finalCheck: typeof passingFinalCheck) =>
         runYeetReadyGate(context, {
           finalCheck,
+          refresh: () => Effect.succeedNone,
           squashCommitlint: passingSquashCommitlint,
           recordInherited: () => Effect.void,
           read: () => Effect.succeed(prView()),
@@ -522,6 +526,92 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet ready gate run", (
       );
       expect(failing).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "final-check" });
       expect(yield* Ref.get(calls)).toEqual([]);
+    })
+  );
+
+  it.effect("flips a head with no receipt when the refresh rule carries an ancestor receipt", () =>
+    Effect.gen(function* () {
+      const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+      const receiptHead = Str.repeat(40)("r");
+      const decision = yield* runYeetReadyGate(context, {
+        finalCheck: () => Effect.succeedNone,
+        refresh: (_context, head) =>
+          Effect.map(passingFinalCheck(_context, receiptHead), (receipt) =>
+            O.map(receipt, (found) =>
+              FinalCheckRefreshPass.make({
+                receipt: found,
+                finalHead: head,
+                ownChanges: [
+                  FinalCheckRefreshOwnChange.make({
+                    path: "standards/schema-first.inventory.jsonc",
+                    allowance: O.some("standards-inventory"),
+                  }),
+                ],
+              })
+            )
+          ),
+        squashCommitlint: passingSquashCommitlint,
+        recordInherited: () => Effect.void,
+        read: () => Effect.succeed(prView()),
+        markReady: recordingMarkReady(calls),
+        requestReview: stubReviewerRequest,
+        findMonitor: () => Effect.succeedNone,
+      });
+      expect(decision._tag).toBe("flip");
+      const printed = A.join(A.map(yield* TestConsole.logLines, String), "\n");
+      expect(printed).toContain(`carries the receipt of ancestor ${receiptHead}`);
+      expect(printed).toContain("standards/schema-first.inventory.jsonc (standards-inventory)");
+      expect(printed).toContain(`final <sha40> #42 receipt ${receiptHead}`);
+      expect(yield* Ref.get(calls)).toEqual([["ready", "42"]]);
+    })
+  );
+
+  it.effect("refuses on final-check when the refresh rule refuses and never calls gh", () =>
+    Effect.gen(function* () {
+      const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+      const receiptHead = Str.repeat(40)("r");
+      const error = yield* runYeetReadyGate(context, {
+        finalCheck: () => Effect.succeedNone,
+        refresh: (_context, head) =>
+          Effect.succeedSome(
+            FinalCheckRefreshRefused.make({
+              receiptHead,
+              finalHead: head,
+              reason: "own-change-outside-allowlist",
+              ownChanges: [FinalCheckRefreshOwnChange.make({ path: "src/index.ts", allowance: O.none() })],
+              detail: "the lane changed 1 file(s) outside the refresh allowlist after the receipt: src/index.ts",
+            })
+          ),
+        squashCommitlint: passingSquashCommitlint,
+        recordInherited: () => Effect.void,
+        read: () => Effect.succeed(prView()),
+        markReady: recordingMarkReady(calls),
+      }).pipe(Effect.flip);
+      expect(error).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "final-check" });
+      expect(error.message).toContain(`no final-check receipt for head ${headSha}`);
+      expect(error.message).toContain(`on ancestor ${Str.slice(0, 12)(receiptHead)}, does not carry`);
+      expect(error.message).toContain("src/index.ts");
+      expect(yield* Ref.get(calls)).toEqual([]);
+    })
+  );
+
+  it.effect("never consults the refresh rule when the head has a failing receipt of its own", () =>
+    Effect.gen(function* () {
+      const consulted = yield* Ref.make(false);
+      const error = yield* runYeetReadyGate(context, {
+        finalCheck: (_context, head) =>
+          Effect.map(
+            passingFinalCheck(_context, head),
+            O.map((receipt) => FinalCheckReceipt.make({ ...receipt, verdict: "fail" }))
+          ),
+        refresh: () => Ref.set(consulted, true).pipe(Effect.as(O.none())),
+        squashCommitlint: passingSquashCommitlint,
+        recordInherited: () => Effect.void,
+        read: () => Effect.succeed(prView()),
+        markReady: () => Effect.void,
+      }).pipe(Effect.flip);
+      expect(error).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "final-check" });
+      expect(yield* Ref.get(consulted)).toBe(false);
     })
   );
 
