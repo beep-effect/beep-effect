@@ -66,6 +66,16 @@ repository autonomy charter. Publication and closeout remain pending.
 
 ## Latest Evidence
 
+- **Evaluator and non-US smoke (2026-10-28):** the strict structural scorer
+  passes seven regression tests and full server verification. Its
+  [pre-prediction protocol](research/EVALUATION-PROTOCOL.md) declares exact
+  source-node alignment, typed-edge diagnostics, reporting groups and the full
+  denominator. Positive benchmark replay has not run. The pinned
+  [IPRally smoke](history/2026-10-28-iprally-smoke.md) used one non-US mechanical
+  token reconstruction and returned one tree / 61 unreviewed findings. It is
+  explicitly non-gold and supplies no accuracy or false-positive estimate.
+
+
 - **Read-only review tool verified (2026-10-28):** `claim_self_check` is now
   declared in the practice toolkit and served by its actual MCP handler. It
   returns full source quotes, `claim-finding` review items, candidate/evidence
