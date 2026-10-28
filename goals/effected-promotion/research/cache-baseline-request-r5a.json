@@ -1,5 +1,5 @@
 {
-  "previous": "daf5edc283c0d555903b3dd0bc8bc1e24919e1bcaf3cb1d1700a856dfc2e157a",
+  "previous": "1ad09b32cb84e0271a5fbfce1a383ba8870a1d59c7c7659912e337ca5932daa2",
   "review": {
     "reviewer": "Claude Opus 5.5 (effected-promotion roadmap R5a, refactor/r5a-typed-frontmatter)",
     "reason": "Record the dependency-only drift of @beep/repo-cli, which gains a direct @beep/yaml edge for the R5a changeset-key removal; the package was already upstream through @beep/markdown, so no closure grows; no qualification is granted.",

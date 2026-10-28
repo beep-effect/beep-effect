@@ -1,0 +1,298 @@
+{
+  "schemaVersion": "goal-completion-receipt/v1",
+  "repository": "beep-effect/beep-effect",
+  "packet": "public-origin-beep-effect-com",
+  "declarationDigest": "a1cd9e84d4dd65c7c3bc47919c420839e7c98c21f4bd61466bf67e7d5e7fd7b0",
+  "acceptedDeclarationDigest": "a1cd9e84d4dd65c7c3bc47919c420839e7c98c21f4bd61466bf67e7d5e7fd7b0",
+  "requiredChecks": {
+    "contexts": [
+      "Codegen Drift",
+      "Commitlint",
+      "Heavy / Check",
+      "Heavy / Docgen",
+      "Heavy / Doctest",
+      "Heavy / Effect Diagnostics",
+      "Heavy / Test Integration",
+      "JSDoc Ratchet",
+      "Lint",
+      "Nix Shell",
+      "Professional Desktop IPC Stdio",
+      "Repo Sanity",
+      "SAST",
+      "Secret Scanning",
+      "Security",
+      "Test Unit",
+      "beep-reviewer"
+    ],
+    "sources": ["repos/{owner}/{repo}/rulesets/10240248/history/53390820"],
+    "effectiveAt": "2026-10-21T13:05:56.000Z",
+    "inventoryComplete": true,
+    "rulesetReadsComplete": true,
+    "mergeTimeInventory": {
+      "source": "repos/{owner}/{repo}/rulesets/rule-suites/4641701588",
+      "ruleSuiteId": 4641701588,
+      "ref": "refs/heads/main",
+      "afterSha": "eba755d93506576824b9f1e8205aa01489efea6a",
+      "pushedAt": "2026-10-21T13:05:56.000Z",
+      "result": "bypass",
+      "ruleSources": [
+        {
+          "sourceType": "ruleset",
+          "rulesetId": 10240248,
+          "name": "main",
+          "enforcement": "active",
+          "requiredStatusChecks": "fail",
+          "survives": true,
+          "version": "repos/{owner}/{repo}/rulesets/10240248/history/53390820",
+          "history": "gating"
+        }
+      ]
+    },
+    "gaps": []
+  },
+  "finalPullRequest": 1946,
+  "acceptedHead": "1da27b6b07b0d755e389e5dc129be1cfc0e54c80",
+  "merge": {
+    "mergeCommit": "eba755d93506576824b9f1e8205aa01489efea6a",
+    "tree": "509d24ef022e576844e592f0924fe9e71002266b",
+    "mergedAt": "2026-10-21T13:05:56.000Z",
+    "method": null,
+    "baseRef": "main"
+  },
+  "evidence": [
+    {
+      "ref": {
+        "kind": "hosted-required-checks",
+        "ref": "required",
+        "gating": true
+      },
+      "outcome": "unsatisfied",
+      "observedHead": "1da27b6b07b0d755e389e5dc129be1cfc0e54c80",
+      "detail": "Required contexts observed at accepted head before merge; 17 contexts. Merge-time evidence unsatisfied: 1 required red(s) at the accepted head; the merge-push rule suite failed required status checks. The merge-push rule suite supplies the merge-time ruleset inventory, including rulesets deleted since then; GitHub lists rule suites for one month."
+    },
+    {
+      "ref": {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/feat_public-origin-beep-effect-com-ac011754d105/verdict.json",
+        "gating": true
+      },
+      "outcome": "unknown",
+      "observedHead": null,
+      "detail": "Yeet verdict absent, invalid or unreadable."
+    }
+  ],
+  "requiredCheckFacts": [
+    {
+      "context": "Codegen Drift",
+      "head": "1da27b6b07b0d755e389e5dc129be1cfc0e54c80",
+      "checkRunId": 119230153457,
+      "conclusion": "success",
+      "outcome": "verified",
+      "source": "check-run"
+    },
+    {
+      "context": "Commitlint",
+      "head": "1da27b6b07b0d755e389e5dc129be1cfc0e54c80",
+      "checkRunId": 119230153728,
+      "conclusion": "success",
+      "outcome": "verified",
+      "source": "check-run"
+    },
+    {
+      "context": "Heavy / Check",
+      "head": "1da27b6b07b0d755e389e5dc129be1cfc0e54c80",
+      "checkRunId": 119230712747,
+      "conclusion": "success",
+      "outcome": "verified",
+      "source": "check-run"
+    },
+    {
+      "context": "Heavy / Docgen",
+      "head": "1da27b6b07b0d755e389e5dc129be1cfc0e54c80",
+      "checkRunId": 119230713013,
+      "conclusion": "success",
+      "outcome": "verified",
+      "source": "check-run"
+    },
+    {
+      "context": "Heavy / Doctest",
+      "head": "1da27b6b07b0d755e389e5dc129be1cfc0e54c80",
+      "checkRunId": 119230712765,
+      "conclusion": "success",
+      "outcome": "verified",
+      "source": "check-run"
+    },
+    {
+      "context": "Heavy / Effect Diagnostics",
+      "head": "1da27b6b07b0d755e389e5dc129be1cfc0e54c80",
+      "checkRunId": 119230712827,
+      "conclusion": "failure",
+      "outcome": "unsatisfied",
+      "source": "check-run"
+    },
+    {
+      "context": "Heavy / Test Integration",
+      "head": "1da27b6b07b0d755e389e5dc129be1cfc0e54c80",
+      "checkRunId": 119230712923,
+      "conclusion": "success",
+      "outcome": "verified",
+      "source": "check-run"
+    },
+    {
+      "context": "JSDoc Ratchet",
+      "head": "1da27b6b07b0d755e389e5dc129be1cfc0e54c80",
+      "checkRunId": 119230154097,
+      "conclusion": "success",
+      "outcome": "verified",
+      "source": "check-run"
+    },
+    {
+      "context": "Lint",
+      "head": "1da27b6b07b0d755e389e5dc129be1cfc0e54c80",
+      "checkRunId": null,
+      "conclusion": "unknown",
+      "outcome": "unknown",
+      "source": "check-run"
+    },
+    {
+      "context": "Nix Shell",
+      "head": "1da27b6b07b0d755e389e5dc129be1cfc0e54c80",
+      "checkRunId": 119230153586,
+      "conclusion": "success",
+      "outcome": "verified",
+      "source": "check-run"
+    },
+    {
+      "context": "Professional Desktop IPC Stdio",
+      "head": "1da27b6b07b0d755e389e5dc129be1cfc0e54c80",
+      "checkRunId": 119230153719,
+      "conclusion": "success",
+      "outcome": "verified",
+      "source": "check-run"
+    },
+    {
+      "context": "Repo Sanity",
+      "head": "1da27b6b07b0d755e389e5dc129be1cfc0e54c80",
+      "checkRunId": 119230153647,
+      "conclusion": "success",
+      "outcome": "verified",
+      "source": "check-run"
+    },
+    {
+      "context": "SAST",
+      "head": "1da27b6b07b0d755e389e5dc129be1cfc0e54c80",
+      "checkRunId": 119230153855,
+      "conclusion": "success",
+      "outcome": "verified",
+      "source": "check-run"
+    },
+    {
+      "context": "Secret Scanning",
+      "head": "1da27b6b07b0d755e389e5dc129be1cfc0e54c80",
+      "checkRunId": 119230153506,
+      "conclusion": "success",
+      "outcome": "verified",
+      "source": "check-run"
+    },
+    {
+      "context": "Security",
+      "head": "1da27b6b07b0d755e389e5dc129be1cfc0e54c80",
+      "checkRunId": 119230153680,
+      "conclusion": "success",
+      "outcome": "verified",
+      "source": "check-run"
+    },
+    {
+      "context": "Test Unit",
+      "head": "1da27b6b07b0d755e389e5dc129be1cfc0e54c80",
+      "checkRunId": 119237510752,
+      "conclusion": "success",
+      "outcome": "verified",
+      "source": "check-run"
+    },
+    {
+      "context": "beep-reviewer",
+      "head": "1da27b6b07b0d755e389e5dc129be1cfc0e54c80",
+      "checkRunId": 119231480679,
+      "conclusion": "success",
+      "outcome": "verified",
+      "source": "check-run"
+    }
+  ],
+  "nonRequiredReds": [
+    {
+      "lane": "Heavy / Coverage Regression",
+      "conclusionAtMerge": "pending",
+      "conclusionFinal": "cancelled",
+      "attribution": "unknown"
+    },
+    {
+      "lane": "Heavy / Lint Policy",
+      "conclusionAtMerge": "failure",
+      "conclusionFinal": "failure",
+      "attribution": "unknown"
+    },
+    {
+      "lane": "Property Laws",
+      "conclusionAtMerge": "pending",
+      "conclusionFinal": "cancelled",
+      "attribution": "unknown"
+    },
+    {
+      "lane": "Lint (lint-b)",
+      "conclusionAtMerge": "pending",
+      "conclusionFinal": "cancelled",
+      "attribution": "unknown"
+    },
+    {
+      "lane": "Lint (lint-a)",
+      "conclusionAtMerge": "pending",
+      "conclusionFinal": "cancelled",
+      "attribution": "unknown"
+    }
+  ],
+  "subClaims": [
+    {
+      "ref": {
+        "kind": "packet-history",
+        "ref": "accepted-declaration",
+        "gating": false
+      },
+      "outcome": "verified",
+      "observedHead": "1da27b6b07b0d755e389e5dc129be1cfc0e54c80",
+      "detail": "Accepted-head declaration compared with current identity and gate, excluding retrospective PR/evidence references. Changes are historical sub-claims and never reset lifecycle."
+    },
+    {
+      "ref": {
+        "kind": "packet-history",
+        "ref": "draft-to-ready",
+        "gating": false
+      },
+      "outcome": "verified",
+      "observedHead": "1da27b6b07b0d755e389e5dc129be1cfc0e54c80",
+      "detail": "ready_for_review event proves transition from draft; caller identity does not prove yeet invocation."
+    },
+    {
+      "ref": {
+        "kind": "packet-history",
+        "ref": "review-window",
+        "gating": false
+      },
+      "outcome": "unsatisfied",
+      "observedHead": "1da27b6b07b0d755e389e5dc129be1cfc0e54c80",
+      "detail": "Review window at merge: open; anchor 2026-10-21T12:46:22.000Z. Check-suite first receipt plus force-push events use Yeet semantics."
+    },
+    {
+      "ref": {
+        "kind": "yeet-verdict",
+        "ref": "merge-ready",
+        "gating": false
+      },
+      "outcome": "unknown",
+      "observedHead": null,
+      "detail": "No head-bound Yeet verdict inferred from timeline or successful checks."
+    }
+  ],
+  "outcome": "unsatisfied",
+  "verifiedAt": "2026-10-28T09:13:31.104Z"
+}

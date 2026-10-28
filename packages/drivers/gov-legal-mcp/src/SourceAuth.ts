@@ -1,6 +1,8 @@
 /**
  * Frozen eCFR and GovInfo source-auth registrations.
  *
+ * **Details**
+ *
  * eCFR is always mounted through the shipped `none` gate. GovInfo uses the
  * shipped `hard` gate and vanishes at composition when `GOVINFO_API_KEY` is
  * absent. The full `none | soft | hard` kit contract remains unchanged.

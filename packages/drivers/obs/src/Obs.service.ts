@@ -1,6 +1,8 @@
 /**
  * High-level OBS recording driver service.
  *
+ * **Details**
+ *
  * Layers on top of {@link ObsProtocol}: provisions the QA capture scene
  * idempotently, starts and stops recordings with event-confirmed state
  * transitions, and (through {@link Obs.makeLayer}) spawns OBS Studio detached

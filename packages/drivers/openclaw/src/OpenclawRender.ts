@@ -1,6 +1,8 @@
 /**
  * Versioned render adapter for OpenClaw deployment intents.
  *
+ * **Details**
+ *
  * Renders an {@link OpenclawDeploymentIntent} into the canonical
  * `openclaw.json` document accepted by the pinned OpenClaw binary. Rendering
  * is version-keyed because upstream config schemas break between releases

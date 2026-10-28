@@ -72,6 +72,11 @@ jobs:
           turbo-team: ${{ vars.TURBO_TEAM }}
           turbo-token: ${{ github.event_name == 'push' && secrets.TURBO_TOKEN || '' }}
           turbo-read-token: ${{ secrets.TURBO_READ_TOKEN }}
+          r2-enabled: ${{ vars.TURBO_R2_ENABLED }}
+          r2-endpoint: ${{ vars.TURBO_R2_ENDPOINT }}
+          r2-bucket: ${{ vars.TURBO_R2_BUCKET }}
+          r2-access-key-id: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_ACCESS_KEY_ID || (github.event_name != 'push' && secrets.TURBO_R2_READ_ACCESS_KEY_ID || '') }}
+          r2-secret-access-key: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_SECRET_ACCESS_KEY || (github.event_name != 'push' && secrets.TURBO_R2_READ_SECRET_ACCESS_KEY || '') }}
 
       # Every event restores the browser cache; only trusted pushes save it, so
       # a pull request cannot seed the entry main restores. The install step is
@@ -158,3 +163,11 @@ jobs:
       - name: Skip lane
         if: steps.lane-gate.outputs.should_run != 'true'
         run: echo "Skipping Storybook for this change set."
+
+      - name: Stop R2 cache adapter
+        if: always()
+        shell: bash
+        run: |
+          if [[ -x infra/r2-cache/adapter.sh ]]; then
+            infra/r2-cache/adapter.sh stop-ci
+          fi

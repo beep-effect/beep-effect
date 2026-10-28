@@ -1,0 +1,88 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "doc-hub-spokes-inversion",
+    "packetId": "goal-packet/v1:12da71f3ed124618fbdd52887a68214d7fe7a5853e1bb3d5da549da56ea3f1d7",
+    "title": "Doc Hub and Spokes Inversion",
+    "status": "active",
+    "created": "2026-10-28",
+    "updated": "2026-10-28",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/doc-hub-spokes-inversion",
+  "lifecycle": "active",
+  "mission": "Rename `@beep/md` to `@beep/doc` (namespace `Doc`), move the parse bridge and the HTML projection into their spokes, replace the Markdown string writer with a projection through `Markdown.stringify`, trim `SafeDocument` to hub-native rules, and amend effected-promotion D-02/D-50.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/doc-hub-spokes",
+    "graduated": "2026-10-28"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/doc-hub-spokes-inversion/README.md",
+    "goals/doc-hub-spokes-inversion/SPEC.md",
+    "goals/doc-hub-spokes-inversion/PLAN.md",
+    "goals/doc-hub-spokes-inversion/GOAL.md",
+    "goals/doc-hub-spokes-inversion/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/doc-hub-spokes-inversion/GOAL.md"
+    }
+  ],
+  "provides": [],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/doc-hub-spokes-inversion/GOAL.md)\" -le 4000",
+    "jq . goals/doc-hub-spokes-inversion/ops/manifest.json",
+    "rg -n \"doc-hub-spokes-inversion|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/doc-hub-spokes-inversion",
+    "git diff --check -- goals/doc-hub-spokes-inversion",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}
