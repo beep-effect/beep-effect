@@ -1,6 +1,8 @@
 /**
  * Schema-first obs-websocket v5 protocol models.
  *
+ * **Details**
+ *
  * Wire reference: obs-websocket `docs/generated/protocol.md` (protocol v5,
  * RPC version 1). Every message rides the base envelope
  * `{ "op": number, "d": object }`; this module models the envelope subset the

@@ -1,6 +1,8 @@
 /**
  * Effect service wrapping the pinned OpenClaw CLI binary.
  *
+ * **Details**
+ *
  * Every operation runs the binary hermetically (`extendEnv: false` with the
  * environment produced by `hermeticOpenclawEnv`), keeps gateway tokens in the
  * environment — never argv — and decodes stdout through tolerant schema
@@ -437,6 +439,8 @@ const toChannelAccountStatus = (entry: unknown) =>
 
 /**
  * Injectable process runner used by the OpenClaw driver services.
+ *
+ * **Details**
  *
  * The live layers back this seam with a hermetic `ChildProcessSpawner`
  * execution; tests inject deterministic runners that capture the request and

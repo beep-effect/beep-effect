@@ -134,7 +134,7 @@ export class OutboxAttachmentError extends S.TaggedError<OutboxAttachmentError, 
  *
  * ```ts
  * import { OutboxAttachmentDigest } from "@beep/m365-mcp/OutboxAttachmentSource"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const digest = OutboxAttachmentDigest.make({
  *   name: "receipt.pdf",
@@ -165,7 +165,7 @@ export class OutboxAttachmentDigest extends S.Opaque<OutboxAttachmentDigest, { r
  *
  * ```ts
  * import { OutboxAttachment } from "@beep/m365-mcp/OutboxAttachmentSource"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const attachment = OutboxAttachment.make({
  *   content: new Uint8Array([37, 80, 68, 70]),

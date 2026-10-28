@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-10-27",
+  "generatedOn": "2026-10-28",
   "scope": [
     "apps/**/*.{ts,tsx}",
     "packages/**/*.{ts,tsx}",
@@ -133,7 +133,7 @@
       "kind": "exported-interface",
       "status": "exception",
       "owner": "@beep/acp",
-      "reason": "Mixed client configuration: logIncoming/logOutgoing are inherited from schema-backed AcpProtocolLoggingOptions, while logger is an Effectful runtime callback."
+      "reason": "Mixed client configuration: logIncoming/logOutgoing are inherited from schema-backed AcpProtocolLoggingOptions, while logger, the onIncomingRequest/onOutgoingResponse/onOutgoingResponseFailure/onTermination lifecycle hooks, and the transformSessionUpdate/transformStdout callbacks are Effectful or functional runtime handles."
     },
     {
       "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
@@ -303,7 +303,7 @@
       "kind": "exported-interface",
       "status": "exception",
       "owner": "@beep/xstate",
-      "reason": "Effect service contract: attach and ready are runtime handles (Effect, Scope) and inspectorUrl is the relay address the Stately SDK derives at connect time; the data half (StatelyInspectorConfig) is already an annotated S.Class."
+      "reason": "Effect service contract: attach and ready are runtime handles (Effect, Scope) and inspectorUrl is the relay address the Stately SDK derives at connect time; the data half (StatelyInspectorConfig) is already an annotated S.Opaque schema."
     },
     {
       "file": "packages/epistemic/domain/src/entities/EdgeVersion/EdgeVersion.behavior.ts",

@@ -1,6 +1,8 @@
 /**
  * `@beep/pglite` driver-level in-process PGlite (embedded PostgreSQL) runtime.
  *
+ * **Details**
+ *
  * Wraps `@effect/sql-pglite` and aliases its client under the `@effect/sql-pg`
  * PgClient tag so Drizzle-backed repositories run unchanged against an
  * in-process database.
