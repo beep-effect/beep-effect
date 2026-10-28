@@ -57,3 +57,19 @@ ecosystem = "npm"
 ignore = true
 effectiveUntil = 2027-01-14T00:00:00Z
 reason = "GHSA-hp3w-g68c-fv3c: no fixed npm release at the 2026-10-17 recheck (alexei/sprintf.js#237 open; latest 1.1.3 is affected). Consumers/owners: @beep/doc-text (mammoth) and @beep/repo-docgen (remarkable and gray-matter's js-yaml 3 via markdown-toc), all via argparse 1.0.10 CLI entrypoints with package-authored templates. Exit: fixed sprintf-js passes consumers and OSV, or every argparse 1 path is removed. Recheck by 2027-01-14; receipt: goals/repository-simplification-residue/history/receipts/hold-register.md."
+
+# GHSA-gcqx-w48m-w2h4 (deepmerge prototype pollution) has no patched release as
+# of the 2026-10-27 recheck: npm latest is 4.3.1, inside the 4.2.0-4.3.1 range,
+# and TehShrike/deepmerge#273 is open. The only lockfile parents are the shadcn
+# CLI (shadcn 4.22.1 and @shadcn/registry 0.2.0); shadcn 4.23.0 and
+# @shadcn/registry 0.2.1 still depend on ^4.3.1. The CLI merges the local
+# components.json config with registry item JSON from developer-configured
+# registries, only when a developer runs it; its output is source reviewed in a
+# PR, and no application runtime path loads deepmerge.
+[[PackageOverrides]]
+name = "deepmerge"
+version = "4.3.1"
+ecosystem = "npm"
+ignore = true
+effectiveUntil = 2027-01-14T00:00:00Z
+reason = "GHSA-gcqx-w48m-w2h4: no fixed npm release at the 2026-10-27 recheck (TehShrike/deepmerge#273 open; latest 4.3.1 is affected). Consumer/owner: @beep/storybook; the only lockfile parents are shadcn 4.22.1 and @shadcn/registry 0.2.0 (the shadcn CLI; 4.23.0 and 0.2.1 still require ^4.3.1). Inputs are the local components.json and registry items from developer-configured registries, merged only when a developer runs the CLI; no runtime path. Exit: fixed deepmerge passes install and OSV, or the shadcn path is removed. Recheck by 2027-01-14; receipt: goals/repository-simplification-residue/history/receipts/hold-register.md."
