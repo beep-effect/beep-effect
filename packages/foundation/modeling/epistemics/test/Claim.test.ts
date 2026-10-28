@@ -127,21 +127,18 @@ describe("Claim envelope", () => {
     })
   );
 
-  it.effect("round-trips schema-derived arbitrary propositions with their keys", () =>
-    Effect.gen(function* () {
-      const result = yield* Arbitrary.checkEffect(Arbitrary.schema(Knows), (proposition) =>
-        Effect.gen(function* () {
-          const row = {
-            ...encoded("cv-generated", { _tag: "Unknown" }, 50, null),
-            proposition,
-            logicalKey: logicalKeyOfKnows(proposition),
-          };
-          expect(yield* encode(yield* decode(row))).toEqual(row);
-          return true;
-        })
-      );
-      expect(result._tag).toBe("Passed");
-    })
+  it.effect.prop(
+    "round-trips schema-derived arbitrary propositions with their keys",
+    [Arbitrary.schema(Knows)],
+    ([proposition]) =>
+      Effect.gen(function* () {
+        const row = {
+          ...encoded("cv-generated", { _tag: "Unknown" }, 50, null),
+          proposition,
+          logicalKey: logicalKeyOfKnows(proposition),
+        };
+        expect(yield* encode(yield* decode(row))).toEqual(row);
+      })
   );
 
   it("gives each binding its own schema identifiers", () => {

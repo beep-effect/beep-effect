@@ -58,6 +58,10 @@ The first complete hosted policy replay found two introduced issues: the claim
 codec regressions crossed the schema-heavy-test threshold without a property
 test, and setting every phase complete while lifecycle stayed active triggered
 `phases-terminal-but-active`. Added schema-derived proposition/key round-trip
-coverage with `Arbitrary.schema` and `Arbitrary.checkEffect`; kept P4 in progress
+coverage with `Arbitrary.schema` and canonical `it.effect.prop`; kept P4 in progress
 until verified completion. No advisory inventory exception or baseline increase
 is used for either fix.
+
+The second hosted replay caught the direct `Arbitrary.checkEffect` call under
+the separate effect-vitest policy (`EV007`). Converted the registration to
+`it.effect.prop` and replayed both test policies with the full package audit.

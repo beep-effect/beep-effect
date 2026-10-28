@@ -64,3 +64,9 @@ Both were introduced here. Added real schema-derived property coverage and kept
 P4 in progress while the proposed closeout awaits verified merge evidence.
 Run the exact schema-first and goal-doctor gates locally after these fixes;
 package audit alone did not cover these repository-wide checks.
+
+The next hosted policy replay caught one introduced `EV007` finding: the new
+property test called `Arbitrary.checkEffect` directly. Converted it to the
+existing `it.effect.prop` registration with `Arbitrary.schema(Knows)`, retaining
+the generated round-trip assertion. Run both effect-vitest and schema-first
+checks together; satisfying one test policy does not establish the other.
