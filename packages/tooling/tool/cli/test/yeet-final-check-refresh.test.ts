@@ -157,6 +157,14 @@ describe("decideFinalCheckRefresh", () => {
     );
     assertTrue(verdict._tag === "refused" && verdict.reason === "effect-vitest-status-drift");
   });
+
+  it("renders a drift the lane lost at the receipt with its sign", () => {
+    const verdict = decideFinalCheckRefresh(
+      facts([EFFECT_VITEST], [FinalCheckStatusDrift.make({ status: "exception", atReceipt: -1, atFinal: 0 })])
+    );
+    assertTrue(verdict._tag === "refused");
+    expect(verdict.detail).toContain("exception -1 at the receipt, +0 at the final head");
+  });
 });
 
 it.layer(NodeServices.layer, { timeout: "60 seconds" })("checkFinalCheckRefresh against a real main merge", (it) => {
