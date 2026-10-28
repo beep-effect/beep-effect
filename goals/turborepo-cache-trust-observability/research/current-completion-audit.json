@@ -143,7 +143,30 @@
       "scope": "unit/fixture only; not deployed trust or all-task qualification"
     },
     "retainedQualification": "goals/turborepo-task-qualification/research/current-signed-qualification.json applies only to its recorded older private-loopback tuple",
-    "nativeProtocol": "goals/turborepo-cache-trust-observability/research/current-native-checkpoint.json"
+    "nativeProtocol": "goals/turborepo-cache-trust-observability/research/current-native-checkpoint.json",
+    "packageVerification": {
+      "fullAudit": {
+        "status": "passed",
+        "head": "23e69e94a4924002397ea5c78407458d128d9f76",
+        "auditSeconds": 1244.6,
+        "docgenSeconds": 40.2,
+        "conditions": "Controlled parent environment: host cache defaults disabled; inherited Turbo endpoint, token, team, cache mode and signing key empty. All package audit/docgen checks ran. Not default-path qualification."
+      },
+      "mainIntegration": {
+        "status": "passed",
+        "head": "3e10e69d103b12536fbd5dea053d2034d9e59976",
+        "launch": "Default enrolled root with main fixture isolation from PR2346.",
+        "selectedFiles": 8,
+        "selectedTestsPassed": 588,
+        "seconds": 26.68,
+        "packageQuick": {
+          "lintSeconds": 5.8,
+          "checkSeconds": 12.1,
+          "status": "passed"
+        },
+        "nativeCheckpointSourceHashesUnchanged": true
+      }
+    }
   },
   "remainingExplicitGates": [
     "SPEC verification matrix commands on actual final changes",
