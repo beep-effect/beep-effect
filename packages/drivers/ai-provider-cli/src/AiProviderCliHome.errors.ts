@@ -1,6 +1,8 @@
 /**
  * Typed failure payloads for provider CLI home-layout mechanics.
  *
+ * **Details**
+ *
  * Error taxonomy ported from t3code (MIT, Copyright 2026 T3 Tools Inc.)
  * `apps/server/src/provider/Drivers/CodexHomeLayout.ts`.
  *

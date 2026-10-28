@@ -1,6 +1,8 @@
 /**
  * Composition of the PACER service layers over a chosen `HttpClient` layer.
  *
+ * **Details**
+ *
  * The only difference between the mock and live runs is which `HttpClient` layer
  * is passed in here (the deterministic mock vs `FetchHttpClient.layer`).
  *

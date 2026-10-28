@@ -1,6 +1,8 @@
 /**
  * MCP server wiring for the `@beep/nlp` MCP driver.
  *
+ * **Details**
+ *
  * Mounts two toolkits into a single stdio-transport MCP server:
  *
  * - the canonical {@link NlpToolkit} from `@beep/nlp`, backed by the wink-nlp
