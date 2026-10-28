@@ -43,46 +43,45 @@ export const RetentionAuthorityReaderDrizzle = Layer.effect(
         const knownAt = DateTime.toEpochMillis(query.knownAt);
         return yield* db
           .transaction(
-            (tx) =>
-              Effect.gen(function* () {
-                const rows = yield* tx
-                  .select()
-                  .from(edge)
-                  .where(
-                    and(
-                      eq(edge.orgId, query.orgId),
-                      inArray(edge.logicalKey, query.logicalKeys),
-                      lte(edge.validFrom, validAt),
-                      or(isNull(edge.validTo), gt(edge.validTo, validAt)),
-                      lte(edge.recordedAt, knownAt),
-                      or(isNull(edge.expiredAt), gt(edge.expiredAt, knownAt))
-                    )
-                  );
-                const edges = yield* Effect.forEach(rows, (row) => Effect.fromResult(fromEdgeVersionRow(row)));
-                const claimIds = A.dedupe(
-                  A.flatMap(edges, (version) => A.getSomes([version.sourceClaimId, version.targetClaimId]))
+            Effect.fnUntraced(function* (tx) {
+              const rows = yield* tx
+                .select()
+                .from(edge)
+                .where(
+                  and(
+                    eq(edge.orgId, query.orgId),
+                    inArray(edge.logicalKey, query.logicalKeys),
+                    lte(edge.validFrom, validAt),
+                    or(isNull(edge.validTo), gt(edge.validTo, validAt)),
+                    lte(edge.recordedAt, knownAt),
+                    or(isNull(edge.expiredAt), gt(edge.expiredAt, knownAt))
+                  )
                 );
-                const dispositions = yield* A.match(claimIds, {
-                  onEmpty: () => Effect.succeed([]),
-                  onNonEmpty: (ids) =>
-                    tx
-                      .select()
-                      .from(disposition)
-                      .where(
-                        and(
-                          eq(disposition.orgId, query.orgId),
-                          inArray(disposition.claimId, ids),
-                          lte(disposition.resolvedAt, knownAt)
-                        )
+              const edges = yield* Effect.forEach(rows, (row) => Effect.fromResult(fromEdgeVersionRow(row)));
+              const claimIds = A.dedupe(
+                A.flatMap(edges, (version) => A.getSomes([version.sourceClaimId, version.targetClaimId]))
+              );
+              const dispositions = yield* A.match(claimIds, {
+                onEmpty: () => Effect.succeed([]),
+                onNonEmpty: (ids) =>
+                  tx
+                    .select()
+                    .from(disposition)
+                    .where(
+                      and(
+                        eq(disposition.orgId, query.orgId),
+                        inArray(disposition.claimId, ids),
+                        lte(disposition.resolvedAt, knownAt)
                       )
-                      .pipe(
-                        Effect.flatMap((results) =>
-                          Effect.forEach(results, (row) => Effect.fromResult(fromClaimDispositionRow(row)))
-                        )
-                      ),
-                });
-                return RetentionSnapshot.make({ edges, dispositions });
-              }),
+                    )
+                    .pipe(
+                      Effect.flatMap((results) =>
+                        Effect.forEach(results, (row) => Effect.fromResult(fromClaimDispositionRow(row)))
+                      )
+                    ),
+              });
+              return RetentionSnapshot.make({ edges, dispositions });
+            }),
             { isolationLevel: "repeatable read", accessMode: "read only" }
           )
           .pipe(

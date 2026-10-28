@@ -25,8 +25,10 @@ Full package verification (`bun run beep quality package-verify <package>`) is
 required for each of `@beep/epistemic-domain`, `@beep/epistemic-use-cases`, and
 `@beep/epistemic-server`, including audit and documentation generation. Initial
 quick checks were followed by full checks; they are not substitutes for them.
-The standalone script also has a separate typecheck because the package's source
-and test configurations do not include scripts. Its no-argument runtime path
+The standalone script has a tracked `scripts/tsconfig.json` and a separate
+typecheck because the package's source and test configurations do not include
+scripts. Native deprecated-API audits cover it and the test helper under
+`test/helpers`; both packages report zero unmatched TypeScript files. Its no-argument runtime path
 returns usage guidance before database configuration or connection acquisition.
 A live production CLI connection is not part of the synthetic drill.
 
@@ -81,3 +83,20 @@ after the targeted Fallow checks. The local Fallow health scan was unfinished
 when this chat's run was stopped. Hosted checks, exact-head final-check with
 explicitly recorded local skips where needed, review resolution and the review
 window still gate completion. No other session's job was stopped.
+
+## Command runtime proof and verification repairs
+
+The actual command succeeds for an empty scoped query with a deliberately
+unreachable synthetic Postgres URI, writes both files, and reports an inert
+policy with zero rows and bytes. This proves the empty scope avoids SQL access.
+The same command with a nonempty key fails with `RetentionUnavailable`; hashes
+of both prior artifacts remain unchanged. This is bounded command/runtime
+evidence, not a production connection or accepted-edge CLI deployment claim.
+The migrated-database property supplies accepted-edge reader/store proof.
+
+Local final-check identified an unwrapped transaction callback and two
+TypeScript ownership gaps. The callback now uses `Effect.fnUntraced`; the helper
+lives in `test/helpers`, and the script has its native program configuration.
+Targeted laws and deprecated-API audits pass, the command configuration
+typechecks, and full server/use-case audits and docgen pass again. No quality
+baseline or authority behavior changed.

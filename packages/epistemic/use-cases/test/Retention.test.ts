@@ -28,7 +28,7 @@ import {
   policyInput,
   provideFixture,
   queryInput,
-} from "./fixtures/Retention.ts";
+} from "./helpers/Retention.ts";
 
 // Generate ordered windows constructively; filtering equal size-zero integers exhausts the generator.
 const PolicyPositive = RetentionPolicy.fields.hotThroughMillis.check(S.isLessThanOrEqualTo(1_000_000));
