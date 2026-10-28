@@ -105,3 +105,16 @@ and attribution are in [package-verification-2026-10-28.md](./package-verificati
 All 33 hosted checks passed at published head `d92846e9cb`; the final update
 requires fresh exact-head readiness. The classic `beep yeet monitor` command,
 after the detached readiness loop, will write the declared readiness verdict.
+
+## Review correction and complete before-census proof
+
+The P2 discussion `4399481243` identified recursive parameter-list matching that
+hid real Schema references. The fix matches direct parameter items, with four
+regression cases. All 32 invalid references are detected; allowed input has
+zero diagnostics. Full lint-rules audit and docgen pass after the correction.
+
+The historical Biome replay over 8,301 tracked TS/TSX files yields exactly the
+same 440 sites as the codemod and normalized text census. File, line, member
+column and facet reconciliation has zero missing or extra matches. The raw
+text count is 448 references on 446 matching lines, including eight enumerated
+comments or strings. The machine-readable report retains all counts.

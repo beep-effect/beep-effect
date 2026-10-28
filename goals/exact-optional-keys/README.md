@@ -36,6 +36,7 @@ rule recall and supplies retained readiness evidence; operative lifecycle stays 
 
 ## Latest Evidence
 
+- Detection reconciliation: [`research/detection-reconciliation-2026-10-28.jsonc`](./research/detection-reconciliation-2026-10-28.jsonc).
 - Package verification: [`research/package-verification-2026-10-28.md`](./research/package-verification-2026-10-28.md).
 - Completion audit: [`research/completion-audit-2026-10-28.md`](./research/completion-audit-2026-10-28.md).
 - Closeout reflection: [`history/reflections/2026-10-28-codex.md`](./history/reflections/2026-10-28-codex.md).

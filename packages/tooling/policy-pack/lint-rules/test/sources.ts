@@ -71,7 +71,7 @@ export const SOURCES: { readonly [K in RuleName]: RuleSource } = {
     ),
   },
   "prefer-exact-optional-key": {
-    invalidCount: 28,
+    invalidCount: 32,
     messageIncludes: "exact optional keys",
     invalid: A.join(
       [
@@ -105,6 +105,10 @@ export const SOURCES: { readonly [K in RuleName]: RuleSource } = {
         "export function siblingScopes() { { const Codec = { optional: (x: number) => x }; Codec.optional(1); } return Codec.optional(Codec.String); }",
         "export function importedType(Codec: unknown) { type T = Codec.optional<typeof S.String>; return 1; }",
         "export function typeNameInAnnotation(other: { Codec: number }) { return Codec.optional(Codec.String); }",
+        "export function nestedCallbackType(cb: (Codec: number) => void) { return Codec.optional(Codec.String); }",
+        "export function nestedMethodType(opts: { map(Codec: number): number }) { return Codec.withDecodingDefault(() => 'x')(Codec.String); }",
+        "export function nestedDefault(x = (Codec: number) => Codec) { return Codec.OptionFromOptional(Codec.String); }",
+        "export function nestedQuery(cb: (Codec: number) => void) { type T = typeof Codec.optional; return 1; }",
         "import DefaultSchema2, { optional as combinedOptional, OptionFromOptional as combinedOption } from 'effect/Schema';",
         "export { withDecodingDefault } from 'effect/Schema';",
       ],

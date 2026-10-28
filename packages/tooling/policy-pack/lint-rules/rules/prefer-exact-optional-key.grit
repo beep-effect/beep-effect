@@ -29,10 +29,10 @@ pattern retired_member() {
 pattern shadowing_parameters($ns) {
   or {
     $ns,
-    contains or {
+    JsParameters(items=some or {
       JsFormalParameter(binding=$ns),
       JsRestParameter(binding=$ns)
-    }
+    })
   }
 }
 

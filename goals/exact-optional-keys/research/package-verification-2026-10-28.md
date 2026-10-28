@@ -3,7 +3,7 @@
 The implementation merge `93ed4b751e9f0d6ea1d453762839877dcbf19c14` touches
 25 registered workspace packages. Each received the default command below,
 serially, with no `--quick` option. The lint-rules package was checked again
-after the precision fix in `8d5aea18328793081254eb2d3bd8982971784d65`.
+after the reviewed direct-parameter regression fix.
 
 ```sh
 bun run beep quality package-verify <package>
@@ -21,7 +21,7 @@ bun run beep quality package-verify <package>
 | `@beep/infra` | 0 | ok 11.6s | ok 15.0s | 29.2 |
 | `@beep/jsonl` | 0 | ok 13.9s | ok 4.2s | 19.8 |
 | `@beep/lexical-schema` | 0 | ok 9.2s | ok 9.7s | 20.8 |
-| `@beep/lint-rules` | 0 | ok 36.7s | ok 3.7s | not sampled |
+| `@beep/lint-rules` | 0 | ok 26.6s | ok 2.6s | not sampled |
 | `@beep/markdown` | 0 | ok 21.6s | ok 4.2s | 27.7 |
 | `@beep/memfs` | 0 | ok 21.2s | ok 2.7s | 25.8 |
 | `@beep/oip-web` | 0 | ok 16.5s | skip | 18.3 |
@@ -90,11 +90,11 @@ and no built-in recommended rules, the real Biome CLI returned:
 
 | Fixture | Exit | Plugin errors | Other errors |
 | --- | --- | --- | --- |
-| Invalid | 1 | 28 | 0 |
+| Invalid | 1 | 32 | 0 |
 | Allowed | 0 | 0 | 0 |
 
 The rule source SHA-256 is
-`ce5fa5125d05c91b9ce360960dd1a675468b6d22354dd5d1d7421fda67af8354`.
+`9cf66aa559efe6d140e77931c75afa436ccfbaa6812c9965f6ffb2816df83176`.
 
 ## Hosted and completion evidence
 
@@ -105,3 +105,14 @@ The detached `--until-ready` monitor emits a status snapshot; the classic
 After final readiness, run that classic monitor, verify its accepted head and
 `mergeReady` facts, retain its unmodified artifacts in the owning clone, and
 only then merge and run completion refresh.
+
+## Historical census reconciliation
+
+The final rule was also replayed against the historical TS tree at `c9035c45e7`.
+All 8,301 tracked TS/TSX files under the goal roots were exported; Biome processed
+8,298 under its scanner limits and reported exactly 440 plugin errors. Those
+match all 440 codemod sites, including their member-token columns and facets,
+with zero missing, extra or unparsed references. Actual ripgrep reports 448
+references on 446 matching lines; eight enumerated comments or strings are
+excluded, leaving the same 440 sites. See
+[detection-reconciliation-2026-10-28.jsonc](./detection-reconciliation-2026-10-28.jsonc).

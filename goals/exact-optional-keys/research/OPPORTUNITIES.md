@@ -119,3 +119,15 @@
 - Disposition: retain the existing inherited-gate disposition already recorded
   above and the user goal's explicit unrelated-failure allowance. No new baseline,
   suppression or expiring waiver is introduced.
+
+## 2026-10-28: recursive parameter matching hid outer Schema references
+
+- Doing: addressing the P2 review on PR #2316, discussion `4399481243`.
+- Evidence: callback parameter types, method-signature types and default arrows
+  contain nested `JsFormalParameter` nodes. The old `contains` test treated those
+  as outer shadows. Four new regression cases were missed before the fix.
+- Fix: match direct `JsParameters.items` with `some`, keeping the bare-arrow
+  parameter alternative. All 32 invalid references and allowed cases now pass;
+  full lint-rules audit and docgen pass.
+- Prevention: scope-sensitive predicates must traverse direct child lists,
+  with nested type/default-value counterexamples alongside true-shadow cases.

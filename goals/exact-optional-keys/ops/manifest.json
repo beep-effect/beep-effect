@@ -56,7 +56,8 @@
     "research/optional-vs-optional-key.md",
     "research/verification.md",
     "research/completion-audit-2026-10-28.md",
-    "research/package-verification-2026-10-28.md"
+    "research/package-verification-2026-10-28.md",
+    "research/detection-reconciliation-2026-10-28.jsonc"
   ],
   "agentLaunchers": [
     {
