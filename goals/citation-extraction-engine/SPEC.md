@@ -720,6 +720,18 @@ instead of silently splitting delivery or weakening scope.
   Reversal requires another evidenced semantic mapping and consumer migration,
   not compatibility aliases or a parallel hierarchy.
 
+- **2026-10-28 canonical model rebaseline:** replace the recursive case/Id/
+  supra/short-case cluster and provisional journal with source-backed semantic
+  forms, adding canonical named reference and unknown branches to the existing
+  union. Reuse component, publication and locator/date schemas across forms.
+  Case editions retain historical refs alongside versioned public reporter
+  identities. Courts are either versioned public identities or explicit
+  unmapped data; source lookup and compatibility verification remain engine
+  duties. Preserve textual metadata and name enrichment without embedded
+  citations, telemetry or source coordinates. Remove the old ad-hoc formatter;
+  lawful structured Bluebook codecs remain an open P1 requirement. Reversal
+  requires an evidenced field/consumer migration, not aliases or recursion.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from

@@ -14,12 +14,10 @@ import {
   DurableLocatorOptions,
   extractPatentFigures,
   extractPatentNumber,
-  FullCaseCitation,
   FullCitation,
   getKindCodeExplanation,
   getPatentDisplay,
   getStatusFromKindCode,
-  IdCitation,
   IdsSubmissionFact,
   KindCode,
   LawPracticeFixtureKey,
@@ -33,7 +31,6 @@ import {
   NeutralCitation,
   OfficeAction,
   OfficeCode,
-  Parenthetical,
   PatentAsset,
   PatentAssetStatus,
   PatentCitationEvent,
@@ -45,12 +42,9 @@ import {
   Rejection,
   RejectionGround,
   ResolutionResult,
-  ShortFormCaseCitation,
   ShortFormCitation,
   Span,
   StatutesAtLargeCitation,
-  SubsequentHistoryEntry,
-  SupraCitation,
   TransformationMap,
   WarningPosition,
   WipoSt13OfficeCode,
@@ -72,21 +66,14 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
 const decodeCitingApplicationIdentityOption = S.decodeOption(CitingApplicationIdentity);
-const decodeCitation = S.decodeEffect(Citation);
 const decodeCitationBase = S.decodeEffect(CitationBase);
 const decodeContextOptions = S.decodeEffect(ContextOptions);
 const decodeDurableLocatorOptions = S.decodeEffect(DurableLocatorOptions);
-const decodeFullCaseCitation = S.decodeEffect(FullCaseCitation);
-const decodeIdCitation = S.decodeEffect(IdCitation);
 const decodeNeutralCitation = S.decodeEffect(NeutralCitation);
-const decodeParenthetical = S.decodeEffect(Parenthetical);
 const decodePinciteInfo = S.decodeEffect(PinciteInfo);
 const decodeResolutionResult = S.decodeEffect(ResolutionResult);
-const decodeShortFormCaseCitation = S.decodeEffect(ShortFormCaseCitation);
 const decodeStatutesAtLargeCitation = S.decodeEffect(StatutesAtLargeCitation);
-const decodeSupraCitation = S.decodeEffect(SupraCitation);
 const decodeUnknownCitingApplicationIdentityOption = S.decodeUnknownOption(CitingApplicationIdentity);
-const decodeUnknownCitation = S.decodeUnknownEffect(Citation);
 const decodeUnknownClaim = S.decodeUnknownEffect(Claim);
 const decodeUnknownDistinction = S.decodeUnknownEffect(Distinction);
 const decodeUnknownLegalClient = S.decodeUnknownEffect(LegalClient);
@@ -96,28 +83,22 @@ const decodeUnknownOfficeAction = S.decodeUnknownEffect(OfficeAction);
 const decodeUnknownPatentAsset = S.decodeUnknownEffect(PatentAsset);
 const decodeUnknownPriorArtReference = S.decodeUnknownEffect(PriorArtReference);
 const decodeUnknownRejection = S.decodeUnknownEffect(Rejection);
-const encodeCitation = S.encodeEffect(Citation);
 const encodeCitationBase = S.encodeEffect(CitationBase);
 const encodeClaim = S.encodeEffect(Claim);
 const encodeContextOptions = S.encodeEffect(ContextOptions);
 const encodeDistinction = S.encodeEffect(Distinction);
 const encodeDurableLocatorOptions = S.encodeEffect(DurableLocatorOptions);
-const encodeFullCaseCitation = S.encodeEffect(FullCaseCitation);
-const encodeIdCitation = S.encodeEffect(IdCitation);
 const encodeLegalClient = S.encodeEffect(LegalClient);
 const encodeLegalContact = S.encodeEffect(LegalContact);
 const encodeMatter = S.encodeEffect(Matter);
 const encodeNeutralCitation = S.encodeEffect(NeutralCitation);
 const encodeOfficeAction = S.encodeEffect(OfficeAction);
-const encodeParenthetical = S.encodeEffect(Parenthetical);
 const encodePatentAsset = S.encodeEffect(PatentAsset);
 const encodePinciteInfo = S.encodeEffect(PinciteInfo);
 const encodePriorArtReference = S.encodeEffect(PriorArtReference);
 const encodeRejection = S.encodeEffect(Rejection);
 const encodeResolutionResult = S.encodeEffect(ResolutionResult);
-const encodeShortFormCaseCitation = S.encodeEffect(ShortFormCaseCitation);
 const encodeStatutesAtLargeCitation = S.encodeEffect(StatutesAtLargeCitation);
-const encodeSupraCitation = S.encodeEffect(SupraCitation);
 const isApplicationNumber = S.is(ApplicationNumber);
 const isClaimNumber = S.is(ClaimNumber);
 const isKindCode = S.is(KindCode);
@@ -596,18 +577,6 @@ describe("@beep/law-practice-domain", () => {
 
   it("constructs citation values with schema-owned definitive defaults", () => {
     const base = CitationBase.make(citationBaseInput("base"));
-    const fullCase = FullCaseCitation.make({
-      ...citationBaseInput("410 U.S. 113"),
-      volume: S.Natural.make(410),
-      reporter: "U.S.",
-    });
-    const id = IdCitation.make(citationBaseInput("Id."));
-    const supra = SupraCitation.make(citationBaseInput("Smith, supra"));
-    const shortForm = ShortFormCaseCitation.make({
-      ...citationBaseInput("410 U.S. at 120"),
-      volume: S.Natural.make(410),
-      reporter: "U.S.",
-    });
     const neutral = NeutralCitation.make({
       ...citationBaseInput("2023 IL 128749"),
       year: S.Natural.make(2023),
@@ -618,24 +587,14 @@ describe("@beep/law-practice-domain", () => {
       volume: S.Natural.make(100),
       page: S.Natural.make(3743),
     });
-    const parenthetical = Parenthetical.make({ text: "holding that X requires Y", type: "holding" });
     const pincite = PinciteInfo.make({ isRange: false, raw: "570" });
     const resolution = ResolutionResult.make({ confidence: 1 });
     const context = ContextOptions.make({});
     const locator = DurableLocatorOptions.make({});
 
     expect(base.warnings).toStrictEqual([]);
-    expect(fullCase.unpublished).toBe(false);
-    expect(fullCase.hasBlankPage).toBe(false);
-    expect(fullCase.parentheticals).toStrictEqual([]);
-    expect(fullCase.subsequentHistoryEntries).toStrictEqual([]);
-    expect(fullCase.justices).toStrictEqual([]);
-    expect(id.pinciteInherited).toBe(false);
-    expect(supra.pinciteInherited).toBe(false);
-    expect(shortForm.pinciteInherited).toBe(false);
     expect(neutral.unpublished).toBe(false);
     expect(statutesAtLarge.pinciteIsRange).toBe(false);
-    expect(parenthetical.citations).toStrictEqual([]);
     expect(pincite.starPage).toBe(false);
     expect(pincite.additionalPincites).toStrictEqual([]);
     expect(resolution.warnings).toStrictEqual([]);
@@ -651,20 +610,6 @@ describe("@beep/law-practice-domain", () => {
     Effect.fnUntraced(function* () {
       const baseWire = citationBaseWire("citation");
       const base = yield* decodeCitationBase(baseWire);
-      const fullCase = yield* decodeFullCaseCitation({
-        ...baseWire,
-        type: "case",
-        volume: 410,
-        reporter: "U.S.",
-      });
-      const id = yield* decodeIdCitation({ ...baseWire, type: "id" });
-      const supra = yield* decodeSupraCitation({ ...baseWire, type: "supra" });
-      const shortForm = yield* decodeShortFormCaseCitation({
-        ...baseWire,
-        type: "shortFormCase",
-        volume: 410,
-        reporter: "U.S.",
-      });
       const neutral = yield* decodeNeutralCitation({
         ...baseWire,
         type: "neutral",
@@ -677,26 +622,14 @@ describe("@beep/law-practice-domain", () => {
         volume: 100,
         page: 3743,
       });
-      const parenthetical = yield* decodeParenthetical({ text: "holding", type: "holding" });
       const pincite = yield* decodePinciteInfo({ isRange: false, raw: "570" });
       const resolution = yield* decodeResolutionResult({ confidence: 1 });
       const context = yield* decodeContextOptions({});
       const locator = yield* decodeDurableLocatorOptions({});
 
       expect((yield* encodeCitationBase(base)).warnings).toStrictEqual([]);
-      expect(yield* encodeFullCaseCitation(fullCase)).toMatchObject({
-        unpublished: false,
-        hasBlankPage: false,
-        parentheticals: [],
-        subsequentHistoryEntries: [],
-        justices: [],
-      });
-      expect((yield* encodeIdCitation(id)).pinciteInherited).toBe(false);
-      expect((yield* encodeSupraCitation(supra)).pinciteInherited).toBe(false);
-      expect((yield* encodeShortFormCaseCitation(shortForm)).pinciteInherited).toBe(false);
       expect((yield* encodeNeutralCitation(neutral)).unpublished).toBe(false);
       expect((yield* encodeStatutesAtLargeCitation(statutesAtLarge)).pinciteIsRange).toBe(false);
-      expect((yield* encodeParenthetical(parenthetical)).citations).toStrictEqual([]);
       expect(yield* encodePinciteInfo(pincite)).toMatchObject({
         starPage: false,
         additionalPincites: [],
@@ -717,22 +650,6 @@ describe("@beep/law-practice-domain", () => {
       message: "Ambiguous reporter",
       position: WarningPosition.make({ start: 0, end: 3 }),
     });
-    const childCitation = FullCaseCitation.make({
-      ...citationBaseInput("100 F.2d 1"),
-      volume: S.Natural.make(100),
-      reporter: "F.2d",
-    });
-    const parenthetical = Parenthetical.make({
-      text: "quoting 100 F.2d 1",
-      type: "quoting",
-      citations: [childCitation],
-    });
-    const history = SubsequentHistoryEntry.make({
-      signal: "affirmed",
-      rawSignal: "aff'd",
-      signalSpan: span(5),
-      order: S.Natural.make(0),
-    });
     const extraPincite = PinciteInfo.make({
       page: O.some(S.Natural.make(580)),
       isRange: false,
@@ -742,24 +659,6 @@ describe("@beep/law-practice-domain", () => {
     const base = CitationBase.make({
       ...citationBaseInput("base"),
       warnings: [warning],
-    });
-    const fullCase = FullCaseCitation.make({
-      ...citationBaseInput("410 U.S. ___"),
-      volume: S.Natural.make(410),
-      reporter: "U.S.",
-      unpublished: true,
-      hasBlankPage: true,
-      parentheticals: [parenthetical],
-      subsequentHistoryEntries: [history],
-      justices: ["Brennan"],
-    });
-    const id = IdCitation.make({ ...citationBaseInput("Id."), pinciteInherited: true });
-    const supra = SupraCitation.make({ ...citationBaseInput("Smith, supra"), pinciteInherited: true });
-    const shortForm = ShortFormCaseCitation.make({
-      ...citationBaseInput("410 U.S. at 120"),
-      volume: S.Natural.make(410),
-      reporter: "U.S.",
-      pinciteInherited: true,
     });
     const neutral = NeutralCitation.make({
       ...citationBaseInput("2023 IL 128749-U"),
@@ -791,17 +690,8 @@ describe("@beep/law-practice-domain", () => {
     });
 
     expect(base.warnings).toStrictEqual([warning]);
-    expect(fullCase.unpublished).toBe(true);
-    expect(fullCase.hasBlankPage).toBe(true);
-    expect(fullCase.parentheticals).toStrictEqual([parenthetical]);
-    expect(fullCase.subsequentHistoryEntries).toStrictEqual([history]);
-    expect(fullCase.justices).toStrictEqual(["Brennan"]);
-    expect(id.pinciteInherited).toBe(true);
-    expect(supra.pinciteInherited).toBe(true);
-    expect(shortForm.pinciteInherited).toBe(true);
     expect(neutral.unpublished).toBe(true);
     expect(statutesAtLarge.pinciteIsRange).toBe(true);
-    expect(parenthetical.citations).toStrictEqual([childCitation]);
     expect(pincite.starPage).toBe(true);
     expect(pincite.additionalPincites).toStrictEqual([extraPincite]);
     expect(resolution.warnings).toStrictEqual(["Multiple antecedents"]);
@@ -810,33 +700,6 @@ describe("@beep/law-practice-domain", () => {
     expect(locator.space).toBe("clean");
     expect(locator.fullSpan).toBe(true);
     expect(locator.contextLength).toBe(64);
-  });
-
-  it("formats full case citation option values without leaking Option representations", () => {
-    const citation = FullCaseCitation.make({
-      ...citationBaseInput("Smith v. Jones, 410 U.S. 113, 120 (2d Cir. 2020)"),
-      volume: S.Natural.make(410),
-      reporter: "U.S.",
-      page: O.some(S.Natural.make(113)),
-      pincite: O.some(S.Natural.make(120)),
-      court: O.some("Second Circuit"),
-      normalizedCourt: O.some("2d Cir."),
-      year: O.some(S.Natural.make(2020)),
-      caseName: O.some("Smith v. Jones"),
-    });
-
-    expect(FullCaseCitation.toBlueBook(citation)).toBe("Smith v. Jones, 410 U.S. 113, 120 (2d Cir. 2020)");
-
-    const rawCourtCitation = FullCaseCitation.make({
-      ...citationBaseInput("410 U.S. 113 (D. Mass. 2021)"),
-      volume: S.Natural.make(410),
-      reporter: "U.S.",
-      page: O.some(S.Natural.make(113)),
-      court: O.some("D. Mass."),
-      year: O.some(S.Natural.make(2021)),
-    });
-
-    expect(FullCaseCitation.toBlueBook(rawCourtCitation)).toBe("410 U.S. 113 (D. Mass. 2021)");
   });
 
   it.effect.prop(
@@ -849,7 +712,7 @@ describe("@beep/law-practice-domain", () => {
   );
 
   it.effect.prop(
-    "round-trips the recursive citation unions via schema-derived arbitraries",
+    "round-trips the citation unions via schema-derived arbitraries",
     {
       Citation: Arbitrary.schema(Citation),
       FullCitation: Arbitrary.schema(FullCitation),
@@ -862,62 +725,6 @@ describe("@beep/law-practice-domain", () => {
         yield* assertSchemaEncodedRoundTrip(ShortFormCitation, values.ShortFormCitation, "ShortFormCitation");
       }),
     { arbitrary: fcRuns(5) }
-  );
-
-  it.effect(
-    "decodes and re-encodes a mutually-recursive Citation nesting",
-    Effect.fnUntraced(function* () {
-      const leaf = (volume: number, reporter: string, text: string) => ({
-        type: "case" as const,
-        text,
-        span: { cleanStart: 0, cleanEnd: text.length, originalStart: 0, originalEnd: text.length },
-        confidence: 1,
-        matchedText: text,
-        processTimeMs: 0,
-        patternsChecked: 1,
-        volume,
-        reporter,
-      });
-
-      // case -> parentheticals -> case -> parentheticals -> case (three recursion levels)
-      const wire = {
-        ...leaf(410, "U.S.", "410 U.S. 113"),
-        parentheticals: [
-          {
-            text: "quoting Doe v. City, 100 F.2d 1 (citing Roe, 200 F.2d 2)",
-            type: "quoting",
-            citations: [
-              {
-                ...leaf(100, "F.2d", "100 F.2d 1"),
-                parentheticals: [
-                  { text: "citing Roe, 200 F.2d 2", type: "citing", citations: [leaf(200, "F.2d", "200 F.2d 2")] },
-                ],
-              },
-            ],
-          },
-        ],
-      };
-
-      const decoded = yield* decodeUnknownCitation(wire);
-      expect(decoded.type).toBe("case");
-      if (decoded.type !== "case") return;
-
-      const level1 = O.getOrThrow(A.head(decoded.parentheticals));
-      expect(level1.type).toBe("quoting");
-      const child = O.getOrThrow(A.head(level1.citations));
-      expect(child.type).toBe("case");
-      if (child.type !== "case") return;
-
-      const childParenthetical = O.getOrThrow(A.head(child.parentheticals));
-      const grandchild = O.getOrThrow(A.head(childParenthetical.citations));
-      expect(grandchild.type).toBe("case");
-      if (grandchild.type !== "case") return;
-      expect(grandchild.reporter).toBe("F.2d");
-
-      // encode -> decode is identity across the S.suspend recursion knot
-      const equivalent = S.toEquivalence(Citation);
-      expect(equivalent(yield* decodeCitation(yield* encodeCitation(decoded)), decoded)).toBe(true);
-    })
   );
 
   it("rejects a negative or fractional clean position when resolving original span positions", () => {

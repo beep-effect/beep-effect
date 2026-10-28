@@ -9,10 +9,10 @@
 /**
  * Component-span model exports.
  *
- * **Example** (Import CaseComponentSpan)
+ * **Example** (Import NeutralComponentSpan)
  *
  * ```ts
- * import { CaseComponentSpan } from "@beep/law-practice-domain/values";
+ * import { NeutralComponentSpan } from "@beep/law-practice-domain/values";
  * ```
  *
  * @category value-objects

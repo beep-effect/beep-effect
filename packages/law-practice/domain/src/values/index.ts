@@ -87,7 +87,7 @@ export * from "./CanonCitation/index.ts";
 export * from "./CaseGroup/index.ts";
 /**
  * Citation value-object exports (the tagged-union `Citation`, its full/short-form
- * unions, and the recursive `Parenthetical` + case/id/supra/short-form members).
+ * unions, canonical semantic forms and provisional extension members).
  *
  * **Example** (Import the citation tagged union)
  *
@@ -171,7 +171,7 @@ export * from "./ClaimElement/index.ts";
  * **Example** (Import the case component-span value objects)
  *
  * ```ts
- * import { CaseComponentSpan } from "@beep/law-practice-domain/values";
+ * import { NeutralComponentSpan } from "@beep/law-practice-domain/values";
  * ```
  *
  * @category value-objects
@@ -392,19 +392,6 @@ export * from "./HohfeldPosition/index.ts";
  */
 export * from "./HohfeldPositionKind/index.ts";
 /**
- * Journal-citation value-object exports.
- *
- * **Example** (Import the journal-citation value objects)
- *
- * ```ts
- * import { JournalCitation } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./JournalCitation/index.ts";
-/**
  * Practice knowledge-graph attribution-source exports.
  *
  * @category value-objects
@@ -565,19 +552,6 @@ export * from "./OfficeCode/index.ts";
  * @since 0.0.0
  */
 export * from "./ParallelGroup/index.ts";
-/**
- * Parenthetical-type value-object exports.
- *
- * **Example** (Import the parenthetical-type value objects)
- *
- * ```ts
- * import { ParentheticalType } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./ParentheticalType/index.ts";
 /**
  * Party kind vocabulary exports.
  *

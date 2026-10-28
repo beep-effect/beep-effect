@@ -1,8 +1,8 @@
 import {
   Citation,
+  CitationComponents,
   CitationEditionRef,
-  CitationLawComponents,
-  CitationLawPublication,
+  CitationPublication,
   FullCitation,
   FullLawCitation,
 } from "@beep/law-practice-domain/values";
@@ -58,7 +58,7 @@ describe("canonical full law semantic schema", () => {
 
   it.effect("retains arbitrary legal group names and explicit null versus absent components", () =>
     Effect.gen(function* () {
-      const components = yield* S.decodeEffect(CitationLawComponents)({
+      const components = yield* S.decodeEffect(CitationComponents)({
         page: null,
         custom_section: "§ 2-A",
         title: "0035",
@@ -66,30 +66,28 @@ describe("canonical full law semantic schema", () => {
       expect(components.page).toEqual(O.none());
       expect(R.has(components, "chapter")).toBe(false);
       expect(components.title).toEqual(O.some("0035"));
-      expect(yield* S.encodeEffect(CitationLawComponents)(components)).toEqual({
+      expect(yield* S.encodeEffect(CitationComponents)(components)).toEqual({
         page: null,
         custom_section: "§ 2-A",
         title: "0035",
       });
-      expect(Result.isFailure(S.decodeUnknownResult(CitationLawComponents)({ title: 35 }))).toBe(true);
+      expect(Result.isFailure(S.decodeUnknownResult(CitationComponents)({ title: 35 }))).toBe(true);
     })
   );
 
   it.effect("keeps unknown and ambiguous publication identities as data and checks selected membership", () =>
     Effect.gen(function* () {
-      const unknown = yield* S.decodeEffect(CitationLawPublication)({ editions: [], selectedEdition: null });
-      const ambiguous = yield* S.decodeEffect(CitationLawPublication)({
+      const unknown = yield* S.decodeEffect(CitationPublication)({ editions: [], selectedEdition: null });
+      const ambiguous = yield* S.decodeEffect(CitationPublication)({
         editions: [cfr, usc, cfr],
         selectedEdition: null,
       });
       expect(unknown.selectedEdition).toEqual(O.none());
       expect(ambiguous.editions).toEqual([cfr, usc, cfr]);
-      expect(Result.isFailure(S.decodeResult(CitationLawPublication)({ editions: [cfr], selectedEdition: usc }))).toBe(
+      expect(Result.isFailure(S.decodeResult(CitationPublication)({ editions: [cfr], selectedEdition: usc }))).toBe(
         true
       );
-      expect(Result.isFailure(S.decodeResult(CitationLawPublication)({ editions: [], selectedEdition: cfr }))).toBe(
-        true
-      );
+      expect(Result.isFailure(S.decodeResult(CitationPublication)({ editions: [], selectedEdition: cfr }))).toBe(true);
     })
   );
 

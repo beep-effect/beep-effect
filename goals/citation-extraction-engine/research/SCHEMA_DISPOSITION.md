@@ -47,6 +47,22 @@ The exact field mapping and remaining donor-only obligations are recorded in
 not a second citation hierarchy or a completed P1 claim. No donor disposition
 is completed by deleting its provisional representation.
 
+## Applied canonical model migration — 2026-10-28
+
+The existing union now contains semantic full case, short case, Id, supra,
+named reference, unknown, full law and full journal models. The source
+`ShortCaseCitation` maps to the existing repo name `ShortFormCaseCitation`;
+there is one branch. `FullJournalCitation` replaces the provisional journal
+class. Shared `CitationComponents`, `CitationPublication` and locator/date
+metadata replace the law-only primitive names without aliases.
+
+The recursive `Parenthetical`, its donor classification helper, five orphaned
+canonical component-span classes and `FullCaseCitation.toBlueBook` are removed.
+Parenthetical content remains semantic text; future document links reference
+IDs. Bluebook codecs, document relationships and the remaining provisional
+extension branches are unfinished. See the exact field ownership and source
+receipt in `history/evidence/2026-10-28-canonical-models.md`.
+
 ## Target boundaries
 
 ### Semantic legal values

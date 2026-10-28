@@ -7,6 +7,12 @@
  */
 
 /**
+ * Canonical case and reference semantic models.
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./Citation.case.ts";
+/**
  * Document-local occurrence and authority identities.
  *
  * @category models
@@ -14,17 +20,17 @@
  */
 export { CitationAuthorityId, CitationMentionId } from "./Citation.identity.ts";
 /**
- * Canonical law semantics and publication identity references.
+ * Canonical journal semantics.
  * @category models
  * @since 0.0.0
  */
-export {
-  CitationEditionRef,
-  CitationLawComponents,
-  CitationLawMetadata,
-  CitationLawPublication,
-  FullLawCitation,
-} from "./Citation.law.ts";
+export { FullJournalCitation } from "./Citation.journal.ts";
+/**
+ * Canonical law semantics.
+ * @category models
+ * @since 0.0.0
+ */
+export { CitationLawMetadata, FullLawCitation } from "./Citation.law.ts";
 /**
  * Citation model exports.
  *
@@ -38,3 +44,9 @@ export {
  * @since 0.0.0
  */
 export * from "./Citation.models.ts";
+/**
+ * Shared canonical semantic components, publication refs and locator metadata.
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./Citation.resource.ts";

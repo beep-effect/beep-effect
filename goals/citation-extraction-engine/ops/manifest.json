@@ -11,7 +11,7 @@
   "packetPath": "goals/citation-extraction-engine",
   "lifecycle": "active",
   "mission": "Deliver Effect-native observable capability parity with pinned official eyecite 2.7.6, exact verified source evidence, schema-first legal models, lawful transformations, and proven TypeScript-port extensions.",
-  "statusNote": "P0/P1 remain in progress. Canonical FullLawCitation replaces provisional statute/regulation models in the existing union, preserving exact locator strings and law publication identity candidates. Unused statute coordinates and standalone type lists are removed. Domain schema proof does not complete parser parity, donor dispositions or remaining mention/authority/runtime safety work.",
+  "statusNote": "P0/P1 remain in progress. All eight canonical model families now have semantic schemas in the existing union; law primitives are shared, historical case editions map to versioned public reporter IDs, and unknown courts/references remain data. Recursive citation copies, the old formatter and orphaned canonical span classes are removed. Verified mentions, document relationships, lawful Bluebook codecs, extension dispositions, actual parser behavior and safety/parity proof remain unfinished.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -61,7 +61,8 @@
     "goals/citation-extraction-engine/history/evidence/2026-10-28-identity-foundations.md",
     "goals/citation-extraction-engine/ops/citation-migration-surface.json",
     "goals/citation-extraction-engine/history/evidence/2026-10-28-mention-identity-producer.md",
-    "goals/citation-extraction-engine/history/evidence/2026-10-28-law-schema.md"
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-law-schema.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-canonical-models.md"
   ],
   "researchReports": [
     "research/EYECITE_BASELINE.md",
@@ -249,6 +250,10 @@
     {
       "path": "ops/probe-law-schema.py",
       "purpose": "Audit pinned canonical law extractor capture names and focused field/metadata observations for semantic ownership; not a target parity gate."
+    },
+    {
+      "path": "ops/probe-canonical-models.py",
+      "purpose": "Record all eight canonical model/metadata field projections and focused oracle observations for semantic ownership; not target parser or formatter parity."
     }
   ]
 }
