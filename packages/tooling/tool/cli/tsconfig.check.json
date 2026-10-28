@@ -129,6 +129,9 @@
       "path": "../../../foundation/modeling/spdx/tsconfig.json"
     },
     {
+      "path": "../../../foundation/modeling/tsconfig/tsconfig.json"
+    },
+    {
       "path": "../../../foundation/modeling/utils/tsconfig.json"
     },
     {
