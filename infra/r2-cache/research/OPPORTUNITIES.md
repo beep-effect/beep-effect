@@ -24,3 +24,7 @@
   runtime cap. Both exact units ended before another invocation. A smaller existing
   cacheable policy task then restored the identical hash remotely on both hosts;
   failed smoke runs are excluded from performance measurements.
+- The repo-cli startup-boundary test caught two eager Effect imports added for host
+  cache defaults. They were moved into the entry point's existing deferred module
+  group; the allowlist expectation stayed unchanged. Entry-point edits should run
+  the narrow startup-boundary contract in the focused proof before publication.

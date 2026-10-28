@@ -8,8 +8,6 @@
  * @since 0.0.0
  */
 
-import * as ConfigProvider from "effect/ConfigProvider";
-import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import { shouldRenderFailureCause } from "./internal/cli/FailureRendering.ts";
 import { LINT_POLICY_SUBCOMMANDS } from "./internal/cli/LintRouting.ts";
@@ -45,13 +43,15 @@ const canUseQualityTaskFastPath = (argv: ReadonlyArray<string>): boolean =>
 const canUseCiFastPath = (argv: ReadonlyArray<string>): boolean => argv[0] === "ci" && !hasRootCliGlobalFlag(argv);
 
 const { BunCrypto, BunHttpClient, BunRuntime, BunServices } = await import("@effect/platform-bun");
-const [Cause, Console, Effect, Exit, Layer, Option, Runtime] = await Promise.all([
+const [Cause, ConfigProvider, Console, Effect, Exit, Layer, Option, R, Runtime] = await Promise.all([
   import("effect/Cause"),
+  import("effect/ConfigProvider"),
   import("effect/Console"),
   import("effect/Effect"),
   import("effect/Exit"),
   import("effect/Layer"),
   import("effect/Option"),
+  import("effect/Record"),
   import("effect/Runtime"),
 ]);
 const { drainProcessStreams, ProcessStreamName, streamConsole, writeBestEffortLine } = await import(
