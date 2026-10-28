@@ -13,9 +13,12 @@
  * @since 0.0.0
  */
 
+import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Runtime from "effect/Runtime";
+import * as Str from "effect/String";
 import type { FailureDetails } from "@beep/cli-kit/CliRuntime";
 
 const VERBOSE_LOG_LEVELS: ReadonlyArray<string> = ["debug", "trace"];
@@ -23,16 +26,15 @@ const VERBOSE_FLAG = "--verbose";
 const LOG_LEVEL_FLAG = "--log-level";
 const LOG_LEVEL_INLINE_PREFIX = `${LOG_LEVEL_FLAG}=`;
 
-const isVerboseLevel = (value: string | undefined): boolean =>
-  value !== undefined && VERBOSE_LOG_LEVELS.includes(value);
+const isVerboseLevel: (value: O.Option<string>) => boolean = O.exists((level) => A.contains(VERBOSE_LOG_LEVELS, level));
 
 /** `--log-level=debug` carries its value in the same argv entry. */
-const LOG_LEVEL_INLINE_PATTERN = new RegExp(`^${LOG_LEVEL_INLINE_PREFIX}([\\s\\S]*)$`);
-const inlineLogLevel = (entry: string): string | undefined => LOG_LEVEL_INLINE_PATTERN.exec(entry)?.[1];
+const inlineLogLevel = (entry: string): O.Option<string> =>
+  Str.startsWith(LOG_LEVEL_INLINE_PREFIX)(entry) ? O.some(Str.slice(LOG_LEVEL_INLINE_PREFIX.length)(entry)) : O.none();
 
 /** `--log-level debug` carries its value in the next entry, which may not exist. */
-const separatedLogLevel = (argv: ReadonlyArray<string>, index: number): string | undefined =>
-  argv[index] === LOG_LEVEL_FLAG ? argv[index + 1] : undefined;
+const separatedLogLevel = (argv: ReadonlyArray<string>, entry: string, index: number): O.Option<string> =>
+  entry === LOG_LEVEL_FLAG ? A.get(argv, index + 1) : O.none();
 
 /**
  * Whether a rendered CLI failure should append the full `Cause`.
@@ -56,19 +58,14 @@ const separatedLogLevel = (argv: ReadonlyArray<string>, index: number): string |
  * @category utils
  * @since 0.0.0
  */
-export const shouldRenderFailureCause = (argv: ReadonlyArray<string>): boolean => {
-  for (let index = 0; index < argv.length; index++) {
-    const entry = argv[index];
-    if (
+export const shouldRenderFailureCause = (argv: ReadonlyArray<string>): boolean =>
+  A.some(
+    argv,
+    (entry, index) =>
       entry === VERBOSE_FLAG ||
-      (entry !== undefined && isVerboseLevel(inlineLogLevel(entry))) ||
-      isVerboseLevel(separatedLogLevel(argv, index))
-    ) {
-      return true;
-    }
-  }
-  return false;
-};
+      isVerboseLevel(inlineLogLevel(entry)) ||
+      isVerboseLevel(separatedLogLevel(argv, entry, index))
+  );
 
 /**
  * Render a repo CLI failure: the `render` hook for `CliRuntime.main`.
