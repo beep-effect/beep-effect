@@ -33,6 +33,7 @@ import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 // beep: Effect public leaf imports replace upstream barrels.
 import * as Rpc from "effect/rpc/Rpc";
+import * as RpcSchema from "effect/rpc/RpcSchema";
 import * as Schema from "effect/Schema";
 // beep: Effect public leaf imports replace upstream barrels.
 import * as TestClock from "effect/testing/TestClock";
@@ -135,13 +136,13 @@ describe("MessageStorage", () => {
   });
 });
 
-// beep: Helpers are module-private (no other suite imports them, dead-code gate); upstream
-// beep: LongKeyRpc, StreamRpc, makeAckChunk, makeChunkReply and makeEmptyReply are dropped as unused.
-const GetUserRpc = Rpc.make("GetUser", {
+// beep: Only helpers another vendored suite imports are exported (dead-code gate); upstream
+// beep: makeEmptyReply is dropped because only the upstream memory-storage suite uses it.
+export const GetUserRpc = Rpc.make("GetUser", {
   payload: { id: Schema.Finite },
 });
 
-const makeRequest = Effect.fnUntraced(function* (options?: {
+export const makeRequest = Effect.fnUntraced(function* (options?: {
   readonly rpc?: Rpc.AnyWithProps;
   readonly payload?: any;
   readonly entityId?: string;
@@ -174,20 +175,66 @@ const makeRequest = Effect.fnUntraced(function* (options?: {
   });
 });
 
-class PrimaryKeyTest extends Rpc.make("PrimaryKeyTest", {
+export class PrimaryKeyTest extends Rpc.make("PrimaryKeyTest", {
   payload: {
     id: Schema.Finite,
   },
   primaryKey: (value) => value.id.toString(),
 }) {}
 
-const makeReply = Effect.fnUntraced(function* (request: Message.OutgoingRequest<any>) {
+export class LongKeyRpc extends Rpc.make("LongKeyRpc", {
+  payload: {
+    id: Schema.String,
+  },
+  primaryKey: (value) => value.id,
+}) {}
+
+export class StreamRpc extends Rpc.make("StreamTest", {
+  success: RpcSchema.Stream(Schema.Void, Schema.Never),
+  payload: {
+    id: Schema.Finite,
+  },
+  primaryKey: (value) => value.id.toString(),
+}) {}
+
+export const makeReply = Effect.fnUntraced(function* (request: Message.OutgoingRequest<any>) {
   const snowflake = yield* Snowflake.Generator;
   return new Reply.ReplyWithContext({
     reply: new Reply.WithExit({
       id: snowflake.nextUnsafe(),
       requestId: request.envelope.requestId,
       exit: Exit.void as any,
+    }),
+    context: request.context,
+    rpc: request.rpc,
+  });
+});
+
+export const makeAckChunk = Effect.fnUntraced(function* (
+  request: Message.OutgoingRequest<any>,
+  chunk: Reply.ReplyWithContext<any>
+) {
+  const snowflake = yield* Snowflake.Generator;
+  return new Message.OutgoingEnvelope({
+    // beep: Schema class `make` replaces `new` (tsgo newSchemaClass).
+    envelope: Envelope.AckChunk.make({
+      id: snowflake.nextUnsafe(),
+      address: request.envelope.address,
+      requestId: chunk.reply.requestId,
+      replyId: chunk.reply.id,
+    }),
+    rpc: request.rpc,
+  });
+});
+
+export const makeChunkReply = Effect.fnUntraced(function* (request: Message.OutgoingRequest<any>, sequence = 0) {
+  const snowflake = yield* Snowflake.Generator;
+  return new Reply.ReplyWithContext({
+    reply: new Reply.Chunk({
+      id: snowflake.nextUnsafe(),
+      requestId: request.envelope.requestId,
+      sequence,
+      values: [undefined],
     }),
     context: request.context,
     rpc: request.rpc,

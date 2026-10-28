@@ -7,10 +7,12 @@ import * as DuckDbEventLogServerEncrypted from "@beep/duckdb/DuckDbEventLogServe
 import { it } from "@beep/test-runner";
 import { assert } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as EventJournal from "effect/eventlog/EventJournal";
 import * as EventLogEncryption from "effect/eventlog/EventLogEncryption";
 import { StoreId } from "effect/eventlog/EventLogMessage";
+import * as EventLogServerEncrypted from "effect/eventlog/EventLogServerEncrypted";
 import * as Layer from "effect/Layer";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
@@ -65,6 +67,21 @@ it.layer(Layer.merge(DuckDbTestLayer, EventLogEncryption.layerSubtle), { timeout
         assert.deepStrictEqual(yield* second.getOrCreateSessionAuthBinding("identity", Uint8Array.of(4)), key);
       })
     );
+    it.effect("defaults table names, skips empty writes and stores a repeated id once", () =>
+      Effect.gen(function* () {
+        const storage = yield* DuckDbEventLogServerEncrypted.makeStorage();
+        const storeId = StoreId.make("defaults");
+        assert.deepStrictEqual(yield* storage.write("carol", storeId, []), []);
+        const id = EventJournal.makeEntryIdUnsafe();
+        const batch = { entryIds: A.make(id, id), iv: new Uint8Array(12), encryptedBatch: Uint8Array.of(3) };
+        yield* storage.write("carol", storeId, [batch]);
+        const acks = yield* storage.entrySequences("carol", storeId, [id]);
+        assert.deepStrictEqual(
+          A.map(acks, (ack) => ack.entryId),
+          [id]
+        );
+      })
+    );
     it.effect("isolates identities and stores", () =>
       Effect.gen(function* () {
         const storage = yield* DuckDbEventLogServerEncrypted.makeStorage({
@@ -93,3 +110,13 @@ it.layer(Layer.merge(DuckDbTestLayer, EventLogEncryption.layerSubtle), { timeout
     );
   }
 );
+
+it.layer(DuckDbTestLayer, { timeout: "30 seconds" })("DuckDB encrypted storage layers", (it) => {
+  it.effect("layerStorageSubtle supplies Web Crypto encryption", () =>
+    Effect.gen(function* () {
+      const layer = DuckDbEventLogServerEncrypted.layerStorageSubtle({ entryTablePrefix: "subtle_encrypted" });
+      const storage = Context.get(yield* Layer.build(layer), EventLogServerEncrypted.Storage);
+      assert.deepStrictEqual(yield* storage.getId, yield* storage.getId);
+    })
+  );
+});

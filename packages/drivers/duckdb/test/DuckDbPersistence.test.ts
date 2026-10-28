@@ -2,6 +2,7 @@ import { DuckDbTestLayer } from "@beep/duckdb";
 import * as DuckDbPersistence from "@beep/duckdb/DuckDbPersistence";
 import { it } from "@beep/test-runner";
 import { assert } from "@effect/vitest";
+import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -70,6 +71,29 @@ it.layer(Layer.fresh(DuckDbTestLayer), { timeout: "30 seconds" })("DuckDB persis
         count: number;
       }>`SELECT COUNT(*) AS count FROM effect_persistence WHERE store_id = 'live'`;
       assert.strictEqual(A.getUnsafe(live, 0).count, 2);
+    })
+  );
+});
+
+it.layer(Layer.fresh(DuckDbTestLayer), { timeout: "30 seconds" })("DuckDB persistence failures", (it) => {
+  it.effect("skips malformed rows in getMany and reports failures after the table is gone", () =>
+    Effect.gen(function* () {
+      // Build in the test scope so the expiry sweep runs on this test's TestClock.
+      const backing = yield* Layer.build(DuckDbPersistence.layerBackingSql);
+      const store = yield* Context.get(backing, Persistence.BackingPersistence).make("failures");
+      yield* store.setMany([
+        ["good", { ok: true }, undefined],
+        ["bad", { ok: false }, undefined],
+      ]);
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`UPDATE effect_persistence SET value = 'not json' WHERE id = 'bad'`;
+      assert.deepStrictEqual(yield* store.getMany(["good", "bad"]), [{ ok: true }, undefined]);
+      yield* sql`DROP TABLE effect_persistence`;
+      const error = yield* Effect.flip(store.clear);
+      assert.strictEqual(error.message, "Failed to clear backing store");
+      // The next scheduled expiry sweep logs its failed delete instead of failing the layer.
+      yield* TestClock.adjust("5 minutes");
+      yield* TestClock.withLive(Effect.sleep("100 millis"));
     })
   );
 });

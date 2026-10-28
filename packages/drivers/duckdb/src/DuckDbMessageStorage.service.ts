@@ -11,6 +11,7 @@
  * @since 0.0.0
  */
 import { $DuckdbId } from "@beep/identity/packages";
+import { quotedString } from "@duckdb/node-api";
 // eslint-disable effect/no-bigint-literals
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
@@ -382,7 +383,7 @@ const makeEncodedStorage = Effect.fnUntraced(function* (
         AND processed = ${sqlFalse}
         AND (m.last_read IS NULL OR m.last_read < ${tenMinutesAgo})
         AND (m.deliver_at IS NULL OR m.deliver_at <= ${sql.literal(String(now))})
-        ORDER BY m.rowid ASC
+        ORDER BY m.seq ASC
         ${filters.limit}
         ${forUpdate}
       `.unprepared.pipe(
@@ -555,7 +556,7 @@ const makeEncodedStorage = Effect.fnUntraced(function* (
             AND acked = ${sqlFalse}
           )
         )
-        ORDER BY rowid ASC
+        ORDER BY seq ASC
       `.unprepared.pipe(
         Effect.provideService(SqlClient.SafeIntegers, true),
         Effect.map(A.map(replyFromRow)),
@@ -568,7 +569,7 @@ const makeEncodedStorage = Effect.fnUntraced(function* (
         SELECT ${replyColumns}
         FROM ${repliesTableSql}
         WHERE request_id IN (${sql.literal(A.join(requestIds, ","))})
-        ORDER BY rowid ASC
+        ORDER BY seq ASC
       `.unprepared.pipe(
         Effect.provideService(SqlClient.SafeIntegers, true),
         Effect.map(A.map(replyFromRow)),
@@ -603,7 +604,7 @@ const makeEncodedStorage = Effect.fnUntraced(function* (
         )
         AND m.processed = ${sqlFalse}
         AND (m.deliver_at IS NULL OR m.deliver_at <= ${sql.literal(String(now))})
-        ORDER BY m.rowid ASC
+        ORDER BY m.seq ASC
       `.unprepared.pipe(
         Effect.map(A.map(messageFromRow)),
         Effect.provideService(SqlClient.SafeIntegers, true),
@@ -721,11 +722,19 @@ export const migrations = (options?: { readonly prefix?: string | undefined }): 
       const sql = (yield* SqlClient.SqlClient).withoutTransforms();
       const messagesTableSql = sql(messagesTable);
       const repliesTableSql = sql(repliesTable);
+      // beep: DuckDB rewrites a row under a new rowid when an UPDATE touches an indexed column
+      // beep: (last_read, acked), so rowid is not insertion order. An explicit sequence column
+      // beep: (like the PostgreSQL BIGSERIAL rowid) keeps reads in insertion order.
+      const messagesSequence = `${messagesTable}_seq`;
+      const repliesSequence = `${repliesTable}_seq`;
+      yield* sql`CREATE SEQUENCE IF NOT EXISTS ${sql(messagesSequence)}`;
+      yield* sql`CREATE SEQUENCE IF NOT EXISTS ${sql(repliesSequence)}`;
 
       // beep: BIGINT ids, sequences and delivery times avoid DuckDB INT32 overflow; last_read is a timestamp.
       yield* sql`
             CREATE TABLE IF NOT EXISTS ${messagesTableSql} (
               id BIGINT PRIMARY KEY,
+              seq BIGINT NOT NULL DEFAULT nextval(${sql.literal(quotedString(messagesSequence))}),
               message_id TEXT,
               shard_id TEXT NOT NULL,
               entity_type TEXT NOT NULL,
@@ -764,6 +773,7 @@ export const migrations = (options?: { readonly prefix?: string | undefined }): 
       yield* sql`
             CREATE TABLE IF NOT EXISTS ${repliesTableSql} (
               id BIGINT PRIMARY KEY,
+              seq BIGINT NOT NULL DEFAULT nextval(${sql.literal(quotedString(repliesSequence))}),
               kind BIGINT,
               request_id BIGINT NOT NULL,
               payload TEXT NOT NULL,
@@ -781,7 +791,7 @@ export const migrations = (options?: { readonly prefix?: string | undefined }): 
             ON ${repliesTableSql} (request_id, kind, acked);
           `;
     }),
-    // beep: DuckDB TEXT is unbounded and uses its implicit rowid; retain upstream migration ids as no-ops.
+    // beep: DuckDB TEXT is unbounded and 0001 already adds the ordering seq column; retain upstream migration ids as no-ops.
     "0002_entity_type_size": Effect.void,
     "0003_pg_messages_rowid_index": Effect.void,
   });
