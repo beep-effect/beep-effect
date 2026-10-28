@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-28T02:38:33.387Z",
+  "generatedAt": "2026-10-28T02:47:36.282Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -533773,8 +533773,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/CheckCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts",
-          "line": 88,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-88-check-census-overlay-file-name",
+          "line": 90,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-90-check-census-overlay-file-name",
           "currentTags": [
             "@category",
             "@since"
@@ -533795,8 +533795,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/CheckCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts",
-          "line": 150,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-150-checkcensusprogram",
+          "line": 152,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-152-checkcensusprogram",
           "currentTags": [
             "@category",
             "@since"
@@ -533817,8 +533817,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/CheckCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts",
-          "line": 184,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-184-checkcensusdelta",
+          "line": 186,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-186-checkcensusdelta",
           "currentTags": [
             "@category",
             "@since"
@@ -533839,8 +533839,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/CheckCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts",
-          "line": 224,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-224-checkcensusrow",
+          "line": 226,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-226-checkcensusrow",
           "currentTags": [
             "@category",
             "@since"
@@ -533861,8 +533861,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/CheckCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts",
-          "line": 259,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-259-checkcensusreport",
+          "line": 261,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-261-checkcensusreport",
           "currentTags": [
             "@category",
             "@since"
@@ -533883,8 +533883,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/CheckCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts",
-          "line": 289,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-289-checkcensuspackage",
+          "line": 291,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-291-checkcensuspackage",
           "currentTags": [
             "@category",
             "@since"
@@ -533905,8 +533905,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/CheckCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts",
-          "line": 320,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-320-checkcensusoptions",
+          "line": 322,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-322-checkcensusoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -533927,8 +533927,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/CheckCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts",
-          "line": 353,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-353-checkcensusmissingoutput",
+          "line": 355,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-355-checkcensusmissingoutput",
           "currentTags": [
             "@category",
             "@since"
@@ -533949,8 +533949,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/CheckCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts",
-          "line": 610,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-610-assertcheckcensustreebuilt",
+          "line": 600,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-600-assertcheckcensustreebuilt",
           "currentTags": [
             "@param",
             "@returns",
@@ -533973,8 +533973,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/CheckCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts",
-          "line": 772,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-772-runcheckcensus",
+          "line": 767,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-767-runcheckcensus",
           "currentTags": [
             "@param",
             "@returns",
@@ -533997,8 +533997,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/CheckCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts",
-          "line": 823,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-823-rendercheckcensuslines",
+          "line": 818,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-818-rendercheckcensuslines",
           "currentTags": [
             "@param",
             "@returns",
@@ -534021,8 +534021,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/CheckCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts",
-          "line": 880,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-880-selectcheckcensuspackages",
+          "line": 875,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-875-selectcheckcensuspackages",
           "currentTags": [
             "@param",
             "@returns",
@@ -534045,8 +534045,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/CheckCensus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts",
-          "line": 1049,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-1049-checkcensuscommand",
+          "line": 1044,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-checkcensus-ts-1044-checkcensuscommand",
           "currentTags": [
             "@category",
             "@since"
