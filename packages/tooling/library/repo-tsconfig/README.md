@@ -82,7 +82,7 @@ console.log(Effect.runSyncExit(TsconfigValidator.validate({ compilerOptions: { s
 
 ## Features
 
-- `TsconfigLoader.load`, `.resolve`, `.compilerOptions`: read and decode one config; resolve its `extends` chain depth-first with per-branch cycle stacks (diamond chains are legal) and a depth guard; or project the result down to the merged options.
+- `TsconfigLoader.load`, `.resolve`, `.resolveDocument`, `.compilerOptions`: read and decode one config; resolve its `extends` chain depth-first with per-branch cycle stacks (diamond chains are legal) and a depth guard, from the named file or from a document already in hand; or project the result down to the merged options.
 - Target resolution as tsc does it. Relative and rooted targets try the exact file, then the `.json` retry. Bare specifiers walk the ancestor `node_modules` chain: `exports` maps with longest-prefix `*` patterns, conditions in insertion order, and `.d.ts`/`.ts`/`.js` targets read as their `.json` sibling, taking the first target that exists (a missing one falls through to the next condition or array entry; a `null` target stops the lookup); then the `tsconfig` manifest field and `<pkg>/tsconfig.json`. A package target is realpathed (`preserveSymlinks: false`).
 - `TsconfigLoaderSync`: the same pipeline under `Effect.runSyncExit` over `{ fileSystem, path }` operations the caller supplies, Windows-correct when the caller passes a win32 `path`.
 - `TsconfigDiscovery.findNearest`: the nearest `tsconfig.json` (or another file name through `FindNearestOptions.filename`) at or above a directory, over `@beep/walker`. An unreadable ancestor cannot hide a config above it.

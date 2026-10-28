@@ -461,9 +461,12 @@ const compilerOptions = Effect.fn("TsconfigValidator.compilerOptions")(function*
 > {
   const path = yield* Path.Path;
   const abs = normalizeSlashes(path.resolve(configPath));
-  yield* load(configPath);
-  const merged = yield* TsconfigLoader.compilerOptions(configPath);
-  return yield* validateCompilerOptionsAt(abs)(merged);
+  // One read of the named file: validate the own document, then resolve its
+  // extends chain from that same document (only the extended configs are read).
+  const document = yield* TsconfigLoader.load(configPath);
+  yield* validateAt(abs)(document);
+  const resolved = yield* TsconfigLoader.resolveDocument(document, abs);
+  return yield* validateCompilerOptionsAt(abs)(resolved.compilerOptions);
 });
 
 /**
@@ -562,10 +565,12 @@ export abstract class TsconfigValidator {
 
   /**
    * The effective `compilerOptions` of a config under the strict rules: the
-   * named file passes {@link TsconfigValidator.load}, its full `extends` chain
-   * is merged by `TsconfigLoader.compilerOptions` (tsc semantics: own config
-   * wins, path options absolute, `${configDir}` substituted), and the merged
-   * record passes {@link TsconfigValidator.validateCompilerOptions}.
+   * named file is read once through `TsconfigLoader.load` and passes
+   * {@link TsconfigValidator.validate}, its full `extends` chain is merged from
+   * that same document by `TsconfigLoader.resolveDocument` (tsc semantics: own
+   * config wins, path options absolute, `${configDir}` substituted; only the
+   * extended configs are read), and the merged record passes
+   * {@link TsconfigValidator.validateCompilerOptions}.
    *
    * **Details**
    *

@@ -26,6 +26,7 @@ import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
 import * as Domain from "./Domain.ts";
 import type { ConfigReadSchema } from "@beep/config-file/ConfigFile";
+import type * as JsonSchema from "effect/JsonSchema";
 
 const $I = $RepoDocgenId.create("Configuration");
 
@@ -205,6 +206,37 @@ export class ConfigurationSchema extends S.Opaque<ConfigurationSchema, { readonl
  * @since 0.0.0
  */
 export type ConfigurationDocument = ConfigurationSchema;
+
+/**
+ * The JSON Schema (draft 2020-12) of {@link ConfigurationSchema}, published as
+ * `@beep/repo-docgen/schema.json` for editor tooling: the `S.toJsonSchemaDocument`
+ * rendering with unknown keys rejected, assembled under one `$defs` map.
+ *
+ * **Details**
+ *
+ * `parseCompilerOptions` and `examplesCompilerOptions` render from
+ * {@link CompilerOptionsShape}, so an editor offers exactly the compiler
+ * options `TsconfigValidator` accepts. `test/ConfigurationJsonSchema.test.ts`
+ * holds the committed `schema.json` equal to this value; regenerate it from the
+ * package directory with
+ * `bun -e 'import("@beep/repo-docgen/Configuration").then((m) => Bun.write("schema.json", JSON.stringify(m.configurationJsonSchema(), null, 2)))'`
+ * followed by `bunx biome format --write schema.json`.
+ *
+ * **Example** (Read the root reference)
+ *
+ * ```ts
+ * import { configurationJsonSchema } from "@beep/repo-docgen/Configuration"
+ *
+ * console.log(configurationJsonSchema().$ref) // #/$defs/@beep~1repo-docgen~1Configuration~1ConfigurationSchema
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const configurationJsonSchema = (): JsonSchema.JsonSchema => {
+  const document = S.toJsonSchemaDocument(ConfigurationSchema, { onExcessProperty: "error" });
+  return { $schema: "https://json-schema.org/draft/2020-12/schema", ...document.schema, $defs: document.definitions };
+};
 
 /**
  * Fully resolved configuration values used by the parser, example checker, and printer.
