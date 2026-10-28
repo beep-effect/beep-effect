@@ -10,6 +10,18 @@ Named trusted workstation agents and protected main CI can write. Same-repositor
 PR jobs read only; forks stay local-only. Existing AWS infrastructure stays intact.
 No task becomes cacheable as part of this transport change.
 
+New worktrees created by `beep worktree` inherit enrolled cache settings. The current
+CLI also loads the host's reference-only client file when a fresh canonical public
+checkout has no cache tuple. Historical readers receive a managed marker: when a
+newer CLI inherits that tuple, it adopts the matching host's approved writer
+posture. An explicit local-only setting, different endpoint/reference, CI, private
+origin or `BEEP_TURBO_HOST_CACHE_DISABLED=true` prevents that adoption. Remove
+`BEEP_TURBO_HOST_CACHE_MANAGED` to retain a manually chosen reader posture.
+
+The offline TBK guest remains a rollout hold while its protective-stop latch is
+present. Windows requires a qualified Linux/WSL route or a separately qualified
+adapter runtime; the pinned upstream release has no native Windows binary.
+
 ## Ownership, pins and deployment state
 
 The tracked template is copied to `pilot/alchemy.run.ts` in the pinned Alchemy workspace,
