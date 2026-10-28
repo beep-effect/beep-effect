@@ -650,7 +650,7 @@ const VITEST_ALIASES_FILENAME = "vitest.aliases.generated.json";
 
 const aliasPathEntriesEqual = (
   current: Readonly<Record<string, unknown>>,
-  expected: Readonly<Record<string, unknown>>
+  expected: Readonly<Record<string, ReadonlyArray<string>>>
 ): boolean => {
   const expectedKeys = R.keys(expected);
 
@@ -659,12 +659,7 @@ const aliasPathEntriesEqual = (
   // mirror must pass both gates.
   return (
     arraysEqual(uniqueSorted(R.keys(current)), uniqueSorted(expectedKeys)) &&
-    A.every(expectedKeys, (key) => {
-      const expectedValue = expected[key];
-      return (
-        A.isArray(expectedValue) && A.every(expectedValue, P.isString) && pathValuesEqual(current[key], expectedValue)
-      );
-    })
+    A.every(R.toEntries(expected), ([key, expectedValue]) => pathValuesEqual(current[key], expectedValue))
   );
 };
 

@@ -1535,6 +1535,19 @@ it.layer(TestLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
         },
         issue: 'Expected @beep/tsconfig/CompilerOptions/Target\n  at ["compilerOptions"]["target"]',
       },
+      {
+        name: "a malformed root path alias value",
+        file: "tsconfig.json",
+        document: {
+          compilerOptions: {
+            paths: {
+              "@beep/example-domain": "./packages/example-domain/src/index.ts",
+              "@beep/example-domain/*": ["./packages/example-domain/src/*"],
+            },
+          },
+        },
+        issue: 'Expected array\n  at ["compilerOptions"]["paths"]["@beep/example-domain"]',
+      },
     ] as const;
 
     for (const testCase of strictDecodeCases) {
