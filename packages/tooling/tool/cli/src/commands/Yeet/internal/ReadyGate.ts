@@ -31,6 +31,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
+import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
@@ -51,6 +52,8 @@ import { decodeAttributedCheckFlags, parseAttributedCheck } from "./MergeGate.ts
 import { YEET_READY_COMMAND } from "./MonitorPolicy.ts";
 import { findLiveReadyMonitorJob } from "./ProofJob.ts";
 import { ProofJobLauncher } from "./ProofJobLauncher.ts";
+import { ReviewLaneFlipRow, YEET_REVIEW_LANE_SCHEMA_VERSION } from "./ReviewLane.schemas.ts";
+import { recordYeetReviewLaneRows } from "./ReviewLane.ts";
 import { YEET_REVIEW_WINDOW_DEFAULT } from "./ReviewWindow.ts";
 import { readSquashCommitlintForPullRequest, renderSquashCommitlintVerdict } from "./SquashCommitlint.ts";
 import { collectYeetStatus, YeetStatusRemote } from "./Status.ts";
@@ -872,6 +875,19 @@ export const runYeetReadyGate = Effect.fn("Yeet.runYeetReadyGate")(function* (
       // shared budget is spent instead of failing the way `gh pr ready` did.
       yield* (dependencies.markReady ?? markReadyThroughBudget)(prNumber, sameHead);
       yield* Console.log(`[yeet] pull request #${prNumber} flipped from draft to ready for review`);
+      // The flip opens the rounds-to-ready window (ruling 81); a failed
+      // record is one warning and never touches the flip.
+      const flippedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
+      yield* recordYeetReviewLaneRows(context.repoRoot, [
+        ReviewLaneFlipRow.make({
+          schemaVersion: YEET_REVIEW_LANE_SCHEMA_VERSION,
+          prNumber,
+          branch: context.branch,
+          recordedAt: flippedAt,
+          headSha: sameHead,
+          at: flippedAt,
+        }),
+      ]);
       // The head was pushed while the pull request was a draft, which
       // beep-reviewer ignores; a failed re-request only warns, the flip stands.
       yield* Console.log(

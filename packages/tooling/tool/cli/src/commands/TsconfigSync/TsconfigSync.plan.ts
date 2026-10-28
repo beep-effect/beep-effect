@@ -29,6 +29,7 @@ import {
   resolveWildcardExportTarget,
 } from "@beep/repo-utils/schemas/TsconfigAliasTargets";
 import { normalizePath } from "@beep/schema";
+import { TsconfigJson } from "@beep/tsconfig/TsconfigJson";
 import { A, Str, thunkFalse, thunkUndefined } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as Console from "effect/Console";
@@ -63,8 +64,6 @@ import {
   stringArrayEquivalence,
   TsconfigSyncChange,
   TsconfigSyncSchemaInternals,
-  TsconfigWithPaths,
-  TsconfigWithReferences,
   WorkspaceDescriptor,
 } from "./TsconfigSync.schemas.ts";
 import type { WorkspaceDeps } from "@beep/repo-utils";
@@ -402,11 +401,8 @@ const summaryCounts = (
   return `${noun}: ${currentItems.length} -> ${expectedItems.length} (add ${added}, remove ${removed}${reordered ? ", reorder" : ""})`;
 };
 
-const compareReferencePathsInOrder = (parsed: TsconfigWithReferences): ReadonlyArray<string> =>
-  pipe(
-    parsed.references ?? A.empty(),
-    A.flatMap((entry) => (P.isString(entry.path) ? A.make(entry.path) : A.empty<string>()))
-  );
+const compareReferencePathsInOrder = (parsed: TsconfigJson): ReadonlyArray<string> =>
+  A.map(parsed.references ?? A.empty(), (reference) => reference.path);
 
 // Ratified lab-apps row 2 (zero-root-churn holdout A): labs workspaces never
 // enter the root solution reference set. Each lab's package-local check is its
@@ -437,7 +433,7 @@ const planRootReferenceSync = Effect.fn(function* (rootDir: string, workspaces: 
   const filePath = path.join(rootDir, "tsconfig.packages.json");
 
   const original = yield* readFileString(filePath);
-  const parsed = yield* parseJsonc(original, filePath, TsconfigWithReferences);
+  const parsed = yield* parseJsonc(original, filePath, TsconfigJson);
 
   const expected = uniqueSorted(
     pipe(
@@ -597,7 +593,7 @@ const planRootAliasSync = Effect.fn(function* (rootDir: string, workspaces: Read
   const filePath = path.join(rootDir, "tsconfig.json");
 
   const original = yield* readFileString(filePath);
-  const parsed = yield* parseJsonc(original, filePath, TsconfigWithPaths);
+  const parsed = yield* parseJsonc(original, filePath, TsconfigJson);
 
   const currentPaths = parsed.compilerOptions?.paths ?? {};
 
@@ -654,7 +650,7 @@ const VITEST_ALIASES_FILENAME = "vitest.aliases.generated.json";
 
 const aliasPathEntriesEqual = (
   current: Readonly<Record<string, unknown>>,
-  expected: Readonly<Record<string, unknown>>
+  expected: Readonly<Record<string, ReadonlyArray<string>>>
 ): boolean => {
   const expectedKeys = R.keys(expected);
 
@@ -663,12 +659,7 @@ const aliasPathEntriesEqual = (
   // mirror must pass both gates.
   return (
     arraysEqual(uniqueSorted(R.keys(current)), uniqueSorted(expectedKeys)) &&
-    A.every(expectedKeys, (key) => {
-      const expectedValue = expected[key];
-      return (
-        A.isArray(expectedValue) && A.every(expectedValue, P.isString) && pathValuesEqual(current[key], expectedValue)
-      );
-    })
+    A.every(R.toEntries(expected), ([key, expectedValue]) => pathValuesEqual(current[key], expectedValue))
   );
 };
 
@@ -714,8 +705,7 @@ const planRootVitestAliasSync = Effect.fn(function* (rootDir: string, plannedRoo
     onNone: () => readFileString(tsconfigPath),
     onSome: Effect.succeed,
   });
-  const expectedPaths =
-    (yield* parseJsonc(tsconfigContent, tsconfigPath, TsconfigWithPaths)).compilerOptions?.paths ?? {};
+  const expectedPaths = (yield* parseJsonc(tsconfigContent, tsconfigPath, TsconfigJson)).compilerOptions?.paths ?? {};
   const currentPaths = yield* parseJsonObject(yield* readFileString(filePath), filePath);
 
   if (aliasPathEntriesEqual(currentPaths, expectedPaths)) {
@@ -1010,7 +1000,7 @@ const planOnePackageReferenceSync = Effect.fnUntraced(function* (
 
   const sourceDir = path.dirname(sourceOwnerTsconfigPath);
   const original = yield* readFileString(sourceOwnerTsconfigPath);
-  const parsed = yield* parseJsonc(original, sourceOwnerTsconfigPath, TsconfigWithReferences);
+  const parsed = yield* parseJsonc(original, sourceOwnerTsconfigPath, TsconfigJson);
   const existingResolvedTargets = yield* canonicalExistingReferenceTargets(
     workspace,
     sourceOwnerTsconfigPath,
@@ -1123,11 +1113,11 @@ const planOnePackageCheckReferenceSync = Effect.fnUntraced(function* (
     HashMap.get(plannedCanonicalContent, canonicalPath),
     O.match({ onNone: () => readFileString(canonicalPath), onSome: Effect.succeed })
   );
-  const canonical = yield* parseJsonc(canonicalContent, canonicalPath, TsconfigWithReferences);
+  const canonical = yield* parseJsonc(canonicalContent, canonicalPath, TsconfigJson);
   const expected = compareReferencePathsInOrder(canonical);
 
   const original = yield* readFileString(overlayPath);
-  const overlay = yield* parseJsonc(original, overlayPath, TsconfigWithReferences);
+  const overlay = yield* parseJsonc(original, overlayPath, TsconfigJson);
   const current = compareReferencePathsInOrder(overlay);
   if (arraysEqual(current, expected)) {
     return O.none<PlannedFileChange>();

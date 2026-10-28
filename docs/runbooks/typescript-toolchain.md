@@ -148,6 +148,19 @@ update the complete root severity map and the copied profiles, keep the
 declared-off ledger explicit, remove retired plugin options, and run the full
 check graph as the census.
 
+## New compiler option values
+
+`beep tsconfig-sync` decodes every tsconfig it reads through
+`@beep/tsconfig/TsconfigJson`, whose `target`, `module`, `moduleResolution`,
+`jsx`, `newLine`, `moduleDetection`, `lib` and `ignoreDeprecations` fields are
+closed vocabularies in
+`packages/foundation/modeling/tsconfig/src/CompilerOptions.ts`. Before a
+tsconfig adopts a value a TypeScript bump introduces (a new `target`, an
+`esnext.*` lib), add it to the matching literal set in the same PR. Otherwise
+the sync, and with it `create-package` and the cheap gates, fails with
+`Failed to parse JSONC in "<file>"` naming the field. Decision record:
+`goals/effected-promotion/SPEC.md` (3-A7 row).
+
 ## Programmatic access
 
 Run sync API consumers with Node: the upstream transport requires Node private
