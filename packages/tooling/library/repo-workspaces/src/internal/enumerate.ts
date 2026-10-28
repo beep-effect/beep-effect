@@ -288,6 +288,12 @@ const containmentOf = Effect.fnUntraced(function* (
     );
 });
 
+/** Whether `absolute` is a directory the enumeration's containment admits. */
+const isAdmittedDirectoryAt = (scope: EnumerationScope, absolute: string): Effect.Effect<boolean> =>
+  Effect.flatMap(isDirectoryAt(scope, absolute), (directory) =>
+    directory ? scope.contains(absolute) : Effect.succeed(false)
+  );
+
 /** A shared-traversal stop, materialized as this module's failure record. */
 const failureOf = (
   stop: { readonly kind: EnumerationFailureKind; readonly detail: string },
@@ -376,8 +382,7 @@ const visitEntry = Effect.fnUntraced(function* (
   if (isPruned(entry)) return;
   const relative = joinRelative(frame.relative, entry);
   const absolute = scope.path.join(frame.absolute, entry);
-  if (!(yield* isDirectoryAt(scope, absolute))) return;
-  if (!(yield* scope.contains(absolute))) return;
+  if (!(yield* isAdmittedDirectoryAt(scope, absolute))) return;
   if (wildcard.crossesSegments && !traversal.admits(frame)) {
     return yield* Effect.fail(failureOf(traversal.depthStop(), wildcard.source));
   }
