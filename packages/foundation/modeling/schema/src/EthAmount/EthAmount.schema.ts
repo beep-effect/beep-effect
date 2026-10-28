@@ -1,6 +1,8 @@
 /**
  * ETH-denominated amount transported as a non-negative JSON number.
  *
+ * **Details**
+ *
  * Decodes into Effect `BigDecimal` for arithmetic safety.
  *
  * @since 0.0.0

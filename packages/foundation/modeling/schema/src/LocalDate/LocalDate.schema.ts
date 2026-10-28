@@ -1,6 +1,8 @@
 /**
  * LocalDate - Date without timezone value object
  *
+ * **Details**
+ *
  * Represents a calendar date (year, month, day) without time or timezone information.
  * Uses Effect's DateTime.Utc internally but only represents the date portion.
  * Encodes to/from ISO 8601 date strings (YYYY-MM-DD format).

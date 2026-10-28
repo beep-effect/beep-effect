@@ -1,6 +1,8 @@
 /**
  * Branded schema for canonical mainnet EVM wallet addresses.
  *
+ * **Details**
+ *
  * Accepts lowercase or EIP-55 checksummed addresses.
  *
  * @since 0.0.0
