@@ -1,6 +1,8 @@
 /**
  * Handoff/Contract - the product-neutral generic graph IR handoff contract.
  *
+ * **Details**
+ *
  * The versioned, documented schema that `@beep/nlp` emits for downstream
  * consumers (e.g. the `ip-law-knowledge-graph` initiative) to decode. It is a
  * generic text-annotation IR — {@link TextChunk}s carved from a document, the

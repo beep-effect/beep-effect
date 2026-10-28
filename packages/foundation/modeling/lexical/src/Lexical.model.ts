@@ -1,6 +1,8 @@
 /**
  * Schema-first models of Lexical's serialized editor state.
  *
+ * **Details**
+ *
  * The node tree is modeled as a tagged union discriminated on Lexical's own
  * `type` key. House style: `S.Class` hierarchies via `.extend`, tags only on
  * concrete leaf classes, nullish wire values captured as `O.Option` at the
@@ -1142,6 +1144,8 @@ const NodeChildren = S.Array(S.suspend((): S.Codec<LexicalNode.Type, LexicalNode
 
 /**
  * Mirrors `SerializedElementNode`.
+ *
+ * **Details**
  *
  * `textFormat`/`textStyle` stay optional here (as on `SerializedElementNode`)
  * even though Lexical 0.45 narrows them to required on paragraph nodes — the
@@ -2353,6 +2357,8 @@ export declare namespace ArtifactRefNode {
 /**
  * Package-owned YouTube decorator block node.
  *
+ * **Details**
+ *
  * Mirrors the serialized shape used by the editor runtime:
  * `{ type: "youtube", videoID, format }`.
  *
@@ -3321,6 +3327,8 @@ const losslessEditorStateDecodeError = (cause: unknown): LexicalDecodeError =>
  * Synchronously decodes an unknown payload into the supported strict semantic
  * editor state without throwing.
  *
+ * **Details**
+ *
  * This Result boundary is intended for synchronous framework callbacks and
  * render admission. Effectful callers should prefer
  * {@link decodeEditorStateStrict}.
@@ -3410,6 +3418,8 @@ export const decodeEditorStateLossless = (
 /**
  * Synchronously retains lossless wire and reports whether strict semantic
  * decoding succeeds, without throwing.
+ *
+ * **Details**
  *
  * This Result boundary is intended for synchronous framework rendering.
  * Effectful callers should prefer {@link analyzeEditorStateCompatibility}.
