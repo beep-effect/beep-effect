@@ -25,13 +25,13 @@ explicitly open coverage families. Divergence accounting now retains eleven
 representation laws and four fidelity questions, all with unfinished target
 proof. The regex corpus/benchmark contract now retains 120 exact-size inputs
 and verified Node/Bun synthetic controls; all family proof remains open. P0
-needs its exit audit, while remaining supplemental proof,
-donor decisions,
-final parity-gate integration and regex-safety
-limits. Vocabulary mapping accounts for all 2,430 frozen publications, 2,533
-editions and 2,798 courts, with three reviewed case-reporter identity
-transitions and explicit metadata drift. P1 remains blocked on the other
-P0 gates. The 29-field limits/default policy and parent-owned process
+remains in progress: focused divergence target tests and execution proof are
+unfinished. The explicit before-P1 prerequisite compatibility and frozen
+limits/strategy gates pass. Limited P1 identity foundations now proceed while
+P0 proof bindings stay open; this overlap does not promote either phase.
+Vocabulary mapping accounts for all 2,430 frozen publications, 2,533 editions
+and 2,798 courts, with three reviewed case-reporter identity transitions and
+explicit metadata drift. The 29-field limits/default policy and parent-owned process
 isolation mechanism are evidenced; production enforcement, pattern-level
 compatibility/scaling and final parity-gate integration remain open. The
 explicit-presence audit passes all 123 deletion controls across seven
@@ -62,7 +62,7 @@ unfinished behavior behind public exports.
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Source baseline and accounting | in-progress | Maintain the detached official eyecite pin; independently enumerate every canonical API, model family, unittest method, assertion/subtest case, regex family, and unique TS-port capability; freeze provenance, limits, and normalization rules. | Pins/tree hashes/licenses and upstream execution are recorded; static source inventory and runtime case export reconcile; the executable accounting checker passes negative controls; donor-suite holdpoints are resolved; regex limits/strategy are frozen; root notice covers copied/adapted material; both dependency contracts are compatible before P1. |
-| P1 Schema rebaseline and transform proof | pending | Rebuild provisional citation values into separate semantic, mention/evidence, resolution, document, and diagnostic schemas; implement the first current-form slice plus lawful base/Bluebook codecs. | Schema disposition is applied; old mixed/duplicated contracts are removed; current forms pass exact-span differential tests and transformation laws. |
+| P1 Schema rebaseline and transform proof | in-progress | Rebuild provisional citation values into separate semantic, mention/evidence, resolution, document, and diagnostic schemas; implement the first current-form slice plus lawful base/Bluebook codecs. | Schema disposition is applied; old mixed/duplicated contracts are removed; current forms pass exact-span differential tests and transformation laws. |
 | P2 Canonical eyecite parity | pending | Port models/document behavior, cleaning, tokenization, full/reference extraction, filtering/disambiguation, resolution, and annotation from the pinned Python oracle using Effect-native internals. | Every canonical capability and fixture-case row is ported or subsumed with equivalent proof; no canonical row is rejected, deferred, or unexplained. |
 | P3 Proven TS extensions | pending | Audit unique `eyecite-ts`/`eyecite-js` behaviors and implement every extension whose final disposition is adopted. | Every extension row has a final disposition; adopted rows have regression proof, rejected rows have source-grounded rationale, and follow-ups name an existing successor goal. |
 | P4 Verify | pending | Run differential fixtures, exact UTF-16 anchors, transform properties, adversarial regex/runtime, package/type/docgen, and repo proof. | Zero unexplained oracle differences; all `SPEC.md` acceptance criteria and local Yeet verification are green. |

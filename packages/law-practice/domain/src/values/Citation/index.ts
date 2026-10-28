@@ -7,6 +7,13 @@
  */
 
 /**
+ * Document-local occurrence and authority identities.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export { CitationAuthorityId, CitationMentionId } from "./Citation.identity.ts";
+/**
  * Citation model exports.
  *
  * **Example** (Import Citation module)

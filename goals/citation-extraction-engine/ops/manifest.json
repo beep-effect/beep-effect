@@ -11,7 +11,7 @@
   "packetPath": "goals/citation-extraction-engine",
   "lifecycle": "active",
   "mission": "Deliver Effect-native observable capability parity with pinned official eyecite 2.7.6, exact verified source evidence, schema-first legal models, lawful transformations, and proven TypeScript-port extensions.",
-  "statusNote": "Ten component audits are integrated. The regex contract binds 120 exact UTF-16 adversarial inputs to all 110 families and 13610 instances; serialized Node/Bun linear/catastrophic controls passed with confirmed cleanup. All 13720 source proof rows remain unfinished, family results are absent, and synthetic controls approve no family. P0 now needs its exit audit; target implementation, donor dispositions, fidelity questions and strict parity remain open.",
+  "statusNote": "Ten component audits pass while strict parity correctly fails unfinished proof. Explicit prerequisite and limits holdpoints pass. Limited P1 occurrence/authority identity foundations now overlap unfinished P0 target proof bindings; neither phase is complete. Frozen consumer inventory and use-form controls support the pending legacy migration. Engine behavior, donor dispositions, fidelity, family safety and exhaustive parity remain open.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -57,7 +57,9 @@
     "goals/citation-extraction-engine/history/evidence/2026-10-28-supplemental-text.md",
     "goals/citation-extraction-engine/history/evidence/2026-10-28-warning-and-p0-audit.md",
     "goals/citation-extraction-engine/history/evidence/2026-10-28-divergence-ledger.md",
-    "goals/citation-extraction-engine/history/evidence/2026-10-28-regex-benchmark-contract.md"
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-regex-benchmark-contract.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-identity-foundations.md",
+    "goals/citation-extraction-engine/ops/citation-migration-surface.json"
   ],
   "researchReports": [
     "research/EYECITE_BASELINE.md",
@@ -85,7 +87,7 @@
     {
       "id": "P1",
       "name": "Schema rebaseline and transformation proof",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",
@@ -233,6 +235,14 @@
     {
       "path": "ops/verify-regex-benchmark-controls.py",
       "purpose": "Prove corpus/control rejection paths and the exact threshold/consecutive-growth boundary rules using isolated copies."
+    },
+    {
+      "path": "ops/scan-citation-consumers.mjs",
+      "purpose": "Maintainer-only pinned TypeScript AST scan of frozen legacy citation exports; retains conservative manual-review findings before migration."
+    },
+    {
+      "path": "ops/verify-consumer-scan.py",
+      "purpose": "Exercise eight consumer use forms and unrelated-import rejection with an owned transient source fixture, then remove it and scan the clean source tree."
     }
   ]
 }

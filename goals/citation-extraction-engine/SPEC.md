@@ -684,6 +684,18 @@ instead of silently splitting delivery or weakening scope.
   caps, positive cases and full geometric results. Reverse through a versioned
   protocol/corpus migration with equivalent positive and negative controls.
 
+- **2026-10-28 identity foundations:** separate versioned `cm1:` occurrence
+  and `ca1:` authority tokens, each with the public shared `Sha256Hex`
+  constraint and a distinct brand. The schema validates format only; source,
+  engine, anchor and semantic-key digest production remains unimplemented.
+  Shared persisted `LawPractice.CitationId` stays distinct. A frozen migration
+  surface and compiler-based consumer scan retain review findings before any
+  legacy removal. Limited P1 foundations overlap unfinished P0 target proof
+  after the explicit prerequisite and limits holdpoints pass; neither phase
+  is complete. Reverse these additive tokens before consumers bind them, or
+  use a versioned migration once producers exist; never weaken anchor or
+  historical authority distinctions to preserve a token.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from
