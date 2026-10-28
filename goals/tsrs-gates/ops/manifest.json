@@ -6,7 +6,7 @@
     "title": "Run the typecheck and build gates on the Effect-patched tsrs",
     "status": "active",
     "created": "2026-10-27",
-    "updated": "2026-10-27",
+    "updated": "2026-10-28",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/tsrs-gates",
@@ -23,7 +23,7 @@
     "acceptanceEvidence": [
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/feat_tsrs-gates-fold-74c30a7cf023/verdict.json",
+        "ref": ".beep/yeet/runs/codex_tsrs-gates-closeout-3d243507d407/verdict.json",
         "gating": true
       }
     ]
@@ -90,6 +90,6 @@
   ],
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 2262
+    "finalPullRequest": 2320
   }
 }

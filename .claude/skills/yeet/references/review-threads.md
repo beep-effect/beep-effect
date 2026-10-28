@@ -109,7 +109,11 @@ is the accepted miss. Inline review comments reach the inbox as
 2. Write `.beep/yeet/reply-drafts.json` (`yeet-reply-drafts/v1`): `prNumber`
    plus one draft per thread with a non-empty `body` and either the GraphQL
    `threadId` (`PRRT_...`) or the numeric `commentId`; `resolve` defaults to
-   true.
+   true. Declare `disposition` on every draft, how you disposed of the finding:
+   `fixed`, `rejected`, `intentional` (correct, kept on purpose) or
+   `immaterial` (true, did not matter). It is what `yeet economics` measures
+   reviewer precision from (ruling 81); a draft without one records `unknown`,
+   and nothing reads the body to guess.
 3. Run `bun run beep yeet reply`. Drafts are validated against the live threads
    first, and each one is routed by the thread's state: an `unresolved` thread is
    posted and resolved; a `resolved-follow-up` thread is posted with resolve
@@ -119,5 +123,9 @@ is the accepted miss. Inline review comments reach the inbox as
    and a denied scope or rate limit becomes that draft's `failed` outcome with a
    retry command rather than aborting the pass.
 4. Read `.beep/yeet/reply-report.json` (`yeet-reply-report/v1`) for the per-draft
-   outcomes. Either party can run the command; when the agent session lacks the
-   write scope, hand the operator the one command instead of pasted bodies.
+   outcomes, each carrying the disposition it recorded. Either party can run the
+   command; when the agent session lacks the write scope, hand the operator the
+   one command instead of pasted bodies. The pass also appends one row per
+   written thread to the owning clone's `.beep/yeet/review-lane.ndjson`, the
+   ledger `bun run beep yeet economics` reads for rounds-to-ready and reviewer
+   precision; a failed append is one warning line and never fails the pass.

@@ -53,6 +53,7 @@ Wave 5 ruled EV003 process-state wrappers a judgment class and repaired the EV00
 Wave 6 closed EV014: imported test layers resolve across files, hermetic in-memory acquisitions are acquisition-free, and 39 real acquisitions take an explicit hook timeout, retiring all 233 exceptions with none added ([record](./history/receipts/detectors-wave-6.md)); wave 7 takes the EV010 owner/exit register.
 Wave 7 is the EV010 owner/exit register: three detector repairs retire 17 rows, 80 open live-resource rows become owner/exit exceptions, and every EV010 exception now names an owner and exit ([record](./history/receipts/detectors-wave-7.md)).
 Wave 8 finishes the owner/exit register: two detector repairs retire 12 exceptions, 36 trial-backed open rows become exceptions, 6 step-capture scopes reopen after their trial, and all 554 exceptions name an owner and exit ([record](./history/receipts/detectors-wave-8.md)).
+Issue #1855 is complete: an optional `--repo-root` on `lint roadmap-refs` retired the last open row, so the fresh scan has 0 open of 543 rows, every exception names an owner and exit, and the repo-cli coverage floors are unchanged ([record](./history/receipts/detectors-closeout.md)).
 Issue #1875 is in progress: wave 1 completed the `@beep/editor`, `@beep/libpff` and
 `@beep/test-runner` cohorts and left 689 open rows
 ([record](./history/receipts/vitest-canon-wave-1.md)).

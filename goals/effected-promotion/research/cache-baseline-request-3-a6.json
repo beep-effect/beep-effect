@@ -1,5 +1,5 @@
 {
-  "previous": "daf5edc283c0d555903b3dd0bc8bc1e24919e1bcaf3cb1d1700a856dfc2e157a",
+  "previous": "dd4fcacee755a4ea112669e37bd7a465616dcae1d80e17a34ee24ada2c37b5a2",
   "review": {
     "reviewer": "Claude Fable 5.1 (effected-promotion 3-A6, effected-3a6)",
     "reason": "Record the dependency-only drift of @beep/repo-docgen from its new @beep/repo-tsconfig and @beep/tsconfig edges and the @beep/memfs devDependency (docgen readTSConfig through TsconfigValidator, map sites #160, #161, #242, #266); no other workspace gains a closure member, as measured in the review; no qualification is granted.",

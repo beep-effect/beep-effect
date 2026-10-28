@@ -1,5 +1,5 @@
 import { runDocgenStepWithStallWatchdogForTesting } from "@beep/repo-cli/test/Docgen";
-import { runToExit } from "@beep/repo-cli/test/Process";
+import { runCapturedStreams, runToExit } from "@beep/repo-cli/test/Process";
 import { DomainError } from "@beep/repo-utils";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { it } from "@beep/test-runner";
@@ -8,7 +8,9 @@ import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as S from "effect/Schema";
@@ -26,6 +28,83 @@ const ProcessDiagnosticTestLayer = Layer.mergeAll(NodeServices.layer, TestConsol
 // these would pass without exercising anything.
 describe("commands/Docgen docgen step stall watchdog", () => {
   it.layer(ProcessDiagnosticTestLayer, { excludeTestServices: true, timeout: "30 seconds" })((it) => {
+    it.effect("resolves only cache references for native Turbo and degrades a denied session to local-only", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const repoRoot = yield* findRepoRoot();
+        const fixtures = path.join(repoRoot, ".beep");
+        yield* fs.makeDirectory(fixtures, { recursive: true });
+        const root = yield* fs.makeTempDirectoryScoped({ directory: fixtures });
+        const bin = path.join(root, "bin");
+        const nativeDirectory = path.join(root, "node_modules/.bin");
+        yield* fs.makeDirectory(bin);
+        yield* fs.makeDirectory(nativeDirectory, { recursive: true });
+        const native = path.join(nativeDirectory, "turbo");
+        const op = path.join(bin, "op");
+        yield* fs.writeFileString(
+          op,
+          `#!/usr/bin/python3
+import os,sys
+if os.environ['FIXTURE_OP_DENY']=='1':raise SystemExit(78)
+assert sys.argv[1:3]==['run','--']
+args=sys.argv[3:];env=dict(os.environ)
+assert 'APPLICATION_REFERENCE' not in env
+env['TURBO_TOKEN']='fixture-resolved-bearer'
+os.execvpe(args[0],args,env)
+`
+        );
+        yield* fs.writeFileString(
+          native,
+          `#!/usr/bin/python3
+import os,sys
+assert 'APPLICATION_REFERENCE' not in os.environ
+if os.environ['FIXTURE_OP_DENY']=='1':
+ assert '--cache=local:rw' in sys.argv and 'TURBO_TOKEN' not in os.environ
+else:
+ assert os.environ['TURBO_TOKEN']=='fixture-resolved-bearer'
+ assert '--cache=local:rw,remote:rw' in sys.argv
+`
+        );
+        yield* fs.chmod(op, 0o700);
+        yield* fs.chmod(native, 0o700);
+        const driver = path.join(root, "driver.ts");
+        yield* fs.writeFileString(
+          driver,
+          `import * as Effect from "effect/Effect";
+import * as Duration from "effect/Duration";
+import * as NodeServices from "@effect/platform-node/NodeServices";
+import { runDocgenStepWithStallWatchdogForTesting } from "@beep/repo-cli/test/Docgen";
+const [, , command = "", cwd = ""] = Bun.argv;
+await Effect.runPromise(runDocgenStepWithStallWatchdogForTesting("cache fixture", command,
+ ["run", "docgen", "--cache=local:rw,remote:rw"], cwd,
+ { first: Duration.seconds(10), retry: Duration.seconds(10) }).pipe(Effect.provide(NodeServices.layer)));
+`
+        );
+        for (const denied of ["0", "1"]) {
+          const result = yield* runCapturedStreams({
+            command: "bun",
+            args: [driver, native, root],
+            cwd: repoRoot,
+            env: {
+              PATH: `${bin}:${Bun.env.PATH ?? ""}`,
+              HOME: Bun.env.HOME ?? root,
+              CI: "false",
+              TURBO_API: "http://127.0.0.1:9427",
+              TURBO_TOKEN: "op://fixture/cache/bearer",
+              TURBO_TEAM: "fixture",
+              TURBO_CACHE: "local:rw,remote:rw",
+              BEEP_TURBO_TRUSTED_WRITER: "true",
+              APPLICATION_REFERENCE: "op://fixture/application/secret",
+              FIXTURE_OP_DENY: denied,
+            },
+            extendEnv: false,
+          });
+          expect(result.exitCode, result.stderr).toBe(0);
+        }
+      })
+    );
+
     it.effect(
       "returns as soon as the child exits, without a retry",
       Effect.fnUntraced(function* () {

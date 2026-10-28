@@ -1130,11 +1130,11 @@
       }
     },
     "@beep/repo-cli": {
-      "reviewer": "Claude Opus 5.5 (effected-promotion roadmap R8, refactor/managed-section-templates)",
-      "reason": "Record the dependency-only drift of @beep/repo-cli, which gains a direct @beep/managed-section edge for the R8 generated-region readers; the package was already upstream through @beep/github-reporting, so no closure grows; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (effected-promotion wave 3-A7, refactor/tsconfig-sync-schemas-onto-tsconfig)",
+      "reason": "Record the @beep/repo-cli manifest edit that adds the @beep/tsconfig workspace dependency for the TsconfigSync.schemas adoption; the task graphs gain only direct edges to tsconfig build/transit, which were already in the graph through @beep/repo-tsconfig, as measured in the review; no qualification is granted.",
       "basis": {
-        "path": "goals/effected-promotion/research/cache-baseline-review-r8.md",
-        "sha256": "42c2e3353dabc472fc5a265b6b17fba9a55f4cb5b2b86736cccf80383dabf04b"
+        "path": "goals/effected-promotion/research/cache-baseline-review-3-a7.md",
+        "sha256": "fe6b7c9824488855e892925e2027e7537d43cca7d8709c137925e64387102e8c"
       }
     },
     "@beep/repo-configs": {
@@ -97902,6 +97902,7 @@
           "@beep/test-runner#audit",
           "@beep/test-utils#audit",
           "@beep/tika#audit",
+          "@beep/tsconfig#audit",
           "@beep/uspto#audit",
           "@beep/utils#audit",
           "@beep/walker#audit",
@@ -98019,6 +98020,7 @@
           "@beep/test-runner#build",
           "@beep/test-utils#build",
           "@beep/tika#build",
+          "@beep/tsconfig#build",
           "@beep/uspto#build",
           "@beep/utils#build",
           "@beep/walker#build",
@@ -98125,6 +98127,7 @@
           "@beep/test-runner#build",
           "@beep/test-utils#build",
           "@beep/tika#build",
+          "@beep/tsconfig#build",
           "@beep/uspto#build",
           "@beep/utils#build",
           "@beep/walker#build",
@@ -98218,6 +98221,7 @@
           "@beep/test-runner#build",
           "@beep/test-utils#build",
           "@beep/tika#build",
+          "@beep/tsconfig#build",
           "@beep/uspto#build",
           "@beep/utils#build",
           "@beep/walker#build",
@@ -98360,6 +98364,7 @@
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
           "@beep/tika#transit",
+          "@beep/tsconfig#transit",
           "@beep/uspto#transit",
           "@beep/utils#transit",
           "@beep/utils#transit",
@@ -98498,6 +98503,7 @@
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
           "@beep/tika#transit",
+          "@beep/tsconfig#transit",
           "@beep/uspto#transit",
           "@beep/utils#transit",
           "@beep/walker#transit",
@@ -98754,6 +98760,7 @@
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
           "@beep/tika#transit",
+          "@beep/tsconfig#transit",
           "@beep/uspto#transit",
           "@beep/utils#transit",
           "@beep/walker#transit",
@@ -98850,6 +98857,7 @@
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
           "@beep/tika#transit",
+          "@beep/tsconfig#transit",
           "@beep/uspto#transit",
           "@beep/utils#transit",
           "@beep/utils#transit",
@@ -98970,6 +98978,7 @@
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
           "@beep/tika#transit",
+          "@beep/tsconfig#transit",
           "@beep/uspto#transit",
           "@beep/utils#transit",
           "@beep/utils#transit",
