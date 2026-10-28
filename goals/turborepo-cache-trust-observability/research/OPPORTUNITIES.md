@@ -1,6 +1,6 @@
 # Friction and opportunities
 
-No implementation receipts yet. Record friction as it occurs: work, minimum
+Record friction as it occurs: work, minimum
 command/error/file evidence, impact, prevention and owner/disposition.
 Redact secrets, use portable paths, omit machine/session IDs and keep raw logs
 in bounded artifacts.
@@ -50,3 +50,13 @@ deriving a secret-bearing Debug implementation. No configuration entered logs.
 A focused CLI test launched from the repository root with a package-relative
 Vitest include found no tests. It was rerun from the package directory and all
 16 cases passed. Use the package working directory for the existing config.
+
+### Parent dotenv survives the host-default guard
+
+The full CLI audit still had six environment failures after the host-default
+fixture fix. A root Bun process had already loaded the checkout cache tuple;
+the host guard could not remove those explicit values. Without signing changes,
+the enrolled-root run reproduced six failures among437tests, while package-cwd
+execution had no inherited tuple. PR #2346 clears only the test-worker cache
+inputs; all561affected tests pass from the enrolled root. Run focused checks
+through the same parent launch path as the full audit to expose this mismatch.

@@ -12,11 +12,27 @@
     "crateUnitTests": 45,
     "middlewareTests": 2,
     "nativeClientTests": 12,
-    "muslBuildAndFleetPortability": "pending",
-    "wireProcessControls": 18,
+    "wireProcessControls": 20,
     "adapterOutputBytes": 0,
-    "scope": "local component only; synthetic storage; no IAM or deployment qualification"
+    "scope": "local component only; synthetic storage; no IAM or deployment qualification",
+    "muslBuild": "passed",
+    "fleetPortability": "pending"
   },
   "productionReadiness": false,
-  "localTestBinarySha256": "6fe6600e5e31faf18b83b7ab87884a966c8e5eae38e6122f614d3b510c0467c4"
+  "portableBuild": {
+    "target": "x86_64-unknown-linux-musl",
+    "profile": "release",
+    "rustc": "1.96.0",
+    "cargoZigbuild": "0.20.1",
+    "zig": "0.14.1",
+    "sha256": "eed2fd185915975720cc769116128f1bbfe631129387d1463c73d2dc6b114037",
+    "bytes": 11348552,
+    "staticElf": true,
+    "buildSeconds": 203,
+    "sourcePatchSha256": "20b5ebacccc4bcabb84976342be1e7b74756cac5bb8fcbec467aec696e44e298",
+    "runtimeVerification": "current Linux workstation only; fleet pending",
+    "trackedDriverVerified": true,
+    "trackedDriverRebuildSeconds": 0.33
+  },
+  "debugTestBinarySha256": "6fe6600e5e31faf18b83b7ab87884a966c8e5eae38e6122f614d3b510c0467c4"
 }

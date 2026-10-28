@@ -103,7 +103,8 @@ def run(options):
             # An upstream dotenv reload would replace the deliberately missing
             # application configuration and emit OTEL or log files.
             trap = "SYNTHETIC_PRIVATE_DOTENV_SENTINEL"
-            (work / ".env").write_text(f"APPLICATION_SECRET={trap}\nRUST_LOG=trace\n")
+            (work / ".env").write_text(
+                f"APPLICATION_SECRET={trap}\nRUST_LOG=trace\nS3_SERVER_SIDE_ENCRYPTION={trap}\n")
             endpoints = {}
             team = "team_beep_policy_lab_epoch_1"
             for role in ["writer", "reader"]:
@@ -249,6 +250,19 @@ def run(options):
                         object_key = f"{team}/{task['hash']}"
                         obj = client.get_object(Bucket="signed-policy-lab", Key=object_key)
                         saved = (object_key, obj["Body"].read(), obj["Metadata"])
+                        # Even a tag produced by the real client's HMAC key
+                        # gives the reader no independent upload capability.
+                        before = fixture.calls
+                        status, metadata, body = request(endpoints["reader"] + f"/v8/artifacts/{task['hash']}" + query,
+                            "PUT", saved[1], {"Authorization": "Bearer synthetic-reader-bearer",
+                                              "x-artifact-tag": saved[2]["x-artifact-tag"]})
+                        passed = (status == 403 and metadata.get("x-beep-cache-result") == "write-denied"
+                                  and fixture.calls == before)
+                        rows.append({"case": f"{pin['channel']}-valid-tag-reader-upload", "status": status,
+                                     "result": metadata.get("x-beep-cache-result"),
+                                     "storageCalls": fixture.calls - before, "passed": passed})
+                        if not passed:
+                            raise AssertionError("A valid artifact tag granted reader upload authority")
 
             for process in processes:
                 process.terminate()

@@ -264,7 +264,8 @@ Prepare and check the reproducible source input:
 RUSTUP_TOOLCHAIN=1.96.0 infra/r2-cache/policy.sh test-domain
 ```
 
-Run `policy.sh cargo-test` or `policy.sh cargo-build` only inside the existing machine admission boundary
+Run `policy.sh cargo-test`, `policy.sh cargo-build` or
+`policy.sh cargo-build-musl` only inside the existing machine admission boundary
 or hosted CI. The caller must select the installed tested Rust 1.96.0 toolchain;
 no ordinary adapter startup compiles Rust. The source patch includes the root
 Cargo.lock metadata correction required by the release's Cargo.toml and preserves
@@ -280,6 +281,10 @@ must match the independently reviewed digest. Only synthetic credentials are use
 and only exact owned child processes are stopped. See the packet's
 `research/adapter-policy-lab.json` for the local result and limits.
 
-A local glibc debug build has passed these checks. A portable build, R2 grant
-negatives, producer attribution, rotation/rollback, deployment and representative
-observation remain required before this patch can serve the enrolled fleet.
+A local glibc debug build and a statically linked x86_64 musl release build have
+passed these checks on the current workstation. The portable build uses installed
+Rust1.96.0 plus cargo-zigbuild0.20.1/Zig0.14.1, pinned in
+`policy-build-requirements.txt`; its checksum and byte size are retained beside
+the source patch. `cargo-build-musl` reproduces that build inside admission.
+Remote fleet execution, R2 grant negatives, producer attribution, rotation/rollback,
+deployment and representative observation remain required before activation.

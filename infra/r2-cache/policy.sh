@@ -40,18 +40,22 @@ case "${1:-}" in
     rustc --edition 2024 --test "$source/src/auth/policy.rs" -o "$cache/policy-tests"
     "$cache/policy-tests"
     ;;
-  cargo-test|cargo-build)
+  cargo-test|cargo-build|cargo-build-musl)
     operation="$1"
     prepare
     # The caller supplies the canonical machine admission bracket (or hosted CI).
     export CARGO_BUILD_JOBS=2 CARGO_PROFILE_DEV_DEBUG=0 CARGO_PROFILE_TEST_DEBUG=0 CARGO_INCREMENTAL=0 CARGO_TERM_COLOR=never
-    export CARGO_TARGET_DIR="$cache/target"
+    export CARGO_TARGET_DIR="${CARGO_TARGET_DIR:-$cache/target}"
     cd "$source"
+    [[ "$(rustc --version | cut -d ' ' -f 2)" == 1.96.0 ]] || { echo 'This component is pinned to installed Rust1.96.0' >&2; exit 1; }
     if [[ "$operation" == cargo-test ]]; then
       cargo test --locked --lib --test signed_policy
+    elif [[ "$operation" == cargo-build-musl ]]; then
+      [[ "$(cargo-zigbuild --version)" == 'cargo-zigbuild 0.20.1' && "$(zig version)" == 0.14.1 ]] || { echo 'Portable build needs cargo-zigbuild0.20.1 and Zig0.14.1' >&2; exit 1; }
+      cargo zigbuild --locked --release --bin decay --target x86_64-unknown-linux-musl
     else
       cargo build --locked --release --bin decay
     fi
     ;;
-  *) echo 'Usage: policy.sh prepare|test-domain|cargo-test|cargo-build' >&2; exit 2 ;;
+  *) echo 'Usage: policy.sh prepare|test-domain|cargo-test|cargo-build|cargo-build-musl' >&2; exit 2 ;;
 esac
