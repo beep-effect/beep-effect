@@ -27,12 +27,14 @@ authority, with policy as schema-validated data behind a calibration gate.
 
 ## Current Phase
 
-P0 Research: freeze the authority read seam, projection identity, rebuild
-contract, and calibration-evidence gate before choosing policy values.
+P3 Yeet: publish the implementation and close review/hosted gates. P0–P2
+are verified; no production policy is active.
 
 ## Latest Evidence
 
-The ratified 2026-08-13 retention-lane decision and row 3 of the source MAP.
+The [P0 contract](history/2026-10-28-p0-contract.md), ten focused reporting
+tests, and the migrated-database delete/rebuild drill. See the
+[operator runbook](ops/REPORT.md). Full audits and docgen pass for all three packages; Yeet completion remains open.
 
 ## Notes
 

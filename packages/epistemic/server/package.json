@@ -47,7 +47,8 @@
     "./GovernedTierGate": "./src/GovernedTierGate/index.ts",
     "./ShaclValidation": "./src/ShaclValidation/index.ts",
     "./internal/*": null,
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./Retention": "./src/Retention/index.ts"
   },
   "files": [
     "src/**/*.ts",

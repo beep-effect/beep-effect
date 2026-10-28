@@ -5,13 +5,13 @@
     "title": "Epistemic Memory Retention Projections",
     "status": "active",
     "created": "2026-08-13",
-    "updated": "2026-08-13",
+    "updated": "2026-10-28",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/epistemic-memory-retention-projections",
   "lifecycle": "active",
   "mission": "Ship rebuildable tier and memory-pressure projections with inert schema-validated retention policy behind calibration evidence.",
-  "statusNote": "Mechanism may proceed now. Tier, decay, and threshold policy must remain inert until a calibration-evidence gate passes; RRF integration is follow-on only.",
+  "statusNote": "Implementation, full package audits/docgen and two-coordinate delete/rebuild proof pass. Closeout is proposed with this PR; Yeet publication and merge readiness are still required. Shipped calibration registry is inert.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -58,20 +58,28 @@
     {
       "id": "P0",
       "name": "Research and calibration gate",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement projections and report",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify rebuild and authority isolation",
-      "status": "pending"
+      "status": "complete"
     },
-    { "id": "P3", "name": "Yeet: PR to mergeable", "status": "pending" },
-    { "id": "P4", "name": "Close", "status": "pending" }
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "in-progress"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
   ],
   "verificationCommands": [
     "test \"$(wc -m < goals/epistemic-memory-retention-projections/GOAL.md)\" -le 4000",
