@@ -79,45 +79,36 @@ const writeReceipt = (repoRoot: string, receipt: FinalCheckReceipt) =>
     writeFile(repoRoot, `${FINAL_CHECK_RECEIPT_DIR}/${receipt.headSha}.json`, text)
   );
 
-// main: M0 (code, two inventories, a packet). The lane changes code and takes
-// a receipt on R; main then changes other code and the schema-first
-// inventory; the lane merges main. `use` gets the checkout, R and the merge head.
-const withMergedLane = <A, E, R>(
-  use: (repoRoot: string, receiptHead: string, mergeHead: string) => Effect.Effect<A, E, R>
-) =>
-  Effect.acquireUseRelease(
-    Effect.flatMap(Effect.service(FileSystem.FileSystem), (fs) =>
-      fs.makeTempDirectory({ prefix: "final-check-refresh-" })
-    ),
-    Effect.fnUntraced(function* (repoRoot) {
-      const run = (args: ReadonlyArray<string>) => git(repoRoot, args);
-      yield* run(["init", "--quiet", "-b", "main"]);
-      yield* run(["config", "user.email", "final-check-refresh@example.invalid"]);
-      yield* run(["config", "user.name", "Final Check Refresh Test"]);
-      yield* run(["config", "commit.gpgsign", "false"]);
-      yield* writeFile(repoRoot, ".gitignore", ".beep/\n");
-      yield* writeFile(repoRoot, "src/a.ts", "export const a = 1;\n");
-      yield* writeFile(repoRoot, "src/b.ts", "export const b = 1;\n");
-      yield* writeFile(repoRoot, SCHEMA_FIRST, '{ "entries": ["main-0"] }\n');
-      yield* writeFile(repoRoot, EFFECT_VITEST, effectVitestInventory(["exception", "exception"]));
-      yield* writeFile(repoRoot, SPEC, "# Demo\n\nstatus: active\n");
-      yield* commitAll(repoRoot, "main 0");
-      yield* run(["switch", "--quiet", "-c", "lane"]);
-      yield* writeFile(repoRoot, "src/a.ts", "export const a = 2;\n");
-      const receiptHead = yield* commitAll(repoRoot, "lane: code");
-      yield* writeReceipt(repoRoot, receiptFor(receiptHead));
-      yield* run(["switch", "--quiet", "main"]);
-      yield* writeFile(repoRoot, "src/b.ts", "export const b = 2;\n");
-      yield* writeFile(repoRoot, SCHEMA_FIRST, '{ "entries": ["main-0", "main-1"] }\n');
-      yield* commitAll(repoRoot, "main 1");
-      yield* run(["switch", "--quiet", "lane"]);
-      yield* run(["merge", "--quiet", "--no-ff", "--no-edit", "main"]);
-      const mergeHead = yield* run(["rev-parse", "HEAD"]);
-      return yield* use(repoRoot, receiptHead, mergeHead);
-    }),
-    (repoRoot) =>
-      Effect.flatMap(Effect.service(FileSystem.FileSystem), (fs) => fs.remove(repoRoot, { recursive: true }))
-  );
+// Each scenario owns a scoped real repository: its mutations and receipts must
+// not be shared with another test. NodeServices is shared by the outer layer.
+const makeMergedLane = Effect.fn("FinalCheckRefreshTest.makeMergedLane")(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const repoRoot = yield* fs.makeTempDirectoryScoped({ prefix: "final-check-refresh-" });
+  const run = (args: ReadonlyArray<string>) => git(repoRoot, args);
+  yield* run(["init", "--quiet", "-b", "main"]);
+  yield* run(["config", "user.email", "final-check-refresh@example.invalid"]);
+  yield* run(["config", "user.name", "Final Check Refresh Test"]);
+  yield* run(["config", "commit.gpgsign", "false"]);
+  yield* writeFile(repoRoot, ".gitignore", ".beep/\n");
+  yield* writeFile(repoRoot, "src/a.ts", "export const a = 1;\n");
+  yield* writeFile(repoRoot, "src/b.ts", "export const b = 1;\n");
+  yield* writeFile(repoRoot, SCHEMA_FIRST, '{ "entries": ["main-0"] }\n');
+  yield* writeFile(repoRoot, EFFECT_VITEST, effectVitestInventory(["exception", "exception"]));
+  yield* writeFile(repoRoot, SPEC, "# Demo\n\nstatus: active\n");
+  yield* commitAll(repoRoot, "main 0");
+  yield* run(["switch", "--quiet", "-c", "lane"]);
+  yield* writeFile(repoRoot, "src/a.ts", "export const a = 2;\n");
+  const receiptHead = yield* commitAll(repoRoot, "lane: code");
+  yield* writeReceipt(repoRoot, receiptFor(receiptHead));
+  yield* run(["switch", "--quiet", "main"]);
+  yield* writeFile(repoRoot, "src/b.ts", "export const b = 2;\n");
+  yield* writeFile(repoRoot, SCHEMA_FIRST, '{ "entries": ["main-0", "main-1"] }\n');
+  yield* commitAll(repoRoot, "main 1");
+  yield* run(["switch", "--quiet", "lane"]);
+  yield* run(["merge", "--quiet", "--no-ff", "--no-edit", "main"]);
+  const mergeHead = yield* run(["rev-parse", "HEAD"]);
+  return { repoRoot, receiptHead, mergeHead };
+});
 
 const refreshAt = (repoRoot: string, head: string) =>
   checkFinalCheckRefresh(repoRoot, "main", head).pipe(Effect.map(O.getOrThrow));
@@ -167,89 +158,82 @@ describe("decideFinalCheckRefresh", () => {
 
 it.layer(NodeServices.layer, { timeout: "60 seconds" })("checkFinalCheckRefresh against a real main merge", (it) => {
   it.effect("passes a bare main merge: main's own code and inventory changes are not the lane's", () =>
-    withMergedLane((repoRoot, receiptHead, mergeHead) =>
-      Effect.gen(function* () {
-        const verdict = yield* refreshAt(repoRoot, mergeHead);
-        assertTrue(verdict._tag === "pass");
-        expect(verdict.receipt.headSha).toBe(receiptHead);
-        expect(ownPaths(verdict)).toEqual([]);
-      })
-    )
+    Effect.gen(function* () {
+      const { repoRoot, receiptHead, mergeHead } = yield* makeMergedLane();
+      const verdict = yield* refreshAt(repoRoot, mergeHead);
+      assertTrue(verdict._tag === "pass");
+      expect(verdict.receipt.headSha).toBe(receiptHead);
+      expect(ownPaths(verdict)).toEqual([]);
+    })
   );
 
   it.effect("passes an inventory-only refresh after the merge", () =>
-    withMergedLane((repoRoot, receiptHead) =>
-      Effect.gen(function* () {
-        yield* writeFile(repoRoot, SCHEMA_FIRST, '{ "entries": ["main-0", "main-1", "lane"] }\n');
-        const finalHead = yield* commitAll(repoRoot, "lane: regenerate schema-first inventory");
-        const verdict = yield* refreshAt(repoRoot, finalHead);
-        assertTrue(verdict._tag === "pass");
-        expect(verdict.receipt.headSha).toBe(receiptHead);
-        expect(ownPaths(verdict)).toEqual([SCHEMA_FIRST]);
-      })
-    )
+    Effect.gen(function* () {
+      const { repoRoot, receiptHead } = yield* makeMergedLane();
+      yield* writeFile(repoRoot, SCHEMA_FIRST, '{ "entries": ["main-0", "main-1", "lane"] }\n');
+      const finalHead = yield* commitAll(repoRoot, "lane: regenerate schema-first inventory");
+      const verdict = yield* refreshAt(repoRoot, finalHead);
+      assertTrue(verdict._tag === "pass");
+      expect(verdict.receipt.headSha).toBe(receiptHead);
+      expect(ownPaths(verdict)).toEqual([SCHEMA_FIRST]);
+    })
   );
 
   it.effect("passes a goal-packet-only change after the merge", () =>
-    withMergedLane((repoRoot) =>
-      Effect.gen(function* () {
-        yield* writeFile(repoRoot, SPEC, "# Demo\n\nstatus: completed-retained\n");
-        const finalHead = yield* commitAll(repoRoot, "lane: flip packet");
-        const verdict = yield* refreshAt(repoRoot, finalHead);
-        assertTrue(verdict._tag === "pass");
-        expect(ownPaths(verdict)).toEqual([SPEC]);
-      })
-    )
+    Effect.gen(function* () {
+      const { repoRoot } = yield* makeMergedLane();
+      yield* writeFile(repoRoot, SPEC, "# Demo\n\nstatus: completed-retained\n");
+      const finalHead = yield* commitAll(repoRoot, "lane: flip packet");
+      const verdict = yield* refreshAt(repoRoot, finalHead);
+      assertTrue(verdict._tag === "pass");
+      expect(ownPaths(verdict)).toEqual([SPEC]);
+    })
   );
 
   it.effect("refuses a code change after the receipt and names the file", () =>
-    withMergedLane((repoRoot, receiptHead) =>
-      Effect.gen(function* () {
-        yield* writeFile(repoRoot, "src/a.ts", "export const a = 3;\n");
-        yield* writeFile(repoRoot, SPEC, "# Demo\n\nstatus: completed-retained\n");
-        const finalHead = yield* commitAll(repoRoot, "lane: code after the receipt");
-        const verdict = yield* refreshAt(repoRoot, finalHead);
-        assertTrue(verdict._tag === "refused");
-        expect(verdict.reason).toBe("own-change-outside-allowlist");
-        expect(verdict.receiptHead).toBe(receiptHead);
-        expect(verdict.detail).toContain("src/a.ts");
-        expect(verdict.detail).not.toContain(SPEC);
-      })
-    )
+    Effect.gen(function* () {
+      const { repoRoot, receiptHead } = yield* makeMergedLane();
+      yield* writeFile(repoRoot, "src/a.ts", "export const a = 3;\n");
+      yield* writeFile(repoRoot, SPEC, "# Demo\n\nstatus: completed-retained\n");
+      const finalHead = yield* commitAll(repoRoot, "lane: code after the receipt");
+      const verdict = yield* refreshAt(repoRoot, finalHead);
+      assertTrue(verdict._tag === "refused");
+      expect(verdict.reason).toBe("own-change-outside-allowlist");
+      expect(verdict.receiptHead).toBe(receiptHead);
+      expect(verdict.detail).toContain("src/a.ts");
+      expect(verdict.detail).not.toContain(SPEC);
+    })
   );
 
   it.effect("refuses an effect-vitest refresh that changes the lane's status counts", () =>
-    withMergedLane((repoRoot) =>
-      Effect.gen(function* () {
-        yield* writeFile(repoRoot, EFFECT_VITEST, effectVitestInventory(["exception", "open"]));
-        const finalHead = yield* commitAll(repoRoot, "lane: re-run effect-vitest --write");
-        const verdict = yield* refreshAt(repoRoot, finalHead);
-        assertTrue(verdict._tag === "refused");
-        expect(verdict.reason).toBe("effect-vitest-status-drift");
-        expect(verdict.detail).toContain("exception +0 at the receipt, -1 at the final head");
-        expect(verdict.detail).toContain("open +0 at the receipt, +1 at the final head");
-      })
-    )
+    Effect.gen(function* () {
+      const { repoRoot } = yield* makeMergedLane();
+      yield* writeFile(repoRoot, EFFECT_VITEST, effectVitestInventory(["exception", "open"]));
+      const finalHead = yield* commitAll(repoRoot, "lane: re-run effect-vitest --write");
+      const verdict = yield* refreshAt(repoRoot, finalHead);
+      assertTrue(verdict._tag === "refused");
+      expect(verdict.reason).toBe("effect-vitest-status-drift");
+      expect(verdict.detail).toContain("exception +0 at the receipt, -1 at the final head");
+      expect(verdict.detail).toContain("open +0 at the receipt, +1 at the final head");
+    })
   );
 
   it.effect("passes an effect-vitest refresh that keeps the lane's status counts", () =>
-    withMergedLane((repoRoot) =>
-      Effect.gen(function* () {
-        yield* writeFile(repoRoot, EFFECT_VITEST, effectVitestInventory(["exception", "exception"], "EV-moved-"));
-        const finalHead = yield* commitAll(repoRoot, "lane: re-run effect-vitest --write");
-        const verdict = yield* refreshAt(repoRoot, finalHead);
-        assertTrue(verdict._tag === "pass");
-        expect(ownPaths(verdict)).toEqual([EFFECT_VITEST]);
-      })
-    )
+    Effect.gen(function* () {
+      const { repoRoot } = yield* makeMergedLane();
+      yield* writeFile(repoRoot, EFFECT_VITEST, effectVitestInventory(["exception", "exception"], "EV-moved-"));
+      const finalHead = yield* commitAll(repoRoot, "lane: re-run effect-vitest --write");
+      const verdict = yield* refreshAt(repoRoot, finalHead);
+      assertTrue(verdict._tag === "pass");
+      expect(ownPaths(verdict)).toEqual([EFFECT_VITEST]);
+    })
   );
 
   it.effect("finds no receipt for a head whose ancestors carry only failing receipts", () =>
-    withMergedLane((repoRoot, receiptHead, mergeHead) =>
-      Effect.gen(function* () {
-        yield* writeReceipt(repoRoot, receiptFor(receiptHead, { verdict: "fail" }));
-        assertNone(yield* checkFinalCheckRefresh(repoRoot, "main", mergeHead));
-      })
-    )
+    Effect.gen(function* () {
+      const { repoRoot, receiptHead, mergeHead } = yield* makeMergedLane();
+      yield* writeReceipt(repoRoot, receiptFor(receiptHead, { verdict: "fail" }));
+      assertNone(yield* checkFinalCheckRefresh(repoRoot, "main", mergeHead));
+    })
   );
 });

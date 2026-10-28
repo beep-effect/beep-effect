@@ -546,6 +546,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet ready gate run", (
                     path: "standards/schema-first.inventory.jsonc",
                     allowance: O.some("standards-inventory"),
                   }),
+                  FinalCheckRefreshOwnChange.make({ path: "unknown.txt", allowance: O.none() }),
                 ],
               })
             )
@@ -561,7 +562,51 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet ready gate run", (
       const printed = A.join(A.map(yield* TestConsole.logLines, String), "\n");
       expect(printed).toContain(`carries the receipt of ancestor ${receiptHead}`);
       expect(printed).toContain("standards/schema-first.inventory.jsonc (standards-inventory)");
+      expect(printed).toContain("unknown.txt (not allowed)");
       expect(printed).toContain(`final <sha40> #42 receipt ${receiptHead}`);
+      expect(yield* Ref.get(calls)).toEqual([["ready", "42"]]);
+    })
+  );
+
+  it.effect("renders an ancestor receipt without own changes and without a skipped-gate reason", () =>
+    Effect.gen(function* () {
+      const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+      const receiptHead = Str.repeat(40)("r");
+      const decision = yield* runYeetReadyGate(context, {
+        finalCheck: () => Effect.succeedNone,
+        refresh: (_context, head) =>
+          Effect.map(passingFinalCheck(_context, receiptHead), (receipt) =>
+            O.map(receipt, (found) =>
+              FinalCheckRefreshPass.make({
+                receipt: FinalCheckReceipt.make({
+                  ...found,
+                  steps: [
+                    FinalCheckStepResult.make({
+                      gate: "coverage",
+                      label: "final-check:coverage",
+                      hostedContext: "Heavy / Coverage Regression",
+                      command: "(skipped)",
+                      status: "skipped",
+                      durationMs: 0,
+                    }),
+                  ],
+                }),
+                finalHead: head,
+                ownChanges: [],
+              })
+            )
+          ),
+        squashCommitlint: passingSquashCommitlint,
+        recordInherited: () => Effect.void,
+        read: () => Effect.succeed(prView()),
+        markReady: recordingMarkReady(calls),
+        requestReview: stubReviewerRequest,
+        findMonitor: () => Effect.succeedNone,
+      });
+      expect(decision._tag).toBe("flip");
+      const printed = A.join(A.map(yield* TestConsole.logLines, String), "\n");
+      expect(printed).toContain("own changes since the receipt: none");
+      expect(printed).toContain("coverage (no reason)");
       expect(yield* Ref.get(calls)).toEqual([["ready", "42"]]);
     })
   );
@@ -920,6 +965,19 @@ const readyPlatform = Layer.mergeAll(
   Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, mockSpawner)
 );
 it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundaries", (it) => {
+  it.effect("uses the real ancestor lookup when the head receipt is missing and refuses an empty store", () =>
+    Effect.gen(function* () {
+      const calls = yield* Ref.make<ReadonlyArray<number>>([]);
+      const error = yield* runYeetReadyGate(context, {
+        read: () => Effect.succeed(prView()),
+        markReady: (prNumber) => Ref.update(calls, (all) => A.append(all, prNumber)),
+      }).pipe(Effect.flip);
+      expect(error).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "final-check" });
+      expect(error.message).toContain(`no final-check receipt for head ${headSha}`);
+      expect(yield* Ref.get(calls)).toEqual([]);
+    })
+  );
+
   const fallbackRunner = (lookup: string, lookupExit = 0, comments = "[]", restStatus = "OPEN") =>
     ChildProcessSpawner.make((command) => {
       if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
