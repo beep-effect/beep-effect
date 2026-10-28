@@ -58,7 +58,6 @@ import { runGitLines } from "@beep/repo-cli/test/SharedInternals";
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
-import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
@@ -131,10 +130,10 @@ const kitMatches = (pattern: string): ((candidate: string) => boolean) => {
 
 const Disagreement = S.Struct({ pattern: S.String, candidate: S.String, old: S.Boolean, kit: S.Boolean });
 const PatternSection = S.Struct({
-  patterns: S.Number,
-  candidates: S.Number,
-  comparisons: S.Number,
-  matches: S.Number,
+  patterns: S.Finite,
+  candidates: S.Finite,
+  comparisons: S.Finite,
+  matches: S.Finite,
   disagreements: S.Array(Disagreement),
 });
 type PatternSection = typeof PatternSection.Type;
@@ -150,14 +149,14 @@ type DialectCase = typeof DialectCase.Type;
 // lists the cases where either observed answer differs from the pinned one.
 const DialectShiftSection = S.Struct({
   cases: S.Array(DialectCase),
-  shifted: S.Number,
+  shifted: S.Finite,
   unexpected: S.Array(DialectCase),
 });
 type DialectShiftSection = typeof DialectShiftSection.Type;
 const Fingerprint = S.Struct({
-  count: S.Number,
+  count: S.Finite,
   sha256: S.String,
-  byTopLevel: S.Record(S.String, S.Number),
+  byTopLevel: S.Record(S.String, S.Finite),
 });
 type Fingerprint = typeof Fingerprint.Type;
 const FileSets = S.Struct({
@@ -204,7 +203,9 @@ type Report = typeof Report.Type;
 const encodeReport = S.encodeEffect(S.fromJsonString(Report, { space: 2 }));
 const decodeReport = S.decodeUnknownEffect(S.fromJsonString(Report));
 
-class ParityFailed extends Data.TaggedError("ParityFailed")<{ readonly reasons: ReadonlyArray<string> }> {}
+class ParityFailed extends S.TaggedError<ParityFailed, { readonly brand: unique symbol }>()("ParityFailed", {
+  reasons: S.Array(S.String),
+}) {}
 
 // --- pattern parity -------------------------------------------------------------------------------------------
 
@@ -241,8 +242,8 @@ const stripDotSlash = Str.replace(/^\.\//, "");
 const docgenNormalize = (pattern: string): string => normalizeSlashes(stripDotSlash(pattern));
 
 const DocgenConfig = S.Struct({
-  srcDir: S.optionalKey(S.String),
-  exclude: S.optionalKey(S.Array(S.String)),
+  srcDir: S.String.pipe(S.optionalKey),
+  exclude: S.Array(S.String).pipe(S.optionalKey),
 });
 const decodeDocgenConfig = S.decodeUnknownEffect(S.fromJsonString(DocgenConfig));
 
@@ -281,37 +282,46 @@ const selectorsFor = (names: ReadonlyArray<string>, directories: ReadonlyArray<s
       names,
       A.map(names, (name) => `${name}...`),
       A.map(names, (name) => `...^${name}`),
-      A.filterMap(names, (name) => {
-        const slash = Str.indexOf("/")(name);
-        return O.map(slash, (index) => `${Str.slice(0, index + 1)(name)}*`);
-      }),
-      A.filterMap(names, (name) => {
-        const dash = Str.lastIndexOf("-")(name);
-        return O.map(dash, (index) => `${Str.slice(0, index + 1)(name)}*`);
-      }),
+      A.getSomes(
+        A.map(names, (name) => {
+          const slash = Str.indexOf("/")(name);
+          return O.map(slash, (index) => `${Str.slice(0, index + 1)(name)}*`);
+        })
+      ),
+      A.getSomes(
+        A.map(names, (name) => {
+          const dash = Str.lastIndexOf("-")(name);
+          return O.map(dash, (index) => `${Str.slice(0, index + 1)(name)}*`);
+        })
+      ),
       A.map(directories, (directory) => `./${directory}`),
       A.map(directories, (directory) => `{./${directory}}`),
       A.map(directories, (directory) => `...{./${directory}}...`),
-      A.filterMap(directories, (directory) => {
-        const slash = Str.lastIndexOf("/")(directory);
-        return O.map(slash, (index) => `{./${Str.slice(0, index + 1)(directory)}*}`);
-      }),
-      A.filterMap(directories, (directory) => {
-        const slash = Str.indexOf("/")(directory);
-        return O.map(slash, (index) => `./${Str.slice(0, index + 1)(directory)}**`);
-      }),
+      A.getSomes(
+        A.map(directories, (directory) => {
+          const slash = Str.lastIndexOf("/")(directory);
+          return O.map(slash, (index) => `{./${Str.slice(0, index + 1)(directory)}*}`);
+        })
+      ),
+      A.getSomes(
+        A.map(directories, (directory) => {
+          const slash = Str.indexOf("/")(directory);
+          return O.map(slash, (index) => `./${Str.slice(0, index + 1)(directory)}**`);
+        })
+      ),
     ])
   );
 
 const TurboEnvArrays = S.Struct({
-  globalEnv: S.optionalKey(S.Array(S.String)),
-  globalPassThroughEnv: S.optionalKey(S.Array(S.String)),
-  tasks: S.optionalKey(
-    S.Record(
-      S.String,
-      S.Struct({ env: S.optionalKey(S.Array(S.String)), passThroughEnv: S.optionalKey(S.Array(S.String)) })
-    )
-  ),
+  globalEnv: S.Array(S.String).pipe(S.optionalKey),
+  globalPassThroughEnv: S.Array(S.String).pipe(S.optionalKey),
+  tasks: S.Record(
+    S.String,
+    S.Struct({
+      env: S.Array(S.String).pipe(S.optionalKey),
+      passThroughEnv: S.Array(S.String).pipe(S.optionalKey),
+    })
+  ).pipe(S.optionalKey),
 });
 const decodeTurboEnvArrays = S.decodeUnknownEffect(S.fromJsonString(TurboEnvArrays));
 
@@ -520,7 +530,7 @@ const program = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   if (normalizeSlashes(process.cwd()) !== normalizeSlashes(Str.replace(/\/$/, "")(repoRoot))) {
-    return yield* new ParityFailed({ reasons: [`run from the repo root (${relative(repoRoot)})`] });
+    return yield* ParityFailed.make({ reasons: [`run from the repo root (${relative(repoRoot)})`] });
   }
 
   const tracked = yield* runGitLines(repoRoot, ["ls-files", "-z"]).pipe(
@@ -553,10 +563,11 @@ const program = Effect.gen(function* () {
   const coverageFixtureOwners = comparePatterns(COVERAGE_FIXTURE_OWNER_PATTERNS, tracked);
 
   // 1c. coverage selectors over the live workspace names and directories.
-  const workspaces = A.fromIterable(MutableHashMap.values(yield* discoverWorkspacePackages(repoRoot, path)));
-  const names = A.sort(
-    A.map(workspaces, (workspace) => workspace.name),
-    Order.String
+  const workspaces = pipe(yield* discoverWorkspacePackages(repoRoot, path), MutableHashMap.values, A.fromIterable);
+  const names = pipe(
+    workspaces,
+    A.map((workspace) => workspace.name),
+    A.sort(Order.String)
   );
   const directories = A.sort(
     A.filter(
@@ -594,16 +605,12 @@ const program = Effect.gen(function* () {
   const markdownDocuments = yield* discoverEffectImportMarkdownFiles(markdownOptions);
   yield* O.match(flag("--list-dir"), {
     onNone: () => Effect.void,
-    onSome: (dir) =>
-      Effect.gen(function* () {
-        yield* fs.makeDirectory(dir, { recursive: true });
-        yield* fs.writeFileString(path.join(dir, "code-sources.txt"), `${A.join(codeSources, "\n")}\n`);
-        yield* fs.writeFileString(
-          path.join(dir, "markdown-mode-sources.txt"),
-          `${A.join(markdownModeSources, "\n")}\n`
-        );
-        yield* fs.writeFileString(path.join(dir, "markdown-documents.txt"), `${A.join(markdownDocuments, "\n")}\n`);
-      }),
+    onSome: Effect.fnUntraced(function* (dir) {
+      yield* fs.makeDirectory(dir, { recursive: true });
+      yield* fs.writeFileString(path.join(dir, "code-sources.txt"), `${A.join(codeSources, "\n")}\n`);
+      yield* fs.writeFileString(path.join(dir, "markdown-mode-sources.txt"), `${A.join(markdownModeSources, "\n")}\n`);
+      yield* fs.writeFileString(path.join(dir, "markdown-documents.txt"), `${A.join(markdownDocuments, "\n")}\n`);
+    }),
   });
   const effectImports: FileSets = {
     codeSources: fingerprint(codeSources),
@@ -620,49 +627,48 @@ const program = Effect.gen(function* () {
   const currentLists: Record<Corpus, ReadonlyArray<string>> = { codeSources, markdownModeSources, markdownDocuments };
   const report: Report = yield* O.match(flag("--before"), {
     onNone: () => Effect.succeed(current),
-    onSome: (baselinePath) =>
-      Effect.gen(function* () {
-        const before = yield* fs.readFileString(baselinePath).pipe(Effect.flatMap(decodeReport));
-        const differing = fileSetDifferences(before.effectImports, effectImports);
-        const baselineTree = flag("--baseline-tree");
-        const tree = yield* O.match(baselineTree, {
-          onNone: () => Effect.succeedNone,
-          onSome: (sha) => Effect.map(treeChanges(sha), O.some),
-        });
-        const head = yield* runGitLines(repoRoot, ["rev-parse", "HEAD"]).pipe(Effect.map(A.head));
-        const shifts = yield* O.match(flag("--before-lists"), {
-          onNone: () => Effect.succeed(A.empty<FileSetShift>()),
-          onSome: (dir) =>
-            Effect.forEach(CORPORA, (corpus) =>
-              fs
-                .readFileString(path.join(dir, corpusListFile[corpus]))
-                .pipe(
-                  Effect.map((text) =>
-                    listShifts(tree, corpus, A.filter(Str.split("\n")(text), Str.isNonEmpty), currentLists[corpus])
-                  )
+    onSome: Effect.fnUntraced(function* (baselinePath) {
+      const before = yield* fs.readFileString(baselinePath).pipe(Effect.flatMap(decodeReport));
+      const differing = fileSetDifferences(before.effectImports, effectImports);
+      const baselineTree = flag("--baseline-tree");
+      const tree = yield* O.match(baselineTree, {
+        onNone: () => Effect.succeedNone,
+        onSome: (sha) => Effect.asSome(treeChanges(sha)),
+      });
+      const head = yield* runGitLines(repoRoot, ["rev-parse", "HEAD"]).pipe(Effect.map(A.head));
+      const shifts = yield* O.match(flag("--before-lists"), {
+        onNone: () => Effect.succeed(A.empty<FileSetShift>()),
+        onSome: (dir) =>
+          Effect.forEach(CORPORA, (corpus) =>
+            fs
+              .readFileString(path.join(dir, corpusListFile[corpus]))
+              .pipe(
+                Effect.map((text) =>
+                  listShifts(tree, corpus, A.filter(Str.split("\n")(text), Str.isNonEmpty), currentLists[corpus])
                 )
-            ).pipe(Effect.map(A.flatten)),
-        });
-        return {
-          ...current,
-          comparison: {
-            baseline: relative(baselinePath),
-            ...O.match(flag("--before-lists"), {
-              onNone: () => ({}),
-              onSome: (dir) => ({ beforeLists: relative(dir) }),
-            }),
-            ...O.match(baselineTree, { onNone: () => ({}), onSome: (sha) => ({ baselineTree: sha }) }),
-            ...O.match(head, { onNone: () => ({}), onSome: (sha) => ({ tree: sha }) }),
-            identical: A.isReadonlyArrayEmpty(differing),
-            differing,
-            shifts,
-            unclassified: A.map(
-              A.filter(shifts, (shift) => Str.isEmpty(shift.reason)),
-              (shift) => `${shift.corpus} ${shift.kind} ${shift.path}`
-            ),
-          },
-        };
-      }),
+              )
+          ).pipe(Effect.map(A.flatten)),
+      });
+      return {
+        ...current,
+        comparison: {
+          baseline: relative(baselinePath),
+          ...O.match(flag("--before-lists"), {
+            onNone: () => ({}),
+            onSome: (dir) => ({ beforeLists: relative(dir) }),
+          }),
+          ...O.match(baselineTree, { onNone: () => ({}), onSome: (sha) => ({ baselineTree: sha }) }),
+          ...O.match(head, { onNone: () => ({}), onSome: (sha) => ({ tree: sha }) }),
+          identical: A.isReadonlyArrayEmpty(differing),
+          differing,
+          shifts,
+          unclassified: A.map(
+            A.filter(shifts, (shift) => Str.isEmpty(shift.reason)),
+            (shift) => `${shift.corpus} ${shift.kind} ${shift.path}`
+          ),
+        },
+      };
+    }),
   });
 
   const json = yield* encodeReport(report);
@@ -671,7 +677,14 @@ const program = Effect.gen(function* () {
     onSome: (out) => fs.writeFileString(out, `${json}\n`),
   });
 
-  const sections = R.toEntries(report.patternParity);
+  const parity = report.patternParity;
+  const sections: ReadonlyArray<readonly [string, PatternSection]> = A.getSomes([
+    O.some(["docgenExcludes", parity.docgenExcludes] as const),
+    O.some(["coverageFixtureOwners", parity.coverageFixtureOwners] as const),
+    O.some(["coverageSelectors", parity.coverageSelectors] as const),
+    O.some(["turboEnv", parity.turboEnv] as const),
+    O.map(O.fromUndefinedOr(parity.dialectPrefixes), (section) => ["dialectPrefixes", section] as const),
+  ]);
   const disagreements = A.flatMap(sections, ([name, section]) =>
     A.isReadonlyArrayEmpty(section.disagreements) ? [] : [`${name}: ${section.disagreements.length} disagreements`]
   );
@@ -706,7 +719,8 @@ const program = Effect.gen(function* () {
   yield* Console.log(
     `effectImports: code=${effectImports.codeSources.count} markdownModeSources=${effectImports.markdownModeSources.count} markdown=${effectImports.markdownDocuments.count}${comparison === undefined ? "" : ` identical=${comparison.identical} shifts=${comparison.shifts.length} (tree=${causes("tree")} walker=${causes("walker")}) unclassified=${comparison.unclassified.length}`}`
   );
-  if (A.isReadonlyArrayNonEmpty(reasons)) return yield* new ParityFailed({ reasons });
+  if (A.isReadonlyArrayNonEmpty(reasons)) return yield* ParityFailed.make({ reasons });
 });
 
+// @effect-diagnostics-next-line strictEffectProvide:off -- this is the script's entry point; the one layer is provided once here. Owner: goals/effected-promotion. Exit: the script is deleted with the packet's closeout.
 NodeRuntime.runMain(program.pipe(Effect.provide(NodeServices.layer)));

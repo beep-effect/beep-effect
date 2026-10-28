@@ -10,16 +10,16 @@
     },
     "coverageFixtureOwners": {
       "patterns": 16,
-      "candidates": 43539,
-      "comparisons": 696624,
+      "candidates": 43542,
+      "comparisons": 696672,
       "matches": 322,
       "disagreements": []
     },
     "coverageSelectors": {
-      "patterns": 1137,
+      "patterns": 1234,
       "candidates": 379,
-      "comparisons": 430923,
-      "matches": 1137,
+      "comparisons": 467686,
+      "matches": 1825,
       "disagreements": []
     },
     "turboEnv": {
@@ -192,7 +192,7 @@
     "baseline": "goals/effected-promotion/research/glob-adoption-parity-r2b-before.json",
     "beforeLists": "goals/effected-promotion/research/glob-adoption-parity-r2b-before-lists",
     "baselineTree": "ed0c4ec45e",
-    "tree": "fa573df1b0924b2182aa1811fe5d1707ac91b2e9",
+    "tree": "03b0bdf0b26aa4281f015f0fcc737c08261b0a4a",
     "identical": false,
     "differing": ["codeSources", "markdownDocuments"],
     "shifts": [
