@@ -17,7 +17,7 @@ import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 import { KnowledgeInterval } from "../KnowledgeInterval/index.ts";
 import { ValidInterval, ValidIntervalFields } from "../ValidInterval/index.ts";
-import type { IdCodec, SchemaIdentity } from "../Factory/index.ts";
+import type { FieldSchema, IdCodec, SchemaIdentity } from "../Factory/index.ts";
 
 const $I = $EpistemicsId.create("Claim/Claim.model");
 
@@ -245,7 +245,8 @@ export type ValidTime = typeof ValidTime.Type;
  * The returned schemas carry identifiers from the caller's `$I`, so two slices
  * binding the envelope get distinct schema identities. `logicalKey` is the
  * slice's own stable key for the proposition (two versions of the same fact
- * share it).
+ * share it). The binding supplies its key function; decoding and encoding
+ * reject a key that disagrees with the decoded proposition.
  *
  * **Example** (Bind the envelope for a tiny proposition)
  *
@@ -253,10 +254,12 @@ export type ValidTime = typeof ValidTime.Type;
  * import { makeClaimEnvelope } from "@beep/epistemics/Claim"
  * import { $ScratchpadId } from "@beep/identity/packages"
  * import * as S from "effect/Schema"
+ * import * as Str from "effect/String"
  *
  * const { ClaimVersion } = makeClaimEnvelope({
  *   $I: $ScratchpadId.create("example/Claim"),
  *   proposition: S.TaggedStruct("Knows", { left: S.String, right: S.String }),
+ *   logicalKey: (p) => `Knows|${Str.length(p.left)}:${p.left}|${Str.length(p.right)}:${p.right}`,
  *   ids: {
  *     claimVersion: S.String.pipe(S.brand("ClaimVersionId")),
  *     assertion: S.String.pipe(S.brand("AssertionId")),
@@ -279,6 +282,7 @@ export const makeClaimEnvelope = <
 >(config: {
   readonly $I: SchemaIdentity;
   readonly proposition: P;
+  readonly logicalKey: (proposition: P["Type"]) => string;
   readonly ids: {
     readonly claimVersion: ClaimVersionId;
     readonly assertion: AssertionId;
@@ -333,6 +337,9 @@ export const makeClaimEnvelope = <
     Retracted: { reason: S.NonEmptyString, at: S.DateTimeUtcFromMillis },
   }).pipe($C.annoteSchema("ReviewState", { description: "Epistemic review state." }));
 
+  const proposition: FieldSchema<P["Type"]> = S.toType(config.proposition);
+  const hasClaimKey = S.is(S.Struct({ logicalKey: S.NonEmptyString, proposition }));
+
   const ClaimVersion = S.Struct({
     id: ids.claimVersion,
     logicalKey: S.NonEmptyString,
@@ -344,11 +351,21 @@ export const makeClaimEnvelope = <
     supersedes: S.OptionFromNullOr(ids.claimVersion),
     review: ReviewState,
     signals: EvidenceSignals,
-  }).pipe(
-    $C.annoteSchema("ClaimVersion", {
-      description: "One immutable bitemporal claim version; corrections append and expire, never update.",
-    })
-  );
+  })
+    .check(
+      S.makeFilter(
+        (claim: unknown) => hasClaimKey(claim) && claim.logicalKey === config.logicalKey(claim.proposition),
+        $C.annote("ClaimLogicalKeyCheck", {
+          description: "The logical key matches the slice-owned proposition key function.",
+          message: "Expected logicalKey to match the proposition key.",
+        })
+      )
+    )
+    .pipe(
+      $C.annoteSchema("ClaimVersion", {
+        description: "One immutable bitemporal claim version; corrections append and expire, never update.",
+      })
+    );
 
   return { ReviewerDisposition, EvidenceSignals, DependenceAssessment, ReviewState, ClaimVersion };
 };

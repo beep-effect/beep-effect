@@ -1,6 +1,8 @@
 /**
  * MCP server wiring for the thin `@beep/uspto` MCP proving host.
  *
+ * **Details**
+ *
  * Mounts the {@link UsptoToolkit} into a single stdio-transport MCP server,
  * gating its registration through `@beep/mcp-kit`'s `SourceAuth`/
  * `ToolkitComposition` seam: the toolkit's `soft` gate never vanishes at

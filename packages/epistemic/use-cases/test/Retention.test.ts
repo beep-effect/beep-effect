@@ -198,7 +198,7 @@ describe("retention reporting", () => {
           O.some(yield* S.decodeEffect(RetentionPolicy)(policyInput))
         ).pipe(provideFixture(yield* makeSnapshot(), O.some(altered)));
         expect(report.admission.state).toBe("inert");
-        expect(report.admission.state).toBe("inert");
+        assertNone(report.pressureRatio);
       })
     );
   }

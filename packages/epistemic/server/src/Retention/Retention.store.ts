@@ -50,6 +50,11 @@ export const rebuildRetentionStore = Effect.fn("Retention.rebuildStore")(functio
     yield* fs.rename(path.join(staging, "report.json"), path.join(root, "report.json"));
   }).pipe(
     Effect.scoped,
+    Effect.tapError((error) =>
+      Effect.logWarning("Retention report store failed").pipe(
+        Effect.annotateLogs({ operation: "store", errorKind: error._tag })
+      )
+    ),
     Effect.mapError(() =>
       RetentionUnavailable.make({ operation: "store", message: "Disposable report store unavailable" })
     )

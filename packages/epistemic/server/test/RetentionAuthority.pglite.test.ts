@@ -11,13 +11,14 @@ import { toCandidateClaimInsert } from "@beep/epistemic-tables/entities/Candidat
 import { toEvidenceInsert } from "@beep/epistemic-tables/entities/Evidence";
 import { ClaimDispositionRepository } from "@beep/epistemic-use-cases/ClaimDisposition";
 import { EdgeAuthorityRepository, RecordEdgeFact, SupersedeEdgeFact } from "@beep/epistemic-use-cases/EdgeAuthority";
-import { RetentionCalibrationRegistry } from "@beep/epistemic-use-cases/Retention";
+import { RetentionAuthorityReader, RetentionCalibrationRegistry, RetentionUnavailable } from "@beep/epistemic-use-cases/Retention";
 import { $EpistemicServerId } from "@beep/identity/packages";
 import { makeDrizzle, makeDrizzleLayer, migrate } from "@beep/postgres";
 import { it } from "@beep/test-runner";
 import { makePgliteSqlTestLayer, productEntityFixtureInput, TestDatabaseInfo } from "@beep/test-utils";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { describe, expect } from "@effect/vitest";
+import { assertFailure } from "@effect/vitest/utils";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { asc } from "drizzle-orm";
 import * as Arbitrary from "effect/Arbitrary";
@@ -226,6 +227,47 @@ const SeededTestLayer = Layer.effect(
 
 describe("retention authority rebuild", { concurrent: false }, () => {
   it.layer(SeededTestLayer, { timeout: "120 seconds" })("migrated Postgres authority", (it) => {
+    it.effect("returns empty snapshots for empty and absent logical keys", () =>
+      Effect.gen(function* () {
+        const reader = yield* RetentionAuthorityReader;
+        for (const logicalKeys of [[], [Str.repeat(64)("0")]]) {
+          const query = yield* S.decodeEffect(RetentionQuery)({
+            orgId: 1,
+            logicalKeys,
+            validAt: 1500,
+            knownAt: 2500,
+            dispositions: [],
+          });
+          const snapshot = yield* reader.read(query);
+          expect(snapshot.edges).toEqual([]);
+          expect(snapshot.dispositions).toEqual([]);
+        }
+      })
+    );
+
+    it.effect("sanitizes a filesystem failure when the store root is a file", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const temp = yield* fs.makeTempDirectoryScoped({ prefix: "retention-store-failure-" });
+        const root = path.join(temp, "occupied");
+        yield* fs.writeFileString(root, "keep this file");
+        const query = yield* S.decodeEffect(RetentionQuery)({
+          orgId: 1,
+          logicalKeys: [],
+          validAt: 1500,
+          knownAt: 2500,
+          dispositions: [],
+        });
+        const result = yield* rebuildRetentionStore(root, query, O.none()).pipe(Effect.result);
+        assertFailure(
+          result,
+          RetentionUnavailable.make({ operation: "store", message: "Disposable report store unavailable" })
+        );
+        expect(yield* fs.readFileString(root)).toBe("keep this file");
+      })
+    );
+
     it.effect.prop(
       "rebuilds disposable retention bytes at two coordinates after full deletion without changing authority",
       [PolicyArbitrary],
@@ -283,4 +325,24 @@ describe("retention authority rebuild", { concurrent: false }, () => {
       { timeout: 300_000 }
     );
   });
+});
+
+it.layer(TestLayer, { timeout: "120 seconds" })("unmigrated retention authority", (it) => {
+  it.effect("sanitizes a database read failure", () =>
+    Effect.gen(function* () {
+      const reader = yield* RetentionAuthorityReader;
+      const query = yield* S.decodeEffect(RetentionQuery)({
+        orgId: 1,
+        logicalKeys: [Str.repeat(64)("0")],
+        validAt: 1500,
+        knownAt: 2500,
+        dispositions: [],
+      });
+      const result = yield* reader.read(query).pipe(Effect.result);
+      assertFailure(
+        result,
+        RetentionUnavailable.make({ operation: "read", message: "Scoped authority snapshot unavailable" })
+      );
+    })
+  );
 });

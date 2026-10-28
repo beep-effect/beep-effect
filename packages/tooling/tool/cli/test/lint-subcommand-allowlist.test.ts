@@ -164,10 +164,9 @@ it.layer(CommandTestLayer, { timeout: "5 seconds" })((it) => {
 // Every module bin-main.ts imports eagerly is paid on every `beep` invocation
 // before the fast paths run, so each one is held to the same zero-import
 // contract as LintRouting.ts and enumerated in the allowlist below.
-const PRE_FAST_PATH_MODULES: ReadonlyArray<string> = [
-  "internal/cli/FailureRendering.ts",
-  "internal/cli/LintRouting.ts",
-];
+// FailureRendering.ts left this list in 4-C-A: it now holds the
+// `CliRuntime.main` render hook and loads lazily beside `@beep/cli-kit`.
+const PRE_FAST_PATH_MODULES: ReadonlyArray<string> = ["internal/cli/LintRouting.ts"];
 
 it.layer(CommandTestLayer, { timeout: "5 seconds" })((it) => {
   describe("internal/cli dependency-free boundary", () => {
@@ -222,7 +221,6 @@ it.layer(CommandTestLayer, { timeout: "5 seconds" })((it) => {
 
           expect(inspectModuleLoads(project, binMainSource, true)).toEqual([
             "import:effect/Result",
-            "import:./internal/cli/FailureRendering.ts",
             "import:./internal/cli/LintRouting.ts",
             "import():@beep/utils",
           ]);

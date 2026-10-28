@@ -20,7 +20,6 @@ import {
 import { canonicalDetectionJson } from "@beep/epistemics/ContradictionDetection";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
-import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as Match from "effect/Match";
@@ -34,8 +33,19 @@ import type { ClaimDisposition } from "@beep/epistemic-domain/entities/ClaimDisp
 import type { RetentionPolicy, RetentionSnapshot } from "@beep/epistemic-domain/values/Retention";
 import type * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 
-const unavailable = (operation: string) => (_cause: unknown) =>
-  RetentionUnavailable.make({ operation, message: "Retention boundary validation failed" });
+const unavailable =
+  (operation: string) =>
+  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, RetentionUnavailable, R> =>
+    effect.pipe(
+      Effect.tapError((error) =>
+        Effect.logWarning("Retention boundary validation failed").pipe(
+          Effect.annotateLogs({ operation, errorKind: S.isSchemaError(error) ? "SchemaError" : "BoundaryError" })
+        )
+      ),
+      Effect.mapError(() =>
+        RetentionUnavailable.make({ operation, message: "Retention boundary validation failed" })
+      )
+    );
 const dispositionOrder = Order.combine(
   Order.mapInput(N.Order, (d: ClaimDisposition) => DateTime.toEpochMillis(d.resolvedAt)),
   Order.mapInput(N.Order, (d: ClaimDisposition) => d.id)
@@ -123,7 +133,7 @@ export const generateRetentionReport = Effect.fn("Retention.generateReport")(fun
   const calibration = yield* O.match(candidate, {
     onNone: () => Effect.succeedNone,
     onSome: Effect.fn("Retention.calibrate")(function* (policy: RetentionPolicy) {
-      const digest = yield* retentionPolicyDigest(policy).pipe(Effect.mapError(unavailable("policy")));
+      const digest = yield* retentionPolicyDigest(policy).pipe(unavailable("policy"));
       const receipt = yield* registry.find(digest, query);
       // Registry membership is necessary; all receipt bindings are also checked here.
       return O.filter(
@@ -154,7 +164,7 @@ export const generateRetentionReport = Effect.fn("Retention.generateReport")(fun
   const rows = A.sort(
     A.filter(
       A.map(edges, (edge) => {
-        const ageMillis = Duration.toMillis(Duration.millis(knownAt - DateTime.toEpochMillis(edge.recordedAt)));
+        const ageMillis = knownAt - DateTime.toEpochMillis(edge.recordedAt);
         return RetentionRow.make({
           logicalKey: edge.logicalKey,
           edgeVersionId: edge.id,
@@ -210,9 +220,10 @@ export const generateRetentionReport = Effect.fn("Retention.generateReport")(fun
       });
     }),
   });
-  // Recheck derived numbers and all boundary data before exposing a report.
-  return yield* S.decodeEffect(RetentionReport)(yield* S.encodeEffect(RetentionReport)(report)).pipe(
-    Effect.mapError(unavailable("report"))
+  // Revalidate field schemas before exposing a report; this does not check cross-field arithmetic.
+  return yield* S.encodeEffect(RetentionReport)(report).pipe(
+    Effect.flatMap(S.decodeEffect(RetentionReport)),
+    unavailable("report")
   );
 });
 
@@ -228,7 +239,7 @@ export const generateRetentionReport = Effect.fn("Retention.generateReport")(fun
  * @since 0.0.0
  */
 export const encodeRetentionReport = Effect.fn("Retention.encodeReport")(function* (report: RetentionReport) {
-  return `${canonicalDetectionJson(yield* S.encodeEffect(RetentionReport)(report).pipe(Effect.mapError(unavailable("encode"))))}\n`;
+  return `${canonicalDetectionJson(yield* S.encodeEffect(RetentionReport)(report).pipe(unavailable("encode")))}\n`;
 });
 
 /**

@@ -1,8 +1,11 @@
 import * as NodeURL from "node:url";
+import { CliRuntime } from "@beep/cli-kit/CliRuntime";
 import {
+  CliReportedExit,
   drainProcessStreams,
   noteProcessStreamWriteFailure,
   ProcessStreamName,
+  renderCliFailure,
   resetProcessStreamStateForTesting,
   StreamWriteFailure,
   streamConsole,
@@ -14,10 +17,14 @@ import { NodeServices } from "@effect/platform-node";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
 import * as MutableRef from "effect/MutableRef";
 import * as O from "effect/Option";
+import * as Runtime from "effect/Runtime";
 import * as Str from "effect/String";
 
 type WriteFn = typeof process.stdout.write;
@@ -857,5 +864,88 @@ describe("stream console", () => {
       }),
       { timeout: 90_000 }
     )
+  );
+});
+
+// The repo CLI entry wraps `CliRuntime.main` in the stream console, so the kit's failure report must reach stderr
+// through the same latching writers as every other line (bin-main.ts `runRepoCliMain`).
+const runReport = Effect.fnUntraced(function* (
+  failure: Error,
+  stderrWrite?: (chunk: string | Uint8Array, callback: WriteCallback) => boolean
+) {
+  const stdout: Array<string> = [];
+  const stderr: Array<string> = [];
+  const originalOut = process.stdout.write;
+  const originalErr = process.stderr.write;
+  const capture =
+    (into: Array<string>, write?: (chunk: string | Uint8Array, callback: WriteCallback) => boolean) =>
+    (chunk: string | Uint8Array, encoding?: string | WriteCallback, callback?: WriteCallback): boolean => {
+      into.push(P.isString(chunk) ? chunk : new TextDecoder().decode(chunk));
+      const done = P.isFunction(encoding) ? encoding : callback;
+      if (write !== undefined && done !== undefined) return write(chunk, done);
+      done?.();
+      return true;
+    };
+  const exit = yield* Effect.acquireUseRelease(
+    Effect.sync(() => {
+      process.stdout.write = capture(stdout) as WriteFn;
+      process.stderr.write = capture(stderr, stderrWrite) as WriteFn;
+    }),
+    () =>
+      CliRuntime.main(Effect.fail(failure), {
+        platform: Layer.empty,
+        usageExitCode: 1,
+        render: renderCliFailure([]),
+      }).pipe(Effect.provideService(Console.Console, streamConsole), Effect.exit),
+    () =>
+      Effect.sync(() => {
+        process.stdout.write = originalOut;
+        process.stderr.write = originalErr;
+      })
+  );
+  const code = Exit.match(exit, {
+    onSuccess: () => 0,
+    onFailure: (cause) => cause.pipe(Cause.squash, Runtime.getErrorExitCode),
+  });
+  return { code, stdout, stderr };
+});
+
+describe("CliRuntime.main through the stream console", () => {
+  beforeEach(resetProcessStreamStateForTesting);
+
+  it.effect("writes the kit's failure report on stderr and exits 1", () =>
+    Effect.gen(function* () {
+      const { code, stdout, stderr } = yield* runReport(new Error("boom"));
+      expect(stdout).toEqual([]);
+      expect(stderr).toEqual(["boom\n"]);
+      expect(code).toBe(1);
+    })
+  );
+
+  it.effect("keeps a CliReportedExit silent and keeps its exit code", () =>
+    Effect.gen(function* () {
+      const { code, stdout, stderr } = yield* runReport(CliReportedExit.make({ message: "printed", exitCode: 3 }));
+      expect(stdout).toEqual([]);
+      expect(stderr).toEqual([]);
+      expect(code).toBe(3);
+    })
+  );
+
+  it.effect("latches a failed stderr write of the report and reports it on stdout", () =>
+    Effect.gen(function* () {
+      const { code, stdout, stderr } = yield* runReport(new Error("boom"), (_chunk, callback) => {
+        callback(new Error("EPIPE"));
+        return false;
+      });
+      const failure = MutableRef.make<O.Option<StreamWriteFailure>>(O.none());
+      drainProcessStreams((value) => MutableRef.set(failure, value));
+      expect(stderr).toEqual(["boom\n"]);
+      expect(stdout).toEqual(["[beep-cli] stderr write failed: EPIPE; later stderr lines are dropped\n"]);
+      assertSome(
+        MutableRef.get(failure),
+        StreamWriteFailure.make({ stream: "stderr", message: "EPIPE", droppedLines: 1 })
+      );
+      expect(code).toBe(1);
+    })
   );
 });

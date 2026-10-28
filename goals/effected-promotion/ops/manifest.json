@@ -51,6 +51,10 @@
       "purpose": "3-A5 parity: frozen copies of the legacy CheckCensus tsconfig readers compared with the adopted TsconfigLoader reads over every census package, plus a timing-stripped census report normalizer."
     },
     {
+      "path": "ops/cli-failure-render-differential.ts",
+      "purpose": "Wave 4-C-A differential: repo-cli bin stdout, stderr and exit code over a failure matrix (usage, reported exit, typed, defect, EPIPE, fast paths, log line, GITHUB_ACTIONS) before and after the CliRuntime.main switch."
+    },
+    {
       "path": "ops/cli-kit-bench.ts",
       "purpose": "Wave 4-C bench gate: @beep/cli-kit grapheme-segmenter and grapheme operation counts at doubling sizes, compared against a baseline."
     },
