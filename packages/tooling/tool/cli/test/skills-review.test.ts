@@ -67,6 +67,8 @@ import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Stdio from "effect/Stdio";
 import * as Str from "effect/String";
+import * as Terminal from "effect/Terminal";
+import type { TestTerminalHandle } from "@beep/cli-kit/testing";
 import type { SkillReviewAnswer, SkillReviewScript, SkillReviewSession } from "@beep/repo-cli/commands/Skills";
 
 const TestLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer);
@@ -809,6 +811,16 @@ layer(TestLayer, { timeout: "60 seconds" })("skills patch", (it) => {
 // The interactive decider runs behind `CliPrompt.gateTerminal`: the gate decides from the audience and the
 // terminal whether a person can be asked, and a run that cannot prompt quits before reading a key.
 layer(TestLayer, { timeout: "60 seconds" })("skills review prompt gate", (it) => {
+  const terminalOf = Effect.fn("SkillsReviewTest.terminalOf")(function* (handle: TestTerminalHandle) {
+    return Context.get(yield* Layer.build(handle.layer), Terminal.Terminal);
+  });
+  const stdioOf = Effect.fn("SkillsReviewTest.stdioOf")(function* (isTerminal: boolean) {
+    const tty = Effect.succeed(isTerminal);
+    return Context.get(
+      yield* Layer.build(Stdio.layerTest({ stdinIsTerminal: tty, stdoutIsTerminal: tty })),
+      Stdio.Stdio
+    );
+  });
   const firstItem = Effect.fn("SkillsReviewTest.firstItem")(function* () {
     const repoRoot = yield* makeRepo();
     const review = yield* reviewWith(pristineFiles);
@@ -820,8 +832,10 @@ layer(TestLayer, { timeout: "60 seconds" })("skills review prompt gate", (it) =>
       const item = yield* firstItem();
       const terminal = yield* TestTerminal.make({ columns: 90, rows: 40 });
       yield* terminal.input([{ name: "enter" }]);
-      const context = yield* Layer.build(Layer.mergeAll(terminal.layer, Stdio.layerTest({})));
-      const decider = yield* makeSkillReviewDeciderPrompt.pipe(Effect.provide(context));
+      const decider = yield* makeSkillReviewDeciderPrompt.pipe(
+        Effect.provideService(Terminal.Terminal, yield* terminalOf(terminal)),
+        Effect.provideService(Stdio.Stdio, yield* stdioOf(false))
+      );
       const decided = yield* decider.answer(item);
       assertTrue(S.is(SkillReviewQuit)(decided));
       expect(yield* terminal.reads).toEqual({ keys: 0, lines: 0, subscriptions: 0 });
@@ -835,15 +849,10 @@ layer(TestLayer, { timeout: "60 seconds" })("skills review prompt gate", (it) =>
       const item = yield* firstItem();
       const terminal = yield* TestTerminal.make({ columns: 90, rows: 40 });
       yield* terminal.input([{ name: "down" }, { name: "enter" }]);
-      const context = yield* Layer.build(
-        Layer.mergeAll(
-          terminal.layer,
-          Stdio.layerTest({ stdinIsTerminal: Effect.succeed(true), stdoutIsTerminal: Effect.succeed(true) })
-        )
-      );
       // A person: no agent or CI variable, and a terminal that is not `dumb`.
       const decider = yield* makeSkillReviewDeciderPrompt.pipe(
-        Effect.provide(context),
+        Effect.provideService(Terminal.Terminal, yield* terminalOf(terminal)),
+        Effect.provideService(Stdio.Stdio, yield* stdioOf(true)),
         Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ TERM: "xterm-256color" }))
       );
       const decided = yield* decider.answer(item);

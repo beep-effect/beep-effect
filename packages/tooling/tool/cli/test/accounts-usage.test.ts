@@ -90,6 +90,7 @@ import * as Redacted from "effect/Redacted";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Terminal from "effect/Terminal";
 import * as Tracer from "effect/Tracer";
 import * as TestClock from "effect/testing/TestClock";
 import type { KeyInput } from "@beep/cli-kit/testing";
@@ -951,7 +952,7 @@ const runScreen = Effect.fnUntraced(function* (
   keys: ReadonlyArray<ScreenKey>
 ) {
   const terminal = yield* TestTerminal.make({ columns: 90, rows: 40 });
-  const context = yield* terminal.layer.pipe(Layer.build, Effect.scoped);
+  const screenTerminal = Context.get(yield* Layer.build(terminal.layer), Terminal.Terminal);
   const poller = AccountsUsage.of({
     accounts: Effect.succeed([]),
     poll: Effect.fn("AccountsUsage.poll")(function* (ref: AccountRef) {
@@ -961,7 +962,7 @@ const runScreen = Effect.fnUntraced(function* (
     signedIn: Effect.succeed([]),
   });
   const screen = yield* watchAccounts(Duration.seconds(30)).pipe(
-    Effect.provide(context),
+    Effect.provideService(Terminal.Terminal, screenTerminal),
     Effect.provideService(AccountsUsage, poller),
     Effect.forkChild
   );
