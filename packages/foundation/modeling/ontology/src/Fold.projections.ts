@@ -2,6 +2,8 @@
  * Pure JSON-LD, JSON-LD context, and Turtle projections over an assembled
  * ontology.
  *
+ * **Details**
+ *
  * Projections are catamorphisms over the assembled value: they never fail,
  * and repeated projection of the same assembly is byte-identical.
  *
@@ -34,7 +36,7 @@ import type {
  * **Example** (Typed term binding)
  *
  * ```ts
- * import type { JsonLdTerm } from "@beep/ontology"
+ * import type { JsonLdTerm } from "@beep/ontology/Fold.projections"
  *
  * const term: JsonLdTerm = { "@id": "http://www.w3.org/2004/02/skos/core#related", "@type": "@id" }
  * console.log(term)
@@ -59,7 +61,7 @@ export type JsonLdTerm =
  *
  * ```ts
  * import { $I } from "@beep/identity/packages"
- * import type { JsonLdContext } from "@beep/ontology"
+ * import type { JsonLdContext } from "@beep/ontology/Fold.projections"
  *
  * const context: JsonLdContext = { "@vocab": $I.create("patent").iri }
  * console.log(context)
@@ -76,7 +78,7 @@ export type JsonLdContext = R.ReadonlyRecord<string, JsonLdTerm>;
  * **Example** (Id reference value)
  *
  * ```ts
- * import type { JsonLdNodeValue } from "@beep/ontology"
+ * import type { JsonLdNodeValue } from "@beep/ontology/Fold.projections"
  *
  * const value: JsonLdNodeValue = { "@id": "https://schema.org/CreativeWork" }
  * console.log(value)
@@ -100,7 +102,7 @@ export type JsonLdNodeValue =
  *
  * ```ts
  * import { $I } from "@beep/identity/packages"
- * import type { JsonLdNode } from "@beep/ontology"
+ * import type { JsonLdNode } from "@beep/ontology/Fold.projections"
  *
  * const node: JsonLdNode = { "@id": $I.create("patent/Claim").iri }
  * console.log(node["@id"])
@@ -121,7 +123,7 @@ export type JsonLdNode = {
  * **Example** (Empty document shell)
  *
  * ```ts
- * import type { JsonLdDocument } from "@beep/ontology"
+ * import type { JsonLdDocument } from "@beep/ontology/Fold.projections"
  *
  * const document: JsonLdDocument = { "@context": {}, "@graph": [] }
  * console.log(document["@graph"].length)
@@ -216,7 +218,8 @@ const prefixTerm = (iri: string): JsonLdTerm => ({ "@id": iri, "@prefix": true }
  *
  * ```ts
  * import { $I as $BeepId } from "@beep/identity/packages"
- * import { fold, toContext } from "@beep/ontology"
+ * import { fold } from "@beep/ontology/Fold.assembly"
+ * import { toContext } from "@beep/ontology/Fold.projections"
  * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
@@ -369,7 +372,8 @@ const predicateNode = (assembled: AssembledClass, predicate: AssembledPredicate)
  *
  * ```ts
  * import { $I as $BeepId } from "@beep/identity/packages"
- * import { fold, toJsonLd } from "@beep/ontology"
+ * import { fold } from "@beep/ontology/Fold.assembly"
+ * import { toJsonLd } from "@beep/ontology/Fold.projections"
  * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
@@ -612,7 +616,8 @@ const prefixDefinitions = (ontology: AssembledOntology): ReadonlyArray<readonly 
  *
  * ```ts
  * import { $I as $BeepId } from "@beep/identity/packages"
- * import { fold, toTurtle } from "@beep/ontology"
+ * import { fold } from "@beep/ontology/Fold.assembly"
+ * import { toTurtle } from "@beep/ontology/Fold.projections"
  * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *

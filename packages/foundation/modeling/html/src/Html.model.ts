@@ -1,6 +1,8 @@
 /**
  * GENERATED FILE — do not edit by hand. Run `bun run generate`.
  *
+ * **Details**
+ *
  * Exhaustive, schema-first AST of the WHATWG HTML specification (conforming +
  * obsolete elements). Each element is an `S.TaggedClass` whose `_tag` is its tag
  * name; all are combined into the {@link HtmlNode} discriminated union via

@@ -1,6 +1,8 @@
 /**
  * Assembly walk for the identity-backed ontology fold.
  *
+ * **Details**
+ *
  * Follows propose → gate → record: tuples and schema handles are validated
  * and resolved, hard SKOS integrity violations fail with typed
  * {@link OntologyAssemblyError} diagnostics, observable warnings ride the
@@ -50,13 +52,15 @@ import type {
 /**
  * Bound identity composer accepted by the fold.
  *
+ * **Details**
+ *
  * One-argument `make(...)` composers are unbound and expose no IRI/CURIE
  * projections; the fold requires a bound composer.
  *
  * **Example** (Usage)
  * ```ts
  * import { $I } from "@beep/identity/packages"
- * import type { BoundComposer } from "@beep/ontology"
+ * import type { BoundComposer } from "@beep/ontology/Fold.assembly"
  *
  * const composer: BoundComposer = $I.create("patent")
  * console.log(composer.iri)
@@ -850,6 +854,8 @@ const composerPrefix = (composer: BoundComposer): string =>
 /**
  * Fold schemas and triples-as-tuples into a deterministic assembled ontology.
  *
+ * **Details**
+ *
  * The composer supplies the owned namespace: class IRIs resolve through their
  * identity annotations, owned predicates default their local names from
  * struct keys, and borrowed predicates ride the `ontologyTerm` channel.
@@ -857,7 +863,7 @@ const composerPrefix = (composer: BoundComposer): string =>
  * **Example** (Usage)
  * ```ts
  * import { $I as $BeepId } from "@beep/identity/packages"
- * import { fold } from "@beep/ontology"
+ * import { fold } from "@beep/ontology/Fold.assembly"
  * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
