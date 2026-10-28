@@ -207,3 +207,18 @@ fault receipts. Remote fallback must never mean unsigned restore.
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
 | None approved | This goal | Goal executor | Record real exceptions before using them. | Every temporary exception needs a bounded removal condition. |
+
+## Decision log: signed-client component, 2026-10-28
+
+- Route optional artifact-key references through the existing cache secret-session
+  allowlist; keep backend and storage credentials separate. A reference cannot
+  reach a direct native child unresolved. Reverse by reverting this component
+  before any signed epoch is activated.
+- Resolve policy from the checkout root and reject alternate-root inputs before
+  selection. Use the same forced local arguments for selection and execution;
+  clear deprecated conflicting cache environment flags in inspection and fallback.
+  The isolated native controls justify this behavior; it grants no trust or task
+  qualification authority.
+- Preserve the current unsigned configuration until deployment readiness, explicit
+  epoch/role/tenant policy, bounded rollout and rollback evidence are complete.
+  This component prepares enforcement; it does not activate a signed cohort.

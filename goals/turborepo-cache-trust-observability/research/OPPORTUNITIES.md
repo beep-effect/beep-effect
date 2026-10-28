@@ -19,3 +19,23 @@ relationship validator for worker, supervisor and importer use would prevent
 validation rules from diverging and make edited transport evidence testable at
 the actual import boundary. This is a source-review finding, not a demonstrated
 escape or a new native failure.
+
+## 2026-10-28: real native selection exposed inherited legacy flags
+
+The signed reader fallback passed mocked spawn tests but an isolated real-runtime
+control failed during native dry selection. Turbo rejects explicit `--cache`
+combined with inherited `TURBO_REMOTE_ONLY` or `TURBO_REMOTE_CACHE_READ_ONLY`, even
+for a dry run. Inspection now clears those legacy environment flags; forced local
+execution also clears them. The real wrapper controls pass on both pinned native
+channels, including a resolved-key remote-request positive control. Prevention:
+retain native selection and execution proof alongside metadata/argument tests.
+Owner: this goal. No production setting changed.
+
+## 2026-10-28: schema compilation belongs at module scope
+
+The signed-client publication preflight found three introduced
+`no-inline-schema-compile` findings in access-mode and legacy-boolean parsing.
+Hoisted named literal domains and their schema-derived guards to module scope.
+Targeted Oxlint, 147 focused tests, package lint/type checks, and both seven-case
+real native controls passed again on the corrected source. The unpublished
+commit is corrected before pushing. No rule is waived. Owner: this goal.

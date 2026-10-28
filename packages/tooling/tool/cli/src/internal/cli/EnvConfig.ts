@@ -519,14 +519,9 @@ export const turboSecretSessionStep: {
     })
 );
 
-const isUnrelatedSecretReference = (value: string | undefined, name: string): boolean =>
-  isUnresolvedSecretReference(value) && !isTurboCacheSecretEnvName(name);
-
-// Unset markers for a direct spawn, which extends the ambient environment; the
-// Turbo credential references are handled by their own fail-closed scrub.
-const unrelatedSecretReferenceScrub = (
+const unresolvedSecretReferenceScrub = (
   environment: Readonly<Record<string, string | undefined>>
-): Record<string, undefined> => R.map(R.filter(environment, isUnrelatedSecretReference), () => undefined);
+): Record<string, undefined> => R.map(R.filter(environment, isUnresolvedSecretReference), () => undefined);
 
 const secretReferenceProbe = Effect.fn("EnvConfig.secretReferenceProbe")(function* (
   repoRoot: string,
@@ -747,7 +742,7 @@ export const turboEnvOverrides = Effect.fn("EnvConfig.turboEnvOverrides")(functi
   }
 
   // A wrapped spawn hands this complete environment to `op run` with ambient
-  // extension disabled. The three Turbo references survive for resolution;
+  // extension disabled. Only Turbo credential references survive for resolution;
   // every unrelated reference is absent from both `op` and its task child.
   if (!directTurbo) {
     return { ...turboCacheSecretSessionEnvironment(environment), TURBO_UI: "false" };
@@ -763,26 +758,35 @@ export const turboEnvOverrides = Effect.fn("EnvConfig.turboEnvOverrides")(functi
     // Unresolved references are inert strings to a task, but Turbo still hashes
     // any it declares in `env`, so per-checkout `.env` drift would split the
     // shared cache. They leave a direct spawn just as they leave a wrapped one.
-    ...unrelatedSecretReferenceScrub(environment),
+    ...unresolvedSecretReferenceScrub(environment),
     // Spawned turbo inherits the parent TTY; its interactive TUI enables
     // crossterm mouse capture (DECSET ?1000/?1002/?1003/?1006) and, when a
     // failed task tears the run down, the child is killed before it can restore
     // the terminal — leaving it emitting mouse-motion reports and swallowing
     // Ctrl-C. Force turbo's stream renderer so it never enables mouse capture.
     TURBO_UI: "false",
-    ...(unresolvedApi ? { TURBO_API: undefined } : {}),
-    ...(unresolvedToken ? { TURBO_TOKEN: undefined } : {}),
-    ...(unresolvedTeam ? { TURBO_TEAM: undefined } : {}),
     ...(unresolvedApi || unresolvedToken || unresolvedTeam ? { TURBO_CACHE: TurboCacheMode.Enum["local:rw"] } : {}),
   };
 });
 
-// Optional cache-directory inputs and the explicit trusted-writer enrollment flag;
-// they sit outside the four required remote-cache values.
-const TURBO_CACHE_OPTION_ENV_NAMES: ReadonlyArray<string> = ["TURBO_CACHE_DIR", "HOME", "BEEP_TURBO_TRUSTED_WRITER"];
+// Optional client inputs, including the artifact key, sit outside the required cache quad.
+const TURBO_CACHE_OPTION_ENV_NAMES: ReadonlyArray<string> = [
+  "TURBO_CACHE_DIR",
+  "HOME",
+  "BEEP_TURBO_TRUSTED_WRITER",
+  "TURBO_REMOTE_CACHE_SIGNATURE_KEY",
+];
 
 const configuredValue = (value: string | undefined): O.Option<string> =>
   pipe(O.fromUndefinedOr(value), O.map(Str.trim), O.filter(Str.isNonEmpty));
+
+const managedHostCacheReferencesMatch = (
+  environment: Readonly<Record<string, string | undefined>>,
+  defaults: Readonly<Record<string, string>>
+): boolean =>
+  A.every(["TURBO_API", "TURBO_TOKEN", "TURBO_TEAM"], (name) => environment[name] === defaults[name]) &&
+  (pipe(environment.TURBO_REMOTE_CACHE_SIGNATURE_KEY, configuredValue, O.isNone) ||
+    environment.TURBO_REMOTE_CACHE_SIGNATURE_KEY === defaults.TURBO_REMOTE_CACHE_SIGNATURE_KEY);
 
 /**
  * Load the enrolled host's cache references for a fresh checkout without cache settings.
@@ -815,7 +819,7 @@ export const loadHostTurboCacheDefaults = Effect.fn("EnvConfig.loadHostTurboCach
   ci: boolean,
   origin = ""
 ) {
-  const names = [...TurboCacheEnvName.literals, "BEEP_TURBO_TRUSTED_WRITER"];
+  const names = [...TurboCacheEnvName.literals, "TURBO_REMOTE_CACHE_SIGNATURE_KEY", "BEEP_TURBO_TRUSTED_WRITER"];
   const managedReader =
     environment.BEEP_TURBO_HOST_CACHE_MANAGED === "true" &&
     environment.TURBO_CACHE === "local:rw,remote:r" &&
@@ -824,7 +828,10 @@ export const loadHostTurboCacheDefaults = Effect.fn("EnvConfig.loadHostTurboCach
     ci ||
     O.isNone(Str.match(/^(?:https:\/\/github\.com\/|git@github\.com:)beep-effect\/beep-effect(?:\.git)?$/u)(origin)) ||
     environment.BEEP_TURBO_HOST_CACHE_DISABLED === "true" ||
-    (!managedReader && A.some(TurboCacheEnvName.literals, (name) => O.isSome(configuredValue(environment[name]))))
+    (!managedReader &&
+      A.some([...TurboCacheEnvName.literals, "TURBO_REMOTE_CACHE_SIGNATURE_KEY"], (name) =>
+        O.isSome(configuredValue(environment[name]))
+      ))
   ) {
     return R.empty<string, string>();
   }
@@ -845,11 +852,7 @@ export const loadHostTurboCacheDefaults = Effect.fn("EnvConfig.loadHostTurboCach
       .pipe(Effect.option, Effect.map(O.flatten), Effect.map(O.map((value) => Tuple.make(name, value))))
   );
   const defaults = R.fromEntries(A.getSomes(entries));
-  if (
-    managedReader &&
-    !A.every(["TURBO_API", "TURBO_TOKEN", "TURBO_TEAM"], (name) => environment[name] === defaults[name])
-  )
-    return R.empty<string, string>();
+  if (managedReader && !managedHostCacheReferencesMatch(environment, defaults)) return R.empty<string, string>();
   return yield* S.decodeUnknownEffect(HostTurboCacheReferences)(defaults).pipe(
     Effect.as(defaults),
     Effect.orElseSucceed(R.empty<string, string>)
@@ -900,6 +903,7 @@ export const readTurboCacheEnvironment = (
     O.getSomesStruct({
       api: turboCacheValueSource(environment.TURBO_API),
       token: turboCacheValueSource(environment.TURBO_TOKEN),
+      signatureKey: turboCacheValueSource(environment.TURBO_REMOTE_CACHE_SIGNATURE_KEY),
       team: turboCacheValueSource(environment.TURBO_TEAM),
       cache: configuredValue(environment.TURBO_CACHE),
       trustedWriter: configuredValue(environment.BEEP_TURBO_TRUSTED_WRITER).pipe(O.map((value) => value === "true")),

@@ -203,3 +203,21 @@ records each important reconciliation.
 
 These are graduated-goal deliverables, not omissions to conceal with static
 confidence.
+
+## 2026-10-28 signed-client posture source refresh
+
+Installed Turbo documentation and exact native experiments informed the client
+component. The stable package is 2.11.10; canary behavior is checked separately
+with the pinned 2.11.9-canary.1 binary. These sources do not establish production
+trust readiness or qualify a computation.
+
+- Installed `turbo/docs/reference/configuration.mdx`: SHA-256 `f8777a3f7e60730da8cff4ea6950c71deb8643cc3200f627db876698ff454074`.
+- Installed `turbo/docs/reference/run.mdx`: SHA-256 `31447baa8071390c403b47c41885eb3579a1f8a695cf61e57befd838aba67731`.
+- Installed `turbo/docs/reference/system-environment-variables.mdx`: SHA-256 `068c31df0ce0ca1acbb6e36d5c7616ee753e617285543f092c11b7bce63ce21e`.
+- Installed `turbo/docs/core-concepts/remote-caching.mdx`: SHA-256 `96dd2390be45fd2dbc312b1175d9836b0b39e114dd470d9fa050ce9e046b6052`.
+
+The two signing-posture native receipts bind the observed controls to client
+checksums and implementation source checksums. The positive control makes remote
+HTTP requests; missing-key local controls do not. Native census accepts the
+monorepo fixture shape. A single-package dry plan omits workspace identity and
+is deliberately not substituted for the normal runtime selection contract.

@@ -18,7 +18,7 @@ SPEC gates. Prefer local fixtures with no incremental cloud resources.
 | Phase | Status | Work | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Threat and receipt contracts | in-progress | Refresh actor/credential/namespace topology and agree typed outcomes with conformance and qualification. | Versioned contracts and explicit secret-safe configuration; no source-as-deployment claims. |
-| P1 Posture and safe events | pending | Implement fail-closed client posture, bounded result/producer receipts and redaction fixtures. | Missing-key and synthetic-secret negative tests pass; metrics labels are bounded. |
+| P1 Posture and safe events | in-progress | Implement fail-closed client posture, bounded result/producer receipts and redaction fixtures. | Missing-key and synthetic-secret negative tests pass; metrics labels are bounded. |
 | P2 Adapter and epoch remediation | pending | Implement opaque tags, independent method/storage policy, tenant binding and namespace rotation in the lab adapter. | Conformance negatives pass without distributing the artifact key to the backend. |
 | P3 Production hardening and observation | pending | Prepare and execute scoped incumbent hardening after concrete rollout gates; coordinate cohort wiring with adoption. | Seven-day nonprod, seven-day cohort and fourteen-day broader evidence plus rollback, where production hardening is deployed. |
 | P4 Verify and hand off | pending | Run package/Lambda/contract tests, direct fault attribution and key/epoch rollback drills. | Trust-readiness receipts are reproducible and available to adoption. |
@@ -226,3 +226,23 @@ focused tests and source type checking pass. Full package verification passes:
 audit 649.6 seconds and docgen 39.2 seconds.
 The accepted policy document, complete authenticated evidence bundle and
 operational promotion importer remain open. No qualification is granted.
+
+## 2026-10-28: signed-client posture component
+
+The current component handles artifact-key reference routing through the existing
+secret session, optional host references, fork/direct scrubbing, and metadata-only
+reader/writer/canary decisions. A required missing or unresolved reader key forces
+local selection and execution; writers and signing canaries fail closed. Canaries
+also reject unsigned configuration. Root configuration is bounded, no-follow and
+strict UTF-8; alternate config and working-directory overrides are refused before
+selection. Native inspection clears conflicting legacy cache environment flags.
+
+The [component checkpoint](research/signing-posture-checkpoint.json) binds source
+hashes to 147 focused tests and seven real runtime controls on each pinned stable
+and canary binary. The resolved-key positive control contacts the isolated remote
+endpoint; missing-key readers execute with zero HTTP requests; prohibited writers,
+canaries and alternate-policy requests produce no task output or HTTP request.
+This is component preparation. The full package audit is pending the separate
+fixture-isolation fix. No signing activation, credential change, backend tenant
+hardening, namespace rotation, production qualification or observation window is
+claimed. P1 and later acceptance remain open.

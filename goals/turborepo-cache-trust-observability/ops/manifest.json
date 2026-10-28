@@ -5,7 +5,7 @@
     "title": "Turborepo cache trust and observability",
     "status": "active",
     "created": "2026-09-08",
-    "updated": "2026-09-29",
+    "updated": "2026-10-28",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/turborepo-cache-trust-observability",
@@ -53,7 +53,10 @@
     "research/actual-persistent-issuer-canary.json",
     "research/owned-producer-workflow.json",
     "research/owned-producer-frozen-profile.json",
-    "research/owned-producer-private-approval.json"
+    "research/owned-producer-private-approval.json",
+    "research/signing-posture-checkpoint.json",
+    "research/signing-posture-native-stable.json",
+    "research/signing-posture-native-canary.json"
   ],
   "agentLaunchers": [
     {
@@ -73,7 +76,7 @@
     {
       "id": "P1",
       "name": "Posture and safe events",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",

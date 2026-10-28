@@ -1,0 +1,86 @@
+{
+  "schemaVersion": "native-signing-control/v1",
+  "authority": "isolated-native-runtime-control-only",
+  "channel": "stable",
+  "clientVersion": "2.11.10",
+  "clientSha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6",
+  "sourceSha256": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.runtime.ts": "603ec2708e0522155a55d026f48cfe313d50c6320e90fafdfeb91a350e773409",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts": "d443672935b5ae9c4bfacb9672180d3c70dfd2faa6b885e0bae06d91a67c2573",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.fingerprint.ts": "36c69fa69e539bcacd74cd2bc72b6f601e821ff5c4567eecc0b7ff7c90f5a955",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.schemas.ts": "0eae36411ca41a1efcff68d1496a64cc994f333aa47252a7150056a52a743a53"
+  },
+  "cases": [
+    {
+      "case": "reader-missing",
+      "exitCode": 0,
+      "outputMaterialized": true,
+      "httpRequests": 0,
+      "keyState": "missing",
+      "role": "reader",
+      "legacyEnvironmentFlags": true,
+      "passed": true
+    },
+    {
+      "case": "reader-unresolved",
+      "exitCode": 0,
+      "outputMaterialized": true,
+      "httpRequests": 0,
+      "keyState": "unresolved",
+      "role": "reader",
+      "legacyEnvironmentFlags": false,
+      "passed": true
+    },
+    {
+      "case": "reader-resolved",
+      "exitCode": 0,
+      "outputMaterialized": true,
+      "httpRequests": 2,
+      "keyState": "resolved",
+      "role": "reader",
+      "legacyEnvironmentFlags": false,
+      "passed": true
+    },
+    {
+      "case": "writer-missing",
+      "exitCode": 1,
+      "outputMaterialized": false,
+      "httpRequests": 0,
+      "keyState": "missing",
+      "role": "writer",
+      "legacyEnvironmentFlags": false,
+      "passed": true
+    },
+    {
+      "case": "canary-missing",
+      "exitCode": 1,
+      "outputMaterialized": false,
+      "httpRequests": 0,
+      "keyState": "missing",
+      "role": "canary",
+      "legacyEnvironmentFlags": false,
+      "passed": true
+    },
+    {
+      "case": "canary-disabled",
+      "exitCode": 1,
+      "outputMaterialized": false,
+      "httpRequests": 0,
+      "keyState": "resolved",
+      "role": "canary",
+      "legacyEnvironmentFlags": false,
+      "passed": true
+    },
+    {
+      "case": "root-env-override",
+      "exitCode": 1,
+      "outputMaterialized": false,
+      "httpRequests": 0,
+      "keyState": "resolved",
+      "role": "reader",
+      "legacyEnvironmentFlags": false,
+      "passed": true
+    }
+  ],
+  "passed": true
+}
