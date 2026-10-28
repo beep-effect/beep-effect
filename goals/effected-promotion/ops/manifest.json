@@ -71,6 +71,10 @@
       "purpose": "R10 differential: the pre-R10 repo-cli merge-base read, worktree probes and origin/labels config reads compared with their @beep/git adoptions over scratch repositories."
     },
     {
+      "path": "ops/glob-adoption-parity.ts",
+      "purpose": "R2b parity: the pre-R2b repo-cli glob compiler frozen and compared with @beep/glob GlobPattern over every live caller pattern and candidate, plus fingerprints of the three EffectImports discovery sets before and after the @beep/walker switch."
+    },
+    {
       "path": "ops/lockfiles-adoption-parity.ts",
       "purpose": "3-A1 parity: frozen copies of the legacy repo-cli bun.lock readers compared with the adopted @beep/lockfiles Lockfile.parse expression over the live lockfile."
     },
