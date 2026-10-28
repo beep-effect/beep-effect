@@ -1,6 +1,8 @@
 /**
  * Percentage - Value object for percentage values (0-100)
  *
+ * **Details**
+ *
  * A branded type representing a valid percentage value constrained to 0-100.
  * Supports decimal values (e.g., 12.5%, 99.99%).
  * Uses Schema.brand for compile-time type safety.

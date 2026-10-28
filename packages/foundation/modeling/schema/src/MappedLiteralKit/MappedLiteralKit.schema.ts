@@ -252,7 +252,7 @@ const makeDirectionalKit = <
  * **Example** (Map SQL state literals)
  *
  * ```ts import.meta.vitest name="Map SQL state literals"
- * import { MappedLiteralKit } from "@beep/schema";
+ * import { MappedLiteralKit } from "@beep/schema/MappedLiteralKit"
  * import * as S from "effect/Schema";
  *
  * const SqlState = MappedLiteralKit([

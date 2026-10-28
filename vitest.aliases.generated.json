@@ -2227,5 +2227,8 @@
   ],
   "@beep/file-processing/SecretScrub": [
     "./packages/foundation/capability/file-processing/src/SecretScrub/index.ts"
+  ],
+  "@beep/schema/CredentialPatternBank": [
+    "./packages/foundation/modeling/schema/src/CredentialPatternBank/index.ts"
   ]
 }

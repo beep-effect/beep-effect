@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-10-28T02:12:25.225Z
+Generated: 2026-10-28T02:47:36.282Z
 
 ## Scope
 
@@ -11,23 +11,23 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | Metric | Count |
 |---|---:|
 | packages | 183 |
-| cleanPackages | 121 |
+| cleanPackages | 122 |
 | packagesWithoutPublicSrcSurface | 2 |
-| packagesNeedingRemediation | 60 |
+| packagesNeedingRemediation | 59 |
 | publicModules | 3546 |
 | publicExports | 25244 |
-| openModules | 330 |
-| openExports | 235 |
+| openModules | 316 |
+| openExports | 202 |
 | missingExportExamples | 7 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
 | forbiddenTagFindings | 0 |
 | malformedConditionalTagFindings | 0 |
-| exampleImportFindings | 157 |
+| exampleImportFindings | 118 |
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
 | undescribed-see | 9 |
-| multiple-description-paragraphs | 356 |
+| multiple-description-paragraphs | 341 |
 | leading-blank | 0 |
 | trailing-blank | 0 |
 | invalid-heading | 1 |
@@ -40,7 +40,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | duplicate-example | 0 |
 | loose-ts-fence | 0 |
 | forbidden-remarks | 0 |
-| no-root-package-import | 151 |
+| no-root-package-import | 112 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -62,7 +62,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 4 | `@beep/identity` | `packages/foundation/modeling/identity` | clean | 8 | 280 | 0 | 0 |
 | 5 | `@beep/utils` | `packages/foundation/modeling/utils` | clean | 29 | 228 | 0 | 0 |
 | 6 | `@beep/data` | `packages/foundation/primitive/data` | needs-remediation | 12 | 162 | 10 | 16 |
-| 7 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 169 | 974 | 14 | 33 |
+| 7 | `@beep/schema` | `packages/foundation/modeling/schema` | clean | 169 | 974 | 0 | 0 |
 | 8 | `@beep/semver` | `packages/foundation/modeling/semver` | clean | 6 | 23 | 0 | 0 |
 | 9 | `@beep/glob` | `packages/foundation/modeling/glob` | clean | 4 | 9 | 0 | 0 |
 | 10 | `@beep/memfs` | `packages/tooling/test-kit/memfs` | clean | 3 | 23 | 0 | 0 |
@@ -303,61 +303,6 @@ Export findings:
 - `src/index.ts:90` `export * as MimeTypesData from "./MimeTypes.ts";` (re-export) - 1 example import violation(s)
 - `src/index.ts:105` `export * as Territories from "./Territories.ts";` (re-export) - 1 example import violation(s)
 - `src/index.ts:120` `export * as Timezones from "./Timezones.ts";` (re-export) - 1 example import violation(s)
-
-### @beep/schema
-
-Path: `packages/foundation/modeling/schema`
-
-Module findings:
-- `src/Color/Color.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/CryptoTxnHash/CryptoTxnHash.schema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/CryptoWalletAddress/CryptoWalletAddress.schema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/EthAmount/EthAmount.schema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/EthereumValidatorPublicKey/EthereumValidatorPublicKey.schema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/EvmAddress/EvmAddress.schema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/Float16Array.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/Float32Array.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/Float64Array.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/Fn/Fn.schema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/LiteralKit/internal/builders.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/LocalDate/LocalDate.schema.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/Percentage.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/UnitInterval.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-
-Export findings:
-- `src/CredentialPatternBank/CredentialPatternBank.policy.ts:37` `credentialRules` (const) - 1 example import violation(s)
-- `src/CredentialPatternBank/CredentialPatternBank.policy.ts:158` `detectCredentials` (const) - 1 example import violation(s)
-- `src/CredentialPatternBank/CredentialPatternBank.policy.ts:192` `countCredentialCategory` (const) - 1 example import violation(s)
-- `src/CredentialPatternBank/CredentialPatternBank.policy.ts:244` `replaceCredentialCategory` (const) - 1 example import violation(s)
-- `src/CredentialPatternBank/CredentialPatternBank.policy.ts:278` `replaceCredentialAssignmentsOutsideHeaders` (const) - 1 example import violation(s)
-- `src/CredentialPatternBank/CredentialPatternBank.policy.ts:308` `maskCredentialMatches` (const) - 1 example import violation(s)
-- `src/CredentialPatternBank/CredentialPatternBank.policy.ts:353` `maskCredentialCategory` (const) - 1 example import violation(s)
-- `src/CredentialPatternBank/CredentialPatternBank.schema.ts:26` `credentialPatternBankVersion` (const) - 1 example import violation(s)
-- `src/CredentialPatternBank/CredentialPatternBank.schema.ts:39` `CredentialCategory` (const) - 1 example import violation(s)
-- `src/CredentialPatternBank/CredentialPatternBank.schema.ts:63` `CredentialCategory` (type) - 1 example import violation(s)
-- `src/CredentialPatternBank/CredentialPatternBank.schema.ts:75` `CredentialRule` (class) - 1 example import violation(s)
-- `src/CredentialPatternBank/CredentialPatternBank.schema.ts:100` `CredentialMatch` (class) - 1 example import violation(s)
-- `src/Email.ts:33` `EmailString` (const) - 1 example import violation(s)
-- `src/Email.ts:52` `EmailString` (type) - 2 example import violation(s)
-- `src/Email.ts:76` `Email` (const) - 1 example import violation(s)
-- `src/Email.ts:96` `Email` (type) - 1 example import violation(s)
-- `src/FileDiff.schema.ts:50` `Added` (class) - 1 example import violation(s)
-- `src/FileDiff.schema.ts:84` `Deleted` (class) - 1 example import violation(s)
-- `src/FileDiff.schema.ts:119` `Modified` (class) - 1 example import violation(s)
-- `src/FileDiff.schema.ts:153` `Info` (const) - 1 example import violation(s)
-- `src/FileDiff.schema.ts:175` `Info` (type) - 1 example import violation(s)
-- `src/FileDiff.schema.ts:193` `Info` (namespace) - 1 example import violation(s)
-- `src/Fn/Fn.schema.ts:528` `ThunkOf` (function) - 3 example import violation(s)
-- `src/Fn/Fn.schema.ts:598` `Fn` (function) - 5 example import violation(s)
-- `src/Fn/Fn.schema.ts:481` `AnyFn` (const) - 1 example import violation(s)
-- `src/Fn/Fn.schema.ts:503` `AnyFn` (type) - 1 example import violation(s)
-- `src/SafeRemoteHost.ts:93` `BlockedHostError` (class) - 1 example import violation(s)
-- `src/SafeRemoteHost.ts:283` `isBlockedRemoteHost` (const) - 1 example import violation(s)
-- `src/SafeRemoteHost.ts:328` `assertAllowedRemoteHost` (const) - 1 example import violation(s)
-- `src/SafeRemoteHost.ts:393` `assertAllowedRemoteUrl` (const) - 1 example import violation(s)
-- `src/SemanticVersion.ts:53` `SemanticVersionSchema` (interface) - 1 documentation section/link violation(s)
-- `src/Slug.ts:52` `SlugChecks` (const) - 1 example import violation(s)
-- `src/index.ts:200` `export * from "./Port.ts";` (re-export) - 1 example import violation(s)
 
 ### @beep/test-utils
 
