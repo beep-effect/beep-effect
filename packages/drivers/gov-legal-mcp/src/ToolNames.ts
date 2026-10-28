@@ -1,6 +1,8 @@
 /**
  * Deterministic MCP tool-name normalization and collision reporting.
  *
+ * **Details**
+ *
  * Candidate names are normalized without consulting registration order, capped
  * at 64 ASCII characters with a SHA-256 prefix digest, grouped by both the
  * normalized and final wire names, and rendered as canonical checked-in JSON.

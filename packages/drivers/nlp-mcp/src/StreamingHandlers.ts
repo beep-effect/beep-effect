@@ -1,6 +1,8 @@
 /**
  * Handler layer for the streaming MCP toolkit.
  *
+ * **Details**
+ *
  * Binds each of the 17 {@link StreamingTools.StreamingToolkit} tools to an
  * Effect-based implementation backed by the {@link TextStream}, {@link Jsonl},
  * {@link DatasetLoader}, and {@link Pipeline} helpers. Handler failures are

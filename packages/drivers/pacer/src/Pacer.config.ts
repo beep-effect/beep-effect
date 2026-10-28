@@ -1,6 +1,8 @@
 /**
  * Typed configuration + base URLs for the PACER driver.
  *
+ * **Details**
+ *
  * Secrets are read through {@link Config} (never `process.env` directly).
  * The package does not ship a live runner; callers provide a ConfigProvider or
  * an explicit {@link PacerConfig} at their own runtime boundary.

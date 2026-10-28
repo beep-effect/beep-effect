@@ -254,7 +254,7 @@ const sameMultiset = (
  * ```ts
  * import { OutboxAttachmentDigest } from "@beep/m365-mcp/OutboxAttachmentSource"
  * import { sameAttachments } from "@beep/m365-mcp/OutboxSendGuard"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const receipt = OutboxAttachmentDigest.make({ name: "receipt.pdf", sha256: Sha256Hex.make("0".repeat(64)), size: 4 })
  * console.log(sameAttachments([receipt], [receipt]))

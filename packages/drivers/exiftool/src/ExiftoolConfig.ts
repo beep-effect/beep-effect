@@ -2,6 +2,8 @@
  * Perl `-config` template and XMP-beepQA provenance codecs for the native
  * ExifTool driver.
  *
+ * **Details**
+ *
  * The rendered config declares the custom `%Image::ExifTool::UserDefined::beepQA`
  * XMP namespace; the service materializes it once per layer into a scoped temp
  * file and passes it as the FIRST exiftool argument on every spawn.
