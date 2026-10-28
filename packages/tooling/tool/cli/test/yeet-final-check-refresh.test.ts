@@ -195,6 +195,23 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("checkFinalCheckRefresh 
     })
   );
 
+  it.effect("refuses a receipt filed under a sha other than the head it records", () =>
+    Effect.gen(function* () {
+      const { repoRoot, receiptHead } = yield* makeMergedLane();
+      yield* writeFile(repoRoot, SPEC, "# Demo\n\nstatus: review\n");
+      const nearer = yield* commitAll(repoRoot, "lane: packet");
+      const text = yield* encodeReceipt(receiptFor(receiptHead));
+      yield* writeFile(repoRoot, `${FINAL_CHECK_RECEIPT_DIR}/${nearer}.json`, text);
+      yield* writeFile(repoRoot, SPEC, "# Demo\n\nstatus: completed-retained\n");
+      const finalHead = yield* commitAll(repoRoot, "lane: flip packet");
+      const verdict = yield* refreshAt(repoRoot, finalHead);
+      assertTrue(verdict._tag === "refused");
+      expect(verdict.reason).toBe("ancestor-receipt-not-passing");
+      expect(verdict.receiptHead).toBe(nearer);
+      expect(verdict.detail).toContain(`the final-check receipt is for ${Str.slice(0, 12)(receiptHead)}`);
+    })
+  );
+
   it.effect("returns none without receipts and ignores non-ancestor and non-JSON entries", () =>
     Effect.gen(function* () {
       const { repoRoot, receiptHead, mergeHead } = yield* makeMergedLane();

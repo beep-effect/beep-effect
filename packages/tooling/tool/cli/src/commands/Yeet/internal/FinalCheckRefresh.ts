@@ -481,11 +481,13 @@ export const checkFinalCheckRefresh = Effect.fn("Yeet.checkFinalCheckRefresh")(f
   if (O.isNone(receiptHead)) return O.none();
   const receipt = yield* readFinalCheckReceipt(repoRoot, receiptHead.value);
   if (O.isNone(receipt)) return malformed(receiptHead.value, "ancestor");
-  const notPassing = finalCheckRefusal(receipt, receipt.value.headSha);
+  // The file name chose this receipt, so it is the head the receipt must
+  // record: a receipt copied or renamed under another sha is refused here.
+  const notPassing = finalCheckRefusal(receipt, receiptHead.value);
   if (O.isSome(notPassing)) {
     return O.some(
       FinalCheckRefreshRefused.make({
-        receiptHead: receipt.value.headSha,
+        receiptHead: receiptHead.value,
         finalHead,
         reason: "ancestor-receipt-not-passing",
         ownChanges: [],
