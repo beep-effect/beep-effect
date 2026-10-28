@@ -422,6 +422,7 @@ const runScenarios = Effect.fnUntraced(function* (root: string, scenarios: Reado
 // --- classification --------------------------------------------------------------------
 
 const DECLARATION = /\.d\.[cm]?ts$/u;
+const sameKeys = A.makeEquivalence(Str.Equivalence);
 
 const multisetDifference = (left: ReadonlyArray<ViolationRow>, right: ReadonlyArray<ViolationRow>) => {
   const counts = MutableHashMap.empty<string, number>();
@@ -533,26 +534,25 @@ const compareOutcomes = Effect.fnUntraced(function* (
   }
   const baselineKeys = A.map(baseline.violations, violationKey);
   const headKeys = A.map(head.violations, violationKey);
-  if (!A.getEquivalence(Str.Equivalence)(baselineKeys, headKeys)) {
-    if (A.getEquivalence(Str.Equivalence)(baseline.sortedViolations, head.sortedViolations)) {
+  if (!sameKeys(baselineKeys, headKeys)) {
+    if (sameKeys(baseline.sortedViolations, head.sortedViolations)) {
       found.push(
         difference(scenario.name, "1-order", `same ${A.length(headKeys)} violation(s), reported in position order`)
       );
     } else {
       const baselineOnly = multisetDifference(baseline.violations, head.violations);
       const headOnly = multisetDifference(head.violations, baseline.violations);
+      // Classification pairs moved literals off this copy; `headOnly` itself stays whole for the order check.
+      const unmatchedHead = A.copy(headOnly);
       for (const row of baselineOnly) {
-        found.push(yield* classifyBaselineOnly(root, scenario.name, row, headOnly));
+        found.push(yield* classifyBaselineOnly(root, scenario.name, row, unmatchedHead));
       }
-      for (const row of headOnly) {
+      for (const row of unmatchedHead) {
         found.push(classifyHeadOnly(scenario.name, row));
       }
       const survivors = multisetDifference(head.violations, headOnly);
       const kept = multisetDifference(baseline.violations, baselineOnly);
-      if (
-        A.isReadonlyArrayNonEmpty(kept) &&
-        !A.getEquivalence(Str.Equivalence)(A.map(kept, violationKey), A.map(survivors, violationKey))
-      ) {
+      if (A.isReadonlyArrayNonEmpty(kept) && !sameKeys(A.map(kept, violationKey), A.map(survivors, violationKey))) {
         found.push(difference(scenario.name, "1-order", "the shared violations are reported in position order"));
       }
     }
