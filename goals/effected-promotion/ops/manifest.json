@@ -71,12 +71,16 @@
       "purpose": "R5a parity: reflection, SKILL.md, KnowledgeDoctor beep-historical and delete-package changeset-prune verdicts over the live corpus and git history, before and after the @beep/markdown switch, plus classified probe shifts."
     },
     {
+      "path": "ops/git-adoption-differential.ts",
+      "purpose": "R10 differential: the pre-R10 repo-cli merge-base read, worktree probes and origin/labels config reads compared with their @beep/git adoptions over scratch repositories."
+    },
+    {
       "path": "ops/github-reporting-gfm-differential.ts",
       "purpose": "Wave 3-1 oracle: GitHubMarkdown writer output rendered through micromark GFM and checked for the promised table and inline structure."
     },
     {
-      "path": "ops/git-adoption-differential.ts",
-      "purpose": "R10 differential: the pre-R10 repo-cli merge-base read, worktree probes and origin/labels config reads compared with their @beep/git adoptions over scratch repositories."
+      "path": "ops/glob-shim-census.ts",
+      "purpose": "R2a parity: recomputes the Bun.Glob shim matcher census (every `new Bun.Glob` pattern, the vitest include globs and semantics probes over the tracked-path universe) with `@beep/glob` GlobPattern (dot: true) and compares it with the recorded `research/glob-shim-census-r2a.json`."
     },
     {
       "path": "ops/lockfiles-adoption-parity.ts",
@@ -115,12 +119,12 @@
       "purpose": "Wave 3-2 differential: TsconfigLoader.resolve against tsc --showConfig, optionally three-way with get-tsconfig."
     },
     {
-      "path": "ops/repo-workspaces-differential.ts",
-      "purpose": "Wave 4-W-a differential: @beep/repo-workspaces member set, edge set and topological order against bun.lock and raw package.json oracles."
-    },
-    {
       "path": "ops/repo-utils-package-json-parity.ts",
       "purpose": "Wave 3-A3 parity: the repo-utils package.json model and workspace dependency helpers recorded before the @beep/package-json re-base and compared at the head, with a mutation corpus."
+    },
+    {
+      "path": "ops/repo-workspaces-differential.ts",
+      "purpose": "Wave 4-W-a differential: @beep/repo-workspaces member set, edge set and topological order against bun.lock and raw package.json oracles."
     },
     {
       "path": "ops/sbom-corpus.ts",
