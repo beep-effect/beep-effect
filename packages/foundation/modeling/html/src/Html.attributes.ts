@@ -1,6 +1,8 @@
 /**
  * Hand-authored global-attribute overlay for the generated HTML AST.
  *
+ * **Details**
+ *
  * `GlobalAttributes` is the shared field bundle spread into every element class
  * in `Html.model.ts`. It is value-typed from the WHATWG/webref enumerations
  * (see `data/`), and composed from three documented sub-bundles:
