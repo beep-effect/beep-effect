@@ -31,7 +31,7 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-PR 1 (#2260) and PR 2 (#2262) merged. The compiler migration and lane fold are implemented. Completion remains active while a fresh closeout PR establishes passing required checks and retained Yeet readiness evidence. See `history/completion-audit-2026-10-28.md`.
+PR 1 (#2260) and PR 2 (#2262) merged. The compiler migration and lane fold are implemented. Completion remains active while closeout PR #2320 establishes passing required checks and retained Yeet readiness evidence. See `history/completion-audit-2026-10-28.md`.
 
 ## Latest Evidence
 

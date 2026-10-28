@@ -38,7 +38,7 @@ The 181-project compiler parity data and original hosted timings remain in
 
 ## Remaining gate
 
-A fresh closeout PR must carry the proposal and reflection, pass its hosted
+Closeout PR #2320 must carry the proposal and reflection, pass its hosted
 required contexts, retain a Yeet verdict for its exact final head, merge, and
 verify through `beep goals completion refresh --slug tsrs-gates`. Until then,
 `initiative.status` and lifecycle remain active. Heavy local replay is avoided
