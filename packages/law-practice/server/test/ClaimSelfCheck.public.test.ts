@@ -10,6 +10,7 @@ import * as BunPath from "@effect/platform-bun/BunPath";
 import { assert, describe } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
 import * as FileSystem from "effect/FileSystem";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
@@ -60,7 +61,7 @@ const checker = ClaimSelfCheckLive.pipe(
 
 describe("Public USPTO antecedent slice", () => {
   it.layer(checker.pipe(Layer.provideMerge(Layer.mergeAll(BunFileSystem.layer, BunPath.layer))))((it) => {
-    it.effect("matches the independent claim-1 tree and the examiner's quoted referring span", () =>
+    it.effect("preserves the recorded legacy slice while adding source-anchored relationships", () =>
       Effect.gen(function* () {
         const expectedClaims = yield* S.decodeEffect(S.fromJsonString(PatentClaims))(
           yield* fixture("US20200109732A1.claims.json")
@@ -75,7 +76,31 @@ describe("Public USPTO antecedent slice", () => {
         );
         assert.deepStrictEqual(result.claimSet.claims, expectedClaims);
         assert.deepStrictEqual(result.report.undecomposed, []);
-        assert.deepStrictEqual(result.report.trees[0], expectedTree);
+        // This immutable first-slice fixture predates functional/bare-mention support.
+        // Keep its exact source spans, terms and edges as a subset, not current gold.
+        // The independent 538-claim evaluator still uses unprojected strict equality.
+        const actualTree = yield* Effect.fromOption(A.head(result.report.trees));
+        for (const expected of expectedTree.elements) {
+          const actual = yield* Effect.fromOption(
+            A.findFirst(actualTree.elements, (element) => element.path === expected.path)
+          );
+          assert.deepStrictEqual(actual.anchor, expected.anchor);
+          for (const term of expected.terms)
+            assert.isTrue(
+              A.some(
+                actual.terms,
+                (candidate) =>
+                  candidate.head === term.head &&
+                  candidate.determiner === term.determiner &&
+                  candidate.anchor.startChar === term.anchor.startChar &&
+                  candidate.anchor.endChar === term.anchor.endChar &&
+                  candidate.anchor.quote === term.anchor.quote
+              )
+            );
+        }
+        for (const edge of expectedTree.edges)
+          assert.isTrue(A.some(actualTree.edges, (candidate) => Equal.equals(candidate, edge)));
+        assert.isTrue(A.some(actualTree.edges, (edge) => edge.kind === "functional"));
         assert.isTrue(
           A.some(
             result.report.findings,

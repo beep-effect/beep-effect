@@ -32,7 +32,8 @@ const decodeUnknownPatentClaims = S.decodeUnknownEffect(PatentClaims);
 
 const $I = $LawPracticeDomainId.create("values/PatentDocument/PatentDocument.normalizer");
 const claimBlockPattern = /(?:^|\n)[\t ]*(\d+)\.[\t ]+(.+?)(?=\n[\t ]*\d+\.[\t ]+|\s*$)/gsu;
-const transitionPattern = /\b(consisting essentially of|consisting of|comprising|including|having|wherein)\b/giu;
+const transitionPattern =
+  /\b(consisting essentially of|consisting of|comprising|comprises|comprised of|including|includes|having|wherein|where|characteri[sz]ed (?:in that|by (?:the fact that)?)|in which(?: method)?)\b/giu;
 const claimReferenceMarkerPattern = /\bclaims?\b/iu;
 const claimReferencePattern = /(\d+)(?:\s*(?:-|–|—|through|thru|to)\s*(\d+))?/giu;
 const ambiguousLexicalTransition = LiteralKit(["including", "having"]);
@@ -327,6 +328,9 @@ const collectSectionDrafts = (document: Document): SectionDraftState =>
 const parseClaimNumber = (value: string): O.Option<PosInt> => decodeClaimNumberFromStringOption(value);
 const parseClaimTransition: (value: string) => PatentClaimTransition = flow(
   Str.toLowerCase,
+  Str.replace(/^(?:characteri[sz]ed .+|in which(?: method)?|where)$/u, "wherein"),
+  Str.replace(/^(?:comprises|comprised of)$/u, "comprising"),
+  Str.replace(/^includes$/u, "including"),
   S.decodeUnknownOption(PatentClaimTransition),
   O.getOrThrow
 );

@@ -41,6 +41,9 @@ are fixed, never before.
 
 ## Current Blockers
 
+- **User-directed bounded repair (2026-10-28):** the user authorized fixing gaps and rerunning without changing original results or reference labels. [Final comparison](history/2026-10-28-repair-comparison.md): strict 0/538, 58 input failures, no undecomposed selected claims, typed-edge F1 21.88%. Functional/phrase/ancestor/transition repairs and full package verification are saved locally. The earlier stop was superseded only for this repair; full goal completion, adjudicated FP and human acceptance remain unproven.
+
+
 - **Poor deterministic floor stop (2026-10-28):** the frozen end-to-end replay returned 0/538 exact claim structures (186 normalization failures, eight undecomposed, 344 mismatches). Per GOAL/SPEC Appetite, stop at this measurement without tuning to the benchmark or expanding scope. [Report and receipts](history/2026-10-28-positive-evaluation.md) retain every selected claim. Human acceptance, adjudicated FP interval, publication and closeout remain unproven; this is not goal completion.
 
 

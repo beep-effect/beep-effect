@@ -28,6 +28,7 @@ import { PatentClaim } from "../PatentDocument/PatentDocument.model.ts";
 import { AntecedentFinding, AntecedentRuleId } from "./AntecedentFinding.model.ts";
 import { ClaimTermIntroducingDeterminer, ClaimTermReferringDeterminer } from "./ClaimElement.behavior.ts";
 import { ClaimTermDeterminer, ClaimTermRef } from "./ClaimElement.model.ts";
+import { isSingleModifiedHead as isSingleModifiedOf } from "./ClaimTerm.compatibility.ts";
 import type { PatentClaims } from "../PatentDocument/PatentDocument.model.ts";
 import type { ClaimTerm } from "./ClaimElement.model.ts";
 import type { ClaimElementTree } from "./ClaimElement.tree.model.ts";
@@ -250,13 +251,6 @@ const singularHead = (head: string): string => {
   const words = Str.split(head, " ");
   return A.join(A.append(A.initNonEmpty(words), singularWord(A.lastNonEmpty(words))), " ");
 };
-
-// "first sensor" or "optical sensor" for "sensor": exactly one modifier word before the referring head.
-const isSingleModifiedOf =
-  (head: string) =>
-  (candidate: string): boolean =>
-    Str.endsWith(` ${head}`)(candidate) &&
-    !pipe(Str.slice(0, Str.length(candidate) - Str.length(head) - 1)(candidate), Str.includes(" "));
 
 // Zero matches: the step does not apply. One or many: the step decides.
 const byCount = <B>(

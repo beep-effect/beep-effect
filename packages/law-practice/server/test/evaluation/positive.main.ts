@@ -73,8 +73,11 @@ const program = Effect.gen(function* () {
   const sources = yield* S.decodeEffect(S.fromJsonString(SourceFreeze))(
     yield* fs.readFileString(`${packet}/positive-source-freeze.json`)
   );
+  const implementationFile = yield* Config.String("CLAIM_IMPLEMENTATION_FREEZE").pipe(
+    Config.withDefault(`${packet}/implementation-freeze.json`)
+  );
   const implementation = yield* S.decodeEffect(S.fromJsonString(ImplementationFreeze))(
-    yield* fs.readFileString(`${packet}/implementation-freeze.json`)
+    yield* fs.readFileString(implementationFile)
   );
   const verifiedText = Effect.fn("PositiveEvaluation.verifiedText")(function* (path: string, expected: string) {
     const text = yield* fs.readFileString(path);
@@ -110,6 +113,10 @@ const program = Effect.gen(function* () {
       return { family, source, gold, canonical, xml };
     })
   );
+  if (yield* fs.exists(`${output}/results.json`))
+    return yield* StructuralEvaluationError.make({
+      message: "Evaluation output already exists; choose a new directory to retain prior evidence.",
+    });
   yield* fs.makeDirectory(output, { recursive: true });
   const rows: Array<unknown> = [];
   for (const { family, source, gold, canonical, xml } of inputs) {

@@ -63,9 +63,12 @@ All 60 families now have semantic-reference drafts covering all 538 selected
 claims. Independent semantic criticism, convention decisions and actual attorney
 agreement remain incomplete. The P3 read-only tool is implemented and verified.
 The first structural measurement triggered the explicit poor-floor stop condition;
-further implementation and publication stop at that measurement. Closeout remains incomplete.
+the subsequent user-directed repair is recorded below; publication remains pending. Closeout remains incomplete.
 
 ## Latest Evidence
+
+- **User-directed repair and rerun (2026-10-28):** [the comparison report](history/2026-10-28-repair-comparison.md) preserves the original and all references. Final strict recovery remains **0/538**; input failures fall **186 → 58**, undecomposed **8 → 0**, and diagnostic typed-edge F1 rises **5.70% → 21.88%**. Functional relationships and conservative ancestor links are now implemented. All three affected package verifications pass. This is a development-set comparison; attorney agreement and adjudicated FP remain pending.
+
 
 - **Poor-floor stop (2026-10-28):** [the first frozen positive replay](history/2026-10-28-positive-evaluation.md) measured **0/538 strict matches**: 186 input failures, eight undecomposed claims, 344 structural mismatches. The 517 current-convention accepted claims also scored zero. The explicit GOAL/SPEC poor-floor condition now stops further implementation and publication pending a new direction. The actual attorney agreement and adjudicated FP interval remain absent; this goal is not complete. The full-corpus scorer self-comparison passes all 538 references.
 
