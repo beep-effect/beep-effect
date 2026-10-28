@@ -248,6 +248,14 @@
       <excludeFolder url="file://$MODULE_DIR$/goals/codex-security-findings-2026-10-14-c2" />
       <excludeFolder url="file://$MODULE_DIR$/goals/codex-security-findings-2026-10-14-drawing-critics" />
       <excludeFolder url="file://$MODULE_DIR$/goals/codex-security-findings-2026-10-14-l0-ledger" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/agent-message-router" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/agent-session-bridges" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/attorney-question-loop" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/docs-lint-oxlint-rules" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/effect-rules-diagnostics-lane" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/eslint-removal" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/knowledge-surface-automation" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/palantiri-parcels" />
       <excludePattern pattern=".beep" />
       <excludePattern pattern=".next" />
       <excludePattern pattern=".turbo" />
