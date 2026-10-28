@@ -53,7 +53,16 @@ Closeout audit on 2026-10-28:
 - Current law scan: 36,972 tracked text files, 0 findings, 106 binaries skipped
   and 4,825 exempt files. Reflection lint has 0 blocking or advisory findings.
   Changeset graph has 189 workspaces, 0 notes and 0 missing references.
-- Current proof and fresh final-head readiness remain in progress.
+- Full package audits and docgen pass for identity, public-site, ontology,
+  skill-contract, all seven epistemic packages, exiftool, rdf and documents-domain.
+  The repo-cli package audit remains in progress.
+- Law command and rule tests: 37 tests pass, including a seeded tracked
+  violation that fails strict mode. Graft finds no retired hosts in 8,747
+  indexed code files; the tracked-file law also covers unindexed prose/data.
+- Packet doctor: 0 new blocking findings. Knowledge refs: 0 live gated
+  observations. Launcher size, manifest JSON and whitespace checks pass.
+- Publication uses the AGENTS.md ten-minute fallback after local JSDoc
+  regeneration did not finish. Fresh final-head hosted readiness is pending.
 
 Historical implementation evidence follows. It does not establish readiness
 of the fresh closeout head.

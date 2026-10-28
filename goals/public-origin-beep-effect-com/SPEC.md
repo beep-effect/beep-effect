@@ -251,7 +251,7 @@ D6  Migration posture: hard cut everywhere, one record, one gate.
 | 2026-10-20 | D5: fold the two drift authorities into `$I`; evidence predicate types bump to `/v2`. | Operator brief. Verbatim above; the changeset clause is superseded by I8. | Same as D1. |
 | 2026-10-20 | D6: hard cut everywhere, one record, one gate. | Operator brief. Verbatim above; I5 and I6 make the two law rules precise. | Same as D1. |
 
-### Agent rulings I1 to I19
+### Agent rulings I1 to I20
 
 Orchestrator rulings made while executing the brief. Each is agent-decided
 under the AGENTS.md autonomy charter. Unless a row says otherwise, reverse it
@@ -284,6 +284,10 @@ with `git revert` of the PR and a re-run of
 | Date | Decision | Reason | How to reverse |
 | --- | --- | --- | --- |
 | 2026-10-28 | I19: deliver a fresh evidence closeout PR from current main and bind its final head, readiness verdict and merge receipt. Keep the original #1946 evidence as history and the operative lifecycle active. | `goals completion refresh` returned unsatisfied for #1946: required Effect Diagnostics failed at merge, Lint was unknown, the review window was open, and the declared Yeet verdict was unreadable. The retained receipt is `history/2026-10-28-original-completion-receipt.json`. A merged PR alone does not satisfy the current completion contract. | Revert the closeout PR to restore the #1946 proposal; its failed completion receipt remains historical evidence. |
+
+| Date | Decision | Reason | How to reverse |
+| --- | --- | --- | --- |
+| 2026-10-28 | I20: use the AGENTS.md ten-minute publication fallback and hosted CI after cancelling the local publish job. | The cheap-gates step exceeded ten minutes while regenerating the JSDoc inventory. Completed package audits and local gate results remain evidence; unfinished JSDoc regeneration and head-install preflight are disclosed in the PR. | Re-run the local publication preflight after capacity allows. |
 
 ## Exception Ledger
 
