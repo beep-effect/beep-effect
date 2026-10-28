@@ -159,7 +159,7 @@ const program = Effect.gen(function* () {
   const textPlan = yield* S.decodeEffect(
     S.fromJsonString(
       S.Struct({
-        schemaVersion: S.tag("citation-supplemental-text-plan/v1"),
+        schemaVersion: S.tag("citation-supplemental-text-plan/v2"),
         cases: S.Array(
           S.Struct({
             id: S.NonEmptyString,
@@ -167,6 +167,7 @@ const program = Effect.gen(function* () {
             input: S.JsonObject,
             expectedOutcome: S.JsonObject,
             expectedMappingUpdates: S.Array(S.JsonObject),
+            expectedWarnings: S.Array(S.JsonObject),
           })
         ),
       })
@@ -195,7 +196,8 @@ const program = Effect.gen(function* () {
       row.operation !== expected.value.operation ||
       !same(value.input, expected.value.input) ||
       !same(value.outcome, expected.value.expectedOutcome) ||
-      !same(value.mappingUpdates, expected.value.expectedMappingUpdates)
+      !same(value.mappingUpdates, expected.value.expectedMappingUpdates) ||
+      !same(value.warnings, expected.value.expectedWarnings)
     )
       return yield* reject();
     yield* verifyTarget(row.targetProof);

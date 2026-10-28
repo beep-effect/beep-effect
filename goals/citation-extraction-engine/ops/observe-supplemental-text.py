@@ -1,5 +1,6 @@
 """Focused oracle text-operation observation, called only by the pinned exporter."""
 import importlib
+import logging
 
 
 def observe(rows):
@@ -8,6 +9,18 @@ def observe(rows):
     original_update = module.SpanUpdater.update
     output = []
     active = []
+    warnings = []
+
+    class WarningCapture(logging.Handler):
+        def emit(self, record):
+            if record.levelno >= logging.WARNING:
+                if not isinstance(record.msg, str) or not isinstance(record.args, tuple) or not all(isinstance(arg, str) for arg in record.args):
+                    raise RuntimeError("unclassified warning arguments in text probe")
+                warnings.append({"logger": record.name, "level": record.levelname,
+                                 "messageTemplate": record.msg, "arguments": list(record.args)})
+
+    warning_capture = WarningCapture()
+    logger = logging.getLogger("eyecite")
 
     def span(text, bounds):
         start, end = bounds
@@ -21,9 +34,11 @@ def observe(rows):
         return result
 
     module.SpanUpdater.update = update
+    logger.addHandler(warning_capture)
     try:
         for row in rows:
             active.clear()
+            warnings.clear()
             try:
                 result = getattr(eyecite, row["operation"])(**row["input"])
                 outcome = {"kind": "success", "value": result}
@@ -36,7 +51,9 @@ def observe(rows):
                                 for index in range(0, len(active), 2)]
             output.append({"id": row["id"], "operation": row["operation"],
                            "input": row["input"], "mappingUpdates": list(active),
-                           "inputSpans": input_spans, "mappedSpans": mapped_spans, "outcome": outcome})
+                           "inputSpans": input_spans, "mappedSpans": mapped_spans,
+                           "warnings": list(warnings), "outcome": outcome})
     finally:
         module.SpanUpdater.update = original_update
+        logger.removeHandler(warning_capture)
     return output

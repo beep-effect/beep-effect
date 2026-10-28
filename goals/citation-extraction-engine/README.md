@@ -35,6 +35,7 @@ Current evidence:
 - [Portable command integration](./history/evidence/2026-10-28-portable-parity-command.md)
 - [Supplemental extraction probes](./history/evidence/2026-10-28-supplemental-extraction.md)
 - [Cleaning/annotation probes](./history/evidence/2026-10-28-supplemental-text.md)
+- [Warning coverage and P0 audit](./history/evidence/2026-10-28-warning-and-p0-audit.md)
 
 ## Mission
 

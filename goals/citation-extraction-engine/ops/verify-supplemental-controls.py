@@ -99,6 +99,22 @@ def main():
         "annotation-payload-as-cleaner": lambda r: next(row for row in r["textCases"] if row["id"] == "annotation-markup").update(operation="clean_text"),
         "forged-text-target": lambda r: r["textCases"][0].update(targetProof={"path": "../../outside", "name": "probe", "evidenceSha256": "a" * 64}),
     })
+    controls.update({
+        "missing-warning-ledger": lambda r: text_payload(r, "annotation-unbalanced-skip", lambda v: v.pop("warnings")),
+        "missing-empty-warning-ledger": lambda r: text_payload(r, "clean-none", lambda v: v.pop("warnings")),
+        "dropped-skip-warning": lambda r: text_payload(r, "annotation-unbalanced-skip", lambda v: v.update(warnings=[])),
+        "duplicated-warning": lambda r: text_payload(r, "annotation-unbalanced-skip", lambda v: v["warnings"].append(v["warnings"][0])),
+        "changed-warning-template": lambda r: text_payload(r, "annotation-unbalanced-skip", lambda v: v["warnings"][0].update(messageTemplate="other")),
+        "interpolated-warning-template": lambda r: text_payload(r, "annotation-unbalanced-skip", lambda v: v["warnings"][0].update(messageTemplate="Citation was not annotated due to unbalanced tags 1 U.S. <span>1")),
+        "changed-warning-arguments": lambda r: text_payload(r, "annotation-unbalanced-skip", lambda v: v["warnings"][0].update(arguments=["other"])),
+        "missing-warning-arguments": lambda r: text_payload(r, "annotation-unbalanced-skip", lambda v: v["warnings"][0].pop("arguments")),
+        "changed-warning-level": lambda r: text_payload(r, "annotation-unbalanced-skip", lambda v: v["warnings"][0].update(level="INFO")),
+        "missing-warning-level": lambda r: text_payload(r, "annotation-unbalanced-skip", lambda v: v["warnings"][0].pop("level")),
+        "changed-warning-logger": lambda r: text_payload(r, "annotation-unbalanced-skip", lambda v: v["warnings"][0].update(logger="other")),
+        "unexpected-cleaner-warning": lambda r: text_payload(r, "clean-none", lambda v: v.update(warnings=[{"logger":"eyecite.clean","level":"WARNING","messageTemplate":"other","arguments":[]}])),
+        "legacy-warning-free-version": lambda r: r.update(schemaVersion="citation-supplemental-extraction/v2"),
+        "unclassified-warning-argument": lambda r: text_payload(r, "annotation-unbalanced-skip", lambda v: v["warnings"][0].update(arguments=[{"unclassified":True}])),
+    })
     args.scratch_root.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="supplemental-controls-", dir=args.scratch_root) as scratch:
         scratch = Path(scratch)

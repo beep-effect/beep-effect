@@ -20,6 +20,14 @@ const Outcome = S.Union([
 const Range = S.Tuple([S.Natural, S.Natural]);
 const Span = S.Struct({ python: Range, utf16: Range, text: S.String });
 const Stages = {
+  warnings: S.Array(
+    S.Struct({
+      logger: S.NonEmptyString,
+      level: S.tag("WARNING"),
+      messageTemplate: S.String,
+      arguments: S.Array(S.String),
+    })
+  ),
   mappingUpdates: S.Array(
     S.Struct({ offset: S.Natural, side: LiteralKit(["bisect_right", "bisect_left"]), result: S.Natural })
   ),

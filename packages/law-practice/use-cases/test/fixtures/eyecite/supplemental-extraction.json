@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "citation-supplemental-extraction/v2",
+  "schemaVersion": "citation-supplemental-extraction/v3",
   "scope": "Focused extraction/resolution/cleaning/annotation projections; not exhaustive supplemental or target parity proof.",
   "commit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
@@ -18,10 +18,10 @@
     "fast-diff-match-patch": "2.0.1",
     "pyahocorasick": "2.0.0"
   },
-  "exporterSha256": "eac88a73722a600da3a3624a183b1f4aa4422eceae09d7fd804d0f06e5ce3d82",
+  "exporterSha256": "0956031da431202af17e180ede316a647b5d5720846cc850332bf8b16ad10377",
   "planSha256": "ca1f99d044650f7e6313290110048dd7e656598ff395f3e42e9344f6b55f454b",
-  "textPlanSha256": "7843a1370ddd98563a71f6a77b280521b6d7f959de905a7a10289aedd2b99a68",
-  "observerSha256": "f40fc17f03a047c42e9928e253f268dd03caf5f6865241e52c9690510be013ed",
+  "textPlanSha256": "f6d00d66e033e8d60145940ee1310dd699a9e74e5141f54cc5451cd133ec3640",
+  "observerSha256": "c1f6eed4d3e94c6b363875953c7058573b9c4d900d56a0ff64a1d5c8cfd26728",
   "sourceHashes": {
     "eyecite/find.py": "64415ffe6a5fc39713a1ad1d6585ae673fb175b32c53820185237a174416dd3d",
     "eyecite/models.py": "2297f2f3a036a5674346e952fd6b03c8d4906c1130ef43157b7e2d79d5bdf38a",
@@ -128,208 +128,208 @@
     {
       "id": "clean-none",
       "operation": "clean_text",
-      "payload": "{\"input\":{\"steps\":[],\"text\":\" \\tfoo\\r\\nbar​ \"},\"inputSpans\":[],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\" \\tfoo\\r\\nbar​ \"}}",
-      "normalizedSha256": "b69f85d03fba374f13f1a050f1ee341d4301483d06cadb13ec8652b5259431de",
+      "payload": "{\"input\":{\"steps\":[],\"text\":\" \\tfoo\\r\\nbar​ \"},\"inputSpans\":[],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\" \\tfoo\\r\\nbar​ \"},\"warnings\":[]}",
+      "normalizedSha256": "21da1051d2b3a8102917ecf7c5907cba01c2b3734b2543dbe1154f33ec9f8b3c",
       "workflowState": "audit",
       "targetProof": null
     },
     {
       "id": "clean-inline",
       "operation": "clean_text",
-      "payload": "{\"input\":{\"steps\":[\"inline_whitespace\"],\"text\":\" \\tfoo\\r\\nbar​ \"},\"inputSpans\":[],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\" foo\\r\\nbar​ \"}}",
-      "normalizedSha256": "4b42ed430a8d05366a169163cb8bf09e87b2cecbb9c1d2e8bbe7877409eac262",
+      "payload": "{\"input\":{\"steps\":[\"inline_whitespace\"],\"text\":\" \\tfoo\\r\\nbar​ \"},\"inputSpans\":[],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\" foo\\r\\nbar​ \"},\"warnings\":[]}",
+      "normalizedSha256": "e426d295a3d6008c9daa39431153a337123f4c70b43bc24a0e2559ca79bfa36f",
       "workflowState": "audit",
       "targetProof": null
     },
     {
       "id": "clean-all",
       "operation": "clean_text",
-      "payload": "{\"input\":{\"steps\":[\"all_whitespace\"],\"text\":\" \\tfoo\\r\\nbar​ \"},\"inputSpans\":[],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\" foo bar \"}}",
-      "normalizedSha256": "e3b239ecb0687e2772def25583687bb8dae407ff8ebbcb7e92f5da22500f823e",
+      "payload": "{\"input\":{\"steps\":[\"all_whitespace\"],\"text\":\" \\tfoo\\r\\nbar​ \"},\"inputSpans\":[],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\" foo bar \"},\"warnings\":[]}",
+      "normalizedSha256": "2be09a78c03d1efbf49a14fbcd6cb66445b408efdeedb9c6d507af3cbe239d80",
       "workflowState": "audit",
       "targetProof": null
     },
     {
       "id": "clean-underscores",
       "operation": "clean_text",
-      "payload": "{\"input\":{\"steps\":[\"underscores\"],\"text\":\"a__b_c___\"},\"inputSpans\":[],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\"ab_c\"}}",
-      "normalizedSha256": "6da153e6d9aed8de204cce055908edb544c6d1d4f1dc6e38349828cb1ef3ddce",
+      "payload": "{\"input\":{\"steps\":[\"underscores\"],\"text\":\"a__b_c___\"},\"inputSpans\":[],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\"ab_c\"},\"warnings\":[]}",
+      "normalizedSha256": "98162759c2a4be308694984d5f61dc46f7d5d2b8c3bd447c8896b94329168319",
       "workflowState": "audit",
       "targetProof": null
     },
     {
       "id": "clean-xml-html",
       "operation": "clean_text",
-      "payload": "{\"input\":{\"steps\":[\"xml\",\"html\",\"all_whitespace\"],\"text\":\"<?xml version=\\\"1.0\\\"?><html><head><style>hidden</style></head><body><p>1 <b>U.S.</b> 1.</p><script>hidden</script><page-number>9</page-number><span class=\\\"star-pagination\\\">*2</span></body></html>\"},\"inputSpans\":[],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\"1 U.S. 1.\"}}",
-      "normalizedSha256": "5f5ed6fccd89510c5d0f8d316b81093c199657766a0e9e2e8c30f6e387e14750",
+      "payload": "{\"input\":{\"steps\":[\"xml\",\"html\",\"all_whitespace\"],\"text\":\"<?xml version=\\\"1.0\\\"?><html><head><style>hidden</style></head><body><p>1 <b>U.S.</b> 1.</p><script>hidden</script><page-number>9</page-number><span class=\\\"star-pagination\\\">*2</span></body></html>\"},\"inputSpans\":[],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\"1 U.S. 1.\"},\"warnings\":[]}",
+      "normalizedSha256": "575d9d37c883c05061b08096a3e1b90140b3bda4475c5ed09ceed2eb379ce51d",
       "workflowState": "audit",
       "targetProof": null
     },
     {
       "id": "clean-html-entities",
       "operation": "clean_text",
-      "payload": "{\"input\":{\"steps\":[\"html\"],\"text\":\"<p>a&nbsp;<b>b</b>&amp;c</p>\"},\"inputSpans\":[],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\"a  b &c\"}}",
-      "normalizedSha256": "db28f37eee48a471008f1e7f9d1f11447782c553e658faa55ed3205edbb87361",
+      "payload": "{\"input\":{\"steps\":[\"html\"],\"text\":\"<p>a&nbsp;<b>b</b>&amp;c</p>\"},\"inputSpans\":[],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\"a  b &c\"},\"warnings\":[]}",
+      "normalizedSha256": "b23c83386a962e2e228111f2c2cc63743f685f17a95ca6cf60e07c478e609789",
       "workflowState": "audit",
       "targetProof": null
     },
     {
       "id": "clean-empty-html",
       "operation": "clean_text",
-      "payload": "{\"input\":{\"steps\":[\"html\"],\"text\":\"\"},\"inputSpans\":[],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"failure\",\"message\":\"Document is empty\",\"type\":\"lxml.etree.ParserError\"}}",
-      "normalizedSha256": "74636145b4beef88157127de2e28de66a7c8578c9e23e2b26cccaf731e67600f",
+      "payload": "{\"input\":{\"steps\":[\"html\"],\"text\":\"\"},\"inputSpans\":[],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"failure\",\"message\":\"Document is empty\",\"type\":\"lxml.etree.ParserError\"},\"warnings\":[]}",
+      "normalizedSha256": "cf5b6c7d2a0fb8f16ec0ad7b22e241380f3d0f5f80049f94cdeb92dd3136fb60",
       "workflowState": "audit",
       "targetProof": null
     },
     {
       "id": "clean-unknown",
       "operation": "clean_text",
-      "payload": "{\"input\":{\"steps\":[\"bogus\"],\"text\":\"text\"},\"inputSpans\":[],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"failure\",\"message\":\"clean_text steps must be callable or one of ['html', 'inline_whitespace', 'all_whitespace', 'underscores', 'xml']\",\"type\":\"builtins.ValueError\"}}",
-      "normalizedSha256": "b6c5f3726f4d57b6fadb6e39ac529df2c796554e144229dd5c9d81c6baeac24a",
+      "payload": "{\"input\":{\"steps\":[\"bogus\"],\"text\":\"text\"},\"inputSpans\":[],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"failure\",\"message\":\"clean_text steps must be callable or one of ['html', 'inline_whitespace', 'all_whitespace', 'underscores', 'xml']\",\"type\":\"builtins.ValueError\"},\"warnings\":[]}",
+      "normalizedSha256": "5ae1ff0c2bac6f6a1017ce87ce2154247d46ecf178c5be59d99ce8a28595d744",
       "workflowState": "audit",
       "targetProof": null
     },
     {
       "id": "clean-order-a",
       "operation": "clean_text",
-      "payload": "{\"input\":{\"steps\":[\"underscores\",\"all_whitespace\"],\"text\":\"a __ b\"},\"inputSpans\":[],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\"a b\"}}",
-      "normalizedSha256": "8ffe0f3dc718d85dc590cc53afa2e084f087a9c18fb9a4cc71c0f10a61f2a413",
+      "payload": "{\"input\":{\"steps\":[\"underscores\",\"all_whitespace\"],\"text\":\"a __ b\"},\"inputSpans\":[],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\"a b\"},\"warnings\":[]}",
+      "normalizedSha256": "487570cded974a2a16502defcf5d08c1b6e922353ce02f7ad97fb775d3837d3a",
       "workflowState": "audit",
       "targetProof": null
     },
     {
       "id": "clean-order-b",
       "operation": "clean_text",
-      "payload": "{\"input\":{\"steps\":[\"all_whitespace\",\"underscores\"],\"text\":\"a __ b\"},\"inputSpans\":[],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\"a  b\"}}",
-      "normalizedSha256": "e3eed91c9d2b236f3546eeef32bfd36b6502201b4c4b309a2494b02e8a6f3e27",
+      "payload": "{\"input\":{\"steps\":[\"all_whitespace\",\"underscores\"],\"text\":\"a __ b\"},\"inputSpans\":[],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\"a  b\"},\"warnings\":[]}",
+      "normalizedSha256": "873b369dafa5a7f558598d0c8e94061030a8bfca1366417eb2e28db9f11027df",
       "workflowState": "audit",
       "targetProof": null
     },
     {
       "id": "annotation-identity",
       "operation": "annotate_citations",
-      "payload": "{\"input\":{\"annotations\":[[[2,10],\"<a>\",\"</a>\"]],\"plain_text\":\"x 1 U.S. 1.\",\"source_text\":\"\",\"unbalanced_tags\":\"unchecked\",\"use_dmp\":true},\"inputSpans\":[{\"python\":[2,10],\"text\":\"1 U.S. 1\",\"utf16\":[2,10]}],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\"x <a>1 U.S. 1</a>.\"}}",
-      "normalizedSha256": "eba998b84fa3ef7f4068fa5f3dac77065e62d89107253952cc1245a66e87f013",
+      "payload": "{\"input\":{\"annotations\":[[[2,10],\"<a>\",\"</a>\"]],\"plain_text\":\"x 1 U.S. 1.\",\"source_text\":\"\",\"unbalanced_tags\":\"unchecked\",\"use_dmp\":true},\"inputSpans\":[{\"python\":[2,10],\"text\":\"1 U.S. 1\",\"utf16\":[2,10]}],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\"x <a>1 U.S. 1</a>.\"},\"warnings\":[]}",
+      "normalizedSha256": "3838977973a9fb9306b40db4b382259b797efb97821346b57cb50a82d0d72679",
       "workflowState": "audit",
       "targetProof": null
     },
     {
       "id": "annotation-astral",
       "operation": "annotate_citations",
-      "payload": "{\"input\":{\"annotations\":[[[2,10],\"<a>\",\"</a>\"]],\"plain_text\":\"😀 1 U.S. 1.\",\"source_text\":\"\",\"unbalanced_tags\":\"unchecked\",\"use_dmp\":true},\"inputSpans\":[{\"python\":[2,10],\"text\":\"1 U.S. 1\",\"utf16\":[3,11]}],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\"😀 <a>1 U.S. 1</a>.\"}}",
-      "normalizedSha256": "434763e2560a2969f45479ada9d8f9e6b64181fcfdbaae4757247696f1898cda",
+      "payload": "{\"input\":{\"annotations\":[[[2,10],\"<a>\",\"</a>\"]],\"plain_text\":\"😀 1 U.S. 1.\",\"source_text\":\"\",\"unbalanced_tags\":\"unchecked\",\"use_dmp\":true},\"inputSpans\":[{\"python\":[2,10],\"text\":\"1 U.S. 1\",\"utf16\":[3,11]}],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\"😀 <a>1 U.S. 1</a>.\"},\"warnings\":[]}",
+      "normalizedSha256": "38111747ca5aa73b5be698882c3b6106c6164dfbc0f70044f3cdfac0fce8b396",
       "workflowState": "audit",
       "targetProof": null
     },
     {
       "id": "annotation-markup",
       "operation": "annotate_citations",
-      "payload": "{\"input\":{\"annotations\":[[[2,10],\"<a>\",\"</a>\"]],\"plain_text\":\"x 1 U.S. 1.\",\"source_text\":\"x <i>1 U.S.</i> 1.\",\"unbalanced_tags\":\"unchecked\",\"use_dmp\":true},\"inputSpans\":[{\"python\":[2,10],\"text\":\"1 U.S. 1\",\"utf16\":[2,10]}],\"mappedSpans\":[{\"python\":[5,17],\"text\":\"1 U.S.</i> 1\",\"utf16\":[5,17]}],\"mappingUpdates\":[{\"offset\":2,\"result\":5,\"side\":\"bisect_right\"},{\"offset\":10,\"result\":17,\"side\":\"bisect_left\"}],\"outcome\":{\"kind\":\"success\",\"value\":\"x <i><a>1 U.S.</i> 1</a>.\"}}",
-      "normalizedSha256": "23714bd3b7f38b55cd5f6252beb8feb9280ca9db12d5fb38dbf6996bd26076cc",
+      "payload": "{\"input\":{\"annotations\":[[[2,10],\"<a>\",\"</a>\"]],\"plain_text\":\"x 1 U.S. 1.\",\"source_text\":\"x <i>1 U.S.</i> 1.\",\"unbalanced_tags\":\"unchecked\",\"use_dmp\":true},\"inputSpans\":[{\"python\":[2,10],\"text\":\"1 U.S. 1\",\"utf16\":[2,10]}],\"mappedSpans\":[{\"python\":[5,17],\"text\":\"1 U.S.</i> 1\",\"utf16\":[5,17]}],\"mappingUpdates\":[{\"offset\":2,\"result\":5,\"side\":\"bisect_right\"},{\"offset\":10,\"result\":17,\"side\":\"bisect_left\"}],\"outcome\":{\"kind\":\"success\",\"value\":\"x <i><a>1 U.S.</i> 1</a>.\"},\"warnings\":[]}",
+      "normalizedSha256": "8669288e1121cd8d490e9ce98cc87c1b6662836b0a172d21809451e0477e41c4",
       "workflowState": "audit",
       "targetProof": null
     },
     {
       "id": "annotation-unbalanced-unchecked",
       "operation": "annotate_citations",
-      "payload": "{\"input\":{\"annotations\":[[[2,10],\"<a>\",\"</a>\"]],\"plain_text\":\"x 1 U.S. 1.\",\"source_text\":\"x 1 U.S. <span>1 tail</span>\",\"unbalanced_tags\":\"unchecked\",\"use_dmp\":true},\"inputSpans\":[{\"python\":[2,10],\"text\":\"1 U.S. 1\",\"utf16\":[2,10]}],\"mappedSpans\":[{\"python\":[2,16],\"text\":\"1 U.S. <span>1\",\"utf16\":[2,16]}],\"mappingUpdates\":[{\"offset\":2,\"result\":2,\"side\":\"bisect_right\"},{\"offset\":10,\"result\":16,\"side\":\"bisect_left\"}],\"outcome\":{\"kind\":\"success\",\"value\":\"x <a>1 U.S. <span>1</a> tail</span>\"}}",
-      "normalizedSha256": "2c4b5d8bd29691ccc173cd4de6732c5c1940f187491d0c7586ccf6026ca38181",
+      "payload": "{\"input\":{\"annotations\":[[[2,10],\"<a>\",\"</a>\"]],\"plain_text\":\"x 1 U.S. 1.\",\"source_text\":\"x 1 U.S. <span>1 tail</span>\",\"unbalanced_tags\":\"unchecked\",\"use_dmp\":true},\"inputSpans\":[{\"python\":[2,10],\"text\":\"1 U.S. 1\",\"utf16\":[2,10]}],\"mappedSpans\":[{\"python\":[2,16],\"text\":\"1 U.S. <span>1\",\"utf16\":[2,16]}],\"mappingUpdates\":[{\"offset\":2,\"result\":2,\"side\":\"bisect_right\"},{\"offset\":10,\"result\":16,\"side\":\"bisect_left\"}],\"outcome\":{\"kind\":\"success\",\"value\":\"x <a>1 U.S. <span>1</a> tail</span>\"},\"warnings\":[]}",
+      "normalizedSha256": "f86319a4fdc44fa6a1b628c9012b76e73cdd805f14711cea527667c73af10e7b",
       "workflowState": "audit",
       "targetProof": null
     },
     {
       "id": "annotation-unbalanced-skip",
       "operation": "annotate_citations",
-      "payload": "{\"input\":{\"annotations\":[[[2,10],\"<a>\",\"</a>\"]],\"plain_text\":\"x 1 U.S. 1.\",\"source_text\":\"x 1 U.S. <span>1 tail</span>\",\"unbalanced_tags\":\"skip\",\"use_dmp\":true},\"inputSpans\":[{\"python\":[2,10],\"text\":\"1 U.S. 1\",\"utf16\":[2,10]}],\"mappedSpans\":[{\"python\":[2,16],\"text\":\"1 U.S. <span>1\",\"utf16\":[2,16]}],\"mappingUpdates\":[{\"offset\":2,\"result\":2,\"side\":\"bisect_right\"},{\"offset\":10,\"result\":16,\"side\":\"bisect_left\"}],\"outcome\":{\"kind\":\"success\",\"value\":\"x 1 U.S. <span>1 tail</span>\"}}",
-      "normalizedSha256": "c3c7aafcbc0c93b5d3b6a52250887838e07c71b1bb19480ac674e4d56d9b13c2",
+      "payload": "{\"input\":{\"annotations\":[[[2,10],\"<a>\",\"</a>\"]],\"plain_text\":\"x 1 U.S. 1.\",\"source_text\":\"x 1 U.S. <span>1 tail</span>\",\"unbalanced_tags\":\"skip\",\"use_dmp\":true},\"inputSpans\":[{\"python\":[2,10],\"text\":\"1 U.S. 1\",\"utf16\":[2,10]}],\"mappedSpans\":[{\"python\":[2,16],\"text\":\"1 U.S. <span>1\",\"utf16\":[2,16]}],\"mappingUpdates\":[{\"offset\":2,\"result\":2,\"side\":\"bisect_right\"},{\"offset\":10,\"result\":16,\"side\":\"bisect_left\"}],\"outcome\":{\"kind\":\"success\",\"value\":\"x 1 U.S. <span>1 tail</span>\"},\"warnings\":[{\"arguments\":[\"1 U.S. <span>1\"],\"level\":\"WARNING\",\"logger\":\"eyecite.annotate\",\"messageTemplate\":\"Citation was not annotated due to unbalanced tags %s\"}]}",
+      "normalizedSha256": "1bf77ee30fc84c3168d3d9c5870e17af6225516706786b7987ab48ba2fa32ecb",
       "workflowState": "audit",
       "targetProof": null
     },
     {
       "id": "annotation-unbalanced-wrap",
       "operation": "annotate_citations",
-      "payload": "{\"input\":{\"annotations\":[[[2,10],\"<a>\",\"</a>\"]],\"plain_text\":\"x 1 U.S. 1.\",\"source_text\":\"x 1 U.S. <span>1 tail</span>\",\"unbalanced_tags\":\"wrap\",\"use_dmp\":true},\"inputSpans\":[{\"python\":[2,10],\"text\":\"1 U.S. 1\",\"utf16\":[2,10]}],\"mappedSpans\":[{\"python\":[2,16],\"text\":\"1 U.S. <span>1\",\"utf16\":[2,16]}],\"mappingUpdates\":[{\"offset\":2,\"result\":2,\"side\":\"bisect_right\"},{\"offset\":10,\"result\":16,\"side\":\"bisect_left\"}],\"outcome\":{\"kind\":\"success\",\"value\":\"x <a>1 U.S. </a><span><a>1</a> tail</span>\"}}",
-      "normalizedSha256": "7c205e723a6c0d494a46656f9a2c8e426d0909b7affd94eac4116421cfa3f46e",
+      "payload": "{\"input\":{\"annotations\":[[[2,10],\"<a>\",\"</a>\"]],\"plain_text\":\"x 1 U.S. 1.\",\"source_text\":\"x 1 U.S. <span>1 tail</span>\",\"unbalanced_tags\":\"wrap\",\"use_dmp\":true},\"inputSpans\":[{\"python\":[2,10],\"text\":\"1 U.S. 1\",\"utf16\":[2,10]}],\"mappedSpans\":[{\"python\":[2,16],\"text\":\"1 U.S. <span>1\",\"utf16\":[2,16]}],\"mappingUpdates\":[{\"offset\":2,\"result\":2,\"side\":\"bisect_right\"},{\"offset\":10,\"result\":16,\"side\":\"bisect_left\"}],\"outcome\":{\"kind\":\"success\",\"value\":\"x <a>1 U.S. </a><span><a>1</a> tail</span>\"},\"warnings\":[]}",
+      "normalizedSha256": "6c1fd903c7947fdbd2549dae362f2be2dffdeab6714efd9417a39e7585ddd974",
       "workflowState": "audit",
       "targetProof": null
     },
     {
       "id": "annotation-repeat-insert",
       "operation": "annotate_citations",
-      "payload": "{\"input\":{\"annotations\":[[[0,8],\"<a>\",\"</a>\"]],\"plain_text\":\"1 U.S. 1.\",\"source_text\":\"1 U.S. 1. 1 U.S. 1.\",\"unbalanced_tags\":\"unchecked\",\"use_dmp\":true},\"inputSpans\":[{\"python\":[0,8],\"text\":\"1 U.S. 1\",\"utf16\":[0,8]}],\"mappedSpans\":[{\"python\":[0,8],\"text\":\"1 U.S. 1\",\"utf16\":[0,8]}],\"mappingUpdates\":[{\"offset\":0,\"result\":0,\"side\":\"bisect_right\"},{\"offset\":8,\"result\":8,\"side\":\"bisect_left\"}],\"outcome\":{\"kind\":\"success\",\"value\":\"<a>1 U.S. 1</a>. 1 U.S. 1.\"}}",
-      "normalizedSha256": "84b174da34eb4309296496bc87cffeeca20619ea8ac0d7e6601a4b88637363d3",
+      "payload": "{\"input\":{\"annotations\":[[[0,8],\"<a>\",\"</a>\"]],\"plain_text\":\"1 U.S. 1.\",\"source_text\":\"1 U.S. 1. 1 U.S. 1.\",\"unbalanced_tags\":\"unchecked\",\"use_dmp\":true},\"inputSpans\":[{\"python\":[0,8],\"text\":\"1 U.S. 1\",\"utf16\":[0,8]}],\"mappedSpans\":[{\"python\":[0,8],\"text\":\"1 U.S. 1\",\"utf16\":[0,8]}],\"mappingUpdates\":[{\"offset\":0,\"result\":0,\"side\":\"bisect_right\"},{\"offset\":8,\"result\":8,\"side\":\"bisect_left\"}],\"outcome\":{\"kind\":\"success\",\"value\":\"<a>1 U.S. 1</a>. 1 U.S. 1.\"},\"warnings\":[]}",
+      "normalizedSha256": "fbf2517b3338e6ebdb516d6dda3639c5b2744416a9b01cb1f7c83a3b55bec61f",
       "workflowState": "audit",
       "targetProof": null
     },
     {
       "id": "annotation-repeat-insert-builtin",
       "operation": "annotate_citations",
-      "payload": "{\"input\":{\"annotations\":[[[0,8],\"<a>\",\"</a>\"]],\"plain_text\":\"1 U.S. 1.\",\"source_text\":\"1 U.S. 1. 1 U.S. 1.\",\"unbalanced_tags\":\"unchecked\",\"use_dmp\":false},\"inputSpans\":[{\"python\":[0,8],\"text\":\"1 U.S. 1\",\"utf16\":[0,8]}],\"mappedSpans\":[{\"python\":[0,8],\"text\":\"1 U.S. 1\",\"utf16\":[0,8]}],\"mappingUpdates\":[{\"offset\":0,\"result\":0,\"side\":\"bisect_right\"},{\"offset\":8,\"result\":8,\"side\":\"bisect_left\"}],\"outcome\":{\"kind\":\"success\",\"value\":\"<a>1 U.S. 1</a>. 1 U.S. 1.\"}}",
-      "normalizedSha256": "d54906401dfff5ef535ab4d423cce8b0630b19eefad566774fb0357b923ea687",
+      "payload": "{\"input\":{\"annotations\":[[[0,8],\"<a>\",\"</a>\"]],\"plain_text\":\"1 U.S. 1.\",\"source_text\":\"1 U.S. 1. 1 U.S. 1.\",\"unbalanced_tags\":\"unchecked\",\"use_dmp\":false},\"inputSpans\":[{\"python\":[0,8],\"text\":\"1 U.S. 1\",\"utf16\":[0,8]}],\"mappedSpans\":[{\"python\":[0,8],\"text\":\"1 U.S. 1\",\"utf16\":[0,8]}],\"mappingUpdates\":[{\"offset\":0,\"result\":0,\"side\":\"bisect_right\"},{\"offset\":8,\"result\":8,\"side\":\"bisect_left\"}],\"outcome\":{\"kind\":\"success\",\"value\":\"<a>1 U.S. 1</a>. 1 U.S. 1.\"},\"warnings\":[]}",
+      "normalizedSha256": "3ed7c816ea875dd7e5ceaaf1e24620a91ccd7b8d052a6612589705cf591e82f7",
       "workflowState": "audit",
       "targetProof": null
     },
     {
       "id": "annotation-repeat-delete",
       "operation": "annotate_citations",
-      "payload": "{\"input\":{\"annotations\":[[[10,18],\"<a>\",\"</a>\"]],\"plain_text\":\"1 U.S. 1. 1 U.S. 1.\",\"source_text\":\"1 U.S. 1.\",\"unbalanced_tags\":\"unchecked\",\"use_dmp\":true},\"inputSpans\":[{\"python\":[10,18],\"text\":\"1 U.S. 1\",\"utf16\":[10,18]}],\"mappedSpans\":[{\"python\":[9,9],\"text\":\"\",\"utf16\":[9,9]}],\"mappingUpdates\":[{\"offset\":10,\"result\":9,\"side\":\"bisect_right\"},{\"offset\":18,\"result\":9,\"side\":\"bisect_left\"}],\"outcome\":{\"kind\":\"success\",\"value\":\"1 U.S. 1.<a></a>\"}}",
-      "normalizedSha256": "80e9a1c862e3484cf75aac73b34e292964f06ad3573d1a66c42907c8aacdd3e7",
+      "payload": "{\"input\":{\"annotations\":[[[10,18],\"<a>\",\"</a>\"]],\"plain_text\":\"1 U.S. 1. 1 U.S. 1.\",\"source_text\":\"1 U.S. 1.\",\"unbalanced_tags\":\"unchecked\",\"use_dmp\":true},\"inputSpans\":[{\"python\":[10,18],\"text\":\"1 U.S. 1\",\"utf16\":[10,18]}],\"mappedSpans\":[{\"python\":[9,9],\"text\":\"\",\"utf16\":[9,9]}],\"mappingUpdates\":[{\"offset\":10,\"result\":9,\"side\":\"bisect_right\"},{\"offset\":18,\"result\":9,\"side\":\"bisect_left\"}],\"outcome\":{\"kind\":\"success\",\"value\":\"1 U.S. 1.<a></a>\"},\"warnings\":[]}",
+      "normalizedSha256": "17cf4ccbf580b07e0568e614ec55e2783bd9fa739c1e6281e6d8220aef5c1f7e",
       "workflowState": "audit",
       "targetProof": null
     },
     {
       "id": "annotation-repeat-delete-builtin",
       "operation": "annotate_citations",
-      "payload": "{\"input\":{\"annotations\":[[[10,18],\"<a>\",\"</a>\"]],\"plain_text\":\"1 U.S. 1. 1 U.S. 1.\",\"source_text\":\"1 U.S. 1.\",\"unbalanced_tags\":\"unchecked\",\"use_dmp\":false},\"inputSpans\":[{\"python\":[10,18],\"text\":\"1 U.S. 1\",\"utf16\":[10,18]}],\"mappedSpans\":[{\"python\":[9,9],\"text\":\"\",\"utf16\":[9,9]}],\"mappingUpdates\":[{\"offset\":10,\"result\":9,\"side\":\"bisect_right\"},{\"offset\":18,\"result\":9,\"side\":\"bisect_left\"}],\"outcome\":{\"kind\":\"success\",\"value\":\"1 U.S. 1.<a></a>\"}}",
-      "normalizedSha256": "4c8f9e088aedd8afc82166c76ebcb218bdfcd944989c2b1859a494dd52ae3ed9",
+      "payload": "{\"input\":{\"annotations\":[[[10,18],\"<a>\",\"</a>\"]],\"plain_text\":\"1 U.S. 1. 1 U.S. 1.\",\"source_text\":\"1 U.S. 1.\",\"unbalanced_tags\":\"unchecked\",\"use_dmp\":false},\"inputSpans\":[{\"python\":[10,18],\"text\":\"1 U.S. 1\",\"utf16\":[10,18]}],\"mappedSpans\":[{\"python\":[9,9],\"text\":\"\",\"utf16\":[9,9]}],\"mappingUpdates\":[{\"offset\":10,\"result\":9,\"side\":\"bisect_right\"},{\"offset\":18,\"result\":9,\"side\":\"bisect_left\"}],\"outcome\":{\"kind\":\"success\",\"value\":\"1 U.S. 1.<a></a>\"},\"warnings\":[]}",
+      "normalizedSha256": "d84d744571bb217fa49a11dc6e6ca4f6f9af6f004cfca98ed3010f8891eb8993",
       "workflowState": "audit",
       "targetProof": null
     },
     {
       "id": "annotation-overlap",
       "operation": "annotate_citations",
-      "payload": "{\"input\":{\"annotations\":[[[0,4],\"<a>\",\"</a>\"],[[2,6],\"<b>\",\"</b>\"]],\"plain_text\":\"abcdef\",\"source_text\":\"\",\"unbalanced_tags\":\"unchecked\",\"use_dmp\":true},\"inputSpans\":[{\"python\":[0,4],\"text\":\"abcd\",\"utf16\":[0,4]},{\"python\":[2,6],\"text\":\"cdef\",\"utf16\":[2,6]}],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\"<a>abcd</a><b>ef</b>\"}}",
-      "normalizedSha256": "4964c581fe1acc7c2a2059b729d6028a865d7563ca173832dc5f4e7a5cf3dc38",
+      "payload": "{\"input\":{\"annotations\":[[[0,4],\"<a>\",\"</a>\"],[[2,6],\"<b>\",\"</b>\"]],\"plain_text\":\"abcdef\",\"source_text\":\"\",\"unbalanced_tags\":\"unchecked\",\"use_dmp\":true},\"inputSpans\":[{\"python\":[0,4],\"text\":\"abcd\",\"utf16\":[0,4]},{\"python\":[2,6],\"text\":\"cdef\",\"utf16\":[2,6]}],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\"<a>abcd</a><b>ef</b>\"},\"warnings\":[]}",
+      "normalizedSha256": "7c88df67e2427fb006d6b03b598d9028f9da80daaa0f98f0f6d83c6e9c2625ba",
       "workflowState": "audit",
       "targetProof": null
     },
     {
       "id": "annotation-duplicate",
       "operation": "annotate_citations",
-      "payload": "{\"input\":{\"annotations\":[[[0,4],\"<a>\",\"</a>\"],[[0,4],\"<b>\",\"</b>\"]],\"plain_text\":\"abcdef\",\"source_text\":\"\",\"unbalanced_tags\":\"unchecked\",\"use_dmp\":true},\"inputSpans\":[{\"python\":[0,4],\"text\":\"abcd\",\"utf16\":[0,4]},{\"python\":[0,4],\"text\":\"abcd\",\"utf16\":[0,4]}],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\"<a>abcd</a>ef\"}}",
-      "normalizedSha256": "815ffa017185d6d05afc5d17e7f76709ee4068fa83c43e6fd8f3111558c94306",
+      "payload": "{\"input\":{\"annotations\":[[[0,4],\"<a>\",\"</a>\"],[[0,4],\"<b>\",\"</b>\"]],\"plain_text\":\"abcdef\",\"source_text\":\"\",\"unbalanced_tags\":\"unchecked\",\"use_dmp\":true},\"inputSpans\":[{\"python\":[0,4],\"text\":\"abcd\",\"utf16\":[0,4]},{\"python\":[0,4],\"text\":\"abcd\",\"utf16\":[0,4]}],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\"<a>abcd</a>ef\"},\"warnings\":[]}",
+      "normalizedSha256": "a590f8006188d5d85f1cfef08216b2fd5871b3e9e8a10a6602ac34dad93989b3",
       "workflowState": "audit",
       "targetProof": null
     },
     {
       "id": "annotation-zero-width",
       "operation": "annotate_citations",
-      "payload": "{\"input\":{\"annotations\":[[[2,2],\"<a>\",\"</a>\"]],\"plain_text\":\"abcdef\",\"source_text\":\"\",\"unbalanced_tags\":\"unchecked\",\"use_dmp\":true},\"inputSpans\":[{\"python\":[2,2],\"text\":\"\",\"utf16\":[2,2]}],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\"ab<a></a>cdef\"}}",
-      "normalizedSha256": "db1580c8b9c1448ce63f097f919b3e12d0d5248e3f53fe03609d06de006b495c",
+      "payload": "{\"input\":{\"annotations\":[[[2,2],\"<a>\",\"</a>\"]],\"plain_text\":\"abcdef\",\"source_text\":\"\",\"unbalanced_tags\":\"unchecked\",\"use_dmp\":true},\"inputSpans\":[{\"python\":[2,2],\"text\":\"\",\"utf16\":[2,2]}],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\"ab<a></a>cdef\"},\"warnings\":[]}",
+      "normalizedSha256": "19907facb3f3b3aec3c825d9f3c9d3c430d8f58f2b71c31d9c419d3068e454f0",
       "workflowState": "audit",
       "targetProof": null
     },
     {
       "id": "annotation-invalid-mode",
       "operation": "annotate_citations",
-      "payload": "{\"input\":{\"annotations\":[],\"plain_text\":\"abcdef\",\"source_text\":\"\",\"unbalanced_tags\":\"bogus\",\"use_dmp\":true},\"inputSpans\":[],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"failure\",\"message\":\"Unknown option 'bogus\",\"type\":\"builtins.ValueError\"}}",
-      "normalizedSha256": "083140a7465d46f7b289543345370217e37debe7d98a8a6d4efabfd3ddf39c1d",
+      "payload": "{\"input\":{\"annotations\":[],\"plain_text\":\"abcdef\",\"source_text\":\"\",\"unbalanced_tags\":\"bogus\",\"use_dmp\":true},\"inputSpans\":[],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"failure\",\"message\":\"Unknown option 'bogus\",\"type\":\"builtins.ValueError\"},\"warnings\":[]}",
+      "normalizedSha256": "804203a12f636b437b247db99a08185f1ef02d2ebac553d5e5b899ac81532aa3",
       "workflowState": "audit",
       "targetProof": null
     },
     {
       "id": "annotation-empty",
       "operation": "annotate_citations",
-      "payload": "{\"input\":{\"annotations\":[],\"plain_text\":\"\",\"source_text\":\"\",\"unbalanced_tags\":\"unchecked\",\"use_dmp\":true},\"inputSpans\":[],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\"\"}}",
-      "normalizedSha256": "211b7a8dce492a4c3bed484491100f891d92aa6b5d9f1cf91b89d8de99102ba7",
+      "payload": "{\"input\":{\"annotations\":[],\"plain_text\":\"\",\"source_text\":\"\",\"unbalanced_tags\":\"unchecked\",\"use_dmp\":true},\"inputSpans\":[],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\"\"},\"warnings\":[]}",
+      "normalizedSha256": "4a83d59fb4e6eadc3bf064d26c53863df61aee6a69cef870175d2c686556c145",
       "workflowState": "audit",
       "targetProof": null
     },
     {
       "id": "annotation-no-spans-source",
       "operation": "annotate_citations",
-      "payload": "{\"input\":{\"annotations\":[],\"plain_text\":\"abc\",\"source_text\":\"Xabc\",\"unbalanced_tags\":\"unchecked\",\"use_dmp\":true},\"inputSpans\":[],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\"Xabc\"}}",
-      "normalizedSha256": "1560ac80b4e73f7588cba404e6c45db522e93ee32db72d77c5e0c11bd3fdbc9c",
+      "payload": "{\"input\":{\"annotations\":[],\"plain_text\":\"abc\",\"source_text\":\"Xabc\",\"unbalanced_tags\":\"unchecked\",\"use_dmp\":true},\"inputSpans\":[],\"mappedSpans\":[],\"mappingUpdates\":[],\"outcome\":{\"kind\":\"success\",\"value\":\"Xabc\"},\"warnings\":[]}",
+      "normalizedSha256": "ea4a692cbb62c0ae75c7be1db81d5e34c864cdbf02937417bc68d85a80e74123",
       "workflowState": "audit",
       "targetProof": null
     }

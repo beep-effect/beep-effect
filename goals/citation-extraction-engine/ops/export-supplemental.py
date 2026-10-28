@@ -71,12 +71,12 @@ def main():
     helper = importlib.import_module("observe-supplemental-text")
     text_cases = []
     for row, observed in zip(text_plan["cases"], helper.observe(text_plan["cases"]), strict=True):
-        if row["expectedOutcome"] != observed["outcome"] or row["expectedMappingUpdates"] != observed["mappingUpdates"]:
+        if row["expectedOutcome"] != observed["outcome"] or row["expectedMappingUpdates"] != observed["mappingUpdates"] or row["expectedWarnings"] != observed["warnings"]:
             raise RuntimeError(f"text probe no longer exercises planned behavior: {row['id']}")
-        payload = json.dumps({key: observed[key] for key in ["input", "mappingUpdates", "inputSpans", "mappedSpans", "outcome"]}, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+        payload = json.dumps({key: observed[key] for key in ["input", "mappingUpdates", "inputSpans", "mappedSpans", "warnings", "outcome"]}, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
         text_cases.append({"id": row["id"], "operation": row["operation"], "payload": payload,
                            "normalizedSha256": sha(payload.encode()), "workflowState": "audit", "targetProof": None})
-    output = {"schemaVersion": "citation-supplemental-extraction/v2", "scope": "Focused extraction/resolution/cleaning/annotation projections; not exhaustive supplemental or target parity proof.",
+    output = {"schemaVersion": "citation-supplemental-extraction/v3", "scope": "Focused extraction/resolution/cleaning/annotation projections; not exhaustive supplemental or target parity proof.",
               "commit": PIN, "tree": TREE, "license": "BSD-2-Clause",
               "licenseSha256": sha((root / "LICENSE").read_bytes()), "lockSha256": sha((root / "uv.lock").read_bytes()),
               "python": sys.version.split()[0], "hashSeed": "0", "clockDate": "2026-10-28",

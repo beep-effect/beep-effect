@@ -654,6 +654,15 @@ instead of silently splitting delivery or weakening scope.
   target readiness; no divergence or weakened raw-anchor contract is approved.
   Reverse through a schema/version and corpus migration with equivalent proof.
 
+- **2026-10-28 warning evidence:** require explicit warning arrays for every
+  supplemental text observation, including empty arrays; preserve logger,
+  severity, template and arguments separately. Advance the fixture to v3 and
+  the text plan to v2. The skip-mode warning is checked oracle data, not an
+  instruction to log raw citation text in the engine. Target diagnostic
+  translation/redaction remains required. Public consumer tests retain the
+  ambiguous-locator and nonempty-anchor boundaries. Reverse only through a
+  schema/corpus migration with equivalent warning and anchor controls.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from

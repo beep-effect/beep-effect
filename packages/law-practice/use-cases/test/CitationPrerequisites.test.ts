@@ -1,6 +1,7 @@
 /** Public-import-only prerequisite compatibility probe; no raw artifacts. */
 import {
   convertTextOffsetRange,
+  locateRawText,
   MAX_SOURCE_TEXT_LENGTH,
   TextOffsetRange,
   VERIFIED_SPAN_NORMALIZATION_VERSION,
@@ -38,6 +39,23 @@ describe("citation engine prerequisite compatibility", () => {
       })
     )
   );
+
+  it.effect("rejects a repeated citation locator instead of adopting the oracle diff's first occurrence", () =>
+    locateRawText("1 U.S. 1. 1 U.S. 1.", "1 U.S. 1").pipe(
+      Effect.flip,
+      Effect.tap((failure) => {
+        expect(failure.reason).toBe("ambiguous");
+        expect(failure.message).not.toContain("1 U.S.");
+        return Effect.void;
+      })
+    )
+  );
+
+  it("keeps a collapsed annotation point outside the verified nonempty range contract", () => {
+    expect(Result.isFailure(S.decodeResult(TextOffsetRange)({ start: 9, end: 9, unit: "unicode-code-point" }))).toBe(
+      true
+    );
+  });
 
   it("pins the public vocabulary and preserves reporter ambiguity", () => {
     expect(Result.isSuccess(CourtReporterArtifact)).toBe(true);

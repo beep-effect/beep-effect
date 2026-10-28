@@ -61,7 +61,7 @@ export class CitationSupplementalExtraction extends S.Opaque<
   { readonly brand: unique symbol }
 >()(
   S.Struct({
-    schemaVersion: S.tag("citation-supplemental-extraction/v2"),
+    schemaVersion: S.tag("citation-supplemental-extraction/v3"),
     scope: S.tag(
       "Focused extraction/resolution/cleaning/annotation projections; not exhaustive supplemental or target parity proof."
     ),

@@ -11,7 +11,7 @@
   "packetPath": "goals/citation-extraction-engine",
   "lifecycle": "active",
   "mission": "Deliver Effect-native observable capability parity with pinned official eyecite 2.7.6, exact verified source evidence, schema-first legal models, lawful transformations, and proven TypeScript-port extensions.",
-  "statusNote": "P0 component audits pass, including 123 explicit-presence deletion controls across all seven validators. Effect constructor tags do not supply missing decoded evidence; existing fixture schemas remain intact. Target implementation, production safety enforcement, per-family regex proof, supplemental coverage, donor decisions and final strict parity-gate integration remain open.",
+  "statusNote": "Eight portable component audits are integrated. The v3 supplemental bundle contains 39 probes, 80 coordinate records, explicit warning evidence, and 66 corruption controls; target proof stays open. Two public prerequisite consumer tests preserve ambiguous-locator and nonempty-anchor boundaries. P0 still owes divergence accounting and an adversarial corpus/benchmark contract; implementation, donor dispositions, per-family safety and final strict parity remain open.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -51,7 +51,11 @@
     "goals/citation-extraction-engine/history/evidence/2026-10-28-typescript-donor-accounting.md",
     "goals/citation-extraction-engine/history/evidence/2026-10-28-vocabulary-version-mapping.md",
     "goals/citation-extraction-engine/history/evidence/2026-10-28-limits-isolation-contract.md",
-    "goals/citation-extraction-engine/history/evidence/2026-10-28-evidence-presence-audit.md"
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-evidence-presence-audit.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-portable-parity-command.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-supplemental-extraction.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-supplemental-text.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-warning-and-p0-audit.md"
   ],
   "researchReports": [
     "research/EYECITE_BASELINE.md",
@@ -113,6 +117,10 @@
     "bun run goals/citation-extraction-engine/ops/check-vocabulary-mapping.ts",
     "bun run goals/citation-extraction-engine/ops/check-safety-contract.ts",
     "python goals/citation-extraction-engine/ops/verify-evidence-presence.py --scratch-root \"$HOME/.cache/beep/citation-extraction-engine\"",
+    "python goals/citation-extraction-engine/ops/verify-parity-controls.py --scratch-root \"$HOME/.cache/beep/citation-extraction-engine\"",
+    "python goals/citation-extraction-engine/ops/verify-supplemental-controls.py --scratch-root \"$HOME/.cache/beep/citation-extraction-engine\"",
+    "bun run --cwd packages/law-practice/use-cases citation:parity-check",
+    "bun run --cwd packages/law-practice/use-cases citation:parity-check --audit",
     "bun run beep goals doctor",
     "bunx markdownlint-cli2 'goals/citation-extraction-engine/**/*.md'",
     "git diff --check origin/main...HEAD -- goals/citation-extraction-engine goals/INDEX.md THIRD_PARTY_NOTICES.md",
@@ -135,6 +143,58 @@
     {
       "path": "ops/check-operations.ts",
       "purpose": "Validate portable public-operation payload/artifact hashes, source accounting, coordinate and membership evidence; not a final parity gate."
+    },
+    {
+      "path": "ops/check-parity.ts",
+      "purpose": "Run the fixed portable evidence composition; audit mode validates current evidence, default mode requires full completion proof."
+    },
+    {
+      "path": "ops/check-supplemental.ts",
+      "purpose": "Validate focused supplemental extraction/resolution/text/warning evidence and reject unfinished target proof in default mode."
+    },
+    {
+      "path": "ops/export-supplemental.py",
+      "purpose": "Generate synthetic supplemental observations only from the clean pinned official oracle."
+    },
+    {
+      "path": "ops/observe-supplemental-text.py",
+      "purpose": "Source-bound observation helper for public text operations, mapping traces and warnings; invoked by the supplemental exporter."
+    },
+    {
+      "path": "ops/verify-parity-controls.py",
+      "purpose": "Prove package-command baselines and rejection paths with isolated copies."
+    },
+    {
+      "path": "ops/verify-supplemental-controls.py",
+      "purpose": "Prove supplemental semantic and presence rejection paths using rehashed temporary payloads."
+    },
+    {
+      "path": "ops/check-assertions.ts",
+      "purpose": "Validate official assertion/loop payloads, producer references and source ownership."
+    },
+    {
+      "path": "ops/check-ledgers.ts",
+      "purpose": "Reconcile source, capability, canonical case and expanded regex projections, with strict completion mode."
+    },
+    {
+      "path": "ops/check-safety-contract.ts",
+      "purpose": "Validate the frozen limits/default contract and owned-process isolation control evidence."
+    },
+    {
+      "path": "ops/check-typescript-donors.ts",
+      "purpose": "Validate both pinned donor export/test inventories and disposition proof, with strict completion mode."
+    },
+    {
+      "path": "ops/check-vocabulary-mapping.ts",
+      "purpose": "Validate frozen oracle identity mapping against public vocabulary identities and version differences."
+    },
+    {
+      "path": "ops/export-policy-contract.ts",
+      "purpose": "Export the annotated absolute maxima and explicit default policy as hash-bound maintainer evidence."
+    },
+    {
+      "path": "ops/export-public-vocabulary.ts",
+      "purpose": "Export the versioned public court/reporter vocabulary API for pinned oracle compatibility mapping."
     }
   ]
 }

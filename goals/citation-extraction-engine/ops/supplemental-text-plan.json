@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "citation-supplemental-text-plan/v1",
+  "schemaVersion": "citation-supplemental-text-plan/v2",
   "cases": [
     {
       "id": "clean-none",
@@ -12,7 +12,8 @@
         "kind": "success",
         "value": " \tfoo\r\nbar​ "
       },
-      "expectedMappingUpdates": []
+      "expectedMappingUpdates": [],
+      "expectedWarnings": []
     },
     {
       "id": "clean-inline",
@@ -25,7 +26,8 @@
         "kind": "success",
         "value": " foo\r\nbar​ "
       },
-      "expectedMappingUpdates": []
+      "expectedMappingUpdates": [],
+      "expectedWarnings": []
     },
     {
       "id": "clean-all",
@@ -38,7 +40,8 @@
         "kind": "success",
         "value": " foo bar "
       },
-      "expectedMappingUpdates": []
+      "expectedMappingUpdates": [],
+      "expectedWarnings": []
     },
     {
       "id": "clean-underscores",
@@ -51,7 +54,8 @@
         "kind": "success",
         "value": "ab_c"
       },
-      "expectedMappingUpdates": []
+      "expectedMappingUpdates": [],
+      "expectedWarnings": []
     },
     {
       "id": "clean-xml-html",
@@ -64,7 +68,8 @@
         "kind": "success",
         "value": "1 U.S. 1."
       },
-      "expectedMappingUpdates": []
+      "expectedMappingUpdates": [],
+      "expectedWarnings": []
     },
     {
       "id": "clean-html-entities",
@@ -77,7 +82,8 @@
         "kind": "success",
         "value": "a  b &c"
       },
-      "expectedMappingUpdates": []
+      "expectedMappingUpdates": [],
+      "expectedWarnings": []
     },
     {
       "id": "clean-empty-html",
@@ -91,7 +97,8 @@
         "type": "lxml.etree.ParserError",
         "message": "Document is empty"
       },
-      "expectedMappingUpdates": []
+      "expectedMappingUpdates": [],
+      "expectedWarnings": []
     },
     {
       "id": "clean-unknown",
@@ -105,7 +112,8 @@
         "type": "builtins.ValueError",
         "message": "clean_text steps must be callable or one of ['html', 'inline_whitespace', 'all_whitespace', 'underscores', 'xml']"
       },
-      "expectedMappingUpdates": []
+      "expectedMappingUpdates": [],
+      "expectedWarnings": []
     },
     {
       "id": "clean-order-a",
@@ -118,7 +126,8 @@
         "kind": "success",
         "value": "a b"
       },
-      "expectedMappingUpdates": []
+      "expectedMappingUpdates": [],
+      "expectedWarnings": []
     },
     {
       "id": "clean-order-b",
@@ -131,7 +140,8 @@
         "kind": "success",
         "value": "a  b"
       },
-      "expectedMappingUpdates": []
+      "expectedMappingUpdates": [],
+      "expectedWarnings": []
     },
     {
       "id": "annotation-identity",
@@ -147,7 +157,8 @@
         "kind": "success",
         "value": "x <a>1 U.S. 1</a>."
       },
-      "expectedMappingUpdates": []
+      "expectedMappingUpdates": [],
+      "expectedWarnings": []
     },
     {
       "id": "annotation-astral",
@@ -163,7 +174,8 @@
         "kind": "success",
         "value": "😀 <a>1 U.S. 1</a>."
       },
-      "expectedMappingUpdates": []
+      "expectedMappingUpdates": [],
+      "expectedWarnings": []
     },
     {
       "id": "annotation-markup",
@@ -190,7 +202,8 @@
           "side": "bisect_left",
           "result": 17
         }
-      ]
+      ],
+      "expectedWarnings": []
     },
     {
       "id": "annotation-unbalanced-unchecked",
@@ -217,7 +230,8 @@
           "side": "bisect_left",
           "result": 16
         }
-      ]
+      ],
+      "expectedWarnings": []
     },
     {
       "id": "annotation-unbalanced-skip",
@@ -243,6 +257,14 @@
           "offset": 10,
           "side": "bisect_left",
           "result": 16
+        }
+      ],
+      "expectedWarnings": [
+        {
+          "logger": "eyecite.annotate",
+          "level": "WARNING",
+          "messageTemplate": "Citation was not annotated due to unbalanced tags %s",
+          "arguments": ["1 U.S. <span>1"]
         }
       ]
     },
@@ -271,7 +293,8 @@
           "side": "bisect_left",
           "result": 16
         }
-      ]
+      ],
+      "expectedWarnings": []
     },
     {
       "id": "annotation-repeat-insert",
@@ -298,7 +321,8 @@
           "side": "bisect_left",
           "result": 8
         }
-      ]
+      ],
+      "expectedWarnings": []
     },
     {
       "id": "annotation-repeat-insert-builtin",
@@ -325,7 +349,8 @@
           "side": "bisect_left",
           "result": 8
         }
-      ]
+      ],
+      "expectedWarnings": []
     },
     {
       "id": "annotation-repeat-delete",
@@ -352,7 +377,8 @@
           "side": "bisect_left",
           "result": 9
         }
-      ]
+      ],
+      "expectedWarnings": []
     },
     {
       "id": "annotation-repeat-delete-builtin",
@@ -379,7 +405,8 @@
           "side": "bisect_left",
           "result": 9
         }
-      ]
+      ],
+      "expectedWarnings": []
     },
     {
       "id": "annotation-overlap",
@@ -395,7 +422,8 @@
         "kind": "success",
         "value": "<a>abcd</a><b>ef</b>"
       },
-      "expectedMappingUpdates": []
+      "expectedMappingUpdates": [],
+      "expectedWarnings": []
     },
     {
       "id": "annotation-duplicate",
@@ -411,7 +439,8 @@
         "kind": "success",
         "value": "<a>abcd</a>ef"
       },
-      "expectedMappingUpdates": []
+      "expectedMappingUpdates": [],
+      "expectedWarnings": []
     },
     {
       "id": "annotation-zero-width",
@@ -427,7 +456,8 @@
         "kind": "success",
         "value": "ab<a></a>cdef"
       },
-      "expectedMappingUpdates": []
+      "expectedMappingUpdates": [],
+      "expectedWarnings": []
     },
     {
       "id": "annotation-invalid-mode",
@@ -444,7 +474,8 @@
         "type": "builtins.ValueError",
         "message": "Unknown option 'bogus"
       },
-      "expectedMappingUpdates": []
+      "expectedMappingUpdates": [],
+      "expectedWarnings": []
     },
     {
       "id": "annotation-empty",
@@ -460,7 +491,8 @@
         "kind": "success",
         "value": ""
       },
-      "expectedMappingUpdates": []
+      "expectedMappingUpdates": [],
+      "expectedWarnings": []
     },
     {
       "id": "annotation-no-spans-source",
@@ -476,7 +508,8 @@
         "kind": "success",
         "value": "Xabc"
       },
-      "expectedMappingUpdates": []
+      "expectedMappingUpdates": [],
+      "expectedWarnings": []
     }
   ]
 }
