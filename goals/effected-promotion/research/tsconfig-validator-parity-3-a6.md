@@ -15,8 +15,8 @@ tsconfig document, plus docgen's resolved compiler options for every `docgen.jso
    `ops/manifest.json` entry, committed unchanged as `29a9f60e43` (the recording commit), so that commit's script
    over `931e52792e`'s source reproduces the record. The switch commit rebinds `MODEL` to `TsconfigValidator` and
    docgen's `encodeExamplesTsconfig`.
-3. After: the same `--record` on the committed, clean final lane tree (`commit` is the last code commit, `dirty:
-   false`; the record is reproducible by checking that commit out and running `--record`).
+3. After: the same `--record` on the committed, clean final lane tree (`commit: 402634ec89`, `dirty: false`; the
+   record is reproducible by checking that commit out and running `--record`).
 4. `--compare before after`, which classifies every difference against the intended verdict shifts (each one an
    inverted test in `packages/tooling/library/repo-tsconfig/test/TsconfigValidator.test.ts`) and fails on any
    unclassified difference. All three records are committed, so the comparison reproduces from them alone:
@@ -24,8 +24,8 @@ tsconfig document, plus docgen's resolved compiler options for every `docgen.jso
    | Record | sha256 |
    | --- | --- |
    | `tsconfig-validator-parity-3-a6-before.json` | `e277b730f11cec7a51907aece3605a873c9000e643d691250126a17ad0de18eb` |
-   | `tsconfig-validator-parity-3-a6-after.json` | `b89e81095f4459d70931760b7dabc3154bc10e315d63bf96d55bfdeb54a53988` |
-   | `tsconfig-validator-parity-3-a6-compare.json` | `355995c3fc12103ed0c3819cc563f6274c40f2b78368d1f0574a9d3d03715c73` |
+   | `tsconfig-validator-parity-3-a6-after.json` | `f837a5a0e3330c39f075caf21a4e6175f64a18d9cc6c22510d81e882f1e52aef` |
+   | `tsconfig-validator-parity-3-a6-compare.json` | `a1df915fe66ae8108d06e5268a9f5c81f0c08bb4ac1ab085382be4e01a0dc110` |
 
 The tsconfig corpus is the corpus-A filter of `repo-tsconfig-differential.ts`: every git-tracked `*tsconfig*.json`
 outside `goals/**/research/**`, 686 files. It includes documents that are not tsconfigs (the `package.json` and

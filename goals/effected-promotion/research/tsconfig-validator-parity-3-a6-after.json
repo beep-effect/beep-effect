@@ -1,8 +1,8 @@
 {
   "tool": "goals/effected-promotion/ops/tsconfig-validator-parity.ts",
   "model": "@beep/repo-tsconfig TsconfigValidator",
-  "commit": "29a9f60e43280309fcc664c53b4bdea60b36aa3f",
-  "dirty": true,
+  "commit": "402634ec8910c236945f640cd5cac3a8c04bee67",
+  "dirty": false,
   "tsconfigs": {
     "count": 686,
     "accept": 662,

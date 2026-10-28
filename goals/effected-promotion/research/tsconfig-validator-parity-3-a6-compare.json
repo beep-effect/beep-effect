@@ -8,7 +8,7 @@
   },
   "after": {
     "model": "@beep/repo-tsconfig TsconfigValidator",
-    "commit": "29a9f60e43280309fcc664c53b4bdea60b36aa3f",
+    "commit": "402634ec8910c236945f640cd5cac3a8c04bee67",
     "tsconfigs": 686,
     "docgen": 181
   },
@@ -52,7 +52,7 @@
     },
     {
       "id": "new-enum-value-accepted",
-      "pinnedBy": "TsconfigValidator.test.ts: accepts the @beep/tsconfig enum values the legacy lists lacked"
+      "pinnedBy": "TsconfigValidator.test.ts: accepts the TypeScript 7 targets and library additions through ES2025"
     }
   ],
   "differences": [
