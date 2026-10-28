@@ -809,7 +809,7 @@ layer(TestLayer, { timeout: "60 seconds" })("skills patch", (it) => {
 });
 
 // The interactive decider runs behind `CliPrompt.gateTerminal`: the gate decides from the audience and the
-// terminal whether a person can be asked, and a run that cannot prompt quits before reading a key.
+// terminal whether a person can be asked, and a run that cannot prompt fails before reading a key.
 layer(TestLayer, { timeout: "60 seconds" })("skills review prompt gate", (it) => {
   const terminalOf = Effect.fn("SkillsReviewTest.terminalOf")(function* (handle: TestTerminalHandle) {
     return Context.get(yield* Layer.build(handle.layer), Terminal.Terminal);
@@ -827,7 +827,7 @@ layer(TestLayer, { timeout: "60 seconds" })("skills review prompt gate", (it) =>
     return itemAt(yield* list(review, repoRoot), 1);
   });
 
-  it.effect("quits without reading a key when the run cannot prompt", () =>
+  it.effect("fails with a decisions-file hint without reading a key when the run cannot prompt", () =>
     Effect.gen(function* () {
       const item = yield* firstItem();
       const terminal = yield* TestTerminal.make({ columns: 90, rows: 40 });
@@ -836,8 +836,9 @@ layer(TestLayer, { timeout: "60 seconds" })("skills review prompt gate", (it) =>
         Effect.provideService(Terminal.Terminal, yield* terminalOf(terminal)),
         Effect.provideService(Stdio.Stdio, yield* stdioOf(false))
       );
-      const decided = yield* decider.answer(item);
-      assertTrue(S.is(SkillReviewQuit)(decided));
+      const error = yield* decider.answer(item).pipe(Effect.flip);
+      expect(error._tag).toBe("SkillsCommandError");
+      expect(error.message).toContain("--decisions <file>");
       expect(yield* terminal.reads).toEqual({ keys: 0, lines: 0, subscriptions: 0 });
       expect(yield* terminal.pending).toBe(1);
       expect(yield* terminal.output).toBe("");

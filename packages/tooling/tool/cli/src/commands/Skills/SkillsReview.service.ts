@@ -450,7 +450,8 @@ const SkillReviewPromptGate: Layer.Layer<Terminal.Terminal, never, Terminal.Term
  * offers skip and quit, and an interrupted prompt (Ctrl-C) quits, so the
  * decisions already recorded stay in the ledger. The prompt runs behind
  * `CliPrompt.gateTerminal`: in a run that cannot prompt (a pipe, an agent, a
- * CI) the first prompt quits without reading a key.
+ * CI) the first answer fails with a `SkillsCommandError` directing the caller
+ * to `--decisions <file>`, without reading a key.
  *
  * **Example** (Inspect the constructor)
  *
@@ -473,6 +474,12 @@ export const makeSkillReviewDeciderPrompt = Effect.gen(function* () {
       yield* Console.log(`skills review: ${A.length(queue)} hunk(s) queued.`);
     }),
     answer: Effect.fn("SkillReviewDeciderPrompt.answer")(function* (item) {
+      if (!(yield* CliInteractive.pipe(Effect.provide(gate)))) {
+        return yield* SkillsCommandError.make({
+          message:
+            "Interactive skill review requires a human terminal; use --decisions <file> for a non-interactive run.",
+        });
+      }
       yield* Console.log(itemHeader(item));
       const choices = A.appendAll(
         item.kind === "classification" ? classificationChoices : conflictChoices(item),
