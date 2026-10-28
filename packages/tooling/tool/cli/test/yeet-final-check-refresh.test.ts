@@ -23,7 +23,10 @@ const SCHEMA_FIRST = "standards/schema-first.inventory.jsonc";
 const EFFECT_VITEST = "standards/effect-vitest.inventory.jsonc";
 const SPEC = "goals/demo/SPEC.md";
 
-const receiptFor = (headSha: string, overrides: Partial<{ readonly verdict: "pass" | "fail"; readonly complete: boolean }> = {}) =>
+const receiptFor = (
+  headSha: string,
+  overrides: Partial<{ readonly verdict: "pass" | "fail"; readonly complete: boolean }> = {}
+) =>
   FinalCheckReceipt.make({
     schemaVersion: "yeet-final-check/v1",
     headSha,

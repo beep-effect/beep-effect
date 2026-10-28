@@ -634,7 +634,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet ready gate run", (
       }).pipe(Effect.flip);
       expect(error).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "final-check" });
       expect(error.message).toContain(`no final-check receipt for head ${headSha}`);
-      expect(error.message).toContain(`on ancestor ${Str.slice(0, 12)(receiptHead)}, does not carry`);
+      expect(error.message).toContain(
+        `the nearest ancestor receipt, on ${Str.slice(0, 12)(receiptHead)}, does not carry`
+      );
       expect(error.message).toContain("src/index.ts");
       expect(yield* Ref.get(calls)).toEqual([]);
     })
