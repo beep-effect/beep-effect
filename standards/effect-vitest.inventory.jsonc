@@ -2033,27 +2033,6 @@
       "reason": "The fresh TestConsole starts inside the application effect, after runner lifecycle logging; the shared it.layer console captured CI start diagnostics and broke the exact stdout and stderr assertions (CI=1 reproduces three failures). Owner: @beep/repo-cli. Exit: retire when the runner's lifecycle logging goes to a separate logger, so the shared it.layer TestConsole sees only application output (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:packages/tooling/tool/cli/test/roadmap-refs.test.ts:78:provideScopedLayer@13#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/roadmap-refs.test.ts",
-      "line": 78,
-      "endLine": 78,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:1a5de86f8ef2f81e738b256351f0a80736b3a505d5788eaa4c6c2cef89009700",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(testLayer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV002:packages/tooling/tool/cli/test/setup-effect-ref.test.ts:80:provide@55#1",
       "lens": "resource",
       "ruleId": "EV002",
@@ -10150,28 +10129,6 @@
       "reason": "FsUtilsLive traverses the workspace with native SharedGlob, so MemoryFileSystem alone would change discovery semantics (goals/effect-vitest-canon/research/cli-package-scripts-policy-proof.json). Owner: @beep/repo-cli. Exit: retire when SharedGlob runs over the Effect FileSystem."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/package-verify.test.ts:25:@effect/platform-node/NodeFileSystem@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/package-verify.test.ts",
-      "line": 25,
-      "endLine": 25,
-      "symbol": "@effect/platform-node/NodeFileSystem",
-      "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
-      "class": "platform-filesystem-candidate",
-      "evidence": "import * as NodeFileSystem from \"@effect/platform-node/NodeFileSystem\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "NodeChildProcessSpawner.layer and Bun.spawnSync run git over a real temp package. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when package-verify runs behind a scripted spawner over a seeded volume."
-    },
-    {
       "id": "EV010:packages/tooling/tool/cli/test/palantiri-command.test.ts:34:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -10478,28 +10435,6 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "The subject verifies writer boot identity from /proc/sys/kernel/random/boot_id, fsyncs archive directories, probes destination capacity and uses real hard links, symlinks and spawned children. Memory trial (#1855 wave 8): 6 of 14 fail (boot_id NotFound, directory sync BadResource EISDIR, capacity probe failure). Owner: @beep/repo-cli. Exit: retire when the corpus writer reads boot identity, directory sync and capacity through an injected platform service (#1855 wave 8 register)."
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/roadmap-refs.test.ts:8:@effect/platform-node@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/roadmap-refs.test.ts",
-      "line": 8,
-      "endLine": 8,
-      "symbol": "@effect/platform-node",
-      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The subject changes the process-global working directory with process.chdir, which needs the directory on the real filesystem. #1875 wave 7 memory trial (H3): fails with ENOENT on chdir into the temp directory. Owner: @beep/repo-cli. Exit: retire when roadmap-refs takes its root through a --root option or an injected working-directory service (the held src seam) (#1855 wave 8 register)."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/runners-bake.test.ts:28:@effect/platform-node/NodeFileSystem@0#1",
