@@ -238,6 +238,24 @@ projections and 7 Models blocks are identical, and the 8 probe shifts are each c
 | repo-cli `CreatePackage/internal/LabIdentitySegment.ts` | #88 | excluded | Unchanged by R8; see the excluded row below. |
 | repo-cli `Yeet/internal/GhOps.ts` | #281 | follow-up goal (W4-l) | Unchanged by R8. |
 
+## Root test shim onto `@beep/glob` (roadmap R2a, SPEC W4-p)
+
+R2a is a matcher swap and a dependency drop in the root `vitest.setup.ts` Bun shim. Parity is recorded in
+`research/glob-shim-census-r2a.json` (the census: 16 patterns over 66,959 tracked paths and directories at
+f77a32de6d, picomatch 4.0.7 beside `@beep/glob` `GlobPattern` with `dot: true`, each side a count and sha256)
+and explained in `research/glob-shim-census-r2a.md`; `ops/glob-shim-census.ts` recomputes the kit side and
+reports 16/16 identical to the record. The five `new Bun.Glob` literals and every vitest glob match the same
+set under both engines; the three trailing-`/**` probes differ, and real `Bun.Glob.match` agrees with the kit
+on every witness. `packages/tooling/tool/cli/test/vitest-bun-glob-shim.test.ts` pins `match` and `scanSync`
+on Bun (native) and Node (shim).
+
+| Site | Map id | Status | Notes |
+| --- | --- | --- | --- |
+| `vitest.setup.ts` `GlobShim.match` (picomatch) | #60 | adopted (R2a) | `GlobPattern.compileResult` once per shim instance under `GlobPatternOptions.make({ dot: true })`; a guard trip throws from the constructor. The walker and the shim class stay. Found and fixed alongside: `scanSync` listed directories by default, Bun defaults `onlyFiles` to `true`. |
+| root `package.json` `toml` devDependency and catalog entry, `Bun.TOML` shim | #234 | dropped (R2a) | No reader of `Bun.TOML` in the repo (`@beep/ai-sync` and repo-cli parse TOML with `effect/encoding/Toml`; `@beep/toml` is the kit). `toml@5.0.1` leaves `bun.lock`. |
+| root `package.json` `picomatch` and `@types/picomatch` devDependencies and catalog entries | #235 | dropped (R2a) | `picomatch@4.0.7` stays in `bun.lock` only as a `vite`, `tinyglobby` and `fdir` transitive; `@types/picomatch@4.0.3` leaves it. |
+| The six `new Bun.Glob(...)` callers (`Cache.command.ts`, `MatchPerson.ts`, three repo-cli tests, effect-drizzle `import-boundary.test.ts`) | - | out of scope (W4-p) | They keep calling `Bun.Glob`; the shim serves them on Node. |
+
 ## Backfill of the remaining map sites (R0, W4-k)
 
 Every confirmed and partial site of the map that had no row above (the earlier `2d-later` rows now carry their plan PR or exclusion too), so each one is migrated, queued under a
@@ -329,9 +347,9 @@ A row naming two PRs is split between them; #143 also appears above for its pack
 | repo-cli internal/repo-run/GitWorktree.ts | #104 | partial | migrated (R10, W4-l) | `isRegisteredWorktree` onto `Git.worktreeList`, `removeGitWorktree` onto `Git.worktreeRemove` (option-like paths refused); prune stays a single capture call (no kit prune member). Parity: `research/git-adoption-differential-r10.json`. |
 | repo-cli Yeet/internal/ProvenanceFooter.ts | #108 | partial | migrated (R10, W4-l) | Both config reads onto `Git.configGet`. Not `Git.remoteUrl`: `git remote get-url` applies `url.*.insteadOf` rewrites, the old `config --get` read did not. The `rev-parse HEAD` read stays on the Yeet git layer (#101, follow-up goal). Parity: `research/git-adoption-differential-r10.json`. |
 | repo-cli internal/repo-run/GitExec.ts | #100 | partial | dead collectors deleted (R10); follow-up goal (W4-l) | R10 deleted `collectDirtyPaths` and `collectChangedPathsSinceBase` (no importer: `git grep -w` outside `goals/` hit only their definitions and the generated instrumentation catalog). The parsers wait for kit gaps (follow-up goal). |
-| vitest.setup.ts | #60 | partial | queued: R2a | `GlobShim` matches through `@beep/glob`; the shim class stays (W4-p). |
-| root package.json | #234 | partial | queued: R2a | `toml` and its `Bun.TOML` shim leave the root. |
-| root package.json | #235 | partial | queued: R2a | `picomatch` and `@types/picomatch` leave the root. |
+| vitest.setup.ts | #60 | partial | adopted (R2a, W4-p) | `GlobShim.match` compiles through `@beep/glob` `GlobPattern` (`dot: true`); the shim class and walker stay for Node runs of Bun-targeted suites. See the root test shim section above. |
+| root package.json | #234 | partial | dropped (R2a) | `toml` and its `Bun.TOML` shim left the root manifest and catalog; nothing in the repo read `Bun.TOML`. |
+| root package.json | #235 | partial | dropped (R2a) | `picomatch` and `@types/picomatch` left the root manifest and catalog; `picomatch@4.0.7` stays in `bun.lock` as a vite, tinyglobby and fdir transitive. |
 | repo-cli internal/GlobPattern.ts | #57 | partial | queued: R2b | `internal/GlobPattern.ts` onto `@beep/glob`; TestTypecheckCoverage's tsc matcher stays. |
 | repo-cli Laws/EffectImports.ts | #59 | partial | queued: R2b | `tinyglobby` out of `EffectImports.ts` (closes Duplicate glob matching). |
 | repo-cli internal/GlobPattern.ts, internal/quality/TestTypecheckCoverage.ts | #263 | partial | queued: R2b | `internal/GlobPattern.ts` onto `@beep/glob`; TestTypecheckCoverage's tsc matcher stays. |
