@@ -60,6 +60,35 @@ The grammar has no escaping, deliberately: names match `[A-Za-z][A-Za-z0-9_-]*`,
 
 Attributed markers are a one-way compatibility break: a scanner predating this feature does not recognize one at all, so the block it opens stops being a managed section for that tool. Writing attributes into a file another tool also manages is a decision, not a detail.
 
+### Literal markers
+
+A file whose markers were written before this package existed can be managed without migrating them. `LiteralMarkerDialect` lists a fixed `BEGIN`/`END` spelling per key; a listed key is rendered and scanned with exactly that spelling, and every other key keeps the ruled form:
+
+```ts
+import { CommentStyle } from "@beep/managed-section/CommentStyle";
+import { SectionId } from "@beep/managed-section/Section";
+import { LiteralMarkerDialect, SectionMarkers } from "@beep/managed-section/SectionDialect";
+import { SectionDocument } from "@beep/managed-section/SectionDocument";
+import * as Result from "effect/Result";
+
+const dialect = LiteralMarkerDialect.make({
+  phrase: "MANAGED SECTION",
+  styles: [CommentStyle.html],
+  markers: [SectionMarkers.make({ key: "catalog", begin: "BEGIN GENERATED: CATALOG", end: "END GENERATED: CATALOG" })],
+});
+const Catalog = SectionId.make({ key: "catalog", commentStyle: CommentStyle.html });
+const doc = SectionDocument.parseResult("# Title\n\n<!-- BEGIN GENERATED: CATALOG -->\nold\n<!-- END GENERATED: CATALOG -->\n", dialect);
+const next = Result.flatMap(doc, (document) => document.reconcile([Catalog.section("new")]));
+console.log(Result.isSuccess(next) ? next.success.text : next.failure.message);
+// # Title
+//
+// <!-- BEGIN GENERATED: CATALOG -->
+// new
+// <!-- END GENERATED: CATALOG -->
+```
+
+The scanner's guarantees carry over unchanged: a literal marker must own its line, a duplicate, orphaned, overlapping or unterminated literal section is a typed `SectionParseError`, the document's line ending is kept, and content containing a literal marker is refused. A literal marker has no attribute slot, so rendering a listed key with attributes fails as `invalidAttribute`. A ruled marker that names a listed key is ordinary text to that dialect.
+
 ## Design
 
 Ambiguity fails typed rather than being resolved by guessing: an unterminated marker, an orphaned `END`, two overlapping sections, or the same identity declared twice are all a typed `SectionParseError` naming the line, never a silent skip that leaves a duplicate block on the next run. Line endings are a first-class invariant too: the document's dominant EOL is detected at parse and every comparison is EOL-normalized, so a CRLF file does not report drift forever.
@@ -107,7 +136,9 @@ Ported from upstream `@effected/templates` (MIT, C. Spencer Beggs) through the e
 
 ### Added exports
 
-None.
+- `SectionMarkers` and `LiteralMarkerDialect` (`SectionDialect` leaf): fixed per-key marker spellings, so repo-cli's pre-existing generated regions (`BEGIN GENERATED: ...`, `beep-models:begin ...`) are managed byte for byte without a marker migration (effected-promotion R8).
+- `CommentStyle.comment`: the one spelling of a commented-out marker line, used by both marker forms.
+- `SectionDialect.spellings` and `SectionDialect.literalMatchers` (internal): the hooks `LiteralMarkerDialect` overrides; both are empty on a ruled dialect.
 
 ### Deviations
 

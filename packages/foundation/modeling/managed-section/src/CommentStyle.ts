@@ -251,4 +251,28 @@ export class CommentStyle extends S.Class<CommentStyle, { readonly brand: unique
   get isWrapped(): boolean {
     return this.suffix !== undefined;
   }
+
+  /**
+   * Comment out one line of text in this style.
+   *
+   * **Details**
+   *
+   * One space separates the prefix from the text and, for a wrapped style,
+   * the text from the suffix. Every marker a `SectionDialect` renders goes
+   * through this spelling, so a marker's comment shell is written in one place.
+   *
+   * **Example** (Comment out a line)
+   *
+   * ```ts
+   * import { CommentStyle } from "@beep/managed-section/CommentStyle";
+   *
+   * console.log(CommentStyle.html.comment("generated")) // <!-- generated -->
+   * console.log(CommentStyle.hash.comment("generated")) // # generated
+   * ```
+   * @category formatting
+   * @since 0.0.0
+   */
+  comment(text: string): string {
+    return `${this.prefix} ${text}${this.suffix === undefined ? "" : ` ${this.suffix}`}`;
+  }
 }
