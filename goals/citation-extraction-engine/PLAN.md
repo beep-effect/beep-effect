@@ -26,7 +26,9 @@ editions and 2,798 courts, with three reviewed case-reporter identity
 transitions and explicit metadata drift. P1 remains blocked on the other
 P0 gates. The 29-field limits/default policy and parent-owned process
 isolation mechanism are evidenced; production enforcement, pattern-level
-compatibility/scaling and strict evidence-presence checks remain open.
+compatibility/scaling and final parity-gate integration remain open. The
+explicit-presence audit passes all 123 deletion controls across seven
+validators; constructor defaults do not fill omitted decoded evidence.
 
 ## Delivery Rule
 

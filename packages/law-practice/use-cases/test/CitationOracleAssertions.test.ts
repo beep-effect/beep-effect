@@ -3,6 +3,7 @@ import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -55,6 +56,41 @@ const fixture = {
 const accepts = (value: unknown) => Result.isSuccess(S.decodeUnknownResult(CitationOracleAssertions)(value));
 
 describe("assertion oracle evidence", () => {
+  it.effect("requires fixed metadata during decode and encode rather than constructing defaults", () =>
+    Effect.gen(function* () {
+      const decoded = yield* S.decodeUnknownEffect(CitationOracleAssertions)(fixture);
+      const fields = [
+        "schemaVersion",
+        "scope",
+        "commit",
+        "tree",
+        "license",
+        "licenseSha256",
+        "clockDate",
+        "hashSeed",
+        "normalizationVersion",
+        "testsRun",
+        "lockSha256",
+      ] as const;
+      for (const field of fields) {
+        expect(accepts(R.remove(fixture, field))).toBe(false);
+        const encoded = yield* S.encodeUnknownEffect(CitationOracleAssertions)(R.remove(decoded, field)).pipe(
+          Effect.exit
+        );
+        expect(Exit.isFailure(encoded)).toBe(true);
+      }
+    })
+  );
+
+  it("requires observed success and relation tags inside the preserved payload", () => {
+    for (const invalid of [
+      Str.replace('"passed":true,', "")(payload),
+      Str.replace('"kind":"comparison",', "")(payload),
+    ]) {
+      expect(accepts({ ...fixture, events: [{ ...event, payload: invalid }] })).toBe(false);
+    }
+  });
+
   it.effect("preserves original assertion bytes through both codec directions", () =>
     Effect.gen(function* () {
       const decoded = yield* S.decodeUnknownEffect(CitationOracleAssertions)(fixture);

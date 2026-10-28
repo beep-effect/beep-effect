@@ -11,7 +11,7 @@
   "packetPath": "goals/citation-extraction-engine",
   "lifecycle": "active",
   "mission": "Deliver Effect-native observable capability parity with pinned official eyecite 2.7.6, exact verified source evidence, schema-first legal models, lawful transformations, and proven TypeScript-port extensions.",
-  "statusNote": "P0 source/case/donor/vocabulary accounting passes component audits. The 29-field hard-limit/effective-policy schema and explicit fixture are frozen; 12 Node/Bun process-stop controls pass with confirmed cleanup. Production enforcement, per-family regex compatibility/scaling, supplemental probes, donor decisions and strict final parity/evidence-presence checks remain open; no P1 completion claim.",
+  "statusNote": "P0 component audits pass, including 123 explicit-presence deletion controls across all seven validators. Effect constructor tags do not supply missing decoded evidence; existing fixture schemas remain intact. Target implementation, production safety enforcement, per-family regex proof, supplemental coverage, donor decisions and final strict parity-gate integration remain open.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -50,7 +50,8 @@
     "goals/citation-extraction-engine/history/evidence/2026-10-28-source-case-ledgers.md",
     "goals/citation-extraction-engine/history/evidence/2026-10-28-typescript-donor-accounting.md",
     "goals/citation-extraction-engine/history/evidence/2026-10-28-vocabulary-version-mapping.md",
-    "goals/citation-extraction-engine/history/evidence/2026-10-28-limits-isolation-contract.md"
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-limits-isolation-contract.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-evidence-presence-audit.md"
   ],
   "researchReports": [
     "research/EYECITE_BASELINE.md",
@@ -111,6 +112,7 @@
     "bun run goals/citation-extraction-engine/ops/check-typescript-donors.ts",
     "bun run goals/citation-extraction-engine/ops/check-vocabulary-mapping.ts",
     "bun run goals/citation-extraction-engine/ops/check-safety-contract.ts",
+    "python goals/citation-extraction-engine/ops/verify-evidence-presence.py --scratch-root \"$HOME/.cache/beep/citation-extraction-engine\"",
     "bun run beep goals doctor",
     "bunx markdownlint-cli2 'goals/citation-extraction-engine/**/*.md'",
     "git diff --check origin/main...HEAD -- goals/citation-extraction-engine goals/INDEX.md THIRD_PARTY_NOTICES.md",

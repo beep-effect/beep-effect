@@ -7,7 +7,7 @@ import * as S from "effect/Schema";
 
 const program = Effect.gen(function* () {
   const text = yield* Effect.tryPromise(() =>
-    Bun.file(new URL("../history/evidence/oracle-discovery.json", import.meta.url)).text()
+    Bun.file(process.argv[2] ?? new URL("../history/evidence/oracle-discovery.json", import.meta.url)).text()
   );
   const report = yield* S.decodeUnknownEffect(S.fromJsonString(CitationOracleDiscovery))(text);
   const exporter = yield* Effect.tryPromise(() => Bun.file(new URL("./audit-oracle.py", import.meta.url)).bytes());

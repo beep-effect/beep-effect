@@ -186,9 +186,11 @@ Full package audit/docgen pass. The portable safety checker validates exact
 maxima/defaults, source hashes, the complete control matrix, successful matches,
 parent responsiveness and confirmed force-stop cleanup. All fourteen actual-
 validator corruption controls fail as required, including absent exit proof.
-Fixed observational values use required literals rather than constructor tags
-that could insert an omitted observation. The remaining fixture/proof schemas
-need the same explicit-presence audit during final parity-gate integration.
+Fixed observational values use required literals. The subsequent
+[evidence-presence audit](./2026-10-28-evidence-presence-audit.md) confirms
+that Effect 4.0.6 constructor tags also require field presence during decoding.
+All 123 end-to-end omission controls reject altered evidence; no decoder
+change was needed.
 
 ## Remaining work
 

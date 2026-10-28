@@ -28,6 +28,7 @@ Current evidence:
 - [Donor accounting](./history/evidence/2026-10-28-typescript-donor-accounting.md)
 - [Vocabulary mapping](./history/evidence/2026-10-28-vocabulary-version-mapping.md)
 - [Limits/isolation](./history/evidence/2026-10-28-limits-isolation-contract.md)
+- [Evidence presence](./history/evidence/2026-10-28-evidence-presence-audit.md)
 
 ## Mission
 
