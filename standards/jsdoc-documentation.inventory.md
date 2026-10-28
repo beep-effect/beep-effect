@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-10-27T20:27:23.048Z
+Generated: 2026-10-28T00:53:43.483Z
 
 ## Scope
 
@@ -11,23 +11,23 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | Metric | Count |
 |---|---:|
 | packages | 183 |
-| cleanPackages | 118 |
+| cleanPackages | 121 |
 | packagesWithoutPublicSrcSurface | 2 |
-| packagesNeedingRemediation | 63 |
+| packagesNeedingRemediation | 60 |
 | publicModules | 3546 |
 | publicExports | 25242 |
-| openModules | 330 |
-| openExports | 346 |
+| openModules | 325 |
+| openExports | 230 |
 | missingExportExamples | 7 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
 | forbiddenTagFindings | 0 |
 | malformedConditionalTagFindings | 0 |
-| exampleImportFindings | 262 |
+| exampleImportFindings | 145 |
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
-| undescribed-see | 10 |
-| multiple-description-paragraphs | 364 |
+| undescribed-see | 9 |
+| multiple-description-paragraphs | 351 |
 | leading-blank | 0 |
 | trailing-blank | 0 |
 | invalid-heading | 1 |
@@ -40,7 +40,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | duplicate-example | 0 |
 | loose-ts-fence | 0 |
 | forbidden-remarks | 0 |
-| no-root-package-import | 256 |
+| no-root-package-import | 139 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -93,7 +93,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 35 | `@beep/workspace-use-cases` | `packages/workspace/use-cases` | needs-remediation | 12 | 45 | 1 | 0 |
 | 36 | `@beep/shared-use-cases` | `packages/shared/use-cases` | clean | 6 | 14 | 0 | 0 |
 | 37 | `@beep/nlp` | `packages/foundation/modeling/nlp` | needs-remediation | 28 | 313 | 9 | 9 |
-| 38 | `@beep/file-processing` | `packages/foundation/capability/file-processing` | needs-remediation | 34 | 183 | 0 | 19 |
+| 38 | `@beep/file-processing` | `packages/foundation/capability/file-processing` | clean | 34 | 183 | 0 | 0 |
 | 39 | `@beep/epistemic-domain` | `packages/epistemic/domain` | needs-remediation | 51 | 241 | 7 | 2 |
 | 40 | `@beep/codegen-kit` | `packages/tooling/library/codegen-kit` | clean | 6 | 45 | 0 | 0 |
 | 41 | `@beep/phoenix` | `packages/drivers/phoenix` | clean | 5 | 49 | 0 | 0 |
@@ -188,13 +188,13 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 130 | `@beep/sanity` | `packages/drivers/sanity` | clean | 4 | 15 | 0 | 0 |
 | 131 | `@beep/epistemic-ui` | `packages/epistemic/ui` | clean | 6 | 14 | 0 | 0 |
 | 132 | `@beep/graph-3d` | `packages/drivers/graph-3d` | needs-remediation | 7 | 17 | 2 | 0 |
-| 133 | `@beep/ontology` | `packages/foundation/modeling/ontology` | needs-remediation | 15 | 157 | 5 | 54 |
+| 133 | `@beep/ontology` | `packages/foundation/modeling/ontology` | clean | 15 | 157 | 0 | 0 |
 | 134 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 473 | 4454 | 47 | 35 |
 | 135 | `@beep/dock-react` | `packages/foundation/ui-system/dock-react` | clean | 3 | 12 | 0 | 0 |
 | 136 | `@beep/drizzle` | `packages/drivers/drizzle` | clean | 3 | 11 | 0 | 0 |
 | 137 | `@beep/repo-workspaces` | `packages/tooling/library/repo-workspaces` | clean | 27 | 244 | 0 | 0 |
 | 138 | `@beep/github-references` | `packages/foundation/modeling/github-references` | clean | 4 | 28 | 0 | 0 |
-| 139 | `@beep/brand` | `packages/foundation/ui-system/brand` | needs-remediation | 7 | 50 | 0 | 43 |
+| 139 | `@beep/brand` | `packages/foundation/ui-system/brand` | clean | 7 | 50 | 0 | 0 |
 | 140 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 11 | 42 | 2 | 0 |
 | 141 | `@beep/editor` | `packages/foundation/ui-system/editor` | clean | 34 | 210 | 0 | 0 |
 | 142 | `@beep/ontology-server` | `packages/ontology/server` | clean | 8 | 23 | 0 | 0 |
@@ -457,31 +457,6 @@ Export findings:
 - `src/index.ts:116` `export * as PathText from "./PathText.ts";` (re-export) - 1 example import violation(s)
 - `src/index.ts:132` `export * as QueryText from "./QueryText.ts";` (re-export) - 1 example import violation(s)
 - `src/index.ts:148` `export * as VariantText from "./VariantText.ts";` (re-export) - 1 example import violation(s)
-
-### @beep/file-processing
-
-Path: `packages/foundation/capability/file-processing`
-
-Export findings:
-- `src/SecretScrub/SecretScrub.policy.ts:36` `PromptAdmissibleText` (type) - 1 example import violation(s)
-- `src/SecretScrub/SecretScrub.policy.ts:50` `promptTextFromScrub` (const) - 1 example import violation(s)
-- `src/SecretScrub/SecretScrub.policy.ts:69` `secretRetentionDeadline` (const) - 1 example import violation(s)
-- `src/SecretScrub/SecretScrub.policy.ts:87` `isSecretPurgeEligible` (const) - 1 example import violation(s)
-- `src/SecretScrub/SecretScrub.schema.ts:26` `SecretCoverage` (const) - 1 example import violation(s)
-- `src/SecretScrub/SecretScrub.schema.ts:42` `SecretCoverage` (type) - 1 example import violation(s)
-- `src/SecretScrub/SecretScrub.schema.ts:53` `SecretResidue` (const) - 1 example import violation(s)
-- `src/SecretScrub/SecretScrub.schema.ts:69` `SecretResidue` (type) - 1 example import violation(s)
-- `src/SecretScrub/SecretScrub.schema.ts:80` `SecretRetentionClass` (const) - 1 example import violation(s)
-- `src/SecretScrub/SecretScrub.schema.ts:96` `SecretRetentionClass` (type) - 1 example import violation(s)
-- `src/SecretScrub/SecretScrub.schema.ts:110` `SecretRetentionRecord` (class) - 1 example import violation(s)
-- `src/SecretScrub/SecretScrub.schema.ts:133` `SecretCategoryCount` (class) - 1 example import violation(s)
-- `src/SecretScrub/SecretScrub.schema.ts:155` `SecretEvidence` (class) - 1 example import violation(s)
-- `src/SecretScrub/SecretScrub.schema.ts:184` `SecretScrubProof` (class) - 1 example import violation(s)
-- `src/SecretScrub/SecretScrub.schema.ts:209` `SecretScrubInput` (class) - 1 example import violation(s)
-- `src/SecretScrub/SecretScrub.schema.ts:233` `SecretScrubResult` (class) - 1 example import violation(s)
-- `src/SecretScrub/SecretScrub.service.ts:38` `SecretScrubService` (class) - 1 example import violation(s)
-- `src/SecretScrub/SecretScrub.service.ts:57` `scrubSecretText` (const) - 1 example import violation(s)
-- `src/SecretScrub/SecretScrub.service.ts:128` `SecretScrubLive` (const) - 1 example import violation(s)
 
 ### @beep/epistemic-domain
 
@@ -930,73 +905,6 @@ Module findings:
 - `src/Graph3D.react.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/Graph3D.renderer.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
-### @beep/ontology
-
-Path: `packages/foundation/modeling/ontology`
-
-Module findings:
-- `src/Fold.assembly.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/Fold.markdown.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/Fold.models.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/Fold.projections.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/Ontology.models.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-
-Export findings:
-- `src/Fold.assembly.ts:68` `BoundComposer` (type) - 1 example import violation(s); 1 documentation section/link violation(s)
-- `src/Fold.assembly.ts:887` `fold` (const) - 1 example import violation(s); 1 documentation section/link violation(s)
-- `src/Fold.markdown.ts:46` `MarkdownLinkMode` (const) - 1 example import violation(s)
-- `src/Fold.markdown.ts:67` `MarkdownLinkMode` (type) - 1 example import violation(s)
-- `src/Fold.markdown.ts:84` `MarkdownOptions` (class) - 1 example import violation(s)
-- `src/Fold.markdown.ts:296` `toMarkdown` (const) - 1 example import violation(s)
-- `src/Fold.models.ts:40` `AbsoluteIri` (type) - 1 example import violation(s)
-- `src/Fold.models.ts:65` `SchemaHandle` (type) - 1 example import violation(s); 1 documentation section/link violation(s)
-- `src/Fold.models.ts:81` `Subject` (type) - 1 example import violation(s)
-- `src/Fold.models.ts:97` `LiteralScalar` (type) - 1 example import violation(s)
-- `src/Fold.models.ts:116` `TypedLiteral` (type) - 1 example import violation(s); 1 documentation section/link violation(s)
-- `src/Fold.models.ts:136` `TupleObject` (type) - 1 example import violation(s)
-- `src/Fold.models.ts:156` `Triple` (type) - 1 example import violation(s); 1 documentation section/link violation(s)
-- `src/Fold.models.ts:172` `OntologyFoldInput` (type) - 1 example import violation(s)
-- `src/Fold.models.ts:203` `isSchemaHandle` (const) - 1 example import violation(s)
-- `src/Fold.models.ts:285` `TripleValue` (const) - 1 example import violation(s); 1 documentation section/link violation(s)
-- `src/Fold.models.ts:305` `TripleValue` (type) - 1 example import violation(s)
-- `src/Fold.models.ts:321` `SkosClassification` (const) - 1 example import violation(s)
-- `src/Fold.models.ts:341` `SkosClassification` (type) - 1 example import violation(s)
-- `src/Fold.models.ts:360` `AssembledPredicateKind` (const) - 1 example import violation(s); 1 documentation section/link violation(s)
-- `src/Fold.models.ts:380` `AssembledPredicateKind` (type) - 1 example import violation(s)
-- `src/Fold.models.ts:397` `FactLiteral` (class) - 1 example import violation(s)
-- `src/Fold.models.ts:423` `FactObject` (const) - 1 example import violation(s)
-- `src/Fold.models.ts:445` `FactObject` (type) - 2 example import violation(s)
-- `src/Fold.models.ts:471` `AssembledFact` (class) - 1 example import violation(s); 1 documentation section/link violation(s)
-- `src/Fold.models.ts:505` `AssembledPredicate` (class) - 1 example import violation(s)
-- `src/Fold.models.ts:542` `AssembledClass` (class) - 1 example import violation(s)
-- `src/Fold.models.ts:571` `OntologyWarningCode` (const) - 1 example import violation(s)
-- `src/Fold.models.ts:595` `OntologyWarningCode` (type) - 1 example import violation(s)
-- `src/Fold.models.ts:618` `OntologyValidationWarning` (class) - 1 example import violation(s); 1 documentation section/link violation(s)
-- `src/Fold.models.ts:653` `AssembledOntology` (class) - 1 example import violation(s)
-- `src/Fold.models.ts:682` `OntologyAssemblyErrorReason` (const) - 1 example import violation(s)
-- `src/Fold.models.ts:711` `OntologyAssemblyErrorReason` (type) - 1 example import violation(s)
-- `src/Fold.models.ts:736` `OntologyAssemblyError` (class) - 1 example import violation(s)
-- `src/Fold.models.ts:770` `isFactLiteral` (const) - 1 example import violation(s)
-- `src/Fold.projections.ts:46` `JsonLdTerm` (type) - 1 example import violation(s)
-- `src/Fold.projections.ts:71` `JsonLdContext` (type) - 1 example import violation(s)
-- `src/Fold.projections.ts:88` `JsonLdNodeValue` (type) - 1 example import violation(s)
-- `src/Fold.projections.ts:112` `JsonLdNode` (type) - 1 example import violation(s)
-- `src/Fold.projections.ts:133` `JsonLdDocument` (type) - 1 example import violation(s)
-- `src/Fold.projections.ts:239` `toContext` (const) - 1 example import violation(s)
-- `src/Fold.projections.ts:392` `toJsonLd` (const) - 1 example import violation(s)
-- `src/Fold.projections.ts:635` `toTurtle` (const) - 1 example import violation(s)
-- `src/SemanticFoundation.models.ts:191` `ConceptAlignment` (class) - 1 example import violation(s)
-- `src/SemanticFoundation.models.ts:224` `TaxonomyConcept` (class) - 1 example import violation(s)
-- `src/SemanticFoundation.models.ts:293` `FilingRoot` (class) - 1 example import violation(s)
-- `src/TaxonomyLoader.ts:223` `VendorAlignmentManifestEntry` (class) - 1 example import violation(s)
-- `src/TaxonomyLoader.ts:282` `VendorConceptSlice` (class) - 1 example import violation(s)
-- `src/TaxonomyLoader.ts:492` `VendorSliceConceptMismatch` (class) - 1 example import violation(s)
-- `src/TaxonomyLoader.ts:528` `VendorAlignmentTargetNotFound` (class) - 1 example import violation(s)
-- `src/TaxonomyRegistry.ts:36` `LibrarianInput` (class) - 1 example import violation(s)
-- `src/TaxonomyRegistry.ts:110` `TaxonomyConceptNotFound` (class) - 1 example import violation(s)
-- `src/TaxonomyRegistry.ts:134` `UnsupportedDocumentClass` (class) - 1 example import violation(s)
-- `src/TaxonomyRegistry.ts:169` `runLibrarianLoop` (const) - 1 example import violation(s)
-
 ### @beep/repo-cli
 
 Path: `packages/tooling/tool/cli`
@@ -1086,55 +994,6 @@ Export findings:
 - `src/commands/Skills/SkillsLock.schemas.ts:886` `SkillsLockWrittenFile` (class) - 1 example import violation(s)
 - `src/commands/Skills/SkillsLock.schemas.ts:921` `SkillsLockWriteReceipt` (class) - 1 example import violation(s)
 - `src/commands/Worktree/Fleet.service.ts:327` `parseProcStatStartTime` (const) - 1 example import violation(s)
-
-### @beep/brand
-
-Path: `packages/foundation/ui-system/brand`
-
-Export findings:
-- `src/Brand.assets.ts:31` `RenderedAsset` (class) - 1 example import violation(s)
-- `src/Brand.assets.ts:85` `renderBrandAssets` (const) - 1 example import violation(s)
-- `src/Brand.css.ts:37` `GENERATED_CSS_BANNER` (const) - 1 example import violation(s)
-- `src/Brand.css.ts:87` `fontStack` (const) - 1 example import violation(s)
-- `src/Brand.css.ts:158` `renderThemeCss` (const) - 1 example import violation(s)
-- `src/Brand.schema.ts:32` `PrintableText` (const) - 1 example import violation(s)
-- `src/Brand.schema.ts:62` `PrintableText` (type) - 1 example import violation(s)
-- `src/Brand.schema.ts:78` `ScaleStep` (const) - 1 example import violation(s)
-- `src/Brand.schema.ts:97` `ScaleStep` (type) - 1 example import violation(s)
-- `src/Brand.schema.ts:113` `SurfaceStep` (const) - 1 example import violation(s)
-- `src/Brand.schema.ts:132` `SurfaceStep` (type) - 1 example import violation(s)
-- `src/Brand.schema.ts:148` `ColorScale` (class) - 1 example import violation(s)
-- `src/Brand.schema.ts:177` `SurfaceScale` (class) - 1 example import violation(s)
-- `src/Brand.schema.ts:202` `Foreground` (class) - 1 example import violation(s)
-- `src/Brand.schema.ts:224` `Border` (class) - 1 example import violation(s)
-- `src/Brand.schema.ts:245` `Semantic` (class) - 1 example import violation(s)
-- `src/Brand.schema.ts:267` `Alpha` (const) - 1 example import violation(s)
-- `src/Brand.schema.ts:287` `Alpha` (type) - 1 example import violation(s)
-- `src/Brand.schema.ts:303` `GlowStop` (class) - 1 example import violation(s)
-- `src/Brand.schema.ts:324` `GlowLayer` (class) - 1 example import violation(s)
-- `src/Brand.schema.ts:345` `Glow` (class) - 1 example import violation(s)
-- `src/Brand.schema.ts:367` `ColorScheme` (class) - 1 example import violation(s)
-- `src/Brand.schema.ts:392` `SchemeName` (const) - 1 example import violation(s)
-- `src/Brand.schema.ts:411` `SchemeName` (type) - 1 example import violation(s)
-- `src/Brand.schema.ts:427` `FontStack` (class) - 1 example import violation(s)
-- `src/Brand.schema.ts:450` `Typography` (class) - 1 example import violation(s)
-- `src/Brand.schema.ts:471` `SvgPathData` (const) - 1 example import violation(s)
-- `src/Brand.schema.ts:508` `SvgPathData` (type) - 1 example import violation(s)
-- `src/Brand.schema.ts:524` `MarkPoint` (class) - 1 example import violation(s)
-- `src/Brand.schema.ts:545` `MarkRotation` (class) - 1 example import violation(s)
-- `src/Brand.schema.ts:566` `PixelGlasses` (class) - 1 example import violation(s)
-- `src/Brand.schema.ts:594` `BrandMark` (class) - 1 example import violation(s)
-- `src/Brand.schema.ts:622` `BrandIdentity` (class) - 1 example import violation(s)
-- `src/Brand.schema.ts:651` `SvgPaint` (const) - 1 example import violation(s)
-- `src/Brand.schema.ts:670` `SvgPaint` (type) - 1 example import violation(s)
-- `src/Brand.schema.ts:687` `MarkPaint` (class) - 1 example import violation(s)
-- `src/Brand.schema.ts:709` `MarkGround` (class) - 1 example import violation(s)
-- `src/Brand.schema.ts:737` `MarkSvgRequest` (class) - 1 example import violation(s)
-- `src/Brand.schema.ts:771` `WordmarkSvgRequest` (class) - 1 example import violation(s)
-- `src/Brand.svg.ts:46` `glassesTransform` (const) - 1 example import violation(s)
-- `src/Brand.svg.ts:115` `renderMarkSvg` (const) - 1 example import violation(s)
-- `src/Brand.svg.ts:153` `renderWordmarkSvg` (const) - 1 example import violation(s)
-- `src/Brand.tokens.ts:134` `beep` (const) - 1 example import violation(s)
 
 ### @beep/agents-server
 

@@ -21,7 +21,7 @@ const printableTextPattern = /^[^\u0000-\u001f\u007f-\u009f\p{Cs}\p{Noncharacter
  * **Example** (Construct printable text)
  *
  * ```ts
- * import { PrintableText } from "@beep/brand"
+ * import { PrintableText } from "@beep/brand/Brand.schema"
  *
  * console.log(PrintableText.make("Inter Variable"))
  * ```
@@ -50,7 +50,7 @@ export const PrintableText = S.NonEmptyString.check(
  * **Example** (Annotate printable text)
  *
  * ```ts
- * import { PrintableText } from "@beep/brand"
+ * import { PrintableText } from "@beep/brand/Brand.schema"
  *
  * const family: PrintableText = PrintableText.make("Inter")
  * console.log(family)
@@ -67,7 +67,7 @@ export type PrintableText = typeof PrintableText.Type;
  * **Example** (Enumerate scale steps)
  *
  * ```ts
- * import { ScaleStep } from "@beep/brand"
+ * import { ScaleStep } from "@beep/brand/Brand.schema"
  *
  * console.log(ScaleStep.literals.length)
  * ```
@@ -85,7 +85,7 @@ export const ScaleStep = LiteralKit(["50", "100", "200", "300", "400", "500", "6
  * **Example** (Annotate a scale step)
  *
  * ```ts
- * import type { ScaleStep } from "@beep/brand"
+ * import type { ScaleStep } from "@beep/brand/Brand.schema"
  *
  * const accent: ScaleStep = "400"
  * console.log(accent)
@@ -102,7 +102,7 @@ export type ScaleStep = typeof ScaleStep.Type;
  * **Example** (Enumerate surface steps)
  *
  * ```ts
- * import { SurfaceStep } from "@beep/brand"
+ * import { SurfaceStep } from "@beep/brand/Brand.schema"
  *
  * console.log(SurfaceStep.literals)
  * ```
@@ -120,7 +120,7 @@ export const SurfaceStep = LiteralKit(["0", "50", "100", "200", "300", "400"]).p
  * **Example** (Annotate a surface step)
  *
  * ```ts
- * import type { SurfaceStep } from "@beep/brand"
+ * import type { SurfaceStep } from "@beep/brand/Brand.schema"
  *
  * const base: SurfaceStep = "0"
  * console.log(base)
@@ -137,7 +137,7 @@ export type SurfaceStep = typeof SurfaceStep.Type;
  * **Example** (Read the accent step)
  *
  * ```ts
- * import { beep } from "@beep/brand"
+ * import { beep } from "@beep/brand/Brand.tokens"
  *
  * console.log(beep.dark.brand["400"])
  * ```
@@ -166,7 +166,7 @@ export class ColorScale extends S.Opaque<ColorScale, { readonly brand: unique sy
  * **Example** (Read the page background)
  *
  * ```ts
- * import { beep } from "@beep/brand"
+ * import { beep } from "@beep/brand/Brand.tokens"
  *
  * console.log(beep.dark.surface["0"])
  * ```
@@ -191,7 +191,7 @@ export class SurfaceScale extends S.Opaque<SurfaceScale, { readonly brand: uniqu
  * **Example** (Read muted text color)
  *
  * ```ts
- * import { beep } from "@beep/brand"
+ * import { beep } from "@beep/brand/Brand.tokens"
  *
  * console.log(beep.dark.foreground.muted)
  * ```
@@ -213,7 +213,7 @@ export class Foreground extends S.Opaque<Foreground, { readonly brand: unique sy
  * **Example** (Read the resting border)
  *
  * ```ts
- * import { beep } from "@beep/brand"
+ * import { beep } from "@beep/brand/Brand.tokens"
  *
  * console.log(beep.dark.border.base)
  * ```
@@ -234,7 +234,7 @@ export class Border extends S.Opaque<Border, { readonly brand: unique symbol }>(
  * **Example** (Read the error color)
  *
  * ```ts
- * import { beep } from "@beep/brand"
+ * import { beep } from "@beep/brand/Brand.tokens"
  *
  * console.log(beep.dark.semantic.error)
  * ```
@@ -256,7 +256,7 @@ export class Semantic extends S.Opaque<Semantic, { readonly brand: unique symbol
  * **Example** (Construct an alpha)
  *
  * ```ts
- * import { Alpha } from "@beep/brand"
+ * import { Alpha } from "@beep/brand/Brand.schema"
  *
  * console.log(Alpha.make(0.35))
  * ```
@@ -275,7 +275,7 @@ export const Alpha = S.Finite.check(S.isBetween({ minimum: 0, maximum: 1 })).pip
  * **Example** (Annotate an alpha)
  *
  * ```ts
- * import { Alpha } from "@beep/brand"
+ * import { Alpha } from "@beep/brand/Brand.schema"
  *
  * const half: Alpha = Alpha.make(0.5)
  * console.log(half)
@@ -292,7 +292,7 @@ export type Alpha = typeof Alpha.Type;
  * **Example** (Construct a glow stop)
  *
  * ```ts
- * import { Alpha, GlowStop } from "@beep/brand"
+ * import { Alpha, GlowStop } from "@beep/brand/Brand.schema"
  *
  * console.log(GlowStop.make({ step: "500", alpha: Alpha.make(0.35) }))
  * ```
@@ -313,7 +313,7 @@ export class GlowStop extends S.Opaque<GlowStop, { readonly brand: unique symbol
  * **Example** (Read the primary glow start)
  *
  * ```ts
- * import { beep } from "@beep/brand"
+ * import { beep } from "@beep/brand/Brand.tokens"
  *
  * console.log(beep.dark.glow.primary.start.step)
  * ```
@@ -334,7 +334,7 @@ export class GlowLayer extends S.Opaque<GlowLayer, { readonly brand: unique symb
  * **Example** (Read the tertiary glow)
  *
  * ```ts
- * import { beep } from "@beep/brand"
+ * import { beep } from "@beep/brand/Brand.tokens"
  *
  * console.log(beep.dark.glow.tertiary.mid.alpha)
  * ```
@@ -356,7 +356,7 @@ export class Glow extends S.Opaque<Glow, { readonly brand: unique symbol }>()(
  * **Example** (Read the light scheme border)
  *
  * ```ts
- * import { beep } from "@beep/brand"
+ * import { beep } from "@beep/brand/Brand.tokens"
  *
  * console.log(beep.light.border.hover)
  * ```
@@ -381,7 +381,7 @@ export class ColorScheme extends S.Opaque<ColorScheme, { readonly nominal: uniqu
  * **Example** (Guard a scheme name)
  *
  * ```ts
- * import { SchemeName } from "@beep/brand"
+ * import { SchemeName } from "@beep/brand/Brand.schema"
  *
  * console.log(SchemeName.is.dark("dark"))
  * ```
@@ -399,7 +399,7 @@ export const SchemeName = LiteralKit(["light", "dark"]).pipe(
  * **Example** (Annotate a scheme name)
  *
  * ```ts
- * import type { SchemeName } from "@beep/brand"
+ * import type { SchemeName } from "@beep/brand/Brand.schema"
  *
  * const scheme: SchemeName = "dark"
  * console.log(scheme)
@@ -416,7 +416,7 @@ export type SchemeName = typeof SchemeName.Type;
  * **Example** (Read the sans family)
  *
  * ```ts
- * import { beep } from "@beep/brand"
+ * import { beep } from "@beep/brand/Brand.tokens"
  *
  * console.log(beep.typography.sans.family)
  * ```
@@ -439,7 +439,7 @@ export class FontStack extends S.Opaque<FontStack, { readonly brand: unique symb
  * **Example** (Read the mono family)
  *
  * ```ts
- * import { beep } from "@beep/brand"
+ * import { beep } from "@beep/brand/Brand.tokens"
  *
  * console.log(beep.typography.mono.family)
  * ```
@@ -460,7 +460,7 @@ export class Typography extends S.Opaque<Typography, { readonly brand: unique sy
  * **Example** (Construct path data)
  *
  * ```ts
- * import { SvgPathData } from "@beep/brand"
+ * import { SvgPathData } from "@beep/brand/Brand.schema"
  *
  * console.log(SvgPathData.make("M6 20l6.5 -9"))
  * ```
@@ -496,7 +496,7 @@ export const SvgPathData = S.String.check(
  * **Example** (Annotate path data)
  *
  * ```ts
- * import { SvgPathData } from "@beep/brand"
+ * import { SvgPathData } from "@beep/brand/Brand.schema"
  *
  * const stroke: SvgPathData = SvgPathData.make("M0 0h1")
  * console.log(stroke)
@@ -513,7 +513,7 @@ export type SvgPathData = typeof SvgPathData.Type;
  * **Example** (Construct a point)
  *
  * ```ts
- * import { MarkPoint } from "@beep/brand"
+ * import { MarkPoint } from "@beep/brand/Brand.schema"
  *
  * console.log(MarkPoint.make({ x: 5.4, y: 9.5 }))
  * ```
@@ -534,7 +534,7 @@ export class MarkPoint extends S.Opaque<MarkPoint, { readonly brand: unique symb
  * **Example** (Construct a rotation)
  *
  * ```ts
- * import { MarkPoint, MarkRotation } from "@beep/brand"
+ * import { MarkPoint, MarkRotation } from "@beep/brand/Brand.schema"
  *
  * console.log(MarkRotation.make({ degrees: 8, origin: MarkPoint.make({ x: 12.5, y: 2.5 }) }))
  * ```
@@ -555,7 +555,7 @@ export class MarkRotation extends S.Opaque<MarkRotation, { readonly brand: uniqu
  * **Example** (Count the lenses)
  *
  * ```ts
- * import { beep } from "@beep/brand"
+ * import { beep } from "@beep/brand/Brand.tokens"
  *
  * console.log(beep.mark.glasses.lenses.length)
  * ```
@@ -583,7 +583,7 @@ export class PixelGlasses extends S.Opaque<PixelGlasses, { readonly brand: uniqu
  * **Example** (Read the view box size)
  *
  * ```ts
- * import { beep } from "@beep/brand"
+ * import { beep } from "@beep/brand/Brand.tokens"
  *
  * console.log(beep.mark.viewBox)
  * ```
@@ -611,7 +611,7 @@ export class BrandMark extends S.Opaque<BrandMark, { readonly brand: unique symb
  * **Example** (Read the brand name)
  *
  * ```ts
- * import { beep } from "@beep/brand"
+ * import { beep } from "@beep/brand/Brand.tokens"
  *
  * console.log(beep.name)
  * ```
@@ -639,7 +639,7 @@ export class BrandIdentity extends S.Opaque<BrandIdentity, { readonly brand: uni
  * **Example** (Inherit the text color)
  *
  * ```ts
- * import { SvgPaint } from "@beep/brand"
+ * import { SvgPaint } from "@beep/brand/Brand.schema"
  * import * as S from "effect/Schema"
  *
  * console.log(S.is(SvgPaint)("currentColor"))
@@ -658,7 +658,7 @@ export const SvgPaint = S.Union([HexColor, S.Literal("currentColor")]).pipe(
  * **Example** (Annotate a paint)
  *
  * ```ts
- * import type { SvgPaint } from "@beep/brand"
+ * import type { SvgPaint } from "@beep/brand/Brand.schema"
  *
  * const paint: SvgPaint = "currentColor"
  * console.log(paint)
@@ -675,7 +675,8 @@ export type SvgPaint = typeof SvgPaint.Type;
  * **Example** (Paint the mark for dark surfaces)
  *
  * ```ts
- * import { beep, MarkPaint } from "@beep/brand"
+ * import { beep } from "@beep/brand/Brand.tokens"
+ * import { MarkPaint } from "@beep/brand/Brand.schema"
  *
  * const paint = MarkPaint.make({ stroke: "currentColor", frame: beep.dark.foreground.base, lens: beep.dark.surface["0"] })
  * console.log(paint.frame)
@@ -698,7 +699,8 @@ export class MarkPaint extends S.Opaque<MarkPaint, { readonly brand: unique symb
  * **Example** (Ground the mark on brand-900)
  *
  * ```ts
- * import { beep, MarkGround } from "@beep/brand"
+ * import { beep } from "@beep/brand/Brand.tokens"
+ * import { MarkGround } from "@beep/brand/Brand.schema"
  *
  * console.log(MarkGround.make({ fill: beep.dark.brand["900"], radius: 6 }))
  * ```
@@ -721,7 +723,8 @@ export class MarkGround extends S.Opaque<MarkGround, { readonly brand: unique sy
  * **Example** (Render request for the 24-unit mark)
  *
  * ```ts
- * import { beep, MarkPaint, MarkSvgRequest } from "@beep/brand"
+ * import { beep } from "@beep/brand/Brand.tokens"
+ * import { MarkPaint, MarkSvgRequest } from "@beep/brand/Brand.schema"
  *
  * const request = MarkSvgRequest.make({
  *   mark: beep.mark,
@@ -755,7 +758,8 @@ export class MarkSvgRequest extends S.Opaque<MarkSvgRequest, { readonly brand: u
  * **Example** (Wordmark request for dark surfaces)
  *
  * ```ts
- * import { beep, MarkPaint, WordmarkSvgRequest } from "@beep/brand"
+ * import { beep } from "@beep/brand/Brand.tokens"
+ * import { MarkPaint, WordmarkSvgRequest } from "@beep/brand/Brand.schema"
  *
  * const request = WordmarkSvgRequest.make({
  *   identity: beep,

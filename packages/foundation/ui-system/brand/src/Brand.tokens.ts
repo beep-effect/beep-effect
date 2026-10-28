@@ -123,7 +123,7 @@ const mark = BrandMark.make({
  * **Example** (Read the theme-color ground)
  *
  * ```ts
- * import { beep } from "@beep/brand"
+ * import { beep } from "@beep/brand/Brand.tokens"
  *
  * console.log(beep.dark.brand["900"])
  * ```
