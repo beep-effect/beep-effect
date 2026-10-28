@@ -79,6 +79,10 @@
       "purpose": "Wave 3-5 oracle: the root bun.lock read by Lockfile.parse against bun pm ls, plus the fixture corpus."
     },
     {
+      "path": "ops/managed-section-adoption-parity.ts",
+      "purpose": "R8 parity: the Observability standard section, the Explore Atlas projection and every Models generated block fingerprinted before and after the @beep/managed-section switch, plus probes for each intended shift."
+    },
+    {
       "path": "ops/markdown-bench.ts",
       "purpose": "Wave 2d bench gate: @beep/markdown parse and stringify cost on fixed corpora, compared against a baseline report."
     },

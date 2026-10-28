@@ -16,6 +16,10 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { CommentStyle } from "@beep/managed-section/CommentStyle";
+import { SectionId } from "@beep/managed-section/Section";
+import { LiteralMarkerDialect, SectionDialect, SectionMarkers } from "@beep/managed-section/SectionDialect";
+import { SectionDocument } from "@beep/managed-section/SectionDocument";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
@@ -28,6 +32,7 @@ import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
@@ -391,17 +396,28 @@ const issueOrder = Order.combine(
 const decodeManifest = S.decodeUnknownEffect(ExplorationManifest);
 const isExplorationStage = S.is(ExplorationStage);
 const isExplorationStatus = S.is(ExplorationStatus);
-const GENERATED_STATUS_BEGIN = "<!-- BEGIN GENERATED: EXPLORATION STATUS -->";
-const GENERATED_STATUS_END = "<!-- END GENERATED: EXPLORATION STATUS -->";
+const STATUS_SECTION_ID = SectionId.make({ key: "exploration-status", commentStyle: CommentStyle.html });
+// The README status markers predate `@beep/managed-section`, so they keep their literal spelling.
+const STATUS_DIALECT = LiteralMarkerDialect.make({
+  phrase: SectionDialect.default.phrase,
+  styles: [CommentStyle.html],
+  markers: [
+    SectionMarkers.make({
+      key: STATUS_SECTION_ID.key,
+      begin: "BEGIN GENERATED: EXPLORATION STATUS",
+      end: "END GENERATED: EXPLORATION STATUS",
+    }),
+  ],
+});
 
 const projectionIssue = (slug: string, path: string, detail: string): ExplorationProjectionIssue =>
   ExplorationProjectionIssue.make({ slug, path, detail });
 
 const renderReadmeStatus = (state: ExplorationProjectionState): ReadonlyArray<string> => [
-  GENERATED_STATUS_BEGIN,
+  STATUS_DIALECT.beginMarker(STATUS_SECTION_ID),
   `Stage: \`${state.resumeStage}\``,
   `Status: \`${state.status}\``,
-  GENERATED_STATUS_END,
+  STATUS_DIALECT.endMarker(STATUS_SECTION_ID),
 ];
 
 const isStatusField = (line: string): boolean => Str.startsWith("Stage: `")(line) || Str.startsWith("Status: `")(line);
@@ -421,17 +437,27 @@ const authoredStatusNote = (line: string): O.Option<string> => {
   );
 };
 
-const generatedMarkerCountsAreValid = (lines: ReadonlyArray<string>): boolean => {
-  const beginCount = A.length(A.filter(lines, (line) => line === GENERATED_STATUS_BEGIN));
-  const endCount = A.length(A.filter(lines, (line) => line === GENERATED_STATUS_END));
-  if (beginCount === 0 && endCount === 0) return true;
-  if (beginCount !== 1 || endCount !== 1) return false;
-  const begin = A.findFirstIndex(lines, (line) => line === GENERATED_STATUS_BEGIN);
-  const end = A.findFirstIndex(lines, (line) => line === GENERATED_STATUS_END);
-  return O.isSome(begin) && O.isSome(end) && begin.value < end.value;
+// The Status section's lines outside its generated region, or `None` when the
+// region's markers are malformed (duplicated, orphaned, overlapping or
+// unterminated). A section without a generated region keeps every line.
+const linesOutsideGeneratedStatus = (section: ReadonlyArray<string>): O.Option<ReadonlyArray<string>> => {
+  const text = A.join(section, "\n");
+  return O.map(Result.getSuccess(SectionDocument.parseResult(text, STATUS_DIALECT)), (document) =>
+    O.match(
+      A.findFirst(document.sections, (placed) => placed.section.key === STATUS_SECTION_ID.key),
+      {
+        onNone: () => section,
+        // A marker owns its line, so the text before the region ends at a line
+        // break and the text after it starts at one.
+        onSome: (placed) => [
+          ...A.dropRight(Str.split("\n")(Str.slice(0, placed.start)(text)), 1),
+          ...A.drop(Str.split("\n")(Str.slice(placed.end)(text)), 1),
+        ],
+      }
+    )
+  );
 };
 
-// fallow-ignore-next-line complexity -- the pass tracks generated markers while preserving authored status prose (cognitive 15). Owner: @beep/repo-cli. Exit: split when README status moves to a schema-backed frontmatter field.
 const projectReadmeStatus = (content: string, state: ExplorationProjectionState): O.Option<string> => {
   const lines = Str.split(/\r?\n/)(content);
   const headingIndex = A.findFirstIndex(lines, (line) => line === "## Status");
@@ -443,27 +469,14 @@ const projectReadmeStatus = (content: string, state: ExplorationProjectionState)
     O.match({ onNone: () => A.length(lines), onSome: (index) => headingIndex.value + 1 + index })
   );
   const section = A.take(A.drop(lines, headingIndex.value + 1), sectionEnd - headingIndex.value - 1);
-  if (!generatedMarkerCountsAreValid(section)) return O.none();
+  const outside = linesOutsideGeneratedStatus(section);
+  if (O.isNone(outside)) return O.none();
 
-  let insideGenerated = false;
-  let authored = A.empty<string>();
-  for (const line of section) {
-    if (line === GENERATED_STATUS_BEGIN) {
-      insideGenerated = true;
-      continue;
-    }
-    if (line === GENERATED_STATUS_END) {
-      insideGenerated = false;
-      continue;
-    }
-    if (!insideGenerated && isStatusField(line)) {
-      const note = authoredStatusNote(line);
-      if (O.isSome(note)) authored = A.append(authored, note.value);
-      continue;
-    }
-    if (!insideGenerated) authored = A.append(authored, line);
-  }
-
+  const authored = A.flatMap(
+    outside.value,
+    (line): ReadonlyArray<string> =>
+      isStatusField(line) ? O.match(authoredStatusNote(line), { onNone: () => [], onSome: (note) => [note] }) : [line]
+  );
   const authoredWithoutLeadingBlanks = A.dropWhile(authored, Str.isEmpty);
   const before = A.take(lines, headingIndex.value + 1);
   const after = A.drop(lines, sectionEnd);
