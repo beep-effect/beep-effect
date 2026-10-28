@@ -1943,7 +1943,6 @@ const resolveStorybookLaneAffected = Effect.fn("CiLane.resolveStorybookLaneAffec
   base: string
 ): Effect.fn.Return<boolean, CiCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const probeArgs = storybookAffectedProbeArgs();
-  yield* Console.log(`[ci] ci:storybook: bunx ${A.join(probeArgs, " ")}`);
   const step = yield* resolveTurboCacheStep(
     QualityTaskStep.make({
       label: "ci:storybook:selection",
@@ -1953,6 +1952,7 @@ const resolveStorybookLaneAffected = Effect.fn("CiLane.resolveStorybookLaneAffec
       env: { TURBO_SCM_BASE: base },
     })
   );
+  yield* Console.log(`[ci] ci:storybook: ${renderStepCommand(step)}`);
   const envOverrides = yield* turboEnvOverrides(step.command, step.args, Bun.env);
   const result = yield* runCaptured({
     command: step.command,
@@ -2136,7 +2136,6 @@ const runCiPartitionedLane = Effect.fn("CiLane.runCiPartitionedLane")(function* 
   const { laneId, partition } = request;
   const task = partitionedLaneTask(laneId);
   const selectionArgs = partitionDryRunArgs(laneId, options);
-  yield* Console.log(`[ci] ci:${laneId}:${partition}: bunx ${A.join(selectionArgs, " ")}`);
 
   const selection = yield* resolveTurboCacheStep(
     QualityTaskStep.make({
@@ -2147,6 +2146,7 @@ const runCiPartitionedLane = Effect.fn("CiLane.runCiPartitionedLane")(function* 
       env: options.affected ? { TURBO_SCM_BASE: options.base } : {},
     })
   );
+  yield* Console.log(`[ci] ci:${laneId}:${partition}: ${renderStepCommand(selection)}`);
   const envOverrides = yield* turboEnvOverrides(selection.command, selection.args, Bun.env);
   const selectedResult = yield* runCaptured({
     command: selection.command,
