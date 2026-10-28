@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { GlobPattern, GlobPatternOptions } from "@beep/glob/GlobPattern";
 import { normalizeJSDocCategory } from "@beep/repo-utils/schemas/JSDocCategories";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -14,8 +15,8 @@ import { flow, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import { Node, Project, SyntaxKind } from "ts-morph";
-import { globPatternToRegExp } from "../../../internal/GlobPattern.ts";
 import {
   byIssueAscending,
   DocgenAnalysisSummary,
@@ -351,6 +352,11 @@ const analyzeModuleFileoverview = (
   );
 };
 
+// docgen.json exclude patterns are developer configuration: a guard trip is a
+// wiring defect. The dot dialect keeps the previous matcher's behaviour, which
+// let `*` match a dot-leading segment.
+const excludeGlob = GlobPatternOptions.make({ dot: true });
+
 const sourceFileMatchesExclude = (
   absolutePackagePath: string,
   srcDir: string,
@@ -365,9 +371,9 @@ const sourceFileMatchesExclude = (
   const srcRelative = Str.startsWith(`${srcDir}/`)(packageRelative)
     ? Str.slice(srcDir.length + 1)(packageRelative)
     : packageRelative;
-  const patternRegex = globPatternToRegExp(normalizedPattern);
+  const compiled = Result.getOrThrow(GlobPattern.compileResult(normalizedPattern, excludeGlob));
 
-  return A.some([packageRelative, srcRelative], (candidate) => patternRegex.test(candidate));
+  return A.some([packageRelative, srcRelative], (candidate) => compiled.matches(candidate));
 };
 
 const getSourceFiles = (

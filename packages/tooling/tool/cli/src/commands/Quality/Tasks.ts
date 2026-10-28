@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { GlobPattern, GlobPatternOptions } from "@beep/glob/GlobPattern";
 import { $RepoCliId } from "@beep/identity/packages";
 import { StringListField, WorkspacesField } from "@beep/package-json/ManifestFields";
 import { findRepoRoot, insertEndOfOptions } from "@beep/repo-utils";
@@ -27,6 +28,7 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import {
   canUseTurboCacheSecretSession,
@@ -56,7 +58,6 @@ import { coverageEnvironment } from "./internal/CoverageEnvironment.ts";
 
 export { coverageProducerEnvironment } from "./internal/CoverageEnvironment.ts";
 
-import { globMatches } from "../../internal/GlobPattern.ts";
 import { manifestParser } from "../../internal/ManifestRead.ts";
 import {
   CapturedStep,
@@ -761,6 +762,9 @@ const resolveNonAffectedCoverageTaskOptions = Effect.fn("QualityTasks.resolveNon
   }
 );
 
+// The dot dialect keeps the previous matcher's behaviour, which let `*` match a dot-leading segment.
+const coverageSelectorGlob = GlobPatternOptions.make({ dot: true });
+
 const isResolvableCoverageSelector = S.is(
   S.String.check(S.isPattern(/^(?:\.\.\.\^?)?(?:\{\.\/[^{}![\]^]+\}|[^{}![\]^]+?)(?:\^?\.\.\.)?$/u))
 );
@@ -820,9 +824,11 @@ export const resolveCoverageSelector: {
   const pattern = Str.replace(/^(?:\.\.\.\^?)|(?:\^?\.\.\.)$/gu, "")(selector);
   const directory = Str.startsWith("./")(pattern) || Str.startsWith("{./")(pattern);
   const normalized = Str.replace(/^\{?|\}$/gu, "")(pattern);
-  const matches = globMatches(Str.replace(/^\.\//u, "")(normalized));
+  // A selector the glob compiler rejects is unsupported, like an unmatched one.
+  const compiled = GlobPattern.compileResult(Str.replace(/^\.\//u, "")(normalized), coverageSelectorGlob);
+  if (Result.isFailure(compiled)) return O.none();
   const seeds = A.map(
-    A.filter(owners, (owner) => matches(directory ? owner.packagePath : owner.packageName)),
+    A.filter(owners, (owner) => compiled.success.matches(directory ? owner.packagePath : owner.packageName)),
     (owner) => owner.packageName
   );
   if (A.isReadonlyArrayEmpty(seeds)) return O.none();

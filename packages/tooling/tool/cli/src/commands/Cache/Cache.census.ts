@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { GlobPattern, GlobPatternOptions } from "@beep/glob/GlobPattern";
 import { CacheTaskConfiguration } from "@beep/repo-configs/cache";
 import { FsUtils, GlobOptions, readPackageJsonFile, resolveWorkspacePackages, toSortedRecord } from "@beep/repo-utils";
 import { Sha256HexFromBytes } from "@beep/schema";
@@ -25,7 +26,6 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { hashFileSha256 } from "../../internal/cli/FsGuards.ts";
 import { isTurboCacheControlArg } from "../../internal/cli/TurboCache.ts";
-import { globMatches } from "../../internal/GlobPattern.ts";
 import { OutputBound, runCaptured } from "../../internal/process/index.ts";
 import {
   CacheCensusNode,
@@ -317,6 +317,23 @@ export const cacheTaskSelectionArgs = Effect.fn("Cache.taskSelectionArgs")(funct
   return A.appendAll(A.appendAll(selected, ["--dry=json", "--cache=local:"]), forwardedArgs);
 });
 
+// Turbo env entries are glob patterns (`BEEP_*`). The dot dialect keeps the
+// previous matcher's behaviour, which never special-cased a leading dot.
+const turboEnvGlob = GlobPatternOptions.make({ dot: true });
+
+// Whether some env or passThroughEnv entry forwards BIOME_CONFIG_PATH. An
+// entry the glob compiler rejects is a configuration failure, not a defect.
+const forwardsBiomeConfigPath = Effect.fn("Cache.forwardsBiomeConfigPath")(function* (entries: ReadonlyArray<string>) {
+  const patterns = yield* Effect.forEach(entries, (entry) =>
+    Effect.fromResult(GlobPattern.compileResult(entry, turboEnvGlob)).pipe(
+      Effect.mapError((error) =>
+        CacheCommandError.new(`Turbo env entry ${entry} is not a glob pattern: ${error.message}`)
+      )
+    )
+  );
+  return A.some(patterns, (pattern) => pattern.matches("BIOME_CONFIG_PATH"));
+});
+
 const validateIdentityProfileScope = Effect.fn("Cache.validateIdentityProfileScope")(function* (
   root: string,
   rows: ReadonlyArray<CacheCensusWorkspace>,
@@ -329,7 +346,7 @@ const validateIdentityProfileScope = Effect.fn("Cache.validateIdentityProfileSco
   );
   if (
     !A.contains(identity.configuration.passThroughEnv, "BIOME_CONFIG_PATH") ||
-    A.some(identity.configuration.env, (pattern) => globMatches(pattern)("BIOME_CONFIG_PATH"))
+    (yield* forwardsBiomeConfigPath(identity.configuration.env))
   )
     return yield* CacheCommandError.new(
       "Identity lint profile routing must use passThroughEnv, with profile bytes hashed as inputs."
@@ -356,7 +373,7 @@ const validateIdentityProfileScope = Effect.fn("Cache.validateIdentityProfileSco
         : []
     ),
   ];
-  if (A.some(outsideProfile, (pattern) => globMatches(pattern)("BIOME_CONFIG_PATH")))
+  if (yield* forwardsBiomeConfigPath(outsideProfile))
     return yield* CacheCommandError.new("Identity lint profile must not be forwarded globally or to another task.");
 });
 
