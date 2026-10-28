@@ -119,8 +119,18 @@ const twoRounds: ReadonlyArray<ReviewLaneRow> = [
   review(5, 20, O.some(SHA_C)),
 ];
 
+const precisionRows = (ledgers: ReadonlyArray<ReviewLaneLedger>, reviewer: YeetReviewerKind) =>
+  A.findFirst(buildYeetEconomicsReviewLane(ledgers, O.none()).precision, (row) => row.reviewer === reviewer);
+
 const precisionRow = (rows: ReadonlyArray<ReviewLaneRow>, reviewer: YeetReviewerKind) =>
-  A.findFirst(buildYeetEconomicsReviewLane([ledger(rows)], O.none()).precision, (row) => row.reviewer === reviewer);
+  precisionRows([ledger(rows)], reviewer);
+
+const ledgerAt = (root: string, rows: ReadonlyArray<ReviewLaneRow>): ReviewLaneLedger =>
+  ReviewLaneLedger.make({
+    ledgerPath: `${root}/.beep/yeet/${YEET_REVIEW_LANE_LEDGER_FILE_NAME}`,
+    rows,
+    malformedRows: 0,
+  });
 
 const rowsEquivalent = S.toEquivalence(ReviewLaneRow);
 
@@ -375,6 +385,32 @@ describe("review lane reviewer precision", () => {
     );
   });
 
+  // Must-fail fixture (review thread on #2310): across ledgers the latest
+  // declaration wins by its recorded instant, never by ledger path order;
+  // ledger order decides only a tie or an instant that does not parse.
+  it("keeps the latest declaration per thread by its recorded instant across ledgers", () => {
+    const declared = (value: YeetThreadDisposition, recordedAt: string): ReviewLaneRow =>
+      ReviewLaneDispositionRow.make({
+        ...base(),
+        recordedAt,
+        threadId: "PRRT_1",
+        reviewer: O.some(BEEP),
+        disposition: value,
+      });
+    const at30rejected = ledgerAt("/a", [declared("rejected", at(30))]);
+    const at10fixed = ledgerAt("/b", [declared("fixed", at(10))]);
+    const at30fixed = ledgerAt("/c", [declared("fixed", at(30))]);
+    const unparseable = ledgerAt("/d", [declared("intentional", "never")]);
+    const counts = (ledgers: ReadonlyArray<ReviewLaneLedger>) =>
+      O.map(precisionRows(ledgers, "beep-reviewer"), (row) => [row.fixed, row.rejected, row.intentional]);
+    assertSome(counts([at30rejected, at10fixed]), [0, 1, 0]);
+    assertSome(counts([at10fixed, at30rejected]), [0, 1, 0]);
+    assertSome(counts([at30rejected, at30fixed]), [1, 0, 0]);
+    assertSome(counts([at30fixed, at30rejected]), [0, 1, 0]);
+    assertSome(counts([at30rejected, unparseable]), [0, 0, 1]);
+    assertSome(counts([unparseable, at30rejected]), [0, 1, 0]);
+  });
+
   it("counts a disposition with no attributable reviewer and keeps it out of every row", () => {
     const section = buildYeetEconomicsReviewLane([ledger([disposition("PRRT_1", "fixed", O.none())])], O.none());
     expect(section.ledgerQuality.unattributedDispositions).toBe(1);
@@ -519,6 +555,38 @@ const Platform = Layer.mergeAll(MemoryFileSystem.layer, NodePath.layer, NodeCryp
 
 it.layer(Layer.mergeAll(Platform, TestConsole.layer), { timeout: "30 seconds" })("review lane ledger", (layerIt) => {
   const tempRoot = (prefix: string) => FileSystem.FileSystem.use((fs) => fs.makeTempDirectoryScoped({ prefix }));
+
+  layerIt.effect(
+    "names the owning clone's ledger when it is unreadable, and the checkout's own path only when unresolvable",
+    () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const base = yield* tempRoot("review-lane-clone-");
+        // A linked worktree the way `git worktree add` writes it.
+        const clone = path.join(base, "repo");
+        const lane = path.join(base, "repo-worktrees", "lane");
+        const gitDir = path.join(clone, ".git", "worktrees", "lane");
+        yield* fs.makeDirectory(gitDir, { recursive: true });
+        yield* fs.makeDirectory(lane, { recursive: true });
+        yield* fs.writeFileString(path.join(gitDir, "commondir"), "../..\n");
+        yield* fs.writeFileString(path.join(gitDir, "gitdir"), `${path.join(lane, ".git")}\n`);
+        yield* fs.writeFileString(path.join(lane, ".git"), `gitdir: ${gitDir}\n`);
+        const cloneLedger = path.join(clone, ".beep", "yeet", YEET_REVIEW_LANE_LEDGER_FILE_NAME);
+        yield* fs.makeDirectory(cloneLedger, { recursive: true });
+        const fromLane = yield* readYeetReviewLaneLedger(lane);
+        expect(fromLane).toMatchObject({ ledgerPath: cloneLedger, unreadable: true, rows: [] });
+        // A `.git` file without a gitdir line cannot be resolved: the checkout's own path stands in.
+        const unresolvable = path.join(base, "not-a-checkout");
+        yield* fs.makeDirectory(unresolvable, { recursive: true });
+        yield* fs.writeFileString(path.join(unresolvable, ".git"), "no gitdir line\n");
+        const fallback = yield* readYeetReviewLaneLedger(unresolvable);
+        expect(fallback).toMatchObject({
+          ledgerPath: path.join(unresolvable, ".beep", "yeet", YEET_REVIEW_LANE_LEDGER_FILE_NAME),
+          unreadable: true,
+        });
+      })
+  );
 
   layerIt.effect("records nothing for an empty batch and never creates the ledger", () =>
     Effect.gen(function* () {

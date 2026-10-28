@@ -489,15 +489,17 @@ export const readYeetReviewLaneLedger = Effect.fn("Yeet.readReviewLaneLedger")(f
   repoRoot: string
 ): Effect.fn.Return<ReviewLaneLedger, never, FileSystem.FileSystem | Path.Path> {
   const path = yield* Path.Path;
-  return yield* YeetReviewLaneLedger.make(repoRoot).pipe(
-    Effect.flatMap((ledger) => ledger.load),
+  const unreadableAt = (ledgerPath: string): ReviewLaneLedger =>
+    ReviewLaneLedger.make({ ledgerPath, rows: [], malformedRows: 0, unreadable: true });
+  // The location resolves first so an unreadable ledger is named by its own
+  // path (the owning clone's for a lane); the checkout's own path stands in
+  // only when the location itself cannot be resolved.
+  return yield* resolveReviewLaneLedgerLocation(repoRoot).pipe(
+    Effect.flatMap((location) =>
+      loadLedger(location).pipe(Effect.orElseSucceed(() => unreadableAt(location.ledgerPath)))
+    ),
     Effect.orElseSucceed(() =>
-      ReviewLaneLedger.make({
-        ledgerPath: path.join(path.resolve(repoRoot), ".beep", "yeet", YEET_REVIEW_LANE_LEDGER_FILE_NAME),
-        rows: [],
-        malformedRows: 0,
-        unreadable: true,
-      })
+      unreadableAt(path.join(path.resolve(repoRoot), ".beep", "yeet", YEET_REVIEW_LANE_LEDGER_FILE_NAME))
     )
   );
 });
@@ -508,7 +510,7 @@ export const readYeetReviewLaneLedger = Effect.fn("Yeet.readReviewLaneLedger")(f
 
 interface PullRequestFacts {
   readonly branches: HashSet.HashSet<string>;
-  // The latest disposition per thread, in ledger order.
+  // The latest disposition per thread by its recorded instant.
   readonly dispositions: HashMap.HashMap<string, ReviewLaneDispositionRow>;
   readonly flips: ReadonlyArray<ReviewLaneFlipRow>;
   readonly heads: HashMap.HashMap<string, ReviewLaneHeadRow>;
@@ -529,6 +531,20 @@ const emptyFacts = (prNumber: number): PullRequestFacts => ({
   dispositions: HashMap.empty(),
 });
 
+const parseMillis = (value: string): O.Option<number> => O.map(DateTime.make(value), DateTime.toEpochMillis);
+
+// The latest declaration per thread wins by its recorded instant, whatever
+// ledger it came from; ledger order decides only a tie or an instant that
+// does not parse.
+const latestDisposition = (
+  held: ReviewLaneDispositionRow,
+  next: ReviewLaneDispositionRow
+): ReviewLaneDispositionRow => {
+  const heldAt = parseMillis(held.recordedAt);
+  const nextAt = parseMillis(next.recordedAt);
+  return O.isSome(heldAt) && O.isSome(nextAt) && heldAt.value > nextAt.value ? held : next;
+};
+
 const addRow = (facts: PullRequestFacts, row: ReviewLaneRow): PullRequestFacts => {
   const branched = { ...facts, branches: HashSet.add(facts.branches, row.branch) };
   return Match.value(row).pipe(
@@ -542,7 +558,9 @@ const addRow = (facts: PullRequestFacts, row: ReviewLaneRow): PullRequestFacts =
     Match.tag("merge-ready", (ready) => ({ ...branched, mergeReadies: A.append(branched.mergeReadies, ready) })),
     Match.tag("disposition", (disposition) => ({
       ...branched,
-      dispositions: HashMap.set(branched.dispositions, disposition.threadId, disposition),
+      dispositions: HashMap.modifyAt(branched.dispositions, disposition.threadId, (held) =>
+        O.some(O.match(held, { onNone: () => disposition, onSome: (row) => latestDisposition(row, disposition) }))
+      ),
     })),
     Match.exhaustive
   );
@@ -563,8 +581,6 @@ const factsByPullRequest = (rows: ReadonlyArray<ReviewLaneRow>): ReadonlyArray<P
     HashMap.toValues,
     A.sort(Order.mapInput(Order.Number, (facts: PullRequestFacts) => facts.prNumber))
   );
-
-const parseMillis = (value: string): O.Option<number> => O.map(DateTime.make(value), DateTime.toEpochMillis);
 
 interface Instant {
   readonly at: string;
@@ -675,7 +691,7 @@ const precisionRow = (
  *
  * Pure: the same ledgers and branch always give the same section. Rows are
  * grouped by pull request; reviews deduplicate by review id, heads by sha,
- * dispositions keep the latest per thread. A pull request enters the rounds
+ * dispositions keep the latest per thread by its recorded instant. A pull request enters the rounds
  * table only with a flip; it is closed when a merge-ready announcement at or
  * after the flip exists, and only closed pull requests feed the nearest-rank
  * percentiles. Precision groups the latest disposition of every thread by
