@@ -2427,6 +2427,15 @@
       ],
       "@beep/schema/CredentialPatternBank": [
         "./packages/foundation/modeling/schema/src/CredentialPatternBank/index.ts"
+      ],
+      "@beep/epistemic-domain/values/Retention": [
+        "./packages/epistemic/domain/src/values/Retention/index.ts"
+      ],
+      "@beep/epistemic-server/Retention": [
+        "./packages/epistemic/server/src/Retention/index.ts"
+      ],
+      "@beep/epistemic-use-cases/Retention": [
+        "./packages/epistemic/use-cases/src/Retention/index.ts"
       ]
     }
   }
