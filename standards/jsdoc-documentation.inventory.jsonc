@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-28T10:57:30.794Z",
+  "generatedAt": "2026-10-28T19:28:49.389Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -119093,8 +119093,8 @@
           "exportKind": "const",
           "filePath": "src/Claim/Claim.model.ts",
           "repoPath": "packages/foundation/modeling/epistemics/src/Claim/Claim.model.ts",
-          "line": 273,
-          "anchor": "packages-foundation-modeling-epistemics-src-claim-claim-model-ts-273-makeclaimenvelope",
+          "line": 276,
+          "anchor": "packages-foundation-modeling-epistemics-src-claim-claim-model-ts-276-makeclaimenvelope",
           "currentTags": [
             "@category",
             "@since"
@@ -119115,8 +119115,8 @@
           "exportKind": "type",
           "filePath": "src/Claim/Claim.model.ts",
           "repoPath": "packages/foundation/modeling/epistemics/src/Claim/Claim.model.ts",
-          "line": 375,
-          "anchor": "packages-foundation-modeling-epistemics-src-claim-claim-model-ts-375-bitemporalversion",
+          "line": 392,
+          "anchor": "packages-foundation-modeling-epistemics-src-claim-claim-model-ts-392-bitemporalversion",
           "currentTags": [
             "@category",
             "@since"
@@ -119137,8 +119137,8 @@
           "exportKind": "type",
           "filePath": "src/Claim/Claim.model.ts",
           "repoPath": "packages/foundation/modeling/epistemics/src/Claim/Claim.model.ts",
-          "line": 396,
-          "anchor": "packages-foundation-modeling-epistemics-src-claim-claim-model-ts-396-bitemporalscope",
+          "line": 413,
+          "anchor": "packages-foundation-modeling-epistemics-src-claim-claim-model-ts-413-bitemporalscope",
           "currentTags": [
             "@category",
             "@since"
@@ -484738,8 +484738,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Docgen/Docgen.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Docgen/Docgen.command.ts",
-          "line": 1223,
-          "anchor": "packages-tooling-tool-cli-src-commands-docgen-docgen-command-ts-1223-docgencommand",
+          "line": 1232,
+          "anchor": "packages-tooling-tool-cli-src-commands-docgen-docgen-command-ts-1232-docgencommand",
           "currentTags": [
             "@category",
             "@since"
