@@ -12,7 +12,7 @@
 | Authority unchanged | SELECT-only read-only repeatable-read adapter | all edge and disposition rows compared before and after the drill |
 | Repo-native implementation | P0 provenance inventory and source review | no donor imports, copied constants, authority migrations, operator memory, or fusion arithmetic |
 
-The ten focused reporting tests and eleven core-authority integration tests pass
+The ten focused reporting tests, the dedicated authority rebuild test and ten core-authority integration tests pass
 as one 21-test run. The new rebuild drill runs against migrated embedded
 Postgres through the real authority repository and the new Drizzle reader/store.
 This is fixture proof; no production database was read or changed.

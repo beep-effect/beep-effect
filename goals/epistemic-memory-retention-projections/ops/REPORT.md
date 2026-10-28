@@ -85,7 +85,7 @@ can legitimately change output. Each generation reads a transaction-consistent
 snapshot; separate invocations cannot promise identical bytes if authority changes.
 
 Executable proof lives in
-`packages/epistemic/server/test/integration/EdgeAuthority.pglite.test.ts`, test
+`packages/epistemic/server/test/RetentionAuthority.pglite.test.ts`, test
 `rebuilds disposable retention bytes at two coordinates after full deletion without changing authority`.
 It uses migrated embedded Postgres, accepted authority repository writes, a
 retroactive correction and durable rejection, destroys the full store including
