@@ -115,8 +115,9 @@ restart attempts and memory, and runs two adapter workers. It receives storage
 access but strips vault and application credentials from the adapter environment.
 A persistent failure leaves quality commands able to execute locally.
 
-Enrollment changes only the cache quad plus `BEEP_TURBO_TRUSTED_WRITER=true` in
-that checkout. It refuses duplicate cache entries, symlinked dotenv files, and
+Enrollment changes only the cache quad, adds `BEEP_TURBO_HOST_CACHE_MANAGED=true`,
+and sets `BEEP_TURBO_TRUSTED_WRITER` to `true` in read/write mode or `false` in read
+mode. It refuses duplicate cache entries, symlinked dotenv files, and
 raw existing cache tokens. A private receipt retains only the old/new cache fields
 and references, retaining original cache lines for rollback, including `export`
 and spacing. Other dotenv values and unrelated later edits stay intact.

@@ -24,12 +24,31 @@ for wrapper in map(Path, sys.argv[1:]):
         mock.write_text('''#!/usr/bin/env python3
 import json,os,sys
 from pathlib import Path
-if '-G' in sys.argv:
- print('controlpath '+os.environ['MOCK_SOCKET'])
-elif '-O' in sys.argv:
- sys.exit(0 if os.environ['MOCK_REUSE']=='true' else 255)
+arguments=sys.argv[1:]
+destination=None
+remote=[]
+configuration=False
+operation=None
+control_path='none'
+index=0
+while index<len(arguments):
+ argument=arguments[index]
+ if argument in ['-F','-S','-O','-o','-i']:
+  value=arguments[index+1]
+  if argument=='-S':control_path=value
+  elif argument=='-O':operation=value
+  elif argument=='-o' and value.startswith('ControlPath='):control_path=value.partition('=')[2]
+  index+=2
+ elif argument=='-G':configuration=True;index+=1
+ elif argument.startswith('-'):index+=1
+ elif destination is None:destination=argument;index+=1
+ else:remote=arguments[index:];break
+if configuration:
+ print('controlpath '+control_path)
+elif operation is not None:
+ sys.exit(0 if operation=='check' and control_path==os.environ['MOCK_SOCKET'] and os.environ['MOCK_REUSE']=='true' else 255)
 else:
- with Path(os.environ['MOCK_CALLS']).open('a') as out:out.write(json.dumps(sys.argv[1:])+'\\n')
+ with Path(os.environ['MOCK_CALLS']).open('a') as out:out.write(json.dumps({'argv':arguments,'remote':remote})+'\\n')
 ''')
         mock.chmod(0o700)
         for name in ['ssh-add', 'ssh-keygen']:
@@ -51,19 +70,31 @@ else:
                        'MOCK_KEY_FINGERPRINT': 'SHA256:bVUwE95rPZDRHE6byIIJdOkfc90OHj1dFC1sc1Rz1HA' if 'ubuntu' in wrapper.name else 'SHA256:/MMPLM/N77AYZ6fGapAV83I/ALH9IyF5h2xmVwpgnPU',
                        'MOCK_SOCKET': str(home / 'control socket'), 'MOCK_CALLS': str(calls), 'MOCK_EVENTS': str(events)}
         try:
-            for reuse, arguments, expected_starts in [('true', ['echo', 'fixture'], 0),
-                                                       ('false', ['echo', 'fixture'], 1),
-                                                       ('false', ['-G'], 0), ('false', ['echo', '-G'], 1), ('false', ['-o', 'ConnectTimeout=1', '-G'], 0)]:
+            for reuse, arguments, expected_starts, expected_remote, expected_reuse in [
+                ('true', ['-o', 'ControlPath='+environment['MOCK_SOCKET'], 'echo', 'fixture'], 0, ['echo', 'fixture'], True),
+                ('true', ['echo', 'fixture'], 1, ['echo', 'fixture'], False),
+                ('false', ['-S', environment['MOCK_SOCKET'], 'echo', 'fixture'], 1, ['echo', 'fixture'], False),
+                ('false', ['echo', 'fixture'], 1, ['echo', 'fixture'], False),
+                ('false', ['-G'], 0, [], False),
+                ('false', ['echo', '-G'], 1, ['echo', '-G'], False),
+                ('false', ['echo', '-O', 'check'], 1, ['echo', '-O', 'check'], False),
+                ('false', ['-o', 'ConnectTimeout=1', '-G'], 0, [], False),
+            ]:
                 events.write_text('')
                 calls.write_text('')
                 result = subprocess.run(['bash', str(wrapper.resolve()), *arguments], env={**environment, 'MOCK_REUSE': reuse},
                                         capture_output=True, text=True, timeout=15)
                 assert result.returncode == 0, wrapper.name + ': wrapper failed'
                 assert events.read_text().splitlines().count('start') == expected_starts, wrapper.name + ': incorrect alerts'
-                if reuse == 'true':
-                    invocation = json.loads(calls.read_text().splitlines()[0])
-                    assert 'ProxyCommand=false' in invocation and 'ControlMaster=no' in invocation
-                    assert environment['MOCK_SOCKET'] in invocation
+                recorded = [json.loads(line) for line in calls.read_text().splitlines()]
+                assert len(recorded) == (1 if expected_remote else 0), wrapper.name + ': incorrect final invocation count'
+                if expected_remote:
+                    invocation = recorded[0]
+                    assert invocation['remote'] == expected_remote, wrapper.name + ': remote command changed'
+                    assert ('ProxyCommand=false' in invocation['argv']) == expected_reuse
+                    if expected_reuse:
+                        assert 'ControlMaster=no' in invocation['argv']
+                        assert environment['MOCK_SOCKET'] in invocation['argv']
             print('PASS: ' + wrapper.name + ': reused channel quiet; fresh authentication announced; config probe quiet; no fallback dial')
         finally:
             for handle in handles:

@@ -17,7 +17,8 @@ Run the inert fixture against each wrapper before installation:
 ```sh
 python3 goals/cloud-agent-readiness/ops/ssh-touch-reuse-check.py \
   goals/cloud-agent-readiness/ops/ssh-beep-worker-yubi.sh \
-  goals/cloud-agent-readiness/ops/ssh-tbk-worker.sh
+  goals/cloud-agent-readiness/ops/ssh-tbk-worker.sh \
+  goals/cloud-agent-readiness/ops/ssh-tbk-ubuntu.sh
 ```
 
 It substitutes SSH, agent/key inspection and the alert consumer. It does not
