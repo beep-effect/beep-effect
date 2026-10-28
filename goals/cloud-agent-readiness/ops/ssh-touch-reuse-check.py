@@ -34,7 +34,7 @@ else:
         mock.chmod(0o700)
         for name in ['ssh-add', 'ssh-keygen']:
             target = binary / name
-            target.write_text('#!/bin/sh\nprintf "%s\\n" "256 SHA256:/MMPLM/N77AYZ6fGapAV83I/ALH9IyF5h2xmVwpgnPU fixture (ED25519-SK)"\n')
+            target.write_text('#!/bin/sh\nprintf "%s\\n" "256 $MOCK_KEY_FINGERPRINT fixture (ED25519-SK)"\n')
             target.chmod(0o700)
         alert = alerts / 'yubikey-touch-alert'
         alert.write_text('#!/bin/sh\nprintf "%s\\n" "$1" >> "$MOCK_EVENTS"\n')
@@ -48,6 +48,7 @@ else:
             handle.bind(str(home / '.ssh' / ('agent-' + suffix + '.sock')))
             handles.append(handle)
         environment = {**os.environ, 'HOME': str(home), 'PATH': str(binary) + os.pathsep + os.environ['PATH'],
+                       'MOCK_KEY_FINGERPRINT': 'SHA256:bVUwE95rPZDRHE6byIIJdOkfc90OHj1dFC1sc1Rz1HA' if 'ubuntu' in wrapper.name else 'SHA256:/MMPLM/N77AYZ6fGapAV83I/ALH9IyF5h2xmVwpgnPU',
                        'MOCK_SOCKET': str(home / 'control socket'), 'MOCK_CALLS': str(calls), 'MOCK_EVENTS': str(events)}
         try:
             for reuse, arguments, expected_starts in [('true', ['echo', 'fixture'], 0),

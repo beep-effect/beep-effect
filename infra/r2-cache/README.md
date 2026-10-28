@@ -203,7 +203,8 @@ the host client references. Use it for direct Turbo calls or historical branches
 ordinary current `bun run` quality commands already select the same cache.
 
 Fresh current clones and raw Git/app worktrees with no cache settings load the
-installed reference-only `client.env` at CLI startup. Explicit checkout settings,
+installed reference-only `client.env` at CLI startup after verifying the canonical
+public upstream. Private forks and unrelated repositories do not inherit it. Explicit checkout settings,
 CI and `BEEP_TURBO_HOST_CACHE_DISABLED=true` take precedence. The canonical
 `beep worktree new` command also copies the enrolled primary checkout's `.env`.
 No discovery daemon or recurring fleet job is installed.

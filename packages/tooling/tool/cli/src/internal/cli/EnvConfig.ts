@@ -756,17 +756,20 @@ const configuredValue = (value: string | undefined): O.Option<string> =>
  *
  * @param environment - The caller's environment before host defaults.
  * @param ci - Whether the caller is running in CI.
+ * @param origin - The checkout's Git origin; only the canonical public upstream is eligible.
  * @returns Reference-only cache defaults, or an empty record when not applicable.
  * @category configuration
  * @since 0.0.0
  */
 export const loadHostTurboCacheDefaults = Effect.fn("EnvConfig.loadHostTurboCacheDefaults")(function* (
   environment: Readonly<Record<string, string | undefined>>,
-  ci: boolean
+  ci: boolean,
+  origin = ""
 ) {
   const names = [...TurboCacheEnvName.literals, "BEEP_TURBO_TRUSTED_WRITER"];
   if (
     ci ||
+    O.isNone(Str.match(/^(?:https:\/\/github\.com\/|git@github\.com:)beep-effect\/beep-effect(?:\.git)?$/u)(origin)) ||
     environment.BEEP_TURBO_HOST_CACHE_DISABLED === "true" ||
     A.some(TurboCacheEnvName.literals, (name) => O.isSome(configuredValue(environment[name])))
   ) {

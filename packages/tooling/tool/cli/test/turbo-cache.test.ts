@@ -72,7 +72,13 @@ it.layer(BunServices.layer)("enrolled host cache defaults", (it) => {
       );
       yield* fs.writeFileString(file, contents);
       const environment = { HOME: root, XDG_CONFIG_HOME: root };
-      const defaults = yield* loadHostTurboCacheDefaults(environment, false);
+      expect(yield* loadHostTurboCacheDefaults(environment, false, "git@github.com:private/fork.git")).toEqual({});
+      expect(yield* loadHostTurboCacheDefaults(environment, false, "")).toEqual({});
+      const defaults = yield* loadHostTurboCacheDefaults(
+        environment,
+        false,
+        "git@github.com:beep-effect/beep-effect.git"
+      );
       expect(defaults).toEqual({
         TURBO_API: "http://127.0.0.1:9427",
         TURBO_TOKEN: "op://fixture/cache/bearer",
@@ -80,13 +86,29 @@ it.layer(BunServices.layer)("enrolled host cache defaults", (it) => {
         TURBO_CACHE: "local:rw,remote:rw",
         BEEP_TURBO_TRUSTED_WRITER: "true",
       });
-      expect(yield* loadHostTurboCacheDefaults(environment, true)).toEqual({});
-      expect(yield* loadHostTurboCacheDefaults({ ...environment, TURBO_CACHE: "local:rw" }, false)).toEqual({});
-      expect(yield* loadHostTurboCacheDefaults({ ...environment, TURBO_API: "https://explicit.test" }, false)).toEqual(
-        {}
-      );
       expect(
-        yield* loadHostTurboCacheDefaults({ ...environment, BEEP_TURBO_HOST_CACHE_DISABLED: "true" }, false)
+        yield* loadHostTurboCacheDefaults(environment, true, "git@github.com:beep-effect/beep-effect.git")
+      ).toEqual({});
+      expect(
+        yield* loadHostTurboCacheDefaults(
+          { ...environment, TURBO_CACHE: "local:rw" },
+          false,
+          "git@github.com:beep-effect/beep-effect.git"
+        )
+      ).toEqual({});
+      expect(
+        yield* loadHostTurboCacheDefaults(
+          { ...environment, TURBO_API: "https://explicit.test" },
+          false,
+          "git@github.com:beep-effect/beep-effect.git"
+        )
+      ).toEqual({});
+      expect(
+        yield* loadHostTurboCacheDefaults(
+          { ...environment, BEEP_TURBO_HOST_CACHE_DISABLED: "true" },
+          false,
+          "git@github.com:beep-effect/beep-effect.git"
+        )
       ).toEqual({});
       for (const invalid of [
         Str.replace("op://fixture/cache/bearer", "raw-fixture-token")(contents),
@@ -95,10 +117,14 @@ it.layer(BunServices.layer)("enrolled host cache defaults", (it) => {
         "TURBO_API=http://127.0.0.1:9427",
       ]) {
         yield* fs.writeFileString(file, invalid);
-        expect(yield* loadHostTurboCacheDefaults(environment, false)).toEqual({});
+        expect(
+          yield* loadHostTurboCacheDefaults(environment, false, "git@github.com:beep-effect/beep-effect.git")
+        ).toEqual({});
       }
       yield* fs.remove(file);
-      expect(yield* loadHostTurboCacheDefaults(environment, false)).toEqual({});
+      expect(
+        yield* loadHostTurboCacheDefaults(environment, false, "git@github.com:beep-effect/beep-effect.git")
+      ).toEqual({});
     }).pipe(Effect.scoped)
   );
 });

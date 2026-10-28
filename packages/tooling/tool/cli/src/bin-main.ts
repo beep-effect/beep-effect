@@ -137,13 +137,24 @@ const applyHostTurboCacheDefaults = (defaults: Readonly<Record<string, string>>)
   for (const [name, value] of R.toEntries(defaults)) Bun.env[name] = value;
 };
 
+const currentGitOrigin = (): string =>
+  Result.getOrElse(
+    Result.map(
+      Result.try(() =>
+        Bun.spawnSync({ cmd: ["git", "remote", "get-url", "origin"], stdout: "pipe", stderr: "ignore" })
+      ),
+      (result) => (result.success ? Str.trim(result.stdout.toString()) : "")
+    ),
+    () => ""
+  );
+
 const withHostTurboCacheDefaults = Effect.fn("RepoCli.withHostTurboCacheDefaults")(function* <A, E, R>(
   effect: import("effect/Effect").Effect<A, E, R>
 ) {
   const { configStringOption, isCiSync, loadHostTurboCacheDefaults } = yield* Effect.promise(
     () => import("./internal/cli/EnvConfig.ts")
   );
-  const defaults = yield* loadHostTurboCacheDefaults(Bun.env, isCiSync());
+  const defaults = yield* loadHostTurboCacheDefaults(Bun.env, isCiSync(), currentGitOrigin());
   const configuredApi = yield* configStringOption("TURBO_API");
   const configuredSummary = yield* configStringOption("TURBO_RUN_SUMMARY");
   const selectedApi = O.orElse(O.fromUndefinedOr(defaults.TURBO_API), () => configuredApi);
