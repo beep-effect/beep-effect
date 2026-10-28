@@ -139,19 +139,6 @@ export * from "./CitationId/index.ts";
  */
 export * from "./CitationSignal/index.ts";
 /**
- * Citation-type value-object exports.
- *
- * **Example** (Import the citation-type value objects)
- *
- * ```ts
- * import { CitationType } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./CitationType/index.ts";
-/**
  * Citation-warning value-object exports.
  *
  * **Example** (Import the citation-warning value objects)
@@ -339,19 +326,6 @@ export * from "./FederalRuleCitation/index.ts";
  * @since 0.0.0
  */
 export * from "./Footnote/index.ts";
-/**
- * Full-citation-type value-object exports.
- *
- * **Example** (Import the full-citation-type value objects)
- *
- * ```ts
- * import { FullCitationType } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./FullCitationType/index.ts";
 /**
  * History-chain value-object exports.
  *
@@ -733,19 +707,6 @@ export * from "./PublicLawCitation/index.ts";
  */
 export * from "./Question/index.ts";
 /**
- * Regulation-citation value-object exports.
- *
- * **Example** (Import the regulation-citation value objects)
- *
- * ```ts
- * import { RegulationCitation } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./RegulationCitation/index.ts";
-/**
  * Resolution-result value-object exports.
  *
  * **Example** (Import the resolution-result value objects)
@@ -838,19 +799,6 @@ export * from "./SessionLawCitation/index.ts";
  */
 export * from "./SetupRequirement/index.ts";
 /**
- * Short-form-citation-type value-object exports.
- *
- * **Example** (Import the short-form-citation-type value objects)
- *
- * ```ts
- * import { ShortFormCitationType } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./ShortFormCitationType/index.ts";
-/**
  * Source norm reference value-object exports.
  *
  * **Example** (Import the source norm reference value objects)
@@ -902,19 +850,6 @@ export * from "./Span/index.ts";
  * @since 0.0.0
  */
 export * from "./StateRuleCitation/index.ts";
-/**
- * Statute-citation value-object exports.
- *
- * **Example** (Import the statute-citation value objects)
- *
- * ```ts
- * import { StatuteCitation } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./StatuteCitation/index.ts";
 /**
  * Statutes-at-large-citation value-object exports.
  *

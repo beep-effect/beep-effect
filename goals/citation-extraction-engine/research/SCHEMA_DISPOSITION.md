@@ -32,6 +32,21 @@ consumer requires the provisional shapes. Repeat all three commands immediately
 before deletion and at close. `private: true` is supporting context, not
 consumer proof.
 
+## Applied law-slice migration — 2026-10-28
+
+The fresh consumer scan permits direct replacement of the provisional law
+shapes. `FullLawCitation` now replaces both `StatuteCitation` and
+`RegulationCitation` in the existing `Citation` union. Their files/barrels and
+unused `StatuteComponentSpan` are removed. The three standalone citation-type
+schemas are removed; `Citation.discriminants` and its derived subsets own tags.
+`FullCitation` and `ShortFormCitation` use `Citation.cases` members.
+
+The exact field mapping and remaining donor-only obligations are recorded in
+[the law schema receipt](../history/evidence/2026-10-28-law-schema.md).
+`CitationBase` and the other provisional forms still await migration; this is
+not a second citation hierarchy or a completed P1 claim. No donor disposition
+is completed by deleting its provisional representation.
+
 ## Target boundaries
 
 ### Semantic legal values

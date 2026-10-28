@@ -44,16 +44,15 @@ import { ParallelGroup } from "../ParallelGroup/index.ts";
 import { ParentheticalType } from "../ParentheticalType/index.ts";
 import { PinciteInfo } from "../PinciteInfo/index.ts";
 import { PublicLawCitation } from "../PublicLawCitation/index.ts";
-import { RegulationCitation } from "../RegulationCitation/index.ts";
 import { RestatementCitation } from "../RestatementCitation/index.ts";
 import { SessionLawCitation } from "../SessionLawCitation/index.ts";
 import { Span } from "../Span/index.ts";
 import { StateRuleCitation } from "../StateRuleCitation/index.ts";
-import { StatuteCitation } from "../StatuteCitation/index.ts";
 import { StatutesAtLargeCitation } from "../StatutesAtLargeCitation/index.ts";
 import { SubsequentHistoryEntry } from "../SubsequentHistoryEntry/index.ts";
 import { TreatiseCitation } from "../TreatiseCitation/index.ts";
 import { TreatyCitation } from "../TreatyCitation/index.ts";
+import { FullLawCitation } from "./Citation.law.ts";
 
 const $I = $LawPracticeDomainId.create("values/Citation/Citation.models");
 
@@ -1491,8 +1490,7 @@ export declare namespace ShortFormCaseCitation {
  * **Details**
  *
  * Discriminated on the `type` field, so downstream code can branch exhaustively
- * across every parsed legal-authority kind — full case, short-form, statute,
- * regulation, and the rest of the Tier-C family.
+ * across every parsed legal-authority kind — full case, short-form, law, and the rest of the Tier-C family.
  *
  * **Example** (Aliasing all citation types)
  *
@@ -1508,8 +1506,7 @@ export declare namespace ShortFormCaseCitation {
 export const Citation = S.Union([
   FullCaseCitation,
   DocketCitation,
-  StatuteCitation,
-  RegulationCitation,
+  FullLawCitation,
   JournalCitation,
   NeutralCitation,
   PublicLawCitation,
@@ -1582,8 +1579,7 @@ export declare namespace Citation {
   export type Type =
     | FullCaseCitation.Type
     | DocketCitation
-    | StatuteCitation
-    | RegulationCitation
+    | FullLawCitation
     | JournalCitation
     | NeutralCitation
     | PublicLawCitation
@@ -1612,8 +1608,7 @@ export declare namespace Citation {
   export type Encoded =
     | FullCaseCitation.Encoded
     | DocketCitation.Encoded
-    | StatuteCitation.Encoded
-    | RegulationCitation.Encoded
+    | typeof FullLawCitation.Encoded
     | JournalCitation.Encoded
     | NeutralCitation.Encoded
     | PublicLawCitation.Encoded
@@ -1655,26 +1650,25 @@ export declare namespace Citation {
  * @since 0.0.0
  */
 export const FullCitation = S.Union([
-  FullCaseCitation,
-  SessionLawCitation,
-  TreatyCitation,
-  LegislativeMaterialCitation,
-  LocalOrdinanceCitation,
-  CanonCitation,
-  DocketCitation,
-  StatuteCitation,
-  RegulationCitation,
-  JournalCitation,
-  NeutralCitation,
-  PublicLawCitation,
-  FederalRegisterCitation,
-  StatutesAtLargeCitation,
-  ConstitutionalCitation,
-  FederalRuleCitation,
-  StateRuleCitation,
-  RestatementCitation,
-  TreatiseCitation,
-  AnnotationCitation,
+  Citation.cases.case,
+  Citation.cases.sessionLaw,
+  Citation.cases.treaty,
+  Citation.cases.legislativeMaterial,
+  Citation.cases.localOrdinance,
+  Citation.cases.canon,
+  Citation.cases.docket,
+  Citation.cases.law,
+  Citation.cases.journal,
+  Citation.cases.neutral,
+  Citation.cases.publicLaw,
+  Citation.cases.federalRegister,
+  Citation.cases.statutesAtLarge,
+  Citation.cases.constitutional,
+  Citation.cases.federalRule,
+  Citation.cases.stateRule,
+  Citation.cases.restatement,
+  Citation.cases.treatise,
+  Citation.cases.annotation,
 ]).pipe(
   S.toTaggedUnion("type"),
   $I.annoteSchema("FullCitation", {
@@ -1717,7 +1711,7 @@ export type FullCitation = typeof FullCitation.Type;
  * @category models
  * @since 0.0.0
  */
-export const ShortFormCitation = S.Union([IdCitation, SupraCitation, ShortFormCaseCitation]).pipe(
+export const ShortFormCitation = S.Union([Citation.cases.id, Citation.cases.supra, Citation.cases.shortFormCase]).pipe(
   S.toTaggedUnion("type"),
   $I.annoteSchema("ShortFormCitation", {
     description: "Union of all short-form citation types (Id., supra, short-form case).",

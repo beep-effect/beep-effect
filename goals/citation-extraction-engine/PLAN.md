@@ -32,7 +32,9 @@ P0 proof bindings stay open; this overlap does not promote either phase.
 Vocabulary mapping accounts for all 2,430 frozen publications, 2,533 editions
 and 2,798 courts, with three reviewed case-reporter identity transitions and
 explicit metadata drift. Private verified-anchor cm1 digest production now
-passes the server package gate; semantic integration remains open. The
+passes the server package gate. Canonical law semantics now replace the two
+provisional statute/regulation shapes; the other semantic forms and mention
+integration remain open. The
 29-field limits/default policy and parent-owned process
 isolation mechanism are evidenced; production enforcement, pattern-level
 compatibility/scaling and final parity-gate integration remain open. The

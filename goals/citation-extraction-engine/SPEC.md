@@ -707,6 +707,19 @@ instead of silently splitting delivery or weakening scope.
   protocol/input change requires a new token version and migration; do not
   silently reinterpret cm1. Authority-key generation remains separately open.
 
+- **2026-10-28 canonical law rebaseline:** replace the two provisional
+  statute/regulation shapes with one `FullLawCitation` in the existing union.
+  Preserve canonical legal component strings, missing versus explicit-null
+  keys, textual metadata and edition artifact identities; C.F.R.'s numeric
+  prefix remains `chapter` while U.S.C.'s remains `title`. The oracle defines
+  component names as non-exhaustive, so the schema retains unknown legal
+  component names instead of silently discarding them. Keep publication kind
+  validation and artifact resolution at the engine boundary. Remove the
+  unused statute coordinate model and independent type literal lists. No
+  residual donor behavior is accepted or rejected by this schema migration.
+  Reversal requires another evidenced semantic mapping and consumer migration,
+  not compatibility aliases or a parallel hierarchy.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from

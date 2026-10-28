@@ -20,8 +20,10 @@ zero-width points. Five coverage families remain open. The 29-field limit
 policy and process-isolation mechanism are evidenced. Limited P1 identity
 work now overlaps P0's unfinished proof bindings after the explicit
 prerequisite/limits holdpoints pass. Occurrence/authority token schemas and a
-private verified-anchor occurrence digest producer are implemented; semantic
-schema replacement, runtime enforcement and family safety remain unfinished.
+private verified-anchor occurrence digest producer are implemented. Canonical
+FullLawCitation replaces the provisional statute/regulation shapes in the
+existing union. Other semantic forms, runtime enforcement and family safety
+remain unfinished.
 
 Current evidence:
 
@@ -42,6 +44,7 @@ Current evidence:
 - [Regex benchmark contract](./history/evidence/2026-10-28-regex-benchmark-contract.md)
 - [Identity foundations](./history/evidence/2026-10-28-identity-foundations.md)
 - [Verified occurrence IDs](./history/evidence/2026-10-28-mention-identity-producer.md)
+- [Canonical law schema](./history/evidence/2026-10-28-law-schema.md)
 
 ## Mission
 

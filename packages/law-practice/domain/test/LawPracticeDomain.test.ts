@@ -42,14 +42,12 @@ import {
   PinciteInfo,
   PriorArtReference,
   parsePatentSections,
-  RegulationCitation,
   Rejection,
   RejectionGround,
   ResolutionResult,
   ShortFormCaseCitation,
   ShortFormCitation,
   Span,
-  StatuteCitation,
   StatutesAtLargeCitation,
   SubsequentHistoryEntry,
   SupraCitation,
@@ -83,10 +81,8 @@ const decodeIdCitation = S.decodeEffect(IdCitation);
 const decodeNeutralCitation = S.decodeEffect(NeutralCitation);
 const decodeParenthetical = S.decodeEffect(Parenthetical);
 const decodePinciteInfo = S.decodeEffect(PinciteInfo);
-const decodeRegulationCitation = S.decodeEffect(RegulationCitation);
 const decodeResolutionResult = S.decodeEffect(ResolutionResult);
 const decodeShortFormCaseCitation = S.decodeEffect(ShortFormCaseCitation);
-const decodeStatuteCitation = S.decodeEffect(StatuteCitation);
 const decodeStatutesAtLargeCitation = S.decodeEffect(StatutesAtLargeCitation);
 const decodeSupraCitation = S.decodeEffect(SupraCitation);
 const decodeUnknownCitingApplicationIdentityOption = S.decodeUnknownOption(CitingApplicationIdentity);
@@ -117,11 +113,9 @@ const encodeParenthetical = S.encodeEffect(Parenthetical);
 const encodePatentAsset = S.encodeEffect(PatentAsset);
 const encodePinciteInfo = S.encodeEffect(PinciteInfo);
 const encodePriorArtReference = S.encodeEffect(PriorArtReference);
-const encodeRegulationCitation = S.encodeEffect(RegulationCitation);
 const encodeRejection = S.encodeEffect(Rejection);
 const encodeResolutionResult = S.encodeEffect(ResolutionResult);
 const encodeShortFormCaseCitation = S.encodeEffect(ShortFormCaseCitation);
-const encodeStatuteCitation = S.encodeEffect(StatuteCitation);
 const encodeStatutesAtLargeCitation = S.encodeEffect(StatutesAtLargeCitation);
 const encodeSupraCitation = S.encodeEffect(SupraCitation);
 const isApplicationNumber = S.is(ApplicationNumber);
@@ -619,8 +613,6 @@ describe("@beep/law-practice-domain", () => {
       year: S.Natural.make(2023),
       documentNumber: "128749",
     });
-    const statute = StatuteCitation.make(citationBaseInput("28 U.S.C. § 1331"));
-    const regulation = RegulationCitation.make(citationBaseInput("42 C.F.R. § 405.1"));
     const statutesAtLarge = StatutesAtLargeCitation.make({
       ...citationBaseInput("100 Stat. 3743"),
       volume: S.Natural.make(100),
@@ -642,8 +634,6 @@ describe("@beep/law-practice-domain", () => {
     expect(supra.pinciteInherited).toBe(false);
     expect(shortForm.pinciteInherited).toBe(false);
     expect(neutral.unpublished).toBe(false);
-    expect(statute.hasEtSeq).toBe(false);
-    expect(regulation.hasEtSeq).toBe(false);
     expect(statutesAtLarge.pinciteIsRange).toBe(false);
     expect(parenthetical.citations).toStrictEqual([]);
     expect(pincite.starPage).toBe(false);
@@ -681,8 +671,6 @@ describe("@beep/law-practice-domain", () => {
         year: 2023,
         documentNumber: "128749",
       });
-      const statute = yield* decodeStatuteCitation({ ...baseWire, type: "statute" });
-      const regulation = yield* decodeRegulationCitation({ ...baseWire, type: "regulation" });
       const statutesAtLarge = yield* decodeStatutesAtLargeCitation({
         ...baseWire,
         type: "statutesAtLarge",
@@ -707,8 +695,6 @@ describe("@beep/law-practice-domain", () => {
       expect((yield* encodeSupraCitation(supra)).pinciteInherited).toBe(false);
       expect((yield* encodeShortFormCaseCitation(shortForm)).pinciteInherited).toBe(false);
       expect((yield* encodeNeutralCitation(neutral)).unpublished).toBe(false);
-      expect((yield* encodeStatuteCitation(statute)).hasEtSeq).toBe(false);
-      expect((yield* encodeRegulationCitation(regulation)).hasEtSeq).toBe(false);
       expect((yield* encodeStatutesAtLargeCitation(statutesAtLarge)).pinciteIsRange).toBe(false);
       expect((yield* encodeParenthetical(parenthetical)).citations).toStrictEqual([]);
       expect(yield* encodePinciteInfo(pincite)).toMatchObject({
@@ -781,14 +767,6 @@ describe("@beep/law-practice-domain", () => {
       documentNumber: "128749",
       unpublished: true,
     });
-    const statute = StatuteCitation.make({
-      ...citationBaseInput("28 U.S.C. § 1331 et seq."),
-      hasEtSeq: true,
-    });
-    const regulation = RegulationCitation.make({
-      ...citationBaseInput("42 C.F.R. § 405.1 et seq."),
-      hasEtSeq: true,
-    });
     const statutesAtLarge = StatutesAtLargeCitation.make({
       ...citationBaseInput("100 Stat. 3743, 3755-58"),
       volume: S.Natural.make(100),
@@ -822,8 +800,6 @@ describe("@beep/law-practice-domain", () => {
     expect(supra.pinciteInherited).toBe(true);
     expect(shortForm.pinciteInherited).toBe(true);
     expect(neutral.unpublished).toBe(true);
-    expect(statute.hasEtSeq).toBe(true);
-    expect(regulation.hasEtSeq).toBe(true);
     expect(statutesAtLarge.pinciteIsRange).toBe(true);
     expect(parenthetical.citations).toStrictEqual([childCitation]);
     expect(pincite.starPage).toBe(true);
@@ -866,16 +842,9 @@ describe("@beep/law-practice-domain", () => {
   it.effect.prop(
     "round-trips leaf citation value schemas through encoded form",
     {
-      StatuteCitation: Arbitrary.schema(StatuteCitation),
-      RegulationCitation: Arbitrary.schema(RegulationCitation),
       DocketCitation: Arbitrary.schema(DocketCitation),
     },
-    (values) =>
-      Effect.gen(function* () {
-        yield* assertSchemaEncodedRoundTrip(StatuteCitation, values.StatuteCitation, "StatuteCitation");
-        yield* assertSchemaEncodedRoundTrip(RegulationCitation, values.RegulationCitation, "RegulationCitation");
-        yield* assertSchemaEncodedRoundTrip(DocketCitation, values.DocketCitation, "DocketCitation");
-      }),
+    (values) => assertSchemaEncodedRoundTrip(DocketCitation, values.DocketCitation, "DocketCitation"),
     { arbitrary: fcRuns(10) }
   );
 
