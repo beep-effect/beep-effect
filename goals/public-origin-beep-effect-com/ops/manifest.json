@@ -6,7 +6,7 @@
     "title": "Single public origin beep-effect.com",
     "status": "active",
     "created": "2026-10-20",
-    "updated": "2026-10-21",
+    "updated": "2026-10-28",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/public-origin-beep-effect-com",
@@ -23,7 +23,7 @@
     "acceptanceEvidence": [
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/feat_public-origin-beep-effect-com-ac011754d105/verdict.json",
+        "ref": ".beep/yeet/runs/codex_public-origin-closeout-aa3ed05cf18f/verdict.json",
         "gating": true
       }
     ]

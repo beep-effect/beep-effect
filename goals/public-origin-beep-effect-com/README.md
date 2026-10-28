@@ -35,15 +35,28 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 to P3 are complete: the packet and doctrine, `@beep/public-site`, the
-authority move with the drift folding and residue rewrite, and the
-`retired-iri-authorities` law with its lane. P4 closeout is in progress: the
-reflection is written and `ops/manifest.json` proposes `completed-retained`
-with final PR #1946, gated on the retained yeet verdict. After merge,
-`bun run beep goals completion refresh --slug public-origin-beep-effect-com`
-verifies it.
+P0 to P3 shipped in PR #1946, merged on 2026-10-21. P4 is in progress.
+The 2026-10-28 completion refresh returned `unsatisfied`; merge-time required
+checks and readiness evidence do not prove completion. A fresh closeout branch
+rechecks the implementation and will bind a new final PR and retained verdict.
+The operative lifecycle stays `active` until completion refresh verifies that PR.
 
 ## Latest Evidence
+
+Closeout audit on 2026-10-28:
+
+- #1946 accepted head `1da27b6b07b0d755e389e5dc129be1cfc0e54c80` merged as
+  `eba755d93506576824b9f1e8205aa01489efea6a`; that merge is in current main.
+- Completion receipt: `history/2026-10-28-original-completion-receipt.json`.
+  Required Effect Diagnostics failed at merge, Lint was unknown, the review
+  window was open, and the declared local readiness verdict was absent.
+- Current law scan: 36,972 tracked text files, 0 findings, 106 binaries skipped
+  and 4,825 exempt files. Reflection lint has 0 blocking or advisory findings.
+  Changeset graph has 189 workspaces, 0 notes and 0 missing references.
+- Current proof and fresh final-head readiness remain in progress.
+
+Historical implementation evidence follows. It does not establish readiness
+of the fresh closeout head.
 
 Proof on the final branch (2026-10-21):
 
