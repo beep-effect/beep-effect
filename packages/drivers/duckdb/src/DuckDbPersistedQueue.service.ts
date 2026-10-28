@@ -444,7 +444,8 @@ export const makeStoreSql: (
               } catch (defect) {
                 // a row that cannot be parsed will never succeed, so dead-letter
                 // it and take the next element
-                return Effect.andThen(fail(element, Cause.die(defect)), loop);
+                // beep: restore so the next take stays interruptible instead of inheriting this mask (#2306 review).
+                return Effect.andThen(fail(element, Cause.die(defect)), restore(loop));
               }
               return Effect.as(
                 Effect.addFinalizer((exit) => {

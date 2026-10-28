@@ -7,6 +7,7 @@ import { assert } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as RunnerAddress from "effect/cluster/RunnerAddress";
 import * as RunnerStorage from "effect/cluster/RunnerStorage";
+import * as ShardId from "effect/cluster/ShardId";
 import * as ShardingConfig from "effect/cluster/ShardingConfig";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -56,5 +57,33 @@ it.layer(
         assert.deepStrictEqual(yield* storage.refresh(RunnerAddress.make("localhost", 4321), []), []);
       })
     )
+  );
+});
+
+const zoneOptions = { prefix: "zone" };
+it.layer(
+  DuckDbRunnerStorage.layerStorage(zoneOptions).pipe(
+    Layer.provide(DuckDbRunnerStorage.layerMigrations(zoneOptions)),
+    Layer.provideMerge(DuckDbTestLayer),
+    Layer.provide(ShardingConfig.layer())
+  ),
+  { timeout: "30 seconds" }
+)("DuckDB runner lease time zones", (it) => {
+  // Lease timestamps are instants: a lease written under UTC must still be live after the session
+  // moves to UTC+14, so another runner cannot take the shard (a zone-less TIMESTAMP would read 14 hours old).
+  it.effect("keeps a lease across a session TimeZone change", () =>
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const storage = yield* RunnerStorage.RunnerStorage;
+      const owner = RunnerAddress.make("localhost", 5001);
+      const rival = RunnerAddress.make("localhost", 5002);
+      const shard = ShardId.make("default", 1);
+      yield* sql`SET TimeZone = 'UTC'`;
+      assert.deepStrictEqual(yield* storage.acquire(owner, [shard]), [shard]);
+      yield* sql`SET TimeZone = 'Pacific/Kiritimati'`;
+      assert.deepStrictEqual(yield* storage.acquire(rival, [shard]), []);
+      assert.deepStrictEqual(yield* storage.refresh(owner, [shard]), [shard]);
+      yield* sql`SET TimeZone = 'UTC'`;
+    })
   );
 });

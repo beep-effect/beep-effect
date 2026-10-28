@@ -727,7 +727,8 @@ export const migrations = (options?: { readonly prefix?: string | undefined }): 
       yield* sql`CREATE SEQUENCE IF NOT EXISTS ${sql(messagesSequence)}`;
       yield* sql`CREATE SEQUENCE IF NOT EXISTS ${sql(repliesSequence)}`;
 
-      // beep: BIGINT ids, sequences and delivery times avoid DuckDB INT32 overflow; last_read is a timestamp.
+      // beep: BIGINT ids, sequences and delivery times avoid DuckDB INT32 overflow; last_read is a TIMESTAMPTZ
+      // beep: instant so the ten-minute redelivery window survives a session TimeZone change (D69).
       yield* sql`
             CREATE TABLE IF NOT EXISTS ${messagesTableSql} (
               id BIGINT PRIMARY KEY,
@@ -747,7 +748,7 @@ export const migrations = (options?: { readonly prefix?: string | undefined }): 
               request_id BIGINT NOT NULL,
               reply_id BIGINT,
               last_reply_id BIGINT,
-              last_read TIMESTAMP,
+              last_read TIMESTAMPTZ,
               deliver_at BIGINT,
               UNIQUE (message_id)
             )
@@ -797,13 +798,21 @@ export const migrations = (options?: { readonly prefix?: string | undefined }): 
 const runMessageMigrations = runPrefixedMigrations({ migrations, historySuffix: "migrations" });
 
 /**
- * DuckDbMessageStorage layer.
+ * Run the DuckDbMessageStorage migrations and provide nothing.
  *
- * **Example** (Compose DuckDB storage)
+ * Creates the MessageStorage tables, sequences and indexes under `prefix` (history in a
+ * per-storage migrations table) when the layer is built. Pair it with `layerStorage` when
+ * the schema should be migrated separately from the storage service.
+ *
+ * **Example** (Migrate the schema)
  *
  * ```ts
- * import * as Storage from "@beep/duckdb/DuckDbMessageStorage"
- * const storage = Storage.layer
+ * import { DuckDbClient, DuckDbMessageStorage } from "@beep/duckdb"
+ * import * as Layer from "effect/Layer"
+ *
+ * const MigrationsLive = DuckDbMessageStorage.layerMigrations({ prefix: "cluster" }).pipe(
+ *   Layer.provide(DuckDbClient.layer({ databasePath: ":memory:" }))
+ * )
  * ```
  *
  * @category layers
@@ -814,13 +823,31 @@ export const layerMigrations = (options: {
 }): Layer.Layer<never, never, SqlClient.SqlClient> => Layer.effectDiscard(runMessageMigrations(options));
 
 /**
- * DuckDbMessageStorage layer.
+ * Provide `MessageStorage` over DuckDB without running any migrations.
  *
- * **Example** (Compose DuckDB storage)
+ * Builds the MessageStorage service against tables that must already exist; it requires
+ * `SqlClient` and `ShardingConfig` and `Crypto`.
+ *
+ * **Gotchas**
+ *
+ * Runs no migrations: provide `layerMigrations` with the same `prefix` first, or use
+ * `layerWith` / `layer`, otherwise the first storage call fails on missing tables.
+ *
+ * **Example** (Provide storage after explicit migrations)
  *
  * ```ts
- * import * as Storage from "@beep/duckdb/DuckDbMessageStorage"
- * const storage = Storage.layer
+ * import { DuckDbClient, DuckDbMessageStorage } from "@beep/duckdb"
+ * import * as NodeCrypto from "@effect/platform-node/NodeCrypto"
+ * import * as ShardingConfig from "effect/cluster/ShardingConfig"
+ * import * as Layer from "effect/Layer"
+ *
+ * const options = { prefix: "cluster" }
+ * const StorageLive = DuckDbMessageStorage.layerStorage(options).pipe(
+ *   Layer.provide(DuckDbMessageStorage.layerMigrations(options)),
+ *   Layer.provide(DuckDbClient.layer({ databasePath: ":memory:" })),
+ *   Layer.provide(ShardingConfig.layer()),
+ *   Layer.provide(NodeCrypto.layer)
+ * )
  * ```
  *
  * @category layers
@@ -835,13 +862,23 @@ export const layerStorage = (options: {
   ).pipe(Layer.provide(Snowflake.layerGenerator));
 
 /**
- * DuckDbMessageStorage layer.
+ * Migrate the DuckDbMessageStorage schema for `prefix`, then provide `MessageStorage`.
  *
- * **Example** (Compose DuckDB storage)
+ * Equivalent to `layerStorage(options)` provided with `layerMigrations(options)`.
+ *
+ * **Example** (Provide migrated storage with a prefix)
  *
  * ```ts
- * import * as Storage from "@beep/duckdb/DuckDbMessageStorage"
- * const storage = Storage.layer
+ * import { DuckDbClient, DuckDbMessageStorage } from "@beep/duckdb"
+ * import * as NodeCrypto from "@effect/platform-node/NodeCrypto"
+ * import * as ShardingConfig from "effect/cluster/ShardingConfig"
+ * import * as Layer from "effect/Layer"
+ *
+ * const StorageLive = DuckDbMessageStorage.layerWith({ prefix: "cluster" }).pipe(
+ *   Layer.provide(DuckDbClient.layer({ databasePath: ":memory:" })),
+ *   Layer.provide(ShardingConfig.layer()),
+ *   Layer.provide(NodeCrypto.layer)
+ * )
  * ```
  *
  * @category layers
@@ -853,13 +890,23 @@ export const layerWith = (options: {
   layerStorage(options).pipe(Layer.provide(layerMigrations(options)));
 
 /**
- * DuckDbMessageStorage layer.
+ * `layerWith({})`: migrate and provide `MessageStorage` with the default table prefix.
  *
- * **Example** (Compose DuckDB storage)
+ * Single-process deployments only (`SingleRunner`, D65): DuckDB locks the file per process.
+ *
+ * **Example** (Provide default storage)
  *
  * ```ts
- * import * as Storage from "@beep/duckdb/DuckDbMessageStorage"
- * const storage = Storage.layer
+ * import { DuckDbClient, DuckDbMessageStorage } from "@beep/duckdb"
+ * import * as NodeCrypto from "@effect/platform-node/NodeCrypto"
+ * import * as ShardingConfig from "effect/cluster/ShardingConfig"
+ * import * as Layer from "effect/Layer"
+ *
+ * const StorageLive = DuckDbMessageStorage.layer.pipe(
+ *   Layer.provide(DuckDbClient.layer({ databasePath: ":memory:" })),
+ *   Layer.provide(ShardingConfig.layer()),
+ *   Layer.provide(NodeCrypto.layer)
+ * )
  * ```
  *
  * @category layers

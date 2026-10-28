@@ -268,6 +268,7 @@ export const migrations = (options: { readonly prefix?: string | undefined }): M
       const runnersTableSql = sql(runnersTable);
       const locksTableSql = sql(locksTable);
       // beep: A DuckDB sequence replaces AUTOINCREMENT.
+      // beep: lease timestamps are TIMESTAMPTZ (instants), so a file reopened under another session TimeZone keeps its lease windows (D69).
       yield* sql`CREATE SEQUENCE IF NOT EXISTS ${sql(`${runnersTable}_sequence`)}`;
 
       yield* sql`
@@ -276,7 +277,7 @@ export const migrations = (options: { readonly prefix?: string | undefined }): M
               address TEXT NOT NULL,
               runner TEXT NOT NULL,
               healthy INTEGER NOT NULL DEFAULT 1,
-              last_heartbeat DATETIME NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+              last_heartbeat TIMESTAMPTZ NOT NULL DEFAULT (CURRENT_TIMESTAMP),
               UNIQUE(address)
             )
           `;
@@ -285,7 +286,7 @@ export const migrations = (options: { readonly prefix?: string | undefined }): M
             CREATE TABLE IF NOT EXISTS ${locksTableSql} (
               shard_id TEXT PRIMARY KEY,
               address TEXT NOT NULL,
-              acquired_at DATETIME NOT NULL
+              acquired_at TIMESTAMPTZ NOT NULL
             )
           `;
     }),
@@ -296,13 +297,21 @@ export const migrations = (options: { readonly prefix?: string | undefined }): M
 const runRunnerMigrations = runPrefixedMigrations({ migrations, historySuffix: "runner_migrations" });
 
 /**
- * DuckDbRunnerStorage layer.
+ * Run the DuckDbRunnerStorage migrations and provide nothing.
  *
- * **Example** (Compose DuckDB storage)
+ * Creates the RunnerStorage tables, sequences and indexes under `prefix` (history in a
+ * per-storage migrations table) when the layer is built. Pair it with `layerStorage` when
+ * the schema should be migrated separately from the storage service.
+ *
+ * **Example** (Migrate the schema)
  *
  * ```ts
- * import * as Storage from "@beep/duckdb/DuckDbRunnerStorage"
- * const storage = Storage.layer
+ * import { DuckDbClient, DuckDbRunnerStorage } from "@beep/duckdb"
+ * import * as Layer from "effect/Layer"
+ *
+ * const MigrationsLive = DuckDbRunnerStorage.layerMigrations({ prefix: "cluster" }).pipe(
+ *   Layer.provide(DuckDbClient.layer({ databasePath: ":memory:" }))
+ * )
  * ```
  *
  * @category layers
@@ -313,13 +322,29 @@ export const layerMigrations = (options: {
 }): Layer.Layer<never, never, SqlClient.SqlClient> => Layer.effectDiscard(runRunnerMigrations(options));
 
 /**
- * DuckDbRunnerStorage layer.
+ * Provide `RunnerStorage` over DuckDB without running any migrations.
  *
- * **Example** (Compose DuckDB storage)
+ * Builds the RunnerStorage service against tables that must already exist; it requires
+ * `SqlClient` and `ShardingConfig`.
+ *
+ * **Gotchas**
+ *
+ * Runs no migrations: provide `layerMigrations` with the same `prefix` first, or use
+ * `layerWith` / `layer`, otherwise the first storage call fails on missing tables.
+ *
+ * **Example** (Provide storage after explicit migrations)
  *
  * ```ts
- * import * as Storage from "@beep/duckdb/DuckDbRunnerStorage"
- * const storage = Storage.layer
+ * import { DuckDbClient, DuckDbRunnerStorage } from "@beep/duckdb"
+ * import * as ShardingConfig from "effect/cluster/ShardingConfig"
+ * import * as Layer from "effect/Layer"
+ *
+ * const options = { prefix: "cluster" }
+ * const StorageLive = DuckDbRunnerStorage.layerStorage(options).pipe(
+ *   Layer.provide(DuckDbRunnerStorage.layerMigrations(options)),
+ *   Layer.provide(DuckDbClient.layer({ databasePath: ":memory:" })),
+ *   Layer.provide(ShardingConfig.layer())
+ * )
  * ```
  *
  * @category layers
@@ -331,13 +356,21 @@ export const layerStorage = (options: {
   Layer.effect(RunnerStorage.RunnerStorage)(makeStorage(options));
 
 /**
- * DuckDbRunnerStorage layer.
+ * Migrate the DuckDbRunnerStorage schema for `prefix`, then provide `RunnerStorage`.
  *
- * **Example** (Compose DuckDB storage)
+ * Equivalent to `layerStorage(options)` provided with `layerMigrations(options)`.
+ *
+ * **Example** (Provide migrated storage with a prefix)
  *
  * ```ts
- * import * as Storage from "@beep/duckdb/DuckDbRunnerStorage"
- * const storage = Storage.layer
+ * import { DuckDbClient, DuckDbRunnerStorage } from "@beep/duckdb"
+ * import * as ShardingConfig from "effect/cluster/ShardingConfig"
+ * import * as Layer from "effect/Layer"
+ *
+ * const StorageLive = DuckDbRunnerStorage.layerWith({ prefix: "cluster" }).pipe(
+ *   Layer.provide(DuckDbClient.layer({ databasePath: ":memory:" })),
+ *   Layer.provide(ShardingConfig.layer())
+ * )
  * ```
  *
  * @category layers
@@ -349,13 +382,21 @@ export const layerWith = (options: {
   Layer.effect(RunnerStorage.RunnerStorage)(make(options));
 
 /**
- * DuckDbRunnerStorage layer.
+ * `layerWith({})`: migrate and provide `RunnerStorage` with the default table prefix.
  *
- * **Example** (Compose DuckDB storage)
+ * Single-process deployments only (`SingleRunner`, D65): DuckDB locks the file per process.
+ *
+ * **Example** (Provide default storage)
  *
  * ```ts
- * import * as Storage from "@beep/duckdb/DuckDbRunnerStorage"
- * const storage = Storage.layer
+ * import { DuckDbClient, DuckDbRunnerStorage } from "@beep/duckdb"
+ * import * as ShardingConfig from "effect/cluster/ShardingConfig"
+ * import * as Layer from "effect/Layer"
+ *
+ * const StorageLive = DuckDbRunnerStorage.layer.pipe(
+ *   Layer.provide(DuckDbClient.layer({ databasePath: ":memory:" })),
+ *   Layer.provide(ShardingConfig.layer())
+ * )
  * ```
  *
  * @category layers

@@ -45,7 +45,10 @@ it.layer(layer, { timeout: "30 seconds" })((it) => {
       assert.deepStrictEqual(yield* sql`SELECT state FROM wide_queue`, [{ state: "completed" }]);
     })
   );
+});
 
+// The queue case changes the session TimeZone, so the lease cases below get their own database.
+it.layer(layer, { timeout: "30 seconds" })((it) => {
   const request = (
     requestId: string
   ): MessageStorage.Encoded["saveEnvelope"] extends (options: infer T) => unknown ? T : never => ({

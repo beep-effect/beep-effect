@@ -106,10 +106,14 @@ export * as DuckDbEventLogServerEncrypted from "./DuckDbEventLogServerEncrypted.
  *
  * ```ts
  * import { DuckDbClient, DuckDbMessageStorage } from "@beep/duckdb"
+ * import * as NodeCrypto from "@effect/platform-node/NodeCrypto"
+ * import * as ShardingConfig from "effect/cluster/ShardingConfig"
  * import * as Layer from "effect/Layer"
  *
  * const StorageLive = DuckDbMessageStorage.layer.pipe(
- *   Layer.provide(DuckDbClient.layer({ databasePath: ":memory:" }))
+ *   Layer.provide(DuckDbClient.layer({ databasePath: ":memory:" })),
+ *   Layer.provide(ShardingConfig.layer()),
+ *   Layer.provide(NodeCrypto.layer)
  * )
  * ```
  *
@@ -148,10 +152,12 @@ export * as DuckDbMigrator from "./DuckDbMigrator.service.ts";
  *
  * ```ts
  * import { DuckDbClient, DuckDbPersistedQueue } from "@beep/duckdb"
+ * import * as NodeCrypto from "@effect/platform-node/NodeCrypto"
  * import * as Layer from "effect/Layer"
  *
  * const StoreLive = DuckDbPersistedQueue.layerStoreSql().pipe(
- *   Layer.provide(DuckDbClient.layer({ databasePath: ":memory:" }))
+ *   Layer.provide(DuckDbClient.layer({ databasePath: ":memory:" })),
+ *   Layer.provide(NodeCrypto.layer)
  * )
  * ```
  *
@@ -184,10 +190,12 @@ export * as DuckDbPersistence from "./DuckDbPersistence.service.ts";
  *
  * ```ts
  * import { DuckDbClient, DuckDbRunnerStorage } from "@beep/duckdb"
+ * import * as ShardingConfig from "effect/cluster/ShardingConfig"
  * import * as Layer from "effect/Layer"
  *
  * const StorageLive = DuckDbRunnerStorage.layer.pipe(
- *   Layer.provide(DuckDbClient.layer({ databasePath: ":memory:" }))
+ *   Layer.provide(DuckDbClient.layer({ databasePath: ":memory:" })),
+ *   Layer.provide(ShardingConfig.layer())
  * )
  * ```
  *

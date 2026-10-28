@@ -37,69 +37,70 @@ const claim = Effect.gen(function* () {
   return yield* storage.unprocessedMessages(["default:1"], yield* Clock.currentTimeMillis);
 });
 
-it.layer(Layer.mergeAll(DuckDbTestLayer, NodeCrypto.layer, Snowflake.layerGenerator), { timeout: "30 seconds" })(
-  "DuckDB message storage boundaries",
-  (it) => {
-    it.effect("reads requests without trace context and sampled requests", () =>
-      Effect.gen(function* () {
-        yield* save(request("10"));
-        yield* save(request("11", { traceId: "trace", spanId: "span", sampled: true }));
-        const [untraced, sampled] = A.map(yield* claim, (message) => message.envelope);
-        assert(untraced?._tag === "Request" && sampled?._tag === "Request");
-        assert.strictEqual(untraced.traceId, undefined);
-        assert.deepStrictEqual([sampled.traceId, sampled.spanId, sampled.sampled], ["trace", "span", true]);
-      })
-    );
+// Both cases claim shard default:1 in the shared cluster_ tables, so run them one at a time (D49).
+it.layer(Layer.mergeAll(DuckDbTestLayer, NodeCrypto.layer, Snowflake.layerGenerator), {
+  concurrent: false,
+  timeout: "30 seconds",
+})("DuckDB message storage boundaries", (it) => {
+  it.effect("reads requests without trace context and sampled requests", () =>
+    Effect.gen(function* () {
+      yield* save(request("10"));
+      yield* save(request("11", { traceId: "trace", spanId: "span", sampled: true }));
+      const [untraced, sampled] = A.map(yield* claim, (message) => message.envelope);
+      assert(untraced?._tag === "Request" && sampled?._tag === "Request");
+      assert.strictEqual(untraced.traceId, undefined);
+      assert.deepStrictEqual([sampled.traceId, sampled.spanId, sampled.sampled], ["trace", "span", true]);
+    })
+  );
 
-    it.effect("round-trips interrupts, acked chunks and address cleanup", () =>
-      Effect.gen(function* () {
-        const storage = yield* DuckDbMessageStorage.makeEncoded();
-        yield* save(request("20"));
-        assert.strictEqual((yield* claim).length, 1);
-        yield* save({ _tag: "Interrupt", id: "21", requestId: "20", address });
-        assert.deepStrictEqual(
-          A.map(yield* claim, (message) => message.envelope._tag),
-          ["Interrupt"]
-        );
-        yield* storage.saveReply({ _tag: "Chunk", id: "22", requestId: "20", sequence: 0, values: [null] });
-        yield* save({ _tag: "AckChunk", id: "23", requestId: "20", replyId: "22", address });
-        yield* storage.resetShards(["default:1"]);
-        const resumed = A.findFirst(
-          yield* claim,
-          (message) => message.envelope._tag === "Request" && message.envelope.requestId === "20"
-        );
-        assert.deepStrictEqual(
-          O.map(
-            O.flatMap(resumed, (message) => message.lastSentReply),
-            (reply) => reply.id
-          ),
-          O.some("22")
-        );
-        assert.strictEqual((yield* storage.repliesForUnfiltered(["20"])).length, 1);
+  it.effect("round-trips interrupts, acked chunks and address cleanup", () =>
+    Effect.gen(function* () {
+      const storage = yield* DuckDbMessageStorage.makeEncoded();
+      yield* save(request("20"));
+      assert.strictEqual((yield* claim).length, 1);
+      yield* save({ _tag: "Interrupt", id: "21", requestId: "20", address });
+      assert.deepStrictEqual(
+        A.map(yield* claim, (message) => message.envelope._tag),
+        ["Interrupt"]
+      );
+      yield* storage.saveReply({ _tag: "Chunk", id: "22", requestId: "20", sequence: 0, values: [null] });
+      yield* save({ _tag: "AckChunk", id: "23", requestId: "20", replyId: "22", address });
+      yield* storage.resetShards(["default:1"]);
+      const resumed = A.findFirst(
+        yield* claim,
+        (message) => message.envelope._tag === "Request" && message.envelope.requestId === "20"
+      );
+      assert.deepStrictEqual(
+        O.map(
+          O.flatMap(resumed, (message) => message.lastSentReply),
+          (reply) => reply.id
+        ),
+        O.some("22")
+      );
+      assert.strictEqual((yield* storage.repliesForUnfiltered(["20"])).length, 1);
 
-        yield* storage.clearReplies(Snowflake.Snowflake("20"));
-        assert.deepStrictEqual(
-          yield* storage.unprocessedMessagesById([Snowflake.Snowflake("21")], yield* Clock.currentTimeMillis),
-          []
-        );
-        yield* storage.resetRequests([]);
-        yield* storage.clearAddress(
-          EntityAddress.make({
-            shardId: ShardId.make("default", 1),
-            entityType: EntityType.make("test"),
-            entityId: EntityId.make("1"),
-          })
-        );
-        assert.deepStrictEqual(yield* storage.repliesForUnfiltered(["20"]), []);
-        assert.strictEqual(yield* storage.withTransaction(Effect.succeed(1)), 1);
-      })
-    );
+      yield* storage.clearReplies(Snowflake.Snowflake("20"));
+      assert.deepStrictEqual(
+        yield* storage.unprocessedMessagesById([Snowflake.Snowflake("21")], yield* Clock.currentTimeMillis),
+        []
+      );
+      yield* storage.resetRequests([]);
+      yield* storage.clearAddress(
+        EntityAddress.make({
+          shardId: ShardId.make("default", 1),
+          entityType: EntityType.make("test"),
+          entityId: EntityId.make("1"),
+        })
+      );
+      assert.deepStrictEqual(yield* storage.repliesForUnfiltered(["20"]), []);
+      assert.strictEqual(yield* storage.withTransaction(Effect.succeed(1)), 1);
+    })
+  );
 
-    it.effect("make builds the decoded storage over migrated tables", () =>
-      Effect.gen(function* () {
-        const storage = yield* DuckDbMessageStorage.make({ prefix: "decoded" });
-        assert.deepStrictEqual(yield* storage.unprocessedMessages([ShardId.make("default", 1)]), []);
-      })
-    );
-  }
-);
+  it.effect("make builds the decoded storage over migrated tables", () =>
+    Effect.gen(function* () {
+      const storage = yield* DuckDbMessageStorage.make({ prefix: "decoded" });
+      assert.deepStrictEqual(yield* storage.unprocessedMessages([ShardId.make("default", 1)]), []);
+    })
+  );
+});
