@@ -1989,13 +1989,13 @@
       "reason": "Scoped SQL provision is the subject: per-call freshness, hooks, driver selection or a post-close reconnect must complete inside the test body with the real driver. Owner: @beep/test-utils. Exit: retire when EV002 recognises a provision whose per-call freshness or post-close reconnect the test asserts (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:packages/tooling/tool/cli/test/models-manifest-errors.test.ts:140:provideScopedLayer@10#1",
+      "id": "EV002:packages/tooling/tool/cli/test/models-manifest-errors.test.ts:164:provideScopedLayer@10#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/models-manifest-errors.test.ts",
-      "line": 140,
-      "endLine": 144,
+      "line": 164,
+      "endLine": 168,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:5d5f83e0d96b9a26d6c135ea063cb127753c7393a4f8bbcf6610ce0e1847e923",
       "class": "unresolved-layer-provide",
@@ -4362,174 +4362,6 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "Each subprocess or resource helper scope ends before the test examines files or starts the next invocation. Owner: @beep/repo-cli. Exit: retire when EV004 recognises assertions that run after a shorter scope closes (#1855 wave 8 register)."
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts:604:scoped@90#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts",
-      "line": 604,
-      "endLine": 604,
-      "symbol": "scoped",
-      "occurrence": "v2:fd38a106cc700c15e4b795210ab591a0b982f0b65b63deb6419c5387b4838e50",
-      "class": "inner-helper-scope-lifetime-review",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts:624:scoped@12#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts",
-      "line": 624,
-      "endLine": 624,
-      "symbol": "scoped",
-      "occurrence": "v2:e869ce1a1546eae7d0fd4905b635d626d960327734bdb5cd3aea1627778f1c78",
-      "class": "inner-helper-scope-lifetime-review",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts:646:scoped@12#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts",
-      "line": 646,
-      "endLine": 646,
-      "symbol": "scoped",
-      "occurrence": "v2:ba491ee54f648278120d309959c08ef35b08c535762e63b486d1d0cb2e4f9e22",
-      "class": "inner-helper-scope-lifetime-review",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts:672:scoped@10#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts",
-      "line": 672,
-      "endLine": 672,
-      "symbol": "scoped",
-      "occurrence": "v2:1e62e0d96ff6d84c2a202ddd07dc64a071ef5bd0010002641932443d8b45ba4f",
-      "class": "inner-helper-scope-lifetime-review",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts:693:scoped@91#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts",
-      "line": 693,
-      "endLine": 693,
-      "symbol": "scoped",
-      "occurrence": "v2:41aa9e092e6a58028af7e7c92ee4def9344a63898d9be6e02c8d8f032ae74f06",
-      "class": "inner-helper-scope-lifetime-review",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts:720:scoped@91#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts",
-      "line": 720,
-      "endLine": 720,
-      "symbol": "scoped",
-      "occurrence": "v2:beff3b69ea6deec4bb16233863bc21919f1f6c4540fc80076060928ff0b7841b",
-      "class": "inner-helper-scope-lifetime-review",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts:742:scoped@91#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts",
-      "line": 742,
-      "endLine": 742,
-      "symbol": "scoped",
-      "occurrence": "v2:32ff75a4050a19ee0c7f1cc775fedb88a427d8c2485a905a8f569c93730b59f4",
-      "class": "inner-helper-scope-lifetime-review",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts:770:scoped@91#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts",
-      "line": 770,
-      "endLine": 770,
-      "symbol": "scoped",
-      "occurrence": "v2:bc41693cd579095e2fbaa284fc0e2e1f43c75012a8b24e1106f5c7e1d0b44ecc",
-      "class": "inner-helper-scope-lifetime-review",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
     },
     {
       "id": "EV004:packages/tooling/tool/cli/test/step-git-exec.test.ts:504:scoped@10#1",
@@ -7612,27 +7444,6 @@
       "reason": "The live pffexport integration spawns the native libpff tools over real PST paths, with Bubblewrap when present. Owner: @beep/libpff. Exit: retire when the live export moves out of the default test run."
     },
     {
-      "id": "EV010:packages/drivers/m365-mcp/test/OutboxAttachmentSource.test.ts:4:@effect/platform-node/NodeFileSystem@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/m365-mcp",
-      "file": "packages/drivers/m365-mcp/test/OutboxAttachmentSource.test.ts",
-      "line": 4,
-      "endLine": 4,
-      "symbol": "@effect/platform-node/NodeFileSystem",
-      "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
-      "class": "platform-filesystem-candidate",
-      "evidence": "import * as NodeFileSystem from \"@effect/platform-node/NodeFileSystem\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV010:packages/drivers/m365-mcp/test/integration/Outbox.live.test.ts:13:@effect/platform-node/NodeFileSystem@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -7651,7 +7462,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "Credential-gated live Microsoft Graph smoke whose attachment file the live service reads from the native volume; skips without M365_OUTBOX_* settings. Owner: @beep/m365-mcp. Exit: retire when EV010 excludes test/integration/*.live.test.ts suites, or the smoke moves out of the effect-vitest scope."
     },
     {
       "id": "EV010:packages/drivers/nlp-mcp/test/Streaming.functions.test.ts:11:@effect/platform-node/NodeFileSystem@0#1",
@@ -9392,27 +9204,6 @@
       "reason": "The ci admission command path resolves the checkout with findRepoRoot() before reading the event payload. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the admission command takes an injected root."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/ci-lane-timings.test.ts:34:@effect/platform-node@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/ci-lane-timings.test.ts",
-      "line": 34,
-      "endLine": 34,
-      "symbol": "@effect/platform-node",
-      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV010:packages/tooling/tool/cli/test/ci-lane.test.ts:35:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -9653,27 +9444,6 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "PdfBackendToolsLive renders and rasterizes real PDFs through poppler binaries. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the PDF backend is replaced by a recording double."
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/drawings-intake.test.ts:24:@effect/platform-node@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/drawings-intake.test.ts",
-      "line": 24,
-      "endLine": 24,
-      "symbol": "@effect/platform-node",
-      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/effect-fn.test.ts:5:@effect/platform-node@0#1",
@@ -10380,28 +10150,6 @@
       "reason": "FsUtilsLive traverses the workspace with native SharedGlob, so MemoryFileSystem alone would change discovery semantics (goals/effect-vitest-canon/research/cli-package-scripts-policy-proof.json). Owner: @beep/repo-cli. Exit: retire when SharedGlob runs over the Effect FileSystem."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/package-verify.test.ts:25:@effect/platform-node/NodeFileSystem@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/package-verify.test.ts",
-      "line": 25,
-      "endLine": 25,
-      "symbol": "@effect/platform-node/NodeFileSystem",
-      "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
-      "class": "platform-filesystem-candidate",
-      "evidence": "import * as NodeFileSystem from \"@effect/platform-node/NodeFileSystem\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "NodeChildProcessSpawner.layer and Bun.spawnSync run git over a real temp package. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when package-verify runs behind a scripted spawner over a seeded volume."
-    },
-    {
       "id": "EV010:packages/tooling/tool/cli/test/palantiri-command.test.ts:34:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -11084,27 +10832,6 @@
       "reason": "The checkout's node_modules/.bin/turbo (findRepoRoot) dry-runs the real turbo.json to read test-tsgo inputs. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the task graph is read from a captured fixture."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/test-typecheck-coverage.test.ts:6:@effect/platform-node/NodeFileSystem@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/test-typecheck-coverage.test.ts",
-      "line": 6,
-      "endLine": 6,
-      "symbol": "@effect/platform-node/NodeFileSystem",
-      "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
-      "class": "platform-filesystem-candidate",
-      "evidence": "import * as NodeFileSystem from \"@effect/platform-node/NodeFileSystem\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV010:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:10:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -11345,27 +11072,6 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "The converge loop appends inbox rows, and the inbox active projection runs flock, sh and jq through Bun.spawnSync in the real inbox directory. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the inbox projection runs in process or behind an injected lock service."
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/yeet-economics.test.ts:37:@effect/platform-node@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-economics.test.ts",
-      "line": 37,
-      "endLine": 37,
-      "symbol": "@effect/platform-node",
-      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-inbox-hook-adapter.test.ts:11:@effect/platform-node@0#1",
@@ -11696,27 +11402,6 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "NodeChildProcessSpawner.layer and Bun.spawnSync run git over real temp repositories. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when git runs behind a scripted spawner."
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/yeet-review-window.test.ts:26:@effect/platform-node@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-review-window.test.ts",
-      "line": 26,
-      "endLine": 26,
-      "symbol": "@effect/platform-node",
-      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-scripted-process.test.ts:54:@effect/platform-node@0#1",

@@ -1,0 +1,20 @@
+{
+  "previous": "b8378901c1451002533ace0f2df31f789ab656e09e879bcabd090ddb03ff8a60",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (rsc residue #1875 wave 11, test/vitest-canon-wave11)",
+    "reason": "Record the new @beep/m365-mcp -> @beep/memfs devDependency edge; commands and cache settings are unchanged and no qualification is granted.",
+    "basis": {
+      "path": "goals/repository-simplification-residue/research/cache-baseline-review-vitest-canon-wave-11.md",
+      "sha256": "ba4c32d1d6ea82b1fcedf5ac610650d8178d06160fef6c4c011e13bd669b4e6d"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2",
+  "subjects": ["@beep/m365-mcp"]
+}

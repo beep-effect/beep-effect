@@ -7,6 +7,7 @@ import {
   OutlookItemRef,
   OutlookItemRefFromInput,
 } from "@beep/m365";
+import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   DrawingIntake,
   DrawingIntakeError,
@@ -289,7 +290,8 @@ const pullWith = (fields: {
 
 const conversation = OutlookItemRef.cases.conversation.make({ id: CONVERSATION });
 
-const ServiceLayer = DrawingIntake.layer.pipe(Layer.provide(FakeM365), Layer.provideMerge(NodeServices.layer));
+const Platform = Layer.mergeAll(NodeServices.layer, MemoryFileSystem.layer);
+const ServiceLayer = DrawingIntake.layer.pipe(Layer.provide(FakeM365), Layer.provideMerge(Platform));
 
 describe("DrawingIntake over a fake mailbox", () => {
   it.layer(ServiceLayer, { timeout: "30 seconds" })((it) => {
@@ -547,7 +549,7 @@ const laneEnv = (overrides: Record<string, string> = {}) =>
 const laneLayer = (overrides: Record<string, string> = {}) =>
   drawingIntakeLaneLayer({ envPrefix: "INTAKE_TEST", mailLayer: () => FakeM365 }).pipe(
     Layer.provide(laneEnv(overrides)),
-    Layer.provideMerge(Layer.mergeAll(NodeServices.layer, TestConsole.layer))
+    Layer.provideMerge(Layer.mergeAll(Platform, TestConsole.layer))
   );
 
 const logged = TestConsole.logLines.pipe(Effect.map((lines) => A.join(A.map(lines, String), "\n")));
@@ -613,7 +615,7 @@ describe("beep drawings intake", () => {
     );
   });
 
-  it.layer(Layer.mergeAll(NodeServices.layer, TestConsole.layer), { timeout: "30 seconds" })((it) => {
+  it.layer(Layer.mergeAll(Platform, TestConsole.layer), { timeout: "30 seconds" })((it) => {
     it.effect(
       "the lane refuses an unresolved op:// value and names only the setting",
       Effect.fnUntraced(function* () {
@@ -651,7 +653,7 @@ describe("beep drawings intake", () => {
 
   // An empty environment, so the default prefix can never reach a live registration.
   const emptyEnv = ConfigProvider.layer(ConfigProvider.fromEnv({ env: {} }));
-  it.layer(Layer.mergeAll(NodeServices.layer, TestConsole.layer, emptyEnv), { timeout: "30 seconds" })((it) => {
+  it.layer(Layer.mergeAll(Platform, TestConsole.layer, emptyEnv), { timeout: "30 seconds" })((it) => {
     it.effect(
       "the command defaults to the docket-intake registration (Mail.ReadWrite, no Mail.Send)",
       Effect.fnUntraced(function* () {
