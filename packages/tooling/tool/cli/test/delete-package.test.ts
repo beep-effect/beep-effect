@@ -918,6 +918,19 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       })
     );
 
+    it.effect("removes the key through the YAML edit layer: escaped keys, CRLF blocks and key comments", () =>
+      Effect.gen(function* () {
+        const read = yield* pruneChangesets("@beep/a", [
+          ["escaped.md", '---\n"\\x40beep/a": patch\n"@beep/b": minor\n---\n\nEscaped key.\n'],
+          ["crlf.md", '---\r\n"@beep/a": patch\r\n"@beep/b": minor\r\n"@beep/c": minor\r\n---\r\n\r\nCRLF.\r\n'],
+          ["comment.md", '---\n# bump both\n"@beep/a": patch\n"@beep/b": minor # keep\n---\n\n---\n"@beep/a": prose\n'],
+        ]);
+        assertSome(yield* read("escaped.md"), '---\n"@beep/b": minor\n---\n\nEscaped key.\n');
+        assertSome(yield* read("crlf.md"), '---\r\n"@beep/b": minor\r\n"@beep/c": minor\r\n---\r\n\r\nCRLF.\r\n');
+        assertSome(yield* read("comment.md"), '---\n"@beep/b": minor # keep\n---\n\n---\n"@beep/a": prose\n');
+      })
+    );
+
     it.effect("removes a single-package changeset and leaves a sibling-only changeset untouched", () =>
       Effect.gen(function* () {
         const sibling = '---\n"@beep/schema-org": minor\n---\n\nSibling only.\n';

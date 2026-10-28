@@ -6,10 +6,12 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { FrontmatterSource, FrontmatterSourceBlock, FrontmatterSourceSplit } from "@beep/markdown/FrontmatterSource";
 import { DomainError, decodePackageJsonEffect, findRepoRoot, resolveWorkspaceDirs } from "@beep/repo-utils";
 import { normalizePath } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { A, Str, thunkFalse } from "@beep/utils";
+import { YamlFormat } from "@beep/yaml/YamlFormat";
 import * as Config from "effect/Config";
 import * as Console from "effect/Console";
 import * as Argument from "effect/cli/Argument";
@@ -44,7 +46,7 @@ import {
 import { runToExit } from "../../internal/process/index.ts";
 import { CreatePackageIdentityRegistration } from "../CreatePackage/internal/IdentityRegistration.ts";
 import { LabIdentitySegment } from "../CreatePackage/internal/LabIdentitySegment.ts";
-import { changesetPackageReferencesFromText } from "../Quality/ChangesetGraph.ts";
+import { ChangesetGraphError, changesetPackageReferencesFromText } from "../Quality/ChangesetGraph.ts";
 import { subtractPackageFromCoverageRegressionBaseline } from "../Quality/internal/CoverageRegression.ts";
 import { syncTsconfigAtRoot } from "../TsconfigSync/index.ts";
 import { TsconfigSyncRunOptionsSync } from "../TsconfigSync/TsconfigSync.schemas.ts";
@@ -362,38 +364,32 @@ export const removeShapeTestRow = Effect.fn("DeletePackage.removeShapeTestRow")(
   if (!Str.equivalence(content, next)) yield* fs.writeFileString(file, next);
 });
 
-const FRONTMATTER_KEY_QUOTES: ReadonlyArray<string> = ['"', "'"];
+const CRLF = "\r\n";
 
-// The mapping key of a changeset frontmatter line: the content of a `"…"` or
-// `'…'` key, or the trimmed text before the first `:` of an unquoted one.
-const frontmatterEntryKey = (line: string): O.Option<string> => {
-  const entry = Str.trim(line);
-  return O.match(
-    A.findFirst(FRONTMATTER_KEY_QUOTES, (quote) => Str.startsWith(entry, quote)),
-    {
-      onNone: () => O.map(Str.indexOf(":")(entry), (end) => Str.trim(Str.slice(0, end)(entry))),
-      onSome: (quote) => {
-        const quoted = Str.slice(1)(entry);
-        return O.map(Str.indexOf(quote)(quoted), (end) => Str.slice(0, end)(quoted));
-      },
-    }
+// Remove the package's key from a changeset's YAML frontmatter through the YAML edit layer, so a
+// quoted or escaped key is matched by its YAML value. A removal re-serializes the block with LF line
+// endings (`YamlFormat.modify`), so a CRLF block gets its CRLFs back; the body is never touched.
+const stripPackageFromFrontmatter = Effect.fn("DeletePackage.stripPackageFromFrontmatter")(function* (
+  file: string,
+  content: string,
+  packageName: string
+) {
+  const split = FrontmatterSource.split(content);
+  const block = split.frontmatter;
+  if (block === undefined) return content;
+  const value = yield* YamlFormat.modifyToString(block.value, [packageName], undefined).pipe(
+    Effect.mapError((cause) =>
+      ChangesetGraphError.new(cause, `Failed to remove ${packageName} from the changeset frontmatter in ${file}.`, file)
+    )
   );
-};
-
-const stripPackageFromFrontmatter = (content: string, packageName: string): string => {
-  let inFrontmatter = false;
-  let boundaryCount = 0;
-  const nextLines = A.filter(Str.split("\n")(content), (line) => {
-    if (Str.equivalence(Str.trim(line), "---")) {
-      boundaryCount += 1;
-      inFrontmatter = boundaryCount === 1;
-      return true;
-    }
-    if (boundaryCount === 2) inFrontmatter = false;
-    return !(inFrontmatter && O.exists(frontmatterEntryKey(line), Str.equivalence(packageName)));
-  });
-  return A.join(nextLines, "\n");
-};
+  const restored = Str.includes(CRLF)(block.value) ? Str.replaceAll("\n", CRLF)(value) : value;
+  return FrontmatterSource.join(
+    FrontmatterSourceSplit.make({
+      frontmatter: FrontmatterSourceBlock.make({ ...block, value: restored }),
+      body: split.body,
+    })
+  );
+});
 
 const pruneChangesetFile = Effect.fn("DeletePackage.pruneChangesetFile")(function* (
   repoRoot: string,
@@ -409,7 +405,7 @@ const pruneChangesetFile = Effect.fn("DeletePackage.pruneChangesetFile")(functio
     yield* fs.remove(file, { force: true });
     return;
   }
-  yield* fs.writeFileString(file, stripPackageFromFrontmatter(content, packageName));
+  yield* fs.writeFileString(file, yield* stripPackageFromFrontmatter(file, content, packageName));
 });
 
 /**
