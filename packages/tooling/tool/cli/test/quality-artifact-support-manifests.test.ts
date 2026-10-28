@@ -204,6 +204,44 @@ it.layer(Layer.provideMerge(MemoryFileSystem.layer, NodeServices.layer), { timeo
   }
 );
 
+const manifestReads: Array<string> = [];
+const CountedFileSystem = MemoryFileSystem.layerWith(
+  {
+    "/repo/package.json": JSON.stringify({ name: "@beep/root", workspaces: ["packages/*"] }),
+    "/repo/packages/a/package.json": JSON.stringify({ name: "@beep/a" }),
+    "/repo/packages/b/package.json": JSON.stringify({ name: "@beep/b" }),
+  },
+  {
+    // A spy, not a stub: every read is recorded, then answered by the volume.
+    faults: (base) => ({
+      readFileString: (path: string, encoding?: string) => {
+        manifestReads.push(path);
+        return base.readFileString(path, encoding);
+      },
+    }),
+  }
+);
+
+it.layer(Layer.mergeAll(CountedFileSystem, Path.layer), { timeout: "30 seconds" })(
+  "QualityArtifactSupport workspace manifest reads",
+  (it) => {
+    it.effect("reads each member manifest once: the strict reader decodes the kit's as-read record", () =>
+      Effect.gen(function* () {
+        const path = yield* Path.Path;
+        manifestReads.length = 0;
+
+        deepStrictEqual(rows(yield* discoverWorkspacePackages("/repo", path)), [
+          "@beep/a=packages/a",
+          "@beep/b=packages/b",
+          "@beep/root=.",
+        ]);
+        strictEqual(A.filter(manifestReads, (read) => read === "/repo/packages/a/package.json").length, 1);
+        strictEqual(A.filter(manifestReads, (read) => read === "/repo/packages/b/package.json").length, 1);
+      })
+    );
+  }
+);
+
 const scratchRepository = Effect.fn(function* (prefix: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
