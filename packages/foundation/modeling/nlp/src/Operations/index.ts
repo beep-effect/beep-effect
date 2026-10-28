@@ -1,6 +1,8 @@
 /**
  * Operations - composable, schema-typed NLP operations.
  *
+ * **Details**
+ *
  * An algebra of operations (`A -> Effect<B, E, R>`) with schema-checked
  * boundaries: define operations ({@link Definition}) and compose them
  * functorially/monadically/applicatively ({@link Composable}).
