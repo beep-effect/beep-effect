@@ -8,21 +8,25 @@
 import { toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
 import { A, Str } from "@beep/utils";
 import * as Effect from "effect/Effect";
-import { pipe } from "effect/Function";
+import * as Equal from "effect/Equal";
+import { dual, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
+import * as Struct from "effect/Struct";
 import { Node, SyntaxKind } from "ts-morph";
 import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";
+import { optionalProp } from "../../../internal/cli/OptionRecord.ts";
 import { todayYmd } from "../../../internal/cli/Timing.ts";
 import { diffMembership, enforceRatchet } from "../../../internal/ratchet/index.ts";
 import { createRepoTsMorphProject } from "../../../internal/tsmorph/index.ts";
 import {
   isActiveSchemaFirstRuleAdvisory,
   LiteralKitConstAssertionViolation,
+  makeSchemaFirstEntryIdentity,
   makeSchemaFirstEntryKey,
   SchemaFirstIncludedGlobs,
   SchemaFirstInventoryDocument,
@@ -47,6 +51,7 @@ import type { CallExpression, SourceFile } from "ts-morph";
 import type {
   SchemaCrispeningPolicyDocument,
   SchemaFirstBacklogRow,
+  SchemaFirstEntryIdentity,
   SchemaFirstEntryKind,
   SchemaFirstLintOptions,
   SchemaFirstParityFindings,
@@ -456,36 +461,140 @@ const parityBacklogToWrite = (
   );
 };
 
-const mergeInventory = (
-  liveDocument: SchemaFirstInventoryDocument,
-  existingDocument: O.Option<SchemaFirstInventoryDocument>,
-  backlog: ReadonlyArray<SchemaFirstBacklogRow>
-): SchemaFirstInventoryDocument => {
-  const existingByKey = pipe(
-    existingDocument,
-    O.map((document) =>
-      HashMap.fromIterable(
-        A.map(document.entries, (entry): readonly [string, SchemaFirstInventoryEntry] => [
-          makeSchemaFirstEntryKey(entry),
-          entry,
-        ])
+type SchemaFirstIdentityIndex = HashMap.HashMap<
+  SchemaFirstEntryIdentity,
+  A.NonEmptyReadonlyArray<SchemaFirstInventoryEntry>
+>;
+
+const indexByIdentity = (entries: ReadonlyArray<SchemaFirstInventoryEntry>): SchemaFirstIdentityIndex =>
+  A.reduce(
+    entries,
+    HashMap.empty<SchemaFirstEntryIdentity, A.NonEmptyReadonlyArray<SchemaFirstInventoryEntry>>(),
+    (index, entry) =>
+      HashMap.modifyAt(index, makeSchemaFirstEntryIdentity(entry), (group) =>
+        O.some(O.match(group, { onNone: () => A.of(entry), onSome: A.append(entry) }))
       )
-    ),
-    O.getOrElse(HashMap.empty<string, SchemaFirstInventoryEntry>)
   );
 
-  const mergedEntries = A.map(liveDocument.entries, (entry) =>
-    O.getOrElse(HashMap.get(existingByKey, makeSchemaFirstEntryKey(entry)), () => entry)
+const uniqueByIdentity = (
+  index: SchemaFirstIdentityIndex,
+  identity: SchemaFirstEntryIdentity
+): O.Option<SchemaFirstInventoryEntry> =>
+  pipe(
+    HashMap.get(index, identity),
+    O.filter((group) => group.length === 1),
+    O.map(A.headNonEmpty)
   );
 
-  return SchemaFirstInventoryDocument.make({
-    version: 1,
-    generatedOn: liveDocument.generatedOn,
-    scope: liveDocument.scope,
-    entries: sortSchemaFirstEntries(mergedEntries),
-    backlog,
-  });
-};
+// A committed entry keeps its status, owner and reason; only the line follows the live finding.
+const withLiveLine = (committed: SchemaFirstInventoryEntry, live: SchemaFirstInventoryEntry) =>
+  Equal.equals(committed.line, live.line)
+    ? committed
+    : SchemaFirstInventoryEntry.make({
+        ...Struct.omit(committed, ["line"]),
+        ...optionalProp("line", O.fromUndefinedOr(live.line)),
+      });
+
+/**
+ * Merge a live schema-first scan into the committed inventory for `--write`.
+ *
+ * **Details**
+ *
+ * A live finding takes over the committed entry with the same
+ * {@link SchemaFirstEntryIdentity} (file, symbol, kind and rule id) when that
+ * identity is unique on both sides, so a committed `exception` keeps its
+ * status and `reason` across edits that only shift lines; the stored `line`
+ * follows the live finding. When an identity is shared (several findings of
+ * one rule on one symbol), the match falls back to the line-bearing
+ * {@link makeSchemaFirstEntryKey}. Unmatched live findings enter as scanned.
+ *
+ * **Example** (Keep an exception across a line shift)
+ *
+ * ```ts
+ * import { mergeSchemaFirstInventory } from "@beep/repo-cli/test/Lint"
+ * import { SchemaFirstInventoryDocument, SchemaFirstInventoryEntry } from "@beep/repo-cli/commands/Lint"
+ * import * as O from "effect/Option"
+ *
+ * const entry = (line: number, status: "advisory" | "exception", reason: string) =>
+ *   SchemaFirstInventoryEntry.make({
+ *     file: "packages/example/src/Users.ts",
+ *     kind: "schema-policy-advisory",
+ *     line,
+ *     owner: "@beep/example",
+ *     reason,
+ *     ruleId: "SFV4-null-return",
+ *     status,
+ *     symbol: "findUser"
+ *   })
+ * const document = (entries: ReadonlyArray<SchemaFirstInventoryEntry>) =>
+ *   SchemaFirstInventoryDocument.make({ version: 1, generatedOn: "2026-10-28", entries, backlog: [] })
+ *
+ * const merged = mergeSchemaFirstInventory(
+ *   document([entry(6, "advisory", "live advisory")]),
+ *   O.some(document([entry(1, "exception", "kept")])),
+ *   []
+ * )
+ * console.log(merged.entries[0]?.status, merged.entries[0]?.line) // "exception" 6
+ * ```
+ *
+ * @param liveDocument - The document built from the current scan.
+ * @param existingDocument - The committed inventory, when one exists.
+ * @param backlog - The parity backlog rows to write.
+ * @returns The inventory document to persist.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const mergeSchemaFirstInventory: {
+  (
+    existingDocument: O.Option<SchemaFirstInventoryDocument>,
+    backlog: ReadonlyArray<SchemaFirstBacklogRow>
+  ): (liveDocument: SchemaFirstInventoryDocument) => SchemaFirstInventoryDocument;
+  (
+    liveDocument: SchemaFirstInventoryDocument,
+    existingDocument: O.Option<SchemaFirstInventoryDocument>,
+    backlog: ReadonlyArray<SchemaFirstBacklogRow>
+  ): SchemaFirstInventoryDocument;
+} = dual(
+  3,
+  (
+    liveDocument: SchemaFirstInventoryDocument,
+    existingDocument: O.Option<SchemaFirstInventoryDocument>,
+    backlog: ReadonlyArray<SchemaFirstBacklogRow>
+  ): SchemaFirstInventoryDocument => {
+    const committedEntries = pipe(
+      existingDocument,
+      O.map((document) => document.entries),
+      O.getOrElse(A.empty<SchemaFirstInventoryEntry>)
+    );
+    const committedByKey = HashMap.fromIterable(
+      A.map(committedEntries, (entry): readonly [string, SchemaFirstInventoryEntry] => [
+        makeSchemaFirstEntryKey(entry),
+        entry,
+      ])
+    );
+    const committedByIdentity = indexByIdentity(committedEntries);
+    const liveByIdentity = indexByIdentity(liveDocument.entries);
+
+    const mergedEntries = A.map(liveDocument.entries, (entry) => {
+      const identity = makeSchemaFirstEntryIdentity(entry);
+      return pipe(
+        uniqueByIdentity(liveByIdentity, identity),
+        O.flatMap(() => uniqueByIdentity(committedByIdentity, identity)),
+        O.map((committed) => withLiveLine(committed, entry)),
+        O.orElse(() => HashMap.get(committedByKey, makeSchemaFirstEntryKey(entry))),
+        O.getOrElse(() => entry)
+      );
+    });
+
+    return SchemaFirstInventoryDocument.make({
+      version: 1,
+      generatedOn: liveDocument.generatedOn,
+      scope: liveDocument.scope,
+      entries: sortSchemaFirstEntries(mergedEntries),
+      backlog,
+    });
+  }
+);
 
 const collectSchemaFirstLintFindings = (
   liveDocument: SchemaFirstInventoryDocument,
@@ -615,7 +724,7 @@ export const runSchemaFirstLint = Effect.fn("runSchemaFirstLint")(function* (opt
       O.getOrElse(A.empty<SchemaFirstBacklogRow>)
     )
   );
-  const mergedDocument = mergeInventory(
+  const mergedDocument = mergeSchemaFirstInventory(
     liveDocument,
     existingDocument,
     parityBacklogToWrite(options, parityEntries, parity)
