@@ -3890,6 +3890,42 @@
     {
       "id": "escaping-member-invalid-json",
       "output": "a=packages/a@repo/packages/a\nroot=.@repo"
+    },
+    {
+      "id": "double-star-symlink-escape",
+      "output": "root=.@repo"
+    },
+    {
+      "id": "member-numeric-version",
+      "output": "a=packages/a@repo/packages/a\nroot=.@repo"
+    },
+    {
+      "id": "member-empty-version",
+      "output": "a=packages/a@repo/packages/a\nroot=.@repo"
+    },
+    {
+      "id": "member-empty-name",
+      "output": "=packages/a@repo/packages/a\nroot=.@repo"
+    },
+    {
+      "id": "member-dependencies-array",
+      "output": "error: Failed to decode package manifest <scratch>/repo/packages/a/package.json."
+    },
+    {
+      "id": "pnpm-workspace-precedence",
+      "output": "a=packages/a@repo/packages/a\nroot=.@repo"
+    },
+    {
+      "id": "pnpm-workspace-invalid-yaml",
+      "output": "a=packages/a@repo/packages/a\nroot=.@repo"
+    },
+    {
+      "id": "symlink-inside-only",
+      "output": "real=packages/real@repo/packages/real\nroot=.@repo"
+    },
+    {
+      "id": "symlinked-root-ancestor",
+      "output": "a=../../real/repo/packages/a@real/repo/packages/a\nroot=.@alias/repo\nx=tools/x@alias/repo/tools/x"
     }
   ]
 }

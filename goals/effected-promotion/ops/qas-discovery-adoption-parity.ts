@@ -4,9 +4,10 @@
  * 4-A1 moves repo-cli `Quality/internal/QualityArtifactSupport.ts`
  * `discoverWorkspacePackages` off its hand-rolled `*`-segment pattern expander
  * and onto `@beep/repo-workspaces` `WorkspaceDiscovery`, discovery only: the
- * kit finds the member directories, and every one is post-filtered through
- * `resolvePathWithinRoot` (the kit keeps upstream link-following, W4-f) before
- * the unchanged `LenientManifest` reader decodes it. The oracle is byte
+ * kit finds the members with its opt-in `containWithinRoot` (upstream
+ * link-following stays the default, W4-f), every one is checked again through
+ * `resolvePathWithinCanonicalRoot`, and the unchanged `LenientManifest` reader
+ * decodes its as-read manifest. The oracle is byte
  * identity of everything the Quality generators derive from discovery over the
  * live repository:
  *
@@ -23,9 +24,11 @@
  * the PR body.
  *
  * It also runs fixture probes through the exported `discoverWorkspacePackages`
- * (symlinks inside and outside the root, literal and `*` patterns, negation and
- * `**` patterns, a dot directory, a root without `workspaces`, malformed
- * manifests), so every behaviour shift the switch makes has a witness.
+ * (symlinks inside and outside the root, under `*`, `**` and literals, a root
+ * behind a symlinked ancestor, negation and `**` patterns, a dot directory, a
+ * root without `workspaces`, a `pnpm-workspace.yaml`, malformed manifests and
+ * the version and name shapes the kit's tolerant projection rejects), so every
+ * behaviour shift the switch makes has a witness.
  *
  * Run it once before the switch to record the baseline (`--out`), then after the
  * switch with `--before <baseline>`: every surface must match the baseline
@@ -86,7 +89,7 @@ const AFFECTED_CHANGES = [
 // Probe outputs the switch changes on purpose. Every key is a probe id.
 const INTENDED_SHIFTS: Record<string, string> = {
   "literal-symlink-escape":
-    "A literal pattern segment is post-filtered like a `*` entry: a member whose real path leaves the root is skipped (the expander only checked `*` entries).",
+    "A literal pattern segment is contained like a `*` entry: a member whose real path leaves the root is skipped (the expander only checked `*` entries).",
   "dot-directory":
     "A `*` segment does not match a dot directory, as the package managers' globbers read it (the expander listed every entry).",
   "missing-base-dir":
@@ -95,8 +98,22 @@ const INTENDED_SHIFTS: Record<string, string> = {
     "A `!` pattern excludes its matches, as npm, yarn, bun and pnpm read it (the expander read it as a literal path).",
   "double-star":
     "A `**` pattern descends, as npm, yarn, bun and pnpm read it (the expander read it as a literal segment and found nothing).",
-  "escaping-member-invalid-json":
-    "The kit reads every member manifest it enumerates before the containment post-filter, so an invalid manifest behind an escaping symlink fails discovery (the expander skipped it unread).",
+  "double-star-symlink-escape":
+    "A `**` pattern descends (the expander found nothing), and the kit's `containWithinRoot` neither reads nor descends into a link whose real path leaves the root.",
+  "member-numeric-version":
+    "The kit's tolerant projection rejects a present non-string `version` before the strict reader runs (the expander's `LenientManifest` read ignored `version`).",
+  "member-empty-version":
+    "The kit's tolerant projection rejects an empty `version`, which would resolve `workspace:^` to a bare `^` (the expander ignored `version`).",
+  "member-empty-name":
+    'The kit\'s tolerant projection rejects an empty `name` (the expander accepted any string name, `""` included).',
+  "pnpm-workspace-precedence":
+    "The kit reads a non-empty `pnpm-workspace.yaml` `packages` list before the root `workspaces`, as pnpm does (the expander read only `workspaces`).",
+  "pnpm-workspace-invalid-yaml":
+    "The kit parses `pnpm-workspace.yaml` when it exists, so a malformed one fails discovery as a workspace config decode (the expander never read it).",
+  "symlink-inside-only":
+    "A member reached through an in-root link is recorded at its repo-relative link path, as the kit enumerated it (the expander recorded a `*` entry at its link target).",
+  "symlinked-root-ancestor":
+    "Members are recorded lexically under the root as given, so a root behind a symlinked ancestor keeps plain repo-relative paths (the expander recorded `*` entries at their canonical paths, relative to the uncanonicalized root, i.e. `../..`).",
 };
 
 // --- surfaces ----------------------------------------------------------------
@@ -181,8 +198,12 @@ type Tree = Record<string, string>;
 const manifest = (name: string, extra: Record<string, unknown> = {}): string => JSON.stringify({ name, ...extra });
 
 // Each probe: a file tree under `repo/`, symlinks as [link, target] relative to
-// the scratch directory, and nothing else. `outside/` sits beside `repo/`.
-const PROBES: ReadonlyArray<readonly [string, Tree, ReadonlyArray<readonly [string, string]>]> = [
+// the scratch directory, and optionally the root to discover from (default
+// `repo`). `outside/` sits beside `repo/`.
+const PROBES: ReadonlyArray<
+  | readonly [string, Tree, ReadonlyArray<readonly [string, string]>]
+  | readonly [string, Tree, ReadonlyArray<readonly [string, string]>, string]
+> = [
   [
     "star-and-literal",
     {
@@ -307,9 +328,89 @@ const PROBES: ReadonlyArray<readonly [string, Tree, ReadonlyArray<readonly [stri
     },
     [["repo/packages/out", "outside/escaped"]],
   ],
+  [
+    "double-star-symlink-escape",
+    {
+      "repo/package.json": manifest("root", { workspaces: ["packages/**"] }),
+      "repo/packages/a/package.json": manifest("a"),
+      "outside/package.json": "{",
+      "outside/deep/package.json": manifest("deep"),
+    },
+    [["repo/packages/out", "outside"]],
+  ],
+  [
+    "member-numeric-version",
+    {
+      "repo/package.json": manifest("root", { workspaces: ["packages/*"] }),
+      "repo/packages/a/package.json": manifest("a", { version: 1 }),
+    },
+    [],
+  ],
+  [
+    "member-empty-version",
+    {
+      "repo/package.json": manifest("root", { workspaces: ["packages/*"] }),
+      "repo/packages/a/package.json": manifest("a", { version: "" }),
+    },
+    [],
+  ],
+  [
+    "member-empty-name",
+    {
+      "repo/package.json": manifest("root", { workspaces: ["packages/*"] }),
+      "repo/packages/a/package.json": manifest(""),
+    },
+    [],
+  ],
+  [
+    "member-dependencies-array",
+    {
+      "repo/package.json": manifest("root", { workspaces: ["packages/*"] }),
+      "repo/packages/a/package.json": manifest("a", { dependencies: [] }),
+    },
+    [],
+  ],
+  [
+    "pnpm-workspace-precedence",
+    {
+      "repo/package.json": manifest("root", { workspaces: ["packages/*"] }),
+      "repo/pnpm-workspace.yaml": "packages:\n  - tools/*\n",
+      "repo/packages/a/package.json": manifest("a"),
+      "repo/tools/t/package.json": manifest("t"),
+    },
+    [],
+  ],
+  [
+    "pnpm-workspace-invalid-yaml",
+    {
+      "repo/package.json": manifest("root", { workspaces: ["packages/*"] }),
+      "repo/pnpm-workspace.yaml": "packages: [\n",
+      "repo/packages/a/package.json": manifest("a"),
+    },
+    [],
+  ],
+  [
+    "symlink-inside-only",
+    {
+      "repo/package.json": manifest("root", { workspaces: ["linked/*"] }),
+      "repo/packages/real/package.json": manifest("real"),
+      "repo/linked/.keep": "",
+    },
+    [["repo/linked/alias", "repo/packages/real"]],
+  ],
+  [
+    "symlinked-root-ancestor",
+    {
+      "real/repo/package.json": manifest("root", { workspaces: ["packages/*", "tools/x"] }),
+      "real/repo/packages/a/package.json": manifest("a"),
+      "real/repo/tools/x/package.json": manifest("x"),
+    },
+    [["alias", "real"]],
+    "alias/repo",
+  ],
 ];
 
-const runProbe = (tree: Tree, links: ReadonlyArray<readonly [string, string]>) =>
+const runProbe = (tree: Tree, links: ReadonlyArray<readonly [string, string]>, rootPath: string) =>
   Effect.scoped(
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -327,7 +428,7 @@ const runProbe = (tree: Tree, links: ReadonlyArray<readonly [string, string]>) =
           fs.symlink(path.join(scratch, target), path.join(scratch, link))
         )
       );
-      const root = path.join(scratch, "repo");
+      const root = path.join(scratch, rootPath);
       const exit = yield* Effect.exit(discoverWorkspacePackages(root, path));
       return Exit.match(exit, {
         onFailure: (cause) =>
@@ -374,8 +475,8 @@ const program = Effect.gen(function* () {
     coverageScope: yield* coverageScopeSurface,
     coverageRegression: yield* coverageRegressionSurface,
   };
-  const probes = yield* Effect.forEach(PROBES, ([id, tree, links]) =>
-    Effect.map(runProbe(tree, links), (output) => ({ id, output }))
+  const probes = yield* Effect.forEach(PROBES, ([id, tree, links, rootPath]) =>
+    Effect.map(runProbe(tree, links, rootPath ?? "repo"), (output) => ({ id, output }))
   );
   const current: Report = { tool: TOOL, surfaces, probes };
 

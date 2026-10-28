@@ -3889,7 +3889,43 @@
     },
     {
       "id": "escaping-member-invalid-json",
-      "output": "error: Failed to decode package manifest <scratch>/repo/packages/out/package.json."
+      "output": "a=packages/a@repo/packages/a\nroot=.@repo"
+    },
+    {
+      "id": "double-star-symlink-escape",
+      "output": "a=packages/a@repo/packages/a\nroot=.@repo"
+    },
+    {
+      "id": "member-numeric-version",
+      "output": "error: Failed to decode package manifest <scratch>/repo/packages/a/package.json."
+    },
+    {
+      "id": "member-empty-version",
+      "output": "error: Failed to decode package manifest <scratch>/repo/packages/a/package.json."
+    },
+    {
+      "id": "member-empty-name",
+      "output": "error: Failed to decode package manifest <scratch>/repo/packages/a/package.json."
+    },
+    {
+      "id": "member-dependencies-array",
+      "output": "error: Failed to decode package manifest <scratch>/repo/packages/a/package.json."
+    },
+    {
+      "id": "pnpm-workspace-precedence",
+      "output": "root=.@repo\nt=tools/t@repo/tools/t"
+    },
+    {
+      "id": "pnpm-workspace-invalid-yaml",
+      "output": "error: Failed to decode workspace config <scratch>/repo/pnpm-workspace.yaml."
+    },
+    {
+      "id": "symlink-inside-only",
+      "output": "real=linked/alias@repo/linked/alias\nroot=.@repo"
+    },
+    {
+      "id": "symlinked-root-ancestor",
+      "output": "a=packages/a@alias/repo/packages/a\nroot=.@alias/repo\nx=tools/x@alias/repo/tools/x"
     }
   ],
   "comparison": {
@@ -3904,7 +3940,7 @@
         "id": "literal-symlink-escape",
         "before": "escaped=linked@repo/linked\nroot=.@repo",
         "after": "root=.@repo",
-        "reason": "A literal pattern segment is post-filtered like a `*` entry: a member whose real path leaves the root is skipped (the expander only checked `*` entries)."
+        "reason": "A literal pattern segment is contained like a `*` entry: a member whose real path leaves the root is skipped (the expander only checked `*` entries)."
       },
       {
         "id": "dot-directory",
@@ -3931,10 +3967,52 @@
         "reason": "A wildcard pattern whose base directory is absent fails discovery as a likely typo (the expander skipped it silently); a missing literal member is still skipped."
       },
       {
-        "id": "escaping-member-invalid-json",
+        "id": "double-star-symlink-escape",
+        "before": "root=.@repo",
+        "after": "a=packages/a@repo/packages/a\nroot=.@repo",
+        "reason": "A `**` pattern descends (the expander found nothing), and the kit's `containWithinRoot` neither reads nor descends into a link whose real path leaves the root."
+      },
+      {
+        "id": "member-numeric-version",
         "before": "a=packages/a@repo/packages/a\nroot=.@repo",
-        "after": "error: Failed to decode package manifest <scratch>/repo/packages/out/package.json.",
-        "reason": "The kit reads every member manifest it enumerates before the containment post-filter, so an invalid manifest behind an escaping symlink fails discovery (the expander skipped it unread)."
+        "after": "error: Failed to decode package manifest <scratch>/repo/packages/a/package.json.",
+        "reason": "The kit's tolerant projection rejects a present non-string `version` before the strict reader runs (the expander's `LenientManifest` read ignored `version`)."
+      },
+      {
+        "id": "member-empty-version",
+        "before": "a=packages/a@repo/packages/a\nroot=.@repo",
+        "after": "error: Failed to decode package manifest <scratch>/repo/packages/a/package.json.",
+        "reason": "The kit's tolerant projection rejects an empty `version`, which would resolve `workspace:^` to a bare `^` (the expander ignored `version`)."
+      },
+      {
+        "id": "member-empty-name",
+        "before": "=packages/a@repo/packages/a\nroot=.@repo",
+        "after": "error: Failed to decode package manifest <scratch>/repo/packages/a/package.json.",
+        "reason": "The kit's tolerant projection rejects an empty `name` (the expander accepted any string name, `\"\"` included)."
+      },
+      {
+        "id": "pnpm-workspace-precedence",
+        "before": "a=packages/a@repo/packages/a\nroot=.@repo",
+        "after": "root=.@repo\nt=tools/t@repo/tools/t",
+        "reason": "The kit reads a non-empty `pnpm-workspace.yaml` `packages` list before the root `workspaces`, as pnpm does (the expander read only `workspaces`)."
+      },
+      {
+        "id": "pnpm-workspace-invalid-yaml",
+        "before": "a=packages/a@repo/packages/a\nroot=.@repo",
+        "after": "error: Failed to decode workspace config <scratch>/repo/pnpm-workspace.yaml.",
+        "reason": "The kit parses `pnpm-workspace.yaml` when it exists, so a malformed one fails discovery as a workspace config decode (the expander never read it)."
+      },
+      {
+        "id": "symlink-inside-only",
+        "before": "real=packages/real@repo/packages/real\nroot=.@repo",
+        "after": "real=linked/alias@repo/linked/alias\nroot=.@repo",
+        "reason": "A member reached through an in-root link is recorded at its repo-relative link path, as the kit enumerated it (the expander recorded a `*` entry at its link target)."
+      },
+      {
+        "id": "symlinked-root-ancestor",
+        "before": "a=../../real/repo/packages/a@real/repo/packages/a\nroot=.@alias/repo\nx=tools/x@alias/repo/tools/x",
+        "after": "a=packages/a@alias/repo/packages/a\nroot=.@alias/repo\nx=tools/x@alias/repo/tools/x",
+        "reason": "Members are recorded lexically under the root as given, so a root behind a symlinked ancestor keeps plain repo-relative paths (the expander recorded `*` entries at their canonical paths, relative to the uncanonicalized root, i.e. `../..`)."
       }
     ],
     "unclassified": []
