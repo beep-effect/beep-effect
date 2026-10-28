@@ -27,6 +27,7 @@ lane from `origin/main` at `d3c684edea`:
 - `EffectTsgoEffectFnPolicy.test.ts`: five tests pass, including the
   Effect-only exit-code fixture and root-map unknown-rule canary.
 - Nine repo-cli compiler, scaffold, script-policy and markdown-fence test files: 107 tests pass.
+- A tracked-manifest audit scanned 558 build/check scripts and found zero `tsc-rs` invocations.
 - `beep lint package-scripts`: 189 manifests, zero drifting.
 - `beep cache audit`: zero blocking findings, 1621 unassessed computations.
 - `beep lint reflection-artifacts`: zero blocking or advisory findings.
@@ -43,3 +44,17 @@ verify through `beep goals completion refresh --slug tsrs-gates`. Until then,
 `initiative.status` and lifecycle remain active. Heavy local replay is avoided
 while other sessions consume workstation memory; hosted checks supply the final
 required-check proof.
+
+## Local compute limit
+
+The initial Yeet publish committed the packet, then its cheap-gates stage ran
+from 09:19:39 UTC until it was interrupted after 09:29:42 UTC under the
+AGENTS.md ten-minute constrained-compute rule. The remaining process was
+`quality jsdoc-ratchet --regenerate`. The owned process tree terminated.
+Completed checks included catalog usage, configuration sync, cache policy, goal
+index/doctor, Effect imports, markdown fences, retired-path and schema-tag laws,
+Effect Vitest and Oxlint. No failing check was converted to a pass.
+
+The branch uses the documented direct push and draft-PR fallback. Local
+`cheap-gates` replay is skipped for the final receipt with this reason; hosted CI
+must still pass before merge.
