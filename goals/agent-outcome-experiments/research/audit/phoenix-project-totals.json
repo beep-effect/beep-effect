@@ -1,0 +1,48 @@
+{
+  "data": {
+    "projectCount": 3,
+    "datasetCount": 0,
+    "promptCount": 0,
+    "evaluatorCount": 0,
+    "serverStatus": {
+      "insufficientStorage": false
+    },
+    "projects": {
+      "edges": [
+        {
+          "node": {
+            "id": "UHJvamVjdDox",
+            "name": "default",
+            "recordCount": 1,
+            "traceCount": 1,
+            "traceAnnotationNames": [],
+            "spanAnnotationNames": [],
+            "sessionAnnotationNames": []
+          }
+        },
+        {
+          "node": {
+            "id": "UHJvamVjdDoy",
+            "name": "harness-otel",
+            "recordCount": 564907,
+            "traceCount": 11042,
+            "traceAnnotationNames": [],
+            "spanAnnotationNames": [],
+            "sessionAnnotationNames": []
+          }
+        },
+        {
+          "node": {
+            "id": "UHJvamVjdDoz",
+            "name": "beep-agent-effectiveness",
+            "recordCount": 0,
+            "traceCount": 0,
+            "traceAnnotationNames": [],
+            "spanAnnotationNames": [],
+            "sessionAnnotationNames": []
+          }
+        }
+      ]
+    }
+  }
+}

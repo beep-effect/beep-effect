@@ -1,0 +1,19 @@
+{
+  "url": "https://raw.githubusercontent.com/openai/codex/rust-v0.165.0/codex-rs/core/src/config/otel.rs",
+  "tag": "rust-v0.165.0",
+  "sha256": "6af9794a087b90c87356a31a9110064632205a1b2efd336b2fce10ac648990be",
+  "matches": [
+    {
+      "line": 17,
+      "text": "let exporter = config.exporter.unwrap_or(OtelExporterKind::None);"
+    },
+    {
+      "line": 20,
+      "text": "let trace_exporter = config.trace_exporter.unwrap_or(OtelExporterKind::None);"
+    },
+    {
+      "line": 21,
+      "text": "let metrics_exporter = config.metrics_exporter.unwrap_or(OtelExporterKind::Statsig);"
+    }
+  ]
+}

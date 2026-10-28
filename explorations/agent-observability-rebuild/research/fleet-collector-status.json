@@ -1,0 +1,87 @@
+{
+  "capturedAtUtc": "2026-10-28T02:15:33.863746+00:00",
+  "units": {
+    "beep-ai-metrics-forwarder.service": {
+      "Id": "beep-ai-metrics-forwarder.service",
+      "LoadState": "masked",
+      "ActiveState": "inactive",
+      "SubState": "dead",
+      "UnitFileState": "masked",
+      "Result": "success",
+      "WorkingDirectory": ""
+    },
+    "beep-ai-metrics-forwarder.timer": {
+      "Id": "beep-ai-metrics-forwarder.timer",
+      "LoadState": "masked",
+      "ActiveState": "inactive",
+      "SubState": "dead",
+      "UnitFileState": "masked",
+      "NextElapseUSecRealtime": "",
+      "LastTriggerUSec": "",
+      "Result": "success"
+    }
+  },
+  "quarantine": {
+    "holdExists": true,
+    "reason": "Post-boot swap/VMA corruption in metrics-forwarder Bun thread; H3 absent and RAM pressure low. Isolates observed trigger, does not assert root cause."
+  },
+  "latestStatus": {
+    "mtimeUtc": "2026-09-15T01:37:48.803972+00:00",
+    "sourceCoverage": [
+      {
+        "candidateFileCount": 317,
+        "includedFileCount": 50,
+        "limitedByMaxFiles": true,
+        "sizeExcludedFileCount": 14,
+        "sourceKind": "codex"
+      },
+      {
+        "candidateFileCount": 15,
+        "includedFileCount": 15,
+        "limitedByMaxFiles": false,
+        "sizeExcludedFileCount": 0,
+        "sourceKind": "claude"
+      },
+      {
+        "candidateFileCount": 0,
+        "includedFileCount": 0,
+        "limitedByMaxFiles": false,
+        "sizeExcludedFileCount": 0,
+        "sourceKind": "openclaw"
+      }
+    ],
+    "sourceFileCount": 65,
+    "turnCount": 34110,
+    "target": "dankserver",
+    "parquetExportMode": "none"
+  },
+  "registry": [
+    {
+      "dataRoot": "~/.local/state/beep/ai-metrics",
+      "rootCount": 3,
+      "sourceInstanceCount": 9,
+      "rootKindCounts": {
+        "primary-clone": 2,
+        "linked-worktree": 1
+      },
+      "generatedAtEpochMillis": 1789448348727,
+      "version": "ai-metrics-identity-registry/v1"
+    }
+  ],
+  "derivedDatabase": {
+    "bytes": 3498323968,
+    "mtimeUtc": "2026-09-15T05:00:56.440858+00:00"
+  },
+  "priorUnitBindings": {
+    "workingDirectory": "~/YeeBois/projects/beep-effect",
+    "target": "dankserver",
+    "otlpConfigured": true,
+    "maxFiles": 50,
+    "maxFileBytes": 33554432,
+    "parquetMode": "none",
+    "intervalMinutes": 360,
+    "originalDataRoot": "~/.local/state/beep/ai-metrics",
+    "preP0BackupDataRoot": ".beep/ai-metrics",
+    "activeCommand": null
+  }
+}
