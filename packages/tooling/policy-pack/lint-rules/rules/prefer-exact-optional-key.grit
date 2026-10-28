@@ -25,14 +25,59 @@ pattern retired_member() {
   }
 }
 
-// Match the import binding rather than assuming the conventional S/Schema name.
-pattern schema_reference($ns) {
-  within JsModule() where {
-    $program <: contains or {
-      `import * as $ns from "effect/Schema"`,
-      `import type * as $ns from "effect/Schema"`
+// Function parameters can shadow a module's namespace import.
+pattern shadowing_parameters($ns) {
+  or {
+    $ns,
+    contains or {
+      JsFormalParameter(binding=$ns),
+      JsRestParameter(binding=$ns)
     }
   }
+}
+
+// Inspect direct statements so a binding in a nested scope cannot hide siblings.
+pattern shadowing_statements($ns) {
+  some or {
+    JsVariableStatement(declaration=JsVariableDeclaration(declarators=some JsVariableDeclarator(id=$ns))),
+    JsFunctionDeclaration(id=$ns),
+    JsClassDeclaration(id=$ns)
+  }
+}
+
+pattern schema_namespace_import($ns) {
+  within JsModule() where {
+    $program <: contains or {
+      JsImportNamespaceClause(namespace_specifier=JsNamespaceImportSpecifier(local_name=$ns), source=`"effect/Schema"`),
+      JsImportCombinedClause(specifier=JsNamespaceImportSpecifier(local_name=$ns), source=`"effect/Schema"`)
+    }
+  }
+}
+
+// Value parameters do not shadow a namespace used as a type. A typeof query
+// instead follows the value binding and must retain the shadowing checks.
+pattern schema_type_reference($ns) {
+  and { schema_namespace_import($ns),
+  or {
+    not within TsTypeofType() ,
+    schema_reference($ns)
+  } }
+}
+
+// Match the import binding rather than assuming the conventional S/Schema name.
+pattern schema_reference($ns) {
+  and { not within or {
+    JsFunctionDeclaration(parameters=shadowing_parameters($ns)),
+    JsFunctionExpression(parameters=shadowing_parameters($ns)),
+    JsArrowFunctionExpression(parameters=shadowing_parameters($ns)),
+    JsFunctionExportDefaultDeclaration(parameters=shadowing_parameters($ns)),
+    JsMethodClassMember(parameters=shadowing_parameters($ns)),
+    JsMethodObjectMember(parameters=shadowing_parameters($ns)),
+    JsConstructorClassMember(parameters=shadowing_parameters($ns)),
+    JsBlockStatement(statements=shadowing_statements($ns)),
+    JsFunctionBody(statements=shadowing_statements($ns))
+  } ,
+  schema_namespace_import($ns) }
 }
 
 or {
@@ -43,7 +88,7 @@ or {
   },
   TsQualifiedName(left=$ns, right=$member) as $ref where {
     $member <: r"^(?:optional|withDecodingDefault|OptionFromOptional)$",
-    $ref <: schema_reference($ns),
+    $ref <: schema_type_reference($ns),
     register_diagnostic(span=$ref, message="Rule: schema fields use exact optional keys (EF-40). Why: this type mirrors `S.optional`, `S.withDecodingDefault` or `S.OptionFromOptional`, which admit a present key holding `undefined`. Fix: reference `S.optionalKey`, `S.withDecodingDefaultKey` or `S.OptionFromOptionalKey`.", severity="error")
   },
   `$ns[$key]` as $ref where {
@@ -51,12 +96,20 @@ or {
     $ref <: schema_reference($ns),
     register_diagnostic(span=$ref, message="Rule: schema fields use exact optional keys (EF-40). Why: computed access to an undefined-admitting optionality member. Fix: use `S.optionalKey`, `S.withDecodingDefaultKey` or `S.OptionFromOptionalKey`.", severity="error")
   },
-  JsImport() as $decl where {
-    $decl <: r"(?s)import\s+(?:type\s+)?\{[^}]*\b(?:optional|withDecodingDefault|OptionFromOptional)\b[^}]*\}\s*from\s*[\"']effect/Schema[\"'].*",
-    register_diagnostic(span=$decl, message="Rule: schema fields use exact optional keys (EF-40). Why: this imports an undefined-admitting optionality member of effect/Schema. Fix: import the namespace (`import * as S from \"effect/Schema\"`) and use `S.optionalKey`, `S.withDecodingDefaultKey` or `S.OptionFromOptionalKey`.", severity="error")
+  or {
+    JsShorthandNamedImportSpecifier(local_name=$member),
+    JsNamedImportSpecifier(name=$member)
+  } as $decl where {
+    $member <: r"^(?:optional|withDecodingDefault|OptionFromOptional)$",
+    $decl <: within or {
+      JsImportNamedClause(source=`"effect/Schema"`),
+      JsImportCombinedClause(source=`"effect/Schema"`)
+    } ,
+    register_diagnostic(span=$decl, message="Rule: schema fields use exact optional keys (EF-40). Why: this imports an undefined-admitting optionality member of effect/Schema. Fix: import optionalKey, withDecodingDefaultKey or OptionFromOptionalKey.", severity="error")
   },
-  JsExportNamedFromClause() as $decl where {
-    $decl <: r"(?s)\{[^}]*\b(?:optional|withDecodingDefault|OptionFromOptional)\b[^}]*\}\s*from\s*[\"']effect/Schema[\"'].*",
-    register_diagnostic(span=$decl, message="Rule: schema fields use exact optional keys (EF-40). Why: this re-exports an undefined-admitting optionality member of effect/Schema. Fix: re-export `optionalKey`, `withDecodingDefaultKey` or `OptionFromOptionalKey` instead.", severity="error")
+  JsExportNamedFromSpecifier(source_name=$member) as $decl where {
+    $member <: r"^(?:optional|withDecodingDefault|OptionFromOptional)$",
+    $decl <: within JsExportNamedFromClause(source=`"effect/Schema"`) ,
+    register_diagnostic(span=$decl, message="Rule: schema fields use exact optional keys (EF-40). Why: this re-exports an undefined-admitting optionality member of effect/Schema. Fix: re-export optionalKey, withDecodingDefaultKey or OptionFromOptionalKey.", severity="error")
   }
 }

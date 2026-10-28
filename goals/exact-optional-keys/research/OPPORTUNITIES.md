@@ -86,3 +86,15 @@
   and precision fixtures for both cases before publishing the closeout PR.
 - Prevention: test arbitrary import aliases and unrelated conventional names
   whenever a structural rule claims to recognize an imported API.
+
+## 2026-10-28: whole-import regex confused source exports with local names
+
+- Doing: completing precision checks on EF-40 before marking PR #2316 final.
+- Evidence: the rule flagged `optionalKey as optional` and a function parameter
+  named Codec shadowing an effect/Schema namespace. Both are unrelated to the
+  banned exports. A combined namespace import also escaped the initial fix.
+- Fix: match source specifier nodes, namespace import nodes, and lexical binding
+  scopes; add positive and negative fixtures, including type/value namespace
+  distinctions and sibling scopes.
+- Prevention: fixture both sides of aliased imports and re-exports, and test
+  imported APIs inside scopes that reuse the import's local name.

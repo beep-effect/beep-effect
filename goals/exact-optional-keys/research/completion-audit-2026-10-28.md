@@ -80,3 +80,16 @@ CI on PR #2316 supplies the remaining authoritative proof.
 Readiness artifacts must be retained in the owning clone before worktree
 retirement. The final proposal remains `completed-retained` while operative
 status remains `active` until completion refresh verifies the merge.
+
+## Continued precision audit
+
+The next audit reproduced false positives on exact exports renamed to banned
+local names and on local parameters shadowing a Schema namespace. Import and
+re-export checks now inspect source specifier names, not the entire statement's
+text. Namespace checks use import syntax nodes, support combined imports, and
+exclude shadowing parameters and direct local bindings. Type references retain
+separate namespace lookup; `typeof` follows the value binding.
+
+The expanded fixture suite passes with 28 invalid references and zero hits on
+allowed forms, including nested sibling scopes, exact exports with renamed local
+bindings, local methods and parameters, and shadowed `typeof` queries.
