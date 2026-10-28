@@ -35,3 +35,5 @@
   queries stay quiet. Fresh and reused hooks are modeled separately in the fixture.
 
 - Hosted coverage comparison passed all unit shards but identified unmeasured native-cache resolver and host-default branches plus a small Docgen line regression. The native integration fixture ran in a child process, outside the parent report. Add in-process tests for successful/denied cache-only sessions, literal/local bypass, absent host configuration and scoped native discovery; preserve the existing coverage floors.
+
+- A local prospective squash-merge replay exposed overlapping conflicts between the fleet and execution-fix PRs. Close through the already validated combined integration head, retaining the first PR and branch as provenance rather than running a second conflicting publication cycle. Qualify dependent fixes together before opening parallel PRs.

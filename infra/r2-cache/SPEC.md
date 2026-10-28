@@ -28,7 +28,7 @@ explicit hold, never a successful enrollment.
 | Centralize CI startup in the existing setup action. | Lint/unit/Storybook and nested policy/docgen Turbo invocations need the same transport as heavy checks. | Disable the repository R2 flag; retain the AWS configuration. |
 | Keep scheduled/manual main jobs read-only and forks local-only. | Broader cache coverage does not require additional writer authority. | Disable their R2 inputs. |
 | Enable run summaries for enrolled local command entry points. | Count actual task origins and timings rather than assuming perceived speed is a provider effect. | Set `TURBO_RUN_SUMMARY=false` explicitly. |
-| Integrate the execution-boundary fix after the fleet source. | Both changes add imports and catalog entries at the same boundary; validate their combined behavior before the second merge. | Revert the execution fix independently; the fleet transport retains its existing rollback. |
+| Close the fleet and execution fixes through one integrated PR. | A prospective squash-merge replay found shared-source conflicts between the two open PRs; the integration head already contains the full transport and validated fixes. One review and CI gate avoids publishing a known intermediate defect and duplicate closure cycles. | Retain both branch archives and review histories; revert the combined source independently of the cache-only host/AWS rollback. |
 
 ## Measurements and interpretation
 
