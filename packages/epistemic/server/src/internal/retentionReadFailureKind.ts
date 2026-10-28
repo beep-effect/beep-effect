@@ -12,7 +12,7 @@ import * as SqlError from "effect/sql/SqlError";
 /**
  * Select a bounded diagnostic label without returning error messages or causes.
  *
- * @example
+ * **Example** (Keep error messages out of diagnostics)
  * ```ts
  * import { retentionReadFailureKind } from "./retentionReadFailureKind.ts"
  * console.log(retentionReadFailureKind(new Error("sensitive detail"))) // DatabaseError
