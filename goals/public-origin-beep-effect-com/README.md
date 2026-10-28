@@ -35,15 +35,45 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 to P3 are complete: the packet and doctrine, `@beep/public-site`, the
-authority move with the drift folding and residue rewrite, and the
-`retired-iri-authorities` law with its lane. P4 closeout is in progress: the
-reflection is written and `ops/manifest.json` proposes `completed-retained`
-with final PR #1946, gated on the retained yeet verdict. After merge,
-`bun run beep goals completion refresh --slug public-origin-beep-effect-com`
-verifies it.
+P0 to P3 shipped in PR #1946, merged on 2026-10-21. P4 is in progress.
+The 2026-10-28 completion refresh returned `unsatisfied`; merge-time required
+checks and readiness evidence do not prove completion. Fresh closeout PR #2319
+rechecks the implementation and binds its retained final-head verdict.
+The operative lifecycle stays `active` until completion refresh verifies that PR.
 
 ## Latest Evidence
+
+Closeout audit on 2026-10-28:
+
+- #1946 accepted head `1da27b6b07b0d755e389e5dc129be1cfc0e54c80` merged as
+  `eba755d93506576824b9f1e8205aa01489efea6a`; that merge is in current main.
+- Completion receipt: `history/2026-10-28-original-completion-receipt.json`.
+  Required Effect Diagnostics failed at merge, Lint was unknown, the review
+  window was open, and the declared local readiness verdict was absent.
+- Current law scan: 36,972 tracked text files, 0 findings, 106 binaries skipped
+  and 4,825 exempt files. Reflection lint has 0 blocking or advisory findings.
+  Changeset graph has 189 workspaces, 0 notes and 0 missing references.
+- Full package audits and docgen pass for identity, public-site, ontology,
+  skill-contract, all seven epistemic packages, exiftool, rdf and documents-domain.
+  Repo-cli docgen passes; its full audit completed with 7,930 passing tests
+  and six environment-specific assertion failures. The same six reproduce on
+  unchanged main when root `.env` is loaded; all 437 tests in those three files
+  pass on both base and closeout without that injection. See the retained
+  [verification record](history/2026-10-28-verification-recovery.md).
+- Law command and rule tests: 37 tests pass, including a seeded tracked
+  violation that fails strict mode. Graft finds no retired hosts in 8,747
+  indexed code files; the tracked-file law also covers unindexed prose/data.
+- Packet doctor: 0 new blocking findings. Knowledge refs: 0 live gated
+  observations. Launcher size, manifest JSON and whitespace checks pass.
+- Publication uses the AGENTS.md ten-minute fallback after local JSDoc
+  regeneration did not finish. The complete final-check on `5248ae2184` passed
+  all other gates, including full CLI coverage. Later pushes change only the
+  packet or reviewer-request metadata; local skips and retained proof are
+  declared in the PR body. Hosted readiness and merge evidence must verify
+  the final pushed head before completion refresh can promote this packet.
+
+Historical implementation evidence follows. It does not establish readiness
+of the fresh closeout head.
 
 Proof on the final branch (2026-10-21):
 

@@ -13,6 +13,7 @@
     {"file":"packages/drivers/duckdb/src/DuckDb.models.ts","symbol":"DuckDbDatabaseExport","kind":"struct-const","owner":"@beep/duckdb","identity":"DuckDbDatabaseExport","description":"Directory artifact for EXPORT DATABASE."},
     {"file":"packages/drivers/duckdb/src/DuckDb.models.ts","symbol":"DuckDbDatabaseImport","kind":"struct-const","owner":"@beep/duckdb","identity":"DuckDbDatabaseImport","description":"Directory artifact to restore into an empty database."},
     {"file":"packages/drivers/duckdb/src/DuckDb.models.ts","symbol":"DuckDbParquetExport","kind":"struct-const","owner":"@beep/duckdb","identity":"DuckDbParquetExport","description":"Parquet export request for a DuckDB table."},
-    {"file":"packages/drivers/duckdb/src/DuckDb.models.ts","symbol":"DuckDbRows","kind":"schema-const","owner":"@beep/duckdb","identity":"DuckDbRows","description":"JSON-compatible rows returned from DuckDB queries."}
+    {"file":"packages/drivers/duckdb/src/DuckDb.models.ts","symbol":"DuckDbRows","kind":"schema-const","owner":"@beep/duckdb","identity":"DuckDbRows","description":"JSON-compatible rows returned from DuckDB queries."},
+    {"file":"packages/drivers/duckdb/src/DuckDbPersistedQueue.service.ts","symbol":"makeStoreSql","kind":"union","owner":"@beep/duckdb","identity":"Element","description":"DuckDB Element persisted row."}
   ]
 }

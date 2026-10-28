@@ -1,6 +1,8 @@
 /**
  * Effect service for the GovInfo REST API (keyed, official public-domain source).
  *
+ * **Details**
+ *
  * Sits on the hand-authored `Search` contract + value models and the assembled
  * {@link GovinfoApi}. Transport (api.data.gov `api_key` auth, rate-limit, retry)
  * is supplied by the shared transformer via `HttpApiClient.make`'s `transformClient`
@@ -52,7 +54,7 @@ const $I = $GovinfoId.create("Govinfo.service");
  * ```ts
  * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
- * import { RateLimitSnapshot } from "@beep/api-transport"
+ * import { RateLimitSnapshot } from "@beep/api-transport/Transport"
  * import type { GovinfoShape } from "@beep/govinfo"
  *
  * const shape: GovinfoShape = {

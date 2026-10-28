@@ -1,6 +1,8 @@
 /**
  * Lazy instanced three.js render adapter for 3D knowledge graphs.
  *
+ * **Details**
+ *
  * Visual grammar (clean-room, from the graph-3d-view research prose spec):
  * dark `#111111` canvas, community-colored billboard nodes sized by
  * importance, quadratic-Bézier ribbon edges, canvas-sprite labels with an
