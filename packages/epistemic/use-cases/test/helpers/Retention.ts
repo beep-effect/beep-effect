@@ -30,7 +30,7 @@ export const queryInput = {
   knownAt: 2500,
   dispositions: [],
 };
-export const edgeInput = {
+const edgeInput = {
   ...productEntityFixtureInput("EpistemicEdgeVersion", 1),
   deletedAt: null,
   deletedByPrincipal: null,
@@ -57,7 +57,7 @@ export const edgeInput = {
   validTo: null,
   version: 1,
 };
-export const dispositionInput = {
+const dispositionInput = {
   ...productEntityFixtureInput("EpistemicClaimDisposition", 1),
   claimId: 1,
   reason: "reviewed",
