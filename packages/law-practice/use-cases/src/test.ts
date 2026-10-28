@@ -14,6 +14,14 @@
  */
 export { CitationOracleDiscovery } from "./internal/citationOracleDiscovery.ts";
 /**
+ * Normalized public-operation oracle inputs, stages and outputs, isolated from
+ * production contracts and independent model/helper assertion accounting.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export { CitationOracleOperations } from "./internal/citationOracleOperations.ts";
+/**
  * Port-output schema for the `Effect` a law-practice port method returns,
  * exported for package-local guard and codec tests.
  *

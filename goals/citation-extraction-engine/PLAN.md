@@ -9,9 +9,14 @@ The 2026-10-28 public prerequisite compatibility record is available and both
 authorized TypeScript donor suites have executable baselines. Independent AST
 discovery accounts for 66 assertion declarations and 1,583 runtime events with
 none unobserved. These are discovery events, not normalized semantic cases.
-P0 still owes case/stage normalization, portable schema-decoded ledgers and
-accounting, donor export/test dispositions, and regex-safety limits. P1 remains
-blocked on those P0 gates.
+Public-operation normalization now retains 826 observations at 31 static
+call sites, including token/filter stages, warnings, resolution groups,
+annotation outputs and 2,811 explicit coordinate records. Its portable codec,
+hash/source/span validator and corruption controls are evidenced in
+`history/evidence/2026-10-28-operation-corpus.md`. P0 still owes model/helper
+assertion normalization, independent semantic-case expansions, final portable
+ledgers/checker, donor dispositions, vocabulary-version mapping and regex-safety
+limits. P1 remains blocked on those P0 gates.
 
 ## Delivery Rule
 

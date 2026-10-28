@@ -26,6 +26,13 @@ Upstream repositories:
   - Affected material: extraction-pipeline behavior, ported/reimplemented
     expressions and regular expressions, and attribution-safe parity fixtures.
 
+The citation oracle fixture baseline also incorporates normalized output and
+regex/extractor data from the official eyecite lock's `reporters-db 3.2.53` and
+`courts-db 0.10.22`. These are retained behavioral-oracle inputs, separate from
+the newer public vocabulary artifact pins above. The committed operation corpus
+records their versions and the SHA-256 of the exact upstream `uv.lock`; it does
+not silently replace the public vocabulary or add a runtime Python dependency.
+
 Copyright (c) 2014, Free Law Project (reporters-db)
 
 Copyright (c) 2020, Free Law Project (courts-db and eyecite)

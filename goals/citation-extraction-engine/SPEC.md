@@ -289,7 +289,7 @@ const bluebook = S.decodeEffect(BluebookFromFullCitation)(citation)
 Its reverse call
 `S.encodeEffect(BluebookFromFullCitation)(bluebook)` returns a semantically
 equivalent `FullCitation.Type`. Unsupported decoded forms fail with a typed
-schema issue through `SchemaTransformation.transformOrFail`; encode may not
+schema issue through `SchemaTransformation.transformEffect`; encode may not
 manufacture missing legal data. Dtslint must prove both exact calls and their
 inferred Effect types.
 
@@ -577,7 +577,37 @@ instead of silently splitting delivery or weakening scope.
   with install scripts disabled; workstation and donor configuration stay
   intact. Remove the environment override to reproduce the initial failure.
 
+- **2026-10-28 Effect API adaptation:** the checked Effect 4.0.6 source
+  exposes `SchemaTransformation.transformEffect` for fallible transforms;
+  `transformOrFail` is absent. Use the current API with typed schema issues,
+  preserving every information/directional law and exact Bluebook call proof.
+  The byte-preserving oracle fixture codec proves this boundary with encode
+  rejection tests. This is an API spelling adaptation, not a parity waiver;
+  reverse it only if a future pinned Effect version changes that API.
+
+- **2026-10-28 oracle environment:** freeze `PYTHONHASHSEED=0` and the
+  oracle clock date in operation corpus metadata. Unseeded runs changed
+  set-derived tokenizer configuration order without changing observed stage
+  outputs. Pinning interpreter inputs preserves actual seeded execution rather
+  than sorting an executable configuration after the fact. Remove the startup
+  gate only with an explicit, re-proved oracle environment update.
+
+- **2026-10-28 representation normalization:** exact/variation/all-edition
+  candidate bags are unordered ambiguity data. The oracle merges them through
+  sets and selects an edition only when one candidate remains. Normalize these
+  bags by artifact identity while retaining every candidate, multiplicity,
+  selected edition and decision. Six changed case pairs prove no other value
+  differs in two seeded runs; the retained receipt is
+  `history/evidence/edition-candidate-order.json`. Restore raw bag order only
+  with a new declared comparison rule and deterministic oracle proof.
+
 ## Exception Ledger
+
+The generated `operation-cases.json` is excluded by exact path from spellcheck
+and formatting: changing upstream legal abbreviations or hash-bound payload
+bytes would falsify evidence. Its separate schema/hash/source/coordinate gate
+and negative controls remain required. Remove those exact exclusions when the
+artifact is retired; they do not apply to authored code or other fixtures.
 
 | Exception | Scope | Owner | Removal condition |
 | --- | --- | --- | --- |
