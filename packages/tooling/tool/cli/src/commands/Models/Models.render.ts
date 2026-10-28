@@ -13,11 +13,20 @@
  * @since 0.0.0
  */
 
+import { CommentStyle } from "@beep/managed-section/CommentStyle";
+import { SectionId } from "@beep/managed-section/Section";
+import { LiteralMarkerDialect, SectionDialect, SectionMarkers } from "@beep/managed-section/SectionDialect";
+import { SectionDocument } from "@beep/managed-section/SectionDocument";
 import { A, O, pipe, Str } from "@beep/utils";
-import { constant, dual, flow } from "effect/Function";
+import { dual, flow } from "effect/Function";
 import * as Match from "effect/Match";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import type { EffortLevel } from "./Models.catalog.schemas.ts";
 import type { LocatorField, LocatorRender, ModelBinding, SupersededModel } from "./Models.manifest.schemas.ts";
+
+const blockBeginText = (blockId: string): string => `beep-models:begin ${blockId}`;
+const blockEndText = (blockId: string): string => `beep-models:end ${blockId}`;
 
 /**
  * Opening marker of a tool-owned generated block.
@@ -35,7 +44,7 @@ import type { LocatorField, LocatorRender, ModelBinding, SupersededModel } from 
  * @category utilities
  * @since 0.0.0
  */
-export const generatedBlockBegin = (blockId: string): string => `<!-- beep-models:begin ${blockId} -->`;
+export const generatedBlockBegin = (blockId: string): string => CommentStyle.html.comment(blockBeginText(blockId));
 
 /**
  * Closing marker of a tool-owned generated block.
@@ -53,7 +62,21 @@ export const generatedBlockBegin = (blockId: string): string => `<!-- beep-model
  * @category utilities
  * @since 0.0.0
  */
-export const generatedBlockEnd = (blockId: string): string => `<!-- beep-models:end ${blockId} -->`;
+export const generatedBlockEnd = (blockId: string): string => CommentStyle.html.comment(blockEndText(blockId));
+
+const decodeBlockMarkers = S.decodeUnknownOption(SectionMarkers);
+
+// One dialect per block: the markers predate `@beep/managed-section`, and each
+// block id has its own literal spelling. `None` when the id is outside the
+// section-key grammar, so it names no block.
+const blockDialect = (blockId: string): O.Option<LiteralMarkerDialect> =>
+  O.map(decodeBlockMarkers({ key: blockId, begin: blockBeginText(blockId), end: blockEndText(blockId) }), (markers) =>
+    LiteralMarkerDialect.make({
+      phrase: SectionDialect.default.phrase,
+      styles: [CommentStyle.html],
+      markers: [markers],
+    })
+  );
 
 const labelFor = (render: LocatorRender, effort: EffortLevel): O.Option<string> =>
   Match.value(render).pipe(
@@ -212,8 +235,12 @@ export const renderGeneratedBlockBody: {
  *
  * **Details**
  *
- * Returns `None` when either marker is absent, which the check run reports as
+ * Returns `None` when the block is absent, which the check run reports as
  * `missing-locator` — the target names a block the file does not yet own.
+ * The file is read as a `@beep/managed-section` document, so a block whose
+ * markers are duplicated, orphaned, overlapping or unterminated, or do not
+ * own their lines, is `None` too: a stale second copy surfaces as drift
+ * instead of hiding behind the first.
  *
  * **Example** (Extract a block body)
  *
@@ -235,13 +262,13 @@ export const renderGeneratedBlockBody: {
 export const extractGeneratedBlock: {
   (content: string, blockId: string): O.Option<string>;
   (blockId: string): (content: string) => O.Option<string>;
-} = dual(2, (content: string, blockId: string): O.Option<string> => {
-  const begin = generatedBlockBegin(blockId);
-  const end = generatedBlockEnd(blockId);
-  const beginIndex = O.getOrElse(Str.indexOf(begin)(content), constant(-1));
-  const endIndex = O.getOrElse(Str.indexOf(end)(content), constant(-1));
-
-  return beginIndex < 0 || endIndex < beginIndex
-    ? O.none()
-    : O.some(Str.trim(Str.slice(beginIndex + begin.length, endIndex)(content)));
-});
+} = dual(
+  2,
+  (content: string, blockId: string): O.Option<string> =>
+    pipe(
+      blockDialect(blockId),
+      O.flatMap((dialect) => Result.getSuccess(SectionDocument.parseResult(content, dialect))),
+      O.flatMap((document) => document.read(SectionId.make({ key: blockId, commentStyle: CommentStyle.html }))),
+      O.map((section) => Str.trim(section.content))
+    )
+);

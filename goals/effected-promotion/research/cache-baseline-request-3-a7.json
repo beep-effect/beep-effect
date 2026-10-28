@@ -1,5 +1,5 @@
 {
-  "previous": "74dd984235888e17335bbc23e0019ec4f147bd71e100307c8962285c55195d05",
+  "previous": "daf5edc283c0d555903b3dd0bc8bc1e24919e1bcaf3cb1d1700a856dfc2e157a",
   "review": {
     "reviewer": "Claude Opus 5.5 (effected-promotion wave 3-A7, refactor/tsconfig-sync-schemas-onto-tsconfig)",
     "reason": "Record the @beep/repo-cli manifest edit that adds the @beep/tsconfig workspace dependency for the TsconfigSync.schemas adoption; the task graphs gain only direct edges to tsconfig build/transit, which were already in the graph through @beep/repo-tsconfig, as measured in the review; no qualification is granted.",

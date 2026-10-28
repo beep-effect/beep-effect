@@ -2,6 +2,8 @@
  * Callable schemas for runtime function values with schema-backed input and
  * output contracts.
  *
+ * **Details**
+ *
  * The schema itself only validates that a value is a function. The attached
  * helper methods validate payloads, results, and expected effect failures at
  * invocation time using the provided input, output, and error schemas.
@@ -468,7 +470,7 @@ const makeUnaryFnSchema = <Input extends S.Top, Output extends S.Top, Error exte
  * **Example** (Decode unknown function)
  *
  * ```ts
- * import { AnyFn } from "@beep/schema"
+ * import { AnyFn } from "@beep/schema/Fn"
  * import * as S from "effect/Schema"
  *
  * const fn = S.decodeUnknownSync(AnyFn)(() => "hello")
@@ -490,7 +492,7 @@ export const AnyFn = S.declare<Function>(isFunctionValue, anyFnAnnotations).pipe
  * **Example** (Typed decoded function)
  *
  * ```ts
- * import { AnyFn } from "@beep/schema"
+ * import { AnyFn } from "@beep/schema/Fn"
  * import * as S from "effect/Schema"
  *
  * const fn: AnyFn = S.decodeUnknownSync(AnyFn)(() => "hello")
@@ -510,7 +512,7 @@ export type AnyFn = typeof AnyFn.Type;
  * **Example** (Implement string thunk)
  *
  * ```ts
- * import { ThunkOf } from "@beep/schema"
+ * import { ThunkOf } from "@beep/schema/Fn"
  * import * as S from "effect/Schema"
  *
  * const GetGreeting = ThunkOf(S.String)
@@ -533,7 +535,7 @@ export function ThunkOf<Output extends S.Top>(output: Output): FnSchema<typeof S
  * **Example** (Thunk with error schema)
  *
  * ```ts
- * import { ThunkOf } from "@beep/schema"
+ * import { ThunkOf } from "@beep/schema/Fn"
  * import * as S from "effect/Schema"
  *
  * const GetCount = ThunkOf({ output: S.Finite, error: S.String })
@@ -553,7 +555,7 @@ export function ThunkOf<Output extends S.Top, Error extends S.Top>(options: {
  * **Example** (Create and call thunk)
  *
  * ```ts
- * import { ThunkOf } from "@beep/schema"
+ * import { ThunkOf } from "@beep/schema/Fn"
  * import * as S from "effect/Schema"
  *
  * const GetName = ThunkOf(S.String)
@@ -581,7 +583,7 @@ export function ThunkOf<Output extends S.Top, Error extends S.Top>(
  * **Example** (Zero-argument greeting schema)
  *
  * ```ts
- * import { Fn } from "@beep/schema"
+ * import { Fn } from "@beep/schema/Fn"
  * import * as S from "effect/Schema"
  *
  * const GetGreeting = Fn({ output: S.String })
@@ -607,7 +609,7 @@ export function Fn<Output extends S.Top, Error extends S.Top = typeof S.Never>(o
  * **Example** (Undefined input thunk)
  *
  * ```ts
- * import { Fn } from "@beep/schema"
+ * import { Fn } from "@beep/schema/Fn"
  * import * as S from "effect/Schema"
  *
  * const GetTime = Fn({ input: S.Undefined, output: S.Finite })
@@ -633,7 +635,7 @@ export function Fn<Output extends S.Top, Error extends S.Top = typeof S.Never>(o
  * **Example** (Void input noop)
  *
  * ```ts
- * import { Fn } from "@beep/schema"
+ * import { Fn } from "@beep/schema/Fn"
  * import * as S from "effect/Schema"
  *
  * const Noop = Fn({ input: S.Void, output: S.Void })
@@ -659,7 +661,7 @@ export function Fn<Output extends S.Top, Error extends S.Top = typeof S.Never>(o
  * **Example** (Unary format count)
  *
  * ```ts
- * import { Fn } from "@beep/schema"
+ * import { Fn } from "@beep/schema/Fn"
  * import * as S from "effect/Schema"
  *
  * const FormatCount = Fn({
@@ -689,7 +691,7 @@ export function Fn<Input extends S.Top, Output extends S.Top, Error extends S.To
  * **Example** (Canonical options schema)
  *
  * ```ts
- * import { Fn } from "@beep/schema"
+ * import { Fn } from "@beep/schema/Fn"
  * import * as S from "effect/Schema"
  *
  * const FormatCount = Fn({ input: S.Finite, output: S.String })

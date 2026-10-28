@@ -1,6 +1,8 @@
 /**
  * Branded color domains and transformation schemas for hex, RGB, and OKLCH.
  *
+ * **Details**
+ *
  * Prefer the canonical namespace import from `@beep/schema/Color`.
  *
  * @packageDocumentation

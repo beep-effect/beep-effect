@@ -28,7 +28,7 @@ const rule = (
  * One canonical rule per category. Consumer rendering and category selection remain local.
  * **Example** (Inspect bank size)
  * ```ts import.meta.vitest name="Inspect bank size"
- * import { CredentialPatternBank } from "@beep/schema"
+ * import * as CredentialPatternBank from "@beep/schema/CredentialPatternBank"
  * console.log(CredentialPatternBank.credentialRules.length)
  * ```
  * @category constants
@@ -149,7 +149,7 @@ const completeMatches = (text: string, grammar: CredentialRule): ReadonlyArray<C
  * Coverage is bounded to these grammars on plain text, never exhaustive secret discovery.
  * **Example** (Inspect a clean input)
  * ```ts import.meta.vitest name="Inspect a clean input"
- * import { CredentialPatternBank } from "@beep/schema"
+ * import * as CredentialPatternBank from "@beep/schema/CredentialPatternBank"
  * console.log(CredentialPatternBank.detectCredentials("public text"))
  * ```
  * @category utilities
@@ -183,7 +183,7 @@ export const detectCredentials = (text: string): ReadonlyArray<CredentialMatch> 
  * Count a category on raw input for legacy counted-proof consumers, including markers.
  * **Example** (Count a near miss)
  * ```ts import.meta.vitest name="Count a near miss"
- * import { CredentialPatternBank } from "@beep/schema"
+ * import * as CredentialPatternBank from "@beep/schema/CredentialPatternBank"
  * console.log(CredentialPatternBank.countCredentialCategory("public text", "auth-header"))
  * ```
  * @category utilities
@@ -235,7 +235,7 @@ const renderAssignmentUnion = (text: string, grammar: CredentialRule, replacemen
  * Apply the canonical grammar with a consumer-owned replacement template.
  * **Example** (Keep clean text unchanged)
  * ```ts import.meta.vitest name="Keep clean text unchanged"
- * import { CredentialPatternBank } from "@beep/schema"
+ * import * as CredentialPatternBank from "@beep/schema/CredentialPatternBank"
  * console.log(CredentialPatternBank.replaceCredentialCategory("public text", "auth-header", "$1: [REDACTED]"))
  * ```
  * @category utilities
@@ -268,7 +268,7 @@ export const replaceCredentialCategory: {
  *
  * **Example** (Keep public text unchanged)
  * ```ts import.meta.vitest name="Keep public text unchanged"
- * import { CredentialPatternBank } from "@beep/schema"
+ * import * as CredentialPatternBank from "@beep/schema/CredentialPatternBank"
  * console.log(CredentialPatternBank.replaceCredentialAssignmentsOutsideHeaders("public text", "$1=[REDACTED]"))
  * ```
  *
@@ -299,7 +299,7 @@ export const replaceCredentialAssignmentsOutsideHeaders: {
  * Mask the union of overlapping original-coordinate spans, retaining no raw match.
  * **Example** (Mask an empty finding list)
  * ```ts import.meta.vitest name="Mask an empty finding list"
- * import { CredentialPatternBank } from "@beep/schema"
+ * import * as CredentialPatternBank from "@beep/schema/CredentialPatternBank"
  * console.log(CredentialPatternBank.maskCredentialMatches("public text", []))
  * ```
  * @category utilities
@@ -343,7 +343,7 @@ export const maskCredentialMatches: {
  *
  * **Example** (Mask a category on public text)
  * ```ts import.meta.vitest name="Mask a category on public text"
- * import { CredentialPatternBank } from "@beep/schema"
+ * import * as CredentialPatternBank from "@beep/schema/CredentialPatternBank"
  * console.log(CredentialPatternBank.maskCredentialCategory("public text", "secret-assignment"))
  * ```
  *

@@ -17,7 +17,7 @@ const $I = $SchemaId.create("CredentialPatternBank");
  *
  * **Example** (Identify the bank)
  * ```ts import.meta.vitest name="Identify the bank"
- * import { CredentialPatternBank } from "@beep/schema"
+ * import * as CredentialPatternBank from "@beep/schema/CredentialPatternBank"
  * console.log(CredentialPatternBank.credentialPatternBankVersion)
  * ```
  * @category constants
@@ -30,7 +30,7 @@ export const credentialPatternBankVersion = "credential-pattern-bank/v1";
  *
  * **Example** (Inspect a category)
  * ```ts import.meta.vitest name="Inspect a category"
- * import { CredentialPatternBank } from "@beep/schema"
+ * import * as CredentialPatternBank from "@beep/schema/CredentialPatternBank"
  * console.log(CredentialPatternBank.CredentialCategory.is.jwt("jwt"))
  * ```
  * @category models
@@ -53,7 +53,7 @@ export const CredentialCategory = LiteralKit([
  * Runtime category type.
  * **Example** (Type a category)
  * ```ts import.meta.vitest name="Type a category"
- * import type { CredentialPatternBank } from "@beep/schema"
+ * import type * as CredentialPatternBank from "@beep/schema/CredentialPatternBank"
  * const category: CredentialPatternBank.CredentialCategory = "jwt"
  * console.log(category)
  * ```
@@ -66,7 +66,7 @@ export type CredentialCategory = typeof CredentialCategory.Type;
  * A rule's grammar and partial-form residue grammar; never a matched value.
  * **Example** (Read a rule field)
  * ```ts import.meta.vitest name="Read a rule field"
- * import { CredentialPatternBank } from "@beep/schema"
+ * import * as CredentialPatternBank from "@beep/schema/CredentialPatternBank"
  * console.log(CredentialPatternBank.credentialRules[0]?.version)
  * ```
  * @category models
@@ -91,7 +91,7 @@ export class CredentialRule extends S.Opaque<CredentialRule, { readonly brand: u
  * A non-secret original UTF-16 span, with an explicit resolution state.
  * **Example** (Find original offsets)
  * ```ts import.meta.vitest name="Find original offsets"
- * import { CredentialPatternBank } from "@beep/schema"
+ * import * as CredentialPatternBank from "@beep/schema/CredentialPatternBank"
  * console.log(CredentialPatternBank.detectCredentials("public text").length)
  * ```
  * @category models
