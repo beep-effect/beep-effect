@@ -1130,11 +1130,11 @@
       }
     },
     "@beep/repo-cli": {
-      "reviewer": "Claude Opus 5.5 (effected-promotion wave 3-A7, refactor/tsconfig-sync-schemas-onto-tsconfig)",
-      "reason": "Record the @beep/repo-cli manifest edit that adds the @beep/tsconfig workspace dependency for the TsconfigSync.schemas adoption; the task graphs gain only direct edges to tsconfig build/transit, which were already in the graph through @beep/repo-tsconfig, as measured in the review; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (effected-promotion roadmap R5a, refactor/r5a-typed-frontmatter)",
+      "reason": "Record the dependency-only drift of @beep/repo-cli, which gains a direct @beep/yaml edge for the R5a changeset-key removal; the package was already upstream through @beep/markdown, so no closure grows; no qualification is granted.",
       "basis": {
-        "path": "goals/effected-promotion/research/cache-baseline-review-3-a7.md",
-        "sha256": "fe6b7c9824488855e892925e2027e7537d43cca7d8709c137925e64387102e8c"
+        "path": "goals/effected-promotion/research/cache-baseline-review-r5a.md",
+        "sha256": "047a5042a79f973815b44fe1ebe8dd27f53cdccb076d943e1df54b9aa7266965"
       }
     },
     "@beep/repo-configs": {
@@ -97906,7 +97906,8 @@
           "@beep/uspto#audit",
           "@beep/utils#audit",
           "@beep/walker#audit",
-          "@beep/xdg#audit"
+          "@beep/xdg#audit",
+          "@beep/yaml#audit"
         ],
         "configuration": {
           "cache": false,
@@ -98024,7 +98025,8 @@
           "@beep/uspto#build",
           "@beep/utils#build",
           "@beep/walker#build",
-          "@beep/xdg#build"
+          "@beep/xdg#build",
+          "@beep/yaml#build"
         ],
         "configuration": {
           "cache": true,
@@ -98131,7 +98133,8 @@
           "@beep/uspto#build",
           "@beep/utils#build",
           "@beep/walker#build",
-          "@beep/xdg#build"
+          "@beep/xdg#build",
+          "@beep/yaml#build"
         ],
         "configuration": {
           "cache": true,
@@ -98225,7 +98228,8 @@
           "@beep/uspto#build",
           "@beep/utils#build",
           "@beep/walker#build",
-          "@beep/xdg#build"
+          "@beep/xdg#build",
+          "@beep/yaml#build"
         ],
         "configuration": {
           "cache": false,
@@ -98369,7 +98373,8 @@
           "@beep/utils#transit",
           "@beep/utils#transit",
           "@beep/walker#transit",
-          "@beep/xdg#transit"
+          "@beep/xdg#transit",
+          "@beep/yaml#transit"
         ],
         "configuration": {
           "cache": true,
@@ -98507,7 +98512,8 @@
           "@beep/uspto#transit",
           "@beep/utils#transit",
           "@beep/walker#transit",
-          "@beep/xdg#transit"
+          "@beep/xdg#transit",
+          "@beep/yaml#transit"
         ],
         "configuration": {
           "cache": true,
@@ -98764,7 +98770,8 @@
           "@beep/uspto#transit",
           "@beep/utils#transit",
           "@beep/walker#transit",
-          "@beep/xdg#transit"
+          "@beep/xdg#transit",
+          "@beep/yaml#transit"
         ],
         "configuration": {
           "cache": false,
@@ -98862,7 +98869,8 @@
           "@beep/utils#transit",
           "@beep/utils#transit",
           "@beep/walker#transit",
-          "@beep/xdg#transit"
+          "@beep/xdg#transit",
+          "@beep/yaml#transit"
         ],
         "configuration": {
           "cache": true,
@@ -98983,7 +98991,8 @@
           "@beep/utils#transit",
           "@beep/utils#transit",
           "@beep/walker#transit",
-          "@beep/xdg#transit"
+          "@beep/xdg#transit",
+          "@beep/yaml#transit"
         ],
         "configuration": {
           "cache": true,

@@ -24,7 +24,7 @@
       {
         "gating": true,
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/codex_exact-optional-keys-closeout-d2d70b183524/verdict.json"
+        "ref": ".beep/yeet/runs/codex_exact-optional-keys-receipt-66fce74eb636/verdict.json"
       }
     ],
     "pullRequests": [
@@ -34,6 +34,10 @@
       },
       {
         "number": 2316,
+        "role": "supporting"
+      },
+      {
+        "number": 2326,
         "role": "final"
       }
     ]
@@ -111,6 +115,6 @@
   ],
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 2316
+    "finalPullRequest": 2326
   }
 }
