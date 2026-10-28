@@ -1,0 +1,20 @@
+{
+  "previous": "daf5edc283c0d555903b3dd0bc8bc1e24919e1bcaf3cb1d1700a856dfc2e157a",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (effected-promotion roadmap R5a, refactor/r5a-typed-frontmatter)",
+    "reason": "Record the dependency-only drift of @beep/repo-cli, which gains a direct @beep/yaml edge for the R5a changeset-key removal; the package was already upstream through @beep/markdown, so no closure grows; no qualification is granted.",
+    "basis": {
+      "path": "goals/effected-promotion/research/cache-baseline-review-r5a.md",
+      "sha256": "047a5042a79f973815b44fe1ebe8dd27f53cdccb076d943e1df54b9aa7266965"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2",
+  "subjects": ["@beep/repo-cli"]
+}

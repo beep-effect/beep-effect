@@ -2942,7 +2942,15 @@
         "id": "escaped-key",
         "output": "---\n\"@beep/b\": minor\n---\n\nEscaped key.\n"
       },
-      { "id": "single-only", "output": null }
+      { "id": "single-only", "output": null },
+      {
+        "id": "sibling-spacing",
+        "output": "---\n'@beep/b': minor\n---\n\nSibling spacing.\n"
+      },
+      {
+        "id": "trailing-blank-line",
+        "output": "---\n\"@beep/b\": minor\n---\n\nTrailing blank.\n"
+      }
     ]
   },
   "comparison": {
@@ -2973,13 +2981,25 @@
         "id": "changesets/comment-line",
         "before": "---\n# bump both\n\"@beep/b\": minor\n---\n\nComment.\n",
         "after": "---\n\"@beep/b\": minor\n---\n\nComment.\n",
-        "reason": "A comment line directly above the removed key belongs to that key's YAML entry, so the edit layer removes it with the key. The old line filter left an orphaned comment."
+        "reason": "A comment line directly above the removed key belongs to that key's YAML entry, so the edit layer removes it with the key, even when its text (here `# bump both`) also covers surviving keys. The old line filter kept the comment."
       },
       {
         "id": "changesets/escaped-key",
         "before": "---\n\"\\x40beep/a\": patch\n\"@beep/b\": minor\n---\n\nEscaped key.\n",
         "after": "---\n\"@beep/b\": minor\n---\n\nEscaped key.\n",
         "reason": "Bug fix: the key is matched by its YAML value, so a key spelled with an escape (\\x40beep/a) is removed. The old textual match missed it and left the deleted package in a changeset the reference reader said named it."
+      },
+      {
+        "id": "changesets/sibling-spacing",
+        "before": "---\n'@beep/b':   minor\n---\n\nSibling spacing.\n",
+        "after": "---\n'@beep/b': minor\n---\n\nSibling spacing.\n",
+        "reason": "A removal re-serializes the whole YAML block, so surviving entries are normalized: `'@beep/b':   minor` becomes `'@beep/b': minor`. The old line filter left sibling lines byte-for-byte. Same keys and values."
+      },
+      {
+        "id": "changesets/trailing-blank-line",
+        "before": "---\n\"@beep/b\": minor\n\n---\n\nTrailing blank.\n",
+        "after": "---\n\"@beep/b\": minor\n---\n\nTrailing blank.\n",
+        "reason": "The re-serialized block drops a trailing blank line inside the frontmatter; the old line filter kept it. Same keys and values."
       }
     ],
     "unclassified": []

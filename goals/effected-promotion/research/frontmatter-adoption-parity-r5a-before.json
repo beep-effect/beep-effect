@@ -2945,7 +2945,15 @@
         "id": "escaped-key",
         "output": "---\n\"\\x40beep/a\": patch\n\"@beep/b\": minor\n---\n\nEscaped key.\n"
       },
-      { "id": "single-only", "output": null }
+      { "id": "single-only", "output": null },
+      {
+        "id": "sibling-spacing",
+        "output": "---\n'@beep/b':   minor\n---\n\nSibling spacing.\n"
+      },
+      {
+        "id": "trailing-blank-line",
+        "output": "---\n\"@beep/b\": minor\n\n---\n\nTrailing blank.\n"
+      }
     ]
   }
 }

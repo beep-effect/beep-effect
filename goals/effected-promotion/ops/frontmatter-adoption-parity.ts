@@ -20,6 +20,10 @@
  * probes run through the same exported functions, and every probe that changed must be listed in
  * `INTENDED_SHIFTS` with its reason.
  *
+ * The `knowledge` corpus surface is vacuous on the live tree: no tracked Markdown file carries a
+ * document-scoped `beep-historical:` marker, so its parity rests on `KNOWLEDGE_PROBES` and the
+ * repo-cli `knowledge-doctor` test, not on the corpus count.
+ *
  * Run it once before the switch to record the baseline (`--out`), then after the switch with
  * `--before <baseline>`. Nothing here runs in CI; the reports ride in `research/` and the PR body.
  *
@@ -173,6 +177,8 @@ const CHANGESET_PROBES: ReadonlyArray<readonly [string, string, string]> = [
   ["body-fence-lines", "@beep/a", '---\n"@beep/a": patch\n"@beep/b": minor\n---\n\nBody\n\n---\n\n"@beep/a": prose\n'],
   ["escaped-key", "@beep/a", '---\n"\\x40beep/a": patch\n"@beep/b": minor\n---\n\nEscaped key.\n'],
   ["single-only", "@beep/a", '---\n"@beep/a": patch\n---\n\nOnly a.\n'],
+  ["sibling-spacing", "@beep/a", "---\n\"@beep/a\": patch\n'@beep/b':   minor\n---\n\nSibling spacing.\n"],
+  ["trailing-blank-line", "@beep/a", '---\n"@beep/a": patch\n"@beep/b": minor\n\n---\n\nTrailing blank.\n'],
 ];
 
 /* ---------------------------------------------------------------------------------------------- */
@@ -314,7 +320,11 @@ const INTENDED_SHIFTS: Readonly<Record<string, string>> = {
   "knowledge/unclosed":
     "An opening fence with no closing fence is not frontmatter under the shared FrontmatterSource grammar (D-47), the rule every other repo-cli frontmatter reader already follows; the old line reader scanned to the end of the document.",
   "changesets/comment-line":
-    "A comment line directly above the removed key belongs to that key's YAML entry, so the edit layer removes it with the key. The old line filter left an orphaned comment.",
+    "A comment line directly above the removed key belongs to that key's YAML entry, so the edit layer removes it with the key, even when its text (here `# bump both`) also covers surviving keys. The old line filter kept the comment.",
+  "changesets/sibling-spacing":
+    "A removal re-serializes the whole YAML block, so surviving entries are normalized: `'@beep/b':   minor` becomes `'@beep/b': minor`. The old line filter left sibling lines byte-for-byte. Same keys and values.",
+  "changesets/trailing-blank-line":
+    "The re-serialized block drops a trailing blank line inside the frontmatter; the old line filter kept it. Same keys and values.",
   "changesets/escaped-key":
     "Bug fix: the key is matched by its YAML value, so a key spelled with an escape (\\x40beep/a) is removed. The old textual match missed it and left the deleted package in a changeset the reference reader said named it.",
 };

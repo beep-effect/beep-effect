@@ -1130,11 +1130,11 @@
       }
     },
     "@beep/repo-cli": {
-      "reviewer": "Claude Opus 5.5 (effected-promotion roadmap R8, refactor/managed-section-templates)",
-      "reason": "Record the dependency-only drift of @beep/repo-cli, which gains a direct @beep/managed-section edge for the R8 generated-region readers; the package was already upstream through @beep/github-reporting, so no closure grows; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (effected-promotion roadmap R5a, refactor/r5a-typed-frontmatter)",
+      "reason": "Record the dependency-only drift of @beep/repo-cli, which gains a direct @beep/yaml edge for the R5a changeset-key removal; the package was already upstream through @beep/markdown, so no closure grows; no qualification is granted.",
       "basis": {
-        "path": "goals/effected-promotion/research/cache-baseline-review-r8.md",
-        "sha256": "42c2e3353dabc472fc5a265b6b17fba9a55f4cb5b2b86736cccf80383dabf04b"
+        "path": "goals/effected-promotion/research/cache-baseline-review-r5a.md",
+        "sha256": "047a5042a79f973815b44fe1ebe8dd27f53cdccb076d943e1df54b9aa7266965"
       }
     },
     "@beep/repo-configs": {
@@ -97905,7 +97905,8 @@
           "@beep/uspto#audit",
           "@beep/utils#audit",
           "@beep/walker#audit",
-          "@beep/xdg#audit"
+          "@beep/xdg#audit",
+          "@beep/yaml#audit"
         ],
         "configuration": {
           "cache": false,
@@ -98022,7 +98023,8 @@
           "@beep/uspto#build",
           "@beep/utils#build",
           "@beep/walker#build",
-          "@beep/xdg#build"
+          "@beep/xdg#build",
+          "@beep/yaml#build"
         ],
         "configuration": {
           "cache": true,
@@ -98128,7 +98130,8 @@
           "@beep/uspto#build",
           "@beep/utils#build",
           "@beep/walker#build",
-          "@beep/xdg#build"
+          "@beep/xdg#build",
+          "@beep/yaml#build"
         ],
         "configuration": {
           "cache": true,
@@ -98221,7 +98224,8 @@
           "@beep/uspto#build",
           "@beep/utils#build",
           "@beep/walker#build",
-          "@beep/xdg#build"
+          "@beep/xdg#build",
+          "@beep/yaml#build"
         ],
         "configuration": {
           "cache": false,
@@ -98364,7 +98368,8 @@
           "@beep/utils#transit",
           "@beep/utils#transit",
           "@beep/walker#transit",
-          "@beep/xdg#transit"
+          "@beep/xdg#transit",
+          "@beep/yaml#transit"
         ],
         "configuration": {
           "cache": true,
@@ -98501,7 +98506,8 @@
           "@beep/uspto#transit",
           "@beep/utils#transit",
           "@beep/walker#transit",
-          "@beep/xdg#transit"
+          "@beep/xdg#transit",
+          "@beep/yaml#transit"
         ],
         "configuration": {
           "cache": true,
@@ -98757,7 +98763,8 @@
           "@beep/uspto#transit",
           "@beep/utils#transit",
           "@beep/walker#transit",
-          "@beep/xdg#transit"
+          "@beep/xdg#transit",
+          "@beep/yaml#transit"
         ],
         "configuration": {
           "cache": false,
@@ -98854,7 +98861,8 @@
           "@beep/utils#transit",
           "@beep/utils#transit",
           "@beep/walker#transit",
-          "@beep/xdg#transit"
+          "@beep/xdg#transit",
+          "@beep/yaml#transit"
         ],
         "configuration": {
           "cache": true,
@@ -98974,7 +98982,8 @@
           "@beep/utils#transit",
           "@beep/utils#transit",
           "@beep/walker#transit",
-          "@beep/xdg#transit"
+          "@beep/xdg#transit",
+          "@beep/yaml#transit"
         ],
         "configuration": {
           "cache": true,
