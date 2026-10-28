@@ -4036,6 +4036,7 @@
         "@beep/utils": "workspace:^",
         "@beep/walker": "workspace:^",
         "@beep/xdg": "workspace:^",
+        "@beep/yaml": "workspace:^",
         "@effect/doctest": "catalog:",
         "@effect/platform-bun": "catalog:",
         "@effect/platform-node": "catalog:",

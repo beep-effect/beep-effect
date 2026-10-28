@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-28T19:16:40.603Z",
+  "generatedAt": "2026-10-28T21:28:06.224Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -65,8 +65,8 @@
     "cleanPackages": 148,
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 33,
-    "publicModules": 3552,
-    "publicExports": 25274,
+    "publicModules": 3562,
+    "publicExports": 25307,
     "openModules": 225,
     "openExports": 130,
     "missingExportExamples": 6,
@@ -141785,9 +141785,9 @@
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 51,
-        "publicModuleCount": 51,
-        "publicExportCount": 241
+        "sourceFileCount": 54,
+        "publicModuleCount": 54,
+        "publicExportCount": 259
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -142952,6 +142952,72 @@
           "categoryViolations": [],
           "documentationShapeViolations": [],
           "exportCount": 1,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/values/Retention/Retention.behavior.ts",
+          "repoPath": "packages/epistemic/domain/src/values/Retention/Retention.behavior.ts",
+          "line": 1,
+          "anchor": "packages-epistemic-domain-src-values-retention-retention-behavior-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 2,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/values/Retention/Retention.model.ts",
+          "repoPath": "packages/epistemic/domain/src/values/Retention/Retention.model.ts",
+          "line": 1,
+          "anchor": "packages-epistemic-domain-src-values-retention-retention-model-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 14,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/values/Retention/index.ts",
+          "repoPath": "packages/epistemic/domain/src/values/Retention/index.ts",
+          "line": 1,
+          "anchor": "packages-epistemic-domain-src-values-retention-index-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 2,
           "remediationStatus": "resolved"
         },
         {
@@ -147994,6 +148060,399 @@
             "@category",
             "@since"
           ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "retentionPolicyDigest",
+          "exportKind": "const",
+          "filePath": "src/values/Retention/Retention.behavior.ts",
+          "repoPath": "packages/epistemic/domain/src/values/Retention/Retention.behavior.ts",
+          "line": 25,
+          "anchor": "packages-epistemic-domain-src-values-retention-retention-behavior-ts-25-retentionpolicydigest",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "retentionPayloadBytes",
+          "exportKind": "const",
+          "filePath": "src/values/Retention/Retention.behavior.ts",
+          "repoPath": "packages/epistemic/domain/src/values/Retention/Retention.behavior.ts",
+          "line": 41,
+          "anchor": "packages-epistemic-domain-src-values-retention-retention-behavior-ts-41-retentionpayloadbytes",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "RetentionDisposition",
+          "exportKind": "const",
+          "filePath": "src/values/Retention/Retention.model.ts",
+          "repoPath": "packages/epistemic/domain/src/values/Retention/Retention.model.ts",
+          "line": 33,
+          "anchor": "packages-epistemic-domain-src-values-retention-retention-model-ts-33-retentiondisposition",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "RetentionDisposition",
+          "exportKind": "type",
+          "filePath": "src/values/Retention/Retention.model.ts",
+          "repoPath": "packages/epistemic/domain/src/values/Retention/Retention.model.ts",
+          "line": 49,
+          "anchor": "packages-epistemic-domain-src-values-retention-retention-model-ts-49-retentiondisposition",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "RetentionTier",
+          "exportKind": "const",
+          "filePath": "src/values/Retention/Retention.model.ts",
+          "repoPath": "packages/epistemic/domain/src/values/Retention/Retention.model.ts",
+          "line": 63,
+          "anchor": "packages-epistemic-domain-src-values-retention-retention-model-ts-63-retentiontier",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "RetentionTier",
+          "exportKind": "type",
+          "filePath": "src/values/Retention/Retention.model.ts",
+          "repoPath": "packages/epistemic/domain/src/values/Retention/Retention.model.ts",
+          "line": 73,
+          "anchor": "packages-epistemic-domain-src-values-retention-retention-model-ts-73-retentiontier",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "RetentionQuery",
+          "exportKind": "class",
+          "filePath": "src/values/Retention/Retention.model.ts",
+          "repoPath": "packages/epistemic/domain/src/values/Retention/Retention.model.ts",
+          "line": 87,
+          "anchor": "packages-epistemic-domain-src-values-retention-retention-model-ts-87-retentionquery",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "RetentionPolicy",
+          "exportKind": "class",
+          "filePath": "src/values/Retention/Retention.model.ts",
+          "repoPath": "packages/epistemic/domain/src/values/Retention/Retention.model.ts",
+          "line": 113,
+          "anchor": "packages-epistemic-domain-src-values-retention-retention-model-ts-113-retentionpolicy",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "RetentionCalibration",
+          "exportKind": "class",
+          "filePath": "src/values/Retention/Retention.model.ts",
+          "repoPath": "packages/epistemic/domain/src/values/Retention/Retention.model.ts",
+          "line": 148,
+          "anchor": "packages-epistemic-domain-src-values-retention-retention-model-ts-148-retentioncalibration",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "RetentionPolicyAdmission",
+          "exportKind": "const",
+          "filePath": "src/values/Retention/Retention.model.ts",
+          "repoPath": "packages/epistemic/domain/src/values/Retention/Retention.model.ts",
+          "line": 180,
+          "anchor": "packages-epistemic-domain-src-values-retention-retention-model-ts-180-retentionpolicyadmission",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "RetentionPolicyAdmission",
+          "exportKind": "type",
+          "filePath": "src/values/Retention/Retention.model.ts",
+          "repoPath": "packages/epistemic/domain/src/values/Retention/Retention.model.ts",
+          "line": 196,
+          "anchor": "packages-epistemic-domain-src-values-retention-retention-model-ts-196-retentionpolicyadmission",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "RetentionSnapshot",
+          "exportKind": "class",
+          "filePath": "src/values/Retention/Retention.model.ts",
+          "repoPath": "packages/epistemic/domain/src/values/Retention/Retention.model.ts",
+          "line": 211,
+          "anchor": "packages-epistemic-domain-src-values-retention-retention-model-ts-211-retentionsnapshot",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "RetentionRow",
+          "exportKind": "class",
+          "filePath": "src/values/Retention/Retention.model.ts",
+          "repoPath": "packages/epistemic/domain/src/values/Retention/Retention.model.ts",
+          "line": 234,
+          "anchor": "packages-epistemic-domain-src-values-retention-retention-model-ts-234-retentionrow",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "RetentionGroup",
+          "exportKind": "class",
+          "filePath": "src/values/Retention/Retention.model.ts",
+          "repoPath": "packages/epistemic/domain/src/values/Retention/Retention.model.ts",
+          "line": 264,
+          "anchor": "packages-epistemic-domain-src-values-retention-retention-model-ts-264-retentiongroup",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "RetentionTierSummary",
+          "exportKind": "class",
+          "filePath": "src/values/Retention/Retention.model.ts",
+          "repoPath": "packages/epistemic/domain/src/values/Retention/Retention.model.ts",
+          "line": 288,
+          "anchor": "packages-epistemic-domain-src-values-retention-retention-model-ts-288-retentiontiersummary",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "RetentionReport",
+          "exportKind": "class",
+          "filePath": "src/values/Retention/Retention.model.ts",
+          "repoPath": "packages/epistemic/domain/src/values/Retention/Retention.model.ts",
+          "line": 312,
+          "anchor": "packages-epistemic-domain-src-values-retention-retention-model-ts-312-retentionreport",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Retention.behavior.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/values/Retention/index.ts",
+          "repoPath": "packages/epistemic/domain/src/values/Retention/index.ts",
+          "line": 7,
+          "anchor": "packages-epistemic-domain-src-values-retention-index-ts-7-export-from-retention-behavior-ts",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Retention.model.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/values/Retention/index.ts",
+          "repoPath": "packages/epistemic/domain/src/values/Retention/index.ts",
+          "line": 8,
+          "anchor": "packages-epistemic-domain-src-values-retention-index-ts-8-export-from-retention-model-ts",
+          "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
@@ -205071,9 +205530,9 @@
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 38,
-        "publicModuleCount": 38,
-        "publicExportCount": 148
+        "sourceFileCount": 41,
+        "publicModuleCount": 41,
+        "publicExportCount": 157
       },
       "docgenCoverage": {
         "hasDocgenConfig": false,
@@ -205876,6 +206335,72 @@
         },
         {
           "docKind": "packageDocumentation",
+          "filePath": "src/Retention/Retention.ports.ts",
+          "repoPath": "packages/epistemic/use-cases/src/Retention/Retention.ports.ts",
+          "line": 1,
+          "anchor": "packages-epistemic-use-cases-src-retention-retention-ports-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 3,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/Retention/Retention.service.ts",
+          "repoPath": "packages/epistemic/use-cases/src/Retention/Retention.service.ts",
+          "line": 1,
+          "anchor": "packages-epistemic-use-cases-src-retention-retention-service-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 3,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/Retention/index.ts",
+          "repoPath": "packages/epistemic/use-cases/src/Retention/index.ts",
+          "line": 1,
+          "anchor": "packages-epistemic-use-cases-src-retention-index-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 2,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
           "filePath": "src/index.ts",
           "repoPath": "packages/epistemic/use-cases/src/index.ts",
           "line": 1,
@@ -205986,7 +206511,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 10,
+          "exportCount": 11,
           "remediationStatus": "resolved"
         }
       ],
@@ -208850,6 +209375,179 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "RetentionUnavailable",
+          "exportKind": "class",
+          "filePath": "src/Retention/Retention.ports.ts",
+          "repoPath": "packages/epistemic/use-cases/src/Retention/Retention.ports.ts",
+          "line": 28,
+          "anchor": "packages-epistemic-use-cases-src-retention-retention-ports-ts-28-retentionunavailable",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "RetentionAuthorityReader",
+          "exportKind": "class",
+          "filePath": "src/Retention/Retention.ports.ts",
+          "repoPath": "packages/epistemic/use-cases/src/Retention/Retention.ports.ts",
+          "line": 45,
+          "anchor": "packages-epistemic-use-cases-src-retention-retention-ports-ts-45-retentionauthorityreader",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "RetentionCalibrationRegistry",
+          "exportKind": "class",
+          "filePath": "src/Retention/Retention.ports.ts",
+          "repoPath": "packages/epistemic/use-cases/src/Retention/Retention.ports.ts",
+          "line": 67,
+          "anchor": "packages-epistemic-use-cases-src-retention-retention-ports-ts-67-retentioncalibrationregistry",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "generateRetentionReport",
+          "exportKind": "const",
+          "filePath": "src/Retention/Retention.service.ts",
+          "repoPath": "packages/epistemic/use-cases/src/Retention/Retention.service.ts",
+          "line": 121,
+          "anchor": "packages-epistemic-use-cases-src-retention-retention-service-ts-121-generateretentionreport",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "encodeRetentionReport",
+          "exportKind": "const",
+          "filePath": "src/Retention/Retention.service.ts",
+          "repoPath": "packages/epistemic/use-cases/src/Retention/Retention.service.ts",
+          "line": 239,
+          "anchor": "packages-epistemic-use-cases-src-retention-retention-service-ts-239-encoderetentionreport",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "renderRetentionReport",
+          "exportKind": "const",
+          "filePath": "src/Retention/Retention.service.ts",
+          "repoPath": "packages/epistemic/use-cases/src/Retention/Retention.service.ts",
+          "line": 254,
+          "anchor": "packages-epistemic-use-cases-src-retention-retention-service-ts-254-renderretentionreport",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Retention.ports.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/Retention/index.ts",
+          "repoPath": "packages/epistemic/use-cases/src/Retention/index.ts",
+          "line": 6,
+          "anchor": "packages-epistemic-use-cases-src-retention-index-ts-6-export-from-retention-ports-ts",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Retention.service.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/Retention/index.ts",
+          "repoPath": "packages/epistemic/use-cases/src/Retention/index.ts",
+          "line": 7,
+          "anchor": "packages-epistemic-use-cases-src-retention-index-ts-7-export-from-retention-service-ts",
+          "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "export * from \"./public.ts\";",
           "exportKind": "re-export",
           "filePath": "src/index.ts",
@@ -209238,6 +209936,25 @@
             "@category",
             "@since"
           ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Retention/index.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/server.ts",
+          "repoPath": "packages/epistemic/use-cases/src/server.ts",
+          "line": 130,
+          "anchor": "packages-epistemic-use-cases-src-server-ts-130-export-from-retention-index-ts",
+          "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
@@ -325204,9 +325921,9 @@
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 24,
-        "publicModuleCount": 24,
-        "publicExportCount": 56
+        "sourceFileCount": 28,
+        "publicModuleCount": 28,
+        "publicExportCount": 62
       },
       "docgenCoverage": {
         "hasDocgenConfig": false,
@@ -325730,6 +326447,72 @@
         },
         {
           "docKind": "packageDocumentation",
+          "filePath": "src/Retention/Retention.reader.ts",
+          "repoPath": "packages/epistemic/server/src/Retention/Retention.reader.ts",
+          "line": 1,
+          "anchor": "packages-epistemic-server-src-retention-retention-reader-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 1,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/Retention/Retention.store.ts",
+          "repoPath": "packages/epistemic/server/src/Retention/Retention.store.ts",
+          "line": 1,
+          "anchor": "packages-epistemic-server-src-retention-retention-store-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 1,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/Retention/index.ts",
+          "repoPath": "packages/epistemic/server/src/Retention/index.ts",
+          "line": 1,
+          "anchor": "packages-epistemic-server-src-retention-index-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 2,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
           "filePath": "src/ShaclValidation/BoundedShaclValidator.layer.ts",
           "repoPath": "packages/epistemic/server/src/ShaclValidation/BoundedShaclValidator.layer.ts",
           "line": 1,
@@ -325792,7 +326575,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 8,
+          "exportCount": 9,
           "remediationStatus": "resolved"
         },
         {
@@ -325816,6 +326599,29 @@
           "categoryViolations": [],
           "documentationShapeViolations": [],
           "exportCount": 2,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/internal/retentionReadFailureKind.ts",
+          "repoPath": "packages/epistemic/server/src/internal/retentionReadFailureKind.ts",
+          "line": 1,
+          "anchor": "packages-epistemic-server-src-internal-retentionreadfailurekind-ts-1-module",
+          "currentTags": [
+            "@internal",
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 1,
           "remediationStatus": "resolved"
         }
       ],
@@ -326720,6 +327526,91 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "RetentionAuthorityReaderDrizzle",
+          "exportKind": "const",
+          "filePath": "src/Retention/Retention.reader.ts",
+          "repoPath": "packages/epistemic/server/src/Retention/Retention.reader.ts",
+          "line": 35,
+          "anchor": "packages-epistemic-server-src-retention-retention-reader-ts-35-retentionauthorityreaderdrizzle",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "rebuildRetentionStore",
+          "exportKind": "const",
+          "filePath": "src/Retention/Retention.store.ts",
+          "repoPath": "packages/epistemic/server/src/Retention/Retention.store.ts",
+          "line": 34,
+          "anchor": "packages-epistemic-server-src-retention-retention-store-ts-34-rebuildretentionstore",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Retention.reader.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/Retention/index.ts",
+          "repoPath": "packages/epistemic/server/src/Retention/index.ts",
+          "line": 6,
+          "anchor": "packages-epistemic-server-src-retention-index-ts-6-export-from-retention-reader-ts",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Retention.store.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/Retention/index.ts",
+          "repoPath": "packages/epistemic/server/src/Retention/index.ts",
+          "line": 7,
+          "anchor": "packages-epistemic-server-src-retention-index-ts-7-export-from-retention-store-ts",
+          "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "MakeBoundedShaclViolation",
           "exportKind": "type",
           "filePath": "src/ShaclValidation/BoundedShaclValidator.layer.ts",
@@ -327005,12 +327896,31 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "export * from \"./Retention/index.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/epistemic/server/src/index.ts",
+          "line": 58,
+          "anchor": "packages-epistemic-server-src-index-ts-58-export-from-retention-index-ts",
+          "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "export * from \"./ShaclValidation/index.ts\";",
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/epistemic/server/src/index.ts",
-          "line": 64,
-          "anchor": "packages-epistemic-server-src-index-ts-64-export-from-shaclvalidation-index-ts",
+          "line": 65,
+          "anchor": "packages-epistemic-server-src-index-ts-65-export-from-shaclvalidation-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -327056,6 +327966,29 @@
           "repoPath": "packages/epistemic/server/src/internal/PosInt.ts",
           "line": 57,
           "anchor": "packages-epistemic-server-src-internal-posint-ts-57-posint",
+          "currentTags": [
+            "@internal",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "retentionReadFailureKind",
+          "exportKind": "const",
+          "filePath": "src/internal/retentionReadFailureKind.ts",
+          "repoPath": "packages/epistemic/server/src/internal/retentionReadFailureKind.ts",
+          "line": 24,
+          "anchor": "packages-epistemic-server-src-internal-retentionreadfailurekind-ts-24-retentionreadfailurekind",
           "currentTags": [
             "@internal",
             "@category",
@@ -484297,8 +485230,8 @@
           "exportKind": "const",
           "filePath": "src/commands/DeletePackage/DeletePackage.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.command.ts",
-          "line": 343,
-          "anchor": "packages-tooling-tool-cli-src-commands-deletepackage-deletepackage-command-ts-343-removeshapetestrow",
+          "line": 345,
+          "anchor": "packages-tooling-tool-cli-src-commands-deletepackage-deletepackage-command-ts-345-removeshapetestrow",
           "currentTags": [
             "@category",
             "@since"
@@ -484319,8 +485252,8 @@
           "exportKind": "const",
           "filePath": "src/commands/DeletePackage/DeletePackage.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.command.ts",
-          "line": 439,
-          "anchor": "packages-tooling-tool-cli-src-commands-deletepackage-deletepackage-command-ts-439-rewritependingchangesets",
+          "line": 438,
+          "anchor": "packages-tooling-tool-cli-src-commands-deletepackage-deletepackage-command-ts-438-rewritependingchangesets",
           "currentTags": [
             "@category",
             "@since"
@@ -484341,8 +485274,8 @@
           "exportKind": "const",
           "filePath": "src/commands/DeletePackage/DeletePackage.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.command.ts",
-          "line": 622,
-          "anchor": "packages-tooling-tool-cli-src-commands-deletepackage-deletepackage-command-ts-622-deletepackagebaselinewriters",
+          "line": 621,
+          "anchor": "packages-tooling-tool-cli-src-commands-deletepackage-deletepackage-command-ts-621-deletepackagebaselinewriters",
           "currentTags": [
             "@category",
             "@since"
@@ -484363,8 +485296,8 @@
           "exportKind": "const",
           "filePath": "src/commands/DeletePackage/DeletePackage.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.command.ts",
-          "line": 863,
-          "anchor": "packages-tooling-tool-cli-src-commands-deletepackage-deletepackage-command-ts-863-deletepackagecommand",
+          "line": 862,
+          "anchor": "packages-tooling-tool-cli-src-commands-deletepackage-deletepackage-command-ts-862-deletepackagecommand",
           "currentTags": [
             "@category",
             "@since"
@@ -512672,8 +513605,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 187,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-187-knowledgedoctortree",
+          "line": 189,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-189-knowledgedoctortree",
           "currentTags": [
             "@see",
             "@category",
@@ -512695,8 +513628,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 214,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-214-knowledgeevaluator",
+          "line": 216,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-216-knowledgeevaluator",
           "currentTags": [
             "@see",
             "@category",
@@ -512718,8 +513651,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 249,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-249-makeknowledgetreeentryindex",
+          "line": 251,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-251-makeknowledgetreeentryindex",
           "currentTags": [
             "@param",
             "@returns",
@@ -512742,8 +513675,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 280,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-280-knowledge-cli-global-flags",
+          "line": 282,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-282-knowledge-cli-global-flags",
           "currentTags": [
             "@category",
             "@since"
@@ -512764,8 +513697,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 308,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-308-knowledge-producer-outputs",
+          "line": 310,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-310-knowledge-producer-outputs",
           "currentTags": [
             "@category",
             "@since"
@@ -512786,8 +513719,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 462,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-462-extractknowledgedocumentspans",
+          "line": 468,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-468-extractknowledgedocumentspans",
           "currentTags": [
             "@param",
             "@returns",
@@ -512810,8 +513743,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 535,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-535-knowledgespanclassificationrule",
+          "line": 541,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-541-knowledgespanclassificationrule",
           "currentTags": [
             "@category",
             "@since"
@@ -512832,8 +513765,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 564,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-564-knowledge-span-classification-rules",
+          "line": 570,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-570-knowledge-span-classification-rules",
           "currentTags": [
             "@category",
             "@since"
@@ -512854,8 +513787,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 617,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-617-classifyknowledgespan",
+          "line": 623,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-623-classifyknowledgespan",
           "currentTags": [
             "@param",
             "@returns",
@@ -512878,8 +513811,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 682,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-682-knowledgepathsevaluator",
+          "line": 688,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-688-knowledgepathsevaluator",
           "currentTags": [
             "@category",
             "@since"
@@ -512900,8 +513833,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 862,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-862-knowledgecommandsevaluator",
+          "line": 868,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-868-knowledgecommandsevaluator",
           "currentTags": [
             "@category",
             "@since"
@@ -512922,8 +513855,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 885,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-885-knowledge-doctor-evaluators",
+          "line": 891,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-891-knowledge-doctor-evaluators",
           "currentTags": [
             "@category",
             "@since"
@@ -512944,8 +513877,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 965,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-965-overlaywithout",
+          "line": 971,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-971-overlaywithout",
           "currentTags": [
             "@param",
             "@returns",
@@ -512968,8 +513901,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 1097,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1097-knowledgecounterfactualverdicts",
+          "line": 1103,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1103-knowledgecounterfactualverdicts",
           "currentTags": [
             "@param",
             "@returns",
@@ -512992,8 +513925,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 1341,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1341-scanknowledgedoctortree",
+          "line": 1347,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1347-scanknowledgedoctortree",
           "currentTags": [
             "@param",
             "@returns",
@@ -513016,8 +513949,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 1441,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1441-knowledgedoctormemorytreeinput",
+          "line": 1447,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1447-knowledgedoctormemorytreeinput",
           "currentTags": [
             "@category",
             "@since"
@@ -513038,8 +513971,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 1485,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1485-makeknowledgedoctormemorytree",
+          "line": 1491,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1491-makeknowledgedoctormemorytree",
           "currentTags": [
             "@param",
             "@returns",
@@ -513062,8 +513995,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 1662,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1662-makeknowledgedoctortree",
+          "line": 1668,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1668-makeknowledgedoctortree",
           "currentTags": [
             "@param",
             "@returns",
@@ -513086,8 +514019,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 1703,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1703-knowledgeshallowhistoryerror",
+          "line": 1709,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1709-knowledgeshallowhistoryerror",
           "currentTags": [
             "@param",
             "@returns",
@@ -513110,8 +514043,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 1775,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1775-knowledgedoctorcheckoptions",
+          "line": 1781,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1781-knowledgedoctorcheckoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -513132,8 +514065,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 1948,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1948-knowledgedoctormintoptions",
+          "line": 1954,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1954-knowledgedoctormintoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -513154,8 +514087,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 2057,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-2057-knowledgedoctorleasesoptions",
+          "line": 2063,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-2063-knowledgedoctorleasesoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -513176,8 +514109,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 2117,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-2117-knowledgedoctorshape",
+          "line": 2123,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-2123-knowledgedoctorshape",
           "currentTags": [
             "@see",
             "@category",
@@ -513199,8 +514132,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 2188,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-2188-knowledgedoctor",
+          "line": 2194,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-2194-knowledgedoctor",
           "currentTags": [
             "@see",
             "@category",
@@ -513222,8 +514155,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 2236,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-2236-knowledgedoctorlive",
+          "line": 2242,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-2242-knowledgedoctorlive",
           "currentTags": [
             "@category",
             "@since"
@@ -520102,8 +521035,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/ReflectionArtifact.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/ReflectionArtifact.ts",
-          "line": 204,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-reflectionartifact-ts-204-reflectionfrontmatterisvalid",
+          "line": 199,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-reflectionartifact-ts-199-reflectionfrontmatterisvalid",
           "currentTags": [
             "@param",
             "@returns",
@@ -520126,8 +521059,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/ReflectionArtifact.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/ReflectionArtifact.ts",
-          "line": 224,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-reflectionartifact-ts-224-reflectionfilenameisartifact",
+          "line": 219,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-reflectionartifact-ts-219-reflectionfilenameisartifact",
           "currentTags": [
             "@param",
             "@returns",
@@ -520150,8 +521083,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/ReflectionArtifact.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/ReflectionArtifact.ts",
-          "line": 393,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-reflectionartifact-ts-393-runreflectionartifactlint",
+          "line": 388,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-reflectionartifact-ts-388-runreflectionartifactlint",
           "currentTags": [
             "@category",
             "@since"
@@ -520172,8 +521105,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/ReflectionArtifact.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/ReflectionArtifact.ts",
-          "line": 426,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-reflectionartifact-ts-426-lintreflectionartifactscommand",
+          "line": 421,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-reflectionartifact-ts-421-lintreflectionartifactscommand",
           "currentTags": [
             "@category",
             "@since"

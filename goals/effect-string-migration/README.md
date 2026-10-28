@@ -33,7 +33,7 @@ Use this command for execution-capable sessions:
 
 Implementation waves 1–7 are merged, including the arming PR [#2027](https://github.com/beep-effect/beep-effect/pull/2027).
 The packet remains active: its original completion proposal does not have verified
-merge-time readiness. The [fresh closeout PR #2318](https://github.com/beep-effect/beep-effect/pull/2318)
+merge-time readiness. The [publication closeout PR #2324](https://github.com/beep-effect/beep-effect/pull/2324)
 has passed the full Check graph and root configuration program. Its exact-head
 readiness and merge verification remain open. The original
 2026-10-22 reflection is retained as historical implementation evidence; the
@@ -59,8 +59,19 @@ Check completed 337 successful Turbo tasks, including 187 package Check tasks;
 334 tasks were cache hits and three executed. The root configuration program
 also exited zero. Both runs observed a stable head and reported no String
 findings. Their full-source coverage is recorded in the
-[verification receipt](history/verification-2026-10-28.md). Subsequent closeout
-edits change this packet only, preserving the checked compiler inputs.
+[verification receipt](history/verification-2026-10-28.md). Main was subsequently synchronized at `8d4fee6759dfcbfdd6294fd3e29a66a593f79b9a`;
+the full Check graph (337 tasks, 187 package Check tasks) and root configuration
+program passed again. The updated graph had 226 cache hits and 111 executions.
+A later reconciliation at `04c716043fa6f11fce4f68862215362e39c07cba`
+also passed all 337 tasks (258 hits, 79 executions) and root configurations.
+The external conflict repair subsequently brought in main `2c59e073c8`.
+Reconciled head `bf0990a3c1852492bccf0aa66a15dd16a95cd6f4` passed the full
+337-task graph (330 hits, seven executions) and root configurations again.
+Only packet review corrections follow this latest qualification. The earlier head reached terminal
+readiness and was subsequently merged as #2318 by `kriegcloud` at
+2026-10-28T10:54:08Z while canonical publication was running. The publisher
+opened #2324 for the remaining evidence update; its head requires fresh
+publication and readiness evidence.
 
 `bun run beep goals completion refresh --slug effect-string-migration`
 returned `unsatisfied` for #2027. GitHub's merge-push rule suite
