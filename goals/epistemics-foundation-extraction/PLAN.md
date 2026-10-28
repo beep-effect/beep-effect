@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `in-progress` (new closeout PR required; #2017 remains historical implementation evidence)
+Status: `in-progress` (closeout PR #2315; #2017 remains historical implementation evidence)
 
 ## Phases
 

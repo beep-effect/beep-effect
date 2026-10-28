@@ -53,13 +53,15 @@ and documentation checks pass on the revised implementation.
 - Detailed audit: [`research/2026-10-28-acceptance-audit.md`](research/2026-10-28-acceptance-audit.md).
 - Reflections: the original `history/reflections/2026-10-22-claude.md` and the
   recovery reflection `history/reflections/2026-10-28-codex.md`.
-- A new final closeout PR must supply passing accepted-head hosted checks and a
+- Final closeout PR [#2315](https://github.com/beep-effect/beep-effect/pull/2315) must supply passing accepted-head hosted checks and a
   retained Yeet readiness verdict. Until completion refresh verifies that merge,
   `initiative.status` stays `active`; a proposal is not achievement.
 
 ## Evidence retention
 
-Retain the final lane's `.beep/yeet/runs/<run-id>/verdict.json`, `status.json`,
+At merge readiness, copy the tool-produced final lane verdict to
+`.beep/goals/epistemics-foundation-extraction/readiness-verdict.json`. Retain
+that file, the final lane's `status.json`,
 and readiness job records in the owning clone before retiring the lane. Bind
 the manifest to that run and the final closeout PR before its last push.
 Do not overwrite #2017's historical failure with inferred readiness.

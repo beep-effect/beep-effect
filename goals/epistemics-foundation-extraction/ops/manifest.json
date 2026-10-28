@@ -23,7 +23,7 @@
     "acceptanceEvidence": [
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/feat_epistemics-foundation-p1-ada9d9015733/verdict.json",
+        "ref": ".beep/goals/epistemics-foundation-extraction/readiness-verdict.json",
         "gating": true
       }
     ]
@@ -93,6 +93,6 @@
   ],
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 2017
+    "finalPullRequest": 2315
   }
 }
