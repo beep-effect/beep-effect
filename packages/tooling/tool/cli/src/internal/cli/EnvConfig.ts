@@ -503,10 +503,14 @@ export const turboSecretSessionStep: {
   2,
   (step: QualityTaskStep, environment: Readonly<Record<string, string | undefined>>): QualityTaskStep =>
     QualityTaskStep.make({
-      ...step,
       label: `${step.label} (op run)`,
       command: "op",
       args: ["run", "--", step.command, ...step.args],
+      cwd: step.cwd,
+      ...O.getSomesStruct({
+        flakeQuarantine: O.fromUndefinedOr(step.flakeQuarantine),
+        captureTimeoutMillis: O.fromUndefinedOr(step.captureTimeoutMillis),
+      }),
       env: turboCacheSecretSessionEnvironment({ ...environment, ...(step.env ?? {}) }),
     })
 );

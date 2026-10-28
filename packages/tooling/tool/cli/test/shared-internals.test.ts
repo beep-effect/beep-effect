@@ -397,12 +397,12 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
         const environment = { TURBO_TOKEN: OP_REFERENCE, APPLICATION_TOKEN: OP_REFERENCE };
         for (const command of ["turbo", "/repo/node_modules/.bin/turbo"]) {
           const direct = yield* overridesFor(environment, command, ["run", "docgen"]);
-          expect(direct.TURBO_TOKEN).toBeUndefined();
-          expect(direct.APPLICATION_TOKEN).toBeUndefined();
-          expect(direct.TURBO_CACHE).toBe("local:rw");
+          expect(direct).toHaveProperty("TURBO_TOKEN", undefined);
+          expect(direct).toHaveProperty("APPLICATION_TOKEN", undefined);
+          expect(direct).toHaveProperty("TURBO_CACHE", "local:rw");
           const args = ["run", "--", command, "run", "docgen"];
           const wrapped = yield* overridesFor(environment, "op", args);
-          expect(wrapped.TURBO_TOKEN).toBe(OP_REFERENCE);
+          expect(wrapped).toHaveProperty("TURBO_TOKEN", OP_REFERENCE);
           expect(wrapped).not.toHaveProperty("APPLICATION_TOKEN");
           expect(turboEnvExtendsAmbient("op", args)).toBe(false);
         }
