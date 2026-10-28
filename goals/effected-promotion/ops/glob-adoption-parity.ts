@@ -5,7 +5,8 @@
  *
  * - `internal/GlobPattern.ts`, a hand-rolled `**`/`*` compiler whose six callers (Docgen `JsDocAnalysis` and
  *   `Quality.subjects`, Quality `JSDocDocumentationInventory`, `CoverageScope` and `Tasks`, Cache `Cache.census`)
- *   now match through `@beep/glob` `GlobPattern` compiled with `dot: true` (the old compiler matched dot segments);
+ *   now match through `@beep/glob` `GlobPattern` compiled with `dot: true, nonegate: true, nocomment: true` (the
+ *   old compiler matched dot segments and read a leading `!` or `#` as an ordinary character);
  * - the `tinyglobby` walk in `Laws/EffectImports.ts`, now `@beep/walker` `compileAndExpand` plus an exclusion
  *   filter through `@beep/glob`.
  *
@@ -18,7 +19,9 @@
  *    repository-fixture owner patterns against every tracked path; coverage selectors derived from every workspace
  *    name and directory against those names and directories (after the `Tasks.ts` selector normalisation); and
  *    every Turbo `env`/`passThroughEnv` entry against every environment variable name those entries mention plus
- *    `BIOME_CONFIG_PATH`. Every disagreement is reported; the gate is zero.
+ *    `BIOME_CONFIG_PATH`. A fixed set of `!`- and `#`-prefixed patterns (`dialectPrefixes`) pins the dialect
+ *    choice itself: no live pattern carries either prefix, so only this synthetic set would catch a matcher that
+ *    read them as negation or comment. Every disagreement is reported; the gate is zero.
  * 2. **EffectImports file-set parity.** The three discovery sets a run can read (`code` sources, `markdown`-mode
  *    foundation sources, `markdown` documents) are listed through the exported discovery functions and
  *    fingerprinted (count, sha256 of the sorted newline-joined list, per-top-level-directory histogram). Run once
@@ -106,9 +109,11 @@ const oldGlobPatternToRegExp = (pattern: string): RegExp => {
   return new RegExp(`${source}$`);
 };
 
-// --- the shipped matcher: `@beep/glob` with the dot dialect every adopted caller states ---------------------------
+// --- the shipped matcher: `@beep/glob` with the dialect every adopted caller states ---------------------------------
 
-const dotGlob = GlobPatternOptions.make({ dot: true });
+// `dot`: the old compiler let `*` and `**` match dot-leading segments. `nonegate` and `nocomment`: it read a
+// leading `!` or `#` as an ordinary character, where the minimatch default negates or drops the pattern.
+const dotGlob = GlobPatternOptions.make({ dot: true, nonegate: true, nocomment: true });
 const kitMatches = (pattern: string): ((candidate: string) => boolean) => {
   const compiled = GlobPattern.compileResult(pattern, dotGlob);
   return Result.isSuccess(compiled) ? (candidate) => compiled.success.matches(candidate) : () => false;
@@ -151,6 +156,7 @@ const Report = S.Struct({
     coverageFixtureOwners: PatternSection,
     coverageSelectors: PatternSection,
     turboEnv: PatternSection,
+    dialectPrefixes: S.optionalKey(PatternSection),
   }),
   effectImports: FileSets,
   comparison: S.optionalKey(
@@ -287,6 +293,20 @@ const turboEnvEntries = (config: typeof TurboEnvArrays.Type): ReadonlyArray<stri
 
 const hasGlobMagic = Str.includes("*");
 
+// Synthetic patterns that pin the `nonegate` / `nocomment` choice: each prefix must stay a literal character, as
+// the old compiler read it, so `!BEEP_*` matches `!BEEP_X` and nothing else.
+const DIALECT_PREFIX_PATTERNS: ReadonlyArray<string> = ["!BEEP_*", "#BEEP_*", "BEEP_*", "!**/*.ts", "#docs/**/*.md"];
+const DIALECT_PREFIX_CANDIDATES: ReadonlyArray<string> = [
+  "!BEEP_X",
+  "#BEEP_X",
+  "BEEP_X",
+  "BIOME_CONFIG_PATH",
+  "!src/a.ts",
+  "src/a.ts",
+  "#docs/a.md",
+  "docs/a.md",
+];
+
 // --- EffectImports file sets ----------------------------------------------------------------------------------
 
 const fingerprint = (files: ReadonlyArray<string>): Fingerprint => {
@@ -332,6 +352,11 @@ const INTENDED_FILE_SET_SHIFTS: ReadonlyArray<
     "removed",
     (path) => path === "packages/tooling/tool/cli/src/internal/GlobPattern.ts",
     "R2b deletes this module; the baseline was listed before the deletion, over an otherwise identical tree.",
+  ],
+  [
+    "added",
+    (path) => path === "packages/tooling/tool/cli/src/commands/Docgen/internal/JsDocNodes.ts",
+    "R2b adds this module (the shared declared-JSDoc reader) after the baseline was listed; a tree change, not a walker change.",
   ],
 ];
 
@@ -437,6 +462,9 @@ const program = Effect.gen(function* () {
   const envNames = A.dedupe(A.append(A.filter(envEntries, P.not(hasGlobMagic)), "BIOME_CONFIG_PATH"));
   const turboEnv = comparePatterns(envEntries, envNames);
 
+  // 1e. the `!` / `#` prefix literals, which no live pattern exercises.
+  const dialectPrefixes = comparePatterns(DIALECT_PREFIX_PATTERNS, DIALECT_PREFIX_CANDIDATES);
+
   // 2. EffectImports discovery sets.
   const codeOptions = EffectImportRulesOptions.make({ excludePaths: [] });
   const markdownOptions = EffectImportRulesOptions.make({ mode: "markdown", excludePaths: [] });
@@ -464,7 +492,7 @@ const program = Effect.gen(function* () {
 
   const current: Report = {
     tool: TOOL,
-    patternParity: { docgenExcludes, coverageFixtureOwners, coverageSelectors, turboEnv },
+    patternParity: { docgenExcludes, coverageFixtureOwners, coverageSelectors, turboEnv, dialectPrefixes },
     effectImports,
   };
   const currentLists: Record<Corpus, ReadonlyArray<string>> = { codeSources, markdownModeSources, markdownDocuments };

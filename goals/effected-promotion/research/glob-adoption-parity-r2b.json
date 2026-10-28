@@ -3,15 +3,15 @@
   "patternParity": {
     "docgenExcludes": {
       "patterns": 37,
-      "candidates": 7656,
-      "comparisons": 283272,
-      "matches": 1361,
+      "candidates": 7658,
+      "comparisons": 283346,
+      "matches": 1362,
       "disagreements": []
     },
     "coverageFixtureOwners": {
       "patterns": 16,
-      "candidates": 43435,
-      "comparisons": 694960,
+      "candidates": 43439,
+      "comparisons": 695024,
       "matches": 320,
       "disagreements": []
     },
@@ -28,12 +28,19 @@
       "comparisons": 805,
       "matches": 23,
       "disagreements": []
+    },
+    "dialectPrefixes": {
+      "patterns": 5,
+      "candidates": 8,
+      "comparisons": 40,
+      "matches": 5,
+      "disagreements": []
     }
   },
   "effectImports": {
     "codeSources": {
-      "count": 8655,
-      "sha256": "4a4755da734d05d9aa33d3946d321148f7c9fcf0cd962efdd790eaf1910b3b68",
+      "count": 8656,
+      "sha256": "8e06119643c43394e756b58d630fdfdcfd63ddcf365c2c635ab6e19aa8377a5f",
       "byTopLevel": {
         ".": 6,
         ".claude": 8,
@@ -41,7 +48,7 @@
         "explorations": 25,
         "goals": 127,
         "infra": 53,
-        "packages": 7178,
+        "packages": 7179,
         "scratchpad": 692,
         "scripts": 5,
         "tools": 1
@@ -82,6 +89,12 @@
     "identical": false,
     "differing": ["codeSources"],
     "shifts": [
+      {
+        "corpus": "codeSources",
+        "kind": "added",
+        "path": "packages/tooling/tool/cli/src/commands/Docgen/internal/JsDocNodes.ts",
+        "reason": "R2b adds this module (the shared declared-JSDoc reader) after the baseline was listed; a tree change, not a walker change."
+      },
       {
         "corpus": "codeSources",
         "kind": "removed",
