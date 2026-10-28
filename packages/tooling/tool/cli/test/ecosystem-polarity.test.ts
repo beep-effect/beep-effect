@@ -3,6 +3,7 @@ import {
   EcosystemPolarityOptions,
   runEcosystemPolarityCheck,
 } from "@beep/repo-cli/commands/Lint/EcosystemPolarity";
+import { findRepoRoot } from "@beep/repo-utils";
 import { SourceBoundary } from "@beep/repo-workspaces/SourceBoundary";
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
@@ -58,6 +59,32 @@ const sourceEdges = (summary: { readonly violations: ReadonlyArray<{ readonly de
 
 /** A dynamic `import(` or `require(` whose first argument is a template literal with a substitution. */
 const TEMPLATE_SUBSTITUTION_IMPORT = /\b(?:import|require)\s*(?:\?\.)?\s*\(\s*`@beep\/[^`]*\$\{/u;
+
+/** A declaration file, which `SourceBoundary.scan` never reads (the kit's own `DECLARATION` spelling). */
+const DECLARATION_FILE = /\.d\.[cm]?ts$/u;
+
+/**
+ * Every live ecosystem member's `src` directory in this checkout, located through the same
+ * `findRepoRoot` marker the command uses. The suite runs outside `temporaryWorkingDirectory`
+ * here, so the working directory is the real repository.
+ */
+const liveMemberSourceRoots = Effect.gen(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const repoRoot = yield* findRepoRoot();
+  const ecosystemRoot = path.join(repoRoot, "packages/ecosystem");
+  const members = yield* fs.readDirectory(ecosystemRoot);
+  const sourceRoots = yield* Effect.filter(
+    A.map(members, (member) => path.join(ecosystemRoot, member, "src")),
+    (sourceRoot) =>
+      fs.stat(sourceRoot).pipe(
+        Effect.map((stat) => stat.type === "Directory"),
+        Effect.orElseSucceed(() => false)
+      )
+  );
+  assertTrue(A.isReadonlyArrayNonEmpty(sourceRoots));
+  return sourceRoots;
+});
 
 it.layer(NodeTestLayer, { timeout: "10 seconds" })((it) => {
   describe("ecosystem polarity lint", { concurrent: false }, () => {
@@ -154,7 +181,8 @@ it.layer(NodeTestLayer, { timeout: "10 seconds" })((it) => {
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
-    // Shift 2: the ts-morph walk scanned declaration files because they end in a source extension.
+    // Shift 2 (SPEC 2026-10-28 W4-f, 4-A4 part): the ts-morph walk scanned declaration files because they
+    // end in a source extension; `SourceBoundary.scan` never reads them.
     it.effect("skips declaration files and does not count them as scanned sources", () =>
       Effect.gen(function* () {
         yield* temporaryRepository;
@@ -172,6 +200,27 @@ it.layer(NodeTestLayer, { timeout: "10 seconds" })((it) => {
         expect(summary.scannedSourceFiles).toBe(1);
         expect(summary.violations).toEqual([]);
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    // Shift 2's guard: the exemption is accepted because no member `src` holds a declaration file. One
+    // that appears would carry `@beep/*` edges the lint no longer sees, so this test fails the suite then.
+    it.effect("no ecosystem member source in this repository holds a declaration file", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const sourceRoots = yield* liveMemberSourceRoots;
+        const declarations = yield* Effect.forEach(sourceRoots, (sourceRoot) =>
+          fs.readDirectory(sourceRoot, { recursive: true }).pipe(
+            Effect.map(
+              flow(
+                A.filter((entry) => DECLARATION_FILE.test(entry)),
+                A.map((entry) => path.join(sourceRoot, entry))
+              )
+            )
+          )
+        );
+        expect(A.flatten(declarations)).toEqual([]);
+      })
     );
 
     // Shift 3: the ts-morph walk reported the line of the call expression.
@@ -201,7 +250,8 @@ it.layer(NodeTestLayer, { timeout: "10 seconds" })((it) => {
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
-    // Shift 4 (ruling 3, accepted): the ts-morph walk read a template literal with a substitution as its head.
+    // Shift 4 (accepted, SPEC 2026-10-28 W4-f, 4-A4 part): the ts-morph walk read a template literal with a
+    // substitution as its head; `SourceBoundary.scan` reads only string-literal and plain-template specifiers.
     it.effect("does not read a template literal with a substitution as a specifier", () =>
       Effect.gen(function* () {
         yield* temporaryRepository;
@@ -225,24 +275,12 @@ it.layer(NodeTestLayer, { timeout: "10 seconds" })((it) => {
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
-    // Ruling 3's guard: the accepted gap stays safe only while no member source uses that form.
+    // Shift 4's guard: the accepted gap stays safe only while no member source uses that form.
     it.effect("no ecosystem member source in this repository uses a template-substitution dynamic @beep import", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const repoRoot = yield* path.fromFileUrl(new URL("../../../../../", import.meta.url));
-        const ecosystemRoot = path.join(repoRoot, "packages/ecosystem");
-        const members = yield* fs.readDirectory(ecosystemRoot);
-        const sourceRoots = yield* Effect.filter(
-          A.map(members, (member) => path.join(ecosystemRoot, member, "src")),
-          (sourceRoot) =>
-            fs.stat(sourceRoot).pipe(
-              Effect.map((stat) => stat.type === "Directory"),
-              Effect.orElseSucceed(() => false)
-            )
-        );
-        assertTrue(A.isReadonlyArrayNonEmpty(sourceRoots));
-
+        const sourceRoots = yield* liveMemberSourceRoots;
         const offenders = yield* Effect.forEach(sourceRoots, (sourceRoot) =>
           Effect.gen(function* () {
             const scan = yield* SourceBoundary.scan({

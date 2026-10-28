@@ -26,11 +26,13 @@
  * 1. `1-order`: the same violations, sorted by file, line and column instead of
  *    imports, then exports, then dynamic calls per file;
  * 2. `2-declaration-skipped`: a `.d.ts` / `.d.mts` / `.d.cts` file is no longer
- *    scanned;
+ *    scanned (accepted in the same SPEC row; a live-tree guard test fails the
+ *    suite if a member `src` ever holds one);
  * 3. `3-literal-line`: a dynamic call spanning lines reports the line of its
  *    string literal, not of the call;
  * 4. `4-template-head`: a template literal with a substitution is no longer
- *    read as its head (ruling 3, accepted and pinned in the package tests);
+ *    read as its head (accepted in SPEC 2026-10-28 W4-f, 4-A4 part, and pinned
+ *    in the package tests with a guard over every live member `src`);
  * 5. `5-wider`: `node_modules` and symlink cycles under `src` are skipped.
  *
  * `require?.(` is not a shift: ts-morph kept `require` as the optional call's
