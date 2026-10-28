@@ -449,6 +449,29 @@ it.layer(runtimeLayer, { timeout: "10 seconds" })("runtime native spawn", (it) =
 });
 
 describe("runtime step routing", () => {
+  it.each([
+    { command: "/repo/node_modules/.bin/turbo", args: ["run", "lint"], expected: "bun", prefix: [] },
+    {
+      command: "op",
+      args: ["run", "--", "/repo/node_modules/.bin/turbo", "run", "lint"],
+      expected: "op",
+      prefix: ["run", "--", "bun"],
+    },
+  ])("routes native Turbo through $command without dropping its run verb", ({ command, args, expected, prefix }) => {
+    const routed = cacheRuntimeStep(QualityTaskStep.make({ label: "native fixture", command, args, cwd: "/repo" }));
+    expect(routed.command).toBe(expected);
+    expect(routed.args).toEqual([
+      ...prefix,
+      "--no-env-file",
+      expect.stringMatching(/bin\.(?:ts|js)$/u),
+      "cache",
+      "execute",
+      "--",
+      "run",
+      "lint",
+    ]);
+  });
+
   it("preserves forwarded arguments and step metadata", () => {
     const step = QualityTaskStep.make({
       label: "fixture",

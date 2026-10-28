@@ -36,10 +36,10 @@ import {
   isUnresolvedSecretReference,
   readTurboCacheEnvironmentSync,
   renderTurboEnvironmentHealthWarning,
-  turboCacheSecretSessionEnvironment,
   turboEnvExtendsAmbient,
   turboEnvironmentHealthWarnings,
   turboEnvOverrides,
+  turboSecretSessionStep,
 } from "../../internal/cli/EnvConfig.ts";
 import { decodeJsoncTextAs } from "../../internal/cli/Jsonc.ts";
 import { optionalProp } from "../../internal/cli/OptionRecord.ts";
@@ -1300,22 +1300,6 @@ const withoutUnusableRemoteCache: {
  * @since 0.0.0
  */
 export const withoutUnusableRemoteCacheForTesting = withoutUnusableRemoteCache;
-
-const turboSecretSessionStep: {
-  (environment: Readonly<Record<string, string | undefined>>): (step: QualityTaskStep) => QualityTaskStep;
-  (step: QualityTaskStep, environment: Readonly<Record<string, string | undefined>>): QualityTaskStep;
-} = dual(
-  2,
-  (step: QualityTaskStep, environment: Readonly<Record<string, string | undefined>>): QualityTaskStep =>
-    QualityTaskStep.make({
-      label: `${step.label} (op run)`,
-      command: "op",
-      args: ["run", "--", step.command, ...step.args],
-      cwd: step.cwd,
-      ...carriedStepProps(step),
-      env: turboCacheSecretSessionEnvironment({ ...environment, ...(step.env ?? {}) }),
-    })
-);
 
 /**
  * Wrap a Turbo step in the least-privilege remote-cache secret session.
