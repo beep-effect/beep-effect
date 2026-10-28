@@ -10,7 +10,7 @@
  *
  * The script proves that in two parts:
  *
- * 1. Corpus: every git-tracked `*tsconfig*.json` decodes through
+ * 1. Corpus: every git-tracked file whose basename matches `tsconfig*.json` decodes through
  *    `TsconfigJson` on the same JSONC path the command uses
  *    (`decodeJsoncTextAs`). The gate is zero failures (wave-4 ruling 4: a
  *    failure means the adoption takes the kit-derived pick, never a looser kit).

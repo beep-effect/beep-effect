@@ -1502,9 +1502,12 @@ it.layer(TestLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
     );
 
     // 3-A7: tsconfig documents decode through `@beep/tsconfig` `TsconfigJson`.
-    // Each case below was tolerated by the retired partial projections (a
-    // non-string or empty reference `path` was skipped, `compilerOptions` was
-    // read for `paths` only); each is now a typed parse failure for the file.
+    // Each case below was tolerated by the retired partial projections: a
+    // non-string reference `path` was skipped; an empty one was a string, so it
+    // reached the comparison and `--write` repaired it (the root rewrote
+    // `references`, a package resolved it to its own tsconfig.json and pruned
+    // it); `compilerOptions` was read for `paths` only. Each is now a typed
+    // parse failure for the file (SPEC 3-A7 row, shift 3).
     const strictDecodeCases = [
       {
         name: "a non-string root reference path",
