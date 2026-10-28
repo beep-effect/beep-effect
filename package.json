@@ -314,6 +314,7 @@
     "postcss-selector-parser": "^7.1.6",
     "protobufjs": "^7.6.6",
     "sharp": "catalog:",
+    "systeminformation": "5.33.14",
     "@modelcontextprotocol/client": "2.3.1",
     "@modelcontextprotocol/server": "2.3.1",
     "http-cache-semantics": "4.3.0",
