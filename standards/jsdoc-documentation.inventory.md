@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-10-28T03:48:32.614Z
+Generated: 2026-10-28T07:58:01.215Z
 
 ## Scope
 
@@ -15,8 +15,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 54 |
 | publicModules | 3546 |
-| publicExports | 25244 |
-| openModules | 301 |
+| publicExports | 25246 |
+| openModules | 300 |
 | openExports | 176 |
 | missingExportExamples | 7 |
 | missingExportCategories | 0 |
@@ -27,7 +27,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
 | undescribed-see | 8 |
-| multiple-description-paragraphs | 322 |
+| multiple-description-paragraphs | 321 |
 | leading-blank | 0 |
 | trailing-blank | 0 |
 | invalid-heading | 1 |
@@ -75,7 +75,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 17 | `@beep/toml` | `packages/foundation/modeling/toml` | clean | 9 | 68 | 0 | 0 |
 | 18 | `@beep/yaml` | `packages/foundation/modeling/yaml` | clean | 11 | 95 | 0 | 0 |
 | 19 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 10 | 3 | 0 |
-| 20 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 65 | 646 | 17 | 0 |
+| 20 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 64 | 628 | 16 | 0 |
 | 21 | `@beep/markdown` | `packages/foundation/modeling/markdown` | clean | 16 | 92 | 0 | 0 |
 | 22 | `@beep/html` | `packages/foundation/modeling/html` | clean | 15 | 544 | 0 | 0 |
 | 23 | `@beep/md` | `packages/foundation/modeling/md` | clean | 11 | 311 | 0 | 0 |
@@ -95,60 +95,60 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 37 | `@beep/nlp` | `packages/foundation/modeling/nlp` | clean | 28 | 313 | 0 | 0 |
 | 38 | `@beep/file-processing` | `packages/foundation/capability/file-processing` | clean | 34 | 183 | 0 | 0 |
 | 39 | `@beep/epistemic-domain` | `packages/epistemic/domain` | needs-remediation | 51 | 241 | 7 | 2 |
-| 40 | `@beep/codegen-kit` | `packages/tooling/library/codegen-kit` | clean | 6 | 45 | 0 | 0 |
-| 41 | `@beep/phoenix` | `packages/drivers/phoenix` | clean | 5 | 49 | 0 | 0 |
-| 42 | `@beep/duckdb` | `packages/drivers/duckdb` | clean | 7 | 43 | 0 | 0 |
-| 43 | `@beep/observability` | `packages/foundation/capability/observability` | clean | 42 | 337 | 0 | 0 |
-| 44 | `@beep/cli-kit` | `packages/foundation/capability/cli-kit` | clean | 29 | 196 | 0 | 0 |
-| 45 | `@beep/xdg` | `packages/foundation/capability/xdg` | clean | 7 | 31 | 0 | 0 |
-| 46 | `@beep/mcp-kit` | `packages/foundation/capability/mcp-kit` | clean | 12 | 113 | 0 | 0 |
-| 47 | `@beep/ontology-domain` | `packages/ontology/domain` | clean | 6 | 40 | 0 | 0 |
-| 48 | `@beep/shacl` | `packages/drivers/shacl` | clean | 3 | 6 | 0 | 0 |
-| 49 | `@beep/agents-use-cases` | `packages/agents/use-cases` | needs-remediation | 31 | 129 | 2 | 2 |
-| 50 | `@beep/law-practice-domain` | `packages/law-practice/domain` | needs-remediation | 251 | 949 | 9 | 5 |
-| 51 | `@beep/langextract` | `packages/foundation/capability/langextract` | clean | 26 | 131 | 0 | 0 |
-| 52 | `@beep/epistemic-use-cases` | `packages/epistemic/use-cases` | needs-remediation | 38 | 148 | 9 | 0 |
-| 53 | `@beep/api-transport` | `packages/foundation/capability/api-transport` | clean | 3 | 9 | 0 | 0 |
-| 54 | `@beep/epistemic-config` | `packages/epistemic/config` | needs-remediation | 7 | 20 | 3 | 0 |
-| 55 | `@beep/postgres` | `packages/drivers/postgres` | needs-remediation | 7 | 42 | 0 | 1 |
-| 56 | `@beep/epistemic-tables` | `packages/epistemic/tables` | needs-remediation | 34 | 99 | 4 | 0 |
-| 57 | `@beep/github` | `packages/drivers/github` | clean | 29 | 192 | 0 | 0 |
-| 58 | `@beep/managed-section` | `packages/foundation/modeling/managed-section` | clean | 7 | 31 | 0 | 0 |
-| 59 | `@beep/sbom` | `packages/foundation/modeling/sbom` | clean | 9 | 75 | 0 | 0 |
-| 60 | `@beep/chalk` | `packages/foundation/capability/chalk` | clean | 1 | 35 | 0 | 0 |
-| 61 | `@beep/acp` | `packages/drivers/acp` | clean | 15 | 1047 | 0 | 0 |
-| 62 | `@beep/commands` | `packages/drivers/commands` | clean | 8 | 58 | 0 | 0 |
-| 63 | `@beep/tsconfig` | `packages/foundation/modeling/tsconfig` | clean | 8 | 61 | 0 | 0 |
-| 64 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | needs-remediation | 31 | 588 | 0 | 2 |
-| 65 | `@beep/technical-drawing` | `packages/foundation/capability/technical-drawing` | clean | 19 | 224 | 0 | 0 |
-| 66 | `@beep/ffmpeg` | `packages/drivers/ffmpeg` | clean | 5 | 111 | 0 | 0 |
-| 67 | `@beep/pretext` | `packages/drivers/pretext` | needs-remediation | 6 | 36 | 6 | 0 |
-| 68 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | needs-remediation | 23 | 217 | 1 | 3 |
-| 69 | `@beep/cosmos` | `packages/drivers/cosmos` | clean | 6 | 22 | 0 | 0 |
-| 70 | `@beep/agents-client` | `packages/agents/client` | needs-remediation | 6 | 39 | 2 | 5 |
-| 71 | `@beep/documents-domain` | `packages/documents/domain` | clean | 26 | 81 | 0 | 0 |
-| 72 | `@beep/architecture-lab-domain` | `packages/architecture-lab/domain` | clean | 15 | 47 | 0 | 0 |
-| 73 | `@beep/uspto` | `packages/drivers/uspto` | clean | 5 | 25 | 0 | 0 |
-| 74 | `@beep/law-practice-tables` | `packages/law-practice/tables` | needs-remediation | 34 | 88 | 1 | 0 |
-| 75 | `@beep/law-practice-use-cases` | `packages/law-practice/use-cases` | needs-remediation | 103 | 651 | 4 | 4 |
-| 76 | `@beep/tika` | `packages/drivers/tika` | needs-remediation | 8 | 33 | 3 | 4 |
-| 77 | `@beep/libpff` | `packages/drivers/libpff` | needs-remediation | 7 | 42 | 4 | 2 |
-| 78 | `@beep/box` | `packages/drivers/box` | needs-remediation | 7 | 878 | 0 | 2 |
-| 79 | `@beep/epistemic-server` | `packages/epistemic/server` | needs-remediation | 24 | 56 | 8 | 4 |
-| 80 | `@beep/m365` | `packages/drivers/m365` | needs-remediation | 8 | 166 | 2 | 0 |
-| 81 | `@beep/nlp-processing` | `packages/foundation/capability/nlp-processing` | clean | 48 | 312 | 0 | 0 |
-| 82 | `@beep/epistemic-client` | `packages/epistemic/client` | clean | 4 | 24 | 0 | 0 |
-| 83 | `@beep/ui` | `packages/foundation/ui-system/ui` | clean | 132 | 557 | 0 | 0 |
-| 84 | `@beep/t3-code` | `packages/drivers/t3-code` | clean | 4 | 17 | 0 | 0 |
-| 85 | `@beep/github-reporting` | `packages/foundation/modeling/github-reporting` | clean | 5 | 40 | 0 | 0 |
-| 86 | `@beep/github-actions` | `packages/drivers/github-actions` | clean | 24 | 162 | 0 | 0 |
-| 87 | `@beep/poppler` | `packages/drivers/poppler` | clean | 3 | 9 | 0 | 0 |
-| 88 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 10 | 103 | 0 | 0 |
-| 89 | `@beep/repo-docgen` | `packages/tooling/tool/docgen` | needs-remediation | 10 | 94 | 0 | 3 |
-| 90 | `@beep/ai-provider-cli` | `packages/drivers/ai-provider-cli` | needs-remediation | 17 | 91 | 3 | 0 |
-| 91 | `@beep/skill-contract` | `packages/foundation/modeling/skill-contract` | clean | 9 | 113 | 0 | 0 |
-| 92 | `@beep/exiftool` | `packages/drivers/exiftool` | needs-remediation | 5 | 55 | 1 | 0 |
-| 93 | `@beep/repo-tsconfig` | `packages/tooling/library/repo-tsconfig` | clean | 4 | 15 | 0 | 0 |
+| 40 | `@beep/tsconfig` | `packages/foundation/modeling/tsconfig` | clean | 8 | 67 | 0 | 0 |
+| 41 | `@beep/codegen-kit` | `packages/tooling/library/codegen-kit` | clean | 6 | 45 | 0 | 0 |
+| 42 | `@beep/phoenix` | `packages/drivers/phoenix` | clean | 5 | 49 | 0 | 0 |
+| 43 | `@beep/duckdb` | `packages/drivers/duckdb` | clean | 7 | 43 | 0 | 0 |
+| 44 | `@beep/observability` | `packages/foundation/capability/observability` | clean | 42 | 337 | 0 | 0 |
+| 45 | `@beep/cli-kit` | `packages/foundation/capability/cli-kit` | clean | 29 | 196 | 0 | 0 |
+| 46 | `@beep/xdg` | `packages/foundation/capability/xdg` | clean | 7 | 31 | 0 | 0 |
+| 47 | `@beep/mcp-kit` | `packages/foundation/capability/mcp-kit` | clean | 12 | 113 | 0 | 0 |
+| 48 | `@beep/ontology-domain` | `packages/ontology/domain` | clean | 6 | 40 | 0 | 0 |
+| 49 | `@beep/shacl` | `packages/drivers/shacl` | clean | 3 | 6 | 0 | 0 |
+| 50 | `@beep/agents-use-cases` | `packages/agents/use-cases` | needs-remediation | 31 | 129 | 2 | 2 |
+| 51 | `@beep/law-practice-domain` | `packages/law-practice/domain` | needs-remediation | 251 | 949 | 9 | 5 |
+| 52 | `@beep/langextract` | `packages/foundation/capability/langextract` | clean | 26 | 131 | 0 | 0 |
+| 53 | `@beep/epistemic-use-cases` | `packages/epistemic/use-cases` | needs-remediation | 38 | 148 | 9 | 0 |
+| 54 | `@beep/api-transport` | `packages/foundation/capability/api-transport` | clean | 3 | 9 | 0 | 0 |
+| 55 | `@beep/epistemic-config` | `packages/epistemic/config` | needs-remediation | 7 | 20 | 3 | 0 |
+| 56 | `@beep/postgres` | `packages/drivers/postgres` | needs-remediation | 7 | 42 | 0 | 1 |
+| 57 | `@beep/epistemic-tables` | `packages/epistemic/tables` | needs-remediation | 34 | 99 | 4 | 0 |
+| 58 | `@beep/github` | `packages/drivers/github` | clean | 29 | 192 | 0 | 0 |
+| 59 | `@beep/managed-section` | `packages/foundation/modeling/managed-section` | clean | 7 | 31 | 0 | 0 |
+| 60 | `@beep/sbom` | `packages/foundation/modeling/sbom` | clean | 9 | 75 | 0 | 0 |
+| 61 | `@beep/chalk` | `packages/foundation/capability/chalk` | clean | 1 | 35 | 0 | 0 |
+| 62 | `@beep/repo-tsconfig` | `packages/tooling/library/repo-tsconfig` | clean | 5 | 24 | 0 | 0 |
+| 63 | `@beep/acp` | `packages/drivers/acp` | clean | 15 | 1047 | 0 | 0 |
+| 64 | `@beep/commands` | `packages/drivers/commands` | clean | 8 | 58 | 0 | 0 |
+| 65 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | needs-remediation | 31 | 588 | 0 | 2 |
+| 66 | `@beep/technical-drawing` | `packages/foundation/capability/technical-drawing` | clean | 19 | 224 | 0 | 0 |
+| 67 | `@beep/ffmpeg` | `packages/drivers/ffmpeg` | clean | 5 | 111 | 0 | 0 |
+| 68 | `@beep/pretext` | `packages/drivers/pretext` | needs-remediation | 6 | 36 | 6 | 0 |
+| 69 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | needs-remediation | 23 | 217 | 1 | 3 |
+| 70 | `@beep/cosmos` | `packages/drivers/cosmos` | clean | 6 | 22 | 0 | 0 |
+| 71 | `@beep/agents-client` | `packages/agents/client` | needs-remediation | 6 | 39 | 2 | 5 |
+| 72 | `@beep/documents-domain` | `packages/documents/domain` | clean | 26 | 81 | 0 | 0 |
+| 73 | `@beep/architecture-lab-domain` | `packages/architecture-lab/domain` | clean | 15 | 47 | 0 | 0 |
+| 74 | `@beep/uspto` | `packages/drivers/uspto` | clean | 5 | 25 | 0 | 0 |
+| 75 | `@beep/law-practice-tables` | `packages/law-practice/tables` | needs-remediation | 34 | 88 | 1 | 0 |
+| 76 | `@beep/law-practice-use-cases` | `packages/law-practice/use-cases` | needs-remediation | 103 | 651 | 4 | 4 |
+| 77 | `@beep/tika` | `packages/drivers/tika` | needs-remediation | 8 | 33 | 3 | 4 |
+| 78 | `@beep/libpff` | `packages/drivers/libpff` | needs-remediation | 7 | 42 | 4 | 2 |
+| 79 | `@beep/box` | `packages/drivers/box` | needs-remediation | 7 | 878 | 0 | 2 |
+| 80 | `@beep/epistemic-server` | `packages/epistemic/server` | needs-remediation | 24 | 56 | 8 | 4 |
+| 81 | `@beep/m365` | `packages/drivers/m365` | needs-remediation | 8 | 166 | 2 | 0 |
+| 82 | `@beep/nlp-processing` | `packages/foundation/capability/nlp-processing` | clean | 48 | 312 | 0 | 0 |
+| 83 | `@beep/epistemic-client` | `packages/epistemic/client` | clean | 4 | 24 | 0 | 0 |
+| 84 | `@beep/ui` | `packages/foundation/ui-system/ui` | clean | 132 | 557 | 0 | 0 |
+| 85 | `@beep/t3-code` | `packages/drivers/t3-code` | clean | 4 | 17 | 0 | 0 |
+| 86 | `@beep/github-reporting` | `packages/foundation/modeling/github-reporting` | clean | 5 | 40 | 0 | 0 |
+| 87 | `@beep/github-actions` | `packages/drivers/github-actions` | clean | 24 | 162 | 0 | 0 |
+| 88 | `@beep/poppler` | `packages/drivers/poppler` | clean | 3 | 9 | 0 | 0 |
+| 89 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 10 | 103 | 0 | 0 |
+| 90 | `@beep/repo-docgen` | `packages/tooling/tool/docgen` | needs-remediation | 10 | 97 | 0 | 3 |
+| 91 | `@beep/ai-provider-cli` | `packages/drivers/ai-provider-cli` | needs-remediation | 17 | 91 | 3 | 0 |
+| 92 | `@beep/skill-contract` | `packages/foundation/modeling/skill-contract` | clean | 9 | 113 | 0 | 0 |
+| 93 | `@beep/exiftool` | `packages/drivers/exiftool` | needs-remediation | 5 | 55 | 1 | 0 |
 | 94 | `@beep/palantiri` | `packages/tooling/library/palantiri` | clean | 20 | 156 | 0 | 0 |
 | 95 | `@beep/pdf-tools` | `packages/drivers/pdf-tools` | clean | 4 | 38 | 0 | 0 |
 | 96 | `@beep/runpod` | `packages/drivers/runpod` | clean | 7 | 204 | 0 | 0 |
@@ -221,7 +221,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 163 | `@beep/storybook` | `apps/storybook` | no-public-src-surface | 0 | 0 | 0 | 0 |
 | 164 | `@beep/shared-tables` | `packages/shared/tables` | clean | 9 | 12 | 0 | 0 |
 | 165 | `@beep/scratchpad` | `scratchpad` | needs-remediation | 68 | 424 | 46 | 0 |
-| 166 | `@beep/practice-kg-mcp` | `apps/practice-kg-mcp` | clean | 16 | 73 | 0 | 0 |
+| 166 | `@beep/practice-kg-mcp` | `apps/practice-kg-mcp` | clean | 16 | 75 | 0 | 0 |
 | 167 | `@beep/tailscale` | `packages/drivers/tailscale` | clean | 5 | 29 | 0 | 0 |
 | 168 | `@beep/todox` | `apps/todox` | clean | 16 | 57 | 0 | 0 |
 | 169 | `@beep/openai-compat` | `packages/drivers/openai-compat` | clean | 4 | 53 | 0 | 0 |
@@ -340,7 +340,6 @@ Module findings:
 - `src/errors/NoSuchFileError.ts:1` (jsdoc) - 1 documentation section/link violation(s)
 - `src/errors/OptionInjectionError.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/schemas/PackageJson.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/schemas/TSConfig.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/schemas/WorkspaceDeps.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
 ### @beep/shared-domain

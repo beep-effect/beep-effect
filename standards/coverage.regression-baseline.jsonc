@@ -41591,6 +41591,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/library/repo-tsconfig/src/TsconfigValidator.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/tooling/library/repo-tsconfig/src/index.ts": {
           "lines": 100,
           "statements": 100,

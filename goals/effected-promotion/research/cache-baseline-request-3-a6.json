@@ -1,0 +1,20 @@
+{
+  "previous": "daf5edc283c0d555903b3dd0bc8bc1e24919e1bcaf3cb1d1700a856dfc2e157a",
+  "review": {
+    "reviewer": "Claude Fable 5.1 (effected-promotion 3-A6, effected-3a6)",
+    "reason": "Record the dependency-only drift of @beep/repo-docgen from its new @beep/repo-tsconfig and @beep/tsconfig edges and the @beep/memfs devDependency (docgen readTSConfig through TsconfigValidator, map sites #160, #161, #242, #266); no other workspace gains a closure member, as measured in the review; no qualification is granted.",
+    "basis": {
+      "path": "goals/effected-promotion/research/cache-baseline-review-3-a6.md",
+      "sha256": "c46f603fa15141acc23197ab84c8169013e29896a60c4919b40a728c09a6d835"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2",
+  "subjects": ["@beep/repo-docgen"]
+}

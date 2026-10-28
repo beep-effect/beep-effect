@@ -306,7 +306,7 @@ const SHIFT_RULES: ReadonlyArray<ShiftRule> = [
   },
   {
     id: "new-enum-value-accepted",
-    pinnedBy: "TsconfigValidator.test.ts: accepts the @beep/tsconfig enum values the legacy lists lacked",
+    pinnedBy: "TsconfigValidator.test.ts: accepts the TypeScript 7 targets and library additions through ES2025",
     claims: (before, _after, direction) => direction === "reject->accept" && mentions(before, /Expected one of/),
   },
 ];
