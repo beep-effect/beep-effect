@@ -60,7 +60,7 @@ and documentation checks pass on the revised implementation.
 
 ## Local proof disposition
 
-Both required package audits and docgen checks pass; the foundation has 36 passing
+Both required package audits and docgen checks pass; the foundation has 38 passing
 tests. Local lint and changed-file formatting pass. The publication preflight and
 scoped policy replay each exceeded ten minutes and were cancelled. Under the
 constrained-compute rule, the final-check receipt names skips for `cheap-gates`,

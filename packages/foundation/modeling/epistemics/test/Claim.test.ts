@@ -16,7 +16,7 @@ const bind = (path: string) =>
   makeClaimEnvelope({
     $I: $EpistemicsId.create(path),
     proposition: Knows,
-    logicalKey: (p) => `Knows|${p.left}|${p.right}`,
+    logicalKey: (p) => `Knows|${Str.length(p.left)}:${p.left}|${Str.length(p.right)}:${p.right}`,
     ids: {
       claimVersion: S.String.pipe(S.brand("TestClaimVersionId")),
       assertion: S.String.pipe(S.brand("TestAssertionId")),
@@ -36,7 +36,7 @@ const encoded = (
   review = "Proposed"
 ) => ({
   id,
-  logicalKey: "Knows|a|b",
+  logicalKey: "Knows|1:a|1:b",
   proposition: { _tag: "Knows", left: "a", right: "b" },
   supportedBy: ["asrt-1"],
   challengedBy: [],
@@ -73,6 +73,53 @@ describe("Claim envelope", () => {
       const valid = yield* decode(row);
       const mismatchedEncoding = yield* Effect.exit(encode({ ...valid, logicalKey: "Knows|other|key" }));
       mismatchedEncoding.pipe(Exit.isFailure, assertTrue);
+    })
+  );
+
+  it.effect("keeps propositions containing separators distinct", () =>
+    Effect.gen(function* () {
+      const row = encoded("cv-separators", { _tag: "Unknown" }, 50, null);
+      const first = {
+        ...row,
+        logicalKey: "Knows|3:a|b|1:c",
+        proposition: { _tag: "Knows", left: "a|b", right: "c" },
+      };
+      const second = {
+        ...row,
+        logicalKey: "Knows|1:a|3:b|c",
+        proposition: { _tag: "Knows", left: "a", right: "b|c" },
+      };
+      const a = yield* decode(first);
+      const b = yield* decode(second);
+      expect(a.logicalKey).not.toEqual(b.logicalKey);
+      const borrowedKey = yield* Effect.exit(decode({ ...first, logicalKey: second.logicalKey }));
+      borrowedKey.pipe(Exit.isFailure, assertTrue);
+    })
+  );
+
+  it.effect("derives keys from decoded propositions in both codec directions", () =>
+    Effect.gen(function* () {
+      const { ClaimVersion: NumericClaim } = makeClaimEnvelope({
+        $I: $EpistemicsId.create("test/DecodedPropositionKey"),
+        proposition: S.Struct({ value: S.FiniteFromString }),
+        logicalKey: (p) => `${p.value + 1}`,
+        ids: { claimVersion: S.String, assertion: S.String, activity: S.String, principal: S.String },
+      });
+      const decodeNumeric = S.decodeUnknownEffect(NumericClaim);
+      const encodeNumeric = S.encodeEffect(NumericClaim);
+      const row = {
+        ...encoded("cv-transformed", { _tag: "Unknown" }, 50, null),
+        logicalKey: "2",
+        proposition: { value: "1" },
+      };
+      const decoded = yield* decodeNumeric(row);
+      expect(decoded.proposition.value).toEqual(1);
+      expect(yield* encodeNumeric(decoded)).toEqual(row);
+      // Applying the key function to the encoded string would concatenate to "11".
+      const wrongDecode = yield* Effect.exit(decodeNumeric({ ...row, logicalKey: "11" }));
+      const wrongEncode = yield* Effect.exit(encodeNumeric({ ...decoded, logicalKey: "11" }));
+      wrongDecode.pipe(Exit.isFailure, assertTrue);
+      wrongEncode.pipe(Exit.isFailure, assertTrue);
     })
   );
 

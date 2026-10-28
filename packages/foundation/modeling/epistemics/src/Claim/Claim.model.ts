@@ -254,11 +254,12 @@ export type ValidTime = typeof ValidTime.Type;
  * import { makeClaimEnvelope } from "@beep/epistemics/Claim"
  * import { $ScratchpadId } from "@beep/identity/packages"
  * import * as S from "effect/Schema"
+ * import * as Str from "effect/String"
  *
  * const { ClaimVersion } = makeClaimEnvelope({
  *   $I: $ScratchpadId.create("example/Claim"),
  *   proposition: S.TaggedStruct("Knows", { left: S.String, right: S.String }),
- *   logicalKey: (p) => `Knows|${p.left}|${p.right}`,
+ *   logicalKey: (p) => `Knows|${Str.length(p.left)}:${p.left}|${Str.length(p.right)}:${p.right}`,
  *   ids: {
  *     claimVersion: S.String.pipe(S.brand("ClaimVersionId")),
  *     assertion: S.String.pipe(S.brand("AssertionId")),
