@@ -9,8 +9,10 @@ import { ConfigFile } from "@beep/config-file/ConfigFile";
 import { JsoncCodec } from "@beep/config-file/JsoncCodec";
 import { $RepoDocgenId } from "@beep/identity/packages";
 import { PackageJsonFile } from "@beep/package-json/PackageJsonFile";
-import { decodeTSConfigFromJsoncTextEffect, TSConfigCompilerOptions } from "@beep/repo-utils";
+import { StrictCompilerOptions, StrictTsconfig, TsconfigValidator } from "@beep/repo-tsconfig/TsconfigValidator";
+import { jsonStringifyPretty } from "@beep/repo-utils";
 import { ArrayKeyDefaultEmpty } from "@beep/schema/SchemaUtils/withKeyDefaults";
+import { ClosedCompilerOptions } from "@beep/tsconfig/CompilerOptions";
 import { A } from "@beep/utils";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -21,6 +23,7 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as Struct from "effect/Struct";
 import * as Domain from "./Domain.ts";
 import type { ConfigReadSchema } from "@beep/config-file/ConfigFile";
 
@@ -46,7 +49,35 @@ export const DEFAULT_THEME = "mikearnaldi/just-the-docs";
 const PACKAGE_JSON_FILE_NAME = "package.json";
 const CONFIG_FILE_NAME = "docgen.json";
 
-const CompilerOptionsShape = S.toEncoded(TSConfigCompilerOptions);
+/**
+ * The on-disk shape of a `compilerOptions` object docgen accepts inline, from
+ * `docgen.json` or a CLI flag: the `@beep/tsconfig` closed view's encoded side.
+ *
+ * **Details**
+ *
+ * Inline options are checked for their typed shape only (an enum is any
+ * string, an unknown option is dropped), as the retired repo-utils model did.
+ * The strict rules (`TsconfigValidator`) run where docgen renders the examples
+ * `tsconfig.json` and where it reads a tsconfig file the user named.
+ *
+ * **Example** (Check an inline options object)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { CompilerOptionsShape } from "@beep/repo-docgen/Configuration"
+ *
+ * console.log(S.is(CompilerOptionsShape)({ strict: true, target: "ES2022" })) // true
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const CompilerOptionsShape = S.toEncoded(ClosedCompilerOptions).pipe(
+  $I.annoteSchema("CompilerOptionsShape", {
+    description: "The on-disk compilerOptions shape docgen accepts inline, from docgen.json or a CLI flag.",
+  })
+);
+
 /**
  * Schema for accepted CLI or config-file compiler options input.
  *
@@ -67,7 +98,8 @@ export const CompilerOptionsInput = S.Union([S.String, CompilerOptionsShape]).pi
     description: "Accepted CLI or config-file input for TypeScript compiler options.",
   })
 );
-const encodeCompilerOptions = S.encodeEffect(TSConfigCompilerOptions);
+const encodeCompilerOptions = S.encodeEffect(StrictCompilerOptions);
+const encodeTsconfig = S.encodeEffect(StrictTsconfig);
 const isStringArray = (value: unknown): value is ReadonlyArray<string> =>
   A.isArray(value) && A.every(value, P.isString);
 
@@ -524,36 +556,64 @@ const readTSConfig = Effect.fn("Configuration.readTSConfig")(function* (
   Domain.DocgenError,
   FileSystem.FileSystem | Path.Path | Domain.Process
 > {
-  const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const process = yield* Domain.Process;
   const cwd = yield* process.cwd;
   const resolved = path.resolve(cwd, fileName);
-  const content = yield* fs.readFileString(resolved).pipe(
-    Effect.mapError((cause) =>
-      Domain.DocgenError.make({
-        message: `[Configuration.readTSConfig] Failed to read TSConfig file '${resolved}'\n${String(cause)}`,
-      })
-    )
+  const fail = (step: string, detail: string) =>
+    Domain.DocgenError.make({
+      message: `[Configuration.readTSConfig] Failed to ${step} TSConfig file '${resolved}'\n${detail}`,
+    });
+  // The named file passes the strict closed check, then its whole `extends`
+  // chain is merged with tsc semantics and the merged options pass it too.
+  const strict = yield* TsconfigValidator.compilerOptions(resolved).pipe(
+    Effect.catchTags({
+      TsconfigValidationError: (error) => fail("decode", error.message),
+      TsconfigParseError: (error) => fail("decode", String(error.cause)),
+      TsconfigExtendsError: (error) => fail("resolve", error.message),
+      PlatformError: (error) => fail("read", String(error)),
+    })
   );
-  const tsconfig = yield* decodeTSConfigFromJsoncTextEffect(content).pipe(
-    Effect.mapError((cause) =>
-      Domain.DocgenError.make({
-        message: `[Configuration.readTSConfig] Failed to decode TSConfig file '${resolved}'\n${cause.message}`,
-      })
-    )
-  );
-  if (O.isNone(tsconfig.compilerOptions)) {
+  if (A.isReadonlyArrayEmpty(Struct.keys(strict))) {
     return defaultCompilerOptions;
   }
 
-  return yield* encodeCompilerOptions(tsconfig.compilerOptions.value).pipe(
-    Effect.mapError((cause) =>
-      Domain.DocgenError.make({
-        message: `[Configuration.readTSConfig] Failed to encode compiler options from '${resolved}'\n${cause.message}`,
-      })
-    )
+  return yield* encodeCompilerOptions(strict).pipe(
+    Effect.mapError((cause) => fail("encode compiler options from", cause.message))
   );
+});
+
+/**
+ * Renders the examples `tsconfig.json` text from resolved examples compiler
+ * options: the options pass the strict `TsconfigValidator` check (an unknown
+ * option or a cross-field violation fails typed), then the validated document
+ * is pretty-printed with every enum in its canonical spelling.
+ *
+ * **Example** (Render the examples tsconfig)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import { encodeExamplesTsconfig } from "@beep/repo-docgen/Configuration"
+ *
+ * const text = Effect.runSync(encodeExamplesTsconfig({ noEmit: true, target: "ES2022" }))
+ * console.log(text.includes('"target": "es2022"')) // true
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const encodeExamplesTsconfig = Effect.fn("Configuration.encodeExamplesTsconfig")(function* (
+  compilerOptions: typeof CompilerOptionsShape.Type
+): Effect.fn.Return<string, Domain.DocgenError> {
+  const fail = (detail: string) =>
+    Domain.DocgenError.make({
+      message: `[Configuration.encodeExamplesTsconfig] Failed to encode examples tsconfig\n${detail}`,
+    });
+  const document = yield* TsconfigValidator.validate({ compilerOptions }).pipe(
+    Effect.mapError((error) => fail(error.message))
+  );
+  const encoded = yield* encodeTsconfig(document).pipe(Effect.mapError((cause) => fail(cause.message)));
+  return yield* jsonStringifyPretty(encoded).pipe(Effect.mapError((cause) => fail(cause.message)));
 });
 
 const resolveCompilerOptions = (
