@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-28T06:40:52.890Z",
+  "generatedAt": "2026-10-28T10:26:21.120Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -62,13 +62,13 @@
   },
   "totals": {
     "packages": 183,
-    "cleanPackages": 127,
+    "cleanPackages": 126,
     "packagesWithoutPublicSrcSurface": 2,
-    "packagesNeedingRemediation": 54,
-    "publicModules": 3546,
-    "publicExports": 25246,
-    "openModules": 301,
-    "openExports": 176,
+    "packagesNeedingRemediation": 55,
+    "publicModules": 3552,
+    "publicExports": 25272,
+    "openModules": 302,
+    "openExports": 184,
     "missingExportExamples": 7,
     "missingExportCategories": 0,
     "missingExportSince": 0,
@@ -78,7 +78,7 @@
     "unsafeExampleFindings": 0,
     "schemaAnnotationFindings": 0,
     "undescribed-see": 8,
-    "multiple-description-paragraphs": 322,
+    "multiple-description-paragraphs": 331,
     "leading-blank": 0,
     "trailing-blank": 0,
     "invalid-heading": 1,
@@ -150732,12 +150732,12 @@
       "packageName": "@beep/duckdb",
       "packagePath": "packages/drivers/duckdb",
       "topoOrder": 42,
-      "status": "clean",
+      "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 7,
-        "publicModuleCount": 7,
-        "publicExportCount": 43
+        "sourceFileCount": 13,
+        "publicModuleCount": 13,
+        "publicExportCount": 73
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -150746,8 +150746,8 @@
         "enforceVersion": true
       },
       "counts": {
-        "openModules": 0,
-        "openExports": 0,
+        "openModules": 1,
+        "openExports": 8,
         "missingExportExamples": 0,
         "missingExportCategories": 0,
         "missingExportSince": 0,
@@ -150759,7 +150759,7 @@
         "schemaAnnotationFindings": 0,
         "documentationRuleFindings": {
           "undescribed-see": 0,
-          "multiple-description-paragraphs": 0,
+          "multiple-description-paragraphs": 9,
           "leading-blank": 0,
           "trailing-blank": 0,
           "invalid-heading": 0,
@@ -150888,6 +150888,76 @@
         },
         {
           "docKind": "packageDocumentation",
+          "filePath": "src/DuckDbEventJournal.service.ts",
+          "repoPath": "packages/drivers/duckdb/src/DuckDbEventJournal.service.ts",
+          "line": 1,
+          "anchor": "packages-drivers-duckdb-src-duckdbeventjournal-service-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 2,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/DuckDbEventLogServerEncrypted.service.ts",
+          "repoPath": "packages/drivers/duckdb/src/DuckDbEventLogServerEncrypted.service.ts",
+          "line": 1,
+          "anchor": "packages-drivers-duckdb-src-duckdbeventlogserverencrypted-service-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [
+            {
+              "rule": "multiple-description-paragraphs"
+            }
+          ],
+          "exportCount": 3,
+          "remediationStatus": "open"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/DuckDbMessageStorage.service.ts",
+          "repoPath": "packages/drivers/duckdb/src/DuckDbMessageStorage.service.ts",
+          "line": 1,
+          "anchor": "packages-drivers-duckdb-src-duckdbmessagestorage-service-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 7,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
           "filePath": "src/DuckDbMigrator.service.ts",
           "repoPath": "packages/drivers/duckdb/src/DuckDbMigrator.service.ts",
           "line": 1,
@@ -150910,6 +150980,72 @@
         },
         {
           "docKind": "packageDocumentation",
+          "filePath": "src/DuckDbPersistedQueue.service.ts",
+          "repoPath": "packages/drivers/duckdb/src/DuckDbPersistedQueue.service.ts",
+          "line": 1,
+          "anchor": "packages-drivers-duckdb-src-duckdbpersistedqueue-service-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 2,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/DuckDbPersistence.service.ts",
+          "repoPath": "packages/drivers/duckdb/src/DuckDbPersistence.service.ts",
+          "line": 1,
+          "anchor": "packages-drivers-duckdb-src-duckdbpersistence-service-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 4,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/DuckDbRunnerStorage.service.ts",
+          "repoPath": "packages/drivers/duckdb/src/DuckDbRunnerStorage.service.ts",
+          "line": 1,
+          "anchor": "packages-drivers-duckdb-src-duckdbrunnerstorage-service-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 6,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/duckdb/src/index.ts",
           "line": 1,
@@ -150927,7 +151063,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 6,
+          "exportCount": 12,
           "remediationStatus": "resolved"
         }
       ],
@@ -151681,6 +151817,286 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "make",
+          "exportKind": "const",
+          "filePath": "src/DuckDbEventJournal.service.ts",
+          "repoPath": "packages/drivers/duckdb/src/DuckDbEventJournal.service.ts",
+          "line": 24,
+          "anchor": "packages-drivers-duckdb-src-duckdbeventjournal-service-ts-24-make",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "layer",
+          "exportKind": "const",
+          "filePath": "src/DuckDbEventJournal.service.ts",
+          "repoPath": "packages/drivers/duckdb/src/DuckDbEventJournal.service.ts",
+          "line": 68,
+          "anchor": "packages-drivers-duckdb-src-duckdbeventjournal-service-ts-68-layer",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "makeStorage",
+          "exportKind": "const",
+          "filePath": "src/DuckDbEventLogServerEncrypted.service.ts",
+          "repoPath": "packages/drivers/duckdb/src/DuckDbEventLogServerEncrypted.service.ts",
+          "line": 65,
+          "anchor": "packages-drivers-duckdb-src-duckdbeventlogserverencrypted-service-ts-65-makestorage",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "layerStorage",
+          "exportKind": "const",
+          "filePath": "src/DuckDbEventLogServerEncrypted.service.ts",
+          "repoPath": "packages/drivers/duckdb/src/DuckDbEventLogServerEncrypted.service.ts",
+          "line": 361,
+          "anchor": "packages-drivers-duckdb-src-duckdbeventlogserverencrypted-service-ts-361-layerstorage",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "layerStorageSubtle",
+          "exportKind": "const",
+          "filePath": "src/DuckDbEventLogServerEncrypted.service.ts",
+          "repoPath": "packages/drivers/duckdb/src/DuckDbEventLogServerEncrypted.service.ts",
+          "line": 383,
+          "anchor": "packages-drivers-duckdb-src-duckdbeventlogserverencrypted-service-ts-383-layerstoragesubtle",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "makeEncoded",
+          "exportKind": "const",
+          "filePath": "src/DuckDbMessageStorage.service.ts",
+          "repoPath": "packages/drivers/duckdb/src/DuckDbMessageStorage.service.ts",
+          "line": 86,
+          "anchor": "packages-drivers-duckdb-src-duckdbmessagestorage-service-ts-86-makeencoded",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "make",
+          "exportKind": "const",
+          "filePath": "src/DuckDbMessageStorage.service.ts",
+          "repoPath": "packages/drivers/duckdb/src/DuckDbMessageStorage.service.ts",
+          "line": 688,
+          "anchor": "packages-drivers-duckdb-src-duckdbmessagestorage-service-ts-688-make",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "migrations",
+          "exportKind": "const",
+          "filePath": "src/DuckDbMessageStorage.service.ts",
+          "repoPath": "packages/drivers/duckdb/src/DuckDbMessageStorage.service.ts",
+          "line": 709,
+          "anchor": "packages-drivers-duckdb-src-duckdbmessagestorage-service-ts-709-migrations",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "layerMigrations",
+          "exportKind": "const",
+          "filePath": "src/DuckDbMessageStorage.service.ts",
+          "repoPath": "packages/drivers/duckdb/src/DuckDbMessageStorage.service.ts",
+          "line": 821,
+          "anchor": "packages-drivers-duckdb-src-duckdbmessagestorage-service-ts-821-layermigrations",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [
+            {
+              "rule": "multiple-description-paragraphs"
+            }
+          ],
+          "remediationStatus": "open"
+        },
+        {
+          "symbolName": "layerStorage",
+          "exportKind": "const",
+          "filePath": "src/DuckDbMessageStorage.service.ts",
+          "repoPath": "packages/drivers/duckdb/src/DuckDbMessageStorage.service.ts",
+          "line": 856,
+          "anchor": "packages-drivers-duckdb-src-duckdbmessagestorage-service-ts-856-layerstorage",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [
+            {
+              "rule": "multiple-description-paragraphs"
+            }
+          ],
+          "remediationStatus": "open"
+        },
+        {
+          "symbolName": "layerWith",
+          "exportKind": "const",
+          "filePath": "src/DuckDbMessageStorage.service.ts",
+          "repoPath": "packages/drivers/duckdb/src/DuckDbMessageStorage.service.ts",
+          "line": 887,
+          "anchor": "packages-drivers-duckdb-src-duckdbmessagestorage-service-ts-887-layerwith",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [
+            {
+              "rule": "multiple-description-paragraphs"
+            }
+          ],
+          "remediationStatus": "open"
+        },
+        {
+          "symbolName": "layer",
+          "exportKind": "const",
+          "filePath": "src/DuckDbMessageStorage.service.ts",
+          "repoPath": "packages/drivers/duckdb/src/DuckDbMessageStorage.service.ts",
+          "line": 915,
+          "anchor": "packages-drivers-duckdb-src-duckdbmessagestorage-service-ts-915-layer",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [
+            {
+              "rule": "multiple-description-paragraphs"
+            }
+          ],
+          "remediationStatus": "open"
+        },
+        {
           "symbolName": "export * from \"effect/sql/Migrator\";",
           "exportKind": "re-export",
           "filePath": "src/DuckDbMigrator.service.ts",
@@ -151745,6 +152161,286 @@
           "categoryViolations": [],
           "documentationShapeViolations": [],
           "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "makeStoreSql",
+          "exportKind": "const",
+          "filePath": "src/DuckDbPersistedQueue.service.ts",
+          "repoPath": "packages/drivers/duckdb/src/DuckDbPersistedQueue.service.ts",
+          "line": 119,
+          "anchor": "packages-drivers-duckdb-src-duckdbpersistedqueue-service-ts-119-makestoresql",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "layerStoreSql",
+          "exportKind": "const",
+          "filePath": "src/DuckDbPersistedQueue.service.ts",
+          "repoPath": "packages/drivers/duckdb/src/DuckDbPersistedQueue.service.ts",
+          "line": 525,
+          "anchor": "packages-drivers-duckdb-src-duckdbpersistedqueue-service-ts-525-layerstoresql",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "layerBackingSqlMultiTable",
+          "exportKind": "const",
+          "filePath": "src/DuckDbPersistence.service.ts",
+          "repoPath": "packages/drivers/duckdb/src/DuckDbPersistence.service.ts",
+          "line": 44,
+          "anchor": "packages-drivers-duckdb-src-duckdbpersistence-service-ts-44-layerbackingsqlmultitable",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "layerBackingSql",
+          "exportKind": "const",
+          "filePath": "src/DuckDbPersistence.service.ts",
+          "repoPath": "packages/drivers/duckdb/src/DuckDbPersistence.service.ts",
+          "line": 72,
+          "anchor": "packages-drivers-duckdb-src-duckdbpersistence-service-ts-72-layerbackingsql",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "layerSql",
+          "exportKind": "const",
+          "filePath": "src/DuckDbPersistence.service.ts",
+          "repoPath": "packages/drivers/duckdb/src/DuckDbPersistence.service.ts",
+          "line": 175,
+          "anchor": "packages-drivers-duckdb-src-duckdbpersistence-service-ts-175-layersql",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "layerSqlMultiTable",
+          "exportKind": "const",
+          "filePath": "src/DuckDbPersistence.service.ts",
+          "repoPath": "packages/drivers/duckdb/src/DuckDbPersistence.service.ts",
+          "line": 188,
+          "anchor": "packages-drivers-duckdb-src-duckdbpersistence-service-ts-188-layersqlmultitable",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "make",
+          "exportKind": "const",
+          "filePath": "src/DuckDbRunnerStorage.service.ts",
+          "repoPath": "packages/drivers/duckdb/src/DuckDbRunnerStorage.service.ts",
+          "line": 237,
+          "anchor": "packages-drivers-duckdb-src-duckdbrunnerstorage-service-ts-237-make",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "migrations",
+          "exportKind": "const",
+          "filePath": "src/DuckDbRunnerStorage.service.ts",
+          "repoPath": "packages/drivers/duckdb/src/DuckDbRunnerStorage.service.ts",
+          "line": 258,
+          "anchor": "packages-drivers-duckdb-src-duckdbrunnerstorage-service-ts-258-migrations",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "layerMigrations",
+          "exportKind": "const",
+          "filePath": "src/DuckDbRunnerStorage.service.ts",
+          "repoPath": "packages/drivers/duckdb/src/DuckDbRunnerStorage.service.ts",
+          "line": 320,
+          "anchor": "packages-drivers-duckdb-src-duckdbrunnerstorage-service-ts-320-layermigrations",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [
+            {
+              "rule": "multiple-description-paragraphs"
+            }
+          ],
+          "remediationStatus": "open"
+        },
+        {
+          "symbolName": "layerStorage",
+          "exportKind": "const",
+          "filePath": "src/DuckDbRunnerStorage.service.ts",
+          "repoPath": "packages/drivers/duckdb/src/DuckDbRunnerStorage.service.ts",
+          "line": 353,
+          "anchor": "packages-drivers-duckdb-src-duckdbrunnerstorage-service-ts-353-layerstorage",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [
+            {
+              "rule": "multiple-description-paragraphs"
+            }
+          ],
+          "remediationStatus": "open"
+        },
+        {
+          "symbolName": "layerWith",
+          "exportKind": "const",
+          "filePath": "src/DuckDbRunnerStorage.service.ts",
+          "repoPath": "packages/drivers/duckdb/src/DuckDbRunnerStorage.service.ts",
+          "line": 379,
+          "anchor": "packages-drivers-duckdb-src-duckdbrunnerstorage-service-ts-379-layerwith",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [
+            {
+              "rule": "multiple-description-paragraphs"
+            }
+          ],
+          "remediationStatus": "open"
+        },
+        {
+          "symbolName": "layer",
+          "exportKind": "const",
+          "filePath": "src/DuckDbRunnerStorage.service.ts",
+          "repoPath": "packages/drivers/duckdb/src/DuckDbRunnerStorage.service.ts",
+          "line": 405,
+          "anchor": "packages-drivers-duckdb-src-duckdbrunnerstorage-service-ts-405-layer",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [
+            {
+              "rule": "multiple-description-paragraphs"
+            }
+          ],
+          "remediationStatus": "open"
         },
         {
           "symbolName": "export * from \"./DuckDb.errors.ts\";",
@@ -151857,12 +152553,144 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "export * as DuckDbEventJournal from \"./DuckDbEventJournal.service.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/drivers/duckdb/src/index.ts",
+          "line": 83,
+          "anchor": "packages-drivers-duckdb-src-index-ts-83-export-as-duckdbeventjournal-from-duckdbeventjournal-service-ts",
+          "currentTags": [
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * as DuckDbEventLogServerEncrypted from \"./DuckDbEventLogServerEncrypted.service.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/drivers/duckdb/src/index.ts",
+          "line": 101,
+          "anchor": "packages-drivers-duckdb-src-index-ts-101-export-as-duckdbeventlogserverencrypted-from-duckdbeventlogserverencrypted-service-ts",
+          "currentTags": [
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * as DuckDbMessageStorage from \"./DuckDbMessageStorage.service.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/drivers/duckdb/src/index.ts",
+          "line": 123,
+          "anchor": "packages-drivers-duckdb-src-index-ts-123-export-as-duckdbmessagestorage-from-duckdbmessagestorage-service-ts",
+          "currentTags": [
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "export * as DuckDbMigrator from \"./DuckDbMigrator.service.ts\";",
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/duckdb/src/index.ts",
-          "line": 89,
-          "anchor": "packages-drivers-duckdb-src-index-ts-89-export-as-duckdbmigrator-from-duckdbmigrator-service-ts",
+          "line": 147,
+          "anchor": "packages-drivers-duckdb-src-index-ts-147-export-as-duckdbmigrator-from-duckdbmigrator-service-ts",
+          "currentTags": [
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * as DuckDbPersistedQueue from \"./DuckDbPersistedQueue.service.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/drivers/duckdb/src/index.ts",
+          "line": 167,
+          "anchor": "packages-drivers-duckdb-src-index-ts-167-export-as-duckdbpersistedqueue-from-duckdbpersistedqueue-service-ts",
+          "currentTags": [
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * as DuckDbPersistence from \"./DuckDbPersistence.service.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/drivers/duckdb/src/index.ts",
+          "line": 185,
+          "anchor": "packages-drivers-duckdb-src-index-ts-185-export-as-duckdbpersistence-from-duckdbpersistence-service-ts",
+          "currentTags": [
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * as DuckDbRunnerStorage from \"./DuckDbRunnerStorage.service.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/drivers/duckdb/src/index.ts",
+          "line": 205,
+          "anchor": "packages-drivers-duckdb-src-index-ts-205-export-as-duckdbrunnerstorage-from-duckdbrunnerstorage-service-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -449806,7 +450634,7 @@
         "srcDir": "src",
         "sourceFileCount": 475,
         "publicModuleCount": 473,
-        "publicExportCount": 4454
+        "publicExportCount": 4450
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -459858,7 +460686,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 66,
+          "exportCount": 62,
           "remediationStatus": "resolved"
         },
         {
@@ -519574,8 +520402,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/RoadmapRefs.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/RoadmapRefs.ts",
-          "line": 300,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-roadmaprefs-ts-300-runroadmaprefslint",
+          "line": 305,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-roadmaprefs-ts-305-runroadmaprefslint",
           "currentTags": [
             "@category",
             "@since"
@@ -519596,8 +520424,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/RoadmapRefs.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/RoadmapRefs.ts",
-          "line": 364,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-roadmaprefs-ts-364-lintroadmaprefscommand",
+          "line": 372,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-roadmaprefs-ts-372-lintroadmaprefscommand",
           "currentTags": [
             "@category",
             "@since"
@@ -552366,8 +553194,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Skills/SkillsReview.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/SkillsReview.service.ts",
-          "line": 467,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-467-makeskillreviewdeciderprompt",
+          "line": 468,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-468-makeskillreviewdeciderprompt",
           "currentTags": [
             "@category",
             "@since"
@@ -552388,8 +553216,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Skills/SkillsReview.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/SkillsReview.service.ts",
-          "line": 771,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-771-skillhunkreviewshape",
+          "line": 778,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-778-skillhunkreviewshape",
           "currentTags": [
             "@see",
             "@category",
@@ -552411,8 +553239,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Skills/SkillsReview.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/SkillsReview.service.ts",
-          "line": 822,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-822-skillhunkreview",
+          "line": 829,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-829-skillhunkreview",
           "currentTags": [
             "@see",
             "@category",
@@ -552434,8 +553262,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Skills/SkillsReview.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/SkillsReview.service.ts",
-          "line": 839,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-839-skillhunkreviewlayer",
+          "line": 846,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-846-skillhunkreviewlayer",
           "currentTags": [
             "@category",
             "@since"
@@ -552456,8 +553284,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Skills/SkillsReview.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/SkillsReview.service.ts",
-          "line": 866,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-866-skillhunkreviewlive",
+          "line": 873,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-873-skillhunkreviewlive",
           "currentTags": [
             "@category",
             "@since"
@@ -553579,8 +554407,8 @@
           "exportKind": "const",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.plan.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.plan.ts",
-          "line": 1325,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-plan-ts-1325-tsconfigsyncplan",
+          "line": 1315,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-plan-ts-1315-tsconfigsyncplan",
           "currentTags": [
             "@category",
             "@since"
@@ -554877,100 +555705,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "TsconfigReferenceEntry",
-          "exportKind": "class",
-          "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 1587,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1587-tsconfigreferenceentry",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "TsconfigCompilerOptionsPaths",
-          "exportKind": "class",
-          "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 1617,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1617-tsconfigcompileroptionspaths",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "TsconfigWithReferences",
-          "exportKind": "class",
-          "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 1646,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1646-tsconfigwithreferences",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "TsconfigWithPaths",
-          "exportKind": "class",
-          "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 1672,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1672-tsconfigwithpaths",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
           "symbolName": "byWorkspaceRelativeDirAscending",
           "exportKind": "const",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 1705,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1705-byworkspacerelativedirascending",
+          "line": 1593,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1593-byworkspacerelativedirascending",
           "currentTags": [
             "@category",
             "@since"
@@ -554991,8 +555731,8 @@
           "exportKind": "const",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 1742,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1742-byplannedchangefileascending",
+          "line": 1630,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1630-byplannedchangefileascending",
           "currentTags": [
             "@category",
             "@since"
@@ -555013,8 +555753,8 @@
           "exportKind": "const",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 1767,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1767-byplannedchangesectionascending",
+          "line": 1655,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1655-byplannedchangesectionascending",
           "currentTags": [
             "@category",
             "@since"
@@ -555035,8 +555775,8 @@
           "exportKind": "const",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 1792,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1792-byplannedchangeascending",
+          "line": 1680,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1680-byplannedchangeascending",
           "currentTags": [
             "@category",
             "@since"
@@ -555057,8 +555797,8 @@
           "exportKind": "const",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 1811,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1811-tsconfigsyncschemainternals",
+          "line": 1699,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1699-tsconfigsyncschemainternals",
           "currentTags": [
             "@category",
             "@since"

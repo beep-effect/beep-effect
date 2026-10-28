@@ -455,7 +455,7 @@ The reason's `message` names the operation; the native error is in
 | `Parser`, `Catalog`, `Binder Error` | `SqlSyntaxError` |
 | anything else | `UnknownError` |
 
-## Support matrix (effect 4.0.5)
+## Support matrix (effect 4.0.6)
 
 The client reports the `"sqlite"` dialect, so effect modules pick their SQLite
 DDL for it.
@@ -464,8 +464,10 @@ DDL for it.
 | --- | --- |
 | Migrator, SqlSchema (findAll, findOne, findOneOption), SqlResolver, SqlModel insert/findById, KeyValueStore.layerSql, SqlEventLogServerUnencrypted (except a caught nested rollback) | supported, tested |
 | SqlModel update with a `GeneratedByDb` id | broken on every driver at 4.0.5 (a Model bug, not DuckDB) |
-| SqlEventJournal | unsupported (INT32 `timestamp` overflow); DuckDB-native layer designed in #2084 |
-| Persistence (both layers), PersistedQueue, cluster SqlMessageStorage/SqlRunnerStorage, SqlEventLogServerEncrypted | unsupported (`AUTOINCREMENT`, `datetime()`, partial index, INT32 columns); DuckDB-native layers designed in #2084, built when a consumer needs one |
+| Upstream SqlEventJournal, Persistence (both layers), PersistedQueue store, cluster SqlMessageStorage/SqlRunnerStorage, SqlEventLogServerEncrypted | unsupported (`AUTOINCREMENT`, `datetime()`, partial index, INT32 columns); use the DuckDB-native modules below |
+| `DuckDbEventJournal`, `DuckDbPersistence` (`layerSql`, `layerSqlMultiTable`, both backings), `DuckDbEventLogServerEncrypted` | supported, tested with the vendored effect 4.0.6 suites |
+| `DuckDbPersistedQueue` (`layerStoreSql`) | supported, tested; also requires `Crypto` (e.g. `NodeCrypto.layer`) |
+| `DuckDbMessageStorage`, `DuckDbRunnerStorage` | supported, tested, single process only (`SingleRunner`): DuckDB locks the file per process |
 | Nested transaction rollback that the outer body catches | refuses the outer commit (no savepoints in DuckDB 2.0) |
 | `backup` | not provided (COPY FROM DATABASE fails on foreign-key order); use `exportDatabase` / `importDatabase` |
 | Streams with one writer statement per row outside a transaction | supported with `readerConnections > 0`; streams on `reserve` still deadlock |
