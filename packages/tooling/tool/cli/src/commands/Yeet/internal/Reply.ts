@@ -80,11 +80,20 @@ import {
   ReplyDraft,
   ReplyDraftOutcome,
   ReplyDraftsJson,
+  ReplyOutcomeStatus,
+  ReplyPullRequestNumber,
   ReplyReport,
   ReplyReportJson,
   replyOutcomesWithStatus,
   replyOutcomeTarget,
 } from "./Reply.schemas.ts";
+import {
+  ReviewLaneDispositionRow,
+  YEET_REVIEW_LANE_SCHEMA_VERSION,
+  YeetReviewerIdentity,
+  YeetThreadDisposition,
+} from "./ReviewLane.schemas.ts";
+import { recordYeetReviewLaneRows, yeetReviewerIdentity } from "./ReviewLane.ts";
 import {
   deriveYeetReviewThreadState,
   YeetReviewThreadNewestComment,
@@ -98,7 +107,7 @@ import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GhCommandFailure } from "../../../internal/github/index.ts";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { GhRepoView } from "./closeout/Gh.schemas.ts";
-import type { ReplyDrafts, ReplyOutcomeStatus } from "./Reply.schemas.ts";
+import type { ReplyDrafts } from "./Reply.schemas.ts";
 import type { YeetReviewThreadStateInput } from "./ReviewThreadState.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Reply");
@@ -197,7 +206,7 @@ query YeetReplyReviewThreads($owner: String!, $name: String!, $number: Int!, $cu
           resolvedBy { login }
           comments(first: 100) {
             pageInfo { hasNextPage endCursor }
-            nodes { id databaseId author { login } }
+            nodes { id databaseId author { __typename login } }
           }
           latest: comments(last: 1) {
             nodes { author { __typename login } }
@@ -503,6 +512,9 @@ export class ReplyPostAction extends S.Opaque<ReplyPostAction, { readonly brand:
       S.withConstructorDefault(Effect.succeed<YeetReviewThreadStateTag>("unresolved")),
       S.withDecodingDefaultKey(Effect.succeed<YeetReviewThreadStateTag>("unresolved"))
     ),
+    // Who opened the thread: the reviewer the recorded disposition is
+    // attributed to (ruling 81); absent when GitHub no longer attributes it.
+    reviewer: YeetReviewerIdentity.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
     $I.annoteSchema("ReplyPostAction", {
       description: "Drafted reply resolved to a live, unresolved review thread and ready to write.",
@@ -617,6 +629,21 @@ const draftTargetLabel = (draft: ReplyDraft): string =>
     A.join(" / ")
   );
 
+// The disposition an outcome carries is the draft's declaration or `unknown`;
+// a body is never read to supply one (ruling 81).
+const draftDisposition = (draft: ReplyDraft): YeetThreadDisposition =>
+  O.getOrElse(draft.disposition, (): YeetThreadDisposition => YeetThreadDisposition.Enum.unknown);
+
+// The thread's opening comment names its reviewer: `comments(first: 100)`
+// lists oldest first, so the head of the page is the finding, whoever spoke
+// last. A comment GitHub no longer attributes leaves the reviewer unknown.
+const replyThreadOpener = (thread: ReplyLiveThread): O.Option<YeetReviewerIdentity> =>
+  pipe(
+    A.head(thread.comments.nodes),
+    O.flatMap((comment) => O.fromNullishOr(comment.author)),
+    O.map((actor) => yeetReviewerIdentity(actor.login, O.fromUndefinedOr(actor.__typename)))
+  );
+
 const settledAction = (
   draft: ReplyDraft,
   threadId: O.Option<string>,
@@ -627,6 +654,7 @@ const settledAction = (
     outcome: ReplyDraftOutcome.make({
       commentId: draft.commentId,
       detail,
+      disposition: draftDisposition(draft),
       status,
       threadId: O.orElse(threadId, () => draft.threadId),
     }),
@@ -726,7 +754,12 @@ const classifyReplyDraft = (
             `review thread ${thread.id} (${threadLocation(thread)}) is already resolved upstream; nothing was posted`
           );
         }
-        return ReplyPostAction.make({ draft, state: thread.state, threadId: thread.id });
+        return ReplyPostAction.make({
+          draft,
+          reviewer: replyThreadOpener(thread),
+          state: thread.state,
+          threadId: thread.id,
+        });
       },
     })
   );
@@ -1013,7 +1046,11 @@ const performReplyPost = Effect.fnUntraced(function* (
   context: RepoRunContext,
   action: ReplyPostAction
 ): Effect.fn.Return<ReplyDraftOutcome, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
-  const target = { commentId: action.draft.commentId, threadId: O.some(action.threadId) };
+  const target = {
+    commentId: action.draft.commentId,
+    disposition: draftDisposition(action.draft),
+    threadId: O.some(action.threadId),
+  };
   const posted = yield* Effect.result(
     replyGhOutput(
       context,
@@ -1115,9 +1152,110 @@ const preflightFailureOutcomes = (drafts: ReplyDrafts, failure: YeetCommandError
     ReplyDraftOutcome.make({
       commentId: draft.commentId,
       detail: `${failure.message} Nothing was posted for any draft; retry the whole run with: ${REPLY_RERUN_COMMAND}`,
+      disposition: draftDisposition(draft),
       status: "failed",
       threadId: draft.threadId,
     })
+  );
+
+const isWrittenOutcome = (outcome: ReplyDraftOutcome): boolean =>
+  ReplyOutcomeStatus.is.posted(outcome.status) || ReplyOutcomeStatus.is.resolved(outcome.status);
+
+/**
+ * What one reply pass produced, paired for the review lane: the planned
+ * actions and their outcomes in drafts-file order, and where and when the
+ * pass ran.
+ *
+ * **Example** (Describe an empty pass)
+ *
+ * ```ts
+ * import { ReplyPassFacts } from "@beep/repo-cli/test/Yeet"
+ *
+ * const facts = ReplyPassFacts.make({
+ *   branch: "feat/review-lane",
+ *   prNumber: 2300,
+ *   recordedAt: "2026-10-27T10:30:00.000Z",
+ *   actions: [],
+ *   outcomes: [],
+ * })
+ * console.log(facts.actions.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ReplyPassFacts extends S.Opaque<ReplyPassFacts, { readonly brand: unique symbol }>()(
+  S.Struct({
+    // The planned actions in drafts-file order, and their outcomes in the same order.
+    actions: S.Array(ReplyAction),
+    outcomes: S.Array(ReplyDraftOutcome),
+    // The branch of the checkout the pass ran in; it stamps every row.
+    branch: S.String,
+    // The pull request the drafts belong to.
+    prNumber: ReplyPullRequestNumber,
+    // The pass's report instant.
+    recordedAt: S.String,
+  }).pipe(
+    $I.annoteSchema("ReplyPassFacts", {
+      description:
+        "One reply pass's planned actions and their outcomes, paired in drafts-file order, with the branch and instant it ran.",
+    })
+  )
+) {}
+
+/**
+ * The review lane rows one reply pass records: one disposition per thread a
+ * reply was written on (ruling 81).
+ *
+ * **Details**
+ *
+ * Actions and outcomes pair positionally, as the pass produced them. Only a
+ * `post` action whose outcome is `posted` or `resolved` records a row: a
+ * stale or failed draft wrote nothing on the thread, so its declaration is
+ * reported but not measured. The row's disposition is the outcome's, which
+ * is the draft's declaration or `unknown`.
+ *
+ * **Example** (A resolved thread records its disposition)
+ *
+ * ```ts
+ * import { ReplyDraft, ReplyDraftOutcome, ReplyPassFacts, ReplyPostAction, replyDispositionRows } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const draft = ReplyDraft.make({ threadId: O.some("PRRT_kwDOA"), body: "Fixed.", disposition: O.some("fixed") })
+ * const rows = replyDispositionRows(ReplyPassFacts.make({
+ *   branch: "feat/review-lane",
+ *   prNumber: 2300,
+ *   recordedAt: "2026-10-27T10:30:00.000Z",
+ *   actions: [ReplyPostAction.make({ draft, threadId: "PRRT_kwDOA" })],
+ *   outcomes: [
+ *     ReplyDraftOutcome.make({ threadId: O.some("PRRT_kwDOA"), status: "resolved", detail: "done", disposition: "fixed" }),
+ *   ],
+ * }))
+ * console.log(rows.length) // 1
+ * ```
+ *
+ * @param pass - The pass's actions and outcomes, and where and when it ran.
+ * @returns One disposition row per written thread.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const replyDispositionRows = (pass: ReplyPassFacts): ReadonlyArray<ReviewLaneDispositionRow> =>
+  A.getSomes(
+    A.map(A.zip(pass.actions, pass.outcomes), ([action, outcome]) =>
+      action._tag === "post" && isWrittenOutcome(outcome)
+        ? O.some(
+            ReviewLaneDispositionRow.make({
+              schemaVersion: YEET_REVIEW_LANE_SCHEMA_VERSION,
+              prNumber: pass.prNumber,
+              branch: pass.branch,
+              recordedAt: pass.recordedAt,
+              threadId: action.threadId,
+              reviewer: action.reviewer,
+              disposition: outcome.disposition,
+            })
+          )
+        : O.none<ReviewLaneDispositionRow>()
+    )
   );
 
 /**
@@ -1192,12 +1330,9 @@ export const runYeetReply = Effect.fn("Yeet.runReply")(function* (
   if (Result.isFailure(preflight) && A.isReadonlyArrayEmpty(drafts.drafts)) {
     return yield* preflight.failure;
   }
+  const actions = Result.isSuccess(preflight) ? planReplyActions(drafts, preflight.success) : A.empty<ReplyAction>();
   const outcomes = Result.isSuccess(preflight)
-    ? yield* Effect.forEach(
-        planReplyActions(drafts, preflight.success),
-        (action) => executeReplyAction(context, action),
-        { concurrency: 1 }
-      )
+    ? yield* Effect.forEach(actions, (action) => executeReplyAction(context, action), { concurrency: 1 })
     : preflightFailureOutcomes(drafts, preflight.failure);
   yield* Effect.forEach(
     outcomes,
@@ -1220,6 +1355,19 @@ export const runYeetReply = Effect.fn("Yeet.runReply")(function* (
   yield* Console.log(
     `[yeet] reply report written to ${reportPath} (${countStatus(outcomes, "resolved")} resolved, ${countStatus(outcomes, "posted")} posted, ${countStatus(outcomes, "stale")} stale, ${countStatus(outcomes, "failed")} failed)`
   );
+  // The measurement rides after the report, best effort: a lost row is one
+  // warning, never a failed pass (ruling 81).
+  const dispositions = replyDispositionRows(
+    ReplyPassFacts.make({ branch: context.branch, prNumber: drafts.prNumber, recordedAt: createdAt, actions, outcomes })
+  );
+  if (A.isReadonlyArrayNonEmpty(dispositions)) {
+    yield* recordYeetReviewLaneRows(context.repoRoot, dispositions);
+    yield* Console.log(
+      `[yeet] reply recorded ${A.length(dispositions)} thread disposition(s) in the review lane ledger (${A.length(
+        A.filter(dispositions, (row) => YeetThreadDisposition.is.unknown(row.disposition))
+      )} unknown: declare "disposition" on the draft to measure the reviewer)`
+    );
+  }
   if (Result.isFailure(preflight)) {
     return yield* YeetCommandError.make({
       cause: preflight.failure,

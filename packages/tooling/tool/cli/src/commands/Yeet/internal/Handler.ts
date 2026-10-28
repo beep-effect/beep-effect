@@ -65,7 +65,7 @@ import {
   YeetAttemptTerminated,
 } from "./AttemptJournal.ts";
 import { PrCloseoutOptions, runPrCloseout, writePrCloseoutReport } from "./Closeout.ts";
-import { printYeetEconomicsCloseoutSummary, YeetEconomicsSource } from "./Economics.ts";
+import { printYeetEconomicsCloseoutSummary, YeetEconomicsSource, YeetReviewLaneSource } from "./Economics.ts";
 import {
   collectStagedPublishPaths,
   collectUnstagedTrackedPaths,
@@ -1798,7 +1798,8 @@ const runCloseoutMode = Effect.fn("Yeet.runCloseoutMode")(function* (
   // never fails the closeout. This closeout's own start is already journaled,
   // so it is passed as in flight rather than counted as a death.
   yield* printYeetEconomicsCloseoutSummary(context.repoRoot, context.branch, context.packetDir, O.some(attemptId)).pipe(
-    Effect.provideServiceEffect(YeetEconomicsSource, YeetEconomicsSource.make)
+    Effect.provideServiceEffect(YeetEconomicsSource, YeetEconomicsSource.make),
+    Effect.provideServiceEffect(YeetReviewLaneSource, YeetReviewLaneSource.make)
   );
   // The closeout is the read-first surface an agent runs after a gap, so it is
   // where a comment posted while nothing was attached has to surface.

@@ -51,6 +51,10 @@
       "purpose": "3-A5 parity: frozen copies of the legacy CheckCensus tsconfig readers compared with the adopted TsconfigLoader reads over every census package, plus a timing-stripped census report normalizer."
     },
     {
+      "path": "ops/cli-failure-render-differential.ts",
+      "purpose": "Wave 4-C-A differential: repo-cli bin stdout, stderr and exit code over a failure matrix (usage, reported exit, typed, defect, EPIPE, fast paths, log line, GITHUB_ACTIONS) before and after the CliRuntime.main switch."
+    },
+    {
       "path": "ops/cli-kit-bench.ts",
       "purpose": "Wave 4-C bench gate: @beep/cli-kit grapheme-segmenter and grapheme operation counts at doubling sizes, compared against a baseline."
     },
@@ -125,6 +129,10 @@
     {
       "path": "ops/semver-owner-switch-differential.ts",
       "purpose": "R1 differential: the deleted @beep/schema/Semver and hand-rolled VersionSync and CacheClientPin version code compared with @beep/semver over bun.lock and every tracked package.json."
+    },
+    {
+      "path": "ops/tsconfig-sync-parity.ts",
+      "purpose": "3-A7 parity: tsconfig-sync dry-run and write outputs (stdout, exit codes, sha256 of every file) over fixed mutations, before and after the @beep/tsconfig schema switch, plus a TsconfigJson decode of every tracked tsconfig."
     },
     {
       "path": "ops/xdg-systemd-differential.ts",

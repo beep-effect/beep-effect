@@ -776,7 +776,7 @@ export const inheritedCodemodDuplicationCountForTesting: {
           (site) => A.contains(report.rules, site.ruleId) && A.contains(report.filesChanged, site.filePath)
         )
       ),
-      O.getOrElse(() => A.empty<(typeof SchemaParityCodemodReport.Type.sites)[number]>())
+      O.getOrElse(A.empty<(typeof SchemaParityCodemodReport.Type.sites)[number]>)
     )
   );
   const hunks = codemodDiffHunks(diff);

@@ -54,7 +54,7 @@ export type BoxContentUploadTransport = typeof BoxContentUploadTransport.Type;
  * ```ts
  * import { BoxContentFolderExists } from "@beep/box-provisioning/BoxContentMigrationPlan"
  * import { BoxProviderId } from "@beep/box-provisioning/BoxProvisioningObserved"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const action = BoxContentFolderExists.make({
  *   depth: 1,
@@ -86,7 +86,7 @@ export class BoxContentFolderExists extends S.Opaque<BoxContentFolderExists, { r
  *
  * ```ts
  * import { BoxContentFolderCreate } from "@beep/box-provisioning/BoxContentMigrationPlan"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const action = BoxContentFolderCreate.make({
  *   depth: 2,
@@ -144,7 +144,7 @@ export type BoxContentFolderAction = typeof BoxContentFolderAction.Type;
  *
  * ```ts
  * import { BoxContentUpload } from "@beep/box-provisioning/BoxContentMigrationPlan"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const action = BoxContentUpload.make({
  *   entryDigest: Sha256Hex.make("a".repeat(64)),
@@ -182,7 +182,7 @@ export class BoxContentUpload extends S.Opaque<BoxContentUpload, { readonly bran
  * ```ts
  * import { BoxContentSkipIdentical } from "@beep/box-provisioning/BoxContentMigrationPlan"
  * import { BoxProviderId } from "@beep/box-provisioning/BoxProvisioningObserved"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const action = BoxContentSkipIdentical.make({
  *   entryDigest: Sha256Hex.make("a".repeat(64)),
@@ -218,7 +218,7 @@ export class BoxContentSkipIdentical extends S.Opaque<BoxContentSkipIdentical, {
  * ```ts
  * import { BoxContentBlockedNameConflict } from "@beep/box-provisioning/BoxContentMigrationPlan"
  * import { BoxProviderId } from "@beep/box-provisioning/BoxProvisioningObserved"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const action = BoxContentBlockedNameConflict.make({
  *   entryDigest: Sha256Hex.make("a".repeat(64)),
@@ -251,7 +251,7 @@ export class BoxContentBlockedNameConflict extends S.Opaque<
  *
  * ```ts
  * import { BoxContentBlockedSourceMissing } from "@beep/box-provisioning/BoxContentMigrationPlan"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const action = BoxContentBlockedSourceMissing.make({ entryDigest: Sha256Hex.make("a".repeat(64)) })
  * console.log(action._tag)
@@ -278,7 +278,7 @@ export class BoxContentBlockedSourceMissing extends S.Opaque<
  *
  * ```ts
  * import { BoxContentBlockedSourceChanged } from "@beep/box-provisioning/BoxContentMigrationPlan"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const action = BoxContentBlockedSourceChanged.make({ entryDigest: Sha256Hex.make("a".repeat(64)) })
  * console.log(action._tag)

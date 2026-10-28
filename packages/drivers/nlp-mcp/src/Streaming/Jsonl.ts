@@ -2,6 +2,8 @@
  * JSONL (JSON Lines / NDJSON) streaming helpers backing the streaming JSONL
  * tools.
  *
+ * **Details**
+ *
  * Records are parsed line-by-line on top of {@link streamLines}, with
  * optional skip-invalid behavior and structured per-line error collection. All
  * operations require the {@link FileSystem.FileSystem} and {@link Path.Path}

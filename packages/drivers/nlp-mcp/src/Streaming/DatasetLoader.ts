@@ -1,6 +1,8 @@
 /**
  * Dataset loading helpers backing the streaming dataset tools.
  *
+ * **Details**
+ *
  * Loads text, line, JSONL, or JSON datasets from either a local file (via
  * {@link TextStream}) or a remote `http(s)` URL (via the {@link HttpClient}
  * service, provided at the entrypoint). Remote reads are bounded by
@@ -662,6 +664,8 @@ export const loadLines = Effect.fn("DatasetLoader.loadLines")(function* (
 
 /**
  * Load a JSONL dataset as an array of parsed records from a file or remote URL.
+ *
+ * **Details**
  *
  * Blank lines are skipped. When `skipInvalid` is `true` lines that fail to parse
  * are dropped; otherwise the first malformed line fails the effect.

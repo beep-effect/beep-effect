@@ -236,6 +236,7 @@
     "@beep/tesseract": "workspace:^",
     "@beep/test-utils": "workspace:^",
     "@beep/tika": "workspace:^",
+    "@beep/tsconfig": "workspace:^",
     "@beep/uspto": "workspace:^",
     "@beep/utils": "workspace:^",
     "@beep/walker": "workspace:^",
