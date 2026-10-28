@@ -214,12 +214,17 @@ const reviewLaneRowFields = {
  *
  * The flip starts the rounds-to-ready window. `headSha` is the head the gate
  * confirmed; the reviewer re-request `yeet ready` pushes next is a later head
- * and arrives as a `review` row's `commitSha`.
+ * and arrives as a `review` row's `commitSha`. `author` is the pull request
+ * author at flip time: a reply on a thread is a review submission by its
+ * author, so the fold counts the author's own submissions beside the rounds,
+ * never inside them. It is absent when the flip could not read it, which
+ * excludes nothing.
  *
  * **Example** (Record a flip)
  *
  * ```ts
  * import { ReviewLaneFlipRow } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
  *
  * const row = ReviewLaneFlipRow.make({
  *   schemaVersion: "yeet-review-lane/v1",
@@ -228,6 +233,7 @@ const reviewLaneRowFields = {
  *   recordedAt: "2026-10-27T10:00:00.000Z",
  *   headSha: "0123456789abcdef0123456789abcdef01234567",
  *   at: "2026-10-27T10:00:00.000Z",
+ *   author: O.some("octocat"),
  * })
  * console.log(row._tag) // "flip"
  * ```
@@ -240,9 +246,13 @@ export class ReviewLaneFlipRow extends S.Opaque<ReviewLaneFlipRow, { readonly br
     ...reviewLaneRowFields,
     headSha: S.NonEmptyString,
     at: S.String,
+    // The pull request author when the flip could read it; the fold keeps the
+    // author's own review submissions out of the rounds.
+    author: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
     $I.annoteSchema("ReviewLaneFlipRow", {
-      description: "yeet ready flipped the pull request to ready at this instant, on this head.",
+      description:
+        "yeet ready flipped the pull request to ready at this instant, on this head; the pull request author when the flip could read it.",
     })
   )
 ) {}
