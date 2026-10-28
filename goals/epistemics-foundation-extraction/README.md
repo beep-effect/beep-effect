@@ -32,12 +32,13 @@ Use this command for execution-capable sessions:
 ## Current phase
 
 P0-P3 extraction work shipped in #2017 (`ab6000add2`); #2019 and #2021
-fixed its Docgen, Lint Policy and JSDoc failures. The implementation repair shipped in #2315 (`559dcb6d2e`). P4 closeout verification
+fixed its Docgen, Lint Policy and JSDoc failures. The implementation repair
+shipped in #2315 (`559dcb6d2e`). P4 closeout verification
 continues in documentation-only PR #2325. Achievement requires
 verified readiness and merge evidence.
 
 The 2026-10-28 acceptance audit found the claim factory lacked the logical-key
-function required by `SPEC.md`. The closeout change supplies it, rejects
+function required by `SPEC.md`. The #2315 implementation repair supplies it, rejects
 inconsistent keys, and includes a private-workspace migration note. Both required package audits
 and documentation checks pass on the revised implementation.
 

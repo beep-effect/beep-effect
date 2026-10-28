@@ -6,7 +6,8 @@ Its accepted head is `eb0972a2ce311c376d7d8c3b3d720de39b197e3d`.
 
 Completion refresh independently verified all 15 required contexts at that head
 before merge and the passing merge-time rule-suite inventory (`4773338508`).
-All 30 head check runs completed without failure. The two Vercel deployment
+All 34 head check runs completed without failure (32 successful GitHub Actions
+runs, successful beep-reviewer and neutral CodeRabbit). The two Vercel deployment
 statuses were the standing rate-limit exceptions recorded in the PR.
 
 The local readiness monitor was interrupted at 11:11 UTC, before the remaining

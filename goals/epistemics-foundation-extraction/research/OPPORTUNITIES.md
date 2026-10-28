@@ -80,3 +80,8 @@ reporting the declared verdict absent. Post-merge `yeet monitor --summary`
 refuses because the PR is merged. Establish a documentation-only final closeout
 PR and retain its real verdict before merging. Keeping the monitor alive or
 retaining the verdict in the merge path would have prevented this extra round.
+
+Review caught a truncated check census: GitHub's default first page contained
+30 runs, while `check-runs?per_page=100` reports all 34. The complete census has
+33 successful and one neutral run, all completed before the merge. Use explicit
+pagination for counts as well as failure searches.
