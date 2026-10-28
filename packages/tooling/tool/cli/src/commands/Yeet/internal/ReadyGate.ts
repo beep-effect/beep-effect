@@ -767,7 +767,7 @@ const requireFinalCheck = Effect.fn("Yeet.requireFinalCheck")(function* (
     refused: (refused) =>
       Effect.fail(
         refuseFinalCheck(
-          `${refusal.value}; the nearest passing receipt, on ancestor ${Str.slice(0, 12)(refused.receiptHead)}, does not carry to this head: ${refused.detail}`
+          `${refusal.value}; the nearest ancestor receipt, on ${Str.slice(0, 12)(refused.receiptHead)}, does not carry to this head: ${refused.detail}`
         )
       ),
     pass: Effect.fnUntraced(function* (passed) {

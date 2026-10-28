@@ -23,7 +23,7 @@ const SCHEMA_FIRST = "standards/schema-first.inventory.jsonc";
 const EFFECT_VITEST = "standards/effect-vitest.inventory.jsonc";
 const SPEC = "goals/demo/SPEC.md";
 
-const receiptFor = (headSha: string, overrides: Partial<{ readonly verdict: "pass" | "fail" }> = {}) =>
+const receiptFor = (headSha: string, overrides: Partial<{ readonly verdict: "pass" | "fail"; readonly complete: boolean }> = {}) =>
   FinalCheckReceipt.make({
     schemaVersion: "yeet-final-check/v1",
     headSha,
@@ -157,6 +157,84 @@ describe("decideFinalCheckRefresh", () => {
 });
 
 it.layer(NodeServices.layer, { timeout: "60 seconds" })("checkFinalCheckRefresh against a real main merge", (it) => {
+  it.effect("returns none without receipts and ignores non-ancestor and non-JSON entries", () =>
+    Effect.gen(function* () {
+      const { repoRoot, receiptHead, mergeHead } = yield* makeMergedLane();
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      yield* fs.remove(path.join(repoRoot, FINAL_CHECK_RECEIPT_DIR), { recursive: true });
+      assertNone(yield* checkFinalCheckRefresh(repoRoot, "main", mergeHead));
+      yield* writeFile(repoRoot, `${FINAL_CHECK_RECEIPT_DIR}/notes.txt`, "not a receipt");
+      yield* writeFile(repoRoot, `${FINAL_CHECK_RECEIPT_DIR}/broken.json`, "invalid json");
+      yield* writeReceipt(repoRoot, receiptFor(mergeHead));
+      yield* git(repoRoot, ["switch", "--quiet", "-c", "unrelated", receiptHead]);
+      const unrelated = yield* commitAll(repoRoot, "unrelated receipt");
+      yield* writeReceipt(repoRoot, receiptFor(unrelated));
+      yield* git(repoRoot, ["switch", "--quiet", "lane"]);
+      assertNone(yield* checkFinalCheckRefresh(repoRoot, "main", mergeHead));
+    })
+  );
+
+  it.effect("refuses an unreadable effect-vitest inventory at the final revision", () =>
+    Effect.gen(function* () {
+      const { repoRoot } = yield* makeMergedLane();
+      yield* writeFile(repoRoot, EFFECT_VITEST, "invalid json");
+      const finalHead = yield* commitAll(repoRoot, "lane: malformed inventory");
+      const verdict = yield* refreshAt(repoRoot, finalHead);
+      assertTrue(verdict._tag === "refused");
+      expect(verdict.reason).toBe("effect-vitest-status-drift");
+      expect(verdict.detail).toContain(finalHead);
+    })
+  );
+
+  it.effect("treats a deleted inventory as zero findings and refuses the status loss", () =>
+    Effect.gen(function* () {
+      const { repoRoot } = yield* makeMergedLane();
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      yield* fs.remove(path.join(repoRoot, EFFECT_VITEST));
+      const finalHead = yield* commitAll(repoRoot, "lane: delete inventory");
+      const verdict = yield* refreshAt(repoRoot, finalHead);
+      assertTrue(verdict._tag === "refused");
+      expect(verdict.reason).toBe("effect-vitest-status-drift");
+      expect(verdict.detail).toContain("exception +0 at the receipt, -2 at the final head");
+    })
+  );
+
+  it.effect("refuses a nearer partial receipt even when its verdict is pass", () =>
+    Effect.gen(function* () {
+      const { repoRoot, mergeHead } = yield* makeMergedLane();
+      yield* writeReceipt(repoRoot, receiptFor(mergeHead, { complete: false }));
+      yield* writeFile(repoRoot, SPEC, "# Demo\nstatus: completed-retained\n");
+      const finalHead = yield* commitAll(repoRoot, "lane: packet after partial proof");
+      const verdict = yield* refreshAt(repoRoot, finalHead);
+      assertTrue(verdict._tag === "refused");
+      expect(verdict.reason).toBe("ancestor-receipt-not-passing");
+      expect(verdict.receiptHead).toBe(mergeHead);
+    })
+  );
+
+  it.effect("refuses a binary changed by both main and the lane", () =>
+    Effect.gen(function* () {
+      const { repoRoot } = yield* makeMergedLane();
+      yield* writeFile(repoRoot, "src/data.bin", "\0lane");
+      const receiptHead = yield* commitAll(repoRoot, "lane: binary");
+      yield* writeReceipt(repoRoot, receiptFor(receiptHead));
+      yield* git(repoRoot, ["switch", "--quiet", "main"]);
+      yield* writeFile(repoRoot, "src/data.bin", "\0main");
+      yield* commitAll(repoRoot, "main: binary");
+      yield* git(repoRoot, ["switch", "--quiet", "lane"]);
+      const merge = yield* runRepoCommandCapture("git", ["merge", "--no-ff", "--no-edit", "main"], repoRoot);
+      expect(merge.exitCode).toBe(1);
+      yield* writeFile(repoRoot, "src/data.bin", "\0resolved");
+      const finalHead = yield* commitAll(repoRoot, "lane: resolve binary conflict");
+      const verdict = yield* refreshAt(repoRoot, finalHead);
+      assertTrue(verdict._tag === "refused");
+      expect(verdict.reason).toBe("own-change-outside-allowlist");
+      expect(verdict.detail).toContain("src/data.bin");
+    })
+  );
+
   it.effect("passes a bare main merge: main's own code and inventory changes are not the lane's", () =>
     Effect.gen(function* () {
       const { repoRoot, receiptHead, mergeHead } = yield* makeMergedLane();

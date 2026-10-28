@@ -68,10 +68,12 @@ A head F with no receipt of its own may carry the receipt of an ancestor R
 merge after final-check does not force a second ~45 minute run. `yeet ready`
 applies the rule only when F has no receipt at all; a failing or partial
 receipt on F always refuses. It picks the nearest strict ancestor with a
-complete passing receipt, takes MBR = merge-base(R, base) and
+receipt of any verdict and refuses if that receipt failed or was partial. For
+a complete passing receipt, it takes MBR = merge-base(R, base) and
 MBF = merge-base(F, base), and counts a path from `git diff R F` as the lane's
 own change when it is absent from `git diff MBR MBF` or when its lane patch
-(`MBR..R` against `MBF..F`, compared like `git patch-id`) differs. It passes
+(`MBR..R` against `MBF..F`, compared verbatim after dropping per-file identity
+headers and hunk line numbers) differs. It passes
 only when every own change is on the allowlist:
 
 - regenerated standards inventories: `jsdoc-documentation.inventory.{jsonc,md}`,

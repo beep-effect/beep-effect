@@ -15,8 +15,8 @@
  * Own changes are computed against MBR = merge-base(R, base) and
  * MBF = merge-base(F, base). A path in `git diff R F` is the lane's own change
  * when it is absent from `git diff MBR MBF`, or when the lane's patch for it
- * differs (`MBR..R` against `MBF..F`, compared the way `git patch-id` does,
- * ignoring whitespace and hunk line numbers). Every own change must be on the
+ * differs (`MBR..R` against `MBF..F`, compared verbatim after dropping
+ * per-file identity headers and hunk line numbers). Every own change must be on the
  * allowlist: the tool-regenerated standards inventories, or goal-packet
  * `SPEC.md`, `PLAN.md`, `README.md`, `ops/manifest.json` and reuse ledgers.
  * Code, tests and config always need a full final-check.
@@ -347,8 +347,8 @@ const isAncestor = (repoRoot: string, ancestor: string, head: string) =>
   );
 
 /**
- * Find the nearest strict ancestor of a head that carries a complete, passing
- * final-check receipt.
+ * Find the nearest strict ancestor of a head that carries a final-check receipt
+ * of any verdict.
  *
  * **Details**
  *
@@ -426,7 +426,7 @@ export const findFinalCheckRefreshReceipt = Effect.fn("Yeet.findFinalCheckRefres
  * @param repoRoot - Checkout holding the heads and the receipts.
  * @param base - Base ref main merges come from, usually `origin/main`.
  * @param finalHead - The head the flip would mark ready.
- * @returns The verdict for the nearest passing ancestor receipt, or none.
+ * @returns The verdict for the nearest ancestor receipt of any verdict, or none.
  * @category workflows
  * @since 0.0.0
  */
