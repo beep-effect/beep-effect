@@ -6,10 +6,15 @@
  * malformed declaration silently discovered a different package set. A
  * malformed `workspaces` now fails the read.
  *
- * Member directories come from `@beep/repo-workspaces` `WorkspaceDiscovery`
- * (4-A1), post-filtered through `resolvePathWithinRoot` because the kit follows
- * links: a member whose real path leaves the root is skipped, and a kept member
- * is recorded at its canonical path.
+ * Members come from `@beep/repo-workspaces` `WorkspaceDiscovery` (4-A1), run
+ * with `containWithinRoot`: a member directory, wildcard base or `**` descent
+ * whose real path leaves the root is skipped before its manifest is read, as
+ * the retired expander skipped an escaping `*` entry unread (CSF-018). A kept
+ * member is recorded at its repo-relative path as enumerated, lexically under
+ * the root as given. The kit's tolerant projection (a non-empty string `name`,
+ * a non-empty string `version` when present) must accept a member before the
+ * strict reader runs, and a non-empty `pnpm-workspace.yaml` `packages` list
+ * takes precedence over `workspaces`.
  */
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { discoverWorkspacePackages } from "@beep/repo-cli/test/Quality";
@@ -151,17 +156,65 @@ it.layer(Layer.provideMerge(MemoryFileSystem.layer, NodeServices.layer), { timeo
           strictEqual(unnamed.message, `Failed to decode package manifest ${badManifest}.`);
         })
       );
+
+      it.effect("fails a member the kit's projection rejects: a numeric or empty version, or an empty name", () =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const { repoRoot, path } = yield* writeRepository({ workspaces: ["packages/*"] });
+          const memberManifest = path.join(repoRoot, "packages", "demo", "package.json");
+
+          for (const manifest of [
+            { name: "@beep/demo", version: 1 },
+            { name: "@beep/demo", version: "" },
+            { name: "" },
+          ]) {
+            yield* fs.writeFileString(memberManifest, yield* encodeJson(manifest));
+            const error = yield* Effect.flip(discoverWorkspacePackages(repoRoot, path));
+            strictEqual(error.message, `Failed to decode package manifest ${memberManifest}.`);
+          }
+        })
+      );
+
+      it.effect("reads a non-empty pnpm-workspace.yaml packages list before workspaces", () =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const { repoRoot, path } = yield* writeRepository({ workspaces: ["packages/*"] });
+          yield* writeManifest(path.join(repoRoot, "tools", "lint"), { name: "@beep/lint" });
+          yield* fs.writeFileString(path.join(repoRoot, "pnpm-workspace.yaml"), "packages:\n  - tools/*\n");
+
+          deepStrictEqual(rows(yield* discoverWorkspacePackages(repoRoot, path)), [
+            "@beep/lint=tools/lint",
+            "@beep/root=.",
+          ]);
+        })
+      );
+
+      it.effect("fails a malformed pnpm-workspace.yaml as a workspace config decode", () =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const { repoRoot, path } = yield* writeRepository({ workspaces: ["packages/*"] });
+          const config = path.join(repoRoot, "pnpm-workspace.yaml");
+          yield* fs.writeFileString(config, "packages: [\n");
+
+          const error = yield* Effect.flip(discoverWorkspacePackages(repoRoot, path));
+          strictEqual(error.message, `Failed to decode workspace config ${config}.`);
+        })
+      );
     });
   }
 );
 
+const scratchRepository = Effect.fn(function* (prefix: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const scratch = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix }));
+  return { fs, path, scratch, repoRoot: path.join(scratch, "repo") };
+});
+
 it.layer(NodeServices.layer, { timeout: "30 seconds" })("QualityArtifactSupport workspace symlinks", (it) => {
-  it.effect("skips a member whose real path leaves the root and records an inside link at its target", () =>
+  it.effect("skips a member whose real path leaves the root and keeps a member behind an in-root link", () =>
     Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const scratch = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "qas-discovery-links-" }));
-      const repoRoot = path.join(scratch, "repo");
+      const { fs, path, scratch, repoRoot } = yield* scratchRepository("qas-discovery-links-");
       yield* writeManifest(repoRoot, { name: "@beep/root", workspaces: ["packages/*", "linked/*", "escape"] });
       yield* writeManifest(path.join(repoRoot, "packages", "real"), { name: "@beep/real" });
       yield* writeManifest(path.join(scratch, "outside"), { name: "@beep/outside" });
@@ -180,23 +233,59 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("QualityArtifactSupport 
     })
   );
 
-  it.effect("fails on an invalid manifest behind an escaping link, which the kit reads before the post-filter", () =>
+  it.effect("records a member reached through an in-root link at its link path", () =>
     Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const scratch = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "qas-discovery-links-" }));
-      const repoRoot = path.join(scratch, "repo");
-      yield* writeManifest(repoRoot, { name: "@beep/root", workspaces: ["packages/*"] });
+      const { fs, path, repoRoot } = yield* scratchRepository("qas-discovery-links-");
+      yield* writeManifest(repoRoot, { name: "@beep/root", workspaces: ["linked/*"] });
+      yield* writeManifest(path.join(repoRoot, "packages", "real"), { name: "@beep/real" });
+      yield* fs.makeDirectory(path.join(repoRoot, "linked"));
+      yield* fs.symlink(path.join(repoRoot, "packages", "real"), path.join(repoRoot, "linked", "alias"));
+
+      const packages = yield* discoverWorkspacePackages(repoRoot, path);
+
+      deepStrictEqual(rows(packages), ["@beep/real=linked/alias", "@beep/root=."]);
+      assertSome(
+        O.map(MutableHashMap.get(packages, "@beep/real"), (info) => info.absolutePath),
+        path.join(repoRoot, "linked", "alias")
+      );
+    })
+  );
+
+  it.effect("skips an invalid manifest behind an escaping link unread, under `*` and under `**`", () =>
+    Effect.gen(function* () {
+      const { fs, path, scratch, repoRoot } = yield* scratchRepository("qas-discovery-links-");
+      yield* writeManifest(repoRoot, { name: "@beep/root", workspaces: ["packages/*", "groups/**"] });
       yield* fs.makeDirectory(path.join(scratch, "outside"));
       yield* fs.writeFileString(path.join(scratch, "outside", "package.json"), "{");
+      yield* writeManifest(path.join(scratch, "outside", "deep"), { name: "@beep/deep" });
+      yield* writeManifest(path.join(repoRoot, "groups", "local"), { name: "@beep/local" });
       yield* fs.makeDirectory(path.join(repoRoot, "packages"));
       yield* fs.symlink(path.join(scratch, "outside"), path.join(repoRoot, "packages", "out"));
+      yield* fs.symlink(path.join(scratch, "outside"), path.join(repoRoot, "groups", "away"));
 
-      const error = yield* Effect.flip(discoverWorkspacePackages(repoRoot, path));
+      deepStrictEqual(rows(yield* discoverWorkspacePackages(repoRoot, path)), [
+        "@beep/local=groups/local",
+        "@beep/root=.",
+      ]);
+    })
+  );
 
-      strictEqual(
-        error.message,
-        `Failed to decode package manifest ${path.join(repoRoot, "packages", "out", "package.json")}.`
+  it.effect("keeps plain repo-relative paths for a root behind a symlinked ancestor", () =>
+    Effect.gen(function* () {
+      const { fs, path, scratch } = yield* scratchRepository("qas-discovery-links-");
+      const realRoot = path.join(scratch, "real", "repo");
+      yield* writeManifest(realRoot, { name: "@beep/root", workspaces: ["packages/*", "tools/x"] });
+      yield* writeManifest(path.join(realRoot, "packages", "a"), { name: "@beep/a" });
+      yield* writeManifest(path.join(realRoot, "tools", "x"), { name: "@beep/x" });
+      yield* fs.symlink(path.join(scratch, "real"), path.join(scratch, "alias"));
+      const repoRoot = path.join(scratch, "alias", "repo");
+
+      const packages = yield* discoverWorkspacePackages(repoRoot, path);
+
+      deepStrictEqual(rows(packages), ["@beep/a=packages/a", "@beep/root=.", "@beep/x=tools/x"]);
+      assertSome(
+        O.map(MutableHashMap.get(packages, "@beep/a"), (info) => info.absolutePath),
+        path.join(repoRoot, "packages", "a")
       );
     })
   );

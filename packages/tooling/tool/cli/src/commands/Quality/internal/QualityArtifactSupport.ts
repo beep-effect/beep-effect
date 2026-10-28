@@ -1,5 +1,5 @@
 import * as NodeURL from "node:url";
-import { resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
+import { resolvePathWithinCanonicalRoot, resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LenientManifest } from "@beep/package-json/LenientManifest";
 import { WorkspaceDiscovery } from "@beep/repo-workspaces/WorkspaceDiscovery";
@@ -10,6 +10,7 @@ import * as O from "@beep/utils/Option";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { dual, pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as Order from "effect/Order";
@@ -18,12 +19,15 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { Node } from "ts-morph";
 import { fencedLineState } from "../../../internal/jsdoc/JSDocSections.ts";
-import { manifestParser } from "../../../internal/ManifestRead.ts";
+import { manifestDecoder, manifestParser } from "../../../internal/ManifestRead.ts";
 import { runCaptured } from "../../../internal/process/index.ts";
 import { OpaqueDefect } from "../../../internal/schema/OpaqueDefect.ts";
 import { QualityScriptCommandError } from "../Quality.errors.ts";
+import type { WorkspaceDiscoveryError } from "@beep/repo-workspaces/WorkspaceDiscovery";
+import type { WorkspacePackage } from "@beep/repo-workspaces/WorkspacePackage";
 import type * as Crypto from "effect/Crypto";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import type { ManifestField } from "../../../internal/ManifestRead.ts";
 
 export { fencedLineState, jsdocCommentsFromSource } from "../../../internal/jsdoc/JSDocSections.ts";
 
@@ -128,7 +132,7 @@ export class WorkspacePackageInfo extends S.Opaque<WorkspacePackageInfo, { reado
 // four dependency buckets let coverage scope planning follow workspace-internal
 // edges to dependents; a malformed `workspaces` fails the read instead of
 // silently discovering fewer packages.
-const parsePackageJson = manifestParser([
+const MANIFEST_FIELDS: ReadonlyArray<ManifestField> = [
   "name",
   "scripts",
   "workspaces",
@@ -136,7 +140,9 @@ const parsePackageJson = manifestParser([
   "devDependencies",
   "peerDependencies",
   "optionalDependencies",
-]);
+];
+const parsePackageJson = manifestParser(MANIFEST_FIELDS);
+const decodePackageJson = manifestDecoder(MANIFEST_FIELDS);
 const decodeJsoncRecord = decodeJsoncTextAs(JsonRecord);
 
 /**
@@ -238,8 +244,9 @@ export const escapeRegExp = (value: string): string => Str.replace(/[.*+?^${}()|
  * (following symlinks via `realPath`) and rejects any target whose real path
  * leaves `root` through a symlink, an absolute path, or a `..` traversal. A
  * rejection is mapped to `Option.none` so escaping entries are silently skipped
- * by the workspace and source scanners rather than crashing the generators or
- * being parsed as in-repo source.
+ * by the source scanner rather than crashing the generators or being parsed as
+ * in-repo source. Workspace discovery keeps the same protection through the
+ * kit's `containWithinRoot` (see {@link discoverWorkspacePackages}).
  *
  * The caller's `path` service is supplied directly to the guard so this helper
  * keeps its requirement channel to `FileSystem` only and never widens callers
@@ -304,6 +311,22 @@ export const readWorkspacePackageText = Effect.fn("QualityArtifactSupport.readWo
   const packageJson = yield* parsePackageJson(content).pipe(
     QualityArtifactGeneratorError.mapError(`Failed to decode package manifest ${filePath}.`, { filePath })
   );
+  return yield* workspacePackageInfoOf(packageJson, filePath, absolutePath, relativePath);
+});
+
+/**
+ * The discovery record for one decoded workspace manifest, failing when it
+ * declares no `name`.
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
+const workspacePackageInfoOf = Effect.fnUntraced(function* (
+  packageJson: LenientManifest,
+  filePath: string,
+  absolutePath: string,
+  relativePath: string
+): Effect.fn.Return<WorkspacePackageInfo, QualityArtifactGeneratorError> {
   if (P.isUndefined(packageJson.name)) {
     return yield* QualityArtifactGeneratorError.new(
       `${filePath} does not declare a package name.`,
@@ -330,42 +353,53 @@ const readWorkspacePackage = Effect.fn("QualityArtifactSupport.readWorkspacePack
 });
 
 /**
- * The member directories `WorkspaceDiscovery` enumerates beneath `repoRoot`,
- * root excluded, root-first order kept.
+ * The generator message for a kit discovery failure, naming the file the way
+ * the retired expander did.
+ *
+ * @param error - The kit failure to describe.
+ * @returns The generator error message.
+ * @category workspaces
+ * @since 0.0.0
+ */
+const discoveryFailureMessage = (error: WorkspaceDiscoveryError): string =>
+  Match.value(error.kind).pipe(
+    Match.when("read", () => `Failed to read ${error.path}.`),
+    Match.when("invalidYaml", () => `Failed to decode workspace config ${error.path}.`),
+    Match.orElse(() => `Failed to decode package manifest ${error.path}.`)
+  );
+
+/**
+ * The members `WorkspaceDiscovery` finds beneath `repoRoot`, root excluded,
+ * enumeration order kept.
  *
  * **Details**
  *
  * The root is pinned as both the start and the ceiling of the root ascent, so
- * an enclosing workspace is never adopted. A kit failure maps onto the
- * generator error with the message the retired expander gave for the same
- * file: a member manifest that cannot be read, parsed or named fails as its
- * read or decode, a pattern that cannot be enumerated (a wildcard whose base
- * directory is absent included) as its expansion.
+ * an enclosing workspace is never adopted, and the kit runs with
+ * `containWithinRoot`, so a member directory, wildcard base or `**` descent
+ * whose real path leaves the root is skipped before its manifest is read or
+ * its tree walked (the CSF-018 traversal protection). A kit failure maps onto
+ * the generator error: a manifest that cannot be read fails as its read, a
+ * malformed `pnpm-workspace.yaml` as a workspace config decode, any other
+ * manifest failure as its decode, and a pattern that cannot be enumerated (a
+ * wildcard whose base directory is absent included) as its expansion.
  *
  * @category workspaces
  * @since 0.0.0
  */
-const discoverMemberDirectories = Effect.fn("QualityArtifactSupport.discoverMemberDirectories")(function* (
+const discoverMembers = Effect.fn("QualityArtifactSupport.discoverMembers")(function* (
   repoRoot: string,
   path: Path.Path
-): Effect.fn.Return<ReadonlyArray<string>, QualityArtifactGeneratorError, FileSystem.FileSystem> {
+): Effect.fn.Return<ReadonlyArray<WorkspacePackage>, QualityArtifactGeneratorError, FileSystem.FileSystem> {
   const roots = yield* WorkspaceRoot.make.pipe(Effect.provideService(Path.Path, path));
-  const discovery = yield* WorkspaceDiscovery.make({ cwd: repoRoot, stopAt: repoRoot }).pipe(
+  const discovery = yield* WorkspaceDiscovery.make({ cwd: repoRoot, stopAt: repoRoot, containWithinRoot: true }).pipe(
     Effect.provideService(WorkspaceRoot, roots),
     Effect.provideService(Path.Path, path)
   );
   const packages = yield* discovery.listPackages.pipe(
     Effect.catchTags({
       WorkspaceDiscoveryError: (error) =>
-        Effect.fail(
-          QualityArtifactGeneratorError.new(
-            error,
-            error.kind === "read"
-              ? `Failed to read ${error.path}.`
-              : `Failed to decode package manifest ${error.path}.`,
-            { filePath: error.path }
-          )
-        ),
+        Effect.fail(QualityArtifactGeneratorError.new(error, discoveryFailureMessage(error), { filePath: error.path })),
       WorkspacePatternError: (error) =>
         Effect.fail(
           QualityArtifactGeneratorError.new(error, `Failed to expand workspace pattern ${error.pattern}.`, {
@@ -380,11 +414,43 @@ const discoverMemberDirectories = Effect.fn("QualityArtifactSupport.discoverMemb
         ),
     })
   );
-  return pipe(
-    packages,
-    A.filter((workspacePackage) => workspacePackage.relativePath !== "."),
-    A.map((workspacePackage) => workspacePackage.path)
+  return A.filter(packages, (workspacePackage) => workspacePackage.relativePath !== ".");
+});
+
+/**
+ * One discovered member as a Quality discovery record, or `Option.none` when
+ * its real path leaves the canonical root.
+ *
+ * **Details**
+ *
+ * The containment check is a guard behind the kit's own `containWithinRoot`.
+ * The member is recorded at its repo-relative path as the kit enumerated it,
+ * lexically under `repoRoot`, and its as-read manifest is decoded by the same
+ * strict reader as the root, without reading the file again.
+ *
+ * @category workspaces
+ * @since 0.0.0
+ */
+const containedMember = Effect.fn("QualityArtifactSupport.containedMember")(function* (
+  member: WorkspacePackage,
+  canonicalRoot: string,
+  repoRoot: string,
+  path: Path.Path
+): Effect.fn.Return<O.Option<WorkspacePackageInfo>, QualityArtifactGeneratorError, FileSystem.FileSystem> {
+  const contained = yield* resolvePathWithinCanonicalRoot({ canonicalRoot, candidate: member.path }).pipe(
+    Effect.provideService(Path.Path, path),
+    Effect.as(true),
+    Effect.orElseSucceed(thunkFalse)
   );
+  if (!contained) {
+    return O.none();
+  }
+  const absolutePath = path.join(repoRoot, member.relativePath);
+  const filePath = path.join(absolutePath, "package.json");
+  const packageJson = yield* decodePackageJson(member.manifestRecord).pipe(
+    QualityArtifactGeneratorError.mapError(`Failed to decode package manifest ${filePath}.`, { filePath })
+  );
+  return O.some(yield* workspacePackageInfoOf(packageJson, filePath, absolutePath, member.relativePath));
 });
 
 /**
@@ -395,12 +461,16 @@ const discoverMemberDirectories = Effect.fn("QualityArtifactSupport.discoverMemb
  * The root manifest is read first, so a malformed `workspaces` fails before
  * any member is enumerated, and a root without `workspaces` is a one-package
  * workspace. Members come from `@beep/repo-workspaces` `WorkspaceDiscovery`
- * (discovery only). The kit follows links, so every member directory is
- * post-filtered through `resolvePathWithinRoot`: one whose real path leaves
- * the root is skipped, and a kept member is recorded at its canonical path.
- * Each kept member is then read through the same strict `package.json`
- * reader as the root. A later member with an earlier member's name replaces
- * it.
+ * (discovery only) run with `containWithinRoot`, and each is checked again
+ * against the root's real path through `resolvePathWithinCanonicalRoot`
+ * before it is kept. The kit's tolerant projection must accept a member
+ * first: a non-empty string `name` and, when present, a non-empty string
+ * `version`; a non-empty `pnpm-workspace.yaml` `packages` list takes
+ * precedence over `workspaces`, as pnpm reads it. The strict `package.json`
+ * reader then decodes the member's as-read manifest. Members are recorded at
+ * their repo-relative paths under `repoRoot` as given, so a root behind a
+ * symlinked ancestor keeps plain relative paths. A later member with an
+ * earlier member's name replaces it.
  *
  * @category workspaces
  * @since 0.0.0
@@ -420,16 +490,17 @@ export const discoverWorkspacePackages = Effect.fn("QualityArtifactSupport.disco
     return packages;
   }
 
-  for (const memberDirectory of yield* discoverMemberDirectories(repoRoot, path)) {
-    const canonicalMember = yield* resolveEntryWithinRoot(repoRoot, memberDirectory, path);
-    if (O.isNone(canonicalMember)) {
-      continue;
-    }
-    const workspacePackage = yield* readWorkspacePackage(
-      canonicalMember.value,
-      repoRelative(canonicalMember.value, repoRoot, path),
-      path
+  const members = yield* discoverMembers(repoRoot, path);
+  const fs = yield* FileSystem.FileSystem;
+  const canonicalRoot = yield* fs
+    .realPath(repoRoot)
+    .pipe(
+      QualityArtifactGeneratorError.mapError(`Failed to resolve workspace root ${repoRoot}.`, { filePath: repoRoot })
     );
+  const kept = yield* Effect.forEach(members, (member) => containedMember(member, canonicalRoot, repoRoot, path), {
+    concurrency: 10,
+  });
+  for (const workspacePackage of A.getSomes(kept)) {
     MutableHashMap.set(packages, workspacePackage.name, workspacePackage);
   }
 
