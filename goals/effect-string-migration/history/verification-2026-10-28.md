@@ -30,10 +30,29 @@ agent stopped that proof, confirmed its service was inactive with no main PID,
 and moved publication to the hosted path. Its full-proof result is **not a
 pass**. The completed cheap-gates results remain evidence only for those gates.
 
-A separate, admitted `bun run beep ci lane check --summarize` without affected
-filtering must provide the full compiler-graph census. Hosted readiness and a
-verified completion receipt for the new final PR remain required. This document
-will record those results once they exist.
+## Full compiler census
+
+The separately admitted `bun run beep ci lane check --summarize`, with two
+workers and no affected-file filtering, exited zero on stable head
+`3c36b00e29618aca3740c897e44f024e4cc05845`. It completed 337 successful Turbo
+tasks, including all 187 package Check tasks selected by the full graph. There
+were 334 cache hits and three executions; the Check task subset had 186 hits
+and one execution. No task had a nonzero execution exit. The current rule-map
+validator confirms that `preferEffectString` is an error in every copied map,
+so this passing graph has zero String findings without a baseline or suppression.
+
+Check's graph does not include the root configuration program. A separately
+admitted `bun run check:configs` compiled `tsconfig.configs.json` with the same
+Effect-patched tsrs and exited zero on that same stable head. This covers root
+TypeScript and repository Vitest configuration files. Infra is included as
+`@beep/infra#check` in the full graph.
+
+The raw command results and Turbo task hashes are retained locally under
+`.beep/effect-string-*-check-result.json` and
+`.beep/effect-string-full-check-tasks.json`. Subsequent closeout commits change
+only this goal packet: no checked source, compiler program, dependency or rule
+configuration changes. Hosted readiness and verified merge evidence for #2318
+remain required before claiming completion.
 
 ## Historical evidence retained
 

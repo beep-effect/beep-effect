@@ -46,12 +46,12 @@ Higher sources outrank lower sources when they conflict.
 
 ## Acceptance Criteria
 
-- [ ] `@effect/tsgo` is at 0.55 or later and `preferEffectString` is `error`
+- [x] `@effect/tsgo` is at 0.55 or later and `preferEffectString` is `error`
       in the compiler profiles consumed by Check.
-- [ ] Repo-wide Check completes with zero `preferEffectString` findings across
+- [x] Repo-wide Check completes with zero `preferEffectString` findings across
       every Check compiler program, and `bun run beep quality tsgo-rules` passes.
-- [ ] The declared-off ledger is unchanged (5 rules).
-- [ ] No unrelated refactors or formatting churn.
+- [x] The declared-off ledger is unchanged (5 rules).
+- [x] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
 

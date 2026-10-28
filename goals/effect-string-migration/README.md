@@ -34,7 +34,8 @@ Use this command for execution-capable sessions:
 Implementation waves 1–7 are merged, including the arming PR [#2027](https://github.com/beep-effect/beep-effect/pull/2027).
 The packet remains active: its original completion proposal does not have verified
 merge-time readiness. The [fresh closeout PR #2318](https://github.com/beep-effect/beep-effect/pull/2318)
-is requalifying the current Check graph and will supply its exact-head Yeet verdict. The original
+has passed the full Check graph and root configuration program. Its exact-head
+readiness and merge verification remain open. The original
 2026-10-22 reflection is retained as historical implementation evidence; the
 [2026-10-28 reflection](history/reflections/2026-10-28-codex.md) records the
 completion audit.
@@ -47,7 +48,14 @@ At closeout base `d3c684edea26987cea6384b296d86960b0bb5d1a`, the catalog pins
 `@effect/tsgo` 0.59.0. The installed Effect-patched tsrs identifies that build.
 `preferEffectString` is `error` in the root map and all four copied profiles.
 The rule-map audit and reflection validation passed in the owning clone; they
-will be rerun on the final closeout head. A fresh repo-wide Check remains required.
+will be rerun on the final closeout head. The full Check graph and root
+configuration program passed at `3c36b00e29618aca3740c897e44f024e4cc05845`.
+Check completed 337 successful Turbo tasks, including 187 package Check tasks;
+334 tasks were cache hits and three executed. The root configuration program
+also exited zero. Both runs observed a stable head and reported no String
+findings. Their full-source coverage is recorded in the
+[verification receipt](history/verification-2026-10-28.md). Subsequent closeout
+edits change this packet only, preserving the checked compiler inputs.
 
 `bun run beep goals completion refresh --slug effect-string-migration`
 returned `unsatisfied` for #2027. GitHub's merge-push rule suite

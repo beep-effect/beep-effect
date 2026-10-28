@@ -10,9 +10,9 @@ Status: `in-progress`
 | --- | --- | --- | --- |
 | P0 Research | complete | Inspect source hierarchy and confirm scope. | Required facts and blockers are recorded. |
 | P1 Implement | complete | Migrate the census sites wave by wave, then arm the rule. | Acceptance criteria are met. |
-| P2 Verify | in-progress | Run required checks and capture evidence. | Verification is green or blockers are documented. |
+| P2 Verify | complete | Run required checks and capture evidence. | Verification is green or blockers are documented. |
 | P3 Yeet: PR to mergeable | in-progress | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
-| P4 Close | in-progress | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
+| P4 Close | complete | Write the closeout reflection and propose closure. | Evidence and reflection are current; the typed proposal retains active lifecycle until completion evidence verifies. |
 
 ## Waves
 
@@ -58,11 +58,13 @@ The 2026-10-28 completion refresh rejects the historical #2027 proposal. Keep
 its failed merge-time evidence intact. The `chore/effect-string-closeout` lane
 must:
 
-1. Run the current full Check graph and attribute any failures, with zero
-   `preferEffectString` findings required across every compiler program.
-2. Rerun `quality tsgo-rules`, packet checks and reflection validation.
-3. Publish the audit and reflection, then bind `proposedCloseout.finalPullRequest`
-   to that PR while keeping operative lifecycle active.
+1. Full Check and the root configuration program passed at `3c36b00e29`: 337
+   successful Turbo tasks, including 187 package Check tasks, and zero
+   `preferEffectString` findings. The full graph had no affected-file filter.
+2. `quality tsgo-rules`, packet checks and reflection validation passed; rerun
+   the cheap packet validators after the evidence update.
+3. The audit and reflection are published in draft #2318, now named by
+   `proposedCloseout.finalPullRequest`; operative lifecycle stays active.
 4. Pass content-final checks and capture a head-bound `--until-ready` Yeet
    verdict; merge only after required checks pass and review gates hold.
 5. Run completion refresh against the new final PR and require `verified`
