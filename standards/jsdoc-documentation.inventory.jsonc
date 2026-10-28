@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-28T01:28:37.649Z",
+  "generatedAt": "2026-10-28T02:12:25.225Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -66,7 +66,7 @@
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 60,
     "publicModules": 3546,
-    "publicExports": 25242,
+    "publicExports": 25244,
     "openModules": 330,
     "openExports": 235,
     "missingExportExamples": 7,
@@ -218958,7 +218958,7 @@
         "srcDir": "src",
         "sourceFileCount": 7,
         "publicModuleCount": 7,
-        "publicExportCount": 29
+        "publicExportCount": 31
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -219082,7 +219082,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 4,
+          "exportCount": 6,
           "remediationStatus": "resolved"
         },
         {
@@ -219409,8 +219409,8 @@
           "exportKind": "const",
           "filePath": "src/SectionDialect.ts",
           "repoPath": "packages/foundation/modeling/managed-section/src/SectionDialect.ts",
-          "line": 42,
-          "anchor": "packages-foundation-modeling-managed-section-src-sectiondialect-ts-42-eol",
+          "line": 43,
+          "anchor": "packages-foundation-modeling-managed-section-src-sectiondialect-ts-43-eol",
           "currentTags": [
             "@public",
             "@category",
@@ -219432,8 +219432,8 @@
           "exportKind": "type",
           "filePath": "src/SectionDialect.ts",
           "repoPath": "packages/foundation/modeling/managed-section/src/SectionDialect.ts",
-          "line": 51,
-          "anchor": "packages-foundation-modeling-managed-section-src-sectiondialect-ts-51-eol",
+          "line": 52,
+          "anchor": "packages-foundation-modeling-managed-section-src-sectiondialect-ts-52-eol",
           "currentTags": [
             "@category",
             "@since"
@@ -219454,8 +219454,31 @@
           "exportKind": "class",
           "filePath": "src/SectionDialect.ts",
           "repoPath": "packages/foundation/modeling/managed-section/src/SectionDialect.ts",
-          "line": 75,
-          "anchor": "packages-foundation-modeling-managed-section-src-sectiondialect-ts-75-sectionrendererror",
+          "line": 76,
+          "anchor": "packages-foundation-modeling-managed-section-src-sectiondialect-ts-76-sectionrendererror",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SectionMarkers",
+          "exportKind": "class",
+          "filePath": "src/SectionDialect.ts",
+          "repoPath": "packages/foundation/modeling/managed-section/src/SectionDialect.ts",
+          "line": 413,
+          "anchor": "packages-foundation-modeling-managed-section-src-sectiondialect-ts-413-sectionmarkers",
           "currentTags": [
             "@public",
             "@category",
@@ -219477,8 +219500,31 @@
           "exportKind": "class",
           "filePath": "src/SectionDialect.ts",
           "repoPath": "packages/foundation/modeling/managed-section/src/SectionDialect.ts",
-          "line": 382,
-          "anchor": "packages-foundation-modeling-managed-section-src-sectiondialect-ts-382-sectiondialect",
+          "line": 541,
+          "anchor": "packages-foundation-modeling-managed-section-src-sectiondialect-ts-541-sectiondialect",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "LiteralMarkerDialect",
+          "exportKind": "class",
+          "filePath": "src/SectionDialect.ts",
+          "repoPath": "packages/foundation/modeling/managed-section/src/SectionDialect.ts",
+          "line": 1018,
+          "anchor": "packages-foundation-modeling-managed-section-src-sectiondialect-ts-1018-literalmarkerdialect",
           "currentTags": [
             "@public",
             "@category",
@@ -219734,12 +219780,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export { type Eol, SectionDialect, SectionRenderError } from \"./SectionDialect.ts\";",
+          "symbolName": "export {\n  type Eol,\n  LiteralMarkerDialect,\n  SectionDialect,\n  SectionMarkers,\n  SectionRenderError,\n} from \"./SectionDialect.ts\";",
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/modeling/managed-section/src/index.ts",
           "line": 20,
-          "anchor": "packages-foundation-modeling-managed-section-src-index-ts-20-export-type-eol-sectiondialect-sectionrendererror-from-sectiondialect-ts",
+          "anchor": "packages-foundation-modeling-managed-section-src-index-ts-20-export-type-eol-literalmarkerdialect-sectiondialect-sectionmarkers-sectionrendererror-from-sectiondialect-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -219757,8 +219803,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/modeling/managed-section/src/index.ts",
-          "line": 21,
-          "anchor": "packages-foundation-modeling-managed-section-src-index-ts-21-export-sectiondocument-sectionparseerror-type-sectionreconciliation-from-sectiondocument-ts",
+          "line": 27,
+          "anchor": "packages-foundation-modeling-managed-section-src-index-ts-27-export-sectiondocument-sectionparseerror-type-sectionreconciliation-from-sectiondocument-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -219776,8 +219822,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/modeling/managed-section/src/index.ts",
-          "line": 22,
-          "anchor": "packages-foundation-modeling-managed-section-src-index-ts-22-export-checkoutcome-syncoutcome-from-sectionoutcome-ts",
+          "line": 28,
+          "anchor": "packages-foundation-modeling-managed-section-src-index-ts-28-export-checkoutcome-syncoutcome-from-sectionoutcome-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -490062,8 +490108,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Explore/Atlas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Explore/Atlas.ts",
-          "line": 57,
-          "anchor": "packages-tooling-tool-cli-src-commands-explore-atlas-ts-57-exploration-atlas-path",
+          "line": 62,
+          "anchor": "packages-tooling-tool-cli-src-commands-explore-atlas-ts-62-exploration-atlas-path",
           "currentTags": [
             "@category",
             "@since"
@@ -490084,8 +490130,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Explore/Atlas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Explore/Atlas.ts",
-          "line": 76,
-          "anchor": "packages-tooling-tool-cli-src-commands-explore-atlas-ts-76-explorationstatus",
+          "line": 81,
+          "anchor": "packages-tooling-tool-cli-src-commands-explore-atlas-ts-81-explorationstatus",
           "currentTags": [
             "@category",
             "@since"
@@ -490106,8 +490152,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Explore/Atlas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Explore/Atlas.ts",
-          "line": 87,
-          "anchor": "packages-tooling-tool-cli-src-commands-explore-atlas-ts-87-explorationstatus",
+          "line": 92,
+          "anchor": "packages-tooling-tool-cli-src-commands-explore-atlas-ts-92-explorationstatus",
           "currentTags": [
             "@see",
             "@category",
@@ -490129,8 +490175,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Explore/Atlas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Explore/Atlas.ts",
-          "line": 103,
-          "anchor": "packages-tooling-tool-cli-src-commands-explore-atlas-ts-103-explorationstage",
+          "line": 108,
+          "anchor": "packages-tooling-tool-cli-src-commands-explore-atlas-ts-108-explorationstage",
           "currentTags": [
             "@category",
             "@since"
@@ -490151,8 +490197,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Explore/Atlas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Explore/Atlas.ts",
-          "line": 114,
-          "anchor": "packages-tooling-tool-cli-src-commands-explore-atlas-ts-114-explorationstage",
+          "line": 119,
+          "anchor": "packages-tooling-tool-cli-src-commands-explore-atlas-ts-119-explorationstage",
           "currentTags": [
             "@see",
             "@category",
@@ -490174,8 +490220,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Explore/Atlas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Explore/Atlas.ts",
-          "line": 137,
-          "anchor": "packages-tooling-tool-cli-src-commands-explore-atlas-ts-137-explorationprojectionauthority",
+          "line": 142,
+          "anchor": "packages-tooling-tool-cli-src-commands-explore-atlas-ts-142-explorationprojectionauthority",
           "currentTags": [
             "@category",
             "@since"
@@ -490196,8 +490242,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Explore/Atlas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Explore/Atlas.ts",
-          "line": 150,
-          "anchor": "packages-tooling-tool-cli-src-commands-explore-atlas-ts-150-explorationprojectionauthority",
+          "line": 155,
+          "anchor": "packages-tooling-tool-cli-src-commands-explore-atlas-ts-155-explorationprojectionauthority",
           "currentTags": [
             "@see",
             "@category",
@@ -490219,8 +490265,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Explore/Atlas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Explore/Atlas.ts",
-          "line": 173,
-          "anchor": "packages-tooling-tool-cli-src-commands-explore-atlas-ts-173-explorationmanifestlinks",
+          "line": 178,
+          "anchor": "packages-tooling-tool-cli-src-commands-explore-atlas-ts-178-explorationmanifestlinks",
           "currentTags": [
             "@category",
             "@since"
@@ -490241,8 +490287,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Explore/Atlas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Explore/Atlas.ts",
-          "line": 204,
-          "anchor": "packages-tooling-tool-cli-src-commands-explore-atlas-ts-204-explorationmanifestentry",
+          "line": 209,
+          "anchor": "packages-tooling-tool-cli-src-commands-explore-atlas-ts-209-explorationmanifestentry",
           "currentTags": [
             "@category",
             "@since"
@@ -490263,8 +490309,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Explore/Atlas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Explore/Atlas.ts",
-          "line": 245,
-          "anchor": "packages-tooling-tool-cli-src-commands-explore-atlas-ts-245-explorationmanifest",
+          "line": 250,
+          "anchor": "packages-tooling-tool-cli-src-commands-explore-atlas-ts-250-explorationmanifest",
           "currentTags": [
             "@category",
             "@since"
@@ -490285,8 +490331,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Explore/Atlas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Explore/Atlas.ts",
-          "line": 276,
-          "anchor": "packages-tooling-tool-cli-src-commands-explore-atlas-ts-276-explorationprojectionstate",
+          "line": 281,
+          "anchor": "packages-tooling-tool-cli-src-commands-explore-atlas-ts-281-explorationprojectionstate",
           "currentTags": [
             "@category",
             "@since"
@@ -490307,8 +490353,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Explore/Atlas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Explore/Atlas.ts",
-          "line": 316,
-          "anchor": "packages-tooling-tool-cli-src-commands-explore-atlas-ts-316-explorationatlasrow",
+          "line": 321,
+          "anchor": "packages-tooling-tool-cli-src-commands-explore-atlas-ts-321-explorationatlasrow",
           "currentTags": [
             "@category",
             "@since"
@@ -490329,8 +490375,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Explore/Atlas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Explore/Atlas.ts",
-          "line": 369,
-          "anchor": "packages-tooling-tool-cli-src-commands-explore-atlas-ts-369-explorationprojection",
+          "line": 374,
+          "anchor": "packages-tooling-tool-cli-src-commands-explore-atlas-ts-374-explorationprojection",
           "currentTags": [
             "@category",
             "@since"
@@ -490351,8 +490397,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Explore/Atlas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Explore/Atlas.ts",
-          "line": 495,
-          "anchor": "packages-tooling-tool-cli-src-commands-explore-atlas-ts-495-renderexplorationatlas",
+          "line": 508,
+          "anchor": "packages-tooling-tool-cli-src-commands-explore-atlas-ts-508-renderexplorationatlas",
           "currentTags": [
             "@param",
             "@returns",
@@ -490375,8 +490421,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Explore/Atlas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Explore/Atlas.ts",
-          "line": 622,
-          "anchor": "packages-tooling-tool-cli-src-commands-explore-atlas-ts-622-buildexplorationprojection",
+          "line": 635,
+          "anchor": "packages-tooling-tool-cli-src-commands-explore-atlas-ts-635-buildexplorationprojection",
           "currentTags": [
             "@category",
             "@since"
@@ -490397,8 +490443,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Explore/Atlas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Explore/Atlas.ts",
-          "line": 742,
-          "anchor": "packages-tooling-tool-cli-src-commands-explore-atlas-ts-742-buildexplorationatlascontent",
+          "line": 755,
+          "anchor": "packages-tooling-tool-cli-src-commands-explore-atlas-ts-755-buildexplorationatlascontent",
           "currentTags": [
             "@category",
             "@since"
@@ -490419,8 +490465,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Explore/Atlas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Explore/Atlas.ts",
-          "line": 774,
-          "anchor": "packages-tooling-tool-cli-src-commands-explore-atlas-ts-774-explorationprojectiondriftpaths",
+          "line": 787,
+          "anchor": "packages-tooling-tool-cli-src-commands-explore-atlas-ts-787-explorationprojectiondriftpaths",
           "currentTags": [
             "@param",
             "@returns",
@@ -490449,8 +490495,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Explore/Atlas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Explore/Atlas.ts",
-          "line": 841,
-          "anchor": "packages-tooling-tool-cli-src-commands-explore-atlas-ts-841-writeexplorationatlas",
+          "line": 854,
+          "anchor": "packages-tooling-tool-cli-src-commands-explore-atlas-ts-854-writeexplorationatlas",
           "currentTags": [
             "@param",
             "@returns",
@@ -490473,8 +490519,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Explore/Atlas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Explore/Atlas.ts",
-          "line": 887,
-          "anchor": "packages-tooling-tool-cli-src-commands-explore-atlas-ts-887-checkexplorationatlas",
+          "line": 900,
+          "anchor": "packages-tooling-tool-cli-src-commands-explore-atlas-ts-900-checkexplorationatlas",
           "currentTags": [
             "@param",
             "@returns",
@@ -490497,8 +490543,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Explore/Atlas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Explore/Atlas.ts",
-          "line": 938,
-          "anchor": "packages-tooling-tool-cli-src-commands-explore-atlas-ts-938-exploreatlascommand",
+          "line": 951,
+          "anchor": "packages-tooling-tool-cli-src-commands-explore-atlas-ts-951-exploreatlascommand",
           "currentTags": [
             "@category",
             "@since"
@@ -524082,8 +524128,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 93,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-93-routingrole",
+          "line": 94,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-94-routingrole",
           "currentTags": [
             "@category",
             "@since"
@@ -524104,8 +524150,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 106,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-106-routingrole",
+          "line": 107,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-107-routingrole",
           "currentTags": [
             "@see",
             "@category",
@@ -524127,8 +524173,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 122,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-122-routingroleoptions",
+          "line": 123,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-123-routingroleoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -524149,8 +524195,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 138,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-138-routingroleis",
+          "line": 139,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-139-routingroleis",
           "currentTags": [
             "@category",
             "@since"
@@ -524171,8 +524217,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 174,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-174-routingsurface",
+          "line": 175,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-175-routingsurface",
           "currentTags": [
             "@category",
             "@since"
@@ -524193,8 +524239,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 187,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-187-routingsurface",
+          "line": 188,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-188-routingsurface",
           "currentTags": [
             "@see",
             "@category",
@@ -524216,8 +524262,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 203,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-203-routingsurfaceoptions",
+          "line": 204,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-204-routingsurfaceoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -524238,8 +524284,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 219,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-219-routingsurfaceis",
+          "line": 220,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-220-routingsurfaceis",
           "currentTags": [
             "@category",
             "@since"
@@ -524260,8 +524306,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 271,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-271-surfaceeffortdomain",
+          "line": 272,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-272-surfaceeffortdomain",
           "currentTags": [
             "@category",
             "@since"
@@ -524282,8 +524328,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 311,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-311-iseffortallowedonsurface",
+          "line": 312,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-312-iseffortallowedonsurface",
           "currentTags": [
             "@param",
             "@returns",
@@ -524306,8 +524352,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 355,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-355-modelbinding",
+          "line": 356,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-356-modelbinding",
           "currentTags": [
             "@category",
             "@since"
@@ -524328,8 +524374,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 396,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-396-targetroot",
+          "line": 397,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-397-targetroot",
           "currentTags": [
             "@category",
             "@since"
@@ -524350,8 +524396,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 409,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-409-targetroot",
+          "line": 410,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-410-targetroot",
           "currentTags": [
             "@see",
             "@category",
@@ -524373,8 +524419,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 425,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-425-targetrootis",
+          "line": 426,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-426-targetrootis",
           "currentTags": [
             "@category",
             "@since"
@@ -524395,8 +524441,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 442,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-442-targetid",
+          "line": 443,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-443-targetid",
           "currentTags": [
             "@category",
             "@since"
@@ -524417,8 +524463,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 456,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-456-targetid",
+          "line": 457,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-457-targetid",
           "currentTags": [
             "@see",
             "@category",
@@ -524440,8 +524486,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 485,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-485-locatorfield",
+          "line": 486,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-486-locatorfield",
           "currentTags": [
             "@category",
             "@since"
@@ -524462,8 +524508,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 498,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-498-locatorfield",
+          "line": 499,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-499-locatorfield",
           "currentTags": [
             "@see",
             "@category",
@@ -524485,8 +524531,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 515,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-515-locatorfieldis",
+          "line": 516,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-516-locatorfieldis",
           "currentTags": [
             "@category",
             "@since"
@@ -524507,8 +524553,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 542,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-542-locatorbinding",
+          "line": 543,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-543-locatorbinding",
           "currentTags": [
             "@category",
             "@since"
@@ -524529,8 +524575,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 577,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-577-bindingfilter",
+          "line": 578,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-578-bindingfilter",
           "currentTags": [
             "@category",
             "@since"
@@ -524551,8 +524597,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 603,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-603-effortdisplaylabel",
+          "line": 604,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-604-effortdisplaylabel",
           "currentTags": [
             "@category",
             "@since"
@@ -524573,8 +524619,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 637,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-637-locatorrender",
+          "line": 638,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-638-locatorrender",
           "currentTags": [
             "@category",
             "@since"
@@ -524595,8 +524641,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 657,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-657-locatorrender",
+          "line": 658,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-658-locatorrender",
           "currentTags": [
             "@see",
             "@category",
@@ -524618,8 +524664,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 698,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-698-locator",
+          "line": 699,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-699-locator",
           "currentTags": [
             "@category",
             "@since"
@@ -524640,8 +524686,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 792,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-792-locator",
+          "line": 795,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-795-locator",
           "currentTags": [
             "@see",
             "@category",
@@ -524663,8 +524709,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 809,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-809-modelslocatorwrite",
+          "line": 812,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-812-modelslocatorwrite",
           "currentTags": [
             "@category",
             "@since"
@@ -524685,8 +524731,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 835,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-835-modelswritespan",
+          "line": 838,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-838-modelswritespan",
           "currentTags": [
             "@category",
             "@since"
@@ -524707,8 +524753,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 862,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-862-modelsapplymode",
+          "line": 865,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-865-modelsapplymode",
           "currentTags": [
             "@category",
             "@since"
@@ -524729,8 +524775,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 874,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-874-modelsapplymode",
+          "line": 877,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-877-modelsapplymode",
           "currentTags": [
             "@category",
             "@since"
@@ -524751,8 +524797,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 900,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-900-modelsapplyjournal",
+          "line": 903,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-903-modelsapplyjournal",
           "currentTags": [
             "@category",
             "@since"
@@ -524773,8 +524819,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 951,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-951-modelsynctarget",
+          "line": 954,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-954-modelsynctarget",
           "currentTags": [
             "@category",
             "@since"
@@ -524795,8 +524841,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 998,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-998-supersededmodel",
+          "line": 1001,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-1001-supersededmodel",
           "currentTags": [
             "@category",
             "@since"
@@ -524817,8 +524863,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 1038,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-1038-modelsmanifest",
+          "line": 1041,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-1041-modelsmanifest",
           "currentTags": [
             "@category",
             "@since"
@@ -524839,8 +524885,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 1065,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-1065-modelseligibilityresult",
+          "line": 1068,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-1068-modelseligibilityresult",
           "currentTags": [
             "@category",
             "@since"
@@ -524861,8 +524907,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 1086,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-1086-modelseligibilityresult",
+          "line": 1089,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-1089-modelseligibilityresult",
           "currentTags": [
             "@category",
             "@since"
@@ -525127,8 +525173,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.render.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.render.ts",
-          "line": 38,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-render-ts-38-generatedblockbegin",
+          "line": 47,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-render-ts-47-generatedblockbegin",
           "currentTags": [
             "@param",
             "@returns",
@@ -525151,8 +525197,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.render.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.render.ts",
-          "line": 56,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-render-ts-56-generatedblockend",
+          "line": 65,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-render-ts-65-generatedblockend",
           "currentTags": [
             "@param",
             "@returns",
@@ -525175,8 +525221,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.render.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.render.ts",
-          "line": 115,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-render-ts-115-expectedlocatorvalue",
+          "line": 138,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-render-ts-138-expectedlocatorvalue",
           "currentTags": [
             "@param",
             "@returns",
@@ -525199,8 +525245,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.render.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.render.ts",
-          "line": 180,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-render-ts-180-rendergeneratedblockbody",
+          "line": 203,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-render-ts-203-rendergeneratedblockbody",
           "currentTags": [
             "@param",
             "@returns",
@@ -525223,8 +525269,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.render.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.render.ts",
-          "line": 235,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-render-ts-235-extractgeneratedblock",
+          "line": 262,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-render-ts-262-extractgeneratedblock",
           "currentTags": [
             "@param",
             "@returns",
@@ -526368,8 +526414,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Observability/Observability.render.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Observability/Observability.render.ts",
-          "line": 79,
-          "anchor": "packages-tooling-tool-cli-src-commands-observability-observability-render-ts-79-harvestedspans",
+          "line": 83,
+          "anchor": "packages-tooling-tool-cli-src-commands-observability-observability-render-ts-83-harvestedspans",
           "currentTags": [
             "@param",
             "@returns",
@@ -526392,8 +526438,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Observability/Observability.render.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Observability/Observability.render.ts",
-          "line": 115,
-          "anchor": "packages-tooling-tool-cli-src-commands-observability-observability-render-ts-115-harvestedspaninstrument",
+          "line": 119,
+          "anchor": "packages-tooling-tool-cli-src-commands-observability-observability-render-ts-119-harvestedspaninstrument",
           "currentTags": [
             "@param",
             "@returns",
@@ -526416,8 +526462,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Observability/Observability.render.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Observability/Observability.render.ts",
-          "line": 150,
-          "anchor": "packages-tooling-tool-cli-src-commands-observability-observability-render-ts-150-buildcatalog",
+          "line": 154,
+          "anchor": "packages-tooling-tool-cli-src-commands-observability-observability-render-ts-154-buildcatalog",
           "currentTags": [
             "@category",
             "@since"
@@ -526438,8 +526484,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Observability/Observability.render.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Observability/Observability.render.ts",
-          "line": 197,
-          "anchor": "packages-tooling-tool-cli-src-commands-observability-observability-render-ts-197-familyspancounts",
+          "line": 201,
+          "anchor": "packages-tooling-tool-cli-src-commands-observability-observability-render-ts-201-familyspancounts",
           "currentTags": [
             "@param",
             "@returns",
@@ -526462,8 +526508,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Observability/Observability.render.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Observability/Observability.render.ts",
-          "line": 235,
-          "anchor": "packages-tooling-tool-cli-src-commands-observability-observability-render-ts-235-shardpath",
+          "line": 239,
+          "anchor": "packages-tooling-tool-cli-src-commands-observability-observability-render-ts-239-shardpath",
           "currentTags": [
             "@param",
             "@returns",
@@ -526486,8 +526532,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Observability/Observability.render.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Observability/Observability.render.ts",
-          "line": 271,
-          "anchor": "packages-tooling-tool-cli-src-commands-observability-observability-render-ts-271-shardcatalog",
+          "line": 275,
+          "anchor": "packages-tooling-tool-cli-src-commands-observability-observability-render-ts-275-shardcatalog",
           "currentTags": [
             "@param",
             "@returns",
@@ -526510,8 +526556,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Observability/Observability.render.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Observability/Observability.render.ts",
-          "line": 317,
-          "anchor": "packages-tooling-tool-cli-src-commands-observability-observability-render-ts-317-rendershardtext",
+          "line": 321,
+          "anchor": "packages-tooling-tool-cli-src-commands-observability-observability-render-ts-321-rendershardtext",
           "currentTags": [
             "@category",
             "@since"
@@ -526532,8 +526578,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Observability/Observability.render.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Observability/Observability.render.ts",
-          "line": 352,
-          "anchor": "packages-tooling-tool-cli-src-commands-observability-observability-render-ts-352-standard-section-begin",
+          "line": 372,
+          "anchor": "packages-tooling-tool-cli-src-commands-observability-observability-render-ts-372-standard-section-begin",
           "currentTags": [
             "@category",
             "@since"
@@ -526554,8 +526600,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Observability/Observability.render.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Observability/Observability.render.ts",
-          "line": 368,
-          "anchor": "packages-tooling-tool-cli-src-commands-observability-observability-render-ts-368-standard-section-end",
+          "line": 388,
+          "anchor": "packages-tooling-tool-cli-src-commands-observability-observability-render-ts-388-standard-section-end",
           "currentTags": [
             "@category",
             "@since"
@@ -526576,8 +526622,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Observability/Observability.render.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Observability/Observability.render.ts",
-          "line": 391,
-          "anchor": "packages-tooling-tool-cli-src-commands-observability-observability-render-ts-391-standard-section",
+          "line": 411,
+          "anchor": "packages-tooling-tool-cli-src-commands-observability-observability-render-ts-411-standard-section",
           "currentTags": [
             "@category",
             "@since"
@@ -526598,8 +526644,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Observability/Observability.render.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Observability/Observability.render.ts",
-          "line": 431,
-          "anchor": "packages-tooling-tool-cli-src-commands-observability-observability-render-ts-431-splicestandardsection",
+          "line": 464,
+          "anchor": "packages-tooling-tool-cli-src-commands-observability-observability-render-ts-464-splicestandardsection",
           "currentTags": [
             "@category",
             "@since"
