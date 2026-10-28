@@ -1,6 +1,8 @@
 /**
  * Pure Markdown projection over an assembled ontology.
  *
+ * **Details**
+ *
  * Renders one deterministic document per assembly: an ontology header, one
  * section per class with identity and predicate tables, and the fact list
  * grouped by predicate. Anchors derive from IRI slugs.
@@ -34,7 +36,7 @@ const $I = $OntologyId.create("Fold/markdown");
  * **Example** (Guard a link mode literal)
  *
  * ```ts import.meta.vitest name="Guard a link mode literal"
- * import { MarkdownLinkMode } from "@beep/ontology"
+ * import { MarkdownLinkMode } from "@beep/ontology/Fold.markdown"
  * import * as S from "effect/Schema"
  *
  * S.is(MarkdownLinkMode)("portable") // => true
@@ -55,7 +57,7 @@ export const MarkdownLinkMode = LiteralKit(["portable", "obsidian"]).pipe(
  * **Example** (Annotate a link mode value)
  *
  * ```ts
- * import type { MarkdownLinkMode } from "@beep/ontology"
+ * import type { MarkdownLinkMode } from "@beep/ontology/Fold.markdown"
  *
  * const mode: MarkdownLinkMode = "obsidian"
  * console.log(mode)
@@ -72,7 +74,7 @@ export type MarkdownLinkMode = typeof MarkdownLinkMode.Type;
  * **Example** (Construct portable link options)
  *
  * ```ts
- * import { MarkdownOptions } from "@beep/ontology"
+ * import { MarkdownOptions } from "@beep/ontology/Fold.markdown"
  *
  * const options = MarkdownOptions.make({ linkMode: "portable" })
  * console.log(options.linkMode)
@@ -273,7 +275,8 @@ const toMarkdownImpl = (ontology: AssembledOntology, options: MarkdownOptionsInp
  *
  * ```ts
  * import { $I as $BeepId } from "@beep/identity/packages"
- * import { fold, toMarkdown } from "@beep/ontology"
+ * import { fold } from "@beep/ontology/Fold.assembly"
+ * import { toMarkdown } from "@beep/ontology/Fold.markdown"
  * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *

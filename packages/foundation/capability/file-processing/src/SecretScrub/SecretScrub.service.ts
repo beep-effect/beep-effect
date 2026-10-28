@@ -29,7 +29,7 @@ const $I = $FileProcessingId.create("SecretScrub.service");
  * Explicit scrub service boundary with no secret resolver, storage, tool or egress capability.
  * **Example** (Inspect the service key)
  * ```ts import.meta.vitest name="Inspect the service key"
- * import { SecretScrub } from "@beep/file-processing"
+ * import * as SecretScrub from "@beep/file-processing/SecretScrub"
  * console.log(SecretScrub.SecretScrubService.key)
  * ```
  * @category services
@@ -46,7 +46,7 @@ export class SecretScrubService extends Context.Service<
  * Apply the canonical bank, mask all detected extents and return non-secret proof.
  * **Example** (Scrub public text)
  * ```ts import.meta.vitest name="Scrub public text"
- * import { SecretScrub } from "@beep/file-processing"
+ * import * as SecretScrub from "@beep/file-processing/SecretScrub"
  * import * as Effect from "effect/Effect"
  * const result = await Effect.runPromise(SecretScrub.scrubSecretText(SecretScrub.SecretScrubInput.make({ text: "public text" })))
  * console.log(result.proof.counts)
@@ -117,7 +117,7 @@ export const scrubSecretText = Effect.fn($I`scrubSecretText`)(function* (input: 
  * Pure local bank implementation of the scrub contract; the clock remains injectable.
  * **Example** (Provide the service)
  * ```ts import.meta.vitest name="Provide the service"
- * import { SecretScrub } from "@beep/file-processing"
+ * import * as SecretScrub from "@beep/file-processing/SecretScrub"
  * import * as Effect from "effect/Effect"
  * const program = Effect.gen(function* () { return (yield* SecretScrub.SecretScrubService).scrub })
  * console.log(await Effect.runPromise(program.pipe(Effect.provide(SecretScrub.SecretScrubLive))))

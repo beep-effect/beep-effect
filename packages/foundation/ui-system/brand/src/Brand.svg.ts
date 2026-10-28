@@ -33,7 +33,9 @@ const escapeXmlAttribute = (value: string): string =>
  * **Example** (Read the glasses transform)
  *
  * ```ts
- * import { beep, glassesTransform, PixelGlasses } from "@beep/brand"
+ * import { beep } from "@beep/brand/Brand.tokens"
+ * import { glassesTransform } from "@beep/brand/Brand.svg"
+ * import { PixelGlasses } from "@beep/brand/Brand.schema"
  *
  * console.log(glassesTransform(PixelGlasses.make(beep.mark.glasses)))
  * ```
@@ -93,7 +95,9 @@ const svgOpen = (width: number, height: number, label: string): string =>
  * **Example** (Render the favicon)
  *
  * ```ts
- * import { beep, MarkGround, MarkPaint, MarkSvgRequest, renderMarkSvg } from "@beep/brand"
+ * import { beep } from "@beep/brand/Brand.tokens"
+ * import { MarkGround, MarkPaint, MarkSvgRequest } from "@beep/brand/Brand.schema"
+ * import { renderMarkSvg } from "@beep/brand/Brand.svg"
  * import * as O from "effect/Option"
  *
  * const svg = renderMarkSvg(
@@ -133,7 +137,9 @@ const wordmarkText = (request: WordmarkSvgRequest): string =>
  * **Example** (Render the wordmark for dark surfaces)
  *
  * ```ts
- * import { beep, MarkPaint, renderWordmarkSvg, WordmarkSvgRequest } from "@beep/brand"
+ * import { beep } from "@beep/brand/Brand.tokens"
+ * import { MarkPaint, WordmarkSvgRequest } from "@beep/brand/Brand.schema"
+ * import { renderWordmarkSvg } from "@beep/brand/Brand.svg"
  *
  * const svg = renderWordmarkSvg(
  *   WordmarkSvgRequest.make({
