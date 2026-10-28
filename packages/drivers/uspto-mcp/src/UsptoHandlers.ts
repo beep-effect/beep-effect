@@ -1,6 +1,8 @@
 /**
  * USPTO MCP toolkit handlers.
  *
+ * **Details**
+ *
  * Each handler first resolves the shared `USPTO_API_KEY` credential via the
  * kit's `SourceAuth` registry; when absent, it returns the `api_key_required`
  * envelope directly, without calling `@beep/uspto` at all (Q6 — no live
