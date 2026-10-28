@@ -33,8 +33,8 @@ Use this command for execution-capable sessions:
 
 Implementation waves 1–7 are merged, including the arming PR [#2027](https://github.com/beep-effect/beep-effect/pull/2027).
 The packet remains active: its original completion proposal does not have verified
-merge-time readiness. A fresh closeout lane is requalifying the current Check
-graph and will supply a new final PR and exact-head Yeet verdict. The original
+merge-time readiness. The [fresh closeout PR #2318](https://github.com/beep-effect/beep-effect/pull/2318)
+is requalifying the current Check graph and will supply its exact-head Yeet verdict. The original
 2026-10-22 reflection is retained as historical implementation evidence; the
 [2026-10-28 reflection](history/reflections/2026-10-28-codex.md) records the
 completion audit.
