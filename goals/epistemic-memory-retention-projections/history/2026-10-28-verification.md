@@ -125,7 +125,7 @@ ten minutes) also parks the full local lint-policy replay. Targeted laws, native
 deprecated-API ownership audits, script typecheck, schema/test gates and package
 audits passed; exact-head hosted Lint Policy remains required. The full repository docgen replay was interrupted for history repair; full
 package audits/docgen passed for all three touched packages. The `cheap-gates`,
-`lint-policy` and `docgen` local skips must be explicit in the final-check receipt and PR
+`lint-policy`, `docgen` and `coverage` local skips must be explicit in the final-check receipt and PR
 body. No baseline is weakened.
 
 ## Preserved history and replacement PR
@@ -139,3 +139,14 @@ branch and PR are preserved and the same feature diff is committed conventionall
 on current main. The epistemic package trees are byte-identical across this
 transfer; only closeout links/evidence change afterward. The replacement PR must
 satisfy all current-head required hosted checks and the normal review window.
+
+## Bounded full-repository coverage replay
+
+The final-check replay passed lint, repository sanity, type checking and Fallow
+(including health). Nine of ten coverage shards passed, including the shards
+containing epistemic domain, use cases and server. The repository CLI shard was
+still running at ten minutes and was stopped under the standing compute rule.
+Its result is parked, not claimed green or attributed as a source failure.
+The final receipt records an explicit `coverage` skip alongside the other local
+skips; current-head hosted Test Unit and Coverage Regression remain required.
+No coverage baseline is changed.
