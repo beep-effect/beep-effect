@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `active` (P0-P2 and P4 complete 2026-10-23; P3 implementation PR #2145 merged; PR #2316 carries the alias rule repair and retained-readiness closeout; proposedCloseout completed-retained)
+Status: `active` (P0-P2 and P4 complete 2026-10-23; P3 implementation PR #2145 merged; PR #2316 merged the alias and scope repairs; final documentation closeout must retain readiness before merge; proposedCloseout completed-retained)
 
 ## Phases
 
