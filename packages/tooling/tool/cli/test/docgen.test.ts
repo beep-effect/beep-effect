@@ -230,6 +230,16 @@ const seedCheckPackage = Effect.fn("DocgenTest.seedCheckPackage")(function* (
   yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
   yield* fs.writeFileString(path.join(packageDir, "src", "index.ts"), source);
 });
+const seedUnconfiguredCheckPackage = Effect.fn("DocgenTest.seedUnconfiguredCheckPackage")(function* (
+  directory: string,
+  name: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const packageDir = path.join(process.cwd(), "packages", "foundation", "modeling", directory);
+  yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
+  yield* fs.writeFileString(path.join(packageDir, "package.json"), yield* encodeJson({ name, version: "0.0.0" }));
+});
 const withConfigEnv = <A, E, R>(
   env: { readonly [key: string]: string },
   use: Effect.Effect<A, E, R>
@@ -4237,6 +4247,196 @@ export const parseValue = (value: string): string => value.trim();
         expect(A.join(A.filter(yield* TestConsole.errorLines, isString), "\n")).toContain(
           'Invalid value for flag --package: "2 occurrences". Expected: at most 1 value'
         );
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+    { timeout: DOCGEN_COMMAND_TEST_TIMEOUT }
+  );
+
+  it.effect(
+    "checks every configured package when docgen check has no --package flag",
+    () =>
+      Effect.gen(function* () {
+        yield* temporaryRepository;
+        yield* seedCheckWorkspace;
+        yield* seedCheckPackage("identity", "@beep/identity", documentedCheckSource);
+        yield* seedCheckPackage("schema", "@beep/schema", documentedCheckSource);
+        yield* seedUnconfiguredCheckPackage("utils", "@beep/utils");
+
+        yield* runDocgenCommand(["check"]);
+
+        expect(A.filter(yield* TestConsole.logLines, isString)).toEqual([
+          "docgen: OK packages/foundation/modeling/identity",
+          "docgen: OK packages/foundation/modeling/schema",
+        ]);
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+    { timeout: DOCGEN_COMMAND_TEST_TIMEOUT }
+  );
+
+  it.effect(
+    "checks a package once when repeated --package flags name it twice",
+    () =>
+      Effect.gen(function* () {
+        yield* temporaryRepository;
+        yield* seedCheckWorkspace;
+        yield* seedCheckPackage("schema", "@beep/schema", documentedCheckSource);
+
+        yield* runDocgenCommand(["check", "-p", "@beep/schema", "-p", "packages/foundation/modeling/schema"]);
+
+        expect(A.filter(yield* TestConsole.logLines, isString)).toEqual([
+          "docgen: OK packages/foundation/modeling/schema",
+        ]);
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+    { timeout: DOCGEN_COMMAND_TEST_TIMEOUT }
+  );
+
+  it.effect(
+    "fails docgen check when a repeated --package selector names no workspace package",
+    () =>
+      Effect.gen(function* () {
+        yield* temporaryRepository;
+        yield* seedCheckWorkspace;
+        yield* seedCheckPackage("schema", "@beep/schema", documentedCheckSource);
+
+        const exit = yield* Effect.exit(runDocgenCommand(["check", "-p", "@beep/schema", "-p", "@beep/missing"]));
+
+        expect(yield* TestConsole.logLines).toEqual([]);
+        expect(yield* TestConsole.errorLines).toEqual([
+          'docgen: Could not resolve workspace package "@beep/missing". Use a package name like "@beep/schema" or a repo-relative path like "packages/foundation/modeling/schema".',
+        ]);
+        expectReportedExit(exit);
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+    { timeout: DOCGEN_COMMAND_TEST_TIMEOUT }
+  );
+
+  it.effect(
+    "generates every package named by repeated --package flags in the given order",
+    () =>
+      Effect.gen(function* () {
+        yield* temporaryRepository;
+        yield* seedCheckWorkspace;
+        yield* seedCheckPackage("identity", "@beep/identity", documentedCheckSource);
+        yield* seedCheckPackage("schema", "@beep/schema", documentedCheckSource);
+
+        const exit = yield* Effect.exit(
+          runDocgenCommand(["generate", "-p", "@beep/schema", "-p", "@beep/identity", "--json"])
+        );
+
+        const decoded = (yield* decodeUnknownJson(
+          A.join(A.filter(yield* TestConsole.logLines, isString), "\n")
+        )) as ReadonlyArray<{ readonly packagePath?: string; readonly success?: boolean }>;
+
+        expect(A.map(decoded, (result) => result.packagePath)).toEqual([
+          "packages/foundation/modeling/schema",
+          "packages/foundation/modeling/identity",
+        ]);
+        expect(A.map(decoded, (result) => result.success)).toEqual([false, false]);
+        expectReportedExit(exit);
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+    { timeout: DOCGEN_COMMAND_TEST_TIMEOUT }
+  );
+
+  it.effect(
+    "fails generate when a later repeated --package target is missing docgen.json",
+    () =>
+      Effect.gen(function* () {
+        yield* temporaryRepository;
+        yield* seedCheckWorkspace;
+        yield* seedCheckPackage("schema", "@beep/schema", documentedCheckSource);
+        yield* seedUnconfiguredCheckPackage("utils", "@beep/utils");
+
+        const exit = yield* Effect.exit(runDocgenCommand(["generate", "-p", "@beep/schema", "-p", "@beep/utils"]));
+
+        expect(yield* TestConsole.errorLines).toEqual([
+          'docgen: packages/foundation/modeling/utils is missing docgen.json. Run "bun run beep docgen init -p packages/foundation/modeling/utils" first.',
+        ]);
+        expectReportedExit(exit);
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+    { timeout: DOCGEN_COMMAND_TEST_TIMEOUT }
+  );
+
+  it.effect(
+    "reports no configured packages when generate has no selector",
+    () =>
+      Effect.gen(function* () {
+        yield* temporaryRepository;
+        yield* seedCheckWorkspace;
+        yield* seedUnconfiguredCheckPackage("utils", "@beep/utils");
+
+        yield* runDocgenCommand(["generate"]);
+
+        expect(yield* TestConsole.logLines).toEqual(["docgen: no configured packages found"]);
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+    { timeout: DOCGEN_COMMAND_TEST_TIMEOUT }
+  );
+
+  it.effect(
+    "rejects a --filter that conflicts with a later repeated --package flag on generate",
+    () =>
+      Effect.gen(function* () {
+        yield* temporaryRepository;
+        yield* seedCheckWorkspace;
+
+        const exit = yield* Effect.exit(
+          runDocgenCommand(["generate", "-p", "@beep/schema", "-p", "@beep/identity", "--filter", "@beep/schema"])
+        );
+
+        expect(yield* TestConsole.errorLines).toEqual([
+          "docgen: Received conflicting selectors --package=@beep/identity and --filter=@beep/schema.",
+        ]);
+        expectReportedExit(exit);
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+    { timeout: DOCGEN_COMMAND_TEST_TIMEOUT }
+  );
+
+  it.effect(
+    "rejects conflicting selector flags for run",
+    () =>
+      Effect.gen(function* () {
+        yield* temporaryRepository;
+        yield* seedCheckWorkspace;
+
+        const exit = yield* Effect.exit(
+          runDocgenCommand(["run", "--package", "@beep/schema", "--filter", "@beep/utils"])
+        );
+
+        expect(yield* TestConsole.errorLines).toEqual([
+          "docgen: Received conflicting selectors --package=@beep/schema and --filter=@beep/utils.",
+        ]);
+        expectReportedExit(exit);
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+    { timeout: DOCGEN_COMMAND_TEST_TIMEOUT }
+  );
+
+  it.effect(
+    "aggregates the --filter selector when it matches --package",
+    () =>
+      Effect.gen(function* () {
+        yield* temporaryRepository;
+        yield* seedCheckWorkspace;
+        yield* seedCheckPackage("schema", "@beep/schema", documentedCheckSource);
+
+        const exit = yield* Effect.exit(
+          runDocgenCommand(["aggregate", "--package", "@beep/schema", "--filter", "@beep/schema"])
+        );
+
+        expect(yield* TestConsole.errorLines).toEqual([
+          'docgen: Package "@beep/schema" does not have generated docs. Run "bun run beep docgen generate -p packages/foundation/modeling/schema" first.',
+        ]);
+        expectReportedExit(exit);
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+    { timeout: DOCGEN_COMMAND_TEST_TIMEOUT }
+  );
+
+  it.effect(
+    "aggregates every package when aggregate has no selector",
+    () =>
+      Effect.gen(function* () {
+        yield* temporaryRepository;
+        yield* seedCheckWorkspace;
+        yield* seedCheckPackage("schema", "@beep/schema", documentedCheckSource);
+
+        yield* runDocgenCommand(["aggregate"]);
+
+        expect(yield* TestConsole.logLines).toEqual(["docgen: no generated package docs found to aggregate"]);
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
     { timeout: DOCGEN_COMMAND_TEST_TIMEOUT }
   );
