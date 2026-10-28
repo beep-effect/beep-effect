@@ -10,6 +10,7 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Str from "effect/String";
+import * as Tuple from "effect/Tuple";
 import { isPlannedTurboCommand } from "../../internal/cli/EnvConfig.ts";
 import { hashFileSha256 } from "../../internal/cli/FsGuards.ts";
 import { QualityTaskStep } from "../../internal/process/index.ts";
@@ -177,7 +178,8 @@ export const cacheRuntimeStep = (step: QualityTaskStep): QualityTaskStep => {
           }
         )
       : A.empty<string>();
-  const args = A.drop(step.args, prefix.length + (step.command === "op" ? 2 : 1));
+  const unwrapped = prefix.length > 0 ? A.drop(step.args, prefix.length) : [step.command, ...step.args];
+  const args = A.drop(unwrapped, unwrapped[0] === "bunx" ? 2 : 1);
   if (
     !O.exists(A.head(args), (arg) => arg === "run") ||
     A.some(
@@ -190,9 +192,7 @@ export const cacheRuntimeStep = (step: QualityTaskStep): QualityTaskStep => {
     new URL(Str.endsWith(".ts")(import.meta.url) ? "../../bin.ts" : "../../bin.js", import.meta.url)
   );
   const child = ["--no-env-file", entrypoint, "cache", "execute", "--", ...args];
-  return QualityTaskStep.make({
-    ...step,
-    command: step.command === "op" ? "op" : "bun",
-    args: step.command === "op" ? [...prefix, "bun", ...child] : child,
-  });
+  const [command, routedArgs] =
+    prefix.length > 0 ? Tuple.make("op", [...prefix, "bun", ...child]) : Tuple.make("bun", child);
+  return QualityTaskStep.make({ ...step, command, args: routedArgs });
 };

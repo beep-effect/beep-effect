@@ -4437,10 +4437,12 @@
           "@beep/test-runner",
           "@beep/test-utils",
           "@beep/tika",
+          "@beep/tsconfig",
           "@beep/uspto",
           "@beep/utils",
           "@beep/walker",
-          "@beep/xdg"
+          "@beep/xdg",
+          "@beep/yaml"
         ],
         "allowTypeOnly": [
           "@beep/ai-provider-cli",
@@ -4497,10 +4499,12 @@
           "@beep/test-runner",
           "@beep/test-utils",
           "@beep/tika",
+          "@beep/tsconfig",
           "@beep/uspto",
           "@beep/utils",
           "@beep/walker",
-          "@beep/xdg"
+          "@beep/xdg",
+          "@beep/yaml"
         ]
       },
       {

@@ -7,6 +7,7 @@ import {
   loadYeetMonitorCommentWatermark,
   openYeetMonitorCommentStream,
   RepoRunContext,
+  readYeetReviewLaneLedger,
   renderYeetMonitorCommentStreamStopped,
   replayYeetMonitorComments,
   runStatusModeForTesting,
@@ -753,6 +754,84 @@ describe("yeet status comment replay", () => {
             expect(A.filter(commands, Str.includes(`repos/{owner}/{repo}`))).toEqual([]);
             const printed = A.join(A.map(yield* TestConsole.logLines, String), "\n");
             expect(printed).not.toContain("comment replay:");
+          }),
+        removeTempDirectory
+      )
+    );
+  });
+});
+
+// Ruling 81: the reviews the poll reads are the review lane's source. A
+// body-less approval is dropped by the stream (nothing to print) and must
+// still reach the ledger; a pending review is not an event yet; a second poll
+// that reads the same reviews writes nothing new.
+describe("yeet monitor review lane recording", () => {
+  const REVIEWED_AT = "2099-01-02T00:00:00.000Z";
+  const REVIEWED_SHA_A = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+  const REVIEWED_SHA_B = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+  const reviewsStub = (commandLine: string): CommandStub =>
+    endpointOf(commandLine) === "reviews"
+      ? {
+          exitCode: 0,
+          output: pages([
+            {
+              body: "**Actionable comments posted: 1**",
+              commit_id: REVIEWED_SHA_A,
+              html_url: `https://github.com/o/r/pull/${PR_NUMBER}#pullrequestreview-1`,
+              id: 1,
+              state: "COMMENTED",
+              submitted_at: REVIEWED_AT,
+              user: { login: "coderabbitai[bot]", type: "Bot" },
+            },
+            {
+              body: null,
+              commit_id: REVIEWED_SHA_B,
+              html_url: `https://github.com/o/r/pull/${PR_NUMBER}#pullrequestreview-2`,
+              id: 2,
+              state: "APPROVED",
+              submitted_at: REVIEWED_AT,
+              user: { login: "octocat", type: "User" },
+            },
+            {
+              body: "still typing",
+              commit_id: null,
+              html_url: `https://github.com/o/r/pull/${PR_NUMBER}#pullrequestreview-3`,
+              id: 3,
+              state: "PENDING",
+              submitted_at: null,
+              user: { login: "octocat", type: "User" },
+            },
+          ]),
+        }
+      : { exitCode: 0, output: EMPTY_PAGE };
+
+  it.layer(Layer.mergeAll(PlatformLayer, recordingSpawnerLayer(reviewsStub)), { timeout: "30 seconds" })((it) => {
+    it.effect("records every submitted review once, body or not, while the stream prints only the body", () =>
+      Effect.acquireUseRelease(
+        makeTempDirectory,
+        (root) =>
+          Effect.gen(function* () {
+            const context = monitorContext(root);
+            const watermarkRef = yield* openYeetMonitorCommentStream(context, PR_NUMBER);
+
+            const comments = yield* collectNewYeetMonitorComments(context, PR_NUMBER, watermarkRef);
+            // Not acknowledged, so the next poll reads the same reviews again.
+            const again = yield* collectNewYeetMonitorComments(context, PR_NUMBER, watermarkRef);
+
+            expect(A.map(comments, (comment) => comment.id)).toStrictEqual([1]);
+            expect(A.map(again, (comment) => comment.id)).toStrictEqual([1]);
+            const ledger = yield* readYeetReviewLaneLedger(root);
+            expect(ledger.unreadable).toBe(false);
+            expect(
+              A.map(ledger.rows, (row) =>
+                row._tag === "review"
+                  ? [row.reviewId, row.reviewer.kind, O.getOrNull(row.commitSha), row.state, row.prNumber]
+                  : [row._tag]
+              )
+            ).toEqual([
+              [1, "coderabbit", REVIEWED_SHA_A, "COMMENTED", PR_NUMBER],
+              [2, "human", REVIEWED_SHA_B, "APPROVED", PR_NUMBER],
+            ]);
           }),
         removeTempDirectory
       )

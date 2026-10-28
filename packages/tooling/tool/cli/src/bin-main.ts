@@ -9,7 +9,6 @@
  */
 
 import * as Result from "effect/Result";
-import { shouldRenderFailureCause } from "./internal/cli/FailureRendering.ts";
 import { LINT_POLICY_SUBCOMMANDS } from "./internal/cli/LintRouting.ts";
 
 const LINT_POLICY_SUBCOMMAND_NAMES: ReadonlyArray<string> = LINT_POLICY_SUBCOMMANDS;
@@ -43,20 +42,23 @@ const canUseQualityTaskFastPath = (argv: ReadonlyArray<string>): boolean =>
 const canUseCiFastPath = (argv: ReadonlyArray<string>): boolean => argv[0] === "ci" && !hasRootCliGlobalFlag(argv);
 
 const { BunCrypto, BunHttpClient, BunRuntime, BunServices } = await import("@effect/platform-bun");
-const [Cause, Console, Effect, Exit, Layer, Option, Runtime] = await Promise.all([
-  import("effect/Cause"),
-  import("effect/Console"),
-  import("effect/Effect"),
-  import("effect/Exit"),
-  import("effect/Layer"),
-  import("effect/Option"),
-  import("effect/Runtime"),
-]);
+const [ConfigProvider, Console, Effect, Layer, Logger, Option, R, Runtime, { CliRuntime }, { renderCliFailure }] =
+  await Promise.all([
+    import("effect/ConfigProvider"),
+    import("effect/Console"),
+    import("effect/Effect"),
+    import("effect/Layer"),
+    import("effect/Logger"),
+    import("effect/Option"),
+    import("effect/Record"),
+    import("effect/Runtime"),
+    import("@beep/cli-kit/CliRuntime"),
+    import("./internal/cli/FailureRendering.ts"),
+  ]);
 const { drainProcessStreams, ProcessStreamName, streamConsole, writeBestEffortLine } = await import(
   "./internal/cli/Stdout.ts"
 );
 const O = await import("effect/Option");
-const P = await import("effect/Predicate");
 
 /**
  * Foundation layer providing Node.js implementations of FileSystem, Path, and Terminal.
@@ -70,38 +72,35 @@ const P = await import("effect/Predicate");
  */
 const BaseLayers = Layer.mergeAll(BunServices.layer, BunHttpClient.layer, BunCrypto.layer);
 
+/**
+ * Effect's default loggers, provided around each whole program.
+ *
+ * `CliRuntime.main` installs `CliLogger` outermost for the failure report. The
+ * program itself keeps Effect's default loggers: `CliLogger` drops a logged
+ * `Cause` and renders an object message as `[object Object]`. Provided around
+ * the scoped program, not beside the platform layers, so a line logged while a
+ * layer builds or a finalizer runs keeps the stdout format it had before, like
+ * a command handler's line (SPEC W4-aa).
+ *
+ * @internal
+ * @category configuration
+ * @since 0.0.0
+ */
+const ProgramLoggers = Logger.layer([Logger.defaultLogger, Logger.tracerLogger]);
+
+/**
+ * Run a program under {@link ProgramLoggers}, built once like every path's own layers.
+ *
+ * @param effect - The scoped CLI program to run with Effect's default loggers provided.
+ * @returns The same program with the logger context provided and the logger scope closed on exit.
+ * @internal
+ * @category configuration
+ * @since 0.0.0
+ */
+const withProgramLoggers = <E, A>(effect: import("effect/Effect").Effect<A, E>) =>
+  Effect.scoped(Effect.flatMap(Layer.build(ProgramLoggers), (context) => Effect.provide(effect, context)));
+
 const argv = A.slice(process.argv, { start: 2 });
-
-const renderCliFailure = (exit: import("effect/Exit").Exit<unknown, unknown>) => {
-  if (Exit.isSuccess(exit)) {
-    return;
-  }
-
-  const error = Cause.squash(exit.cause);
-  if (!Runtime.getErrorReported(error)) {
-    return;
-  }
-
-  // Print the message, then the full cause. Previously this returned right after
-  // the message, so every typed error rendered as one bare sentence with no
-  // errno, path, or stack at ANY log level including --log-level debug. That is
-  // why the ai-metrics parquet-export regression sat unexplained for a month
-  // behind `Failed to read transcript input.`, and why the forwarder's systemd
-  // unit -- which captures 2000 bytes of stderr into status/latest.json -- had
-  // nothing useful to capture.
-  //
-  // The cause is appended rather than substituted so the common case still leads
-  // with the human-readable line.
-  if (P.hasProperty(error, "message") && P.isString(error.message)) {
-    writeBestEffortLine(process.stderr, process.stdout, `${error.message}\n`);
-    if (shouldRenderFailureCause(argv)) {
-      writeBestEffortLine(process.stderr, process.stdout, `${Cause.pretty(exit.cause)}\n`);
-    }
-    return;
-  }
-
-  writeBestEffortLine(process.stderr, process.stdout, `${Cause.pretty(exit.cause)}\n`);
-};
 
 /**
  * Reset the shared terminal on CLI exit.
@@ -130,39 +129,86 @@ const restoreSharedTerminal = (): void => {
   }
 };
 
+// Environment mutation belongs to this process entry point. Libraries only return defaults.
+const applyHostTurboCacheDefaults = (defaults: Readonly<Record<string, string>>): void => {
+  for (const [name, value] of R.toEntries(defaults)) Bun.env[name] = value;
+};
+
+const currentGitOrigin = (): string =>
+  Result.getOrElse(
+    Result.map(
+      Result.try(() =>
+        Bun.spawnSync({ cmd: ["git", "remote", "get-url", "origin"], stdout: "pipe", stderr: "ignore" })
+      ),
+      (result) => (result.success ? Str.trim(result.stdout.toString()) : "")
+    ),
+    () => ""
+  );
+
+const withHostTurboCacheDefaults = Effect.fn("RepoCli.withHostTurboCacheDefaults")(function* <A, E, R>(
+  effect: import("effect/Effect").Effect<A, E, R>
+) {
+  const { configStringOption, isCiSync, loadHostTurboCacheDefaults } = yield* Effect.promise(
+    () => import("./internal/cli/EnvConfig.ts")
+  );
+  const defaults = yield* loadHostTurboCacheDefaults(Bun.env, isCiSync(), currentGitOrigin());
+  const configuredApi = yield* configStringOption("TURBO_API");
+  const configuredSummary = yield* configStringOption("TURBO_RUN_SUMMARY");
+  const selectedApi = O.orElse(O.fromUndefinedOr(defaults.TURBO_API), () => configuredApi);
+  const summarize = O.isNone(configuredSummary) && O.exists(selectedApi, Str.startsWith("http://127.0.0.1:"));
+  yield* Effect.sync(() =>
+    applyHostTurboCacheDefaults(summarize ? R.set(defaults, "TURBO_RUN_SUMMARY", "true") : defaults)
+  );
+  // Rebuild the provider trie after adding defaults so effectful readers see the new keys.
+  return yield* effect.pipe(Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnv()));
+});
+
 const runRepoCliMain = <E, A>(effect: import("effect/Effect").Effect<A, E>) =>
-  BunRuntime.runMain(Effect.provideService(effect, Console.Console, streamConsole), {
-    disableErrorReporting: true,
-    // The runner's onExit only hard-exits on a signal or nonzero code; a clean
-    // success is left to event-loop drain, so any handle a child leaves behind
-    // (turbo daemon sockets, stuck bun wrappers) wedges the process after its
-    // work is done — the CI class where a lane prints success and never exits.
-    // Keep defaultTeardown as the sole exit-code authority and force the exit
-    // the runner declines on success.
-    teardown: (exit, onExit) => {
-      // A dead stderr must not abort before the drain and exit.
-      Result.try(() => renderCliFailure(exit));
-      // A dead terminal must not abort before the drain and exit.
-      Result.try(restoreSharedTerminal);
-      Runtime.defaultTeardown(exit, (code) => {
-        // The runner's onExit hard-exits on a nonzero code, so the drain must come first.
-        drainProcessStreams((failure) => {
-          if (Option.isSome(failure)) {
-            const { stream, message, droppedLines } = failure.value;
-            const channel = ProcessStreamName.is.stderr(stream) ? process.stdout : process.stderr;
-            const fallback = ProcessStreamName.is.stderr(stream) ? process.stderr : process.stdout;
-            writeBestEffortLine(
-              channel,
-              fallback,
-              `[beep-cli] exiting with code ${code}; ${stream} write failed: ${message}; ${droppedLines} line(s) dropped\n`
-            );
-          }
-          onExit(code);
-          process.exit(code);
+  BunRuntime.runMain(
+    // The stream console wraps the whole run, so the failure report the kit
+    // writes through its logger goes through the same EPIPE-latching writers.
+    Effect.provideService(
+      CliRuntime.main(withProgramLoggers(effect), {
+        // Every path builds its own platform layer inside the program.
+        platform: Layer.empty,
+        // An unknown subcommand or a bad flag exits 1, as before the kit.
+        usageExitCode: 1,
+        render: renderCliFailure(argv),
+      }),
+      Console.Console,
+      streamConsole
+    ),
+    {
+      disableErrorReporting: true,
+      // The runner's onExit only hard-exits on a signal or nonzero code; a clean
+      // success is left to event-loop drain, so any handle a child leaves behind
+      // (turbo daemon sockets, stuck bun wrappers) wedges the process after its
+      // work is done — the CI class where a lane prints success and never exits.
+      // Keep defaultTeardown as the sole exit-code authority and force the exit
+      // the runner declines on success.
+      teardown: (exit, onExit) => {
+        // A dead terminal must not abort before the drain and exit.
+        Result.try(restoreSharedTerminal);
+        Runtime.defaultTeardown(exit, (code) => {
+          // The runner's onExit hard-exits on a nonzero code, so the drain must come first.
+          drainProcessStreams((failure) => {
+            if (Option.isSome(failure)) {
+              const { stream, message, droppedLines } = failure.value;
+              const channel = ProcessStreamName.is.stderr(stream) ? process.stdout : process.stderr;
+              const fallback = ProcessStreamName.is.stderr(stream) ? process.stderr : process.stdout;
+              writeBestEffortLine(
+                channel,
+                fallback,
+                `[beep-cli] exiting with code ${code}; ${stream} write failed: ${message}; ${droppedLines} line(s) dropped\n`
+              );
+            }
+            onExit(code);
+            process.exit(code);
+          });
         });
-      });
-    },
-  });
+      },
+    }
+  );
 
 /**
  * Top-level CLI program effect produced by running the root command tree
@@ -186,7 +232,10 @@ if (canUseQualityTaskFastPath(argv)) {
       Layer.build(BaseLayers).pipe(
         Effect.flatMap(
           Effect.fnUntraced(function* (context) {
-            return yield* runQualityTask(qualityTaskInvocation.value).pipe(Effect.provide(context));
+            return yield* runQualityTask(qualityTaskInvocation.value).pipe(
+              withHostTurboCacheDefaults,
+              Effect.provide(context)
+            );
           })
         )
       )
@@ -213,7 +262,10 @@ if (!handledByQualityFastPath && canUseCiFastPath(argv)) {
     Layer.build(CiLayers).pipe(
       Effect.flatMap(
         Effect.fnUntraced(function* (context) {
-          return yield* Command.run(ciRootCommand, { version: "0.0.0" }).pipe(Effect.provide(context));
+          return yield* Command.run(ciRootCommand, { version: "0.0.0" }).pipe(
+            withHostTurboCacheDefaults,
+            Effect.provide(context)
+          );
         })
       )
     )
@@ -235,7 +287,10 @@ if (!handledByQualityFastPath && !handledByCiFastPath) {
     Layer.build(DerivedLayers).pipe(
       Effect.flatMap(
         Effect.fnUntraced(function* (context) {
-          return yield* Command.run(rootCommand, { version: "0.0.0" }).pipe(Effect.provide(context));
+          return yield* Command.run(rootCommand, { version: "0.0.0" }).pipe(
+            withHostTurboCacheDefaults,
+            Effect.provide(context)
+          );
         })
       )
     )

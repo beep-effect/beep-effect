@@ -1,6 +1,8 @@
 /**
  * CLI output, process, and probe models for the OpenClaw driver.
  *
+ * **Details**
+ *
  * Upstream CLI JSON documents are rich and version-fluid; every model here is
  * a tolerant projection that decodes only the fields the driver asserts.
  * Diagnostic text is trim-normalized and capped so no model ever carries raw
@@ -104,6 +106,8 @@ export type OpenclawExitCode = typeof OpenclawExitCode.Type;
 /**
  * Trim-normalized redacted diagnostic text capped at 2000 characters.
  *
+ * **Details**
+ *
  * Decoding trims surrounding whitespace and truncates oversized text so
  * diagnostics never smuggle full process output (or secrets embedded in it)
  * into errors or reports.
@@ -153,6 +157,8 @@ export type OpenclawDiagnosticText = typeof OpenclawDiagnosticText.Type;
 const openclawProcessRequestEnvDefault = R.empty();
 /**
  * Complete technical request passed to an injected OpenClaw process runner.
+ *
+ * **Details**
  *
  * The environment is an execution boundary only — it can carry the gateway
  * token and must never be rendered into diagnostics, errors, or spans.
@@ -331,6 +337,8 @@ export class OpenclawConfigValid extends S.Opaque<OpenclawConfigValid, { readonl
 /**
  * Failed `openclaw config validate` outcome.
  *
+ * **Details**
+ *
  * A nonzero validate exit is a decodable result — negative fixtures must be
  * assertable — not an error-channel failure.
  *
@@ -406,6 +414,8 @@ export type OpenclawConfigValidation = typeof OpenclawConfigValidation.Type;
 /**
  * Read-only `openclaw doctor --non-interactive` report.
  *
+ * **Details**
+ *
  * Doctor may exit nonzero with findings; that is a report, not a driver
  * error.
  *
@@ -437,6 +447,8 @@ export class OpenclawDoctorReport extends S.Opaque<OpenclawDoctorReport, { reado
 
 /**
  * Wire projection of successful `openclaw secrets reload --json` stdout.
+ *
+ * **Details**
  *
  * The pinned binary prints exactly `{ "ok": true, "warningCount": 0 }` on
  * success.
@@ -503,6 +515,8 @@ export class OpenclawSecretsReloaded extends S.Opaque<OpenclawSecretsReloaded, {
 
 /**
  * Degraded secrets reload outcome — an expected, assertable result.
+ *
+ * **Details**
  *
  * The CLI stdout only carries generic text (`secrets.reload failed`,
  * `Gateway did not respond`); the causal `SECRETS_RELOADER_DEGRADED` detail
@@ -1206,6 +1220,8 @@ const openclawInvocationContextExtraEnvDefault = R.empty();
 /**
  * Invocation context shared by every OpenClaw CLI operation.
  *
+ * **Details**
+ *
  * Carries hermetic-environment inputs (paths, nix mode) and gateway
  * addressing. Gateway tokens travel only through `extraEnv`, never argv.
  *
@@ -1313,6 +1329,8 @@ export type OpenclawSystemdActiveState = typeof OpenclawSystemdActiveState.Type;
 /**
  * Unit facts parsed from `systemctl --user show` key/value output.
  *
+ * **Details**
+ *
  * `activeState` keeps the raw reported string; {@link OpenclawSystemdUnitState.knownActiveState}
  * derives the recognized literal when the raw value is in the known domain.
  *
@@ -1398,6 +1416,8 @@ export type OpenclawHttpProbeStatus = typeof OpenclawHttpProbeStatus.Type;
 /**
  * Result of probing a gateway HTTP endpoint.
  *
+ * **Details**
+ *
  * Any 2xx response is `healthy`; transport failures and timeouts collapse to
  * `unreachable` — the probe itself never fails.
  *
@@ -1473,6 +1493,8 @@ export type OpenclawSchemaPlaceholderReason = typeof OpenclawSchemaPlaceholderRe
 
 /**
  * A declared extension surface the `config schema` export cannot validate.
+ *
+ * **Details**
  *
  * Emitted by the lossy schema-export guard when the pinned binary's exported
  * JSON schema is missing a declared surface or collapses it to an

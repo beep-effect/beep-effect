@@ -8842,7 +8842,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
     });
 
     it("wraps a Turbo step without loading the project env file or carrying unrelated references", () => {
-      const wrapped = turboSecretSessionStepForTesting(remoteStep({}), {
+      const wrapped = turboSecretSessionStepForTesting(QualityTaskStep.make({ ...remoteStep({}), useLocalEnv: true }), {
         PATH: "/fixture/bin",
         TURBO_API: "op://fixture-vault/turbo/api",
         TURBO_TOKEN: "op://fixture-vault/turbo/token",
@@ -8852,6 +8852,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       });
 
       expect(wrapped.command).toBe("op");
+      expect(wrapped).not.toHaveProperty("useLocalEnv");
       expect(wrapped.args).toEqual([
         "run",
         "--",

@@ -31,7 +31,11 @@
     {"name":"DuckDbClient.installExtension","owner":"@beep/duckdb","family":"driver","conforms":true},
     {"name":"DuckDbClient.loadExtension","owner":"@beep/duckdb","family":"driver","conforms":true},
     {"name":"DuckDbClient.make","owner":"@beep/duckdb","family":"driver","conforms":true},
+    {"name":"DuckDbEventJournal.make","owner":"@beep/duckdb","family":"driver","conforms":true},
+    {"name":"DuckDbEventLogServerEncrypted.makeStorage","owner":"@beep/duckdb","family":"driver","conforms":true},
     {"name":"DuckDbMigrator.dumpSchema","owner":"@beep/duckdb","family":"driver","conforms":true},
+    {"name":"DuckDbPersistedQueue.offer","owner":"@beep/duckdb","family":"driver","conforms":true},
+    {"name":"DuckDbPersistedQueue.take","owner":"@beep/duckdb","family":"driver","conforms":true},
     {"name":"db.export","owner":"@beep/duckdb","family":"driver","conforms":false},
     {"name":"db.query","owner":"@beep/duckdb","family":"driver","conforms":false},
     {"name":"db.transaction","owner":"@beep/duckdb","family":"driver","conforms":false}

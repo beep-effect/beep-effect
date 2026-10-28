@@ -1,5 +1,5 @@
 {
-  "previous": "daf5edc283c0d555903b3dd0bc8bc1e24919e1bcaf3cb1d1700a856dfc2e157a",
+  "previous": "8305527cac03f920305953eac85b0ca24b956d0b368f66d46bc9e454b6464cdb",
   "review": {
     "reviewer": "Claude Opus 5.5 (effected-promotion adoption 4-A4, effected-4a4)",
     "reason": "Record the @beep/repo-cli manifest edit that adds the @beep/repo-workspaces workspace dependency for the 4-A4 EcosystemPolarity adoption of SourceBoundary.scan; the task graphs gain only repo-workspaces build/transit, and the policy-tool fingerprint closure gains that one package, as measured in the review; no qualification is granted.",

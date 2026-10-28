@@ -2,6 +2,8 @@
  * Translation from technical libpff driver failures to file-processing
  * operation errors.
  *
+ * **Details**
+ *
  * Every libpff engine funnels its failures through this module so no process,
  * filesystem, or libpff error escapes the operation contract.
  *

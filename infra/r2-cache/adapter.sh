@@ -90,7 +90,7 @@ start_ci() {
   printf '::add-mask::%s\n' "$TURBO_TOKEN"
   {
     printf 'TURBO_API=http://127.0.0.1:%s\n' "$R2_ADAPTER_PORT"
-    printf 'TURBO_TOKEN=%s\nTURBO_CACHE=%s\n' "$TURBO_TOKEN" "$mode"
+    printf 'TURBO_TOKEN=%s\nTURBO_CACHE=%s\nTURBO_TEAM=%s\n' "$TURBO_TOKEN" "$mode" "$TURBO_TEAM"
     printf 'BEEP_CI_TURBO_R2_ACTIVE=true\n'
   } >> "$GITHUB_ENV"
   echo "R2 loopback adapter ready; cache posture $mode."

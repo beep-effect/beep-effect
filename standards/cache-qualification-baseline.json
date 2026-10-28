@@ -97905,10 +97905,12 @@
           "@beep/test-runner#audit",
           "@beep/test-utils#audit",
           "@beep/tika#audit",
+          "@beep/tsconfig#audit",
           "@beep/uspto#audit",
           "@beep/utils#audit",
           "@beep/walker#audit",
-          "@beep/xdg#audit"
+          "@beep/xdg#audit",
+          "@beep/yaml#audit"
         ],
         "configuration": {
           "cache": false,
@@ -98023,10 +98025,12 @@
           "@beep/test-runner#build",
           "@beep/test-utils#build",
           "@beep/tika#build",
+          "@beep/tsconfig#build",
           "@beep/uspto#build",
           "@beep/utils#build",
           "@beep/walker#build",
-          "@beep/xdg#build"
+          "@beep/xdg#build",
+          "@beep/yaml#build"
         ],
         "configuration": {
           "cache": true,
@@ -98130,10 +98134,12 @@
           "@beep/test-runner#build",
           "@beep/test-utils#build",
           "@beep/tika#build",
+          "@beep/tsconfig#build",
           "@beep/uspto#build",
           "@beep/utils#build",
           "@beep/walker#build",
-          "@beep/xdg#build"
+          "@beep/xdg#build",
+          "@beep/yaml#build"
         ],
         "configuration": {
           "cache": true,
@@ -98224,10 +98230,12 @@
           "@beep/test-runner#build",
           "@beep/test-utils#build",
           "@beep/tika#build",
+          "@beep/tsconfig#build",
           "@beep/uspto#build",
           "@beep/utils#build",
           "@beep/walker#build",
-          "@beep/xdg#build"
+          "@beep/xdg#build",
+          "@beep/yaml#build"
         ],
         "configuration": {
           "cache": false,
@@ -98367,11 +98375,13 @@
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
           "@beep/tika#transit",
+          "@beep/tsconfig#transit",
           "@beep/uspto#transit",
           "@beep/utils#transit",
           "@beep/utils#transit",
           "@beep/walker#transit",
-          "@beep/xdg#transit"
+          "@beep/xdg#transit",
+          "@beep/yaml#transit"
         ],
         "configuration": {
           "cache": true,
@@ -98506,10 +98516,12 @@
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
           "@beep/tika#transit",
+          "@beep/tsconfig#transit",
           "@beep/uspto#transit",
           "@beep/utils#transit",
           "@beep/walker#transit",
-          "@beep/xdg#transit"
+          "@beep/xdg#transit",
+          "@beep/yaml#transit"
         ],
         "configuration": {
           "cache": true,
@@ -98763,10 +98775,12 @@
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
           "@beep/tika#transit",
+          "@beep/tsconfig#transit",
           "@beep/uspto#transit",
           "@beep/utils#transit",
           "@beep/walker#transit",
-          "@beep/xdg#transit"
+          "@beep/xdg#transit",
+          "@beep/yaml#transit"
         ],
         "configuration": {
           "cache": false,
@@ -98860,11 +98874,13 @@
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
           "@beep/tika#transit",
+          "@beep/tsconfig#transit",
           "@beep/uspto#transit",
           "@beep/utils#transit",
           "@beep/utils#transit",
           "@beep/walker#transit",
-          "@beep/xdg#transit"
+          "@beep/xdg#transit",
+          "@beep/yaml#transit"
         ],
         "configuration": {
           "cache": true,
@@ -98981,11 +98997,13 @@
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
           "@beep/tika#transit",
+          "@beep/tsconfig#transit",
           "@beep/uspto#transit",
           "@beep/utils#transit",
           "@beep/utils#transit",
           "@beep/walker#transit",
-          "@beep/xdg#transit"
+          "@beep/xdg#transit",
+          "@beep/yaml#transit"
         ],
         "configuration": {
           "cache": true,
