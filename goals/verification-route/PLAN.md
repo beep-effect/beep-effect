@@ -90,7 +90,7 @@ jq . goals/verification-route/ops/manifest.json
 rg -n "verification-route|GOAL.md|agentLaunchers|packetAnchorDocument" goals/verification-route
 git diff --check -- goals/verification-route
 bun run beep quality package-verify @beep/repo-cli
-bun run beep ci route plan --json
-bun run beep ci route census --json
-bun run beep ci route replay --json
+bun run beep ci route plan --json # after slice 1 lands
+bun run beep ci route census --json # after slice 1 lands
+bun run beep ci route replay --json # after slice 1 lands
 ```

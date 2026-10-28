@@ -152,9 +152,9 @@ All slices:
 | Manifest JSON | `jq . goals/verification-route/ops/manifest.json` | Passes |
 | Whitespace | `git diff --check -- goals/verification-route` | Passes |
 | Package handoff | `bun run beep quality package-verify @beep/repo-cli` | Green |
-| Route at all-unknown | `bun run beep ci route plan --json` on a branch with a change | Selected set = every lane |
-| Census | `bun run beep ci route census --json` | Rows by atom kind, `unknown` share, pinned receipts |
-| Recall | `bun run beep ci route replay --json` | 100% at all-unknown; per-refinement 100% before enforcement |
+| Route at all-unknown | `bun run beep ci route plan --json # slice 1 creates this command` on a branch with a change | Selected set = every lane |
+| Census | `bun run beep ci route census --json # slice 1 creates this command` | Rows by atom kind, `unknown` share, pinned receipts |
+| Recall | `bun run beep ci route replay --json # slice 1 creates this command` | 100% at all-unknown; per-refinement 100% before enforcement |
 | Layer-1 fixture | repo-cli test: biome catalog bump dry-run under pinned turbo | Lint-only invalidation for the compiled refinement |
 | Hosted receipt (slice 3) | a PR whose route excludes a lane: job summary | `skip-satisfied` success with receipt; ruleset contexts unchanged |
 | Reflection | `bun run beep lint reflection-artifacts` | Passes at close |
