@@ -642,6 +642,34 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet ready gate run", (
     })
   );
 
+  it.effect("refuses with the refresh detail alone when a receipt is malformed", () =>
+    Effect.gen(function* () {
+      const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+      const detail = `the final-check receipt for head ${headSha} exists but does not decode`;
+      const error = yield* runYeetReadyGate(context, {
+        finalCheck: () => Effect.succeedNone,
+        refresh: (_context, head) =>
+          Effect.succeedSome(
+            FinalCheckRefreshRefused.make({
+              receiptHead: head,
+              finalHead: head,
+              reason: "malformed-receipt",
+              ownChanges: [],
+              detail,
+            })
+          ),
+        squashCommitlint: passingSquashCommitlint,
+        recordInherited: () => Effect.void,
+        read: () => Effect.succeed(prView()),
+        markReady: recordingMarkReady(calls),
+      }).pipe(Effect.flip);
+      expect(error).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "final-check" });
+      expect(error.message).toContain(detail);
+      expect(error.message).not.toContain("nearest ancestor receipt, on");
+      expect(yield* Ref.get(calls)).toEqual([]);
+    })
+  );
+
   it.effect("never consults the refresh rule when the head has a failing receipt of its own", () =>
     Effect.gen(function* () {
       const consulted = yield* Ref.make(false);

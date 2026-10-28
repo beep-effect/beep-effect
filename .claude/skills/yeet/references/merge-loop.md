@@ -66,9 +66,10 @@ planned: a push after the flip restarts the review window. Squash-message advice
 A head F with no receipt of its own may carry the receipt of an ancestor R
 (operator ruling 2026-10-28, `internal/FinalCheckRefresh.ts`), so taking a main
 merge after final-check does not force a second ~45 minute run. `yeet ready`
-applies the rule only when F has no receipt at all; a failing or partial
-receipt on F always refuses. It picks the nearest strict ancestor with a
-receipt of any verdict and refuses if that receipt failed or was partial. For
+applies the rule only when F has no receipt at all; a failing, partial or
+undecodable receipt file on F always refuses. It picks the nearest strict
+ancestor with a receipt file, by name before decoding, and refuses if that
+receipt does not decode, failed or was partial. For
 a complete passing receipt, it takes MBR = merge-base(R, base) and
 MBF = merge-base(F, base), and counts a path from `git diff R F` as the lane's
 own change when it is absent from `git diff MBR MBF` or when its lane patch

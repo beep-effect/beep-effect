@@ -168,6 +168,33 @@ describe("decideFinalCheckRefresh", () => {
 });
 
 it.layer(NodeServices.layer, { timeout: "60 seconds" })("checkFinalCheckRefresh against a real main merge", (it) => {
+  it.effect("refuses an unreadable receipt on the head instead of falling back to an ancestor", () =>
+    Effect.gen(function* () {
+      const { repoRoot, mergeHead } = yield* makeMergedLane();
+      yield* writeFile(repoRoot, `${FINAL_CHECK_RECEIPT_DIR}/${mergeHead}.json`, '{ "schemaVersion": "yeet-final');
+      const verdict = yield* refreshAt(repoRoot, mergeHead);
+      assertTrue(verdict._tag === "refused");
+      expect(verdict.reason).toBe("malformed-receipt");
+      expect(verdict.receiptHead).toBe(mergeHead);
+    })
+  );
+
+  it.effect("refuses an unreadable nearer ancestor receipt instead of an older passing one", () =>
+    Effect.gen(function* () {
+      const { repoRoot, receiptHead } = yield* makeMergedLane();
+      yield* writeFile(repoRoot, SPEC, "# Demo\n\nstatus: review\n");
+      const nearer = yield* commitAll(repoRoot, "lane: packet");
+      yield* writeFile(repoRoot, `${FINAL_CHECK_RECEIPT_DIR}/${nearer}.json`, "");
+      yield* writeFile(repoRoot, SPEC, "# Demo\n\nstatus: completed-retained\n");
+      const finalHead = yield* commitAll(repoRoot, "lane: flip packet");
+      const verdict = yield* refreshAt(repoRoot, finalHead);
+      assertTrue(verdict._tag === "refused");
+      expect(verdict.reason).toBe("malformed-receipt");
+      expect(verdict.receiptHead).toBe(nearer);
+      expect(verdict.receiptHead).not.toBe(receiptHead);
+    })
+  );
+
   it.effect("returns none without receipts and ignores non-ancestor and non-JSON entries", () =>
     Effect.gen(function* () {
       const { repoRoot, receiptHead, mergeHead } = yield* makeMergedLane();
@@ -177,11 +204,13 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("checkFinalCheckRefresh 
       assertNone(yield* checkFinalCheckRefresh(repoRoot, "main", mergeHead));
       yield* writeFile(repoRoot, `${FINAL_CHECK_RECEIPT_DIR}/notes.txt`, "not a receipt");
       yield* writeFile(repoRoot, `${FINAL_CHECK_RECEIPT_DIR}/broken.json`, "invalid json");
-      yield* writeReceipt(repoRoot, receiptFor(mergeHead));
       yield* git(repoRoot, ["switch", "--quiet", "-c", "unrelated", receiptHead]);
       const unrelated = yield* commitAll(repoRoot, "unrelated receipt");
       yield* writeReceipt(repoRoot, receiptFor(unrelated));
       yield* git(repoRoot, ["switch", "--quiet", "lane"]);
+      assertNone(yield* checkFinalCheckRefresh(repoRoot, "main", mergeHead));
+      // A head with a decodable receipt of its own is outside the rule.
+      yield* writeReceipt(repoRoot, receiptFor(mergeHead));
       assertNone(yield* checkFinalCheckRefresh(repoRoot, "main", mergeHead));
     })
   );

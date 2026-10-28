@@ -34,6 +34,7 @@ import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { constFalse, constTrue } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
@@ -43,7 +44,12 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { EffectVitestInventoryPath } from "../../Lint/Lint.schemas.ts";
-import { FINAL_CHECK_RECEIPT_DIR, finalCheckRefusal, readFinalCheckReceipt } from "./FinalCheck.ts";
+import {
+  FINAL_CHECK_RECEIPT_DIR,
+  finalCheckRefusal,
+  readFinalCheckReceipt,
+  YEET_FINAL_CHECK_COMMAND,
+} from "./FinalCheck.ts";
 import {
   FinalCheckRefreshFacts,
   FinalCheckRefreshOwnChange,
@@ -343,7 +349,7 @@ export const collectFinalCheckRefreshFacts = Effect.fn("Yeet.collectFinalCheckRe
 const isAncestor = (repoRoot: string, ancestor: string, head: string) =>
   runGitOutput(repoRoot, ["merge-base", "--is-ancestor", ancestor, head]).pipe(
     Effect.as(true),
-    Effect.orElseSucceed(() => false)
+    Effect.orElseSucceed(constFalse)
   );
 
 /**
@@ -352,10 +358,11 @@ const isAncestor = (repoRoot: string, ancestor: string, head: string) =>
  *
  * **Details**
  *
- * Reads every receipt under `.beep/yeet/final-check/`, keeps the ones whose
- * head is a strict ancestor of `finalHead`, and returns the one with the
- * fewest commits to `finalHead`, whatever its verdict: a nearer failing or
- * partial receipt must refuse, never fall back to an older pass.
+ * Lists the receipt files under `.beep/yeet/final-check/`, keeps those named
+ * by a strict ancestor of `finalHead`, and returns the head with the fewest
+ * commits to `finalHead`. The choice is made by file name before any decode,
+ * so a nearer failing, partial or malformed receipt is the one judged and
+ * refuses; an older passing receipt never stands in for it.
  *
  * **Example** (Build the receipt search)
  *
@@ -368,14 +375,14 @@ const isAncestor = (repoRoot: string, ancestor: string, head: string) =>
  *
  * @param repoRoot - Checkout holding `.beep/yeet/final-check/`.
  * @param finalHead - The head the flip would mark ready.
- * @returns The nearest ancestor receipt of any verdict, or none.
+ * @returns The head of the nearest ancestor receipt file, or none.
  * @category io
  * @since 0.0.0
  */
 export const findFinalCheckRefreshReceipt = Effect.fn("Yeet.findFinalCheckRefreshReceipt")(function* (
   repoRoot: string,
   finalHead: string
-): Effect.fn.Return<O.Option<FinalCheckReceipt>, never, FileSystem.FileSystem | Path.Path | GitServices> {
+): Effect.fn.Return<O.Option<string>, never, FileSystem.FileSystem | Path.Path | GitServices> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const entries = yield* fs
@@ -384,12 +391,13 @@ export const findFinalCheckRefreshReceipt = Effect.fn("Yeet.findFinalCheckRefres
   const heads = A.flatMap(entries, (entry) =>
     Str.endsWith(".json")(entry) ? [Str.slice(0, -".json".length)(entry)] : []
   );
-  const receipts = yield* Effect.forEach(heads, (head) => readFinalCheckReceipt(repoRoot, head));
-  const others = A.filter(A.getSomes(receipts), (receipt) => receipt.headSha !== finalHead);
-  const ancestors = yield* Effect.filter(others, (receipt) => isAncestor(repoRoot, receipt.headSha, finalHead));
-  const distances = yield* Effect.forEach(ancestors, (receipt) =>
-    gitLine(repoRoot, ["rev-list", "--count", `${receipt.headSha}..${finalHead}`]).pipe(
-      Effect.map((count) => [Number(count), receipt] as const),
+  const ancestors = yield* Effect.filter(
+    A.filter(heads, (head) => head !== finalHead),
+    (head) => isAncestor(repoRoot, head, finalHead)
+  );
+  const distances = yield* Effect.forEach(ancestors, (head) =>
+    gitLine(repoRoot, ["rev-list", "--count", `${head}..${finalHead}`]).pipe(
+      Effect.map((count) => [Number(count), head] as const),
       Effect.option
     )
   );
@@ -397,11 +405,23 @@ export const findFinalCheckRefreshReceipt = Effect.fn("Yeet.findFinalCheckRefres
     A.map(
       A.sort(
         A.getSomes(distances),
-        Order.mapInput(Order.Number, ([distance]: readonly [number, FinalCheckReceipt]) => distance)
+        Order.mapInput(Order.Number, ([distance]: readonly [number, string]) => distance)
       ),
-      ([, receipt]) => receipt
+      ([, head]) => head
     )
   );
+});
+
+// A probe that cannot answer counts as present, so the caller fails closed.
+const receiptFileExists = Effect.fn("Yeet.finalCheckRefreshReceiptFileExists")(function* (
+  repoRoot: string,
+  headSha: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  return yield* fs
+    .exists(path.join(repoRoot, FINAL_CHECK_RECEIPT_DIR, `${headSha}.json`))
+    .pipe(Effect.orElseSucceed(constTrue));
 });
 
 /**
@@ -410,9 +430,10 @@ export const findFinalCheckRefreshReceipt = Effect.fn("Yeet.findFinalCheckRefres
  * **Details**
  *
  * Returns none when no strict ancestor carries a receipt, so the caller keeps
- * its ordinary "no final-check receipt" refusal. A nearest receipt that failed
- * or ran a gate subset refuses outright; otherwise the rule judges the lane's
- * own changes since that receipt.
+ * its ordinary "no final-check receipt" refusal. A receipt file for the head
+ * itself that exists but does not decode refuses (`malformed-receipt`), as
+ * does an undecodable, failing or partial receipt on the nearest ancestor;
+ * otherwise the rule judges the lane's own changes since that receipt.
  *
  * **Example** (Build the refresh check)
  *
@@ -439,8 +460,27 @@ export const checkFinalCheckRefresh = Effect.fn("Yeet.checkFinalCheckRefresh")(f
   YeetCommandError,
   FileSystem.FileSystem | Path.Path | GitServices
 > {
-  const receipt = yield* findFinalCheckRefreshReceipt(repoRoot, finalHead);
-  if (O.isNone(receipt)) return O.none();
+  const malformed = (receiptHead: string, which: string) =>
+    O.some(
+      FinalCheckRefreshRefused.make({
+        receiptHead,
+        finalHead,
+        reason: "malformed-receipt",
+        ownChanges: [],
+        detail: `the final-check receipt for ${which} ${Str.slice(0, 12)(receiptHead)} exists but does not decode; re-run \`${YEET_FINAL_CHECK_COMMAND}\` instead of falling back to an older receipt`,
+      })
+    );
+  // The rule covers only a head with no receipt of its own. A decodable one
+  // is judged on its own (none here); a file that is there but unreadable must
+  // refuse, never fall through to an ancestor.
+  if (yield* receiptFileExists(repoRoot, finalHead)) {
+    const own = yield* readFinalCheckReceipt(repoRoot, finalHead);
+    return O.isSome(own) ? O.none() : malformed(finalHead, "head");
+  }
+  const receiptHead = yield* findFinalCheckRefreshReceipt(repoRoot, finalHead);
+  if (O.isNone(receiptHead)) return O.none();
+  const receipt = yield* readFinalCheckReceipt(repoRoot, receiptHead.value);
+  if (O.isNone(receipt)) return malformed(receiptHead.value, "ancestor");
   const notPassing = finalCheckRefusal(receipt, receipt.value.headSha);
   if (O.isSome(notPassing)) {
     return O.some(

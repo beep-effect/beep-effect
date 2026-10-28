@@ -3395,6 +3395,7 @@
     {"name":"Yeet.failWithRerunGuidance","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.finalCheckDirtyTree","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.finalCheckRefreshEffectVitestDrift","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"Yeet.finalCheckRefreshReceiptFileExists","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.finalCheckRefreshStatusCounts","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.findFinalCheckRefreshReceipt","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.findOpenPullRequest","owner":"@beep/repo-cli","family":"tooling","conforms":true},

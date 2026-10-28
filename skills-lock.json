@@ -328,7 +328,7 @@
         ".claude/skills/orchestrate",
         ".agents/skills/orchestrate"
       ],
-      "installedTreeHash": "3426d6f4fbe872e348a7cf89ccd84ef5ed8a4c0cff5396cd0541632653739fa9"
+      "installedTreeHash": "703b2f45bc17148150f5ef029e62995cea5cd1980e92878c21874b6f4a8be3f0"
     },
     "plasma-sensitive-entry": {
       "_tag": "local",
@@ -753,7 +753,7 @@
         ".claude/skills/yeet",
         ".agents/skills/yeet"
       ],
-      "installedTreeHash": "eab016855779c6e97a1af27c9216ced21a55d1bb215e9af516bd8719d2b3049b"
+      "installedTreeHash": "c3df65c22da6174aaa36c97c9fe8d055ed42d793c72323078839d1f4136fa977"
     }
   }
 }
