@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-10-28T19:19:45.833Z
+Generated: 2026-10-28T21:43:09.922Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 148 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 33 |
-| publicModules | 3552 |
-| publicExports | 25272 |
+| publicModules | 3562 |
+| publicExports | 25307 |
 | openModules | 225 |
 | openExports | 130 |
 | missingExportExamples | 6 |
@@ -94,7 +94,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 36 | `@beep/shared-use-cases` | `packages/shared/use-cases` | clean | 6 | 14 | 0 | 0 |
 | 37 | `@beep/nlp` | `packages/foundation/modeling/nlp` | clean | 28 | 313 | 0 | 0 |
 | 38 | `@beep/file-processing` | `packages/foundation/capability/file-processing` | clean | 34 | 183 | 0 | 0 |
-| 39 | `@beep/epistemic-domain` | `packages/epistemic/domain` | needs-remediation | 51 | 241 | 7 | 2 |
+| 39 | `@beep/epistemic-domain` | `packages/epistemic/domain` | needs-remediation | 54 | 259 | 7 | 2 |
 | 40 | `@beep/codegen-kit` | `packages/tooling/library/codegen-kit` | clean | 6 | 45 | 0 | 0 |
 | 41 | `@beep/phoenix` | `packages/drivers/phoenix` | clean | 5 | 49 | 0 | 0 |
 | 42 | `@beep/duckdb` | `packages/drivers/duckdb` | needs-remediation | 13 | 73 | 1 | 8 |
@@ -107,7 +107,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 49 | `@beep/agents-use-cases` | `packages/agents/use-cases` | needs-remediation | 31 | 129 | 2 | 2 |
 | 50 | `@beep/law-practice-domain` | `packages/law-practice/domain` | needs-remediation | 251 | 949 | 9 | 5 |
 | 51 | `@beep/langextract` | `packages/foundation/capability/langextract` | clean | 26 | 131 | 0 | 0 |
-| 52 | `@beep/epistemic-use-cases` | `packages/epistemic/use-cases` | needs-remediation | 38 | 148 | 9 | 0 |
+| 52 | `@beep/epistemic-use-cases` | `packages/epistemic/use-cases` | needs-remediation | 41 | 157 | 9 | 0 |
 | 53 | `@beep/api-transport` | `packages/foundation/capability/api-transport` | clean | 3 | 9 | 0 | 0 |
 | 54 | `@beep/epistemic-config` | `packages/epistemic/config` | needs-remediation | 7 | 20 | 3 | 0 |
 | 55 | `@beep/postgres` | `packages/drivers/postgres` | clean | 7 | 42 | 0 | 0 |
@@ -134,7 +134,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 76 | `@beep/tika` | `packages/drivers/tika` | clean | 8 | 33 | 0 | 0 |
 | 77 | `@beep/libpff` | `packages/drivers/libpff` | clean | 7 | 42 | 0 | 0 |
 | 78 | `@beep/box` | `packages/drivers/box` | clean | 7 | 878 | 0 | 0 |
-| 79 | `@beep/epistemic-server` | `packages/epistemic/server` | needs-remediation | 24 | 56 | 8 | 4 |
+| 79 | `@beep/epistemic-server` | `packages/epistemic/server` | needs-remediation | 28 | 62 | 8 | 4 |
 | 80 | `@beep/m365` | `packages/drivers/m365` | clean | 8 | 166 | 0 | 0 |
 | 81 | `@beep/nlp-processing` | `packages/foundation/capability/nlp-processing` | clean | 48 | 312 | 0 | 0 |
 | 82 | `@beep/epistemic-client` | `packages/epistemic/client` | clean | 4 | 24 | 0 | 0 |
@@ -189,7 +189,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 131 | `@beep/epistemic-ui` | `packages/epistemic/ui` | clean | 6 | 14 | 0 | 0 |
 | 132 | `@beep/graph-3d` | `packages/drivers/graph-3d` | clean | 7 | 17 | 0 | 0 |
 | 133 | `@beep/ontology` | `packages/foundation/modeling/ontology` | clean | 15 | 157 | 0 | 0 |
-| 134 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 473 | 4450 | 47 | 35 |
+| 134 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 473 | 4452 | 47 | 35 |
 | 135 | `@beep/dock-react` | `packages/foundation/ui-system/dock-react` | clean | 3 | 12 | 0 | 0 |
 | 136 | `@beep/drizzle` | `packages/drivers/drizzle` | clean | 3 | 11 | 0 | 0 |
 | 137 | `@beep/repo-workspaces` | `packages/tooling/library/repo-workspaces` | clean | 27 | 244 | 0 | 0 |
