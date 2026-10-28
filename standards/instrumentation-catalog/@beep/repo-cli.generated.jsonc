@@ -1305,6 +1305,7 @@
     {"name":"EffectVitestStore.writeRows","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"EnvConfig.canUseTurboCacheSecretSession","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"EnvConfig.envFileSecretReferenceEntries","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"EnvConfig.resolveTurboCacheStep","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"EnvConfig.secretReferenceProbe","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"EnvConfig.turboEnvOverrides","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"EnvConfig.turboEnvironmentHealthWarnings","owner":"@beep/repo-cli","family":"tooling","conforms":true},

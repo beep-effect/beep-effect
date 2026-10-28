@@ -22,23 +22,16 @@ import * as ChildProcess from "effect/process/ChildProcess";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import {
-  canUseTurboCacheSecretSession,
   isCi,
   isCiSync,
   readTurboCacheEnvironment,
+  resolveTurboCacheStep,
   turboEnvExtendsAmbient,
   turboEnvOverrides,
-  turboSecretSessionStep,
 } from "../../../internal/cli/EnvConfig.ts";
 import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";
 import { printLines } from "../../../internal/cli/Printer.ts";
-import {
-  hasRemoteTurboCacheArgs,
-  localOnlyTurboCacheArgs,
-  resolveTurboCachePlan,
-  turboCacheEnvironmentNeedsSecretSession,
-  turboCachePlanArgs,
-} from "../../../internal/cli/TurboCache.ts";
+import { resolveTurboCachePlan, turboCachePlanArgs } from "../../../internal/cli/TurboCache.ts";
 import { QualityTaskStep, runCapturedStreams } from "../../../internal/process/StepExec.ts";
 import { collectChangedFiles } from "../../../internal/repo-run/ChangedFiles.ts";
 import {
@@ -710,11 +703,7 @@ const prepareDocgenStep = Effect.fn("DocgenLocal.prepareDocgenStep")(function* (
 ) {
   const step = QualityTaskStep.make({ label, command, args, cwd });
   if (command !== turboBinaryPath(cwd)) return step;
-  if (!hasRemoteTurboCacheArgs(args) || !turboCacheEnvironmentNeedsSecretSession(readTurboCacheEnvironment(Bun.env)))
-    return step;
-  return (yield* canUseTurboCacheSecretSession(cwd))
-    ? turboSecretSessionStep(step, Bun.env)
-    : QualityTaskStep.make({ ...step, args: localOnlyTurboCacheArgs(args) });
+  return yield* resolveTurboCacheStep(step);
 });
 
 const runStep = Effect.fn("DocgenLocal.runStep")(function* (

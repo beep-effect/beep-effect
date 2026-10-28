@@ -34,6 +34,7 @@ import * as S from "effect/Schema";
 import {
   isCiSync,
   readTurboCacheEnvironment,
+  resolveTurboCacheStep,
   turboEnvExtendsAmbient,
   turboEnvOverrides,
 } from "../../internal/cli/EnvConfig.ts";
@@ -1767,25 +1768,26 @@ const renderStepCommand = (step: QualityTaskStep): string => A.join([step.comman
 const runLaneProcess = Effect.fn("CiLane.runLaneProcess")(function* (
   step: QualityTaskStep
 ): Effect.fn.Return<number, CiCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
-  const stepEnv = step.env ?? {};
-  yield* assertCacheRuntimeKeyUnspecified(step.command, step.args, Bun.env, stepEnv).pipe(
+  const resolved = yield* resolveTurboCacheStep(step);
+  const stepEnv = resolved.env ?? {};
+  yield* assertCacheRuntimeKeyUnspecified(resolved.command, resolved.args, Bun.env, stepEnv).pipe(
     CiCommandError.mapError("Rejected a caller-provided cache runtime identity.")
   );
-  yield* Console.log(`[ci] ${step.label}: ${renderStepCommand(step)}`);
+  yield* Console.log(`[ci] ${step.label}: ${renderStepCommand(resolved)}`);
   // Lane bodies that shell out to Turbo need the same env hygiene the root
   // quality runner applies: no interactive TUI (it can leave a killed run's
   // terminal in mouse-capture mode) and no unresolved `op://` token/team
   // references leaking through as literal values on a workstation.
-  const envOverrides = yield* turboEnvOverrides(step.command, step.args, Bun.env);
-  const runtime = cacheRuntimeStep(step);
+  const envOverrides = yield* turboEnvOverrides(resolved.command, resolved.args, Bun.env);
+  const runtime = cacheRuntimeStep(resolved);
   return yield* runToExit({
     command: runtime.command,
     args: runtime.args,
-    cwd: step.cwd,
+    cwd: resolved.cwd,
     env: { ...envOverrides, ...stepEnv },
-    extendEnv: turboEnvExtendsAmbient(step.command, step.args),
+    extendEnv: turboEnvExtendsAmbient(resolved.command, resolved.args),
     stdio: "inherit",
-  }).pipe(CiCommandError.mapError(`Failed to spawn ${renderStepCommand(step)}.`));
+  }).pipe(CiCommandError.mapError(`Failed to spawn ${renderStepCommand(resolved)}.`));
 });
 
 const runCiFallowLane = Effect.fn("CiLane.runCiFallowLane")(function* (
@@ -1942,13 +1944,22 @@ const resolveStorybookLaneAffected = Effect.fn("CiLane.resolveStorybookLaneAffec
 ): Effect.fn.Return<boolean, CiCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const probeArgs = storybookAffectedProbeArgs();
   yield* Console.log(`[ci] ci:storybook: bunx ${A.join(probeArgs, " ")}`);
-  const envOverrides = yield* turboEnvOverrides("bunx", probeArgs, Bun.env);
+  const step = yield* resolveTurboCacheStep(
+    QualityTaskStep.make({
+      label: "ci:storybook:selection",
+      command: "bunx",
+      args: probeArgs,
+      cwd: repoRoot,
+      env: { TURBO_SCM_BASE: base },
+    })
+  );
+  const envOverrides = yield* turboEnvOverrides(step.command, step.args, Bun.env);
   const result = yield* runCaptured({
-    command: "bunx",
-    args: probeArgs,
+    command: step.command,
+    args: step.args,
     cwd: repoRoot,
-    env: { ...envOverrides, TURBO_SCM_BASE: base },
-    extendEnv: turboEnvExtendsAmbient("bunx", probeArgs),
+    env: { ...envOverrides, ...(step.env ?? {}) },
+    extendEnv: turboEnvExtendsAmbient(step.command, step.args),
     source: "stdout",
     trim: true,
   }).pipe(CiCommandError.mapError("Failed to spawn Turbo's Storybook affected dry run."));
@@ -2127,13 +2138,22 @@ const runCiPartitionedLane = Effect.fn("CiLane.runCiPartitionedLane")(function* 
   const selectionArgs = partitionDryRunArgs(laneId, options);
   yield* Console.log(`[ci] ci:${laneId}:${partition}: bunx ${A.join(selectionArgs, " ")}`);
 
-  const envOverrides = yield* turboEnvOverrides("bunx", selectionArgs, Bun.env);
+  const selection = yield* resolveTurboCacheStep(
+    QualityTaskStep.make({
+      label: `ci:${laneId}:${partition}:selection`,
+      command: "bunx",
+      args: selectionArgs,
+      cwd: repoRoot,
+      env: options.affected ? { TURBO_SCM_BASE: options.base } : {},
+    })
+  );
+  const envOverrides = yield* turboEnvOverrides(selection.command, selection.args, Bun.env);
   const selectedResult = yield* runCaptured({
-    command: "bunx",
-    args: selectionArgs,
+    command: selection.command,
+    args: selection.args,
     cwd: repoRoot,
-    env: { ...envOverrides, ...(options.affected ? { TURBO_SCM_BASE: options.base } : {}) },
-    extendEnv: turboEnvExtendsAmbient("bunx", selectionArgs),
+    env: { ...envOverrides, ...(selection.env ?? {}) },
+    extendEnv: turboEnvExtendsAmbient(selection.command, selection.args),
     source: "stdout",
     trim: true,
   }).pipe(

@@ -36,11 +36,14 @@ import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import { QualityTaskStep, runToExit } from "../process/StepExec.ts";
 import {
+  hasRemoteTurboCacheArgs,
+  localOnlyTurboCacheArgs,
   TurboCacheEnvironment,
   TurboCacheEnvName,
   TurboCacheMode,
   TurboCacheSecretEnvName,
   TurboEnvironmentHealthWarning,
+  turboCacheEnvironmentNeedsSecretSession,
   turboCacheValueSourceFor,
 } from "./TurboCache.ts";
 import type * as Crypto from "effect/Crypto";
@@ -908,4 +911,34 @@ export const canUseTurboCacheSecretSession = Effect.fn("EnvConfig.canUseTurboCac
   const usable = yield* secretReferenceProbe(repoRoot, turboCacheSecretSessionEnvironment(environment));
   MutableHashMap.set(turboSecretSessionVerdicts, repoRoot, usable);
   return usable;
+});
+
+/**
+ * Resolve the cache-only session for a planned local Turbo command.
+ *
+ * **Example** (Prepare a native cache consumer)
+ *
+ * ```ts
+ * import { resolveTurboCacheStep } from "@beep/repo-cli/test/SharedInternals"
+ * import { QualityTaskStep } from "@beep/repo-cli/test/Process"
+ * import * as Effect from "effect/Effect"
+ * console.log(Effect.isEffect(resolveTurboCacheStep(QualityTaskStep.make({ label: "docgen", command: "turbo", args: ["run", "docgen"], cwd: "/repo" }))))
+ * ```
+ *
+ * @category execution
+ * @since 0.0.0
+ */
+export const resolveTurboCacheStep = Effect.fn("EnvConfig.resolveTurboCacheStep")(function* (
+  step: QualityTaskStep,
+  environment: Readonly<Record<string, string | undefined>> = Bun.env
+) {
+  if (
+    !isPlannedTurboCommand(step.command, step.args) ||
+    !hasRemoteTurboCacheArgs(step.args) ||
+    !turboCacheEnvironmentNeedsSecretSession(readTurboCacheEnvironment(environment))
+  )
+    return step;
+  return (yield* canUseTurboCacheSecretSession(step.cwd, environment))
+    ? turboSecretSessionStep(step, environment)
+    : QualityTaskStep.make({ ...step, args: localOnlyTurboCacheArgs(step.args) });
 });
