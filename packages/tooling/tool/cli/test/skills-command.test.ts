@@ -708,35 +708,33 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("vendored skill trees in
 
 it.layer(NodeServices.layer, { timeout: "30 seconds" })("installed skill frontmatter check", (it) => {
   it.effect("reads the YAML block through the @beep/markdown codec and names engine diagnostics", () =>
-    Effect.scoped(
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-skill-frontmatter-" });
-        const skills: ReadonlyArray<readonly [string, string]> = [
-          ["valid", "---\nname: valid\ndescription: A valid skill.\n---\n\n# Valid\n"],
-          ["broken", "---\nname: [broken\n---\n\n# Broken\n"],
-          ["doubled", "---\nname: doubled\ndescription: Doubled.\nname: doubled\n---\n"],
-          ["toml", '+++\nname = "toml"\n+++\n'],
-          ["unclosed", "---\nname: unclosed\ndescription: Unclosed.\n"],
-        ];
-        for (const [name, content] of skills) {
-          yield* fs.makeDirectory(path.join(root, name), { recursive: true });
-          yield* fs.writeFileString(path.join(root, name, "SKILL.md"), content);
-        }
-        const report = yield* checkInstalledSkills(
-          root,
-          A.map(skills, ([name]) => name),
-          HashSet.empty()
-        );
-        expect(A.map(report.issues, (issue) => [issue.skill, issue.message])).toEqual([
-          ["broken", "Invalid YAML frontmatter (YAML parse failed with 1 error: MalformedFlowCollection at 1:7)."],
-          ["doubled", "Invalid YAML frontmatter (YAML parse failed with 1 error: DuplicateKey at 3:1)."],
-          ["toml", "SKILL.md frontmatter is toml; the Agent Skills format requires a YAML block."],
-          ["unclosed", "SKILL.md has no YAML frontmatter block."],
-        ]);
-      })
-    )
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-skill-frontmatter-" });
+      const skills: ReadonlyArray<readonly [string, string]> = [
+        ["valid", "---\nname: valid\ndescription: A valid skill.\n---\n\n# Valid\n"],
+        ["broken", "---\nname: [broken\n---\n\n# Broken\n"],
+        ["doubled", "---\nname: doubled\ndescription: Doubled.\nname: doubled\n---\n"],
+        ["toml", '+++\nname = "toml"\n+++\n'],
+        ["unclosed", "---\nname: unclosed\ndescription: Unclosed.\n"],
+      ];
+      for (const [name, content] of skills) {
+        yield* fs.makeDirectory(path.join(root, name), { recursive: true });
+        yield* fs.writeFileString(path.join(root, name, "SKILL.md"), content);
+      }
+      const report = yield* checkInstalledSkills(
+        root,
+        A.map(skills, ([name]) => name),
+        HashSet.empty()
+      );
+      expect(A.map(report.issues, (issue) => [issue.skill, issue.message])).toEqual([
+        ["broken", "Invalid YAML frontmatter (YAML parse failed with 1 error: MalformedFlowCollection at 1:7)."],
+        ["doubled", "Invalid YAML frontmatter (YAML parse failed with 1 error: DuplicateKey at 3:1)."],
+        ["toml", "SKILL.md frontmatter is toml; the Agent Skills format requires a YAML block."],
+        ["unclosed", "SKILL.md has no YAML frontmatter block."],
+      ]);
+    })
   );
 });
 
