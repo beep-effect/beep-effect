@@ -100,3 +100,29 @@ lives in `test/helpers`, and the script has its native program configuration.
 Targeted laws and deprecated-API audits pass, the command configuration
 typechecks, and full server/use-case audits and docgen pass again. No quality
 baseline or authority behavior changed.
+
+## Landing closeout
+
+[PR #2321](https://github.com/beep-effect/beep-effect/pull/2321) carries the
+implementation and retained packet state together. The retained status is the
+proposed state at merge, not an assertion that an open draft has already shipped.
+The conversation goal stays active until current-head required checks, answered
+reviews, review window, merge and lane retirement are verified.
+
+Hosted Fallow caught two file-local helper values still exported after the
+helper move. Removing only those exports restored a zero-finding local audit;
+full use-case audit/docgen passed again. Hosted health passed. Cancelled unit
+shards and their dependent coverage summaries on superseded heads are not
+measured coverage regressions.
+
+The base advanced during verification. The only conflicts were generated root
+TypeScript and Vitest aliases, regenerated with `beep tsconfig-sync`; frozen
+dependency installation passed. An independently published merge of the same
+base had a byte-identical tree and its ancestry is preserved.
+
+The standing constrained-compute fallback (after the original pre-push exceeded
+ten minutes) also parks the full local lint-policy replay. Targeted laws, native
+deprecated-API ownership audits, script typecheck, schema/test gates and package
+audits passed; exact-head hosted Lint Policy remains required. Both `cheap-gates`
+and `lint-policy` local skips must be explicit in the final-check receipt and PR
+body. No baseline is weakened.
