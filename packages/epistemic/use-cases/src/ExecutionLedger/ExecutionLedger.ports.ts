@@ -3,6 +3,8 @@
  * and post-settlement outcomes are appended and read back. The live Drizzle
  * implementation is provided in the epistemic server tier.
  *
+ * **Details**
+ *
  * The surface is deliberately append-and-read only: there is no update, no
  * delete, and no way to express either, because the tables reject both by
  * trigger and the mutable operation would be exactly what an attacker wants.

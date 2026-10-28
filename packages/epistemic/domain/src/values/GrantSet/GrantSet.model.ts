@@ -1,6 +1,8 @@
 /**
  * Grant set: the Draft/Frozen authority container and the pure evaluator.
  *
+ * **Details**
+ *
  * The freeze is expressed as types, not as a runtime flag someone must
  * remember to check: {@link addGrant} accepts only a {@link DraftGrantSet},
  * and evaluation accepts only a {@link FrozenGrantSet}, so widening a frozen
@@ -243,6 +245,8 @@ export const emptyDraftGrantSet = (policyRevision: PolicyRevision): DraftGrantSe
  * {@link FrozenGrantSet} is a compile error, which is the freeze invariant
  * expressed as a type rather than as a runtime check.
  *
+ * **Details**
+ *
  * Fails with {@link GrantRevisionMismatch} when the grant's own
  * `policyRevision` differs from the set's: a set pinned to revision X must not
  * smuggle in authority issued under revision Y, or the revision recorded in
@@ -455,6 +459,8 @@ const principalsEqual = S.toEquivalence(Principal);
 /**
  * The pure evaluator: a total function of (frozen grants, request, evaluation
  * options) with error channel `never` — refusal is a value.
+ *
+ * **Details**
  *
  * It re-verifies the set's seal **first**, because `S.Class` and schema
  * decoding can both produce a `FrozenGrantSet` whose `digest` does not match

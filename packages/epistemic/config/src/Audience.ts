@@ -1,6 +1,8 @@
 /**
  * Destination-to-audience resolution.
  *
+ * **Details**
+ *
  * Audience is derived from the destination, never declared by the caller — a
  * prompt-injected agent that could name its own audience could name the
  * friendlier one. The rule is loopback-versus-not: a destination that resolves
