@@ -21,20 +21,28 @@
  *    every Turbo `env`/`passThroughEnv` entry against every environment variable name those entries mention plus
  *    `BIOME_CONFIG_PATH`. A fixed set of `!`- and `#`-prefixed patterns (`dialectPrefixes`) pins the dialect
  *    choice itself: no live pattern carries either prefix, so only this synthetic set would catch a matcher that
- *    read them as negation or comment. Every disagreement is reported; the gate is zero.
+ *    read them as negation or comment. Every disagreement is reported; the gate is zero. A second synthetic
+ *    section (`dialectMagic`) records where the two dialects are KNOWN to differ: `?`, `[..]`, `{a,b}`, `+(..)`,
+ *    `\` and an in-segment `**` (`src/**.ts`) were literal characters to the old compiler and carry minimatch
+ *    meaning in the kit. Each case states both expected answers; the gate is that every observed pair matches its
+ *    expectation (no live pattern uses any of these characters, so the live sections cannot see the shift).
  * 2. **EffectImports file-set parity.** The three discovery sets a run can read (`code` sources, `markdown`-mode
  *    foundation sources, `markdown` documents) are listed through the exported discovery functions and
  *    fingerprinted (count, sha256 of the sorted newline-joined list, per-top-level-directory histogram). Run once
  *    before the switch (`--out`, with `--list-dir <dir>` writing each full list), then after it with
- *    `--before <baseline.json> --before-lists <dir>`: every fingerprint must match, or every added and removed path
- *    must be a shift listed in `INTENDED_FILE_SET_SHIFTS` with its reason.
+ *    `--before <baseline.json> --before-lists <dir> --baseline-tree <sha>`: every fingerprint must match, or every
+ *    added and removed path must be classified: a path the tree itself gained or lost between the baseline commit
+ *    and HEAD (`git diff --name-status <sha> HEAD`) is a tree change, not a walker change; anything else must be a
+ *    shift listed in `INTENDED_FILE_SET_SHIFTS` with its reason. The R2b before lists are committed under
+ *    `research/glob-adoption-parity-r2b-before-lists/` (listed at ed0c4ec45e), so the classification re-derives
+ *    after the lane merges `main`.
  *
  * Nothing here runs in CI; the reports ride in `research/` and the PR body.
  *
  * Usage (from the repo root):
  *
  *   bun goals/effected-promotion/ops/glob-adoption-parity.ts [--out <report.json>] [--list-dir <dir>]
- *     [--before <baseline.json> --before-lists <dir>]
+ *     [--before <baseline.json> --before-lists <dir> --baseline-tree <sha>]
  *
  * Exit status is non-zero when a pattern pair disagrees or an EffectImports fingerprint differs from the baseline.
  */
@@ -130,6 +138,22 @@ const PatternSection = S.Struct({
   disagreements: S.Array(Disagreement),
 });
 type PatternSection = typeof PatternSection.Type;
+const DialectCase = S.Struct({
+  pattern: S.String,
+  candidate: S.String,
+  old: S.Boolean,
+  kit: S.Boolean,
+  reason: S.String,
+});
+type DialectCase = typeof DialectCase.Type;
+// A section whose disagreements are expected: every case is checked against both dialects, and `unexpected`
+// lists the cases where either observed answer differs from the pinned one.
+const DialectShiftSection = S.Struct({
+  cases: S.Array(DialectCase),
+  shifted: S.Number,
+  unexpected: S.Array(DialectCase),
+});
+type DialectShiftSection = typeof DialectShiftSection.Type;
 const Fingerprint = S.Struct({
   count: S.Number,
   sha256: S.String,
@@ -146,6 +170,9 @@ const FileSetShift = S.Struct({
   corpus: S.String,
   kind: S.Literals(["added", "removed"]),
   path: S.String,
+  // "tree": the repository gained or lost the path between the baseline commit and HEAD; "walker": a listed
+  // semantic shift of the switch itself; "" when unclassified.
+  cause: S.Literals(["tree", "walker", ""]),
   reason: S.String,
 });
 type FileSetShift = typeof FileSetShift.Type;
@@ -158,10 +185,14 @@ const Report = S.Struct({
     turboEnv: PatternSection,
     dialectPrefixes: S.optionalKey(PatternSection),
   }),
+  dialectMagic: S.optionalKey(DialectShiftSection),
   effectImports: FileSets,
   comparison: S.optionalKey(
     S.Struct({
       baseline: S.String,
+      beforeLists: S.optionalKey(S.String),
+      baselineTree: S.optionalKey(S.String),
+      tree: S.optionalKey(S.String),
       identical: S.Boolean,
       differing: S.Array(S.String),
       shifts: S.Array(FileSetShift),
@@ -307,6 +338,66 @@ const DIALECT_PREFIX_CANDIDATES: ReadonlyArray<string> = [
   "docs/a.md",
 ];
 
+// Where the dialects are known to differ. The old compiler treated every character other than `*` as a literal;
+// minimatch gives these glob meaning. Each row pins both answers, so a matcher that drifted either way is caught.
+const LITERAL_THEN_MAGIC = "the old compiler read the character literally; minimatch gives it glob meaning";
+const DIALECT_MAGIC_CASES: ReadonlyArray<DialectCase> = [
+  { pattern: "a?.ts", candidate: "ab.ts", old: false, kit: true, reason: `\`?\`: ${LITERAL_THEN_MAGIC}` },
+  { pattern: "a?.ts", candidate: "a?.ts", old: true, kit: true, reason: "`?` also matches a literal `?`" },
+  { pattern: "a?.ts", candidate: "a.ts", old: false, kit: false, reason: "`?` matches exactly one character" },
+  { pattern: "[ab].ts", candidate: "a.ts", old: false, kit: true, reason: `\`[..]\`: ${LITERAL_THEN_MAGIC}` },
+  { pattern: "[ab].ts", candidate: "[ab].ts", old: true, kit: false, reason: `\`[..]\`: ${LITERAL_THEN_MAGIC}` },
+  { pattern: "[ab].ts", candidate: "c.ts", old: false, kit: false, reason: "`[ab]` excludes `c`" },
+  { pattern: "{a,b}.ts", candidate: "b.ts", old: false, kit: true, reason: `\`{a,b}\`: ${LITERAL_THEN_MAGIC}` },
+  { pattern: "{a,b}.ts", candidate: "{a,b}.ts", old: true, kit: false, reason: `\`{a,b}\`: ${LITERAL_THEN_MAGIC}` },
+  { pattern: "+(a|b).ts", candidate: "ab.ts", old: false, kit: true, reason: `\`+(..)\`: ${LITERAL_THEN_MAGIC}` },
+  { pattern: "+(a|b).ts", candidate: "+(a|b).ts", old: true, kit: false, reason: `\`+(..)\`: ${LITERAL_THEN_MAGIC}` },
+  {
+    pattern: "src/**.ts",
+    candidate: "src/a.ts",
+    old: true,
+    kit: true,
+    reason: "an in-segment `**` matches within the segment under both",
+  },
+  {
+    pattern: "src/**.ts",
+    candidate: "src/a/b.ts",
+    old: true,
+    kit: false,
+    reason: "an in-segment `**` crossed `/` for the old compiler; minimatch reads it as a single-segment `*`",
+  },
+  {
+    pattern: "a\\*.ts",
+    candidate: "a*.ts",
+    old: false,
+    kit: true,
+    reason: `\`\\\`: ${LITERAL_THEN_MAGIC} (an escape)`,
+  },
+  {
+    pattern: "a\\*.ts",
+    candidate: "a\\b.ts",
+    old: true,
+    kit: false,
+    reason: `\`\\\`: ${LITERAL_THEN_MAGIC} (an escape)`,
+  },
+];
+
+const compareDialectMagic = (): DialectShiftSection => {
+  const observed = A.map(DIALECT_MAGIC_CASES, (expected) => ({
+    ...expected,
+    old: oldGlobPatternToRegExp(expected.pattern).test(expected.candidate),
+    kit: kitMatches(expected.pattern)(expected.candidate),
+  }));
+  return {
+    cases: DIALECT_MAGIC_CASES,
+    shifted: A.length(A.filter(DIALECT_MAGIC_CASES, (expected) => expected.old !== expected.kit)),
+    unexpected: A.filter(observed, (row, index) => {
+      const expected = DIALECT_MAGIC_CASES[index];
+      return expected === undefined || row.old !== expected.old || row.kit !== expected.kit;
+    }),
+  };
+};
+
 // --- EffectImports file sets ----------------------------------------------------------------------------------
 
 const fingerprint = (files: ReadonlyArray<string>): Fingerprint => {
@@ -348,30 +439,58 @@ const INTENDED_FILE_SET_SHIFTS: ReadonlyArray<
       /\.(?:ts|tsx|mts|cts|js|jsx|mjs|cjs)\/[^/]+$/u.test(path) && !/\.(?:ts|tsx|mts|cts|js|jsx|mjs|cjs)$/u.test(path),
     "tinyglobby matched every file below a directory whose own name ends in a source extension (a Playwright `__screenshots__/<name>.test.ts/` folder); the kit matches the file path itself, so a PNG is no longer scanned as TypeScript.",
   ],
-  [
-    "removed",
-    (path) => path === "packages/tooling/tool/cli/src/internal/GlobPattern.ts",
-    "R2b deletes this module; the baseline was listed before the deletion, over an otherwise identical tree.",
-  ],
-  [
-    "added",
-    (path) => path === "packages/tooling/tool/cli/src/commands/Docgen/internal/JsDocNodes.ts",
-    "R2b adds this module (the shared declared-JSDoc reader) after the baseline was listed; a tree change, not a walker change.",
-  ],
 ];
 
-const classifyShift = (corpus: Corpus, kind: "added" | "removed", path: string): FileSetShift => ({
-  corpus,
-  kind,
-  path,
-  reason: pipe(
+// Paths the repository itself gained or lost between the baseline commit and HEAD. A walker that lists a file the
+// tree gained, or stops listing one the tree lost, has not changed semantics.
+interface TreeChanges {
+  readonly added: MutableHashSet.MutableHashSet<string>;
+  readonly removed: MutableHashSet.MutableHashSet<string>;
+}
+const treeChanges = (baselineTree: string) =>
+  runGitLines(repoRoot, ["diff", "--name-status", "-z", "--no-renames", baselineTree, "HEAD"]).pipe(
+    Effect.map((lines): TreeChanges => {
+      const fields = A.filter(A.flatMap(lines, Str.split("\0")), Str.isNonEmpty);
+      const added = MutableHashSet.empty<string>();
+      const removed = MutableHashSet.empty<string>();
+      for (const [status, path] of A.chunksOf(fields, 2)) {
+        if (path === undefined) continue;
+        if (status === "A") MutableHashSet.add(added, path);
+        if (status === "D") MutableHashSet.add(removed, path);
+      }
+      return { added, removed };
+    })
+  );
+
+const classifyShift = (
+  tree: O.Option<TreeChanges>,
+  corpus: Corpus,
+  kind: "added" | "removed",
+  path: string
+): FileSetShift => {
+  const inTree = O.exists(tree, (changes) =>
+    MutableHashSet.has(kind === "added" ? changes.added : changes.removed, path)
+  );
+  if (inTree) {
+    return {
+      corpus,
+      kind,
+      path,
+      cause: "tree",
+      reason: `the repository ${kind === "added" ? "gained" : "lost"} this path between the baseline commit and HEAD; a tree change, not a walker change`,
+    };
+  }
+  return pipe(
     A.findFirst(INTENDED_FILE_SET_SHIFTS, ([shiftKind, test]) => shiftKind === kind && test(path)),
-    O.map(([, , reason]) => reason),
-    O.getOrElse(() => "")
-  ),
-});
+    O.match({
+      onNone: (): FileSetShift => ({ corpus, kind, path, cause: "", reason: "" }),
+      onSome: ([, , reason]): FileSetShift => ({ corpus, kind, path, cause: "walker", reason }),
+    })
+  );
+};
 
 const listShifts = (
+  tree: O.Option<TreeChanges>,
   corpus: Corpus,
   before: ReadonlyArray<string>,
   after: ReadonlyArray<string>
@@ -381,11 +500,11 @@ const listShifts = (
   return A.appendAll(
     A.map(
       A.filter(after, (path) => !MutableHashSet.has(beforeSet, path)),
-      (path) => classifyShift(corpus, "added", path)
+      (path) => classifyShift(tree, corpus, "added", path)
     ),
     A.map(
       A.filter(before, (path) => !MutableHashSet.has(afterSet, path)),
-      (path) => classifyShift(corpus, "removed", path)
+      (path) => classifyShift(tree, corpus, "removed", path)
     )
   );
 };
@@ -464,6 +583,8 @@ const program = Effect.gen(function* () {
 
   // 1e. the `!` / `#` prefix literals, which no live pattern exercises.
   const dialectPrefixes = comparePatterns(DIALECT_PREFIX_PATTERNS, DIALECT_PREFIX_CANDIDATES);
+  // 1f. the characters that are literal to the old compiler and magic to minimatch, with both answers pinned.
+  const dialectMagic = compareDialectMagic();
 
   // 2. EffectImports discovery sets.
   const codeOptions = EffectImportRulesOptions.make({ excludePaths: [] });
@@ -493,6 +614,7 @@ const program = Effect.gen(function* () {
   const current: Report = {
     tool: TOOL,
     patternParity: { docgenExcludes, coverageFixtureOwners, coverageSelectors, turboEnv, dialectPrefixes },
+    dialectMagic,
     effectImports,
   };
   const currentLists: Record<Corpus, ReadonlyArray<string>> = { codeSources, markdownModeSources, markdownDocuments };
@@ -502,6 +624,12 @@ const program = Effect.gen(function* () {
       Effect.gen(function* () {
         const before = yield* fs.readFileString(baselinePath).pipe(Effect.flatMap(decodeReport));
         const differing = fileSetDifferences(before.effectImports, effectImports);
+        const baselineTree = flag("--baseline-tree");
+        const tree = yield* O.match(baselineTree, {
+          onNone: () => Effect.succeedNone,
+          onSome: (sha) => Effect.map(treeChanges(sha), O.some),
+        });
+        const head = yield* runGitLines(repoRoot, ["rev-parse", "HEAD"]).pipe(Effect.map(A.head));
         const shifts = yield* O.match(flag("--before-lists"), {
           onNone: () => Effect.succeed(A.empty<FileSetShift>()),
           onSome: (dir) =>
@@ -510,7 +638,7 @@ const program = Effect.gen(function* () {
                 .readFileString(path.join(dir, corpusListFile[corpus]))
                 .pipe(
                   Effect.map((text) =>
-                    listShifts(corpus, A.filter(Str.split("\n")(text), Str.isNonEmpty), currentLists[corpus])
+                    listShifts(tree, corpus, A.filter(Str.split("\n")(text), Str.isNonEmpty), currentLists[corpus])
                   )
                 )
             ).pipe(Effect.map(A.flatten)),
@@ -519,6 +647,12 @@ const program = Effect.gen(function* () {
           ...current,
           comparison: {
             baseline: relative(baselinePath),
+            ...O.match(flag("--before-lists"), {
+              onNone: () => ({}),
+              onSome: (dir) => ({ beforeLists: relative(dir) }),
+            }),
+            ...O.match(baselineTree, { onNone: () => ({}), onSome: (sha) => ({ baselineTree: sha }) }),
+            ...O.match(head, { onNone: () => ({}), onSome: (sha) => ({ tree: sha }) }),
             identical: A.isReadonlyArrayEmpty(differing),
             differing,
             shifts,
@@ -549,10 +683,15 @@ const program = Effect.gen(function* () {
       : A.isReadonlyArrayEmpty(comparison.shifts)
         ? A.map(
             comparison.differing,
-            (key) => `EffectImports ${key} differs from the baseline (pass --before-lists to classify)`
+            (key) =>
+              `EffectImports ${key} differs from the baseline (pass --before-lists and --baseline-tree to classify)`
           )
         : A.map(comparison.unclassified, (shift) => `unclassified EffectImports shift: ${shift}`);
-  const reasons = A.appendAll(disagreements, fileSetReasons);
+  const magicReasons = A.map(
+    dialectMagic.unexpected,
+    (row) => `dialectMagic: ${row.pattern} vs ${row.candidate} observed old=${row.old} kit=${row.kit}`
+  );
+  const reasons = A.appendAll(A.appendAll(disagreements, magicReasons), fileSetReasons);
   yield* Console.log(
     A.join(
       A.map(sections, ([name, section]) => `${name}: ${section.comparisons} comparisons, ${section.matches} matches`),
@@ -560,7 +699,12 @@ const program = Effect.gen(function* () {
     )
   );
   yield* Console.log(
-    `effectImports: code=${effectImports.codeSources.count} markdownModeSources=${effectImports.markdownModeSources.count} markdown=${effectImports.markdownDocuments.count}${comparison === undefined ? "" : ` identical=${comparison.identical} shifts=${comparison.shifts.length}`}`
+    `dialectMagic: ${dialectMagic.cases.length} pinned cases, ${dialectMagic.shifted} shifted, ${dialectMagic.unexpected.length} unexpected`
+  );
+  const causes = (cause: "tree" | "walker"): number =>
+    comparison === undefined ? 0 : A.length(A.filter(comparison.shifts, (shift) => shift.cause === cause));
+  yield* Console.log(
+    `effectImports: code=${effectImports.codeSources.count} markdownModeSources=${effectImports.markdownModeSources.count} markdown=${effectImports.markdownDocuments.count}${comparison === undefined ? "" : ` identical=${comparison.identical} shifts=${comparison.shifts.length} (tree=${causes("tree")} walker=${causes("walker")}) unclassified=${comparison.unclassified.length}`}`
   );
   if (A.isReadonlyArrayNonEmpty(reasons)) return yield* new ParityFailed({ reasons });
 });

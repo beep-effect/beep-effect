@@ -3,16 +3,16 @@
   "patternParity": {
     "docgenExcludes": {
       "patterns": 37,
-      "candidates": 7658,
-      "comparisons": 283346,
-      "matches": 1362,
+      "candidates": 7678,
+      "comparisons": 284086,
+      "matches": 1367,
       "disagreements": []
     },
     "coverageFixtureOwners": {
       "patterns": 16,
-      "candidates": 43439,
-      "comparisons": 695024,
-      "matches": 320,
+      "candidates": 43539,
+      "comparisons": 696624,
+      "matches": 322,
       "disagreements": []
     },
     "coverageSelectors": {
@@ -37,18 +37,122 @@
       "disagreements": []
     }
   },
+  "dialectMagic": {
+    "cases": [
+      {
+        "pattern": "a?.ts",
+        "candidate": "ab.ts",
+        "old": false,
+        "kit": true,
+        "reason": "`?`: the old compiler read the character literally; minimatch gives it glob meaning"
+      },
+      {
+        "pattern": "a?.ts",
+        "candidate": "a?.ts",
+        "old": true,
+        "kit": true,
+        "reason": "`?` also matches a literal `?`"
+      },
+      {
+        "pattern": "a?.ts",
+        "candidate": "a.ts",
+        "old": false,
+        "kit": false,
+        "reason": "`?` matches exactly one character"
+      },
+      {
+        "pattern": "[ab].ts",
+        "candidate": "a.ts",
+        "old": false,
+        "kit": true,
+        "reason": "`[..]`: the old compiler read the character literally; minimatch gives it glob meaning"
+      },
+      {
+        "pattern": "[ab].ts",
+        "candidate": "[ab].ts",
+        "old": true,
+        "kit": false,
+        "reason": "`[..]`: the old compiler read the character literally; minimatch gives it glob meaning"
+      },
+      {
+        "pattern": "[ab].ts",
+        "candidate": "c.ts",
+        "old": false,
+        "kit": false,
+        "reason": "`[ab]` excludes `c`"
+      },
+      {
+        "pattern": "{a,b}.ts",
+        "candidate": "b.ts",
+        "old": false,
+        "kit": true,
+        "reason": "`{a,b}`: the old compiler read the character literally; minimatch gives it glob meaning"
+      },
+      {
+        "pattern": "{a,b}.ts",
+        "candidate": "{a,b}.ts",
+        "old": true,
+        "kit": false,
+        "reason": "`{a,b}`: the old compiler read the character literally; minimatch gives it glob meaning"
+      },
+      {
+        "pattern": "+(a|b).ts",
+        "candidate": "ab.ts",
+        "old": false,
+        "kit": true,
+        "reason": "`+(..)`: the old compiler read the character literally; minimatch gives it glob meaning"
+      },
+      {
+        "pattern": "+(a|b).ts",
+        "candidate": "+(a|b).ts",
+        "old": true,
+        "kit": false,
+        "reason": "`+(..)`: the old compiler read the character literally; minimatch gives it glob meaning"
+      },
+      {
+        "pattern": "src/**.ts",
+        "candidate": "src/a.ts",
+        "old": true,
+        "kit": true,
+        "reason": "an in-segment `**` matches within the segment under both"
+      },
+      {
+        "pattern": "src/**.ts",
+        "candidate": "src/a/b.ts",
+        "old": true,
+        "kit": false,
+        "reason": "an in-segment `**` crossed `/` for the old compiler; minimatch reads it as a single-segment `*`"
+      },
+      {
+        "pattern": "a\\*.ts",
+        "candidate": "a*.ts",
+        "old": false,
+        "kit": true,
+        "reason": "`\\`: the old compiler read the character literally; minimatch gives it glob meaning (an escape)"
+      },
+      {
+        "pattern": "a\\*.ts",
+        "candidate": "a\\b.ts",
+        "old": true,
+        "kit": false,
+        "reason": "`\\`: the old compiler read the character literally; minimatch gives it glob meaning (an escape)"
+      }
+    ],
+    "shifted": 10,
+    "unexpected": []
+  },
   "effectImports": {
     "codeSources": {
-      "count": 8656,
-      "sha256": "8e06119643c43394e756b58d630fdfdcfd63ddcf365c2c635ab6e19aa8377a5f",
+      "count": 8686,
+      "sha256": "991293a8b848f09044a69306ad0d35a004d52d6ee2116a93d49b239e2a8142a5",
       "byTopLevel": {
         ".": 6,
         ".claude": 8,
         "apps": 560,
         "explorations": 25,
-        "goals": 127,
+        "goals": 129,
         "infra": 53,
-        "packages": 7179,
+        "packages": 7207,
         "scratchpad": 692,
         "scripts": 5,
         "tools": 1
@@ -62,8 +166,8 @@
       }
     },
     "markdownDocuments": {
-      "count": 8538,
-      "sha256": "2f2ec7b25f86fc6ef045f93f0fda852bfd7eb7a542db8eb2134da53db37b1c3a",
+      "count": 8591,
+      "sha256": "a6203b37d0259d3effed8d7d004b2b2b8b9a639cb912dced7ea973f71a00d66b",
       "byTopLevel": {
         ".": 9,
         ".changeset": 1,
@@ -73,8 +177,8 @@
         ".patterns": 7,
         "apps": 52,
         "docs": 91,
-        "explorations": 1581,
-        "goals": 5920,
+        "explorations": 1604,
+        "goals": 5950,
         "harness-ledger": 1,
         "infra": 8,
         "packages": 445,
@@ -86,26 +190,613 @@
   },
   "comparison": {
     "baseline": "goals/effected-promotion/research/glob-adoption-parity-r2b-before.json",
+    "beforeLists": "goals/effected-promotion/research/glob-adoption-parity-r2b-before-lists",
+    "baselineTree": "ed0c4ec45e",
+    "tree": "fa573df1b0924b2182aa1811fe5d1707ac91b2e9",
     "identical": false,
-    "differing": ["codeSources"],
+    "differing": ["codeSources", "markdownDocuments"],
     "shifts": [
       {
         "corpus": "codeSources",
         "kind": "added",
+        "path": "goals/effected-promotion/ops/cli-failure-render-differential.ts",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "codeSources",
+        "kind": "added",
+        "path": "goals/effected-promotion/ops/tsconfig-sync-parity.ts",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "codeSources",
+        "kind": "added",
+        "path": "packages/drivers/duckdb/src/DuckDbEventJournal.service.ts",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "codeSources",
+        "kind": "added",
+        "path": "packages/drivers/duckdb/src/DuckDbEventLogServerEncrypted.service.ts",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "codeSources",
+        "kind": "added",
+        "path": "packages/drivers/duckdb/src/DuckDbMessageStorage.service.ts",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "codeSources",
+        "kind": "added",
+        "path": "packages/drivers/duckdb/src/DuckDbPersistedQueue.service.ts",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "codeSources",
+        "kind": "added",
+        "path": "packages/drivers/duckdb/src/DuckDbPersistence.service.ts",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "codeSources",
+        "kind": "added",
+        "path": "packages/drivers/duckdb/src/DuckDbRunnerStorage.service.ts",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "codeSources",
+        "kind": "added",
+        "path": "packages/drivers/duckdb/src/internal/storage.ts",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "codeSources",
+        "kind": "added",
+        "path": "packages/drivers/duckdb/test/DuckDbEventJournal.test.ts",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "codeSources",
+        "kind": "added",
+        "path": "packages/drivers/duckdb/test/DuckDbEventLogServerEncrypted.test.ts",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "codeSources",
+        "kind": "added",
+        "path": "packages/drivers/duckdb/test/DuckDbMessageStorage.test.ts",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "codeSources",
+        "kind": "added",
+        "path": "packages/drivers/duckdb/test/DuckDbNativeQueueCluster.probe.test.ts",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "codeSources",
+        "kind": "added",
+        "path": "packages/drivers/duckdb/test/DuckDbPersistedQueue.test.ts",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "codeSources",
+        "kind": "added",
+        "path": "packages/drivers/duckdb/test/DuckDbPersistence.test.ts",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "codeSources",
+        "kind": "added",
+        "path": "packages/drivers/duckdb/test/DuckDbQueueCluster.boundaries.test.ts",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "codeSources",
+        "kind": "added",
+        "path": "packages/drivers/duckdb/test/DuckDbRunnerStorage.test.ts",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "codeSources",
+        "kind": "added",
+        "path": "packages/drivers/duckdb/test/shared/DuckDbPersistenceSharedTest.ts",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "codeSources",
+        "kind": "added",
+        "path": "packages/drivers/duckdb/test/shared/DuckDbRunnerStorageIntegrationTest.ts",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "codeSources",
+        "kind": "added",
+        "path": "packages/drivers/duckdb/test/shared/DuckDbRunnerStorageSharedTest.ts",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "codeSources",
+        "kind": "added",
+        "path": "packages/drivers/duckdb/test/shared/MessageStorageTest.ts",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "codeSources",
+        "kind": "added",
+        "path": "packages/drivers/duckdb/test/shared/PersistedQueueSqlTest.ts",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "codeSources",
+        "kind": "added",
+        "path": "packages/drivers/duckdb/test/shared/PersistedQueueTest.ts",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "codeSources",
+        "kind": "added",
+        "path": "packages/drivers/duckdb/test/shared/SqlEventJournalSharedTest.ts",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "codeSources",
+        "kind": "added",
+        "path": "packages/drivers/duckdb/test/shared/SqlEventLogServerEncryptedStorageTest.ts",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "codeSources",
+        "kind": "added",
+        "path": "packages/drivers/duckdb/test/shared/SqlMessageStorageIntegrationTest.ts",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "codeSources",
+        "kind": "added",
         "path": "packages/tooling/tool/cli/src/commands/Docgen/internal/JsDocNodes.ts",
-        "reason": "R2b adds this module (the shared declared-JSDoc reader) after the baseline was listed; a tree change, not a walker change."
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "codeSources",
+        "kind": "added",
+        "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/LedgerFile.ts",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "codeSources",
+        "kind": "added",
+        "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/ReviewLane.schemas.ts",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "codeSources",
+        "kind": "added",
+        "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/ReviewLane.ts",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "codeSources",
+        "kind": "added",
+        "path": "packages/tooling/tool/cli/test/yeet-review-lane.test.ts",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
       },
       {
         "corpus": "codeSources",
         "kind": "removed",
         "path": "packages/ontology/client/test/browser/__screenshots__/graph-renderer-toggle.test.ts/workbench-graph-renderer-toggle-mounts-cosmos-by-default--swaps-to-3D-and-back--and-keeps-selection-flowing-1.png",
+        "cause": "walker",
         "reason": "tinyglobby matched every file below a directory whose own name ends in a source extension (a Playwright `__screenshots__/<name>.test.ts/` folder); the kit matches the file path itself, so a PNG is no longer scanned as TypeScript."
       },
       {
         "corpus": "codeSources",
         "kind": "removed",
         "path": "packages/tooling/tool/cli/src/internal/GlobPattern.ts",
-        "reason": "R2b deletes this module; the baseline was listed before the deletion, over an otherwise identical tree."
+        "cause": "tree",
+        "reason": "the repository lost this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "explorations/doc-hub-spokes/BRIEF.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "explorations/doc-hub-spokes/CAPTURE.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "explorations/doc-hub-spokes/DECISIONS.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "explorations/doc-hub-spokes/MAP.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "explorations/doc-hub-spokes/README.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "explorations/doc-hub-spokes/RESEARCH.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "explorations/doc-hub-spokes/research/OPPORTUNITIES.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "explorations/doc-hub-spokes/research/REPORT-2026-10-28-prior-art.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "explorations/doc-hub-spokes/research/SOURCES.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "explorations/doc-hub-spokes/research/capture-2026-10-28.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "explorations/doc-hub-spokes/research/notes/diagnostics_as_signal.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "explorations/doc-hub-spokes/research/notes/document_rule_oracles.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "explorations/doc-hub-spokes/research/notes/positioned_codecs.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "explorations/doc-hub-spokes/research/notes/provenance_gating.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "explorations/doc-hub-spokes/research/notes/rule_dsls.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "explorations/doc-hub-spokes/research/notes/typed_llm_admission.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "explorations/doc-hub-spokes/research/panel/PANEL-BRIEF.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "explorations/doc-hub-spokes/research/panel/astra.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "explorations/doc-hub-spokes/research/panel/glm.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "explorations/doc-hub-spokes/research/panel/grok.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "explorations/doc-hub-spokes/research/panel/kimi.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "explorations/doc-hub-spokes/research/panel/muse.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "explorations/doc-hub-spokes/research/panel/opus.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "goals/doc-hub-spokes-inversion/GOAL.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "goals/doc-hub-spokes-inversion/PLAN.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "goals/doc-hub-spokes-inversion/README.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "goals/doc-hub-spokes-inversion/SPEC.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "goals/doc-hub-spokes-inversion/research/SOURCES.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "goals/effect-string-migration/history/reflections/2026-10-28-codex.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "goals/effect-string-migration/history/verification-2026-10-28.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "goals/effect-string-migration/research/OPPORTUNITIES.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "goals/effected-promotion/research/cache-baseline-review-3-a7.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "goals/epistemics-foundation-extraction/history/2026-10-28-claim-key-migration.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "goals/epistemics-foundation-extraction/history/2026-10-28-hosted-acceptance.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "goals/epistemics-foundation-extraction/history/2026-10-28-readiness-retention.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "goals/epistemics-foundation-extraction/history/reflections/2026-10-28-codex.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "goals/epistemics-foundation-extraction/research/2026-10-28-acceptance-audit.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "goals/epistemics-foundation-extraction/research/OPPORTUNITIES.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "goals/exact-optional-keys/history/reflections/2026-10-28-codex.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "goals/exact-optional-keys/research/completion-audit-2026-10-28.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "goals/exact-optional-keys/research/package-verification-2026-10-28.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "goals/oracle-loop-poc/GOAL.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "goals/oracle-loop-poc/PLAN.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "goals/oracle-loop-poc/README.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "goals/oracle-loop-poc/SPEC.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "goals/oracle-loop-poc/research/SOURCES.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "goals/public-origin-beep-effect-com/history/2026-10-28-verification-recovery.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "goals/public-origin-beep-effect-com/history/reflections/2026-10-28-codex.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "goals/public-origin-beep-effect-com/research/OPPORTUNITIES.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "goals/repository-simplification-residue/history/receipts/detectors-closeout.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "goals/tsrs-gates/history/completion-audit-2026-10-28.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "goals/tsrs-gates/history/reflections/2026-10-28-codex.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
+      },
+      {
+        "corpus": "markdownDocuments",
+        "kind": "added",
+        "path": "goals/tsrs-gates/research/OPPORTUNITIES.md",
+        "cause": "tree",
+        "reason": "the repository gained this path between the baseline commit and HEAD; a tree change, not a walker change"
       }
     ],
     "unclassified": []
