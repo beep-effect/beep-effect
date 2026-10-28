@@ -63,12 +63,12 @@
       "purpose": "Wave 3-3 differential: @beep/config-file JSONC, YAML and TOML codecs against the npm parser oracles over every tracked config file."
     },
     {
-      "path": "ops/github-reporting-gfm-differential.ts",
-      "purpose": "Wave 3-1 oracle: GitHubMarkdown writer output rendered through micromark GFM and checked for the promised table and inline structure."
-    },
-    {
       "path": "ops/git-adoption-differential.ts",
       "purpose": "R10 differential: the pre-R10 repo-cli merge-base read, worktree probes and origin/labels config reads compared with their @beep/git adoptions over scratch repositories."
+    },
+    {
+      "path": "ops/github-reporting-gfm-differential.ts",
+      "purpose": "Wave 3-1 oracle: GitHubMarkdown writer output rendered through micromark GFM and checked for the promised table and inline structure."
     },
     {
       "path": "ops/lockfiles-adoption-parity.ts",
@@ -107,12 +107,12 @@
       "purpose": "Wave 3-2 differential: TsconfigLoader.resolve against tsc --showConfig, optionally three-way with get-tsconfig."
     },
     {
-      "path": "ops/repo-workspaces-differential.ts",
-      "purpose": "Wave 4-W-a differential: @beep/repo-workspaces member set, edge set and topological order against bun.lock and raw package.json oracles."
-    },
-    {
       "path": "ops/repo-utils-package-json-parity.ts",
       "purpose": "Wave 3-A3 parity: the repo-utils package.json model and workspace dependency helpers recorded before the @beep/package-json re-base and compared at the head, with a mutation corpus."
+    },
+    {
+      "path": "ops/repo-workspaces-differential.ts",
+      "purpose": "Wave 4-W-a differential: @beep/repo-workspaces member set, edge set and topological order against bun.lock and raw package.json oracles."
     },
     {
       "path": "ops/sbom-corpus.ts",
@@ -121,6 +121,10 @@
     {
       "path": "ops/semver-owner-switch-differential.ts",
       "purpose": "R1 differential: the deleted @beep/schema/Semver and hand-rolled VersionSync and CacheClientPin version code compared with @beep/semver over bun.lock and every tracked package.json."
+    },
+    {
+      "path": "ops/tsconfig-validator-parity.ts",
+      "purpose": "3-A6 parity: records the strict tsconfig verdict over every tracked tsconfig*.json and docgen's resolved compiler options for every docgen.json, and compares a before/after pair against the intended TsconfigValidator verdict shifts."
     },
     {
       "path": "ops/xdg-systemd-differential.ts",
