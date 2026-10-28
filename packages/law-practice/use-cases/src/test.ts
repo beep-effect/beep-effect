@@ -64,6 +64,17 @@ export { CitationOracleOperations } from "./internal/citationOracleOperations.ts
  */
 export { CitationOracleVocabularyMapping } from "./internal/citationOracleVocabularyMapping.ts";
 /**
+ * Regex adversarial corpus, synthetic controls and family benchmark receipts.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export {
+  CitationRegexBenchmarkContract,
+  CitationRegexBenchmarkControls,
+  CitationRegexBenchmarkResults,
+} from "./internal/citationRegexBenchmarks.ts";
+/**
  * Focused supplemental extraction, resolution, cleaning and annotation evidence.
  *
  * @category testing

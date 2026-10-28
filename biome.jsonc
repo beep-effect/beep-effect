@@ -80,6 +80,7 @@
       "!packages/law-practice/use-cases/test/fixtures/eyecite/regex-inventory.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/typescript-extensions.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/vocabulary-mapping.json",
+      "!packages/law-practice/use-cases/test/fixtures/eyecite/regex-adversarial-corpus.json",
       "!scratchpad",
       // beep-ci-operational-ontology §4b: digest-locked run evidence. The
       // adapter engine bytes are pinned by a sha256 sidecar and the archived

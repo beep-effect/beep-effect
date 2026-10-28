@@ -59,6 +59,11 @@ const program = Effect.gen(function* () {
       ["--fixtures", fixtures, "--evidence", evidence, ...(audit ? ["--audit"] : [])],
     ],
     ["divergences", "check-divergences.ts", ["--fixtures", fixtures, ...(audit ? ["--audit"] : [])]],
+    [
+      "regex-benchmarks",
+      "check-regex-benchmarks.ts",
+      ["--fixtures", fixtures, "--evidence", evidence, ...(audit ? ["--audit"] : [])],
+    ],
   ] as const;
   const results = yield* Effect.forEach(
     checks,
@@ -86,7 +91,7 @@ const program = Effect.gen(function* () {
   );
 
   // Trusted, fixed repository paths only. Evidence never supplies executable commands.
-  const finalVerifiers = ["check-regex-benchmarks.ts", "check-target-parity.ts"];
+  const finalVerifiers = ["check-target-parity.ts"];
   const finalResults = yield* Effect.forEach(
     finalVerifiers,
     (script) =>
@@ -121,7 +126,7 @@ const program = Effect.gen(function* () {
   if (!A.every(results, Boolean)) return yield* reject("Citation evidence component validation failed.");
   if (audit) {
     yield* Console.log(
-      "Citation evidence audit passed: 9 components; completion proof remains open. This is not a parity verdict."
+      "Citation evidence audit passed: 10 components; completion proof remains open. This is not a parity verdict."
     );
     return;
   }

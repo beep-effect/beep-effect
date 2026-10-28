@@ -673,12 +673,24 @@ instead of silently splitting delivery or weakening scope.
   difference without a proved applicable rule. Reverse or extend through the
   reviewed plan, schema and equivalent corruption controls.
 
+- **2026-10-28 regex benchmark contract:** freeze twelve adversarial recipes
+  at ten exact UTF-16 sizes, two warmups, five samples and the strict
+  greater-than-3.5 ratio rule for two consecutive doublings. Native control
+  execution is serialized in owned child processes with a one-second lifetime
+  watchdog and confirmed cleanup; this maintainer guard includes startup and
+  does not replace production policy deadlines. The source-only projection
+  excludes mutable workflow/proof fields, avoiding circular receipt hashes.
+  Every family/instance approval remains open pending review, routing, work
+  caps, positive cases and full geometric results. Reverse through a versioned
+  protocol/corpus migration with equivalent positive and negative controls.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from
 spellcheck and formatting in the root tool configuration: `operation-cases`,
 `assertion-cases`, `source-inventory`, `canonical-cases`, `regex-inventory`,
-`typescript-extensions` and `vocabulary-mapping` JSON files below the eyecite
+`typescript-extensions`, `vocabulary-mapping` and `regex-adversarial-corpus`
+JSON files below the eyecite
 fixture directory. They retain upstream legal spellings, source expressions
 or hash-bound payloads. Their separate schema/source/hash/coverage validators
 and corruption controls remain required. These exclusions do not apply to

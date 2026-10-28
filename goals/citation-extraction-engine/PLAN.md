@@ -23,8 +23,9 @@ obligations. Supplemental accounting now retains 13 extraction/resolution
 probes and 26 cleaning/annotation probes, with 80 coordinate records and five
 explicitly open coverage families. Divergence accounting now retains eleven
 representation laws and four fidelity questions, all with unfinished target
-proof. P0 still owes the regex adversarial/benchmark artifacts and remaining
-supplemental proof,
+proof. The regex corpus/benchmark contract now retains 120 exact-size inputs
+and verified Node/Bun synthetic controls; all family proof remains open. P0
+needs its exit audit, while remaining supplemental proof,
 donor decisions,
 final parity-gate integration and regex-safety
 limits. Vocabulary mapping accounts for all 2,430 frozen publications, 2,533
