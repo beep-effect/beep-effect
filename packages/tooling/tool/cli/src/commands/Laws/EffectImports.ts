@@ -340,16 +340,10 @@ const CODE_GLOBS = [
   "*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
 ] as const;
 
-const MARKDOWN_GLOBS = [
-  "**/*.{md,mdx}",
-  "*.{md,mdx}",
-  ".changeset/**/*.{md,mdx}",
-  ".claude/**/*.{md,mdx}",
-  ".github/**/*.{md,mdx}",
-  ".junie/**/*.{md,mdx}",
-  ".patterns/**/*.{md,mdx}",
-  "scratchpad/**/*.{md,mdx}",
-] as const;
+// One walk: under the dot dialect `**` enters every directory, so the dot-leading
+// roots (`.claude`, `.github`, `.changeset`, ...) that used to be listed beside it
+// are already covered and would only be walked a second time.
+const MARKDOWN_GLOBS = ["**/*.{md,mdx}"] as const;
 
 const NESTED_WORKTREE_SEGMENT = "/.claude/worktrees/";
 const GENERATED_OR_VENDOR_SEGMENTS = ["/.repos/", "/node_modules/", "/dist/", "/vendor/"] as const;
@@ -368,8 +362,12 @@ const MARKDOWN_EXCLUSION_GLOBS = A.appendAll(
     `${directory}/**`,
   ])
 );
-// The name-shaped exclusions above, which the walk never enters at any depth.
-const PRUNED_DIRECTORY_NAMES = [".repos", "node_modules", "dist", "vendor", ".git", ".beep"] as const;
+// The name-shaped exclusions above, which the walk never enters at any depth, plus
+// `worktrees`: a populated `.claude/worktrees/<lane>` is a whole checkout that the
+// `**/.claude/worktrees` exclusion would otherwise walk before discarding. The
+// repository tracks no other directory of that name (`git ls-files | grep -c
+// '/worktrees/'` is 0), so the pruned set equals the excluded set over the tree.
+const PRUNED_DIRECTORY_NAMES = [".repos", "node_modules", "dist", "vendor", ".git", ".beep", "worktrees"] as const;
 
 const hasPathPrefix = (prefix: string, filePath: string): boolean =>
   filePath === prefix || Str.startsWith(Str.endsWith("/")(prefix) ? prefix : `${prefix}/`)(filePath);
@@ -1632,6 +1630,7 @@ const codeGlobsFor = (options: EffectImportRulesOptions): ReadonlyArray<string> 
 };
 
 const FOUNDATION_SOURCE_GLOB = "packages/foundation/**/src/**/*.{ts,tsx}";
+const READLINK_CONCURRENCY = 16;
 
 const toCwdRelativePosixPath = (path: Path.Path, file: string): string =>
   toPosixPath(path.isAbsolute(file) ? path.relative(process.cwd(), file) : file);
@@ -1643,7 +1642,10 @@ const toCwdRelativePosixPath = (path: Path.Path, file: string): string =>
 // patterns. Symbolic links are dropped, directories and files alike, as the
 // previous walker did: the repository's `CLAUDE.md` links resolve to `AGENTS.md`
 // files the walk already reads, and a link scanned through its own path would
-// double every finding and write.
+// double every finding and write. The walker skips linked directories itself but
+// lists a linked file (its `stat` follows the link), so the file-level drop is a
+// `readLink` probe per candidate, run concurrently: it is one syscall each over
+// thousands of files, and order is restored by the sort before it.
 const discoverFilesWithGlob = Effect.fn("EffectImports.discoverFilesWithGlob")(function* (
   patterns: ReadonlyArray<string>,
   exclusions: ReadonlyArray<string>,
@@ -1673,11 +1675,14 @@ const discoverFilesWithGlob = Effect.fn("EffectImports.discoverFilesWithGlob")(f
     A.dedupe,
     A.sort(Order.String)
   );
-  return yield* Effect.filter(candidates, (file) =>
-    fs.readLink(path.join(cwd, file)).pipe(
-      Effect.as(false),
-      Effect.orElseSucceed(() => true)
-    )
+  return yield* Effect.filter(
+    candidates,
+    (file) =>
+      fs.readLink(path.join(cwd, file)).pipe(
+        Effect.as(false),
+        Effect.orElseSucceed(() => true)
+      ),
+    { concurrency: READLINK_CONCURRENCY }
   );
 });
 
@@ -1691,9 +1696,9 @@ const discoverFilesWithGlob = Effect.fn("EffectImports.discoverFilesWithGlob")(f
  * family by default, or the explicit paths and prefixes) plus the foundation
  * `src` files the mapping phase resolves exports from; in `markdown` mode only
  * the foundation files remain. Generated and vendored directories
- * (`.repos`, `node_modules`, `dist`, `vendor`, nested `.claude/worktrees`) are
- * excluded, dot directories are not entered, symbolic links are skipped and an
- * unreadable entry is skipped. Paths are POSIX, deduplicated and sorted;
+ * (`.repos`, `node_modules`, `dist`, `vendor`, any `worktrees` directory, so
+ * nested `.claude/worktrees` checkouts above all) are excluded, dot directories
+ * are not entered, symbolic links are skipped and an unreadable entry is skipped. Paths are POSIX, deduplicated and sorted;
  * the per-run scope filter (`excludePaths`, deliberate exclusions, prefixes)
  * is applied by the runner, not here.
  *
@@ -1731,8 +1736,9 @@ export const discoverEffectImportSourceFiles = Effect.fn("EffectImports.discover
  *
  * Explicit `includePaths` are taken as given; otherwise every `.md` and `.mdx`
  * file below the working directory is listed, dot directories included, except
- * the generated and vendored directories the source corpus excludes plus
- * `.git`, `.beep`, `docs/modules`, `docs/generated` and `docs/_internal`.
+ * the generated and vendored directories the source corpus excludes (any
+ * `worktrees` directory among them) plus `.git`, `.beep`, `docs/modules`,
+ * `docs/generated` and `docs/_internal`.
  * Symbolic links and unreadable entries are skipped. Paths are
  * POSIX, deduplicated and sorted; the per-run scope filter is applied by the
  * runner, not here.
