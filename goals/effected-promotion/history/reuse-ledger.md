@@ -165,13 +165,13 @@ formatter rewrites 185 of the 186 repo manifests, while a same-value `modifyToSt
 | repo-cli `Quality/EffectDiagnostics.ts` `buildProjects` and `effectDiagnosticsProjectConfig` (get-tsconfig `parseTsconfig`) | #158 | adopted (3-2) | `TsconfigLoader.resolve` / `.compilerOptions`; the local `EffectiveProjectConfig` schema is deleted. Inventory and every lspconfig string identical before and after. |
 | repo-cli `test/test-tsgo-turbo-inputs.test.ts` build-reference walk | #158 | adopted (3-2) | `TsconfigLoader.resolve`. |
 | repo-cli `internal/quality/TestTypecheckCoverage.ts` hand-rolled extends walk | #159 | adopted (3-2) | One tolerant `TsconfigLoader.resolve` per visited config (W3-m). Every package's uncovered set identical before and after. |
-| repo-cli `Quality/CheckCensus.ts` `TsconfigReferences`, `TsconfigOutDir` | #162 | 3-A5 | `TsconfigLoader.compilerOptions(ref)` gives the inherited, absolutized `outDir`; prove census output parity. |
+| repo-cli `Quality/CheckCensus.ts` `TsconfigReferences`, `TsconfigOutDir` (and the check-overlay `TsconfigSelection`) | #162 | adopted (3-A5) | `TsconfigLoader.load` for `references` and `include`/`exclude`, `TsconfigLoader.compilerOptions(ref)` for the inherited, absolutized `outDir`; the local schemas and the `jsonc-parser` import are deleted. Parity: 0 overlay and 0 declaration-index differences over 185 census packages and 1,273 references (`ops/check-census-adoption-parity.ts`), and the real census output before/after (`research/check-census-parity-3-a5.md`). |
 | docgen `Configuration.ts` `readTSConfig`, `CLI.ts`, `Core.ts` | #160 | 3-A6 | `TsconfigLoader.compilerOptions` plus `TsconfigValidator`; after 3-3 and 3-A4 (shared `Configuration.ts`). |
 | repo-utils `src/schemas/TSConfig.ts` and its test | #161, #242, #266 | 3-A6 | Deleted once docgen uses the validator; needs the `@beep/tsconfig` closed view and its changeset. |
 | repo-cli `TsconfigSync/TsconfigSync.schemas.ts` | #164 | 3-A7 | A pure-model site (`@beep/tsconfig`); needs byte parity of tsconfig-sync output. |
 | repo-cli `Quality.command.ts` `resolveTsconfigInheritance` | #163 | excluded | A pure resolver over a pre-read map with branch semantics and exact diagnostics; the map ruled it partial. |
 | repo-utils `src/TsConfig.ts` `collectTsConfigPaths` | #245 | excluded | Downward enumeration, a different capability. |
-| repo-cli `KnowledgeDoctor.domain.ts` root `paths` projection | - | candidate | Re-check with 3-A5. |
+| repo-cli `KnowledgeDoctor.domain.ts` root `paths` projection | - | excluded (re-checked in 3-A5) | It decodes the root `tsconfig.json` from git tree bytes through `KnowledgeTreeOracle`, not from disk, and needs `paths` as written; `TsconfigLoader` reads the filesystem and absolutizes `paths`. |
 
 ## `@beep/md` syntax bridge (wave 2d-2, SPEC D-48 to D-51)
 
