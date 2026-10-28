@@ -1,6 +1,6 @@
 {
   "schemaVersion": "cache-signing-posture-checkpoint/v1",
-  "recordedAt": "2026-10-28T21:50:18.480711+00:00",
+  "recordedAt": "2026-10-28T23:49:14.072356+00:00",
   "authority": "component-preparation-only",
   "sourceSha256": {
     "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts": "d443672935b5ae9c4bfacb9672180d3c70dfd2faa6b885e0bae06d91a67c2573",
@@ -25,7 +25,13 @@
     "canary": "signing-posture-native-canary.json",
     "casesPerChannel": 7
   },
-  "fullPackageAudit": "pending after fixture-isolation fix lands",
+  "fullPackageAudit": {
+    "status": "passed",
+    "head": "4d9da2f6da5acfae22cccbf4e542e0f6a50c0d02",
+    "auditSeconds": 1426.7,
+    "docgenSeconds": 46.3,
+    "environment": "Controlled parent environment: host cache defaults disabled and inherited Turbo endpoint, token, team, cache mode and signing key empty. All audit/docgen checks ran. Not default-path qualification."
+  },
   "productionChanges": false,
   "notProven": [
     "mandatory production signing and epoch binding",
@@ -41,5 +47,19 @@
     "checkSeconds": 14.9,
     "status": "passed"
   },
-  "targetedOxlint": "passed after hoisting schema guards"
+  "targetedOxlint": "passed after hoisting schema guards",
+  "mainIntegration": {
+    "status": "passed",
+    "head": "f98c12c35fef4dfba2f757145848d788f2b5287f",
+    "rootLaunch": "Default enrolled checkout root; test-worker environment isolation from PR2346 is active.",
+    "selectedTestFiles": 8,
+    "selectedTestsPassed": 623,
+    "durationSeconds": 30.2,
+    "packageQuick": {
+      "lintSeconds": 7.0,
+      "checkSeconds": 14.7,
+      "status": "passed"
+    },
+    "componentSourceHashesUnchanged": true
+  }
 }
