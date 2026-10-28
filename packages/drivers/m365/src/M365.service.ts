@@ -1,6 +1,8 @@
 /**
  * Effect service for Microsoft Graph `v1.0` driver calls.
  *
+ * **Details**
+ *
  * The driver uses raw Graph REST requests through `effect/http`,
  * decodes every JSON payload with `effect/Schema`, and records only technical
  * counts/sizes in spans. It never logs tokens, mail bodies, file bytes, or

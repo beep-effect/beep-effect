@@ -2,6 +2,8 @@
  * Typed PCL client derived from the `Pcl.api.ts` HttpApi definition via
  * `HttpApiClient.make`, plus a pagination stream over `/cases/find`.
  *
+ * **Details**
+ *
  * The derived client is base-URL-prefixed and, on every request, has the
  * current `nextGenCSO` token (read from {@link PacerSession}) injected as the
  * `X-NEXT-GEN-CSO` header (plus optional `X-CLIENT-CODE`). Any fresh token PACER

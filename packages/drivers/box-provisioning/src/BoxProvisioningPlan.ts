@@ -385,7 +385,7 @@ export type BoxPlanAction = typeof BoxPlanAction.Type;
  * ```ts
  * import { BoxForeignResource } from "@beep/box-provisioning/BoxProvisioningPlan"
  * import { BoxProviderId } from "@beep/box-provisioning/BoxProvisioningObserved"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const foreign = BoxForeignResource.make({
  *   identityDigest: Sha256Hex.make("d".repeat(64)),

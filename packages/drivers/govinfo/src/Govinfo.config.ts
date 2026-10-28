@@ -116,7 +116,7 @@ const govinfoConfigInputApiUrlDefault = URLStr.make(GOVINFO_API_URL);
  *
  * ```ts
  * import { GovinfoConfigInput } from "@beep/govinfo"
- * import { URLStr } from "@beep/schema"
+ * import { URLStr } from "@beep/schema/URL"
  *
  * const config = GovinfoConfigInput.make({
  *   apiUrl: URLStr.make("https://api.govinfo.gov")

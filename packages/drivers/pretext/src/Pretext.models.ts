@@ -1,6 +1,8 @@
 /**
  * Font-metrics snapshot contracts and pure layout helpers.
  *
+ * **Details**
+ *
  * The browser-safe pure surface of the driver: a `FontMetricsSnapshotV1` is
  * captured once in an actual engine (impure, `@beep/pretext/browser`) and
  * decoded anywhere; everything downstream of decode is pure arithmetic. The

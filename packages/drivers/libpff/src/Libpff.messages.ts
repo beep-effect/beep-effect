@@ -1,6 +1,8 @@
 /**
  * JSONL metadata records for pffexport-exported items.
  *
+ * **Details**
+ *
  * The pffexport engine writes one record per exported item directory so the
  * folder → message → body/attachment relationships survive into the
  * file-processing manifest tree as data. P4 consumers read the JSONL through

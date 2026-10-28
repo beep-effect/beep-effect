@@ -1,6 +1,8 @@
 /**
  * Fixture-backed capture layers: the DOM-free test story.
  *
+ * **Details**
+ *
  * A fixture layer serves {@link PretextCapture} from a canned, oracle-
  * validated snapshot, so every consumer of the capture capability tests
  * without a DOM or canvas. The built-in fixture is the Chrome/150 · Linux ·
