@@ -1,6 +1,8 @@
 /**
  * Conservative policy checks for HTML intended for browser insertion.
  *
+ * **Details**
+ *
  * This module is a validator, not a sanitizer. It accepts only an explicit
  * element and attribute allowlist, rejects foreign content, and applies a
  * strict URL policy. Callers that need to clean arbitrary HTML source must use
@@ -86,7 +88,6 @@ export const SafeHtmlAttributes = readonlyStruct({
  *
  * ```ts import.meta.vitest name="Make empty attributes object"
  * import { SafeHtmlAttributesStruct } from "@beep/html/Html.policy"
- *
  * import * as S from "effect/Schema"
  *
  * const attributes = SafeHtmlAttributesStruct.make({})
@@ -495,7 +496,9 @@ const issueSafeHtmlAst = (conformant: ConformantHtml): SafeHtmlAstValue => {
  * **Example** (Issue and check safe proof)
  *
  * ```ts import.meta.vitest name="Issue and check safe proof"
- * import { conform, enforceSafeHtml, Fragment, SafeHtmlAst } from "@beep/html"
+ * import { conform } from "@beep/html/Html.conformance"
+ * import { enforceSafeHtml, SafeHtmlAst } from "@beep/html/Html.policy"
+ * import { Fragment } from "@beep/html/Html.model"
  * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
@@ -522,7 +525,9 @@ export const SafeHtmlAst = S.declare(SafeHtmlAstValue.is).pipe(
  * **Example** (Typed frozen safe proof)
  *
  * ```ts import.meta.vitest name="Typed frozen safe proof"
- * import { conform, enforceSafeHtml, Fragment } from "@beep/html"
+ * import { conform } from "@beep/html/Html.conformance"
+ * import { enforceSafeHtml } from "@beep/html/Html.policy"
+ * import { Fragment } from "@beep/html/Html.model"
  * import type { SafeHtmlAst } from "@beep/html/Html.policy"
  * import * as Effect from "effect/Effect";
  * const proof: SafeHtmlAst = Effect.runSync(
@@ -542,7 +547,9 @@ export type SafeHtmlAst = typeof SafeHtmlAst.Type;
  * **Example** (Check safe node provenance)
  *
  * ```ts import.meta.vitest name="Check safe node provenance"
- * import { conform, enforceSafeHtml, Fragment, SafeHtmlNode } from "@beep/html"
+ * import { conform } from "@beep/html/Html.conformance"
+ * import { enforceSafeHtml, SafeHtmlNode } from "@beep/html/Html.policy"
+ * import { Fragment } from "@beep/html/Html.model"
  * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
  *
@@ -800,7 +807,8 @@ const inspectNode = (node: RuntimeNode, path: ReadonlyArray<string>): ReadonlyAr
  * **Example** (Inspect empty fragment issues)
  *
  * ```ts import.meta.vitest name="Inspect empty fragment issues"
- * import { conform, inspectSafeHtml } from "@beep/html"
+ * import { conform } from "@beep/html/Html.conformance"
+ * import { inspectSafeHtml } from "@beep/html/Html.policy"
  * import { Fragment } from "@beep/html/Html.model"
  * import * as Effect from "effect/Effect";
  * const program = conform(Fragment.make({ children: [] })).pipe(
@@ -827,7 +835,9 @@ export const inspectSafeHtml = (value: ConformantHtml): ReadonlyArray<HtmlPolicy
  * **Example** (Enforce policy on fragment)
  *
  * ```ts import.meta.vitest name="Enforce policy on fragment"
- * import { conform, enforceSafeHtml, Fragment } from "@beep/html"
+ * import { conform } from "@beep/html/Html.conformance"
+ * import { enforceSafeHtml } from "@beep/html/Html.policy"
+ * import { Fragment } from "@beep/html/Html.model"
  * import * as Effect from "effect/Effect";
  * const program = conform(Fragment.make({ children: [] })).pipe(
  *   Effect.flatMap(enforceSafeHtml)
@@ -855,7 +865,9 @@ export const enforceSafeHtml: (value: ConformantHtml) => Effect.Effect<SafeHtmlA
  * **Example** (Extract conformance proof)
  *
  * ```ts
- * import { conform, enforceSafeHtml, Fragment, safeHtmlAstConformant } from "@beep/html"
+ * import { conform } from "@beep/html/Html.conformance"
+ * import { enforceSafeHtml, safeHtmlAstConformant } from "@beep/html/Html.policy"
+ * import { Fragment } from "@beep/html/Html.model"
  * import * as Effect from "effect/Effect";
  * const proof = Effect.runSync(
  *   conform(Fragment.make({ children: [] })).pipe(Effect.flatMap(enforceSafeHtml))
@@ -883,7 +895,9 @@ export const safeHtmlAstConformant = (value: SafeHtmlAst): ConformantHtml =>
  * **Example** (Extract validated AST root)
  *
  * ```ts import.meta.vitest name="Extract validated AST root"
- * import { conform, enforceSafeHtml, Fragment, safeHtmlAstRoot } from "@beep/html"
+ * import { conform } from "@beep/html/Html.conformance"
+ * import { enforceSafeHtml, safeHtmlAstRoot } from "@beep/html/Html.policy"
+ * import { Fragment } from "@beep/html/Html.model"
  * import * as Effect from "effect/Effect";
  * const proof = Effect.runSync(
  *   conform(Fragment.make({ children: [] })).pipe(Effect.flatMap(enforceSafeHtml))
