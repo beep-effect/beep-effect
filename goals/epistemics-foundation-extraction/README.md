@@ -32,7 +32,8 @@ Use this command for execution-capable sessions:
 ## Current phase
 
 P0-P3 extraction work shipped in #2017 (`ab6000add2`); #2019 and #2021
-fixed its Docgen, Lint Policy and JSDoc failures. P4 remains in progress.
+fixed its Docgen, Lint Policy and JSDoc failures. P4 proposal preparation is
+complete. Achievement remains pending verified readiness and merge evidence.
 
 The 2026-10-28 acceptance audit found the claim factory lacked the logical-key
 function required by `SPEC.md`. The closeout change supplies it, rejects
@@ -56,6 +57,16 @@ and documentation checks pass on the revised implementation.
 - Final closeout PR [#2315](https://github.com/beep-effect/beep-effect/pull/2315) must supply passing accepted-head hosted checks and a
   retained Yeet readiness verdict. Until completion refresh verifies that merge,
   `initiative.status` stays `active`; a proposal is not achievement.
+
+## Local proof disposition
+
+Both required package audits and docgen checks pass; the foundation has 36 passing
+tests. Local lint and changed-file formatting pass. The publication preflight and
+scoped policy replay each exceeded ten minutes and were cancelled. Under the
+constrained-compute rule, the final-check receipt names skips for `cheap-gates`,
+`lint-policy`, `repo-sanity`, `check`, `docgen`, `fallow` and `coverage`.
+The PR body records each skip; exact-head hosted CI must prove these gates before
+strict merge. A receipt containing skips does not claim those local gates ran.
 
 ## Evidence retention
 

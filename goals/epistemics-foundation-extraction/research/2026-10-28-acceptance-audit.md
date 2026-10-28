@@ -30,3 +30,14 @@ untracked `sst-env.d.ts` files remain outside this change.
 The historical failure is preserved. A new final PR proves the revised work;
 its merge cannot retroactively qualify #2017. No lifecycle status is flipped
 from this audit or from a proposal alone.
+
+## Local gate disposition
+
+The publication cheap-gates wave and scoped policy replay each exceeded ten
+minutes. Both owned processes were cancelled and exited 130. Package audits,
+docgen, all 36 foundation tests, local lint and changed-file formatting passed.
+The tool-produced content-final receipt explicitly skips `cheap-gates`,
+`lint-policy`, `repo-sanity`, `check`, `docgen`, `fallow` and `coverage` under
+the constrained-compute route. PR #2315 records those skips and requires exact-head
+hosted checks before strict merge. Phase P4 means proposal preparation is complete;
+operative lifecycle remains active until completion refresh verifies the merge.
