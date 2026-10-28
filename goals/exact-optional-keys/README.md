@@ -31,8 +31,10 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P3: implementation PR #2145 is merged. Closeout PR #2316 repairs arbitrary-alias
-rule recall and supplies retained readiness evidence; operative lifecycle stays active.
+P3: implementation PRs #2145 and #2316 are merged. PR #2316 has 15 green
+required checks at its accepted head and zero outstanding review threads. The
+readiness monitor stopped before recording a positive local verdict, so a final
+documentation closeout PR #2326 must retain that verdict before merging. Lifecycle stays active.
 
 ## Latest Evidence
 

@@ -85,3 +85,13 @@ Review caught a truncated check census: GitHub's default first page contained
 30 runs, while `check-runs?per_page=100` reports all 34. The complete census has
 33 successful and one neutral run, all completed before the merge. Use explicit
 pagination for counts as well as failure searches.
+
+## 2026-10-28: coordinate the readiness-to-merge boundary
+
+Another process merged #2325 with its coverage follow-up still running. The
+follow-up passed afterward, but the normal monitor then correctly wrote a
+negative post-merge verdict. Retained those bytes unchanged and confirmed the
+completion verifier still returns `unknown`. The operator has held other merges
+of this goal so the owner can retain a positive verdict before merging the final
+closeout. Explicit merge ownership prevents repeated documentation-only proof
+rounds without changing any acceptance gate.

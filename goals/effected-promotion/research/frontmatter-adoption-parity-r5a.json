@@ -1,0 +1,3007 @@
+{
+  "tool": "goals/effected-promotion/ops/frontmatter-adoption-parity.ts",
+  "corpus": {
+    "reflections": [
+      {
+        "path": "explorations/research-corpus-synthesis/history/reflections/2026-10-06-codex.md",
+        "valid": false
+      },
+      {
+        "path": "goals/_template/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/agent-effectiveness-loop/history/reflections/2026-08-29-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/agent-execution-authority/history/reflections/2026-07-28-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/agent-execution-authority/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/agent-message-router/history/reflections/2026-10-09-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/agent-message-router/history/reflections/README.md",
+        "valid": false
+      },
+      {
+        "path": "goals/agent-pipeline-velocity/history/reflections/2026-07-05-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/agent-pool-doctrine/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/agent-pool-picker/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/agent-reflection-loop/history/reflections/2026-06-09-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/agent-reflection-loop/history/reflections/2026-07-14-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/agent-session-bridges/history/reflections/2026-10-09-codex-t3.md",
+        "valid": true
+      },
+      {
+        "path": "goals/agent-session-bridges/history/reflections/2026-10-09-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/agent-session-bridges/history/reflections/README.md",
+        "valid": false
+      },
+      {
+        "path": "goals/agentic-cad-patent-tooling/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/agentic-governance-laws/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/ai-metrics-raw-retention/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/ai-metrics-stack/history/reflections/2026-08-10-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/attorney-question-loop/history/reflections/2026-10-15-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/attributed-multi-claim-span/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/beep-schema-topology/history/reflections/2026-07-11-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/belief-view-engine/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/boolean-creep/history/reflections/2026-10-02-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/boolean-creep/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/box-driver/history/reflections/2026-07-14-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/box-typecheck-cost/history/reflections/2026-08-01-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/candor-gate-followups-closeout/history/reflections/2026-08-13-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/canonical-slice-factory/history/reflections/2026-06-12-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/canvas/history/reflections/2026-07-11-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/chat-input-and-theming/history/reflections/2026-06-21-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/chat-input-and-theming/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/chat-surface-parity/history/reflections/2026-06-15-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/ci-fleet-endgame/history/reflections/2026-08-10-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/ci-fleet-endgame/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/ci-fleet-residue/history/reflections/2026-08-13-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/ci-fleet-residue/history/reflections/2026-08-24-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/ci-step-watchdog/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/ciops-ontology-pipeline/history/reflections/2026-10-06-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/citation-extraction-engine/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/citation-verified-span-substrate/history/reflections/2026-08-27-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/citation-verified-span-substrate/history/reflections/2026-10-05-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/citation-verified-span-substrate/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/codex-security-findings-2026-06-17/history/reflections/2026-06-18-closeout.md",
+        "valid": true
+      },
+      {
+        "path": "goals/codex-security-findings-2026-07-08/history/reflections/2026-07-14-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/codex-security-findings-2026-07-14/history/reflections/2026-07-14-fable.md",
+        "valid": true
+      },
+      {
+        "path": "goals/codex-security-findings-2026-08-04/history/reflections/2026-08-04-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/codex-security-findings-2026-08-04/history/reflections/2026-08-05-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/codex-security-findings-2026-08-10/history/reflections/2026-08-24-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/codex-security-findings-2026-08-13/history/reflections/2026-08-24-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/codex-security-findings-2026-08-24/history/reflections/2026-08-24-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/codex-security-findings-2026-08-30/history/reflections/2026-09-03-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/codex-security-findings-2026-09-03/history/reflections/2026-09-03-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/codex-security-findings-2026-09-08/history/reflections/2026-09-08-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/codex-security-findings-2026-09-08/history/reflections/2026-09-16-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/codex-security-findings-2026-09-16/history/reflections/2026-09-16-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/codex-security-findings-2026-10-14-agent-message/history/reflections/2026-10-14-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/codex-security-findings-2026-10-14-c2/history/reflections/2026-10-14-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/codex-security-findings-2026-10-14-drawing-critics/history/reflections/2026-10-14-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/codex-security-findings-2026-10-14-l0-ledger/history/reflections/2026-10-14-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/codex-security-findings-2026-10-14/history/reflections/2026-10-14-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/codex-security-findings-2026-10-20/history/reflections/2026-10-21-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/complexity-ceiling-burn-down/history/reflections/2026-09-03-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/complexity-ceiling-burn-down/history/reflections/2026-09-08-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/complexity-ceiling-burn-down/history/reflections/2026-09-09-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/configurable-full-document-editor/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/court-reporter-vocabulary/history/reflections/2026-08-27-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/court-reporter-vocabulary/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/dedup-clone-engine/history/reflections/2026-08-29-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/design-figure-generation/history/reflections/2026-10-06-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/design-figure-generation/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/design-figure-review-loop/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/desktop-chat-surface/history/reflections/2026-06-14-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/desktop-chat-surface/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/dock-substrate-landing/history/reflections/2026-07-17-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/docs-lint-oxlint-rules/history/reflections/2026-10-14-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/document-ast-pattern-classification/history/reflections/2026-10-05-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/document-ast-pattern-classification/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/domain-kernel-hardening/history/reflections/2026-10-09-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/domain-kernel-hardening/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/effect-child-process-hardening/history/reflections/2026-07-30-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/effect-child-process-hardening/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/effect-drizzle-graduation/history/reflections/2026-08-11-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/effect-drizzle-graduation/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/effect-jsdoc-quality/history/reflections/2026-08-02-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/effect-jsdoc-quality/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/effect-native-legal-eval/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/effect-native-migration/history/reflections/2026-07-14-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/effect-reference-workspace/history/reflections/2026-09-28-fable.md",
+        "valid": true
+      },
+      {
+        "path": "goals/effect-reference-workspace/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/effect-rules-diagnostics-lane/history/reflections/2026-10-14-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/effect-schema-parity/history/reflections/2026-10-01-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/effect-schema-parity/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/effect-string-migration/history/reflections/2026-10-22-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/effect-v4-workflow-engine-spike/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/entity-optimistic-concurrency/history/reflections/2026-10-21-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/entity-optimistic-concurrency/history/reflections/2026-10-23-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/epistemic-bitemporal-edge-core/history/reflections/2026-07-25-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/epistemic-bitemporal-edge-core/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/epistemic-claim-lifecycle-gate/history/reflections/2026-06-17-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/epistemic-contradiction-detection/history/reflections/2026-10-09-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/epistemic-contradiction-detection/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/epistemic-contradiction-triage/history/reflections/2026-07-30-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/epistemic-contradiction-triage/history/reflections/2026-10-05-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/epistemic-contradiction-triage/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/epistemic-memory-retention-projections/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/epistemics-foundation-extraction/history/reflections/2026-10-22-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/eslint-removal/history/reflections/2026-10-15-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/exact-optional-keys/history/reflections/2026-10-23-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/fallow-advisory-ratchets/history/reflections/2026-07-14-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/fallow-quality-enforcement/history/reflections/2026-07-11-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/fallow-zero-dead-code/history/reflections/2026-07-11-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/file-processing-capability/history/reflections/2026-07-27-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/fleet-mirror/history/reflections/2026-08-06-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/fleet-mirror/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/fleet-root-registry/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/folio-lynx-taxonomy-browse/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/freshbooks-driver/history/reflections/2026-09-03-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/goal-portfolio-driver/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/goals-doctor/history/reflections/2026-07-11-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/gov-legal-data-driver-codegen/history/reflections/2026-06-30-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/gov-legal-data-driver-codegen/history/reflections/2026-07-14-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/gov-legal-data-driver-codegen/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/gov-legal-data-driver-delivery/history/reflections/2026-07-14-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/gov-legal-data-driver-delivery/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/gov-legal-mcp/history/reflections/2026-07-31-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/gov-legal-mcp/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/graph-3d-view/history/reflections/2026-07-16-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/graph-3d-view/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/harness-evidence-ledger/history/reflections/2026-09-29-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/harness-hygiene-mechanical/history/reflections/2026-07-14-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/harness-hygiene-mechanical/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/harness-otel-adoption/history/reflections/2026-07-25-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/harness-otel-adoption/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/honest-repo-signal/history/reflections/2026-08-24-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/honest-repo-signal/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/hybrid-retrieval-fusion-core/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/identity-iri-core/history/reflections/2026-07-02-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/identity-iri-core/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/identity-iri-fibered/history/reflections/2026-08-25-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/identity-iri-fibered/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/identity-iri-fold/history/reflections/2026-08-01-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/identity-iri-fold/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/ingestion-secret-scrub/history/reflections/2026-10-09-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/ingestion-secret-scrub/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/inline-schema-compile-hard-error/history/reflections/2026-09-08-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/inline-schema-compile-hard-error/history/reflections/2026-09-09-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/jsdoc-carrier-migration/history/reflections/2026-08-06-grok.md",
+        "valid": true
+      },
+      {
+        "path": "goals/jsdoc-worker-eval/history/reflections/2026-08-29-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/knowledge-freshness-audit/history/reflections/2026-09-24-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/knowledge-surface-automation/history/reflections/2026-10-16-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/lab-apps-lifecycle/history/reflections/2026-08-17-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/lab-apps-lifecycle/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/lane-bootstrap/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/langextract-capability/history/reflections/2026-07-11-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/law-doc-structure-oa-slice/history/reflections/2026-10-09-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/law-doc-structure-oa-slice/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/law-docketing-patent-spine/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/law-docketing-reliability/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/law-practice-office-action-extraction-rung/history/reflections/2026-06-18-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/law-practice-office-action-spike/history/reflections/2026-06-18-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/law-time-capture-spine/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/legacy-drain/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/legal-document-intake/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/legal-position-relator-runtime/history/reflections/2026-08-07-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/legal-position-relator-runtime/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/lejeune-demo-corpus-and-ontology/history/reflections/2026-08-27-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/lexical-playground-capability-atlas/history/reflections/2026-08-25-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/lexical-playground-capability-atlas/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/lint-advisory-hardening/history/reflections/2026-07-14-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/lint-policy-oxlint-type-aware/history/reflections/2026-10-14-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/lint-policy-single-digit/history/reflections/2026-08-13-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/lint-policy-single-digit/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/lint-toolchain-modernization/history/reflections/2026-06-21-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/literal-kit-subset-algebra/history/reflections/2026-10-22-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/llm-provider-subscription-auth/history/reflections/2026-07-12-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/llm-provider-subscription-auth/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/m365-driver/history/reflections/2026-06-18-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/m365-driver/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/m365-mcp/history/reflections/2026-06-18-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/m365-mcp/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/mcp-host-retrofit/history/reflections/2026-07-11-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/mcp-host-retrofit/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/mcp-kit/history/reflections/2026-07-01-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/mcp-kit/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/mcp-stateless-kit-and-drivers/history/reflections/2026-09-22-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/mcp-stateless-kit-and-drivers/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/model-arrangement-admission-core/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/model-routing-sync/history/reflections/2026-09-24-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/model-routing-sync/history/reflections/2026-09-25-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/model-routing-sync/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/nlp-adjunct-port/history/reflections/2026-08-29-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/oa-evidence-consumer-conformance/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/observability-kernel-catalog/history/reflections/2026-10-14-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/official-data-sync-foundation/history/reflections/2026-07-11-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/official-data-sync-foundation/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/oip-web-launch/history/reflections/2026-07-14-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/oip-web-production-hardening/history/reflections/2026-07-14-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/one-round-loop/history/reflections/2026-07-14-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/one-round-loop/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/ontology-agent-surface/history/reflections/2026-07-11-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/ontology-agent-surface/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/ontology-interop-roadmap/history/reflections/2026-06-12-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/ontology-sidecar-stateless-identity/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/ontology-workbench-migration/history/reflections/2026-07-17-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/ontology-workbench/history/reflections/2026-07-09-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/openai-driver/history/reflections/2026-08-27-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/openai-driver/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/openclaw-workstation-agent/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/oppold-corpus-pipeline/history/reflections/2026-06-11-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/oppold-corpus-refresh/history/reflections/2026-07-03-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/oppold-corpus-salvage-restoration/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/ops-seat-timers/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/packet-control-plane-core/history/reflections/2026-08-26-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/packet-control-plane-core/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/packet-convention-migration/history/reflections/2026-08-30-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/palantiri-parcels/history/reflections/2026-10-15-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/pandoc-ast-foundation/history/reflections/2026-07-11-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/pandoc-ast-foundation/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/patent-citation-candor-gate/history/reflections/2026-08-05-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/patent-citation-candor-gate/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/patent-document-schema/history/reflections/2026-10-05-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/patent-document-schema/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/patent-drafting-episode-ledger/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/per-module-imports/history/reflections/2026-09-03-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/practice-box-onboarding/history/reflections/2026-10-06-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/practice-box-provisioning/history/reflections/2026-09-03-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/practice-claude-mod/history/reflections/2026-10-14-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/practice-docket-intake/history/reflections/2026-10-06-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/practice-docket-intake/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/practice-document-identification/history/reflections/2026-10-07-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/practice-kg-mcp-strict-tier/history/reflections/2026-10-20-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/practice-kg-mcp/history/reflections/2026-10-06-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/practice-kg-mcp/history/reflections/2026-10-09-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/practice-m365-contacts/history/reflections/2026-10-13-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/practice-mail-tagging/history/reflections/2026-10-14-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/pretext-driver/history/reflections/2026-07-14-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/projection-dispatch-core/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/provenance-shared-claim-kernel/history/reflections/2026-06-18-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/public-origin-beep-effect-com/history/reflections/2026-10-21-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/push-first-publish/history/reflections/2026-10-05-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/quality-gate-ratchets/history/reflections/2026-07-06-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/quality-speedup/history/reflections/2026-08-04-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/quality-speedup/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/recorded-qa-acceptance/history/reflections/2026-08-01-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/repo-cli-modularization/history/reflections/2026-07-08-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/repo-crispening-orchestration/history/reflections/2026-07-07-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/repo-crispening-orchestration/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/repo-quality-convergence/history/reflections/2026-08-29-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/repo-quality-throughput/history/reflections/2026-06-12-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/repository-simplification-confidence/history/reflections/2026-10-16-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/review-verdict-envelope/history/reflections/2026-10-14-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/rich-text-foundation/history/reflections/2026-06-12-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/rich-text-foundation/history/reflections/2026-06-13-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/rich-text-foundation/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/runner-trust-boundary/history/reflections/2026-08-25-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/runner-trust-boundary/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/schema-first-v4-capabilities/history/reflections/2026-07-14-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/schema-first-zero-actionables/history/reflections/2026-07-08-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/schema-opaque-default/history/reflections/2026-10-15-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/schema-utils-selective-codec-statics/history/reflections/2026-10-05-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/schema-utils-selective-codec-statics/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/secure-document-delivery/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/semantic-foundation/history/reflections/2026-08-27-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/semantic-foundation/history/reflections/2026-10-09-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/semantica-canary/history/reflections/2026-09-02-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/semantica-canary/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/shared-memory-code-kg-wiring/history/reflections/2026-08-06-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/shared-memory-code-kg-wiring/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/ship-velocity/history/reflections/2026-08-17-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/ship-velocity/history/reflections/2026-08-27-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/ship-velocity/history/reflections/2026-08-30-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/ship-velocity/history/reflections/2026-09-02-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/skill-contract-kernel/history/reflections/2026-08-25-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/skill-contract-kernel/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/skillopt-training-pilot/history/reflections/2026-07-06-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/spar-document-annotation-wire/history/reflections/2026-10-09-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/spar-document-annotation-wire/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/speed-loop/history/reflections/2026-08-08-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/standards-remediation/history/reflections/2026-07-08-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/storybook-app/history/reflections/2026-06-12-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/thread-virtualization/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/time-to-certainty/history/reflections/2026-09-28-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/todox-marketing-site/history/reflections/2026-09-11-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/todox-marketing-site/history/reflections/2026-09-12-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/todox-marketing-site/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/tracked-changes-ingest-wedge/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/ts7-ts-native-api/history/reflections/2026-10-14-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/ts7-tstyche8-type-tests/history/reflections/2026-10-14-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/ts7-typescript-catalog-7/history/reflections/2026-10-15-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/tsc-rs-gates/history/reflections/2026-10-14-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/tsrs-gates/history/reflections/2026-10-27-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/turborepo-cache-conformance/history/reflections/2026-10-24-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/turborepo-cache-conformance/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/turborepo-cache-trust-observability/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/turborepo-quality-cache-adoption/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/turborepo-task-qualification/history/reflections/2026-10-02-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/turborepo-task-qualification/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/unified-ai-toolchain/history/reflections/2026-07-14-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/uspto-mcp/history/reflections/2026-07-11-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/uspto-mcp/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/uspto-prosecution-read/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/uspto-ptmnfee2-ingest/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/voice-composer-slice/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/workspace-thread-domain/history/reflections/2026-06-13-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/workspace-thread-domain/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/yeet-agent-ergonomics/history/reflections/2026-06-12-codex.md",
+        "valid": true
+      },
+      {
+        "path": "goals/yeet-pr-events/history/reflections/2026-09-28-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/yeet-pr-events/history/reflections/_TEMPLATE.md",
+        "valid": true
+      },
+      {
+        "path": "goals/yeet-pr-resume-footer/history/reflections/2026-09-03-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/yeet-publish-preflight/history/reflections/2026-07-14-claude.md",
+        "valid": true
+      },
+      {
+        "path": "goals/yeet-publish-preflight/history/reflections/_TEMPLATE.md",
+        "valid": true
+      }
+    ],
+    "skills": [
+      { "path": ".claude/skills/adhd/SKILL.md", "issue": null },
+      {
+        "path": ".claude/skills/atom-reactivity-specialist/SKILL.md",
+        "issue": null
+      },
+      { "path": ".claude/skills/browser-qa-loop/SKILL.md", "issue": null },
+      { "path": ".claude/skills/closeout/SKILL.md", "issue": null },
+      { "path": ".claude/skills/codex-findings/SKILL.md", "issue": null },
+      { "path": ".claude/skills/crispen/SKILL.md", "issue": null },
+      {
+        "path": ".claude/skills/effect-first-development/SKILL.md",
+        "issue": null
+      },
+      { "path": ".claude/skills/explore/SKILL.md", "issue": null },
+      { "path": ".claude/skills/graft/SKILL.md", "issue": null },
+      { "path": ".claude/skills/grill-me/SKILL.md", "issue": null },
+      { "path": ".claude/skills/grill-with-docs/SKILL.md", "issue": null },
+      { "path": ".claude/skills/grilling/SKILL.md", "issue": null },
+      {
+        "path": ".claude/skills/jsdoc-annotation-specialist/SKILL.md",
+        "issue": null
+      },
+      {
+        "path": ".claude/skills/motion-evidence-review/SKILL.md",
+        "issue": null
+      },
+      {
+        "path": ".claude/skills/onepassword-secret-refs/SKILL.md",
+        "issue": null
+      },
+      { "path": ".claude/skills/ontology-architect/SKILL.md", "issue": null },
+      {
+        "path": ".claude/skills/ontology-conceptualizer/SKILL.md",
+        "issue": null
+      },
+      { "path": ".claude/skills/ontology-curator/SKILL.md", "issue": null },
+      {
+        "path": ".claude/skills/ontology-foundational-auditor/SKILL.md",
+        "issue": null
+      },
+      { "path": ".claude/skills/ontology-mapper/SKILL.md", "issue": null },
+      {
+        "path": ".claude/skills/ontology-requirements/SKILL.md",
+        "issue": null
+      },
+      { "path": ".claude/skills/ontology-scout/SKILL.md", "issue": null },
+      { "path": ".claude/skills/ontology-validator/SKILL.md", "issue": null },
+      { "path": ".claude/skills/operator-handoff/SKILL.md", "issue": null },
+      { "path": ".claude/skills/oracle/SKILL.md", "issue": null },
+      { "path": ".claude/skills/orchestrate/SKILL.md", "issue": null },
+      {
+        "path": ".claude/skills/plasma-sensitive-entry/SKILL.md",
+        "issue": null
+      },
+      { "path": ".claude/skills/portless/SKILL.md", "issue": null },
+      { "path": ".claude/skills/qa-session-ops/SKILL.md", "issue": null },
+      {
+        "path": ".claude/skills/quality-review-fix-loop/SKILL.md",
+        "issue": null
+      },
+      { "path": ".claude/skills/reflect/SKILL.md", "issue": null },
+      {
+        "path": ".claude/skills/remote-development-agents/SKILL.md",
+        "issue": null
+      },
+      {
+        "path": ".claude/skills/schema-first-development/SKILL.md",
+        "issue": null
+      },
+      { "path": ".claude/skills/shadcn/SKILL.md", "issue": null },
+      { "path": ".claude/skills/sparql-expert/SKILL.md", "issue": null },
+      { "path": ".claude/skills/teach/SKILL.md", "issue": null },
+      { "path": ".claude/skills/turborepo/SKILL.md", "issue": null },
+      { "path": ".claude/skills/unslop/SKILL.md", "issue": null },
+      { "path": ".claude/skills/yeet/SKILL.md", "issue": null },
+      { "path": ".grok/skills/graft/SKILL.md", "issue": null },
+      {
+        "path": "apps/practice-claude-mod/skills/brief/SKILL.md",
+        "issue": null
+      },
+      {
+        "path": "apps/practice-claude-mod/skills/legal-risk-assessment/SKILL.md",
+        "issue": null
+      },
+      {
+        "path": "apps/practice-claude-mod/skills/meeting-briefing/SKILL.md",
+        "issue": null
+      },
+      {
+        "path": "apps/practice-claude-mod/skills/review-contract/SKILL.md",
+        "issue": null
+      },
+      {
+        "path": "apps/practice-claude-mod/skills/triage-nda/SKILL.md",
+        "issue": null
+      },
+      {
+        "path": "apps/practice-gateway/plugin/skills/practice-onboarding/SKILL.md",
+        "issue": null
+      },
+      {
+        "path": "packages/tooling/tool/cli/skills/qa-inventory-judge/SKILL.md",
+        "issue": "SKILL.md frontmatter is json; the Agent Skills format requires a YAML block."
+      },
+      {
+        "path": "packages/tooling/tool/cli/test/fixtures/skills-provenance/shadcn/upstream/SKILL.md",
+        "issue": "frontmatter name \"shadcn\" must match the skill directory name \"upstream\"."
+      }
+    ],
+    "knowledge": { "documents": 8674, "markers": [] },
+    "changesets": [
+      {
+        "source": "beaf8277bdce:.changeset/agent-notification-click-routes.md",
+        "removed": "@beep/repo-ai-metrics",
+        "outputSha256": "9eca0dba12d91a8b689cc69ae365110acd822124bf37aa65624d6810028210ea"
+      },
+      {
+        "source": "34ec2bcda8c0:.changeset/agents-assistant-content-compat.md",
+        "removed": "@beep/agents-domain",
+        "outputSha256": "913fb0fc440a4932b45e6d824fdc42f4da958cf0ada99c8c5f9fb56184d49c6a"
+      },
+      {
+        "source": "c2b75455dff1:.changeset/agents-foundation-canonical-runner.md",
+        "removed": "@beep/agents-domain",
+        "outputSha256": "0211f009c749479878e0c7b989c1e3cc130f0b1de0f79b79a005086806380296"
+      },
+      {
+        "source": "7cd3b3eecddf:.changeset/ai-metrics-main-sync.md",
+        "removed": "@beep/schema",
+        "outputSha256": "f7727f4722479250b87402d777a39d1379de30b8b685dfcf07d3acf5a0639b35"
+      },
+      {
+        "source": "0f224c9a3a8a:.changeset/ai-metrics-observability-repairs.md",
+        "removed": "@beep/repo-ai-metrics",
+        "outputSha256": "0db2fa4315edc8904ffc40e110e7dff76a8df43cade7b73c7fafe31f7f7b7c38"
+      },
+      {
+        "source": "3435c24f9455:.changeset/ai-metrics-schema-first-quality-loop.md",
+        "removed": "@beep/repo-ai-metrics",
+        "outputSha256": "bd6c253d02b5fd8b7ad4d96e19b96d4161db812dd0c6065662e92bce8dd2da67"
+      },
+      {
+        "source": "09bd930bbc17:.changeset/api-docs-httpapi-contracts.md",
+        "removed": "@beep/codegen-kit",
+        "outputSha256": "5e9f38741c1f32955be15561384a65f8206d82e4bd729da72d6e9cacee361532"
+      },
+      {
+        "source": "3435c24f9455:.changeset/api-reference-file-detection.md",
+        "removed": "@beep/architecture-lab-proof",
+        "outputSha256": "a109986761a131c17f3680e42d38d53629fc9c2bf70a907ce2a2cb3c579a781b"
+      },
+      {
+        "source": "4b8bd76c2b14:.changeset/baked-ami-activation.md",
+        "removed": "@beep/infra",
+        "outputSha256": "4ebf68ff692f1acd76a2156804dd81a1c4d6f396eaa59d97786a66db4d6b0cf3"
+      },
+      {
+        "source": "e5c38736585a:.changeset/beep-brand-package.md",
+        "removed": "@beep/brand",
+        "outputSha256": "1091c075a79f380728f90fa9233fefca614978d0ba15bfbfa82032a0c31a1556"
+      },
+      {
+        "source": "3435c24f9455:.changeset/branch-quality-closure.md",
+        "removed": "@beep/agents-client",
+        "outputSha256": "2ff57e99b7c05a46b440b1ad6bfbf0e1b8cb7c5d2863138c457d77af476a1900"
+      },
+      {
+        "source": "c2b75455dff1:.changeset/business-driver-test-canon.md",
+        "removed": "@beep/freshbooks",
+        "outputSha256": "004c94154bf3b0c36a970141526cce9d99414bcaf019ebbd848cc2f926317ab1"
+      },
+      {
+        "source": "f36be8586798:.changeset/c3-1-package-scripts-convergence.md",
+        "removed": "@beep/acp",
+        "outputSha256": "57a863ad7813a99108d6e21cee53bcbf2209afce6f4ba2718cb44df0567065b2"
+      },
+      {
+        "source": "e08b24b0042c:.changeset/c3-456-turbo-tasks.md",
+        "removed": "@beep/api-transport",
+        "outputSha256": "7e3157d53830f94c3a58a412c7b84deca1fd5baf848c2cc91547a2fbd87094ee"
+      },
+      {
+        "source": "791353796915:.changeset/cache-baseline-per-subject-reviews.md",
+        "removed": "@beep/repo-configs",
+        "outputSha256": "c96473e02b5dc345322aa58dd6390b2a1adda18335e04e4c653f016ff5a53bfb"
+      },
+      {
+        "source": "2086a0a090c1:.changeset/cache-qualification-policy.md",
+        "removed": "@beep/identity",
+        "outputSha256": "0b9b3fd4b65e04df2633cb327236cd71377e677faad680a5f32cfcf5634af6c2"
+      },
+      {
+        "source": "e6c371e1f101:.changeset/calm-owls-shield.md",
+        "removed": "@beep/professional-desktop",
+        "outputSha256": "34bb4a11154d5b94b1bde49dea05a233fa7c89431468ad38e0ab2b6515476aeb"
+      },
+      {
+        "source": "bc05d3f1bbba:.changeset/calm-pacer-contracts.md",
+        "removed": "@beep/schema",
+        "outputSha256": "ef4f2ebcce8283b7f0b1abfe28418a172108be17acc7e4484701ac4dd0276c20"
+      },
+      {
+        "source": "c2b75455dff1:.changeset/canonical-cli-config-tests.md",
+        "removed": "@beep/ai-provider-cli",
+        "outputSha256": "e807f144d28987e950c188bebd449d25eebf99e4ca0124530207afc25891fac4"
+      },
+      {
+        "source": "782aa4d34b70:.changeset/canonical-config-test-wave.md",
+        "removed": "@beep/fc-runs",
+        "outputSha256": "2188e6bacef607f958d6d38ab185c651ec1cc7541647a780d381fd66f78a946a"
+      },
+      {
+        "source": "c2b75455dff1:.changeset/canonical-government-driver-tests.md",
+        "removed": "@beep/ecfr",
+        "outputSha256": "c815eecc0ba74a8f3c2b71ac1795d769bfbce996e2c6a6b6196f21c345d600a2"
+      },
+      {
+        "source": "4203a309f119:.changeset/canonical-outcome-assertions.md",
+        "removed": "@beep/file-processing",
+        "outputSha256": "07dd1487647290ab0545c9024113f19945cc9de4e9b42d698b2c9c14b85fcbc4"
+      },
+      {
+        "source": "c2b75455dff1:.changeset/canonical-shacl-oxigraph-observability.md",
+        "removed": "@beep/oxigraph",
+        "outputSha256": "9c72b89ef461b8c1acca81dde15b8649dcd530553ac2136396245013fc09b32d"
+      },
+      {
+        "source": "4203a309f119:.changeset/canonical-test-fixtures.md",
+        "removed": "@beep/mcp-kit",
+        "outputSha256": "4149e5902e846f2eb751473e87ed6b582c8ce7c6999e164cd45acfe454d85263"
+      },
+      {
+        "source": "6f7425642487:.changeset/chat-composer-canonical-stop.md",
+        "removed": "@beep/editor",
+        "outputSha256": "fbcbabd8bb10cfdb8a1a93a8c7baad02c504244d354008a5320f1b2c5091a42a"
+      },
+      {
+        "source": "b7429ee94179:.changeset/chat-surface-parity.md",
+        "removed": "@beep/professional-desktop",
+        "outputSha256": "03f3303db727c7b1791a7d222a5eec06586966cedbf436392f4927e75f4d582d"
+      },
+      {
+        "source": "2bd1a978c0cf:.changeset/check-census-typeperf-fixtures.md",
+        "removed": "@beep/schema",
+        "outputSha256": "403178015df8c527f998dbfd5d1d3714269faaf26ef7b1dd99dfd9710f74ff57"
+      },
+      {
+        "source": "e7b7d03e61bd:.changeset/check-overlay-references-workspaces.md",
+        "removed": "@beep/acp",
+        "outputSha256": "de78284db58c9a93f349c79e27933f41326dd2cac9b91f5e50fd22d31013dba3"
+      },
+      {
+        "source": "9ee1e38ee98d:.changeset/ci-lane-economics-inherited-quality-repairs.md",
+        "removed": "@beep/html",
+        "outputSha256": "53ec11c72b33c7fb6bddbec7a2de41a22c70addcd9e07b8ae432b9a420af8fbe"
+      },
+      {
+        "source": "e562e78389d0:.changeset/citation-verified-span-history.md",
+        "removed": "@beep/langextract",
+        "outputSha256": "9f1163294d13eb0818c910cc4a5e8d1297ac18fe3e32c1c80679c12c8d87e9ab"
+      },
+      {
+        "source": "55e368190f98:.changeset/claim-evidence-review.md",
+        "removed": "@beep/epistemic-domain",
+        "outputSha256": "c11ab16ca19f28321e0f62e1a0835260327456b7ee12463f8556c73ba97ff752"
+      },
+      {
+        "source": "c0333d03d5b4:.changeset/cli-success-exit-hardening.md",
+        "removed": "@beep/repo-cli",
+        "outputSha256": "059e8788577ce38953edad4cedcbb8b48820115c284345b13b55a448c4931591"
+      },
+      {
+        "source": "f9b8aaac15e5:.changeset/codemode-string-contracts.md",
+        "removed": "@beep/types",
+        "outputSha256": "feff667a0cce005befbd8f65091875699256f3c9a2dea28e043da5f4c442ce0d"
+      },
+      {
+        "source": "860375b90d10:.changeset/codex-cloud-security-hardening.md",
+        "removed": "@beep/dock",
+        "outputSha256": "2e577225aa8cf3dc049223111c20f608393575e7f7c9fd80e65716d19ee7cccc"
+      },
+      {
+        "source": "618e81f4c094:.changeset/codex-findings-libs.md",
+        "removed": "@beep/repo-ai-metrics",
+        "outputSha256": "d82746b4f5f1f8071122cf06f648aa42266038aed411e788f8fdb769253d2bd0"
+      },
+      {
+        "source": "a10825dd01bb:.changeset/codex-security-findings-2026-08-13.md",
+        "removed": "@beep/ai-sync",
+        "outputSha256": "e3056227f16408b7c771c94b28f58714239975a56ce4af969d2c1fb89679ab33"
+      },
+      {
+        "source": "e552d7da1903:.changeset/codex-security-hardening.md",
+        "removed": "@beep/html",
+        "outputSha256": "d31f94acf708886da6ccd8556eadd47cf4cc0e071eb1480e4effe74af3ef16ca"
+      },
+      {
+        "source": "3464a827e46b:.changeset/cognitive-ceiling-standard.md",
+        "removed": "@beep/agents-server",
+        "outputSha256": "04580e26af21a36d71c50d4cc7949393a6be8ac830a6479d3ad56ee4c8cd31ed"
+      },
+      {
+        "source": "74efb548f16a:.changeset/complexity-ceiling-burn-down.md",
+        "removed": "@beep/epistemic-server",
+        "outputSha256": "efbf84a2a386ae2059511e80e20f51c13a3276ced55a8df20ba48dd54fa4cf34"
+      },
+      {
+        "source": "c2b75455dff1:.changeset/consolidated-agents-gov-canonical-tests.md",
+        "removed": "@beep/agents-use-cases",
+        "outputSha256": "3dd12b8c5060d6122238ba553d28b3c88f8c0bba0e8587eb75675316d1c8777d"
+      },
+      {
+        "source": "c2b75455dff1:.changeset/consolidated-architecture-canonical-tests.md",
+        "removed": "@beep/architecture-lab-domain",
+        "outputSha256": "5c773b82388fca7a689448578d55186261d18228f624ea65f898e8b2356269b4"
+      },
+      {
+        "source": "c2b75455dff1:.changeset/consolidated-cli-tables-mcp-tests.md",
+        "removed": "@beep/onepassword-cli",
+        "outputSha256": "9e244b3e9e81983ca0472108f3c3e4334d2b5e114c33927773f8cd4f36431fe0"
+      },
+      {
+        "source": "c2b75455dff1:.changeset/consolidated-law-epistemic-canonical-tests.md",
+        "removed": "@beep/law-practice-domain",
+        "outputSha256": "14f23b61b97b181c40493261e2f348defae1d7da29191a7cf9006073563bbd3b"
+      },
+      {
+        "source": "c2b75455dff1:.changeset/consolidated-server-proof-canonical-tests.md",
+        "removed": "@beep/agents-server",
+        "outputSha256": "f52c24e53da1aeb4361184480d5852779f9a4e40142c0ee468e5c9894dd76853"
+      },
+      {
+        "source": "c2b75455dff1:.changeset/consolidated-workspace-canonical-tests.md",
+        "removed": "@beep/workspace-domain",
+        "outputSha256": "a3cdad1bf7e56c582f264e26f5fcf1373a98823584ecccad3b2df20b982563fc"
+      },
+      {
+        "source": "61aeca13b223:.changeset/content-aware-llm-filing.md",
+        "removed": "@beep/doc-text",
+        "outputSha256": "b1d76a1c05b50ee10c368602d1a011dea7024bd413df0bd977b0207bc87cbb2f"
+      },
+      {
+        "source": "2dffb2827cd4:.changeset/corpus-extract-cpu-page-ocr.md",
+        "removed": "@beep/tesseract",
+        "outputSha256": "b752190f08c43d86f1580564d2468db72b505d825354b33972d8232b7cba5c91"
+      },
+      {
+        "source": "604694ebec1d:.changeset/corpus-provenance-index.md",
+        "removed": "@beep/repo-cli",
+        "outputSha256": "3987f73b44f9221d8c46deeda9c60f2ddfe2a9af2713463c62afe18ca31137ec"
+      },
+      {
+        "source": "a09d001ed7f8:.changeset/corpus-restoration-boundaries.md",
+        "removed": "@beep/libpff",
+        "outputSha256": "081e2e9a1fb6433485865f80d3c1a8b368b783ff861a0e6e567610040faa96f3"
+      },
+      {
+        "source": "26066eb89b87:.changeset/cosmos-driver-spike.md",
+        "removed": "@beep/cosmos",
+        "outputSha256": "68a76a84e1ad5747e3f2fec7085bfd4603cbacd972b796fcf3501fbf8ff56d1c"
+      },
+      {
+        "source": "b1698ccc8da7:.changeset/coverage-flag-scope-next-guard.md",
+        "removed": "@beep/todox",
+        "outputSha256": "f3174c19a4a81e3774922fb5f9b461c8da64d60a5afdf69586dd8ac865d004f3"
+      },
+      {
+        "source": "980b4cd44c48:.changeset/coverage-floor-non-product.md",
+        "removed": "@beep/api-transport",
+        "outputSha256": "38f01f9ea9c4ecbbbdc6c5b0d47ca56492501b50ab04210b53b7fd8a889694e1"
+      },
+      {
+        "source": "e522f8359d2c:.changeset/coverage-floors-after-codec-statics.md",
+        "removed": "@beep/govinfo",
+        "outputSha256": "e86f4e4c170ad10cf9e2516ae1ec7124e1fe533bb939bcdb8c5d920966bde2d5"
+      },
+      {
+        "source": "f951c8b39f0b:.changeset/crisp-document-boundaries.md",
+        "removed": "@beep/html",
+        "outputSha256": "026cb1be817b61a84ad6c19a7efc99fd90121ed90378f35ffa28936915a84d9f"
+      },
+      {
+        "source": "5d425c352b93:.changeset/crispen-batch-schema-first.md",
+        "removed": "@beep/m365",
+        "outputSha256": "a3b216e0fa9c48b0db81adc5adeb6c9aa37b1079ded3f0817705b5bfaefe1127"
+      },
+      {
+        "source": "4ee44ab92856:.changeset/crispen-professional-desktop.md",
+        "removed": "@beep/professional-desktop",
+        "outputSha256": "f9a99d342dd402340df95d02241205a46d7aa761b71c63af19b62be6f589e697"
+      },
+      {
+        "source": "a10825dd01bb:.changeset/csf-019-migration-rebaseline.md",
+        "removed": "@beep/postgres",
+        "outputSha256": "daefa253b35715f3fb49625997223bfbfc32e7519841dc4403d261f4d05f55cd"
+      },
+      {
+        "source": "2c1cb448ba57:.changeset/declare-direct-workspace-dependencies.md",
+        "removed": "@beep/architecture-lab-proof",
+        "outputSha256": "6a54ebbb554720dfec5da24acb239df3e11792df449fa79b1887a3dc75cff0ed"
+      },
+      {
+        "source": "439d6634185d:.changeset/declared-equivalence-refactor.md",
+        "removed": "@beep/ai-provider-cli",
+        "outputSha256": "a8b09a32ec857616c2132db0d4126cab04a4a58379dd869c2341622723854538"
+      },
+      {
+        "source": "f76f5ee4e419:.changeset/dedup-clone-engine-closeout.md",
+        "removed": "@beep/observability",
+        "outputSha256": "c992aef28ccce67a34fa88b6ce9d3390b81e90da39bea412bd7245d6c1a48f8d"
+      },
+      {
+        "source": "af052d1f6719:.changeset/deprecation-purge.md",
+        "removed": "@beep/editor",
+        "outputSha256": "2018a16d75e4293221379befa6ca3d999a4dee6682eaef6858ae4431b5842523"
+      },
+      {
+        "source": "7a0fd7041eaf:.changeset/deps-update-effect-402.md",
+        "removed": "@beep/gov-legal-mcp",
+        "outputSha256": "34d9587ff6816c92afc91766230f6e7c754c4f5587155f2f192dc431643348c3"
+      },
+      {
+        "source": "b79308975cdc:.changeset/design-figure-drivers.md",
+        "removed": "@beep/occt",
+        "outputSha256": "31a142dc353da7f41b0cf48ca4ddbd90d2411b902acb8446d9fd4e33d6b2cd18"
+      },
+      {
+        "source": "2901be07d20f:.changeset/desktop-chat-qa-effect-cleanup.md",
+        "removed": "@beep/editor",
+        "outputSha256": "e21ed78f13716baff15039c8306775727a97153cb1f23ac607e03acce6368666"
+      },
+      {
+        "source": "7dd6b9af5c65:.changeset/desktop-chat-surface.md",
+        "removed": "@beep/agents-domain",
+        "outputSha256": "584ad136aeeafe278dbb81cf918bab7073b3b8f0cb55747d8f8b80568a413db3"
+      },
+      {
+        "source": "204c347a6fd6:.changeset/desktop-practice-canonical-test-harness.md",
+        "removed": "@beep/practice-kg-mcp",
+        "outputSha256": "584dceb8625d0675d43e13432e684348bb98e7526a8c2f885ef7966b141d76f4"
+      },
+      {
+        "source": "a466eee4720e:.changeset/desktop-storybook-qa-826.md",
+        "removed": "@beep/professional-desktop",
+        "outputSha256": "ee8e5c8d3e339816861c7a82fbfd042eba7fd09a2d33ddfb17eb581ea86d62f5"
+      },
+      {
+        "source": "77b49bfd919f:.changeset/docgen-bare-reexport-metadata.md",
+        "removed": "@beep/api-transport",
+        "outputSha256": "7ff72e34a1c2e07ea5ab33b8380d0ff38d00a371da59dcdd168794ab254e12b8"
+      },
+      {
+        "source": "5bd8c7f4b6c6:.changeset/docgen-full-proof-metadata-ratchet.md",
+        "removed": "@beep/repo-cli",
+        "outputSha256": "08f672ce33459f2bc9639117ecd0666db037983abfe667cb412afb8ba94dafc9"
+      },
+      {
+        "source": "42bb1576be9f:.changeset/docgen-paths-prune.md",
+        "removed": "@beep/acp",
+        "outputSha256": "3125134fe82cc17baa0f9bf5daec3b984402d0eec86f401f33e4b5f827bad782"
+      },
+      {
+        "source": "73760dc2f7b5:.changeset/docgen-shrink.md",
+        "removed": "@beep/cosmos",
+        "outputSha256": "5054cc8878eb22bfc966a2b12da72871abcd0fe4bf8550985b0314c12dae9936"
+      },
+      {
+        "source": "dde260743854:.changeset/dock-capabilities-m1.md",
+        "removed": "@beep/dock",
+        "outputSha256": "eeb6a83c9354bc76d82c10a7919bc01aa15773456c68423c4164b5935737c3d5"
+      },
+      {
+        "source": "3dbfcfb7219a:.changeset/dock-drag-ghost-ux.md",
+        "removed": "@beep/dock-react",
+        "outputSha256": "c28ed6fbb8741d43208b5d9e6a10b866d1ef5e8db3ca8eb29ce92ec22805d188"
+      },
+      {
+        "source": "793b1efffb26:.changeset/docket-intake-core.md",
+        "removed": "@beep/law-practice-domain",
+        "outputSha256": "37f955babc05402e830650887e90bd269ba6ffc99544ae0d1f8eebbdd7d4ba61"
+      },
+      {
+        "source": "f443286f26af:.changeset/docket-intake-first-run.md",
+        "removed": "@beep/docket-intake",
+        "outputSha256": "cd69a103300129c611f60c2f68b7ae657bc525c65e91a51f5738a722dedf7b25"
+      },
+      {
+        "source": "af9bcb993fcd:.changeset/docket-intake-matters.md",
+        "removed": "@beep/law-practice-use-cases",
+        "outputSha256": "b9c391b639dcdf06a0bcd52206a8fdb3232ee6d0151ab6c70525b5e19610e59d"
+      },
+      {
+        "source": "7874cdbf26b3:.changeset/docket-intake-module-jsdoc-details.md",
+        "removed": "@beep/law-practice-domain",
+        "outputSha256": "92bd0f1d294b16a8e97dc8213b1aaec2e3ff85c67a579f874e8d3c7724bfb94f"
+      },
+      {
+        "source": "af9bcb993fcd:.changeset/docket-intake-reproducible-review.md",
+        "removed": "@beep/anthropic",
+        "outputSha256": "427b32b99a55ac8dddb3cf7d91bdfc6989f1cec0838e7f12242a8c5413f93ca1"
+      },
+      {
+        "source": "a9b6f6cc4825:.changeset/docket-intake-service.md",
+        "removed": "@beep/law-practice-server",
+        "outputSha256": "5de05d89c033f865d75d6eb61652234c01f15fccb8c5fbdd008868ac6399efc0"
+      },
+      {
+        "source": "d413c39afe6e:.changeset/docket-review-loop.md",
+        "removed": "@beep/law-practice-use-cases",
+        "outputSha256": "f99a89595e7d4734a4161f0919e7cc5006a043e17984cc576c19a10f401f218b"
+      },
+      {
+        "source": "426a49759e8f:.changeset/doctest-lane.md",
+        "removed": "@beep/repo-cli",
+        "outputSha256": "d0b272ab7ffbf44360242634d721f91958b9f5ae945067a43c5bb12739deb230"
+      },
+      {
+        "source": "11c06092078e:.changeset/doctest-mark-capability.md",
+        "removed": "@beep/api-transport",
+        "outputSha256": "582c43ab0a47ccb95ae76ffd815ab14cc094a471e86e598f32d71bebdae88a30"
+      },
+      {
+        "source": "e6e88af611c2:.changeset/doctest-mark-foundation.md",
+        "removed": "@beep/html",
+        "outputSha256": "146d8dc11f4b19134ad566b862bd6560a87ba2d38779fd8dd3b97708898ba98e"
+      },
+      {
+        "source": "c94ed82f0f28:.changeset/doctest-mark-ui-system.md",
+        "removed": "@beep/dock",
+        "outputSha256": "6c75ce7c1e87326f47a2838241e7a9943797f0830384fc39de5362498135be5b"
+      },
+      {
+        "source": "2f2426b695ff:.changeset/document-ast-pattern-classification.md",
+        "removed": "@beep/schema",
+        "outputSha256": "b4818315b294dd1bcfdd977533913fd54483013e581409358481eb645a6fd93d"
+      },
+      {
+        "source": "09ad07d1fcec:.changeset/document-semantic-conformance.md",
+        "removed": "@beep/schema",
+        "outputSha256": "1491ec30e4a0f59b922e931a1374b4d1b1d67b8ab1a0db8a6228097afc1fe5f9"
+      },
+      {
+        "source": "5e8f26239e34:.changeset/effect-beta-102-compat.md",
+        "removed": "@beep/schema",
+        "outputSha256": "582b3f312bf1de8e363ab1d0afae7e8e80d6d1ef4587d2993283a3e400496b93"
+      },
+      {
+        "source": "308a3855aa83:.changeset/effect-catalog-snapshot-330b7475e2.md",
+        "removed": "@beep/acp",
+        "outputSha256": "d3860249f93c5323f263a3558a60897518cff07fce162351ec48a5f0abdba6ae"
+      },
+      {
+        "source": "cf97523f40d6:.changeset/effect-catalog-snapshot-b5a2d4c1d6.md",
+        "removed": "@beep/acp",
+        "outputSha256": "4e7b5b52066c9d57cf781ace75592b0c6203ecbc2e851065bd955d5177b45957"
+      },
+      {
+        "source": "6b1ebc8d33a3:.changeset/effect-catalog-snapshot-c8349ed.md",
+        "removed": "@beep/acp",
+        "outputSha256": "9e40c290a3c66f9070034616e9063c54aa68611c2e980ae3ff1202521da8f576"
+      },
+      {
+        "source": "f590617f158d:.changeset/effect-catalog-snapshot-df77fff939.md",
+        "removed": "@beep/acp",
+        "outputSha256": "2c686cff017c48433c352cae8a2469c622562aa4d84621177cb3116f540b0f02"
+      },
+      {
+        "source": "76f69dfc92a7:.changeset/effect-catalog-snapshot-e5f7d12af9.md",
+        "removed": "@beep/acp",
+        "outputSha256": "621c40151b6bc6b776f90d579345a4f53341917be4baabce0966b7c7bcccf4ed"
+      },
+      {
+        "source": "03d2f4ab627a:.changeset/effect-child-process-hardening.md",
+        "removed": "@beep/acp",
+        "outputSha256": "01fd830052f25d75f2bba5f59d7c556437c7d437c8cd3cc34d4232fe05d75b9a"
+      },
+      {
+        "source": "6eb1f37024eb:.changeset/effect-drizzle-graduation.md",
+        "removed": "@beep/effect-drizzle",
+        "outputSha256": "9f7ec30db45758b15e2b9b9a85569267d1b62a8a428dac23625713e832903332"
+      },
+      {
+        "source": "5616ccf51dbc:.changeset/effect-drizzle-kit-v2.md",
+        "removed": "@beep/effect-drizzle",
+        "outputSha256": "f10362a4d9803f8c3af2fa9b58e0d9c101266695b937c4c7b53b97eef2de9a41"
+      },
+      {
+        "source": "c93cf5ccf74f:.changeset/effect-jsdoc-quality-grammar.md",
+        "removed": "@beep/schema",
+        "outputSha256": "ac4e4f8d0c152c3d7c9750ad5bc2a53fc956256328414f3c3bd51ac78337d502"
+      },
+      {
+        "source": "217e3085921c:.changeset/effect-reference-workspace-refs.md",
+        "removed": "@beep/ai-sync",
+        "outputSha256": "6945272f373f67e25490058faea37ca1d2ce3f828defde5fe4fd5995fba82fa3"
+      },
+      {
+        "source": "a98dd51966d7:.changeset/effect-stable-401.md",
+        "removed": "@beep/acp",
+        "outputSha256": "e3c7c830c8362203c125ef1aaf65d940035b3baedfd24196815f7c2b29c7bab3"
+      },
+      {
+        "source": "e3b7a5932028:.changeset/effect-vitest-claims-ontology-coverage.md",
+        "removed": "@beep/law-practice-server",
+        "outputSha256": "a05191a16f8b4dc520035424f0af1b1a85b44f1b5c576389bad79a5f80fb48cb"
+      },
+      {
+        "source": "64c0696b2d60:.changeset/effect-vitest-cli-wave-quality-repairs.md",
+        "removed": "@beep/law-practice-server",
+        "outputSha256": "d41160a05663853ec463f049cff6211ad5baac610ddd58bea0b42cffccd9fa98"
+      },
+      {
+        "source": "d117ecf26d9a:.changeset/epistemic-bitemporal-edge-core.md",
+        "removed": "@beep/shared-domain",
+        "outputSha256": "ff56ebc0d1cd411b70d738a4309ce0abdddf1b9365b0a3eca9793bb89bb7d831"
+      },
+      {
+        "source": "6706b95a75ad:.changeset/epistemic-bounded-shacl-move.md",
+        "removed": "@beep/epistemic-server",
+        "outputSha256": "33941e4b44cc1bbf15aaba38e03e0f9c83e6cd681aceb3199812f6b37b9cbfc6"
+      },
+      {
+        "source": "d2c2bc29ca4f:.changeset/epistemic-execution-authority-config.md",
+        "removed": "@beep/epistemic-config",
+        "outputSha256": "7661db34dfde77c9d84a7ec4a1b7f1c1777a8ed29a266c7fc4b9f4bfb462fd7d"
+      },
+      {
+        "source": "1641154dae50:.changeset/epistemic-execution-ledger.md",
+        "removed": "@beep/epistemic-tables",
+        "outputSha256": "3ef4ae6791916b01c5af12fa9f92ad652c66cd58a88b70606e242a2202da6b20"
+      },
+      {
+        "source": "fb2185154f66:.changeset/epistemic-governed-egress.md",
+        "removed": "@beep/epistemic-server",
+        "outputSha256": "83da324fdcd5d8b2b4a791680ca393b522198bf4fe973d281a995057bff4d264"
+      },
+      {
+        "source": "17f614ccd3d6:.changeset/epistemic-governed-tier-gate.md",
+        "removed": "@beep/epistemic-server",
+        "outputSha256": "d5c5ca59bb5473c8b18f01ccb366d4a6ad915649c727b39c2bef4a4b45058e32"
+      },
+      {
+        "source": "e721ede7004c:.changeset/exhaustive-html-ast.md",
+        "removed": "@beep/html",
+        "outputSha256": "f593527dfefd199e08bdb7c2c253dc576183be4ac94dc1593436ff412de78db1"
+      },
+      {
+        "source": "f61797343545:.changeset/fc-runs-leaf-extraction.md",
+        "removed": "@beep/fc-runs",
+        "outputSha256": "653abb129a8aa6f3fc758a8e9210b24321395069aef557601cb38cff305d36bc"
+      },
+      {
+        "source": "bf227c324959:.changeset/fibered-identities-resolve.md",
+        "removed": "@beep/identity",
+        "outputSha256": "b3ee3d27c69acdc47ca2b26575c03bd94a52e274a40882d7eae00b6bc1b718e3"
+      },
+      {
+        "source": "50735cfd106f:.changeset/flat-check-configs-for-reference-tips.md",
+        "removed": "@beep/shared-domain",
+        "outputSha256": "11ea6396e772ebf74ebae9e1acb4fca20ef77f3b7959228aa6569e09f8fcb9d9"
+      },
+      {
+        "source": "6912323d8f88:.changeset/fresh-acp-driver.md",
+        "removed": "@beep/acp",
+        "outputSha256": "e22dbabe0582164da05fb073c2157f7032d065aa43e7801d638127677a317cfc"
+      },
+      {
+        "source": "1d03e21f456e:.changeset/giant-lilies-chew.md",
+        "removed": "@beep/canvas",
+        "outputSha256": "ec25549499f3ea8a982dbb3200ffc9a4db0b4ed801a847fb6dabe2f089615e9a"
+      },
+      {
+        "source": "16f22c079d22:.changeset/gov-legal-mcp-host.md",
+        "removed": "@beep/gov-legal-mcp",
+        "outputSha256": "5c9a73d6e3f4a627accd0c18fecca74262a67d8425db0fc63f510557a41556db"
+      },
+      {
+        "source": "64476ececeb9:.changeset/graph-3d-view.md",
+        "removed": "@beep/graph-3d",
+        "outputSha256": "c4b765b3b63744b6fceae52914b3ad9dc8ac407aa6290dd8c29785f5039130c8"
+      },
+      {
+        "source": "2ad8f270810c:.changeset/green-plans-admire.md",
+        "removed": "@beep/ai-sdk",
+        "outputSha256": "3eeeb09637afc2bc809e97d16107804273ae1b87fb863e0c3ce1181f7a479878"
+      },
+      {
+        "source": "2476ffa8c9a6:.changeset/harness-ledger-regime-gate.md",
+        "removed": "@beep/repo-ai-metrics",
+        "outputSha256": "ef1a4a4d9fe216179a1c6136fb91d0cb6b2541bb9d811cf728613a724896d6e7"
+      },
+      {
+        "source": "52fcc8d1353d:.changeset/hoist-inline-schema-compilers.md",
+        "removed": "@beep/acp",
+        "outputSha256": "1a3b631e578ee2cf20def6968b07391932498ad64c11963c9f071d424fbe5afb"
+      },
+      {
+        "source": "1e9d94675088:.changeset/housekeeping-entity-stack.md",
+        "removed": "@beep/agents-client",
+        "outputSha256": "107abb1ce9c73cf5c57b5da202bfba6cca6715abc339980f07ff70f28e039821"
+      },
+      {
+        "source": "ec3bc91e63db:.changeset/housekeeping-platform-hygiene.md",
+        "removed": "@beep/acp",
+        "outputSha256": "98a026a156bbaaf9d6306d735bcb460157e049426bce2117e201f581b72a37c0"
+      },
+      {
+        "source": "e5bd9e2f3fbe:.changeset/identity-annote-class-helper.md",
+        "removed": "@beep/identity",
+        "outputSha256": "15c000024a44b481e06643685f2261a49c16f0ed9a2c6127b41ab9a7481763d6"
+      },
+      {
+        "source": "d24237344ba2:.changeset/identity-iri-fold.md",
+        "removed": "@beep/identity",
+        "outputSha256": "3e634e5f196be30e01b5b5d0630264ba20a59c2bb2537ca6eca9d9570d3ee276"
+      },
+      {
+        "source": "7980e5aaa1e1:.changeset/import-surface-tidy-fc-runs-ai-metrics.md",
+        "removed": "@beep/fc-runs",
+        "outputSha256": "a036c50820098ba6fafd9b4d0bf722f8f3de66fa5da28f631d455cd6aaefb041"
+      },
+      {
+        "source": "a8a9c71a02e6:.changeset/instrumented-runner-extraction.md",
+        "removed": "@beep/test-runner",
+        "outputSha256": "603d048e23322ffbb568602e7f4dcc06a9a8d7b9aa0453ffad8aa3a1438213fd"
+      },
+      {
+        "source": "2b82fba51c11:.changeset/internal-dependency-compatibility.md",
+        "removed": "@beep/repo-cli",
+        "outputSha256": "883fa7d12a1a89d0d5a524b70179e0a7ed408f45a91d5b5b9e481f8dd6f50c04"
+      },
+      {
+        "source": "c2c56bbb0ec6:.changeset/jsdoc-followups.md",
+        "removed": "@beep/acp",
+        "outputSha256": "21d82f0dd572390e82cc79db1464d08938b6050ab4e420ab7dab3e8896d829f6"
+      },
+      {
+        "source": "98ec0c645124:.changeset/jsdoc-generator-templates.md",
+        "removed": "@beep/box",
+        "outputSha256": "5686b03b7ae6c37fc48eb2019bb9189b14844545ba82092fbbf001bd0972129a"
+      },
+      {
+        "source": "7929b1f52975:.changeset/jsonl-effect-first.md",
+        "removed": "@beep/scratchpad",
+        "outputSha256": "3fdd6fd2baf9351bb1c169edd59dd1bdd4aa22cfa8063731eee7193e443df748"
+      },
+      {
+        "source": "2819a7d747cf:.changeset/lab-apps-p2-first-lab-and-audit-fixes.md",
+        "removed": "@beep/repo-cli",
+        "outputSha256": "d1351eaa5a9814c4bc81c0779f0e80f5373085c62c47fedb614da3753426877c"
+      },
+      {
+        "source": "c0333d03d5b4:.changeset/lambda-surface-gate-scoping.md",
+        "removed": "@beep/repo-cli",
+        "outputSha256": "2575dad641d00370f7f1143184112281a2e0e2a3ed541ef5ba5bf2400394e5e2"
+      },
+      {
+        "source": "746b5353047e:.changeset/langextract-generation-timeout-service.md",
+        "removed": "@beep/langextract",
+        "outputSha256": "88305463f0349796aa20eeee86b0a14dfcc225697ad7ddc8acb8277e99ffc9b2"
+      },
+      {
+        "source": "3961138de6d8:.changeset/langextract-grounded-spans.md",
+        "removed": "@beep/langextract",
+        "outputSha256": "a42d5edb9cc0b27e7a5d79a3a4daa3bfc0ed9d5080e506fd4f4a6d8bef45703e"
+      },
+      {
+        "source": "19d8b3df005d:.changeset/langextract-minimal-fold-alignment.md",
+        "removed": "@beep/langextract",
+        "outputSha256": "e051c02fa83bac07adbc17bfba6f1b48060e128722d0c1206b65dac16b1de859"
+      },
+      {
+        "source": "c4f19e7026f5:.changeset/law-practice-office-action-spike.md",
+        "removed": "@beep/schema",
+        "outputSha256": "2364f2cbd547c375c44d0144929aa0d0d4d82ecf957669b6d2d4c613ee03b78b"
+      },
+      {
+        "source": "4d5314f567a8:.changeset/leaf-boundaries-instantiation.md",
+        "removed": "@beep/md",
+        "outputSha256": "96453715896bd20670e2b33f134d7a58d28ef4f42972a3e210537282f22ca9f2"
+      },
+      {
+        "source": "60e042462607:.changeset/legal-document-intake-p1.md",
+        "removed": "@beep/professional-desktop",
+        "outputSha256": "d04728710659929d83cf80ceb013793e72e5cd2be74b204b17c5cb405def858e"
+      },
+      {
+        "source": "158876c1e65f:.changeset/legal-document-intake-p3-box-sync.md",
+        "removed": "@beep/documents-domain",
+        "outputSha256": "a768cbbfad5a344bd7d45ec51a788dd97746f6656696e558e09dea7651f1b4eb"
+      },
+      {
+        "source": "3ff5b4055ff3:.changeset/legal-position-relator-runtime.md",
+        "removed": "@beep/schema",
+        "outputSha256": "19105084d4072d7aa8eed75da4b8252b52d59cb01f9412786a87c2ee448000c7"
+      },
+      {
+        "source": "96a98bfd8b02:.changeset/legal-values.md",
+        "removed": "@beep/law-practice-domain",
+        "outputSha256": "db38b507ef24638d853d4be137ccb806ac5a4766f78d52501daec982e9c026e7"
+      },
+      {
+        "source": "a172f9d7c4d3:.changeset/lexical-atlas-p1-capability-profiles.md",
+        "removed": "@beep/editor",
+        "outputSha256": "3c38156c563054c03e2f1887c4185513d8fb836367d1ad2c3a6ca481973878d8"
+      },
+      {
+        "source": "614910901c6e:.changeset/linear-archive-forwarder.md",
+        "removed": "@beep/repo-ai-metrics",
+        "outputSha256": "4a86f1b165a17f5f9c394178bc1e7804f8aa4800e119965653835e5db484bb24"
+      },
+      {
+        "source": "46ddaafc9587:.changeset/lint-eslint-cache-key.md",
+        "removed": "@beep/repo-cli",
+        "outputSha256": "0de57a19a54552a5eb27411d949e3f7901b31e45d53e7d63edd9528cd63dc0d1"
+      },
+      {
+        "source": "d6729d9dc5db:.changeset/lint-turbo-cache-root-plan.md",
+        "removed": "@beep/repo-cli",
+        "outputSha256": "773aaa051524ce7b8ef3a3b9bdd90189a45ec4fcacf3bc7330770cb724d1ff2f"
+      },
+      {
+        "source": "b26ed3a81d55:.changeset/literal-kit-trim.md",
+        "removed": "@beep/schema",
+        "outputSha256": "07b46ddebd17154b5ea8a8df04a5c94a1c6ac0876336c60784c4032bd34772df"
+      },
+      {
+        "source": "6081174d05f7:.changeset/m365-app-only-write-lane.md",
+        "removed": "@beep/m365",
+        "outputSha256": "1755945caa013e39451ef4514b2448870e97eb39400f806eade590de139d5877"
+      },
+      {
+        "source": "ade7b1465805:.changeset/m365-mail-folder-lookup.md",
+        "removed": "@beep/m365",
+        "outputSha256": "0d12feb91cfc763535f201181d68bd5aaf99e00fb056c26643b5bb756053a569"
+      },
+      {
+        "source": "fa90e642f1b5:.changeset/m365-mail-outbound-verbs.md",
+        "removed": "@beep/m365",
+        "outputSha256": "356105e4fd6c8d7c9efcd199d7ab9efbbff71d17f44ca5690b8cd7432ce4bd5f"
+      },
+      {
+        "source": "fa90e642f1b5:.changeset/m365-outbox-mcp-server.md",
+        "removed": "@beep/m365-mcp",
+        "outputSha256": "3694f6c4ac6c69c62122172528d6790e3c4eeb7a2dc4a248ff6aa12588007e64"
+      },
+      {
+        "source": "2de6906778ea:.changeset/mcp-handshake-protocols.md",
+        "removed": "@beep/mcp-kit",
+        "outputSha256": "da55553855cbf8a1734b63629688ca4145233cd353d97f8dbebc741f18e21f6e"
+      },
+      {
+        "source": "7d8a22c78761:.changeset/mcp-hosts-2026-pr2.md",
+        "removed": "@beep/m365-mcp",
+        "outputSha256": "e99ff400d7d29c732d809886569d499cca5cf1058d031ecf29975e70d1f30cb9"
+      },
+      {
+        "source": "532f628744ad:.changeset/mcp-hosts-2026-pr3.md",
+        "removed": "@beep/gov-legal-mcp",
+        "outputSha256": "492b4f23d24a71e365fde7ec097d7adfba014f921252ec5525490379ad5e21d1"
+      },
+      {
+        "source": "79f232d7b8d5:.changeset/mcp-stateless-kit-client.md",
+        "removed": "@beep/mcp-kit",
+        "outputSha256": "7cd0cd36666daddc7d00bcfac454142530e8cbb52cf27812ab649ad90e955e29"
+      },
+      {
+        "source": "c2b75455dff1:.changeset/mcp-utf8-response-budget.md",
+        "removed": "@beep/mcp-kit",
+        "outputSha256": "845a2d4a2dac45d67decc00fd66a833242e6f711e9de84de836317a59550d664"
+      },
+      {
+        "source": "5bb7754cce8e:.changeset/model-routing-sync-coverage-isolation.md",
+        "removed": "@beep/identity",
+        "outputSha256": "0a8d3be137d7dc6b5edc9dcdc0e196c546574dc912cb9c4bd05d67636949695f"
+      },
+      {
+        "source": "663904610cce:.changeset/neat-vercel-bootstrap.md",
+        "removed": "@beep/oip-web",
+        "outputSha256": "0205e913b7efcc14fdc4fc422b060d2c2c7b302682a8efd8bf1490a0957f0438"
+      },
+      {
+        "source": "9b7553f618b2:.changeset/next-config-bun-runtime-alignment.md",
+        "removed": "@beep/oip-web",
+        "outputSha256": "3fd369e15a7b4ca45d58e93fb1dc5c96b6ba39c19fa3b399cd61683d05616450"
+      },
+      {
+        "source": "381023275837:.changeset/next-config-shared-system.md",
+        "removed": "@beep/repo-configs",
+        "outputSha256": "14e695408df60059afe743207ce419bd1839d2238146041648cf61481a770ebd"
+      },
+      {
+        "source": "6d04f123c43e:.changeset/nightly-property-lane-677.md",
+        "removed": "@beep/md",
+        "outputSha256": "a7a32d69089538d298940c174966efe03fc7a0231be0f7e955b63ceac69cda49"
+      },
+      {
+        "source": "f35cfa5fe2b3:.changeset/nlp-handoff-mentions.md",
+        "removed": "@beep/nlp",
+        "outputSha256": "3d1b25f4e30b598549eb202c9df99b03c42e8c4319e795d247fd6672ae099cdc"
+      },
+      {
+        "source": "f33547b6d0f6:.changeset/official-dataset-schemas.md",
+        "removed": "@beep/data",
+        "outputSha256": "684e8425537d8fde04f3d21ebda01d1b60ef9ac432bcba0ba3a51572c94eff1d"
+      },
+      {
+        "source": "64b7e44d8862:.changeset/one-round-loop-p1-property-lane.md",
+        "removed": "@beep/acp",
+        "outputSha256": "3d3d348f919edc9d77d655ebaaa7664541d1e780e4e35b7af28d89591f984fe6"
+      },
+      {
+        "source": "c63d23c1b482:.changeset/ontology-agent-p0-repairs.md",
+        "removed": "@beep/semantic-web",
+        "outputSha256": "c243f864d7aff5eb03170c07de8e5a7e649b600739b9d9bc850e524c1e5e065a"
+      },
+      {
+        "source": "c63d23c1b482:.changeset/ontology-agent-surface-p0-hardening.md",
+        "removed": "@beep/shacl",
+        "outputSha256": "9ecf53efa53c2c3e7e989d11d533247e018c3ff5b2dff0bed17b73ee6d9ef2d0"
+      },
+      {
+        "source": "35840445db81:.changeset/ontology-agent-surface-p1-toolkit.md",
+        "removed": "@beep/ontology-use-cases",
+        "outputSha256": "39027ccf5528b4ff3b725586212119d029e8bcccace82049b22c04d16a49620f"
+      },
+      {
+        "source": "6eb65ca1b04c:.changeset/ontology-agent-surface-p2-transport.md",
+        "removed": "@beep/mcp-kit",
+        "outputSha256": "2223b5f27a39ff571bc9024bf03bb4ee81efb50b81b1abc4932ac3504078074b"
+      },
+      {
+        "source": "423e6e0d2ab5:.changeset/ontology-agent-surface-p3-harden.md",
+        "removed": "@beep/ontology-server",
+        "outputSha256": "c69693be658dbde2638ca95792ad63b162c2b77fdf5dd5c5fef6fcac2032387f"
+      },
+      {
+        "source": "8c62ec08b395:.changeset/ontology-migration-qa.md",
+        "removed": "@beep/dock-react",
+        "outputSha256": "313040dff3346eafc717e1e766aff22e2fc249038db0daaba12728373345d931"
+      },
+      {
+        "source": "05bb13a9d4b6:.changeset/ontology-workbench-p1-foundation.md",
+        "removed": "@beep/ontology-domain",
+        "outputSha256": "75fbe2f76f369fcb7ef14913c29e907a90c96b99042e0163bff5b74fa003c451"
+      },
+      {
+        "source": "26066eb89b87:.changeset/ontology-workbench-p2-explorer-editor.md",
+        "removed": "@beep/ontology-domain",
+        "outputSha256": "c59e10e2ff804c1b06e66d19359481fa5542492db9614ebd2e3373cf8507810d"
+      },
+      {
+        "source": "26066eb89b87:.changeset/ontology-workbench-p3-visualizer.md",
+        "removed": "@beep/cosmos",
+        "outputSha256": "a4f7e7d6b31be37d2acf5cc65e7f2e61378539174af25b259e2aee91521c77ec"
+      },
+      {
+        "source": "26066eb89b87:.changeset/ontology-workbench-p4-sparql-reasoning.md",
+        "removed": "@beep/oxigraph",
+        "outputSha256": "79795df21430732fc827cd8e58c6c4004848625772a9a485059dc33d7d5a6b56"
+      },
+      {
+        "source": "fb2124de340c:.changeset/ontology-workbench-split.md",
+        "removed": "@beep/ontology-ui",
+        "outputSha256": "264b68b1281ed80979ef1afd11a8ff445fef704f2cbeec20436cfcef2a3eff8f"
+      },
+      {
+        "source": "f3c7f3cb3720:.changeset/openapi-generator-rails.md",
+        "removed": "@beep/acp",
+        "outputSha256": "1f3d20d199fdaa41cf4a80cee3e10dc0468465f609f9ceeb793d307dc6c4f822"
+      },
+      {
+        "source": "3dbf2d277b2c:.changeset/openclaw-p1-driver.md",
+        "removed": "@beep/openclaw",
+        "outputSha256": "172ae33432c6c3ba43f0a16be27edac1cb7aa6503a0d2081e97945dd095c7782"
+      },
+      {
+        "source": "c83514a0f9a9:.changeset/openclaw-p3-live-agent.md",
+        "removed": "@beep/openclaw",
+        "outputSha256": "8fbd850d9c402c53d48dec9433a987f027f581ed2e813ebd43067439121b2662"
+      },
+      {
+        "source": "1fc96c1d60ca:.changeset/oppold-corpus-pipeline.md",
+        "removed": "@beep/libpff",
+        "outputSha256": "48b02b4f2f7c8f657c0d59115b30ace714816a7b773416402d94ed34e6a90331"
+      },
+      {
+        "source": "278108f771a5:.changeset/oppold-corpus-refresh.md",
+        "removed": "@beep/identity",
+        "outputSha256": "7213b8d6062127a2c1cbd14e87887479560a91a5807801d11b212eecc9c983d0"
+      },
+      {
+        "source": "7bda565a5fff:.changeset/orange-melons-dig.md",
+        "removed": "@beep/repo-ai-metrics",
+        "outputSha256": "edbb6159121d47ac3cbdb10a4f6107d29fcfa33cf0a3d058ea008abb5848401f"
+      },
+      {
+        "source": "7a4530b99af3:.changeset/orange-mice-bake.md",
+        "removed": "@beep/ai-sdk",
+        "outputSha256": "871ac2d6a169f3b8d64f58851b02e93b3aaab39b826f2736bb9bdd507e56bdee"
+      },
+      {
+        "source": "9e7d01fad6f5:.changeset/pandoc-ast-foundation.md",
+        "removed": "@beep/identity",
+        "outputSha256": "867c5a6152754720814d74fce8494a977452b8689b3283ed4b19285901c57250"
+      },
+      {
+        "source": "f1383148c6c4:.changeset/patent-document-schema.md",
+        "removed": "@beep/law-practice-domain",
+        "outputSha256": "6cf7aaac1a78d0939a84c4a0f0c299c4e77924ad2fdb8e92405b5b96350693f0"
+      },
+      {
+        "source": "aa9ce19cff22:.changeset/per-module-effect-imports.md",
+        "removed": "@beep/acp",
+        "outputSha256": "07adab9e40a46c9d8cdb43cbfcd07c2d8bf6e8b877f293b59937fea4ddc89c48"
+      },
+      {
+        "source": "a14f9174b604:.changeset/per-module-imports-p1.md",
+        "removed": "@beep/api-transport",
+        "outputSha256": "fd7db3f533b094f177dd9c7e744b6fc78116425fa439361cfb8056e46baf99ba"
+      },
+      {
+        "source": "3254833bac97:.changeset/per-module-imports-pilot.md",
+        "removed": "@beep/repo-cli",
+        "outputSha256": "463aae6ac020f0a47f4298b23dc92fd7367d0e66244c175c3bbbabb978fbc5bd"
+      },
+      {
+        "source": "76380acc39c3:.changeset/per-module-jsdoc-fence-followup.md",
+        "removed": "@beep/repo-cli",
+        "outputSha256": "4236e7f9650b2923bcd0a82d8cd6f38195b9d3d6d996027dbcef4aaa7b8d5616"
+      },
+      {
+        "source": "b44d20809a21:.changeset/pglite-inprocess-driver.md",
+        "removed": "@beep/pglite",
+        "outputSha256": "4f2da386df6e8e4ae8fdb1cc04ce91e3f6bd671fe536150dc5b8fe5d977eb111"
+      },
+      {
+        "source": "26066eb89b87:.changeset/polite-keys-sparkle.md",
+        "removed": "@beep/semantic-web",
+        "outputSha256": "7998c24d314d36c8e5500e4aad7f215df5037965b61c3dd316c7d67f6e45b997"
+      },
+      {
+        "source": "71d396efb469:.changeset/portless-default-react-grab-storybook.md",
+        "removed": "@beep/storybook",
+        "outputSha256": "1e4cacf3c4f07e4925d6baa849902d092cfaa488806e059380551d8a1e061ab9"
+      },
+      {
+        "source": "88fa371cb050:.changeset/practice-box-provisioning-preapply.md",
+        "removed": "@beep/box",
+        "outputSha256": "39e4944a18f84ac84f4376f2ca1e07ca997d8aba92a6df2d76e7811cd1a8a772"
+      },
+      {
+        "source": "3cf349106b54:.changeset/practice-box-provisioning.md",
+        "removed": "@beep/box",
+        "outputSha256": "774e4fb3aec44650127c53feba6e88acfa3891e5e6c1da621e0ab0a3d42327d6"
+      },
+      {
+        "source": "75674b0a87e3:.changeset/practice-document-identification-close.md",
+        "removed": "@beep/law-practice-use-cases",
+        "outputSha256": "1a2d51f61a867dd17adf34fe7cb48a181d985674cb0a57c2451d493e107378ae"
+      },
+      {
+        "source": "5329c31d5812:.changeset/practice-document-identification.md",
+        "removed": "@beep/law-practice-use-cases",
+        "outputSha256": "ced5b1cd711d46122e69aeee583edad4394fadba5429fd2b8033f5d825ec8aec"
+      },
+      {
+        "source": "cf106e28a726:.changeset/practice-kg-bundle-04.md",
+        "removed": "@beep/law-practice-domain",
+        "outputSha256": "c7ac39cf11dba98133e80621ab22d78f3b950256b68d52edcb241e3ed06bc6c5"
+      },
+      {
+        "source": "99d30b1b5286:.changeset/practice-kg-bundle-version-flag.md",
+        "removed": "@beep/law-practice-server",
+        "outputSha256": "9918fcc2d8c2e85d926868385222bb209c33d66bf150fde93c02ba8d6b30239b"
+      },
+      {
+        "source": "7ad560eed049:.changeset/practice-kg-compare-to.md",
+        "removed": "@beep/law-practice-server",
+        "outputSha256": "f371fcd3f0e0aa2123a7010c7615eb43bc67daffafaf952ede402753e66be8db"
+      },
+      {
+        "source": "c4636cfdadcb:.changeset/practice-kg-link-source-type-aliases.md",
+        "removed": "@beep/law-practice-use-cases",
+        "outputSha256": "1656fc7aef046b74b6064e9a2eab570346c06a159c4b43a7b943e5aa502ddef5"
+      },
+      {
+        "source": "1e1c997be982:.changeset/practice-kg-mail-index.md",
+        "removed": "@beep/law-practice-domain",
+        "outputSha256": "920bc5490fdd8390e205c92307809d91c8ce7943d27aa1d98d7f00ba5f656e30"
+      },
+      {
+        "source": "bde2e5b8c763:.changeset/practice-kg-matter-lookup.md",
+        "removed": "@beep/law-practice-use-cases",
+        "outputSha256": "9a734e4a983c999de5de1bef2acd5cdcfecc9b4151eaebe4d33685525269d343"
+      },
+      {
+        "source": "b66ef07ba026:.changeset/practice-kg-message-identity.md",
+        "removed": "@beep/law-practice-server",
+        "outputSha256": "9320befcd0fede39c0bef76d592de5635ea7ee3f26d7a1096634e9218490662e"
+      },
+      {
+        "source": "65476030301a:.changeset/practice-kg-p6-graph-integrity.md",
+        "removed": "@beep/law-practice-domain",
+        "outputSha256": "063bff28a339eb83594f12f3be618b6be6a3a187605bf2df636ed714f1a564de"
+      },
+      {
+        "source": "1cde4bf43a21:.changeset/practice-kg-working-files.md",
+        "removed": "@beep/law-practice-domain",
+        "outputSha256": "1331ff4dfa4e9312c33f26bf0977b392bd179669152fa50f22fa094a3fed92a9"
+      },
+      {
+        "source": "1a4aa495f845:.changeset/practice-mail-kg-correspondents.md",
+        "removed": "@beep/law-practice-server",
+        "outputSha256": "2c869ca09533a565981f0a9e19c403d50e69f4063a98a5bf3c0133903f78619d"
+      },
+      {
+        "source": "29bcdfe00b91:.changeset/practice-mail-review-noise.md",
+        "removed": "@beep/law-practice-domain",
+        "outputSha256": "4aaa7fc21036107ba3462c4976f5f41884925b28067ad8b48e252d3749d592e1"
+      },
+      {
+        "source": "50b79e470b3b:.changeset/practice-mail-tagging-adapters.md",
+        "removed": "@beep/law-practice-domain",
+        "outputSha256": "fe8853a35790e2caebdbef60b18b5a7c7f8e37ce08bdf2d22766e2eef0675345"
+      },
+      {
+        "source": "0f5b4d5ae123:.changeset/practice-mail-tagging-core.md",
+        "removed": "@beep/law-practice-domain",
+        "outputSha256": "a2d8860e565bd38192a91bc65741f0b7bff551d895e06194d6411ce50f88e7a3"
+      },
+      {
+        "source": "6008faca1d09:.changeset/practice-mail-tagging-entrypoint.md",
+        "removed": "@beep/practice-mail-tagging",
+        "outputSha256": "d81916c86b270e2ce5e43cd7b1be6d72cfa0825fc44954f90e289e8911d4e6b2"
+      },
+      {
+        "source": "f08b01b1c35b:.changeset/process-error-boundary-logging.md",
+        "removed": "@beep/ai-provider-cli",
+        "outputSha256": "6ddf8982d94482ba5eef69b00dd7634933e38e646121b258561e06f3e9587eb0"
+      },
+      {
+        "source": "81f5461c9cf0:.changeset/professional-desktop-qa-closeout.md",
+        "removed": "@beep/documents-use-cases",
+        "outputSha256": "4710979a590f4e114dda4ebf2eab41a3c5b00c116fd6e0081ed2bb1506ab9170"
+      },
+      {
+        "source": "3382a1a96eac:.changeset/provider-driver-review-fixes.md",
+        "removed": "@beep/drizzle",
+        "outputSha256": "3754998b022dc95a33a7e1bc8f7942cf88457d979b0d515a9f8f816276a2f3ce"
+      },
+      {
+        "source": "c2b75455dff1:.changeset/provider-test-runner-canon.md",
+        "removed": "@beep/anthropic",
+        "outputSha256": "de1c5942e40df1385b68bdf7233732792ebedb7e5320930da779d85e75486142"
+      },
+      {
+        "source": "bed30c6adf3b:.changeset/quality-lanes-pr1-aux.md",
+        "removed": "@beep/cosmos",
+        "outputSha256": "290d1544b07886f50ac0841d8d2b8bc1f1c96ecab658dfafbfc64859558d3d9b"
+      },
+      {
+        "source": "d68f1a11dd41:.changeset/quality-lanes-pr2-check-scripts.md",
+        "removed": "@beep/architecture-lab-proof",
+        "outputSha256": "06d034f89216a2132c84d7235b4e9144a0aaed0aab9c7753f6617562a4674188"
+      },
+      {
+        "source": "c12c6ae651a3:.changeset/quality-lanes-pr3-burndown.md",
+        "removed": "@beep/agents-client",
+        "outputSha256": "6d40a319284e54bdd0fed5772009a80f0d4ef9327df97eb19e4a047631fa5335"
+      },
+      {
+        "source": "f137beedb270:.changeset/quality-sweep-root-lanes.md",
+        "removed": "@beep/identity",
+        "outputSha256": "554b82ae156b2354ab6c9c5e378aa73de7a51b9c43890eea7785042f9f199ce8"
+      },
+      {
+        "source": "751da1fc18e0:.changeset/quick-otters-typecheck.md",
+        "removed": "@beep/acp",
+        "outputSha256": "fb8b1a9af8ca762cfbb926ca19d9f19960784e4f3293f1ed3f9db3f6ccb72ddd"
+      },
+      {
+        "source": "e7c58a30c52a:.changeset/quiet-canvas-compat.md",
+        "removed": "@beep/openai-compat",
+        "outputSha256": "e7fb03f67dd87c7c4b1ed447ebc9f843d1fe4c341ae6d9110996613b480fdfd6"
+      },
+      {
+        "source": "7bbeacb0d70a:.changeset/quiet-geese-rest.md",
+        "removed": "@beep/repo-ai-metrics",
+        "outputSha256": "1fa5141d4608ef68ac19cac0fd337484dc9e05c17e12b38b0bf3d48412f3db3f"
+      },
+      {
+        "source": "c2b75455dff1:.changeset/quiet-media-fixtures.md",
+        "removed": "@beep/exiftool",
+        "outputSha256": "14442cc9f37155e6fa1722996c9dfdb6fed9761ab11cf590d280d03d1402d487"
+      },
+      {
+        "source": "8ae9c8e4f57a:.changeset/remove-retired-beep-packages.md",
+        "removed": "@beep/identity",
+        "outputSha256": "892f5efd17c7b4ff273e23abb75f2c04188e4fb36fb40d382e024038f7c87a72"
+      },
+      {
+        "source": "037dd8a912d1:.changeset/repo-cli-modularization.md",
+        "removed": "@beep/repo-cli",
+        "outputSha256": "d882384ecbbcd7bfd396e8b7dc7d93d16db2e037506e693059324abfd5194f98"
+      },
+      {
+        "source": "a10825dd01bb:.changeset/repo-utils-biome-json-render.md",
+        "removed": "@beep/repo-utils",
+        "outputSha256": "9d0e0368ba92ed28c9a638bbf3b825158e38163f7973e9a8ce2fc084092f6a17"
+      },
+      {
+        "source": "2c1cb448ba57:.changeset/restore-claims-schema-quality.md",
+        "removed": "@beep/law-practice-server",
+        "outputSha256": "25f50c10303e7726906c1ca809d918dd312ba99155b84bfd604c517bd975187a"
+      },
+      {
+        "source": "793677e8e295:.changeset/rich-text-foundation.md",
+        "removed": "@beep/editor",
+        "outputSha256": "52f6a2f1c111031d37b24fefe79717082e9eb8cd6cf0a724be922a97a16e7f7f"
+      },
+      {
+        "source": "df6048c67053:.changeset/runner-toolchain-cache-cost.md",
+        "removed": "@beep/repo-cli",
+        "outputSha256": "567854bb30942fc4e539190f7f16e49e512ea79860d4ddae96a5d482efa7b527"
+      },
+      {
+        "source": "e6f84f8eb425:.changeset/runtime-branch-regressions.md",
+        "removed": "@beep/pretext",
+        "outputSha256": "6c66b57705c8f57d98b77aa8923154c3ad89cec632080421d3e18cef0aa75b79"
+      },
+      {
+        "source": "2996409e56e3:.changeset/saved-mail-format-families.md",
+        "removed": "@beep/file-processing",
+        "outputSha256": "4feb095d78c0fbae59736c94ddbc79a709fd2892decb6b1c7013be488811438a"
+      },
+      {
+        "source": "90517df719fa:.changeset/schema-always-equivalent.md",
+        "removed": "@beep/schema",
+        "outputSha256": "68a62a848551d8489e1350a7d4d13e392091a1fa5678db7c5abf25d52d283bde"
+      },
+      {
+        "source": "4e56cb7eccb9:.changeset/schema-first-v4-capabilities.md",
+        "removed": "@beep/schema",
+        "outputSha256": "b56513d04a7c44eb7b4b798989a1bfbe15cfe95cb059f21f970443d51b8d00de"
+      },
+      {
+        "source": "f4727ecd7ee9:.changeset/schema-first-zero-actionables-internal.md",
+        "removed": "@beep/repo-cli",
+        "outputSha256": "8d80c7db583a0177e76a198a82ce372e6c1101c250559ed5bd06f74285323498"
+      },
+      {
+        "source": "20e4cbd8a41e:.changeset/schema-first-zero-actionables.md",
+        "removed": "@beep/box",
+        "outputSha256": "413b3b3b631297be0532d73c498e42c46bb29b4b41295ae6def4894c67ed0424"
+      },
+      {
+        "source": "3435c24f9455:.changeset/schema-helper-quality-followups.md",
+        "removed": "@beep/ontology-ui",
+        "outputSha256": "bfcebb5f046721a0061db93b2e79651899cb65fa88a76fd92b55155caed65cb0"
+      },
+      {
+        "source": "ab54eb1643b4:.changeset/schema-retire-binary-collections.md",
+        "removed": "@beep/schema",
+        "outputSha256": "e4418d8f86d55e3edd50856d63626d8299fcb18b1e3eae6ebba3d76089733ef4"
+      },
+      {
+        "source": "560fc93394d4:.changeset/schema-retire-codec-statics.md",
+        "removed": "@beep/codegen-kit",
+        "outputSha256": "dcc51968242f277e551c02d21fd6e52131c43557d1fcf859eaaca2295596833c"
+      },
+      {
+        "source": "abd5eb6041ad:.changeset/schema-retire-default-helpers.md",
+        "removed": "@beep/schema",
+        "outputSha256": "50c49998bda5962b33cc5e8d6419eef9ab1bb0a375112f1a51bccfb695f7fa99"
+      },
+      {
+        "source": "5c609806beb4:.changeset/schema-retire-int-consumers.md",
+        "removed": "@beep/anthropic",
+        "outputSha256": "9f8cb981458faa9b73b845edae1dfd0bc421fb297d4ad7938f0736ce10964d70"
+      },
+      {
+        "source": "fd0866b0e91b:.changeset/schema-retire-jsonschema.md",
+        "removed": "@beep/schema",
+        "outputSha256": "894a1347054c8fc87bbfd3befad344565ea112ec030ba92aa7e660c6576a32f9"
+      },
+      {
+        "source": "5c609806beb4:.changeset/schema-retire-number-consumers.md",
+        "removed": "@beep/agents-client",
+        "outputSha256": "ed2381f28dc458ff07ceeb3f102812612ab637321d0a2c992f774e8c0350332d"
+      },
+      {
+        "source": "90517df719fa:.changeset/schema-retire-opaque-record.md",
+        "removed": "@beep/schema",
+        "outputSha256": "0e114573cfd6393082188b3d12883457892078284c6651ee8e41d1e9c05e5464"
+      },
+      {
+        "source": "b26ed3a81d55:.changeset/schema-retire-role-b-consumers.md",
+        "removed": "@beep/observability",
+        "outputSha256": "1387326ee495599c56cc70fe5ecaf7bb9926bc680f5c0299834d2e3eb203836a"
+      },
+      {
+        "source": "dde5d928283f:.changeset/schema-retire-text-misc.md",
+        "removed": "@beep/schema",
+        "outputSha256": "ad0fe0ee853c2aae5e0d98c9ff2448b6b38f00939a380995ef6c24ec1cb58675"
+      },
+      {
+        "source": "86234f1c9ca4:.changeset/schema-retire-time-duration-consumers.md",
+        "removed": "@beep/skill-contract",
+        "outputSha256": "730f8a022abef6ee80155592029d799ced724abc330c1122059e7a78e3903392"
+      },
+      {
+        "source": "90517df719fa:.changeset/schema-retire-unknown-json.md",
+        "removed": "@beep/schema",
+        "outputSha256": "bdaa3f3ea1943ca587b4a625ddbaac0cd6b5e398e52cc44a56acbe06e6f9a9fb"
+      },
+      {
+        "source": "9b7553f618b2:.changeset/schema-ui-regression-coverage.md",
+        "removed": "@beep/schema",
+        "outputSha256": "331c55f3416556b114acfe9a142dd2d56f0c08c11ac116b01e813bb53e82c1ba"
+      },
+      {
+        "source": "5201b02fe511:.changeset/scoped-cache-evidence.md",
+        "removed": "@beep/repo-configs",
+        "outputSha256": "24b7da0ea1ed84e8fc31f7401068e3f513a55edbef674f9fd534755053f18e97"
+      },
+      {
+        "source": "831410b4928b:.changeset/secure-local-boundaries.md",
+        "removed": "@beep/documents-server",
+        "outputSha256": "6469a05fd125c7a00e24e7c213dc6faedb06b9377c26d2f78e82cb7bbf516f21"
+      },
+      {
+        "source": "831410b4928b:.changeset/secure-ontology-thread-boundaries.md",
+        "removed": "@beep/ontology-config",
+        "outputSha256": "e8280d9c7685e46591c14a97ff5192050e0065173e0a7df2a77767618e210936"
+      },
+      {
+        "source": "5307967fea29:.changeset/security-cloud-policy-coverage.md",
+        "removed": "@beep/repo-cli",
+        "outputSha256": "5544a438d5b496989fef47a58ecdb75624c4a438bf220af935ccd7616d13ee01"
+      },
+      {
+        "source": "c8055f40d2aa:.changeset/security-codex-findings-2026-06-17.md",
+        "removed": "@beep/agents-client",
+        "outputSha256": "b8f31b73a33ccaf0e68da1400ee3c96cda22e7922b0b140d1a61b9307cde4c41"
+      },
+      {
+        "source": "c9ca7734e533:.changeset/security-codex-findings-2026-07-08.md",
+        "removed": "@beep/editor",
+        "outputSha256": "5b7c621490fe896f546853e59c409096d600b1ef7fc166c60a91c2b6a5199f9b"
+      },
+      {
+        "source": "a1fb064d628a:.changeset/security-codex-followup-2026-06-18.md",
+        "removed": "@beep/schema",
+        "outputSha256": "99aa308cf38bd0d667185dc7732df033292b4e45a847a9496bf29064e1345571"
+      },
+      {
+        "source": "247d22465bdf:.changeset/security-findings-september.md",
+        "removed": "@beep/freshbooks",
+        "outputSha256": "011882d6cb08ab139725beb8cffc57b3557c348561278fa13e70bebe189b2bb3"
+      },
+      {
+        "source": "27318473461e:.changeset/selective-codec-statics.md",
+        "removed": "@beep/acp",
+        "outputSha256": "8602376aa342d4a7541237a4dd2c063ad5169b9a42da0c7535f31ce822a2e5dc"
+      },
+      {
+        "source": "ec5c9c4056d0:.changeset/semantic-foundation-m1.md",
+        "removed": "@beep/identity",
+        "outputSha256": "632f7b84f97709863ba1963df9ebcaaf69b547c7d1531e4e778cde686355aef5"
+      },
+      {
+        "source": "93e403dac29d:.changeset/semantic-web-shim-removal.md",
+        "removed": "@beep/semantic-web",
+        "outputSha256": "130a6eb704b0a87714aa11cd9ed004e7ccaed08619e172110a4343faeb4cff5c"
+      },
+      {
+        "source": "7f1a6eaf1e3d:.changeset/service-backed-office-action-extraction.md",
+        "removed": "@beep/law-practice-server",
+        "outputSha256": "2811f885aa1b29cbba41329a91aafb6c24683cd23c21dc9b91f6b1ce2c519bb8"
+      },
+      {
+        "source": "68f1396c9c23:.changeset/service-driver-test-canon.md",
+        "removed": "@beep/firecrawl",
+        "outputSha256": "8e74b68cdae4daf0962a160678526868539748eb7e790479b09a376c95787f7a"
+      },
+      {
+        "source": "5ce4b0c9922f:.changeset/serwist-pwa-migration.md",
+        "removed": "@beep/repo-configs",
+        "outputSha256": "d7d0e3985119e0b602150b883e653b41b1017a88b21446ed02db7867e7cb7d3d"
+      },
+      {
+        "source": "736f6f7b0c21:.changeset/shadcn-lint-strict-design-system.md",
+        "removed": "@beep/ui",
+        "outputSha256": "e29ec289aa4a8638daa2d4d2d9cf5f45428c49b76a48f548e37049dd9fa976eb"
+      },
+      {
+        "source": "1c0977ccad5b:.changeset/silent-rules-bake.md",
+        "removed": "@beep/agents-client",
+        "outputSha256": "98c92311715976773fd005de779b0d0a62642334755ec85ba553704d70c16258"
+      },
+      {
+        "source": "99c297515600:.changeset/silly-comics-wait.md",
+        "removed": "@beep/ai-sdk",
+        "outputSha256": "b885a7fb0a1848ec8b6caf19b8a0b3abd9519ece7ee98b47eff04b5d38349540"
+      },
+      {
+        "source": "6bc0accde998:.changeset/single-project-check.md",
+        "removed": "@beep/acp",
+        "outputSha256": "bdb8358f7f6dfcc876b84339cb69b54c13c32cc51cc05d32c3557dc571d17ea5"
+      },
+      {
+        "source": "43bee86e40b3:.changeset/single-project-emit.md",
+        "removed": "@beep/acp",
+        "outputSha256": "8e6479cc247b896056d7b1f778a739460853e852885132025405b54d91c1dea4"
+      },
+      {
+        "source": "cc2f1da23794:.changeset/skill-contract-kernel.md",
+        "removed": "@beep/skill-contract",
+        "outputSha256": "0128acb32c384036b4f728b61e33ed22879b8dba450ae3c32a70673d85f7734e"
+      },
+      {
+        "source": "b24f7a93d99e:.changeset/slop-09-02-quality-closure.md",
+        "removed": "@beep/architecture-lab-proof",
+        "outputSha256": "26331a53869fbed88bbec4621ce1f552e9bef8b7b21f1258ed347a97b4f947a4"
+      },
+      {
+        "source": "3435c24f9455:.changeset/slop-branch-version-neutral.md",
+        "removed": "@beep/acp",
+        "outputSha256": "e8bfbe1063744be1cf4a1a4082530c6f647b35fe40d43af76cfc113fc8357128"
+      },
+      {
+        "source": "5cf9ce1a21a9:.changeset/slow-caps-fail.md",
+        "removed": "@beep/desktop",
+        "outputSha256": "6f887fe1e22b8a62f58bcb59efee8288616177adb9fa51e4aa26f8966b817b32"
+      },
+      {
+        "source": "aee2664b91d1:.changeset/speed-loop-pra.md",
+        "removed": "@beep/db-admin",
+        "outputSha256": "e69243c46417776d104ff3e3a8153b56c513c2e506ff21fa57f7732a6ed5adcd"
+      },
+      {
+        "source": "b64cdc4f891c:.changeset/stale-tsconfig-references.md",
+        "removed": "@beep/epistemic-ui",
+        "outputSha256": "5cd5f84ba94e016b9f59eecc15aa65a7697a1770b5859b5fa8abe320f1e0416d"
+      },
+      {
+        "source": "705647b8d091:.changeset/standards-remediation-wave2.md",
+        "removed": "@beep/acp",
+        "outputSha256": "140502121f8acd005cc3f72c5a655dfe60fb3dfa3ed061a5213ebebb3d84c6f7"
+      },
+      {
+        "source": "cc98de12b382:.changeset/storybook-popover-visibility-races.md",
+        "removed": "@beep/ui",
+        "outputSha256": "d4f47a4cb4498b0d10e064fcd1ba01f8202f9a67949ca041bad6216af685ba48"
+      },
+      {
+        "source": "f590617f158d:.changeset/sync-reconnect-and-ledger-coverage.md",
+        "removed": "@beep/professional-desktop",
+        "outputSha256": "0b2bc2a6fb7ad3826da47575970e1fa4e15b0bf50f64cdedc063c2cd8e0a0fb0"
+      },
+      {
+        "source": "7d4ce3434c7c:.changeset/tagged-error-declared-equivalence.md",
+        "removed": "@beep/ai-provider-cli",
+        "outputSha256": "7de7c918e777d52a0ce3b9350fa9d77d8ea6f832c66cce1bdc305b39cbb53a9b"
+      },
+      {
+        "source": "58aa5dc33a0d:.changeset/tagged-error-equivalence.md",
+        "removed": "@beep/schema",
+        "outputSha256": "753e7cf79365e80b1c5b2e633419e388d1ff902ed7ed1e73909a023fdad744f9"
+      },
+      {
+        "source": "439d6634185d:.changeset/tagged-error-tail-burndown.md",
+        "removed": "@beep/acp",
+        "outputSha256": "85c94e33348579ffd8642a9a8e04c50ffaaa89ca1aa7796d4dce21c25a732289"
+      },
+      {
+        "source": "71d396efb469:.changeset/tauri-packaged-rpc-origin.md",
+        "removed": "@beep/agents-client",
+        "outputSha256": "6b0d48414ddde74fbf6fb52d64d724e4be55bb7980d99cea78e1371e39aa1e64"
+      },
+      {
+        "source": "42c01e6cf75c:.changeset/thick-meteors-attend.md",
+        "removed": "@beep/schema",
+        "outputSha256": "8c760ce5975e8e8db4f9888ee4368c55cc346e2cd15dc896e0fd7808c9a1a5fc"
+      },
+      {
+        "source": "c88040155076:.changeset/tidy-things-draw.md",
+        "removed": "@beep/md",
+        "outputSha256": "80726f065400684204409176cea051b4833aa69a879b8f603ba8906caee2ba86"
+      },
+      {
+        "source": "a6b654e112d2:.changeset/tiergate-record-outcome-egress-denied.md",
+        "removed": "@beep/mcp-kit",
+        "outputSha256": "ad9aa31dae581db0bb12200a881a6b8608bab1e517b4a0e4a1b0b747cd56f9a3"
+      },
+      {
+        "source": "95dd682ae91b:.changeset/transport-port-schema.md",
+        "removed": "@beep/schema",
+        "outputSha256": "e7d601d7469ea572b8a43623209e7c948e6be5ff9251728e27327bbd37b872e8"
+      },
+      {
+        "source": "1f7a14ec4e03:.changeset/transport-sync-test-canon.md",
+        "removed": "@beep/ai-sync",
+        "outputSha256": "15e9a1c736bc5a934463efb69f59137b57394d25ef270ed388cdb046a41a0dad"
+      },
+      {
+        "source": "99dd28b0698e:.changeset/tsconfig-strictness.md",
+        "removed": "@beep/agents-client",
+        "outputSha256": "bdee2af7455ec155784a8d1e48c06078b9811ffcad84491c00c54962d4415697"
+      },
+      {
+        "source": "90c199a25f19:.changeset/tsgo-039-diagnostics.md",
+        "removed": "@beep/agents-server",
+        "outputSha256": "1bbf85c2492c5d386250ada66dd50b2a42ca1f091053e761fa057df98a2b5223"
+      },
+      {
+        "source": "8c69730bfec4:.changeset/tsgo-045-foundations.md",
+        "removed": "@beep/identity",
+        "outputSha256": "a71b4340a0f829fe766b49c3465d160c3999a2be4b498188d27f5f47b07f61ef"
+      },
+      {
+        "source": "b1aa7e320cde:.changeset/tsgo-045-rules-error.md",
+        "removed": "@beep/acp",
+        "outputSha256": "8914a2e20cfe6d266e5a1f8d2df0d2ae06fb393ab441d9d17cfd8f6d6228cd34"
+      },
+      {
+        "source": "886de7a2613e:.changeset/tsgo-047-new-rules.md",
+        "removed": "@beep/acp",
+        "outputSha256": "d6baac641c9be48f490eeee876781a2b38492acc3378a2dfb5db1a6b5cc45c76"
+      },
+      {
+        "source": "678cf4198280:.changeset/turbo-cache-input-boundaries.md",
+        "removed": "@beep/repo-configs",
+        "outputSha256": "d5d97fd8f4696416930706c2485ffae4426e2892fbefe496b04672a01033fe97"
+      },
+      {
+        "source": "35861fc9dd90:.changeset/unified-ai-sync-toolchain.md",
+        "removed": "@beep/ai-sync",
+        "outputSha256": "c88890daa54d8828629dfb7bd5290681d99835e130f18a377dfb4789413b4905"
+      },
+      {
+        "source": "cbd8df46b3ff:.changeset/usage-record-provider-capture.md",
+        "removed": "@beep/agents-server",
+        "outputSha256": "cf60efe0fea5fb236cff5129439373a6e13a90329d18d02602defb47244839e1"
+      },
+      {
+        "source": "5c768538e434:.changeset/vitest-isolate-coverage.md",
+        "removed": "@beep/agents-server",
+        "outputSha256": "789fd1231725f6032fec389d90394c60d10617ece20ababf607939f2d4af5d65"
+      },
+      {
+        "source": "a452e795dcfb:.changeset/vitest-per-package-module-cache.md",
+        "removed": "@beep/libpff",
+        "outputSha256": "57ecff3b63d9fd61de6a3de4148e41aae6cc74c1e20c8579da48f61e10256d21"
+      },
+      {
+        "source": "a01967df20ee:.changeset/warm-lints-pglite.md",
+        "removed": "@beep/data",
+        "outputSha256": "01e8e4eecfb7c21aff08e30034cf1fe081099c7562a2cc8bcd79d5fd0b990412"
+      },
+      {
+        "source": "3435c24f9455:.changeset/workspace-codec-statics-colocation.md",
+        "removed": "@beep/md",
+        "outputSha256": "97601d31d8c15457b911bac536c9d6b2ba28cc306941f5ab317673154e1906b8"
+      },
+      {
+        "source": "6cbe90d5c1a9:.changeset/xstate-effect-document-intake.md",
+        "removed": "@beep/xstate",
+        "outputSha256": "07a40c18c01a09404fbc5df0b5361872ab3c87c37ea5834fa204759b14c7cee2"
+      },
+      {
+        "source": "ce4a938d960b:.changeset/yeet-pr-resume-footer-siblings.md",
+        "removed": "@beep/agents-client",
+        "outputSha256": "29bea344bf0262d8d292becebe63214fb8f620d420c202b2e26e3e49003b85ff"
+      }
+    ]
+  },
+  "probes": {
+    "reflections": [
+      { "id": "valid", "output": "valid" },
+      { "id": "valid-crlf", "output": "valid" },
+      { "id": "valid-trailing-fence-blanks", "output": "valid" },
+      { "id": "no-block", "output": "invalid" },
+      { "id": "unclosed-block", "output": "invalid" },
+      { "id": "empty-block", "output": "invalid" },
+      { "id": "json-block", "output": "invalid" },
+      { "id": "toml-block", "output": "invalid" },
+      { "id": "invalid-yaml", "output": "invalid" },
+      { "id": "schema-invalid", "output": "invalid" },
+      { "id": "duplicate-key", "output": "invalid" },
+      { "id": "unquoted-date-timestamp", "output": "valid" },
+      { "id": "bom", "output": "invalid" }
+    ],
+    "skills": [
+      { "id": "valid", "output": null },
+      { "id": "no-block", "output": "SKILL.md has no YAML frontmatter block." },
+      {
+        "id": "json-block",
+        "output": "SKILL.md frontmatter is json; the Agent Skills format requires a YAML block."
+      },
+      {
+        "id": "toml-block",
+        "output": "SKILL.md frontmatter is toml; the Agent Skills format requires a YAML block."
+      },
+      {
+        "id": "invalid-yaml",
+        "output": "Invalid YAML frontmatter (YAML parse failed with 1 error: MalformedFlowCollection at 1:7)."
+      },
+      {
+        "id": "unknown-key",
+        "output": "Expected no excess property\n  at [\"version\"]"
+      },
+      {
+        "id": "name-mismatch",
+        "output": "frontmatter name \"other\" must match the skill directory name \"probe\"."
+      },
+      {
+        "id": "duplicate-key",
+        "output": "Invalid YAML frontmatter (YAML parse failed with 1 error: DuplicateKey at 3:1)."
+      },
+      {
+        "id": "empty-block",
+        "output": "Expected @beep/ai-sync/schemas/AgentSkillFrontmatter"
+      },
+      {
+        "id": "unclosed-block",
+        "output": "SKILL.md has no YAML frontmatter block."
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "closed",
+        "output": "0123456789abcdef0123456789abcdef01234567@3"
+      },
+      {
+        "id": "double-quoted",
+        "output": "0123456789abcdef0123456789abcdef01234567@2"
+      },
+      {
+        "id": "single-quoted",
+        "output": "0123456789abcdef0123456789abcdef01234567@2"
+      },
+      { "id": "crlf", "output": "0123456789abcdef0123456789abcdef01234567@3" },
+      {
+        "id": "fence-trailing-blanks",
+        "output": "0123456789abcdef0123456789abcdef01234567@2"
+      },
+      { "id": "unclosed", "output": null },
+      { "id": "after-closing-fence", "output": null },
+      { "id": "json-fence", "output": null },
+      { "id": "toml-fence", "output": null },
+      { "id": "indented-key", "output": null },
+      { "id": "short-sha", "output": null },
+      { "id": "bom", "output": null },
+      { "id": "not-at-start", "output": null }
+    ],
+    "changesets": [
+      {
+        "id": "double-quoted",
+        "output": "---\n\"@beep/schema-org\": minor\n---\n\nTouches @beep/schema.\n"
+      },
+      {
+        "id": "single-quoted",
+        "output": "---\n'@beep/schema-org': patch\n---\n\nSingle.\n"
+      },
+      {
+        "id": "unquoted",
+        "output": "---\nprobe-extra: minor\n---\n\nUnquoted keys.\n"
+      },
+      {
+        "id": "last-key",
+        "output": "---\n\"@beep/a\": patch\n---\n\nLast key.\n"
+      },
+      {
+        "id": "comment-line",
+        "output": "---\n\"@beep/b\": minor\n---\n\nComment.\n"
+      },
+      {
+        "id": "crlf",
+        "output": "---\r\n\"@beep/b\": minor\r\n---\r\n\r\nCRLF.\r\n"
+      },
+      {
+        "id": "body-fence-lines",
+        "output": "---\n\"@beep/b\": minor\n---\n\nBody\n\n---\n\n\"@beep/a\": prose\n"
+      },
+      {
+        "id": "escaped-key",
+        "output": "---\n\"@beep/b\": minor\n---\n\nEscaped key.\n"
+      },
+      { "id": "single-only", "output": null },
+      {
+        "id": "sibling-spacing",
+        "output": "---\n'@beep/b': minor\n---\n\nSibling spacing.\n"
+      },
+      {
+        "id": "trailing-blank-line",
+        "output": "---\n\"@beep/b\": minor\n---\n\nTrailing blank.\n"
+      }
+    ]
+  },
+  "comparison": {
+    "baseline": "goals/effected-promotion/research/frontmatter-adoption-parity-r5a-before.json",
+    "corpusVerdictsIdentical": true,
+    "differingCorpusSurfaces": [],
+    "skillMessageShifts": [],
+    "probeShifts": [
+      {
+        "id": "skills/invalid-yaml",
+        "before": "Invalid YAML input (SyntaxError: Expected ',' at flow offset 6).",
+        "after": "Invalid YAML frontmatter (YAML parse failed with 1 error: MalformedFlowCollection at 1:7).",
+        "reason": "The YAML engine is now @beep/yaml (YamlFrontmatter): the finding names the diagnostic code and position instead of the old engine's SyntaxError text. Same verdict."
+      },
+      {
+        "id": "skills/duplicate-key",
+        "before": "Invalid YAML input (SyntaxError: Duplicate key 'name' at line 3).",
+        "after": "Invalid YAML frontmatter (YAML parse failed with 1 error: DuplicateKey at 3:1).",
+        "reason": "Same engine switch: the duplicate key is reported as the DuplicateKey diagnostic at its position. Same verdict."
+      },
+      {
+        "id": "knowledge/unclosed",
+        "before": "0123456789abcdef0123456789abcdef01234567@2",
+        "after": null,
+        "reason": "An opening fence with no closing fence is not frontmatter under the shared FrontmatterSource grammar (D-47), the rule every other repo-cli frontmatter reader already follows; the old line reader scanned to the end of the document."
+      },
+      {
+        "id": "changesets/comment-line",
+        "before": "---\n# bump both\n\"@beep/b\": minor\n---\n\nComment.\n",
+        "after": "---\n\"@beep/b\": minor\n---\n\nComment.\n",
+        "reason": "A comment line directly above the removed key belongs to that key's YAML entry, so the edit layer removes it with the key, even when its text (here `# bump both`) also covers surviving keys. The old line filter kept the comment."
+      },
+      {
+        "id": "changesets/escaped-key",
+        "before": "---\n\"\\x40beep/a\": patch\n\"@beep/b\": minor\n---\n\nEscaped key.\n",
+        "after": "---\n\"@beep/b\": minor\n---\n\nEscaped key.\n",
+        "reason": "Bug fix: the key is matched by its YAML value, so a key spelled with an escape (\\x40beep/a) is removed. The old textual match missed it and left the deleted package in a changeset the reference reader said named it."
+      },
+      {
+        "id": "changesets/sibling-spacing",
+        "before": "---\n'@beep/b':   minor\n---\n\nSibling spacing.\n",
+        "after": "---\n'@beep/b': minor\n---\n\nSibling spacing.\n",
+        "reason": "A removal re-serializes the whole YAML block, so surviving entries are normalized: `'@beep/b':   minor` becomes `'@beep/b': minor`. The old line filter left sibling lines byte-for-byte. Same keys and values."
+      },
+      {
+        "id": "changesets/trailing-blank-line",
+        "before": "---\n\"@beep/b\": minor\n\n---\n\nTrailing blank.\n",
+        "after": "---\n\"@beep/b\": minor\n---\n\nTrailing blank.\n",
+        "reason": "The re-serialized block drops a trailing blank line inside the frontmatter; the old line filter kept it. Same keys and values."
+      }
+    ],
+    "unclassified": []
+  }
+}

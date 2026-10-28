@@ -125,3 +125,27 @@ The direct-item constructor alternative handles formal, rest and property
 parameters. Plain and private-parameter constructors are allowed, while a
 nested callback parameter cannot suppress the actual Schema reference. The
 focused regression fails before the correction and passes after it.
+
+## PR 2316 merge and final receipt retention
+
+PR #2316 merged at `2026-10-28T15:21:35Z`, accepted head
+`62c59f945a83a084625bbdc9558a1963ec498100`, merge commit
+`1b259c4d232633b8faddaf68d751af0695504539`. All 15 required contexts
+verify at that head; merge-push rule suite `4773343124` passed. All 35
+check runs completed without failure. Both review threads are resolved and the
+review window elapsed before merge. One optional Vercel status is rate limited.
+
+The local final-check replay passed after interruption, with the previously
+recorded constrained-compute skips. Completion refresh still reports `unknown`
+because the declared closeout-mode verdict has no `mergeReady.ready`. The
+readiness job was interrupted before recording a positive result, and classic
+monitor refuses to run after merge. Thirteen original evidence files were
+retained unchanged in the owning clone. No retrospective readiness verdict is
+fabricated. Final documentation closeout PR #2326 obtains fresh canonical readiness
+and retains it before merge; the operative lifecycle remains active until the
+completion refresher verifies the full declaration.
+
+The updated-main census on the receipt branch scans 8,456 files with 221
+candidates, zero rewrites, zero residue and zero quarantined cases. The new
+publication scan exceeded ten minutes after multiple passing policy checks;
+hosted CI supplies the remaining proof under the constrained-compute route.
