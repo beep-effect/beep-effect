@@ -2530,6 +2530,7 @@
     {"name":"QaSession.resolveRound","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"QaSession.writeRecordStartHint","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Quality.reconcileCurrentCheckoutAttempts","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"QualityArtifactSupport.discoverMemberDirectories","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"QualityArtifactSupport.discoverWorkspacePackages","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"QualityArtifactSupport.listSourceFiles","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"QualityArtifactSupport.listSourceFiles.visit","owner":"@beep/repo-cli","family":"tooling","conforms":false},

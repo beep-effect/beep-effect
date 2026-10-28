@@ -2,6 +2,8 @@ import * as NodeURL from "node:url";
 import { resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LenientManifest } from "@beep/package-json/LenientManifest";
+import { WorkspaceDiscovery } from "@beep/repo-workspaces/WorkspaceDiscovery";
+import { WorkspaceRoot } from "@beep/repo-workspaces/WorkspaceRoot";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { A, Err, Str, thunkEmptyStr, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -328,116 +330,77 @@ const readWorkspacePackage = Effect.fn("QualityArtifactSupport.readWorkspacePack
 });
 
 /**
- * Extract workspace glob patterns from a package manifest workspace field.
+ * The member directories `WorkspaceDiscovery` enumerates beneath `repoRoot`,
+ * root excluded, root-first order kept.
  *
- * **Example** (Read the object workspace form)
+ * **Details**
  *
- * ```ts
- * import { workspacePatternsFrom } from "@beep/repo-cli/test/Quality"
+ * The root is pinned as both the start and the ceiling of the root ascent, so
+ * an enclosing workspace is never adopted. A kit failure maps onto the
+ * generator error with the message the retired expander gave for the same
+ * file: a member manifest that cannot be read, parsed or named fails as its
+ * read or decode, a pattern that cannot be enumerated (a wildcard whose base
+ * directory is absent included) as its expansion.
  *
- * console.log(workspacePatternsFrom({ packages: ["packages/*"] })) // ["packages/*"]
- * ```
- *
- * @param workspaces - Raw `package.json` workspaces value.
- * @returns Workspace glob patterns from array or object forms.
  * @category workspaces
  * @since 0.0.0
  */
-export const workspacePatternsFrom = (workspaces: unknown): ReadonlyArray<string> => {
-  if (A.isArray(workspaces)) {
-    return A.filter(workspaces, P.isString);
-  }
-  if (P.isObject(workspaces) && P.hasProperty(workspaces, "packages") && A.isArray(workspaces.packages)) {
-    return A.filter(workspaces.packages, P.isString);
-  }
-  return [];
-};
-
-/**
- * Expand a workspace glob pattern into package directories.
- *
- * @param pattern - Workspace glob pattern to expand.
- * @param repoRoot - Repository root used as the expansion base.
- * @param path - Effect platform path service.
- * @returns Effect that returns package directories containing `package.json`.
- * @category workspaces
- * @since 0.0.0
- */
-const expandWorkspacePattern: {
-  (
-    pattern: string,
-    repoRoot: string,
-    path: Path.Path
-  ): Effect.Effect<ReadonlyArray<string>, QualityArtifactGeneratorError, FileSystem.FileSystem>;
-  (
-    repoRoot: string,
-    path: Path.Path
-  ): (pattern: string) => Effect.Effect<ReadonlyArray<string>, QualityArtifactGeneratorError, FileSystem.FileSystem>;
-} = dual(
-  3,
-  (
-    pattern: string,
-    repoRoot: string,
-    path: Path.Path
-  ): Effect.Effect<ReadonlyArray<string>, QualityArtifactGeneratorError, FileSystem.FileSystem> =>
-    // fallow-ignore-next-line complexity -- the segment and candidate double loop mirrors the workspace-glob grammar (cognitive 28). Owner: @beep/repo-cli. Exit: replace with effect/FileSystem glob support or the repo-utils workspace glob helper.
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const segments = A.filter(Str.split("/")(normalizeSlashes(pattern)), Str.isNonEmpty);
-      let candidates = [repoRoot];
-
-      for (const segment of segments) {
-        const nextCandidates: Array<string> = [];
-
-        for (const candidate of candidates) {
-          if (segment === "*") {
-            const exists = yield* fs.exists(candidate).pipe(Effect.orElseSucceed(thunkFalse));
-            if (!exists) {
-              continue;
-            }
-            const entries = yield* fs.readDirectory(candidate).pipe(
-              QualityArtifactGeneratorError.mapError(`Failed to read directory ${candidate}.`, {
-                filePath: candidate,
-              })
-            );
-            for (const entry of entries) {
-              const entryPath = path.join(candidate, entry);
-              const safeEntry = yield* resolveEntryWithinRoot(repoRoot, entryPath, path);
-              if (O.isNone(safeEntry)) {
-                continue;
-              }
-              const stat = yield* fs.stat(safeEntry.value).pipe(Effect.option);
-              if (O.isSome(stat) && stat.value.type === "Directory") {
-                A.appendInPlace(nextCandidates, safeEntry.value);
-              }
-            }
-            continue;
-          }
-
-          A.appendInPlace(nextCandidates, path.join(candidate, segment));
-        }
-
-        candidates = nextCandidates;
-      }
-
-      const existingCandidates: Array<string> = [];
-      for (const candidate of candidates) {
-        const exists = yield* fs.exists(path.join(candidate, "package.json")).pipe(Effect.orElseSucceed(thunkFalse));
-        if (exists) {
-          A.appendInPlace(existingCandidates, candidate);
-        }
-      }
-
-      return existingCandidates;
-    }).pipe(
-      QualityArtifactGeneratorError.mapError(`Failed to expand workspace pattern ${pattern}.`, {
-        filePath: repoRoot,
-      })
-    )
-);
+const discoverMemberDirectories = Effect.fn("QualityArtifactSupport.discoverMemberDirectories")(function* (
+  repoRoot: string,
+  path: Path.Path
+): Effect.fn.Return<ReadonlyArray<string>, QualityArtifactGeneratorError, FileSystem.FileSystem> {
+  const roots = yield* WorkspaceRoot.make.pipe(Effect.provideService(Path.Path, path));
+  const discovery = yield* WorkspaceDiscovery.make({ cwd: repoRoot, stopAt: repoRoot }).pipe(
+    Effect.provideService(WorkspaceRoot, roots),
+    Effect.provideService(Path.Path, path)
+  );
+  const packages = yield* discovery.listPackages.pipe(
+    Effect.catchTags({
+      WorkspaceDiscoveryError: (error) =>
+        Effect.fail(
+          QualityArtifactGeneratorError.new(
+            error,
+            error.kind === "read"
+              ? `Failed to read ${error.path}.`
+              : `Failed to decode package manifest ${error.path}.`,
+            { filePath: error.path }
+          )
+        ),
+      WorkspacePatternError: (error) =>
+        Effect.fail(
+          QualityArtifactGeneratorError.new(error, `Failed to expand workspace pattern ${error.pattern}.`, {
+            filePath: repoRoot,
+          })
+        ),
+      WorkspaceRootNotFoundError: (error) =>
+        Effect.fail(
+          QualityArtifactGeneratorError.new(error, `Failed to resolve workspace root ${repoRoot}.`, {
+            filePath: repoRoot,
+          })
+        ),
+    })
+  );
+  return pipe(
+    packages,
+    A.filter((workspacePackage) => workspacePackage.relativePath !== "."),
+    A.map((workspacePackage) => workspacePackage.path)
+  );
+});
 
 /**
  * Discover workspace packages available to Quality artifact generators.
+ *
+ * **Details**
+ *
+ * The root manifest is read first, so a malformed `workspaces` fails before
+ * any member is enumerated, and a root without `workspaces` is a one-package
+ * workspace. Members come from `@beep/repo-workspaces` `WorkspaceDiscovery`
+ * (discovery only). The kit follows links, so every member directory is
+ * post-filtered through `resolvePathWithinRoot`: one whose real path leaves
+ * the root is skipped, and a kept member is recorded at its canonical path.
+ * Each kept member is then read through the same strict `package.json`
+ * reader as the root. A later member with an earlier member's name replaces
+ * it.
  *
  * @category workspaces
  * @since 0.0.0
@@ -453,16 +416,21 @@ export const discoverWorkspacePackages = Effect.fn("QualityArtifactSupport.disco
   const rootPackage = yield* readWorkspacePackage(repoRoot, ".", path);
   const packages = MutableHashMap.empty<string, WorkspacePackageInfo>();
   MutableHashMap.set(packages, rootPackage.name, rootPackage);
+  if (P.isUndefined(rootPackage.packageJson.workspaces)) {
+    return packages;
+  }
 
-  for (const pattern of workspacePatternsFrom(rootPackage.packageJson.workspaces)) {
-    for (const packagePath of yield* expandWorkspacePattern(pattern, repoRoot, path)) {
-      const workspacePackage = yield* readWorkspacePackage(
-        packagePath,
-        repoRelative(packagePath, repoRoot, path),
-        path
-      );
-      MutableHashMap.set(packages, workspacePackage.name, workspacePackage);
+  for (const memberDirectory of yield* discoverMemberDirectories(repoRoot, path)) {
+    const canonicalMember = yield* resolveEntryWithinRoot(repoRoot, memberDirectory, path);
+    if (O.isNone(canonicalMember)) {
+      continue;
     }
+    const workspacePackage = yield* readWorkspacePackage(
+      canonicalMember.value,
+      repoRelative(canonicalMember.value, repoRoot, path),
+      path
+    );
+    MutableHashMap.set(packages, workspacePackage.name, workspacePackage);
   }
 
   return packages;
