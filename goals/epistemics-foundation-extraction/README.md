@@ -32,8 +32,8 @@ Use this command for execution-capable sessions:
 ## Current phase
 
 P0-P3 extraction work shipped in #2017 (`ab6000add2`); #2019 and #2021
-fixed its Docgen, Lint Policy and JSDoc failures. P4 proposal preparation is
-ready, and closeout verification remains in progress. Achievement requires
+fixed its Docgen, Lint Policy and JSDoc failures. The implementation repair shipped in #2315 (`559dcb6d2e`). P4 closeout verification
+continues in documentation-only PR #2325. Achievement requires
 verified readiness and merge evidence.
 
 The 2026-10-28 acceptance audit found the claim factory lacked the logical-key
@@ -55,7 +55,8 @@ and documentation checks pass on the revised implementation.
 - Detailed audit: [`research/2026-10-28-acceptance-audit.md`](research/2026-10-28-acceptance-audit.md).
 - Reflections: the original `history/reflections/2026-10-22-claude.md` and the
   recovery reflection `history/reflections/2026-10-28-codex.md`.
-- Final closeout PR [#2315](https://github.com/beep-effect/beep-effect/pull/2315) must supply passing accepted-head hosted checks and a
+- PR [#2315](https://github.com/beep-effect/beep-effect/pull/2315) passed all 15 required hosted contexts before merge. Its interrupted monitor did not retain a readiness verdict; completion refresh therefore returned `unknown`. See [`history/2026-10-28-hosted-acceptance.md`](history/2026-10-28-hosted-acceptance.md).
+- Final closeout PR [#2325](https://github.com/beep-effect/beep-effect/pull/2325) must supply passing accepted-head hosted checks and a
   retained Yeet readiness verdict. Until completion refresh verifies that merge,
   `initiative.status` stays `active`; a proposal is not achievement.
 
