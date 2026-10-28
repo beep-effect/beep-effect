@@ -1123,6 +1123,7 @@
     {"name":"DocgenLocal.filterMetadataCheckPackages","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"DocgenLocal.logDocgenProcessTree","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"DocgenLocal.logDocumentationFailure","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"DocgenLocal.prepareDocgenStep","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"DocgenLocal.queryDocgenProcesses","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"DocgenLocal.renderPlan","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"DocgenLocal.renderPlanJson","owner":"@beep/repo-cli","family":"tooling","conforms":true},

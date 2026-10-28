@@ -392,6 +392,23 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
     const overridesFor = (env: Record<string, string>, command: string, args: ReadonlyArray<string>) =>
       turboEnvOverrides(command, args, env).pipe(withTurboEnv(env));
 
+    it.effect("sanitizes native Turbo binaries and their cache-only secret-session wrappers", () =>
+      Effect.gen(function* () {
+        const environment = { TURBO_TOKEN: OP_REFERENCE, APPLICATION_TOKEN: OP_REFERENCE };
+        for (const command of ["turbo", "/repo/node_modules/.bin/turbo"]) {
+          const direct = yield* overridesFor(environment, command, ["run", "docgen"]);
+          expect(direct.TURBO_TOKEN).toBeUndefined();
+          expect(direct.APPLICATION_TOKEN).toBeUndefined();
+          expect(direct.TURBO_CACHE).toBe("local:rw");
+          const args = ["run", "--", command, "run", "docgen"];
+          const wrapped = yield* overridesFor(environment, "op", args);
+          expect(wrapped.TURBO_TOKEN).toBe(OP_REFERENCE);
+          expect(wrapped).not.toHaveProperty("APPLICATION_TOKEN");
+          expect(turboEnvExtendsAmbient("op", args)).toBe(false);
+        }
+      })
+    );
+
     const opRunArgs = (turboArgs: ReadonlyArray<string>): ReadonlyArray<string> => [
       "run",
       "--",

@@ -34,7 +34,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
-import { runToExit } from "../process/StepExec.ts";
+import { QualityTaskStep, runToExit } from "../process/StepExec.ts";
 import {
   TurboCacheEnvironment,
   TurboCacheEnvName,
@@ -359,6 +359,9 @@ const isBunxTurbo = (command: string, args: ReadonlyArray<string>): boolean =>
     O.exists((arg) => arg === "turbo")
   );
 
+const isDirectTurbo = (command: string, args: ReadonlyArray<string>): boolean =>
+  command === "turbo" || Str.endsWith("/turbo")(command) || isBunxTurbo(command, args);
+
 // `op run -- bunx turbo ...` is still a turbo spawn: the
 // overrides below must reach it, or an op-wrapped lane silently loses the
 // mouse-capture guard and the fail-closed cache posture.
@@ -370,7 +373,7 @@ const isOpRunTurbo = (command: string, args: ReadonlyArray<string>): boolean =>
     O.exists((childArgs) =>
       pipe(
         A.head(childArgs),
-        O.exists((childCommand) => isBunxTurbo(childCommand, A.drop(childArgs, 1)))
+        O.exists((childCommand) => isDirectTurbo(childCommand, A.drop(childArgs, 1)))
       )
     )
   );
@@ -387,7 +390,7 @@ const isOpRunTurbo = (command: string, args: ReadonlyArray<string>): boolean =>
  * ```
  *
  * **Details**
- * Recognizes `bunx turbo` and its `op run --` wrapper. This is not a shell parser.
+ * Recognizes native Turbo binaries, `bunx turbo` and their `op run --` wrappers. This is not a shell parser.
  *
  * @category configuration
  * @since 0.0.0
@@ -397,7 +400,7 @@ export const isPlannedTurboCommand: {
   (command: string, args: ReadonlyArray<string>): boolean;
 } = dual(
   2,
-  (command: string, args: ReadonlyArray<string>): boolean => isBunxTurbo(command, args) || isOpRunTurbo(command, args)
+  (command: string, args: ReadonlyArray<string>): boolean => isDirectTurbo(command, args) || isOpRunTurbo(command, args)
 );
 
 const isTurboCacheSecretEnvName = S.is(TurboCacheSecretEnvName);
@@ -470,6 +473,43 @@ export const turboCacheSecretSessionEnvironment = (
     (value, name): value is string =>
       value !== undefined && (!isUnresolvedSecretReference(value) || isTurboCacheSecretEnvName(name))
   );
+
+/**
+ * Wrap a Turbo process in a cache-only 1Password reference session.
+ *
+ * **Details**
+ *
+ * The child environment retains only cache references and ordinary ambient values.
+ * Pair this step with `turboEnvExtendsAmbient` so removed application references
+ * cannot return through environment inheritance. Native Turbo binaries stay native.
+ *
+ * **Example** (Wrap a native Turbo process)
+ *
+ * ```ts
+ * import { turboSecretSessionStep } from "@beep/repo-cli/test/SharedInternals"
+ * import { QualityTaskStep } from "@beep/repo-cli/test/Process"
+ *
+ * const step = QualityTaskStep.make({ label: "docgen", command: "/repo/node_modules/.bin/turbo", args: ["run", "docgen"], cwd: "/repo" })
+ * console.log(turboSecretSessionStep(step, { PATH: "/usr/bin" }).command) // "op"
+ * ```
+ *
+ * @category execution
+ * @since 0.0.0
+ */
+export const turboSecretSessionStep: {
+  (environment: Readonly<Record<string, string | undefined>>): (step: QualityTaskStep) => QualityTaskStep;
+  (step: QualityTaskStep, environment: Readonly<Record<string, string | undefined>>): QualityTaskStep;
+} = dual(
+  2,
+  (step: QualityTaskStep, environment: Readonly<Record<string, string | undefined>>): QualityTaskStep =>
+    QualityTaskStep.make({
+      ...step,
+      label: `${step.label} (op run)`,
+      command: "op",
+      args: ["run", "--", step.command, ...step.args],
+      env: turboCacheSecretSessionEnvironment({ ...environment, ...(step.env ?? {}) }),
+    })
+);
 
 const isUnrelatedSecretReference = (value: string | undefined, name: string): boolean =>
   isUnresolvedSecretReference(value) && !isTurboCacheSecretEnvName(name);
@@ -693,7 +733,7 @@ export const turboEnvOverrides = Effect.fn("EnvConfig.turboEnvOverrides")(functi
   args: ReadonlyArray<string>,
   environment: Readonly<Record<string, string | undefined>>
 ) {
-  const directTurbo = isBunxTurbo(command, args);
+  const directTurbo = isDirectTurbo(command, args);
   if (!directTurbo && !isOpRunTurbo(command, args)) {
     return {};
   }
