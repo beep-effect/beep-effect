@@ -11,7 +11,7 @@
   "packetPath": "goals/citation-extraction-engine",
   "lifecycle": "active",
   "mission": "Deliver Effect-native observable capability parity with pinned official eyecite 2.7.6, exact verified source evidence, schema-first legal models, lawful transformations, and proven TypeScript-port extensions.",
-  "statusNote": "P0 public prerequisite contracts and exact-pin source baselines verified. Discovery retains 66 assertion declarations / 1583 events; normalized public-operation evidence retains 31 static sites / 826 observations and 2811 coordinate records. Model/helper normalization, independent semantic-case expansions, final ledgers/checker, vocabulary-version mapping, donor dispositions and regex/limits proof remain open; no P1 implementation.",
+  "statusNote": "P0 public prerequisite contracts and exact-pin source baselines verified. Portable evidence retains 66 assertion declarations / 1583 normalized events, 8488 traced iterations / 241 complete literal-loop runs, and 31 public-operation sites / 826 observations / 2811 coordinate records. Final semantic-case reconciliation, supplemental probes, ledgers/checker, vocabulary-version mapping, donor dispositions and regex/limits proof remain open; no P1 implementation.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -45,7 +45,8 @@
     "goals/citation-verified-span-substrate/SPEC.md",
     "goals/court-reporter-vocabulary/SPEC.md",
     "goals/citation-extraction-engine/history/evidence/prerequisite-compatibility.md",
-    "goals/citation-extraction-engine/history/evidence/2026-10-28-operation-corpus.md"
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-operation-corpus.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-assertion-corpus.md"
   ],
   "researchReports": [
     "research/EYECITE_BASELINE.md",
@@ -101,6 +102,7 @@
     "jq -e . goals/citation-extraction-engine/ops/manifest.json >/dev/null",
     "bun run beep goals index --check",
     "bun run goals/citation-extraction-engine/ops/check-operations.ts",
+    "bun run goals/citation-extraction-engine/ops/check-assertions.ts",
     "bun run beep goals doctor",
     "bunx markdownlint-cli2 'goals/citation-extraction-engine/**/*.md'",
     "git diff --check origin/main...HEAD -- goals/citation-extraction-engine goals/INDEX.md THIRD_PARTY_NOTICES.md",

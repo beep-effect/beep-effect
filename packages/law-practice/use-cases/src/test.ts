@@ -6,6 +6,13 @@
  */
 
 /**
+ * Assertion and loop evidence for the pinned official citation oracle.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export { CitationOracleAssertions } from "./internal/citationOracleAssertions.ts";
+/**
  * Pinned citation-oracle source/runtime discovery evidence, validated only at
  * the test boundary and never presented as target parity proof.
  *
@@ -13,6 +20,13 @@
  * @since 0.0.0
  */
 export { CitationOracleDiscovery } from "./internal/citationOracleDiscovery.ts";
+/**
+ * Preserve exact oracle JSON bytes with their schema-decoded view.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export { CitationOracleArtifact, CitationOracleJson } from "./internal/citationOracleJson.ts";
 /**
  * Normalized public-operation oracle inputs, stages and outputs, isolated from
  * production contracts and independent model/helper assertion accounting.

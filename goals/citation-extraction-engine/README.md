@@ -9,9 +9,10 @@ Source: [`ops/manifest.json`](./ops/manifest.json)
 P0 source acquisition and public prerequisite compatibility are evidenced.
 The 2026-10-28 run passed the pinned official and authorized donor baselines;
 66 static assertion declarations produced 1,583 runtime assertion events with
-none unobserved. The public-operation corpus now retains 826 normalized
-observations and 2,811
-coordinate records. Model/helper and semantic-case accounting, vocabulary
+none unobserved. Those events now retain normalized operands and producer
+context alongside 8,488 traced iterations and 241 complete literal-loop runs.
+The public-operation corpus retains 826 observations and 2,811 coordinate
+records. Final semantic-case reconciliation, supplemental probes, vocabulary
 mapping, regex review, and hard safety limits remain open before P1.
 
 Current evidence:
@@ -19,6 +20,7 @@ Current evidence:
 - [Prerequisite compatibility](./history/evidence/prerequisite-compatibility.md)
 - [Source baselines/discovery](./history/evidence/2026-10-28-source-baselines.md)
 - [Operation corpus](./history/evidence/2026-10-28-operation-corpus.md)
+- [Assertion corpus](./history/evidence/2026-10-28-assertion-corpus.md)
 
 ## Mission
 

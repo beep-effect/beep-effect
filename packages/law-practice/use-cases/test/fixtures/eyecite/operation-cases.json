@@ -11,7 +11,7 @@
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
   "lockSha256": "864cf7a1ef7ebafe8159b9691a42a2dfe980cf0e609b5fd1899bcc5703b91e9a",
-  "exporterSha256": "8b597a4ff3d3ad04e7017f570b82985a37a39c9775cfb62209af3f6553e1a978",
+  "exporterSha256": "9a8176ca6d55de38ff94731a1c532b9d4788651bcdd497c8d308b8520bae15e8",
   "dependencies": {
     "eyecite": "2.7.6",
     "reporters-db": "3.2.53",

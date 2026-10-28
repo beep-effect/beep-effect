@@ -7,10 +7,8 @@
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
-import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import * as SchemaIssue from "effect/SchemaIssue";
-import * as SchemaTransformation from "effect/SchemaTransformation";
+import { CitationOracleArtifact, CitationOracleJson } from "./citationOracleJson.ts";
 
 const $I = $LawPracticeUseCasesId.create("internal/citationOracleOperations");
 const Operation = LiteralKit(["clean_text", "get_citations", "resolve_citations", "annotate_citations"]).pipe(
@@ -126,35 +124,10 @@ const CommonCase = {
 const EmptyStages = S.Struct({}).pipe(
   $I.annoteSchema("EmptyStages", { description: "No additional instrumented intermediate stage for this operation." })
 );
-// Information law: preserve original JSON bytes plus their derived typed value.
-// Decode is partial for malformed/unsupported data; encode is partial for a
-// forged raw/value pair. Coherent decoded values encode to the exact raw bytes.
-const capturedJson = <Value, Encoded>(schema: S.Codec<Value, Encoded>) => {
-  const json = S.fromJsonString(schema);
-  const equivalent = S.toEquivalence(S.toType(schema));
-  const invalid = () => new SchemaIssue.InvalidValue({ message: "Captured JSON bytes and typed value disagree." });
-  return S.String.pipe(
-    S.decodeTo(
-      S.Struct({ raw: S.String, value: S.toType(schema) }),
-      SchemaTransformation.transformEffect({
-        decode: (raw) =>
-          S.decodeEffect(json)(raw).pipe(
-            Effect.map((value) => ({ raw, value })),
-            Effect.mapError(invalid)
-          ),
-        encode: ({ raw, value }) =>
-          S.decodeEffect(json)(raw).pipe(
-            Effect.flatMap((original) => (equivalent(original, value) ? Effect.succeed(raw) : Effect.fail(invalid()))),
-            Effect.mapError(invalid)
-          ),
-      })
-    )
-  );
-};
 const OperationCase = Operation.toTaggedUnion("operation")({
   clean_text: {
     ...CommonCase,
-    payload: capturedJson(
+    payload: CitationOracleJson(
       S.Struct({
         input: S.Struct({ text: S.String, steps: CleanerSteps }),
         stages: EmptyStages,
@@ -164,7 +137,7 @@ const OperationCase = Operation.toTaggedUnion("operation")({
   },
   get_citations: {
     ...CommonCase,
-    payload: capturedJson(
+    payload: CitationOracleJson(
       S.Struct({
         input: S.Struct({
           plain_text: S.String,
@@ -191,7 +164,7 @@ const OperationCase = Operation.toTaggedUnion("operation")({
   },
   resolve_citations: {
     ...CommonCase,
-    payload: capturedJson(
+    payload: CitationOracleJson(
       S.Struct({
         input: S.Struct({
           citations: S.Array(OracleCitation),
@@ -208,7 +181,7 @@ const OperationCase = Operation.toTaggedUnion("operation")({
   },
   annotate_citations: {
     ...CommonCase,
-    payload: capturedJson(
+    payload: CitationOracleJson(
       S.Struct({
         input: S.Struct({
           plain_text: S.String,
@@ -230,17 +203,6 @@ const OperationCase = Operation.toTaggedUnion("operation")({
       "A closed operation-specific observation with one canonical JSON payload and typed decoded input/stage/output boundaries.",
   })
 );
-const Artifact = S.Union([
-  S.Struct({ kind: S.tag("tokenizer-extractors"), payload: S.JsonObject.pipe(S.Array, capturedJson) }),
-  S.Struct({ kind: S.tag("model-value"), payload: S.JsonObject.pipe(capturedJson) }),
-]).pipe(
-  S.toTaggedUnion("kind"),
-  $I.annoteSchema("Artifact", {
-    description:
-      "Shared tokenizer configuration or immutable reporter/edition data, identified by the SHA-256 of its exact encoded payload.",
-  })
-);
-
 const OperationSite = S.Struct({
   id: S.NonEmptyString,
   path: S.NonEmptyString,
@@ -270,7 +232,7 @@ const Operations = S.Struct({
   dependencies: S.Record(S.NonEmptyString, S.NonEmptyString),
   sourceSites: S.Array(OperationSite),
   cases: S.Array(OperationCase),
-  artifacts: S.Record(Sha256Hex, Artifact),
+  artifacts: S.Record(Sha256Hex, CitationOracleArtifact),
 });
 const OperationAccounting = S.makeFilter(
   (report: typeof Operations.Type) => {

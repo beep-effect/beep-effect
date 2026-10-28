@@ -173,6 +173,7 @@ extend-exclude = [
   # Exact pinned oracle text includes legal abbreviations and upstream typos.
   # Its schema, hashes, coordinates and source accounting have a separate gate.
   "packages/law-practice/use-cases/test/fixtures/eyecite/operation-cases.json",
+  "packages/law-practice/use-cases/test/fixtures/eyecite/assertion-cases.json",
   "**/src-tauri/gen/**",
   "**/src-tauri/target/**",
   # Vendored, version-pinned WHATWG/webref spec data for @beep/html (see data/SOURCES.md).

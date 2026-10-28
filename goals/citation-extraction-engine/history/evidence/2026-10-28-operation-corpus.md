@@ -141,8 +141,9 @@ the same clean pin produced byte-identical corpus bytes (`cmp` exited zero).
 
 ## Remaining accounting work
 
-- Normalize and reconcile all 1,583 assertion events, including model, helper,
-  equality/hash, court-parser, tokenizer, regex, and SpanUpdater behaviors.
+- Integrate the separately normalized 1,583 assertion observations and their
+  source-loop evidence into the final semantic cases. See the
+  [assertion receipt](./2026-10-28-assertion-corpus.md).
 - Independently expand source fixture/parameter declarations into semantic
   case IDs. Static public call-site coverage does not prove that no repeated
   observation within a site was dropped.

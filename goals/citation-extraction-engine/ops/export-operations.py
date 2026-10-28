@@ -68,28 +68,21 @@ def source_inventory(root):
     return sorted(rows, key=lambda row: (row["path"], row["line"], row["column"]))
 
 
-def capture(root, sites):
-    import eyecite
+def make_normalizer(root):
+    """Share value representation; completeness inventories remain independent."""
+    import re
+    import regex
+    from unittest.mock import NonCallableMock
     from eyecite.annotate import SpanUpdater
-    from eyecite.models import CitationBase, Document, Edition, Reporter, TokenExtractor
-    from eyecite.tokenizers import EXTRACTORS, Tokenizer
+    from eyecite.models import CitationBase, Edition, Reporter, TokenExtractor
+    from eyecite.tokenizers import Tokenizer
 
     artifacts = {}
-    cases = []
-    counts = {}
-    current = {"test": None}
-    active = []
     source_hashes = {}
     immutable_values = {}
     callable_values = {}
     extractor_values = {}
     tokenizer_values = {}
-    by_location = {}
-    for row in sites:
-        key = (row["path"], row["line"], row["operation"])
-        if key in by_location:
-            raise RuntimeError(f"multiple operation calls on one line need column tracing: {key}")
-        by_location[key] = row
 
     def normal_field(name, value):
         snapshot = normal(value)
@@ -173,6 +166,19 @@ def capture(root, sites):
             return [normal(item) for item in value]
         if isinstance(value, (set, frozenset)):
             return {"set": sorted([normal(item) for item in value], key=encoded)}
+        if isinstance(value, (re.Pattern, regex.Pattern)):
+            return {"regexPattern": {"pattern": value.pattern, "flags": int(value.flags)}}
+        if isinstance(value, (re.Match, regex.Match)):
+            return {"regexMatch": {
+                "pattern": value.re.pattern, "flags": int(value.re.flags),
+                "source": value.string, "span": normal(value.span()),
+                "groups": normal(value.groups()), "groupdict": normal(value.groupdict()),
+                "match": value.group(0),
+                "coordinateSpace": "match-source", "unit": "unicode-code-point",
+                "utf16Span": [len(value.string[:boundary].encode("utf-16-le")) // 2 for boundary in value.span()],
+            }}
+        if isinstance(value, NonCallableMock):
+            return {"mockCalls": {"count": value.call_count, "calls": normal(value.call_args_list)}}
         if callable(value):
             if id(value) in callable_values:
                 return callable_values[id(value)][1]
@@ -188,6 +194,25 @@ def capture(root, sites):
             callable_values[id(value)] = (value, descriptor)
             return descriptor
         raise TypeError(f"unclassified oracle value: {type(value).__module__}.{type(value).__qualname__}")
+
+    return normal, artifacts
+
+
+def capture(root, sites):
+    import eyecite
+    from eyecite.models import Document
+
+    normal, artifacts = make_normalizer(root)
+    cases = []
+    counts = {}
+    current = {"test": None}
+    active = []
+    by_location = {}
+    for row in sites:
+        key = (row["path"], row["line"], row["operation"])
+        if key in by_location:
+            raise RuntimeError(f"multiple operation calls on one line need column tracing: {key}")
+        by_location[key] = row
 
     def span(text, bounds):
         start, end = bounds
