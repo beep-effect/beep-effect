@@ -49,9 +49,8 @@ TypeScript and repository Vitest configuration files. Infra is included as
 
 The raw command results and Turbo task hashes are retained locally under
 `.beep/effect-string-*-check-result.json` and
-`.beep/effect-string-full-check-tasks.json`. Subsequent closeout commits change
-only this goal packet: no checked source, compiler program, dependency or rule
-configuration changes. Hosted readiness and verified merge evidence for #2318
+`.beep/effect-string-full-check-tasks.json`. That receipt qualifies the named source snapshot. Later main merges require
+separate qualification, recorded below. Hosted readiness and verified merge evidence for #2318
 remain required before claiming completion.
 
 ## Historical evidence retained
@@ -73,13 +72,14 @@ root configuration program both passed again on that stable head. Check
 completed 337 successful tasks, including 187 package Check tasks; 226 tasks
 were cache hits and 111 executed. The new raw results and Turbo summary are
 retained in the owning clone's `.beep/goals/effect-string-qualification-2026-10-28/base-sync-8d4fee6759/`.
-Only packet documentation changes follow this source qualification.
+This receipt covers the named source snapshot; later merges are qualified below.
 
 The earlier closeout head `91bd237d203d2b75aaf097bce48245ecad5aa139`
 reached terminal readiness in monitor `7a2cd4f9-df69-4643-9584-c93093374755`:
 all 15 required checks passed, all review threads were resolved, and the review
 window elapsed. Its two Vercel failures reported deployment rate limiting, the
-standing allowed exception. That head was not merged. Its evidence is retained
+standing allowed exception. The head was unmerged when that run ended;
+GitHub subsequently merged it as #2318, as recorded below. Its evidence is retained
 separately and does not qualify the synchronized head.
 
 The constrained direct-push fallback did not create the successful publish-mode
@@ -106,4 +106,31 @@ After reconciling the squash merge and current main, stable head
 lane again: 337 successful tasks, including 187 package Check tasks, with
 258 cache hits and 79 executions. The separate root configuration program
 also exited zero. No String findings were reported. Final publication changes
-only this packet after that qualification.
+only this packet at that point; the subsequent upstream repair is qualified below.
+
+## Requalification after the external conflict repair
+
+The operator's separate PR-repair chat pushed `07a3548728` with main
+`2c59e073c8`, including additional TypeScript source changes. The interrupted
+local publisher and monitor were terminal, not live waits. Reconciliation
+preserved that upstream repair and the unpublished final proposal binding.
+Stable reconciled head `bf0990a3c1852492bccf0aa66a15dd16a95cd6f4` passed the
+unfiltered full Check graph: 337 successful tasks, including 187 package Check
+tasks, with 330 cache hits and seven executions. The separate root configuration
+program also exited zero on that head. Zero String findings were reported.
+Only the packet review corrections follow this latest source qualification.
+The raw results, logs and Turbo summary are retained in the owning clone under
+`.beep/goals/effect-string-qualification-2026-10-28/repair-sync-bf0990a3c1/`.
+
+Post-merge completion refresh was repeated from the repaired checkout whose
+actual proposal still names #2318. At 2026-10-28T19:14:58.814Z it returned
+`unknown`: all 15 required contexts and merge-push rule suite `4768239716`
+verified, but the declared Yeet verdict was absent, invalid or unreadable.
+The ready transition and review window also verified; successful hosted checks
+do not infer a head-bound Yeet verdict. In the originating lane the retained
+old verdict is closeout-mode, and the later successful publisher qualifies
+`f5d31276f3`, not accepted head `91bd237d20`. Neither supplies the missing
+successful publisher record for that accepted head. Thus #2324 remains the
+required evidence follow-up; its proposal is bound to #2324 and operative
+lifecycle remains active. The raw post-merge receipt is retained alongside the
+latest compiler evidence as `pr2318-postmerge-completion-receipt.json`.

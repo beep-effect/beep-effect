@@ -59,7 +59,7 @@ its failed merge-time evidence intact. The `chore/effect-string-closeout` lane
 must:
 
 1. Full Check and the root configuration program passed most recently at
-   `04c716043f`: 337
+   `bf0990a3c1`: 337
    successful Turbo tasks, including 187 package Check tasks, and zero
    `preferEffectString` findings. The full graph had no affected-file filter.
 2. `quality tsgo-rules`, packet checks and reflection validation passed; rerun

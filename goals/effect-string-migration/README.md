@@ -64,7 +64,10 @@ the full Check graph (337 tasks, 187 package Check tasks) and root configuration
 program passed again. The updated graph had 226 cache hits and 111 executions.
 A later reconciliation at `04c716043fa6f11fce4f68862215362e39c07cba`
 also passed all 337 tasks (258 hits, 79 executions) and root configurations.
-Packet-only edits follow that qualification. The earlier head reached terminal
+The external conflict repair subsequently brought in main `2c59e073c8`.
+Reconciled head `bf0990a3c1852492bccf0aa66a15dd16a95cd6f4` passed the full
+337-task graph (330 hits, seven executions) and root configurations again.
+Only packet review corrections follow this latest qualification. The earlier head reached terminal
 readiness and was subsequently merged as #2318 by `kriegcloud` at
 2026-10-28T10:54:08Z while canonical publication was running. The publisher
 opened #2324 for the remaining evidence update; its head requires fresh
