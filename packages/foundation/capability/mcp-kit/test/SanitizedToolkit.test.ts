@@ -604,3 +604,50 @@ describe("sanitizedToolkit", () => {
     }
   );
 });
+
+describe("named template literal tool schemas", () => {
+  const identifier = S.TemplateLiteral([
+    "item:",
+    S.Union([S.Literal("a"), S.Literal("b")]).annotate({ identifier: "TemplatePrefix" }),
+    ":",
+    S.String.annotate({ identifier: "TemplateTail" }),
+  ]);
+  const tool = Tool.make("template_literal_tool", {
+    parameters: S.Struct({ id: identifier }),
+    success: S.Struct({ id: identifier }),
+  });
+  const toolkit = Toolkit.make(tool);
+  const handlers = toolkit.toLayer(
+    Effect.succeed(
+      toolkit.of({
+        template_literal_tool: Effect.fn("TemplateLiteralTool.echo")(({ id }) => Effect.succeed({ id })),
+      })
+    )
+  );
+  const layer = Layer.mergeAll(
+    McpServer.McpServer.layer,
+    sanitizedToolkit(toolkit).pipe(Layer.provide(handlers)),
+    StubMcpClientLayer
+  );
+  it.layer(layer)((it) => {
+    it.effect("registers named scalar/union fragments in both schemas and retains runtime validation", () =>
+      Effect.gen(function* () {
+        const server = yield* McpServer.McpServer;
+        const result = yield* server.callTool({ name: "template_literal_tool", arguments: { id: "item:a:42" } });
+        const decoded = yield* S.decodeUnknownEffect(
+          S.Struct({
+            content: S.NonEmptyArray(S.Struct({ text: S.String })),
+          })
+        )(result);
+        const value = yield* S.decodeEffect(S.fromJsonString(S.Struct({ id: identifier })))(
+          A.headNonEmpty(decoded.content).text
+        );
+        assert.strictEqual(value.id, "item:a:42");
+        const invalid = yield* Effect.exit(
+          server.callTool({ name: "template_literal_tool", arguments: { id: "other:a:42" } })
+        );
+        assert.isTrue(Exit.isFailure(invalid));
+      })
+    );
+  });
+});
