@@ -1709,7 +1709,7 @@ const discoverFilesWithGlob = Effect.fn("EffectImports.discoverFilesWithGlob")(f
  *
  * @param options - The run options whose mode, include paths and prefixes bound the corpus.
  * @returns Sorted working-directory-relative POSIX paths of the sources the run reads.
- * @category discovery
+ * @category queries
  * @since 0.0.0
  */
 export const discoverEffectImportSourceFiles = Effect.fn("EffectImports.discoverEffectImportSourceFiles")(function* (
@@ -1749,7 +1749,7 @@ export const discoverEffectImportSourceFiles = Effect.fn("EffectImports.discover
  *
  * @param options - The run options whose explicit include paths, when present, replace the walk.
  * @returns Sorted working-directory-relative POSIX paths of the Markdown documents the run reads.
- * @category discovery
+ * @category queries
  * @since 0.0.0
  */
 export const discoverEffectImportMarkdownFiles = Effect.fn("EffectImports.discoverEffectImportMarkdownFiles")(
