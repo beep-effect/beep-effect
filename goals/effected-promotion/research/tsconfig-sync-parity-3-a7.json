@@ -1,0 +1,237 @@
+{
+  "schemaVersion": 1,
+  "tool": "goals/effected-promotion/ops/tsconfig-sync-parity.ts",
+  "rev": "1515da682813d9e01f470eb4c8a85c0d523d218a",
+  "commit": "1515da682813d9e01f470eb4c8a85c0d523d218a",
+  "inputs": 1039,
+  "inputsSha256": "36c764a9a8c560e7cdf8eec185e08aca9fa45006e1cd4427c959bf243b992064",
+  "corpus": {
+    "scope": "git ls-files '*tsconfig*.json' decoded with decodeJsoncTextAs(TsconfigJson)",
+    "files": 691,
+    "decoded": 691,
+    "failures": []
+  },
+  "mutations": [
+    {
+      "mutation": "unchanged",
+      "description": "The extracted inputs as committed (no drift expected).",
+      "dryRun": {
+        "argv": ["tsconfig-sync", "--dry-run", "--verbose"],
+        "exitCode": 0,
+        "stdout": "tsconfig-sync: dry-run found no changes\n",
+        "stderr": ""
+      },
+      "write": {
+        "argv": ["tsconfig-sync", "--write"],
+        "exitCode": 0,
+        "stdout": "tsconfig-sync: all files already in sync\n",
+        "stderr": ""
+      },
+      "files": 1039,
+      "treeSha256": "36c764a9a8c560e7cdf8eec185e08aca9fa45006e1cd4427c959bf243b992064",
+      "changed": {}
+    },
+    {
+      "mutation": "root-reference-dropped",
+      "description": "tsconfig.packages.json loses its first reference.",
+      "dryRun": {
+        "argv": ["tsconfig-sync", "--dry-run", "--verbose"],
+        "exitCode": 0,
+        "stdout": "tsconfig-sync: dry-run planned changes (1 file change(s))\n  - tsconfig.packages.json [root-references] references: 182 -> 183 (add 1, remove 0)\n",
+        "stderr": ""
+      },
+      "write": {
+        "argv": ["tsconfig-sync", "--write"],
+        "exitCode": 0,
+        "stdout": "tsconfig-sync: applied changes (1 file change(s))\n  - tsconfig.packages.json [root-references] references: 182 -> 183 (add 1, remove 0)\n",
+        "stderr": ""
+      },
+      "files": 1039,
+      "treeSha256": "36c764a9a8c560e7cdf8eec185e08aca9fa45006e1cd4427c959bf243b992064",
+      "changed": {}
+    },
+    {
+      "mutation": "root-references-reordered",
+      "description": "tsconfig.packages.json lists its references in reverse order.",
+      "dryRun": {
+        "argv": ["tsconfig-sync", "--dry-run", "--verbose"],
+        "exitCode": 0,
+        "stdout": "tsconfig-sync: dry-run planned changes (1 file change(s))\n  - tsconfig.packages.json [root-references] references: 183 -> 183 (add 0, remove 0, reorder)\n",
+        "stderr": ""
+      },
+      "write": {
+        "argv": ["tsconfig-sync", "--write"],
+        "exitCode": 0,
+        "stdout": "tsconfig-sync: applied changes (1 file change(s))\n  - tsconfig.packages.json [root-references] references: 183 -> 183 (add 0, remove 0, reorder)\n",
+        "stderr": ""
+      },
+      "files": 1039,
+      "treeSha256": "36c764a9a8c560e7cdf8eec185e08aca9fa45006e1cd4427c959bf243b992064",
+      "changed": {}
+    },
+    {
+      "mutation": "root-reference-metadata",
+      "description": "One root reference carries an extra key beside `path` (passthrough, no drift).",
+      "dryRun": {
+        "argv": ["tsconfig-sync", "--dry-run", "--verbose"],
+        "exitCode": 0,
+        "stdout": "tsconfig-sync: dry-run found no changes\n",
+        "stderr": ""
+      },
+      "write": {
+        "argv": ["tsconfig-sync", "--write"],
+        "exitCode": 0,
+        "stdout": "tsconfig-sync: all files already in sync\n",
+        "stderr": ""
+      },
+      "files": 1039,
+      "treeSha256": "decb93adbd8ed111a7ff39ab2d89d8ebe86c4af0ca424cd27638c4d247edacfa",
+      "changed": {
+        "tsconfig.packages.json": "730848ce2be1500ea769c82304151e76faa9b5c8ad4b82e76341ee74b5b5a4ab"
+      }
+    },
+    {
+      "mutation": "package-references-empty",
+      "description": "The @beep/tsconfig project tsconfig.json has an empty references array.",
+      "dryRun": {
+        "argv": ["tsconfig-sync", "--dry-run", "--verbose"],
+        "exitCode": 0,
+        "stdout": "[verbose] packages/foundation/modeling/tsconfig/tsconfig.json: computed 5 ref(s), pruned 0 existing ref(s)\ntsconfig-sync: dry-run planned changes (1 file change(s))\n  - packages/foundation/modeling/tsconfig/tsconfig.json [package-references] references: 0 -> 5 (add 5, remove 0)\n",
+        "stderr": ""
+      },
+      "write": {
+        "argv": ["tsconfig-sync", "--write"],
+        "exitCode": 0,
+        "stdout": "tsconfig-sync: applied changes (1 file change(s))\n  - packages/foundation/modeling/tsconfig/tsconfig.json [package-references] references: 0 -> 5 (add 5, remove 0)\n",
+        "stderr": ""
+      },
+      "files": 1039,
+      "treeSha256": "36c764a9a8c560e7cdf8eec185e08aca9fa45006e1cd4427c959bf243b992064",
+      "changed": {}
+    },
+    {
+      "mutation": "canonical-alias-stale",
+      "description": "The root @beep/tsconfig path alias points at a stale target.",
+      "dryRun": {
+        "argv": ["tsconfig-sync", "--dry-run", "--verbose"],
+        "exitCode": 0,
+        "stdout": "tsconfig-sync: dry-run planned changes (1 file change(s))\n  - tsconfig.json [root-aliases] aliases: add 0, update 1, remove 0\n",
+        "stderr": ""
+      },
+      "write": {
+        "argv": ["tsconfig-sync", "--write"],
+        "exitCode": 0,
+        "stdout": "tsconfig-sync: applied changes (1 file change(s))\n  - tsconfig.json [root-aliases] aliases: add 0, update 1, remove 0\n",
+        "stderr": ""
+      },
+      "files": 1039,
+      "treeSha256": "36c764a9a8c560e7cdf8eec185e08aca9fa45006e1cd4427c959bf243b992064",
+      "changed": {}
+    },
+    {
+      "mutation": "canonical-alias-missing",
+      "description": "The root @beep/tsconfig/* path alias is deleted.",
+      "dryRun": {
+        "argv": ["tsconfig-sync", "--dry-run", "--verbose"],
+        "exitCode": 0,
+        "stdout": "tsconfig-sync: dry-run planned changes (1 file change(s))\n  - tsconfig.json [root-aliases] aliases: add 1, update 0, remove 0\n",
+        "stderr": ""
+      },
+      "write": {
+        "argv": ["tsconfig-sync", "--write"],
+        "exitCode": 0,
+        "stdout": "tsconfig-sync: applied changes (1 file change(s))\n  - tsconfig.json [root-aliases] aliases: add 1, update 0, remove 0\n",
+        "stderr": ""
+      },
+      "files": 1039,
+      "treeSha256": "4f6c7e5cfe5dc9758066545606311401328d6dd27ff82db02a03590c9942a384",
+      "changed": {
+        "tsconfig.json": "fa164f5da440ea63997db421dbf5331a6342e5667e97b7c78c7056f4d8ae116d"
+      }
+    },
+    {
+      "mutation": "check-overlay-drift",
+      "description": "The @beep/tsconfig tsconfig.check.json overlay keeps only its first reference.",
+      "dryRun": {
+        "argv": ["tsconfig-sync", "--dry-run", "--verbose"],
+        "exitCode": 0,
+        "stdout": "tsconfig-sync: dry-run planned changes (1 file change(s))\n  - packages/foundation/modeling/tsconfig/tsconfig.check.json [package-check-references] references: 1 -> 5 (add 4, remove 0)\n",
+        "stderr": ""
+      },
+      "write": {
+        "argv": ["tsconfig-sync", "--write"],
+        "exitCode": 0,
+        "stdout": "tsconfig-sync: applied changes (1 file change(s))\n  - packages/foundation/modeling/tsconfig/tsconfig.check.json [package-check-references] references: 1 -> 5 (add 4, remove 0)\n",
+        "stderr": ""
+      },
+      "files": 1039,
+      "treeSha256": "36c764a9a8c560e7cdf8eec185e08aca9fa45006e1cd4427c959bf243b992064",
+      "changed": {}
+    },
+    {
+      "mutation": "lab-reference-hand-added",
+      "description": "tsconfig.packages.json gains a hand-added labs workspace reference.",
+      "dryRun": {
+        "argv": ["tsconfig-sync", "--dry-run", "--verbose"],
+        "exitCode": 0,
+        "stdout": "tsconfig-sync: dry-run planned changes (1 file change(s))\n  - tsconfig.packages.json [root-references] references: 184 -> 183 (add 0, remove 1)\n",
+        "stderr": ""
+      },
+      "write": {
+        "argv": ["tsconfig-sync", "--write"],
+        "exitCode": 0,
+        "stdout": "tsconfig-sync: applied changes (1 file change(s))\n  - tsconfig.packages.json [root-references] references: 184 -> 183 (add 0, remove 1)\n",
+        "stderr": ""
+      },
+      "files": 1039,
+      "treeSha256": "36c764a9a8c560e7cdf8eec185e08aca9fa45006e1cd4427c959bf243b992064",
+      "changed": {}
+    },
+    {
+      "mutation": "docgen-field-drift",
+      "description": "The @beep/tsconfig docgen.json srcLink is stale.",
+      "dryRun": {
+        "argv": ["tsconfig-sync", "--dry-run", "--verbose"],
+        "exitCode": 0,
+        "stdout": "tsconfig-sync: dry-run planned changes (1 file change(s))\n  - packages/foundation/modeling/tsconfig/docgen.json [package-docgen] managed docgen fields synchronized\n",
+        "stderr": ""
+      },
+      "write": {
+        "argv": ["tsconfig-sync", "--write"],
+        "exitCode": 0,
+        "stdout": "tsconfig-sync: applied changes (1 file change(s))\n  - packages/foundation/modeling/tsconfig/docgen.json [package-docgen] managed docgen fields synchronized\n",
+        "stderr": ""
+      },
+      "files": 1039,
+      "treeSha256": "36c764a9a8c560e7cdf8eec185e08aca9fa45006e1cd4427c959bf243b992064",
+      "changed": {}
+    },
+    {
+      "mutation": "filter-run",
+      "description": "Two packages lose their references; the run is filtered to @beep/tsconfig, so @beep/utils stays drifted.",
+      "dryRun": {
+        "argv": [
+          "tsconfig-sync",
+          "--dry-run",
+          "--verbose",
+          "--filter",
+          "@beep/tsconfig"
+        ],
+        "exitCode": 0,
+        "stdout": "[verbose] packages/foundation/modeling/tsconfig/tsconfig.json: computed 5 ref(s), pruned 0 existing ref(s)\ntsconfig-sync: dry-run planned changes (1 file change(s))\n  - packages/foundation/modeling/tsconfig/tsconfig.json [package-references] references: 0 -> 5 (add 5, remove 0)\n",
+        "stderr": ""
+      },
+      "write": {
+        "argv": ["tsconfig-sync", "--write", "--filter", "@beep/tsconfig"],
+        "exitCode": 0,
+        "stdout": "tsconfig-sync: applied changes (1 file change(s))\n  - packages/foundation/modeling/tsconfig/tsconfig.json [package-references] references: 0 -> 5 (add 5, remove 0)\n",
+        "stderr": ""
+      },
+      "files": 1039,
+      "treeSha256": "0746f5c849f7ad4ada0d2ee8d8a6b94543b4755d38ef9941b23fde8a35d91f9f",
+      "changed": {
+        "packages/foundation/modeling/utils/tsconfig.json": "84d5496bb53913228b5d3c9069fe9a70e55947cc90b5b98bb398ce40e489ad13"
+      }
+    }
+  ]
+}
