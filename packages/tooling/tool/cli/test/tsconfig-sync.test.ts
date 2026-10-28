@@ -1500,5 +1500,121 @@ it.layer(TestLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
       20_000
     );
+
+    // 3-A7: tsconfig documents decode through `@beep/tsconfig` `TsconfigJson`.
+    // Each case below was tolerated by the retired partial projections (a
+    // non-string or empty reference `path` was skipped, `compilerOptions` was
+    // read for `paths` only); each is now a typed parse failure for the file.
+    const strictDecodeCases = [
+      {
+        name: "a non-string root reference path",
+        file: "tsconfig.packages.json",
+        document: { references: [{ path: 42 }] },
+        issue: 'Expected string\n  at ["references"][0]["path"]',
+      },
+      {
+        name: "an empty root reference path",
+        file: "tsconfig.packages.json",
+        document: { references: [{ path: "" }] },
+        issue: 'Expected a value with a length of at least 1\n  at ["references"][0]["path"]',
+      },
+      {
+        name: "an empty package reference path",
+        file: "packages/example-domain/tsconfig.json",
+        document: { references: [{ path: "" }], compilerOptions: { outDir: "dist", rootDir: "src" } },
+        issue: 'Expected a value with a length of at least 1\n  at ["references"][0]["path"]',
+      },
+      {
+        name: "an invalid root compilerOptions value",
+        file: "tsconfig.json",
+        document: {
+          compilerOptions: {
+            target: "es1999",
+            paths: { "@beep/example-domain": ["./packages/example-domain/src/index.ts"] },
+          },
+        },
+        issue: 'Expected @beep/tsconfig/CompilerOptions/Target\n  at ["compilerOptions"]["target"]',
+      },
+    ] as const;
+
+    for (const testCase of strictDecodeCases) {
+      it.effect(
+        `fails to parse ${testCase.name} instead of skipping it`,
+        () =>
+          Effect.andThen(
+            temporaryRepository,
+            Effect.gen(function* () {
+              const path = yield* Path.Path;
+              const rootDir = process.cwd();
+
+              yield* bootstrapRootConfig(rootDir, {
+                workspaces: ["packages/example-domain"],
+                references: ["packages/example-domain"],
+                paths: {
+                  "@beep/example-domain": ["./packages/example-domain/src/index.ts"],
+                  "@beep/example-domain/*": ["./packages/example-domain/src/*"],
+                },
+                syncpackSources: ["package.json", "packages/example-domain/package.json"],
+              });
+              yield* bootstrapWorkspace(rootDir, {
+                relativeDir: "packages/example-domain",
+                packageName: "@beep/example-domain",
+              });
+              const filePath = path.join(rootDir, testCase.file);
+              yield* writeJsonFile(filePath, testCase.document);
+
+              const failure = yield* syncTsconfigAtRoot(
+                rootDir,
+                TsconfigSyncRunOptionsCheck.make({ mode: "check", filter: undefined, verbose: false })
+              ).pipe(Effect.flip);
+
+              expect(failure._tag).toBe("DomainError");
+              expect(failure.message).toBe(`Failed to parse JSONC in "${filePath}": ${testCase.issue}`);
+            })
+          ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+        20_000
+      );
+    }
+
+    it.effect(
+      "keeps extra reference metadata and reads only its path",
+      () =>
+        Effect.andThen(
+          temporaryRepository,
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const rootDir = process.cwd();
+            const rootReferencesPath = path.join(rootDir, "tsconfig.packages.json");
+
+            yield* bootstrapRootConfig(rootDir, {
+              workspaces: ["packages/example-domain"],
+              references: [],
+              paths: {
+                "@beep/example-domain": ["./packages/example-domain/src/index.ts"],
+                "@beep/example-domain/*": ["./packages/example-domain/src/*"],
+              },
+              syncpackSources: ["package.json", "packages/example-domain/package.json"],
+            });
+            yield* bootstrapWorkspace(rootDir, {
+              relativeDir: "packages/example-domain",
+              packageName: "@beep/example-domain",
+            });
+            yield* writeJsonFile(rootReferencesPath, {
+              references: [{ path: "packages/example-domain", circular: true }],
+            });
+            const before = yield* fs.readFileString(rootReferencesPath);
+
+            const result = yield* syncTsconfigAtRoot(
+              rootDir,
+              TsconfigSyncRunOptionsCheck.make({ mode: "check", filter: undefined, verbose: false })
+            );
+
+            expect(result.changedFiles).toBe(0);
+            expect(yield* fs.readFileString(rootReferencesPath)).toBe(before);
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      20_000
+    );
   });
 });
