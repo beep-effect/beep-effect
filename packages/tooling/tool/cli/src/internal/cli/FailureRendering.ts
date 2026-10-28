@@ -84,14 +84,16 @@ export const shouldRenderFailureCause = (argv: ReadonlyArray<string>): boolean =
  * stderr, after neutralizing any line a GitHub runner would read as a workflow
  * command.
  *
- * **Example** (A reported exit renders nothing)
+ * **Example** (Render a failure, then an already-reported one)
  *
  * ```ts
- * import { renderCliFailure } from "@beep/repo-cli/test/Cli"
+ * import { CliReportedExit, renderCliFailure } from "@beep/repo-cli/test/Cli"
  * import * as Cause from "effect/Cause"
  *
  * const error = new Error("boom")
- * console.log(renderCliFailure([])(error, { cause: Cause.fail(error) })) // ["boom"]
+ * console.log(JSON.stringify(renderCliFailure([])(error, { cause: Cause.fail(error) }))) // ["boom"]
+ * const reported = CliReportedExit.make({ message: "printed", exitCode: 2 })
+ * console.log(JSON.stringify(renderCliFailure([])(reported, { cause: Cause.fail(reported) }))) // []
  * ```
  *
  * @param argv - The raw CLI arguments, read for `--verbose` and `--log-level`.
