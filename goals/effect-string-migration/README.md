@@ -31,9 +31,38 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-Waves 1–6f merged (2,991 sites across #1968, #1976, #1983, #1987, #1993, #2008, #2001, #2015, #2026, #2012, #2011, #2013, #2018, #2014, #2010); wave 7 (#2027) migrates the last site, pins `@effect/tsgo` 0.55.0 and arms `preferEffectString` at error, proven by the zero-site census on its branch (see Latest Evidence). Closeout reflection: `history/reflections/2026-10-22-claude.md`.
+Implementation waves 1–7 are merged, including the arming PR [#2027](https://github.com/beep-effect/beep-effect/pull/2027).
+The packet remains active: its original completion proposal does not have verified
+merge-time readiness. A fresh closeout lane is requalifying the current Check
+graph and will supply a new final PR and exact-head Yeet verdict. The original
+2026-10-22 reflection is retained as historical implementation evidence; the
+[2026-10-28 reflection](history/reflections/2026-10-28-codex.md) records the
+completion audit.
 
 ## Latest Evidence
+
+### Completion audit, 2026-10-28
+
+At closeout base `d3c684edea26987cea6384b296d86960b0bb5d1a`, the catalog pins
+`@effect/tsgo` 0.59.0. The installed Effect-patched tsrs identifies that build.
+`preferEffectString` is `error` in the root map and all four copied profiles.
+The rule-map audit and reflection validation passed in the owning clone; they
+will be rerun on the final closeout head. A fresh repo-wide Check remains required.
+
+`bun run beep goals completion refresh --slug effect-string-migration`
+returned `unsatisfied` for #2027. GitHub's merge-push rule suite
+`4660857638`
+recorded a required-status-check bypass; required checks were still pending at
+merge. The declared local Yeet verdict was unavailable. These historical facts
+are retained, not waived or relabelled as a passing completion gate.
+
+The [hosted diagnostics job](https://github.com/beep-effect/beep-effect/actions/runs/39760243138/job/119763331111)
+on accepted head `5249b167984da46755522915418cc2a34cd7c3aa` checked 375 projects
+and 90,238 file visits. It reported only seven `preferEffectArray` findings and
+zero `preferEffectString` findings. This proves the historical String census,
+not current repo-wide Check or pre-merge readiness.
+
+### Historical implementation census
 
 Zero-site census, 2026-10-22, on the wave 7 branch at `fe7bc21218`: main at
 `b7c85da54c` (#2026, the last site wave) plus the final epistemics fix, with

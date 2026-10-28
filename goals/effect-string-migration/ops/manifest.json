@@ -6,7 +6,7 @@
     "title": "effect/String migration",
     "status": "active",
     "created": "2026-10-21",
-    "updated": "2026-10-22",
+    "updated": "2026-10-28",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/effect-string-migration",
@@ -23,7 +23,7 @@
     "acceptanceEvidence": [
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/chore_effect-string-arm-626612e31552/verdict.json",
+        "ref": ".beep/yeet/runs/chore_effect-string-closeout-6c42a77d97b9/verdict.json",
         "gating": true
       }
     ]
@@ -63,7 +63,7 @@
     {
       "id": "P2",
       "name": "Verify",
-      "status": "complete"
+      "status": "in-progress"
     },
     {
       "id": "P3",
@@ -73,7 +73,7 @@
     {
       "id": "P4",
       "name": "Close",
-      "status": "complete"
+      "status": "in-progress"
     }
   ],
   "proposedCloseout": {
