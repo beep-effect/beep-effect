@@ -2,7 +2,7 @@ diff --git a/Cargo.lock b/Cargo.lock
 index e0b98f6..0fae3ae 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
-@@ -705,7 +705,7 @@ checksum = "092966b41edc516079bdf31ec78a2e0588d1d0c08f78b91d8307215928642b2b"
+@@ -705,7 +705,7 @@
  
  [[package]]
  name = "decay"
@@ -15,7 +15,7 @@ diff --git a/src/app_settings.rs b/src/app_settings.rs
 index 8890c8d..5e5d05a 100644
 --- a/src/app_settings.rs
 +++ b/src/app_settings.rs
-@@ -57,6 +57,8 @@ impl FromStr for S3ServerSideEncryption {
+@@ -57,6 +57,8 @@
  
  #[derive(Clone)]
  pub struct AppSettings {
@@ -24,7 +24,7 @@ index 8890c8d..5e5d05a 100644
      /// Host where to bind the server to
      /// Defaults to the loopback address
      pub host: String,
-@@ -102,7 +104,29 @@ pub fn get_settings() -> AppSettings {
+@@ -102,7 +104,29 @@
  
      let turbo_token = env::var("TURBO_TOKEN").ok().map(SecretString::from);
  
@@ -357,7 +357,7 @@ diff --git a/src/auth/turbo_token.rs b/src/auth/turbo_token.rs
 index 625e944..794d195 100644
 --- a/src/auth/turbo_token.rs
 +++ b/src/auth/turbo_token.rs
-@@ -12,6 +12,7 @@ use serde::Serialize;
+@@ -12,6 +12,7 @@
  use subtle::ConstantTimeEq;
  
  use crate::app_settings::AppSettings;
@@ -365,7 +365,7 @@ index 625e944..794d195 100644
  
  #[derive(Serialize)]
  struct AuthError {
-@@ -57,6 +58,41 @@ pub async fn validate_turbo_token(
+@@ -57,6 +58,41 @@
          }
      };
  
@@ -407,7 +407,7 @@ index 625e944..794d195 100644
      match outcome {
          Outcome::NoTokenConfigured => {
              tracing::debug!("No TURBO_TOKEN configured. Skipping token validation");
-@@ -77,6 +113,20 @@ pub async fn validate_turbo_token(
+@@ -77,6 +113,20 @@
      }
  }
  
@@ -432,7 +432,7 @@ diff --git a/src/main.rs b/src/main.rs
 index d196b24..5d8a085 100644
 --- a/src/main.rs
 +++ b/src/main.rs
-@@ -13,27 +13,35 @@ const PKG_VERSION: &str = env!("CARGO_PKG_VERSION");
+@@ -13,27 +13,35 @@
  
  #[tokio::main]
  async fn main() -> Result<(), std::io::Error> {
@@ -484,12 +484,137 @@ index d196b24..5d8a085 100644
  
      let address = format!("{}:{}", app_settings.host, app_settings.port);
      let listener = TcpListener::bind(address)?;
+diff --git a/src/routes/artifacts.rs b/src/routes/artifacts.rs
+index a5bf2ea..d88d74d 100644
+--- a/src/routes/artifacts.rs
++++ b/src/routes/artifacts.rs
+@@ -8,6 +8,7 @@
+ use serde::Serialize;
+ use tokio_util::io::StreamReader;
+ 
++use crate::app_settings::AppSettings;
+ use crate::storage::{Storage, StorageError};
+ 
+ /// When Turborepo is configured with `"signature": true` (turbo.json), the CLI
+@@ -146,6 +147,7 @@
+             builder.finish()
+         }
+         Err(StorageError::NotFound) => HttpResponse::NotFound().finish(),
++        Err(StorageError::Throttled) => HttpResponse::TooManyRequests().finish(),
+         Err(error) => {
+             tracing::error!(error = %error, "Could not check artifact on the bucket");
+             HttpResponse::InternalServerError().finish()
+@@ -176,6 +178,7 @@
+ 
+             HttpResponse::Created().json(artifact)
+         }
++        Err(StorageError::Throttled) => HttpResponse::TooManyRequests().finish(),
+         Err(error) => {
+             tracing::error!(error = %error, "Could not store artifact on the bucket");
+             HttpResponse::InternalServerError().finish()
+@@ -183,8 +186,12 @@
+     }
+ }
+ 
+-#[tracing::instrument(name = "Read artifact", skip(storage))]
+-pub async fn get_file(req: HttpRequest, storage: Data<Storage>) -> impl Responder {
++#[tracing::instrument(name = "Read artifact", skip(req, storage, settings))]
++pub async fn get_file(
++    req: HttpRequest,
++    storage: Data<Storage>,
++    settings: Data<AppSettings>,
++) -> impl Responder {
+     let artifact_info = match ArtifactRequest::from(&req) {
+         Some(info) => info,
+         None => return HttpResponse::NotFound().finish(),
+@@ -192,20 +199,30 @@
+ 
+     let file_path = artifact_info.file_path();
+ 
+-    let (maybe_response, metadata) = tokio::join!(
+-        storage.get_file(&file_path),
+-        storage.get_metadata(&file_path),
+-    );
++    let (maybe_response, metadata) =
++        tokio::join!(storage.get_file(&file_path), storage.head_file(&file_path),);
+ 
+     let response = match maybe_response {
+         Ok(response) => response,
+         Err(StorageError::NotFound) => return HttpResponse::NotFound().finish(),
++        Err(StorageError::Throttled) => return HttpResponse::TooManyRequests().finish(),
+         Err(error) => {
+             tracing::error!(error = %error, "Could not read artifact from the bucket");
+             return HttpResponse::InternalServerError().finish();
+         }
+     };
+ 
++    let metadata = match metadata {
++        Ok(metadata) => metadata,
++        Err(StorageError::Throttled) if settings.cache_policy.is_some() => {
++            return HttpResponse::TooManyRequests().finish();
++        }
++        Err(_) if settings.cache_policy.is_some() => {
++            return HttpResponse::ServiceUnavailable().finish();
++        }
++        Err(_) => HashMap::new(),
++    };
++
+     let stream = response.bytes.map(|maybe_chunk| match maybe_chunk {
+         Ok(bytes) => Result::<Bytes, actix_web::error::Error>::Ok(bytes),
+         Err(error) => {
 diff --git a/src/storage.rs b/src/storage.rs
-index 92b16f9..eca3bba 100644
+index 92b16f9..9048d30 100644
 --- a/src/storage.rs
 +++ b/src/storage.rs
-@@ -167,6 +167,7 @@ mod tests {
+@@ -13,6 +13,8 @@
+ pub enum StorageError {
+     /// The bucket answered, but holds no object under that path.
+     NotFound,
++    /// The store explicitly throttled this request.
++    Throttled,
+     /// The bucket could not be reached, or rejected the request.
+     Unreachable(S3Error),
+ }
+@@ -21,6 +23,7 @@
+     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+         match self {
+             Self::NotFound => write!(f, "no such object in the bucket"),
++            Self::Throttled => write!(f, "object store throttled the request"),
+             Self::Unreachable(error) => write!(f, "S3 request failed: {error}"),
+         }
+     }
+@@ -29,7 +32,7 @@
+ impl std::error::Error for StorageError {
+     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+         match self {
+-            Self::NotFound => None,
++            Self::NotFound | Self::Throttled => None,
+             Self::Unreachable(error) => Some(error),
+         }
+     }
+@@ -39,6 +42,7 @@
+     fn from(error: S3Error) -> Self {
+         match error {
+             S3Error::HttpFailWithBody(404, _) => Self::NotFound,
++            S3Error::HttpFailWithBody(429, _) => Self::Throttled,
+             other => Self::Unreachable(other),
+         }
+     }
+@@ -165,8 +169,20 @@
+ mod tests {
+     use super::*;
  
++    #[test]
++    fn preserves_explicit_storage_throttling_without_a_raw_body() {
++        let error = StorageError::from(S3Error::HttpFailWithBody(
++            429,
++            "synthetic-private-storage-body".to_owned(),
++        ));
++        assert!(matches!(error, StorageError::Throttled));
++        assert_eq!(error.to_string(), "object store throttled the request");
++        assert!(std::error::Error::source(&error).is_none());
++    }
++
      fn settings_with_credentials() -> AppSettings {
          AppSettings {
 +            cache_policy: None,

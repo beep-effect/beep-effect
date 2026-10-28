@@ -253,7 +253,9 @@ artifact HMAC key or claims the tag proves a protected producer.
 
 Strict mode skips dotenv and telemetry initialization. Responses carry a finite
 `x-beep-cache-result`; an unclassified 404 stays `not-found`, and an unsuccessful
-PUT stays `write-ambiguous`. This preparation does not add production counters,
+PUT stays `write-ambiguous`. Explicit storage 429 responses retain the
+`throttled` class. A signed read with an unavailable metadata lookup fails as
+`backend-unavailable`, even when the object body was reachable. This preparation does not add production counters,
 trust-readiness, deployment authority or an accepted task profile.
 
 Prepare and check the reproducible source input:
@@ -262,7 +264,7 @@ Prepare and check the reproducible source input:
 RUSTUP_TOOLCHAIN=1.96.0 infra/r2-cache/policy.sh test-domain
 ```
 
-Run `policy.sh cargo-test` only inside the existing machine admission boundary
+Run `policy.sh cargo-test` or `policy.sh cargo-build` only inside the existing machine admission boundary
 or hosted CI. The caller must select the installed tested Rust 1.96.0 toolchain;
 no ordinary adapter startup compiles Rust. The source patch includes the root
 Cargo.lock metadata correction required by the release's Cargo.toml and preserves

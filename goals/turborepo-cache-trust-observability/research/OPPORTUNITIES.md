@@ -27,7 +27,7 @@ while Cargo.toml names `4.0.20`; `cargo test --locked` refuses that mismatch.
 The reviewed patch synchronizes only the root metadata. No third-party dependency
 version or checksum changes. The first full crate compile also caught a test
 initializer missing the new optional policy field; that initializer is repaired.
-Both failures preceded the passing 44 crate and two middleware tests.
+Both failures preceded the passing crate and middleware tests. The expanded patch passes 45 crate and two middleware tests.
 
 The standalone native conformance runner also omitted `--skip-infer` and
 `--single-package`, although its fixture has no workspace packages. A separate
@@ -35,3 +35,18 @@ small CLI repair will align its invocation with the native protocol fixture.
 Its regression must assert both flags; simulated cache responses alone cannot
 prove the real binary entered that fixture. The adapter process lab uses both
 flags and checks each pinned binary digest before invocation.
+
+### Preserve storage faults through the adapter boundary
+
+The initial passing process lab did not inject object-store faults. Source review
+found that S3 throttling became a generic HTTP failure and a failed metadata HEAD
+could become an untagged success. The patch now preserves explicit storage 429s,
+reports ambiguous failed writes independently, and fails signed reads when
+metadata cannot be read. Five injected-fault process controls pass. Adding the
+settings parameter initially exposed an upstream tracing macro that wanted to
+Debug-print the configuration; the parameter is explicitly skipped instead of
+deriving a secret-bearing Debug implementation. No configuration entered logs.
+
+A focused CLI test launched from the repository root with a package-relative
+Vitest include found no tests. It was rerun from the package directory and all
+16 cases passed. Use the package working directory for the existing config.

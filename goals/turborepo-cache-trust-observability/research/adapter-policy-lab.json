@@ -2,7 +2,7 @@
   "schemaVersion": "r2-cache-policy-lab/v1",
   "authority": "isolated-process-component-only",
   "storage": "Moto5.1.15 synthetic S3; no R2 IAM qualification",
-  "adapterSha256": "b3641473ca84788bfbe9b4b1e9d39912a52654b7242d9575e9790313ee398089",
+  "adapterSha256": "6fe6600e5e31faf18b83b7ab87884a966c8e5eae38e6122f614d3b510c0467c4",
   "wire": [
     {
       "case": "missing-auth",
@@ -87,6 +87,41 @@
     },
     {
       "case": "metadata-head",
+      "passed": true
+    },
+    {
+      "case": "metadata-unavailable",
+      "status": 503,
+      "result": "backend-unavailable",
+      "storageCalls": 3,
+      "passed": true
+    },
+    {
+      "case": "storage-unavailable",
+      "status": 500,
+      "result": "backend-unavailable",
+      "storageCalls": 4,
+      "passed": true
+    },
+    {
+      "case": "ambiguous-upload",
+      "status": 500,
+      "result": "write-ambiguous",
+      "storageCalls": 1,
+      "passed": true
+    },
+    {
+      "case": "storage-throttled-read",
+      "status": 429,
+      "result": "throttled",
+      "storageCalls": 4,
+      "passed": true
+    },
+    {
+      "case": "storage-throttled-write",
+      "status": 429,
+      "result": "throttled",
+      "storageCalls": 1,
       "passed": true
     }
   ],
@@ -227,10 +262,10 @@
   "adapterOutputBytes": 0,
   "productionReadiness": false,
   "passed": true,
-  "recordedAt": "2026-10-28T22:34:41.966128+00:00",
+  "recordedAt": "2026-10-28T22:40:23.174944+00:00",
   "upstreamCommit": "0e893f63e1c7f1ac3c460d79e75fb63d4c9f7c85",
-  "patchSha256": "e28300cdf283aa1fb8bd00712e4a5332ff6c324b6b61d7f28e27d11b0f7190c0",
-  "harnessSha256": "6bd3fde59e4f05ecb9b47f91d4e1345ce74f431de43540aa7e543e52ad1a094d",
+  "patchSha256": "20b5ebacccc4bcabb84976342be1e7b74756cac5bb8fcbec467aec696e44e298",
+  "harnessSha256": "9df79f7274861cdd1cbfc64cf3ff479eececd4669c04fd44c3963bcc93be0055",
   "limitations": [
     "Local glibc debug binary; no musl build or fleet portability proof.",
     "Synthetic S3 does not prove Cloudflare R2 IAM enforcement or deployed credentials.",

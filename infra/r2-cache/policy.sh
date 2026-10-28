@@ -29,7 +29,8 @@ prepare() {
   fi
   [[ "$(git -C "$source" rev-parse HEAD)" == "$revision" ]] || return 1
   # Compare all intended source modifications; an edited or partial cache never builds.
-  git -C "$source" diff --binary HEAD | cmp -s "$patch" - || { echo 'Patched source differs from the reviewed input' >&2; return 1; }
+  # Drop optional Git hunk headings, whose truncated words are not source content.
+  git -C "$source" diff --binary HEAD | sed -E 's/^(@@ -[0-9,]+ \+[0-9,]+ @@).*$/\1/' | cmp -s "$patch" - || { echo 'Patched source differs from the reviewed input' >&2; return 1; }
   [[ -z "$(git -C "$source" ls-files --others --exclude-standard)" ]] || { echo 'Source cache contains unreviewed files' >&2; return 1; }
 }
 case "${1:-}" in

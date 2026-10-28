@@ -33,7 +33,7 @@ class StorageFixture:
     """Count storage calls without retaining requests, headers, or payloads."""
     def __init__(self):
         self.calls = 0
-        self.fail = False
+        self.fail = None
         self.application = DomainDispatcherApplication(create_backend_app)
         self.server = make_server("127.0.0.1", 0, self, threaded=True,
                                   request_handler=QuietHandler)
@@ -41,8 +41,9 @@ class StorageFixture:
 
     def __call__(self, environ, start_response):
         self.calls += 1
-        if self.fail:
-            start_response("503 Service Unavailable", [("Content-Length", "0")])
+        if self.fail and (self.fail != "metadata" or environ["REQUEST_METHOD"] == "HEAD"):
+            status = "429 Too Many Requests" if self.fail == "throttle" else "503 Service Unavailable"
+            start_response(status, [("Content-Length", "0")])
             return [b""]
         return self.application(environ, start_response)
 
@@ -174,6 +175,25 @@ def run(options):
                 assert metadata["x-artifact-duration"] == "1234"
                 assert body == (b"synthetic-payload" if method == "GET" else b"")
                 rows.append({"case": f"metadata-{method.lower()}", "passed": True})
+
+            for name, failure, method, expected, code in [
+                ("metadata-unavailable", "metadata", "GET", 503, "backend-unavailable"),
+                ("storage-unavailable", "unavailable", "GET", 500, "backend-unavailable"),
+                ("ambiguous-upload", "unavailable", "PUT", 500, "write-ambiguous"),
+                ("storage-throttled-read", "throttle", "GET", 429, "throttled"),
+                ("storage-throttled-write", "throttle", "PUT", 429, "throttled"),
+            ]:
+                fixture.fail = failure
+                before = fixture.calls
+                status, metadata, body = request(endpoints["writer"] + path + query,
+                                                method, b"synthetic-payload" if method == "PUT" else None,
+                                                headers)
+                passed = status == expected and metadata.get("x-beep-cache-result") == code and fixture.calls > before
+                rows.append({"case": name, "status": status, "result": metadata.get("x-beep-cache-result"),
+                             "storageCalls": fixture.calls - before, "passed": passed})
+                if not passed:
+                    raise AssertionError(f"Storage result attribution failed: {name}")
+            fixture.fail = None
 
             # Both exact native clients must restore an upload from this actual
             # adapter and reject bad HMAC metadata before declared output appears.
