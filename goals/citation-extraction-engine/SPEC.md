@@ -625,14 +625,24 @@ instead of silently splitting delivery or weakening scope.
 
 - **2026-10-28 portable gate composition:** the package command defaults to
   completion mode and sends `--complete` to ledger and donor validators.
-  Explicit `--audit` checks the seven available evidence components without
-  asserting parity. Require four fixed repository verifier entrypoints for
+  Explicit `--audit` checks the available evidence components without
+  asserting parity. Require fixed repository verifier entrypoints for
   divergences, regex benchmarks, supplemental probes and target parity; their
   absence fails completion. Fixtures never supply executable commands. The
   future entrypoints take `--fixtures` and `--evidence` paths, must independently
   validate their full proof scope, and must reject absent or incomplete proof.
   Their implementations remain open; adding files alone is not evidence.
   Reverse by changing the fixed composition with equivalent rejection controls.
+
+- **2026-10-28 supplemental extraction:** integrate 13 focused probes as an
+  eighth portable audit component, with exact Python/UTF-16 coordinates,
+  equality and authority membership. Keep the CIT identity-merger observation
+  linked to its original evidence. The pinned oracle classifies the probed
+  U.S.C. and C.F.R. examples as `FullLawCitation`; neither is an extension.
+  The supplemental verifier now exists but rejects completion while its target
+  proof or five named coverage families remain open. Divergence, benchmark
+  and exhaustive target verifiers remain absent. Reverse or expand this
+  projection through the authored plan, schema and equivalent controls.
 
 ## Exception Ledger
 

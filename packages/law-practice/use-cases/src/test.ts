@@ -57,6 +57,13 @@ export { CitationOracleOperations } from "./internal/citationOracleOperations.ts
  */
 export { CitationOracleVocabularyMapping } from "./internal/citationOracleVocabularyMapping.ts";
 /**
+ * Focused supplemental extraction and resolution oracle evidence.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export { CitationSupplementalExtraction } from "./internal/citationSupplementalExtraction.ts";
+/**
  * Pinned TypeScript donor export/test accounting and disposition obligations.
  *
  * @category testing

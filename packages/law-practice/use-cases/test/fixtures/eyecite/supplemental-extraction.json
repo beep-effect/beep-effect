@@ -1,0 +1,129 @@
+{
+  "schemaVersion": "citation-supplemental-extraction/v1",
+  "scope": "Focused extraction/resolution projections; not exhaustive supplemental or target parity proof.",
+  "commit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
+  "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
+  "license": "BSD-2-Clause",
+  "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
+  "lockSha256": "864cf7a1ef7ebafe8159b9691a42a2dfe980cf0e609b5fd1899bcc5703b91e9a",
+  "python": "3.11.15",
+  "hashSeed": "0",
+  "clockDate": "2026-10-28",
+  "dependencies": {
+    "eyecite": "2.7.6",
+    "reporters-db": "3.2.53",
+    "courts-db": "0.10.22",
+    "regex": "2023.12.25",
+    "lxml": "5.1.0",
+    "fast-diff-match-patch": "2.0.1",
+    "pyahocorasick": "2.0.0"
+  },
+  "exporterSha256": "29ea384f854708660db0d5fd3a3b1a67afce88e12083354bd458d1a2a5abd656",
+  "planSha256": "ca1f99d044650f7e6313290110048dd7e656598ff395f3e42e9344f6b55f454b",
+  "sourceHashes": {
+    "eyecite/find.py": "64415ffe6a5fc39713a1ad1d6585ae673fb175b32c53820185237a174416dd3d",
+    "eyecite/models.py": "2297f2f3a036a5674346e952fd6b03c8d4906c1130ef43157b7e2d79d5bdf38a",
+    "eyecite/helpers.py": "3d3431db232be2f3d7320125528975d57797372a9c4c21d524927fc1ccf0a297",
+    "eyecite/resolve.py": "651ede8c2a2d5df9ec9c9f1145530a6de7fca15304d1816b7f620a81ab3f2044"
+  },
+  "cases": [
+    {
+      "id": "cit-merger",
+      "workflowState": "audit",
+      "targetProof": null,
+      "payload": "{\"authorityGroups\":[[0],[1]],\"citations\":[{\"correctedCitation\":\"1 C.I.T. 1\",\"correctedFullCitation\":\"1 C.I.T. 1\",\"correctedReporter\":\"C.I.T.\",\"groups\":{\"page\":\"1\",\"reporter\":\"C.I.T.\",\"volume\":\"1\"},\"kind\":\"FullCaseCitation\",\"spans\":{\"fullSpan\":{\"python\":[0,10],\"text\":\"1 C.I.T. 1\",\"utf16\":[0,10]},\"span\":{\"python\":[0,10],\"text\":\"1 C.I.T. 1\",\"utf16\":[0,10]},\"spanWithPincite\":{\"python\":[0,10],\"text\":\"1 C.I.T. 1\",\"utf16\":[0,10]}}},{\"correctedCitation\":\"1 Ct. Int'l Trade 1\",\"correctedFullCitation\":\"1 Ct. Int'l Trade 1\",\"correctedReporter\":\"Ct. Int'l Trade\",\"groups\":{\"page\":\"1\",\"reporter\":\"Ct. Int'l Trade\",\"volume\":\"1\"},\"kind\":\"FullCaseCitation\",\"spans\":{\"fullSpan\":{\"python\":[12,31],\"text\":\"1 Ct. Int'l Trade 1\",\"utf16\":[12,31]},\"span\":{\"python\":[12,31],\"text\":\"1 Ct. Int'l Trade 1\",\"utf16\":[12,31]},\"spanWithPincite\":{\"python\":[12,31],\"text\":\"1 Ct. Int'l Trade 1\",\"utf16\":[12,31]}}}],\"equality\":[[true,false],[false,true]],\"text\":\"1 C.I.T. 1. 1 Ct. Int'l Trade 1.\"}",
+      "normalizedSha256": "9d178cdaabdb12b351c0640bddc94b14bbd8e3f45c08acd65d44e1a0e0eaf0a0"
+    },
+    {
+      "id": "astral-prefix",
+      "workflowState": "audit",
+      "targetProof": null,
+      "payload": "{\"authorityGroups\":[[0]],\"citations\":[{\"correctedCitation\":\"1 U.S. 1\",\"correctedFullCitation\":\"😀, 1 U.S. 1 (scotus)\",\"correctedReporter\":\"U.S.\",\"groups\":{\"page\":\"1\",\"reporter\":\"U.S.\",\"volume\":\"1\"},\"kind\":\"FullCaseCitation\",\"spans\":{\"fullSpan\":{\"python\":[0,10],\"text\":\"😀 1 U.S. 1\",\"utf16\":[0,11]},\"span\":{\"python\":[2,10],\"text\":\"1 U.S. 1\",\"utf16\":[3,11]},\"spanWithPincite\":{\"python\":[2,10],\"text\":\"1 U.S. 1\",\"utf16\":[3,11]}}}],\"equality\":[[true]],\"text\":\"😀 1 U.S. 1.\"}",
+      "normalizedSha256": "a62d9ea11b2c3485f99af91abd8be3ef603737dd3164a3fd7fb94885ee467f5e"
+    },
+    {
+      "id": "combining-prefix",
+      "workflowState": "audit",
+      "targetProof": null,
+      "payload": "{\"authorityGroups\":[[0]],\"citations\":[{\"correctedCitation\":\"1 U.S. 1\",\"correctedFullCitation\":\"1 U.S. 1 (scotus)\",\"correctedReporter\":\"U.S.\",\"groups\":{\"page\":\"1\",\"reporter\":\"U.S.\",\"volume\":\"1\"},\"kind\":\"FullCaseCitation\",\"spans\":{\"fullSpan\":{\"python\":[3,11],\"text\":\"1 U.S. 1\",\"utf16\":[3,11]},\"span\":{\"python\":[3,11],\"text\":\"1 U.S. 1\",\"utf16\":[3,11]},\"spanWithPincite\":{\"python\":[3,11],\"text\":\"1 U.S. 1\",\"utf16\":[3,11]}}}],\"equality\":[[true]],\"text\":\"é 1 U.S. 1.\"}",
+      "normalizedSha256": "b863f5a4bd19cf3d46d77e2afb4c89e493e4e7b6993512a676efecde66232d6b"
+    },
+    {
+      "id": "usc-law",
+      "workflowState": "audit",
+      "targetProof": null,
+      "payload": "{\"authorityGroups\":[[0]],\"citations\":[{\"correctedCitation\":\"35 U.S.C. § 101\",\"correctedFullCitation\":\"35 U.S.C. § 101 (2018)\",\"correctedReporter\":\"U.S.C.\",\"groups\":{\"reporter\":\"U.S.C.\",\"section\":\"101\",\"title\":\"35\"},\"kind\":\"FullLawCitation\",\"spans\":{\"fullSpan\":{\"python\":[0,22],\"text\":\"35 U.S.C. § 101 (2018)\",\"utf16\":[0,22]},\"span\":{\"python\":[0,15],\"text\":\"35 U.S.C. § 101\",\"utf16\":[0,15]},\"spanWithPincite\":{\"python\":[0,15],\"text\":\"35 U.S.C. § 101\",\"utf16\":[0,15]}}}],\"equality\":[[true]],\"text\":\"35 U.S.C. § 101 (2018)\"}",
+      "normalizedSha256": "868aaf974533578ad8974fc56e4686db28ff070dc1e40f7e9a317c6d4adc12a4"
+    },
+    {
+      "id": "cfr-law",
+      "workflowState": "audit",
+      "targetProof": null,
+      "payload": "{\"authorityGroups\":[[0]],\"citations\":[{\"correctedCitation\":\"37 C.F.R. § 1.56\",\"correctedFullCitation\":\"37 C.F.R. § 1.56 (2020)\",\"correctedReporter\":\"C.F.R.\",\"groups\":{\"chapter\":\"37\",\"reporter\":\"C.F.R.\",\"section\":\"1.56\"},\"kind\":\"FullLawCitation\",\"spans\":{\"fullSpan\":{\"python\":[0,23],\"text\":\"37 C.F.R. § 1.56 (2020)\",\"utf16\":[0,23]},\"span\":{\"python\":[0,16],\"text\":\"37 C.F.R. § 1.56\",\"utf16\":[0,16]},\"spanWithPincite\":{\"python\":[0,16],\"text\":\"37 C.F.R. § 1.56\",\"utf16\":[0,16]}}}],\"equality\":[[true]],\"text\":\"37 C.F.R. § 1.56 (2020)\"}",
+      "normalizedSha256": "07adae52f4edfe2815c9f91491897eba57252782e3054c071b0909a2bfd974c6"
+    },
+    {
+      "id": "unresolved-id",
+      "workflowState": "audit",
+      "targetProof": null,
+      "payload": "{\"authorityGroups\":[],\"citations\":[{\"correctedCitation\":\"Id.\",\"correctedFullCitation\":\"Id.\",\"correctedReporter\":null,\"groups\":{},\"kind\":\"IdCitation\",\"spans\":{\"fullSpan\":{\"python\":[0,8],\"text\":\"Id. at 2\",\"utf16\":[0,8]},\"span\":{\"python\":[0,8],\"text\":\"Id. at 2\",\"utf16\":[0,8]},\"spanWithPincite\":{\"python\":[0,8],\"text\":\"Id. at 2\",\"utf16\":[0,8]}}}],\"equality\":[[true]],\"text\":\"Id. at 2.\"}",
+      "normalizedSha256": "4d60c9d26ab44cbef594b88ce26acd8798844c22015a6389e08a801dea53a504"
+    },
+    {
+      "id": "resolved-id",
+      "workflowState": "audit",
+      "targetProof": null,
+      "payload": "{\"authorityGroups\":[[0,1]],\"citations\":[{\"correctedCitation\":\"1 U.S. 1\",\"correctedFullCitation\":\"1 U.S. 1 (scotus)\",\"correctedReporter\":\"U.S.\",\"groups\":{\"page\":\"1\",\"reporter\":\"U.S.\",\"volume\":\"1\"},\"kind\":\"FullCaseCitation\",\"spans\":{\"fullSpan\":{\"python\":[0,8],\"text\":\"1 U.S. 1\",\"utf16\":[0,8]},\"span\":{\"python\":[0,8],\"text\":\"1 U.S. 1\",\"utf16\":[0,8]},\"spanWithPincite\":{\"python\":[0,8],\"text\":\"1 U.S. 1\",\"utf16\":[0,8]}}},{\"correctedCitation\":\"Id.\",\"correctedFullCitation\":\"Id.\",\"correctedReporter\":null,\"groups\":{},\"kind\":\"IdCitation\",\"spans\":{\"fullSpan\":{\"python\":[10,18],\"text\":\"Id. at 2\",\"utf16\":[10,18]},\"span\":{\"python\":[10,18],\"text\":\"Id. at 2\",\"utf16\":[10,18]},\"spanWithPincite\":{\"python\":[10,18],\"text\":\"Id. at 2\",\"utf16\":[10,18]}}}],\"equality\":[[true,false],[false,true]],\"text\":\"1 U.S. 1. Id. at 2.\"}",
+      "normalizedSha256": "7b190545a521ee7ce3f84aaf07c950508728c3231efa3f121d77737e3382acc2"
+    },
+    {
+      "id": "nearest-id",
+      "workflowState": "audit",
+      "targetProof": null,
+      "payload": "{\"authorityGroups\":[[0],[1,2]],\"citations\":[{\"correctedCitation\":\"1 U.S. 1\",\"correctedFullCitation\":\"1 U.S. 1 (scotus)\",\"correctedReporter\":\"U.S.\",\"groups\":{\"page\":\"1\",\"reporter\":\"U.S.\",\"volume\":\"1\"},\"kind\":\"FullCaseCitation\",\"spans\":{\"fullSpan\":{\"python\":[0,8],\"text\":\"1 U.S. 1\",\"utf16\":[0,8]},\"span\":{\"python\":[0,8],\"text\":\"1 U.S. 1\",\"utf16\":[0,8]},\"spanWithPincite\":{\"python\":[0,8],\"text\":\"1 U.S. 1\",\"utf16\":[0,8]}}},{\"correctedCitation\":\"2 U.S. 2\",\"correctedFullCitation\":\"2 U.S. 2 (scotus)\",\"correctedReporter\":\"U.S.\",\"groups\":{\"page\":\"2\",\"reporter\":\"U.S.\",\"volume\":\"2\"},\"kind\":\"FullCaseCitation\",\"spans\":{\"fullSpan\":{\"python\":[10,18],\"text\":\"2 U.S. 2\",\"utf16\":[10,18]},\"span\":{\"python\":[10,18],\"text\":\"2 U.S. 2\",\"utf16\":[10,18]},\"spanWithPincite\":{\"python\":[10,18],\"text\":\"2 U.S. 2\",\"utf16\":[10,18]}}},{\"correctedCitation\":\"Id.\",\"correctedFullCitation\":\"Id.\",\"correctedReporter\":null,\"groups\":{},\"kind\":\"IdCitation\",\"spans\":{\"fullSpan\":{\"python\":[20,28],\"text\":\"Id. at 3\",\"utf16\":[20,28]},\"span\":{\"python\":[20,28],\"text\":\"Id. at 3\",\"utf16\":[20,28]},\"spanWithPincite\":{\"python\":[20,28],\"text\":\"Id. at 3\",\"utf16\":[20,28]}}}],\"equality\":[[true,false,false],[false,true,false],[false,false,true]],\"text\":\"1 U.S. 1. 2 U.S. 2. Id. at 3.\"}",
+      "normalizedSha256": "16de12da7443e3ae05121f040468a34fb1737dd98e8c37e73a8197f092c7ea6c"
+    },
+    {
+      "id": "repeated-authority",
+      "workflowState": "audit",
+      "targetProof": null,
+      "payload": "{\"authorityGroups\":[[0,1]],\"citations\":[{\"correctedCitation\":\"1 U.S. 1\",\"correctedFullCitation\":\"1 U.S. 1 (scotus)\",\"correctedReporter\":\"U.S.\",\"groups\":{\"page\":\"1\",\"reporter\":\"U.S.\",\"volume\":\"1\"},\"kind\":\"FullCaseCitation\",\"spans\":{\"fullSpan\":{\"python\":[0,8],\"text\":\"1 U.S. 1\",\"utf16\":[0,8]},\"span\":{\"python\":[0,8],\"text\":\"1 U.S. 1\",\"utf16\":[0,8]},\"spanWithPincite\":{\"python\":[0,8],\"text\":\"1 U.S. 1\",\"utf16\":[0,8]}}},{\"correctedCitation\":\"1 U.S. 1\",\"correctedFullCitation\":\"1 U.S. 1 (scotus)\",\"correctedReporter\":\"U.S.\",\"groups\":{\"page\":\"1\",\"reporter\":\"U.S.\",\"volume\":\"1\"},\"kind\":\"FullCaseCitation\",\"spans\":{\"fullSpan\":{\"python\":[10,18],\"text\":\"1 U.S. 1\",\"utf16\":[10,18]},\"span\":{\"python\":[10,18],\"text\":\"1 U.S. 1\",\"utf16\":[10,18]},\"spanWithPincite\":{\"python\":[10,18],\"text\":\"1 U.S. 1\",\"utf16\":[10,18]}}}],\"equality\":[[true,true],[true,true]],\"text\":\"1 U.S. 1. 1 U.S. 1.\"}",
+      "normalizedSha256": "ac295aae646e5978f3b6c4f20af15a7db1ae037faaecb3b7ed43fd78c2b5e91f"
+    },
+    {
+      "id": "reporter-spelling",
+      "workflowState": "audit",
+      "targetProof": null,
+      "payload": "{\"authorityGroups\":[[0]],\"citations\":[{\"correctedCitation\":\"1 U.S. 1\",\"correctedFullCitation\":\"1 U.S. 1 (scotus)\",\"correctedReporter\":\"U.S.\",\"groups\":{\"page\":\"1\",\"reporter\":\"U. S.\",\"volume\":\"1\"},\"kind\":\"FullCaseCitation\",\"spans\":{\"fullSpan\":{\"python\":[0,9],\"text\":\"1 U. S. 1\",\"utf16\":[0,9]},\"span\":{\"python\":[0,9],\"text\":\"1 U. S. 1\",\"utf16\":[0,9]},\"spanWithPincite\":{\"python\":[0,9],\"text\":\"1 U. S. 1\",\"utf16\":[0,9]}}}],\"equality\":[[true]],\"text\":\"1 U. S. 1.\"}",
+      "normalizedSha256": "9bfc3b9a64ddedaf3717bb11cfdac5b0c44447c6881e15db7d3c377c548a748e"
+    },
+    {
+      "id": "no-citations",
+      "workflowState": "audit",
+      "targetProof": null,
+      "payload": "{\"authorityGroups\":[],\"citations\":[],\"equality\":[],\"text\":\"Text without a citation.\"}",
+      "normalizedSha256": "241e24ca851db6201f01e58e5a465466131633ca3d02cc34f802b85ecf400f85"
+    },
+    {
+      "id": "crlf-context",
+      "workflowState": "audit",
+      "targetProof": null,
+      "payload": "{\"authorityGroups\":[[0,1]],\"citations\":[{\"correctedCitation\":\"1 U.S. 1\",\"correctedFullCitation\":\"1 U.S. 1 (scotus)\",\"correctedReporter\":\"U.S.\",\"groups\":{\"page\":\"1\",\"reporter\":\"U.S.\",\"volume\":\"1\"},\"kind\":\"FullCaseCitation\",\"spans\":{\"fullSpan\":{\"python\":[0,8],\"text\":\"1 U.S. 1\",\"utf16\":[0,8]},\"span\":{\"python\":[0,8],\"text\":\"1 U.S. 1\",\"utf16\":[0,8]},\"spanWithPincite\":{\"python\":[0,8],\"text\":\"1 U.S. 1\",\"utf16\":[0,8]}}},{\"correctedCitation\":\"Id.\",\"correctedFullCitation\":\"Id.\",\"correctedReporter\":null,\"groups\":{},\"kind\":\"IdCitation\",\"spans\":{\"fullSpan\":{\"python\":[11,19],\"text\":\"Id. at 2\",\"utf16\":[11,19]},\"span\":{\"python\":[11,19],\"text\":\"Id. at 2\",\"utf16\":[11,19]},\"spanWithPincite\":{\"python\":[11,19],\"text\":\"Id. at 2\",\"utf16\":[11,19]}}}],\"equality\":[[true,false],[false,true]],\"text\":\"1 U.S. 1.\\r\\nId. at 2.\"}",
+      "normalizedSha256": "1312467f87d661dba9c352d5ed65da704acf33c3e327156fb67267f7a4045883"
+    },
+    {
+      "id": "astral-context",
+      "workflowState": "audit",
+      "targetProof": null,
+      "payload": "{\"authorityGroups\":[[0,1]],\"citations\":[{\"correctedCitation\":\"1 U.S. 1\",\"correctedFullCitation\":\"1 U.S. 1 (scotus)\",\"correctedReporter\":\"U.S.\",\"groups\":{\"page\":\"1\",\"reporter\":\"U.S.\",\"volume\":\"1\"},\"kind\":\"FullCaseCitation\",\"spans\":{\"fullSpan\":{\"python\":[0,8],\"text\":\"1 U.S. 1\",\"utf16\":[0,8]},\"span\":{\"python\":[0,8],\"text\":\"1 U.S. 1\",\"utf16\":[0,8]},\"spanWithPincite\":{\"python\":[0,8],\"text\":\"1 U.S. 1\",\"utf16\":[0,8]}}},{\"correctedCitation\":\"Id.\",\"correctedFullCitation\":\"Id.\",\"correctedReporter\":null,\"groups\":{},\"kind\":\"IdCitation\",\"spans\":{\"fullSpan\":{\"python\":[12,20],\"text\":\"Id. at 2\",\"utf16\":[13,21]},\"span\":{\"python\":[12,20],\"text\":\"Id. at 2\",\"utf16\":[13,21]},\"spanWithPincite\":{\"python\":[12,20],\"text\":\"Id. at 2\",\"utf16\":[13,21]}}}],\"equality\":[[true,false],[false,true]],\"text\":\"1 U.S. 1. 😀 Id. at 2.\"}",
+      "normalizedSha256": "7ba641c1f98a65e92074dff03935cb071546a3889ad0d64cc123dbbc62de5585"
+    }
+  ],
+  "remainingCoverage": [
+    "cleaning-and-markup-mapping",
+    "annotation-diff-and-ambiguity",
+    "tokenizer-and-callback-injection",
+    "hash-and-model-identity",
+    "malformed-and-adversarial-inputs"
+  ]
+}
