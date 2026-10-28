@@ -230,6 +230,7 @@ export type ConfigurationDocument = ConfigurationSchema;
  * console.log(configurationJsonSchema().$ref) // #/$defs/@beep~1repo-docgen~1Configuration~1ConfigurationSchema
  * ```
  *
+ * @returns The draft 2020-12 JSON Schema document for `docgen.json`, with every referenced schema under `$defs`.
  * @category configuration
  * @since 0.0.0
  */
