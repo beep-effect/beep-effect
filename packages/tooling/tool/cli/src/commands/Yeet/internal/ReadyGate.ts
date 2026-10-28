@@ -38,7 +38,7 @@ import * as Console from "effect/Console";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
-import { dual, pipe } from "effect/Function";
+import { dual, flow, pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as Match from "effect/Match";
 import * as Num from "effect/Number";
@@ -47,6 +47,7 @@ import * as P from "effect/Predicate";
 import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { ghOutput } from "../../../internal/github/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { finalCheckRefusal, readFinalCheckReceipt } from "./FinalCheck.ts";
 import { FinalCheckRefreshVerdict } from "./FinalCheckRefresh.schemas.ts";
@@ -560,6 +561,22 @@ const recordInheritedThroughRest = (prNumber: number, entries: ReadonlyArray<Yee
     )
   );
 
+// The pull request author at flip time, so the fold can count the author's
+// own review submissions (thread replies) beside the rounds, never inside
+// them (ruling 81). A failed read leaves the flip row without one, which
+// excludes nothing.
+const readPullRequestAuthor = Effect.fn("Yeet.ReadyGate.readPullRequestAuthor")(function* (
+  context: RepoRunContext,
+  prNumber: number
+): Effect.fn.Return<O.Option<string>, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+  return yield* ghOutput({
+    args: ["pr", "view", `${prNumber}`, "--json", "author", "--jq", ".author.login"],
+    cwd: context.repoRoot,
+    label: "gh pr view author",
+    onFailure: (failure) => failure,
+  }).pipe(Effect.map(flow(Str.trim, O.liftPredicate(Str.isNonEmpty))), Effect.orElseSucceed(O.none<string>));
+});
+
 interface YeetReadyGateDependencies {
   readonly finalCheck?: (
     context: RepoRunContext,
@@ -577,6 +594,10 @@ interface YeetReadyGateDependencies {
     YeetCommandError,
     Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
   >;
+  readonly readAuthor?: (
+    context: RepoRunContext,
+    prNumber: number
+  ) => Effect.Effect<O.Option<string>, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>;
   readonly recordInherited?: (
     prNumber: number,
     entries: ReadonlyArray<YeetReadyInheritedRed>,
@@ -934,6 +955,7 @@ export const runYeetReadyGate = Effect.fn("Yeet.runYeetReadyGate")(function* (
       // The flip opens the rounds-to-ready window (ruling 81); a failed
       // record is one warning and never touches the flip.
       const flippedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
+      const author = yield* (dependencies.readAuthor ?? readPullRequestAuthor)(context, prNumber);
       yield* recordYeetReviewLaneRows(context.repoRoot, [
         ReviewLaneFlipRow.make({
           schemaVersion: YEET_REVIEW_LANE_SCHEMA_VERSION,
@@ -942,6 +964,7 @@ export const runYeetReadyGate = Effect.fn("Yeet.runYeetReadyGate")(function* (
           recordedAt: flippedAt,
           headSha: sameHead,
           at: flippedAt,
+          author,
         }),
       ]);
       // The head was pushed while the pull request was a draft, which

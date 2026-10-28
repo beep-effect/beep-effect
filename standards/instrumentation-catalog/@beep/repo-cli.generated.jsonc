@@ -3305,6 +3305,7 @@
     {"name":"Yeet.ProofShadow.inputDigest","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.ProofShadow.readChangedPackages","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.ProofShadow.readWorktreeChangedPaths","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"Yeet.ReadyGate.readPullRequestAuthor","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.ReviewLaneLedger.append","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.ReviewLaneLedger.appendNew","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.ReviewLaneLedger.load","owner":"@beep/repo-cli","family":"tooling","conforms":true},
