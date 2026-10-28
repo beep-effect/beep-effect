@@ -148,7 +148,8 @@ const makeEncodedStorage = Effect.fnUntraced(function* (
         headers: encodeJson(envelope.headers),
         trace_id: envelope.traceId ?? null,
         span_id: envelope.spanId ?? null,
-        sampled: envelope.sampled === undefined ? null : supportsBooleans ? envelope.sampled : envelope.sampled ? 1 : 0,
+        // beep: DuckDB stores `sampled` as an integer flag; upstream's `supportsBooleans` switch is always false here.
+        sampled: envelope.sampled === undefined ? null : envelope.sampled ? 1 : 0,
         request_id: envelope.requestId,
         reply_id: null,
         deliver_at,
@@ -197,8 +198,6 @@ const makeEncodedStorage = Effect.fnUntraced(function* (
     payload: reply._tag === "WithExit" ? encodeJson(reply.exit) : encodeJson(reply.values),
     sequence: reply._tag === "Chunk" ? reply.sequence : null,
   });
-
-  const supportsBooleans = false;
 
   type MessageResult = { readonly envelope: Envelope.Encoded; readonly lastSentReply: O.Option<Reply.Encoded> };
   // beep: Effect Match and schema JSON codecs replace upstream switch/native JSON row decoding.
@@ -279,20 +278,18 @@ const makeEncodedStorage = Effect.fnUntraced(function* (
       Match.orElseAbsurd
     );
 
-  const sqlFalse = sql.literal(supportsBooleans ? "FALSE" : "0");
-  const sqlTrue = sql.literal(supportsBooleans ? "TRUE" : "1");
+  // beep: integer flags, as above.
+  const sqlFalse = sql.literal("0");
+  const sqlTrue = sql.literal("1");
 
-  // Read SQLite IDs as text to avoid rounding on number-returning drivers
-  // such as Durable Objects.
-  const idsAsText = true;
-  const idAs = (column: string, alias: string) =>
-    idsAsText ? `CAST(${column} AS TEXT) AS ${alias}` : `${column} AS ${alias}`;
+  // beep: always read BIGINT ids as text so 64-bit snowflakes above 2^53 round-trip exactly
+  // (upstream's `idsAsText` switch is always true on this path).
+  const idAs = (column: string, alias: string) => `CAST(${column} AS TEXT) AS ${alias}`;
   const replyJoinColumns = "r.kind as reply_kind, r.payload as reply_payload, r.sequence as reply_sequence";
-  const messageColumns = idsAsText
-    ? `${idAs("m.id", "id")}, m.message_id, m.shard_id, m.entity_type, m.entity_id, m.kind, m.tag, m.payload, ` +
-      `m.headers, m.trace_id, m.span_id, m.sampled, m.processed, ${idAs("m.request_id", "request_id")}, ` +
-      `${idAs("m.reply_id", "reply_id")}, ${idAs("m.last_reply_id", "last_reply_id")}, m.last_read, m.deliver_at`
-    : "m.*";
+  const messageColumns =
+    `${idAs("m.id", "id")}, m.message_id, m.shard_id, m.entity_type, m.entity_id, m.kind, m.tag, m.payload, ` +
+    `m.headers, m.trace_id, m.span_id, m.sampled, m.processed, ${idAs("m.request_id", "request_id")}, ` +
+    `${idAs("m.reply_id", "reply_id")}, ${idAs("m.last_reply_id", "last_reply_id")}, m.last_read, m.deliver_at`;
 
   const idColumn = sql.literal(idAs("id", "id"));
   const replyColumns = sql.literal(`${idAs("id", "id")}, kind, ${idAs("request_id", "request_id")}, payload, sequence`);

@@ -79,12 +79,10 @@ const makeAckRetrySchedule = (lockExpiration: Duration.Input) =>
 // Internal signal used by the factory to tell a store that a taken element
 // cannot ever be processed (its stored payload fails to decode) and must be
 // dead-lettered instead of retried.
-class DeadLetter {
-  readonly _tag = "~effect/persistence/PersistedQueue/DeadLetter";
+// beep: type-only — upstream `PersistedQueue.make` constructs dead letters; this store only matches them by tag.
+interface DeadLetter {
+  readonly _tag: "~effect/persistence/PersistedQueue/DeadLetter";
   readonly cause: Cause.Cause<unknown>;
-  constructor(cause: Cause.Cause<unknown>) {
-    this.cause = cause;
-  }
 }
 
 const isDeadLetter = (u: unknown): u is DeadLetter => P.isTagged(u, "~effect/persistence/PersistedQueue/DeadLetter");
@@ -328,7 +326,8 @@ export const makeStoreSql: (
             yield* Effect.yieldNow;
             nudge.closeUnsafe();
             const lock = yield* crypto.randomUUIDv4();
-            const results = takers.current === 0 ? [] : yield* poll(takers.current, stringLiteral(lock));
+            // beep: no zero-takers short-circuit; a taker leaving mid-iteration polls `LIMIT 0`, which returns no rows.
+            const results = yield* poll(takers.current, stringLiteral(lock));
             if (results.length === 0) {
               yield* Effect.race(Effect.sleep(pollInterval), nudge.await);
               continue;
