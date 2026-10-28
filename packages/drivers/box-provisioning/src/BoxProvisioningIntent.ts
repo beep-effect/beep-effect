@@ -536,7 +536,7 @@ export class BoxCollaborationIntent extends S.Opaque<BoxCollaborationIntent, { r
  *
  * ```ts
  * import { BoxLogicalKey, BoxWebhookIntent } from "@beep/box-provisioning/BoxProvisioningIntent"
- * import { HttpsUrl } from "@beep/schema"
+ * import { HttpsUrl } from "@beep/schema/URL"
  *
  * const webhook = BoxWebhookIntent.make({
  *   address: HttpsUrl.make("https://example.test/box/events"),

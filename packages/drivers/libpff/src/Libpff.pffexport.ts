@@ -1,6 +1,8 @@
 /**
  * Real pffexport-backed PST archive export engine.
  *
+ * **Details**
+ *
  * Runs the pffexport CLI sidecar, walks every mode-derived target tree,
  * assembles deterministic EML child artifacts, and writes a JSONL metadata
  * record per exported item so folder/message/attachment relationships survive
