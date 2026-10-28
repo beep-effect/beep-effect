@@ -13,6 +13,10 @@
  * - a defect, plain and verbose (`graft deep status` with `HOME` unset dies on `Config.String("HOME")`);
  * - EPIPE: `--completions zsh | head -c1`, which must print the `[beep-cli] exiting with code` drain line;
  * - the quality fast path (`check` outside a repository) and the ci fast path (`ci`, `ci nosuch`);
+ * - a typed failure whose message carries a line that starts with `::` (`check` run from a directory whose name
+ *   holds a newline and `::warning::`), so the kit's workflow-command neutralization shows up in the matrix;
+ * - an interrupt: `yeet inbox append --from-stdin` blocks on an open stdin and gets SIGINT after
+ *   `INTERRUPT_DELAY_MS`, long enough for the bin to reach its runner;
  * - every case with and without `GITHUB_ACTIONS=true`.
  *
  * Each child runs with a cleared environment (`PATH`, a scratch `HOME`, `TERM=dumb`). Before comparing, the
@@ -23,6 +27,9 @@
  *
  * - `workflow-command-neutralized`: the kit's report puts a zero-width space in front of a report line that
  *   starts with `::` or `##`, so a runner never reads it as a workflow command. Equal once U+200B is removed.
+ * - `interrupt-report-dropped`: exit 130 on both sides, stdout equal, and the head writes nothing on stderr where
+ *   the baseline wrote the one squashed-interrupt line `All fibers interrupted without error`. The kit leaves an
+ *   interrupt-only cause unrendered; the old teardown renderer squashed it into that message.
  *
  * Usage (from the repo root):
  *
@@ -36,6 +43,7 @@ import { NodeRuntime, NodeServices } from "@effect/platform-node";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Console from "effect/Console";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
@@ -58,7 +66,18 @@ const flagValue = (flag: string): O.Option<string> =>
     O.flatMap((index) => A.get(process.argv, index + 1))
   );
 
-const Fixture = S.Literals(["empty", "version-sync"]);
+const Fixture = S.Literals(["empty", "version-sync", "workflow-command"]);
+type Fixture = typeof Fixture.Type;
+
+/** The `workflow-command` directory name puts a line starting with `::` into any message that quotes the cwd. */
+const FIXTURE_DIRS: { readonly [K in Fixture]: string } = {
+  empty: "empty",
+  "version-sync": "version-sync",
+  "workflow-command": "wf\n::warning::injected",
+};
+
+/** How long the interrupt case waits before SIGINT: the bin's module loading has to finish first. */
+const INTERRUPT_DELAY_MS = 6000;
 
 const CaseSpec = S.Struct({
   id: S.String,
@@ -66,6 +85,7 @@ const CaseSpec = S.Struct({
   fixture: Fixture,
   home: S.Boolean,
   pipeHead: S.Boolean,
+  interrupt: S.Boolean,
 });
 type CaseSpec = typeof CaseSpec.Type;
 
@@ -88,7 +108,7 @@ const Report = S.Struct({
 const ReportJson = S.fromJsonString(Report, { space: 2 });
 
 const spec = (id: string, argv: ReadonlyArray<string>, extra: Partial<Omit<CaseSpec, "id" | "argv">> = {}) =>
-  CaseSpec.make({ id, argv, fixture: "empty", home: true, pipeHead: false, ...extra });
+  CaseSpec.make({ id, argv, fixture: "empty", home: true, pipeHead: false, interrupt: false, ...extra });
 
 const MATRIX: ReadonlyArray<CaseSpec> = [
   spec("version", ["--version"]),
@@ -103,6 +123,8 @@ const MATRIX: ReadonlyArray<CaseSpec> = [
   spec("quality-fast-path-failure", ["check"]),
   spec("ci-fast-path-help", ["ci"]),
   spec("ci-fast-path-usage-error", ["ci", "nosuch"]),
+  spec("workflow-command-in-message", ["check"], { fixture: "workflow-command" }),
+  spec("interrupt", ["yeet", "inbox", "append", "--from-stdin"], { fixture: "version-sync", interrupt: true }),
 ];
 
 const NORMALIZATION = [
@@ -144,20 +166,28 @@ const runCase = Effect.fn("CliFailureRenderDifferential.runCase")(function* (
     ...(githubActions ? { GITHUB_ACTIONS: "true" } : {}),
   };
   const bin = `${repoRoot}/${BIN}`;
+  const cwd = `${tmp}/${FIXTURE_DIRS[item.fixture]}`;
   const command = item.pipeHead
     ? ChildProcess.make(
         "bash",
         ["-c", 'set -o pipefail; "$0" "$@" | head -c1 >/dev/null', process.execPath, bin, ...item.argv],
-        { cwd: `${tmp}/${item.fixture}`, env, extendEnv: false }
+        { cwd, env, extendEnv: false }
       )
-    : ChildProcess.make(process.execPath, [bin, ...item.argv], {
-        cwd: `${tmp}/${item.fixture}`,
-        env,
-        extendEnv: false,
-      });
+    : ChildProcess.make(process.execPath, [bin, ...item.argv], { cwd, env, extendEnv: false });
   const [stdout, stderr, exitCode] = yield* Effect.scoped(
     Effect.flatMap(spawner.spawn(command), (handle) =>
-      Effect.all([collect(handle.stdout), collect(handle.stderr), handle.exitCode], { concurrency: "unbounded" })
+      Effect.all(
+        [
+          collect(handle.stdout),
+          collect(handle.stderr),
+          handle.exitCode,
+          // The child's stdin stays open, so the interrupt case blocks until the signal arrives.
+          item.interrupt
+            ? Effect.ignore(Effect.delay(handle.kill({ killSignal: "SIGINT" }), Duration.millis(INTERRUPT_DELAY_MS)))
+            : Effect.void,
+        ],
+        { concurrency: "unbounded" }
+      )
     )
   );
   const clean = normalize(tmp);
@@ -173,12 +203,17 @@ const runCase = Effect.fn("CliFailureRenderDifferential.runCase")(function* (
 
 const ZERO_WIDTH_SPACE = "​";
 
+const INTERRUPT_LINE = "All fibers interrupted without error\n";
+
 const classify = (
   base: CaseResult,
   head: CaseResult
-): "identical" | "workflow-command-neutralized" | "UNCLASSIFIED" => {
+): "identical" | "workflow-command-neutralized" | "interrupt-report-dropped" | "UNCLASSIFIED" => {
   if (base.exitCode === head.exitCode && base.stdout === head.stdout && base.stderr === head.stderr) {
     return "identical";
+  }
+  if (base.exitCode === 130 && head.exitCode === 130 && base.stdout === head.stdout) {
+    return base.stderr === INTERRUPT_LINE && head.stderr === "" ? "interrupt-report-dropped" : "UNCLASSIFIED";
   }
   const strip = Str.replaceAll(ZERO_WIDTH_SPACE, "");
   return base.exitCode === head.exitCode && base.stdout === strip(head.stdout) && base.stderr === strip(head.stderr)
@@ -193,6 +228,7 @@ const program = Effect.gen(function* () {
   yield* fs.makeDirectory(path.join(tmp, "empty"));
   yield* fs.makeDirectory(path.join(tmp, "home"));
   yield* fs.makeDirectory(path.join(tmp, "version-sync"));
+  yield* fs.makeDirectory(path.join(tmp, FIXTURE_DIRS["workflow-command"]));
   yield* fs.writeFileString(path.join(tmp, "version-sync", "package.json"), '{"name":"x","private":true}\n');
   yield* fs.writeFileString(path.join(tmp, "version-sync", "bun.lock"), "");
   // The `empty` cases rely on repo-root discovery failing. A `.git` or `bun.lock` in any ancestor of the scratch

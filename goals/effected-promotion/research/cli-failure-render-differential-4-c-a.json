@@ -231,6 +231,38 @@
       "exitCode": 1,
       "stdout": "DESCRIPTION\n  Continuous integration helper commands\n\nUSAGE\n  beep-cli ci <subcommand> [flags]\n\nGLOBAL FLAGS\n  --help, -h                                                          Show help information\n  --version, -v                                                       Show version information\n  --wizard                                                            Start wizard mode for a command\n  --completions <bash|zsh|fish|powershell|sh|pwsh>                    Print shell completion script (choices: bash, zsh, fish, powershell, sh, pwsh)\n  --log-level <all|trace|debug|info|warn|warning|error|fatal|none>    Sets the minimum log level (choices: all, trace, debug, info, warn, warning, error, fatal, none)\n\nSUBCOMMANDS\n  patterns            Check the pre-runtime CI pattern projection, or regenerate with --write\n  change-profile      Export goals-only and desktop Rust lane profiles\n  job-env             Append the trusted event's explicit environment inputs to GITHUB_ENV\n  runner-resources    Measure host resources around a command while preserving its status\n  ruleset             Read-only ruleset drift check; --capture updates the local snapshot\n  settings            Read-only desktop release environment check\n  held-group          Detect a stalled main Check concurrency group without cancelling runs\n  pr-size             Replace contradictory size labels on a same-repository PR\n  workflow-lint       Lint trusted cache writers, push concurrency and artifact retention\n  admission           Decide heavy-matrix admission for the current GitHub event\n  append-turbo-summary Append a Turbo run summary to GitHub step summary or stdout\n  dependency-review   Review dependency changes between two commits, excluding declared fixture manifests\n  lane                Run one check.yml CI lane body exactly as hosted CI does\n  lane-timings        Collect recent hosted lane timings or a bounded admission census with attempt filtering\n  local               Run the locally-runnable CI battery from the same lane definitions as hosted CI\n  rerun-runner-loss   Re-run the jobs of a completed workflow run that lost their runner\n",
       "stderr": "\nERROR\n  Unknown subcommand \"nosuch\" for \"beep-cli ci\"\n"
+    },
+    {
+      "id": "workflow-command-in-message",
+      "argv": ["check"],
+      "githubActions": false,
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": "Could not find repository root (looked for .git, bun.lock) starting from \"<tmp>/wf\n::warning::injected\"\n"
+    },
+    {
+      "id": "workflow-command-in-message",
+      "argv": ["check"],
+      "githubActions": true,
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": "Could not find repository root (looked for .git, bun.lock) starting from \"<tmp>/wf\n::warning::injected\"\n"
+    },
+    {
+      "id": "interrupt",
+      "argv": ["yeet", "inbox", "append", "--from-stdin"],
+      "githubActions": false,
+      "exitCode": 130,
+      "stdout": "",
+      "stderr": "All fibers interrupted without error\n"
+    },
+    {
+      "id": "interrupt",
+      "argv": ["yeet", "inbox", "append", "--from-stdin"],
+      "githubActions": true,
+      "exitCode": 130,
+      "stdout": "",
+      "stderr": "All fibers interrupted without error\n"
     }
   ]
 }
