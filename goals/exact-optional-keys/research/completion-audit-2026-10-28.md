@@ -44,8 +44,27 @@ verdict. A merge and green required checks do not replace that declared proof.
 
 ## Completion route
 
-A documentation-only closeout PR will retain this audit and the fresh reflection,
+A closeout PR will retain this audit and the fresh reflection,
 name itself as the final PR, and declare its own Yeet verdict. Its exact-head
 readiness and merge must pass the existing completion verifier. Initiative
 status stays active until the derived completion receipt verifies. The original
 implementation and its historical proof gap remain recorded separately.
+
+## Rule recall repair
+
+An additional acceptance probe found that the existing rule missed
+`import * as Codec from "effect/Schema"; Codec.optional(Codec.String)` and
+incorrectly flagged `const S = { optional: ... }; S.optional(1)`. The previous
+fixtures used only conventional namespace names and did not exercise those cases.
+
+The rule now binds namespace member references to an actual `effect/Schema`
+namespace import, including type-only imports. New fixtures cover arbitrary
+aliases in all three banned value forms, computed access, generic type positions,
+and type-only namespace imports; local S/Schema objects and exact Codec forms
+remain legal. Namespace binding uses Biome GritQL syntax nodes and structural
+import patterns. Sources: [Biome GritQL reference](https://biomejs.dev/reference/gritql/)
+and [Biome JavaScript grammar](https://github.com/biomejs/biome/blob/main/xtask/codegen/js.ungram).
+
+The expanded focused rule suite passes (22 invalid references, zero valid-source
+hits). `beep quality package-verify @beep/lint-rules` passes the complete package
+audit and docgen (73.2 seconds and 6.4 seconds respectively).

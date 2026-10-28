@@ -25,26 +25,30 @@ pattern retired_member() {
   }
 }
 
-pattern schema_namespace() {
-  or {
-    `S`,
-    `Schema`
+// Match the import binding rather than assuming the conventional S/Schema name.
+pattern schema_reference($ns) {
+  within JsModule() where {
+    $program <: contains or {
+      `import * as $ns from "effect/Schema"`,
+      `import type * as $ns from "effect/Schema"`
+    }
   }
 }
 
 or {
   `$ns.$member` as $ref where {
-    $ns <: schema_namespace(),
     $member <: retired_member(),
+    $ref <: schema_reference($ns),
     register_diagnostic(span=$ref, message="Rule: schema fields use exact optional keys (EF-40). Why: `S.optional`, `S.withDecodingDefault` and `S.OptionFromOptional` admit a present key holding `undefined`, put `| undefined` back into the field type under exactOptionalPropertyTypes, and `S.optional`'s JSON Schema advertises a `null` the decoder rejects. Fix: use `S.optionalKey`, `S.withDecodingDefaultKey` or `S.OptionFromOptionalKey` (codemod: `bun run beep lint schema-parity-codemod --rule exact-optional-keys --write`); a field whose decoder really receives `undefined` from third-party code is `S.optionalKey(S.UndefinedOr(X))`.", severity="error")
   },
-  TsQualifiedName() as $ref where {
-    $ref <: r"^(?:S|Schema)\s*\.\s*(?:optional|withDecodingDefault|OptionFromOptional)$",
+  TsQualifiedName(left=$ns, right=$member) as $ref where {
+    $member <: r"^(?:optional|withDecodingDefault|OptionFromOptional)$",
+    $ref <: schema_reference($ns),
     register_diagnostic(span=$ref, message="Rule: schema fields use exact optional keys (EF-40). Why: this type mirrors `S.optional`, `S.withDecodingDefault` or `S.OptionFromOptional`, which admit a present key holding `undefined`. Fix: reference `S.optionalKey`, `S.withDecodingDefaultKey` or `S.OptionFromOptionalKey`.", severity="error")
   },
   `$ns[$key]` as $ref where {
-    $ns <: schema_namespace(),
     $key <: r"^[\"'](?:optional|withDecodingDefault|OptionFromOptional)[\"']$",
+    $ref <: schema_reference($ns),
     register_diagnostic(span=$ref, message="Rule: schema fields use exact optional keys (EF-40). Why: computed access to an undefined-admitting optionality member. Fix: use `S.optionalKey`, `S.withDecodingDefaultKey` or `S.OptionFromOptionalKey`.", severity="error")
   },
   JsImport() as $decl where {

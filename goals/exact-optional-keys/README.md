@@ -31,10 +31,13 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P3: PR #2145 at the merge gate; `proposedCloseout` completed-retained ships in the same PR.
+P3: implementation PR #2145 is merged. A closeout PR repairs arbitrary-alias
+rule recall and supplies retained readiness evidence; operative lifecycle stays active.
 
 ## Latest Evidence
 
+- Completion audit: [`research/completion-audit-2026-10-28.md`](./research/completion-audit-2026-10-28.md).
+- Closeout reflection: [`history/reflections/2026-10-28-codex.md`](./history/reflections/2026-10-28-codex.md).
 - Grounding: [`research/optional-vs-optional-key.md`](./research/optional-vs-optional-key.md).
 - Exceptions: [`research/classification-ledger.md`](./research/classification-ledger.md).
 - Exhaustiveness and CI proof: [`research/verification.md`](./research/verification.md).

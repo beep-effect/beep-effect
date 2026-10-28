@@ -75,3 +75,14 @@
 - Response: preserve the historical gap and obtain a new closeout PR's retained
   exact-head readiness evidence. Keep operative lifecycle active until verified.
 - Prevention: archive every declared local completion artifact before retirement.
+
+## 2026-10-28: conventional namespace fixtures missed import ownership defects
+
+- Doing: auditing EF-40 against the any-alias acceptance contract.
+- Evidence: the existing focused rule suite passed, but the real Biome harness
+  returned zero diagnostics for `Codec.optional` imported from `effect/Schema`
+  and one diagnostic for a local object named `S` with an `optional` method.
+- Fix: bind namespace references to their `effect/Schema` import and add recall
+  and precision fixtures for both cases before publishing the closeout PR.
+- Prevention: test arbitrary import aliases and unrelated conventional names
+  whenever a structural rule claims to recognize an imported API.
