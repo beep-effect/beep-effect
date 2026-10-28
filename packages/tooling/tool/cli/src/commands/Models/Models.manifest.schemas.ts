@@ -20,6 +20,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { SectionKey } from "@beep/managed-section/Section";
 import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
@@ -710,7 +711,9 @@ export const Locator = LiteralKit([
 ])
   .toTaggedUnion("_tag")({
     "md-generated-block": {
-      blockId: S.NonEmptyString,
+      // The id is spelled into `<!-- beep-models:begin <id> -->`, so it is a
+      // managed-section key: a malformed id fails at decode, not as a missing block.
+      blockId: SectionKey,
       filter: BindingFilter,
       includeSuperseded: S.Boolean.pipe(S.withDecodingDefaultKey(Effect.succeed(false))),
     },

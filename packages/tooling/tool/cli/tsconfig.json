@@ -114,6 +114,9 @@
       "path": "../../../foundation/modeling/lockfiles/tsconfig.json"
     },
     {
+      "path": "../../../foundation/modeling/managed-section/tsconfig.json"
+    },
+    {
       "path": "../../../foundation/modeling/markdown/tsconfig.json"
     },
     {
