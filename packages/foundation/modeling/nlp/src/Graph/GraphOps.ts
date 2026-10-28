@@ -1,6 +1,8 @@
 /**
  * GraphOps - generic categorical operations over `effect/Graph` directed graphs.
  *
+ * **Details**
+ *
  * Structure-preserving and structure-querying operations with mathematical
  * foundations: functorial `mapNodes`/`mapEdges`/`bimap`, monoidal folds,
  * indexed search, effectful traversals, and streaming for large graphs. Graphs

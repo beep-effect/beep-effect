@@ -17,6 +17,12 @@ export {
   SectionFileError,
 } from "./ManagedSection.ts";
 export { PlacedSection, Section, SectionId, SectionKey } from "./Section.ts";
-export { type Eol, SectionDialect, SectionRenderError } from "./SectionDialect.ts";
+export {
+  type Eol,
+  LiteralMarkerDialect,
+  SectionDialect,
+  SectionMarkers,
+  SectionRenderError,
+} from "./SectionDialect.ts";
 export { SectionDocument, SectionParseError, type SectionReconciliation } from "./SectionDocument.ts";
 export { CheckOutcome, SyncOutcome } from "./SectionOutcome.ts";

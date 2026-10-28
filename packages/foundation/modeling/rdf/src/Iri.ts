@@ -861,7 +861,7 @@ const iriChecks = makeNonEmptyReferenceChecks("IRI", "IRI", "An RFC 3987 IRI.", 
  *
  * ```ts import.meta.vitest name="Decode absolute IRI reference"
  * import * as S from "effect/Schema"
- * import { IRIReference } from "@beep/rdf"
+ * import { IRIReference } from "@beep/rdf/Iri"
  *
  * const decoded = S.decodeUnknownSync(IRIReference)("https://example.org/resource")
  * decoded // => "https://example.org/resource"
@@ -902,7 +902,7 @@ export type IRIReference = typeof IRIReference.Type;
  *
  * ```ts import.meta.vitest name="Decode relative IRI path"
  * import * as S from "effect/Schema"
- * import { RelativeIRIReference } from "@beep/rdf"
+ * import { RelativeIRIReference } from "@beep/rdf/Iri"
  *
  * const decoded = S.decodeUnknownSync(RelativeIRIReference)("/path/to/resource")
  * decoded // => "/path/to/resource"
@@ -942,7 +942,7 @@ export type RelativeIRIReference = typeof RelativeIRIReference.Type;
  *
  * ```ts import.meta.vitest name="Decode absolute IRI"
  * import * as S from "effect/Schema"
- * import { AbsoluteIRI } from "@beep/rdf"
+ * import { AbsoluteIRI } from "@beep/rdf/Iri"
  *
  * const decoded = S.decodeUnknownSync(AbsoluteIRI)("https://example.org")
  * decoded // => "https://example.org"
@@ -983,7 +983,7 @@ export type AbsoluteIRI = typeof AbsoluteIRI.Type;
  *
  * ```ts import.meta.vitest name="Decode IRI with fragment"
  * import * as S from "effect/Schema"
- * import { IRI } from "@beep/rdf"
+ * import { IRI } from "@beep/rdf/Iri"
  *
  * const decoded = S.decodeUnknownSync(IRI)("https://example.org/page#section")
  * decoded // => "https://example.org/page#section"

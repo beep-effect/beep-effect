@@ -1,6 +1,8 @@
 /**
  * Handoff - the product-neutral generic graph IR emitted for downstream consumers.
  *
+ * **Details**
+ *
  * The versioned handoff contract (chunks, mentions, entities, relations with
  * spans + PROV-O provenance) that `@beep/nlp` produces and the
  * `ip-law-knowledge-graph` initiative (and other consumers) decode.

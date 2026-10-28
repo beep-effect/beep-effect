@@ -47,6 +47,10 @@
   ],
   "opsScripts": [
     {
+      "path": "ops/check-census-adoption-parity.ts",
+      "purpose": "3-A5 parity: frozen copies of the legacy CheckCensus tsconfig readers compared with the adopted TsconfigLoader reads over every census package, plus a timing-stripped census report normalizer."
+    },
+    {
       "path": "ops/cli-failure-render-differential.ts",
       "purpose": "Wave 4-C-A differential: repo-cli bin stdout, stderr and exit code over a failure matrix (usage, reported exit, typed, defect, EPIPE, fast paths, log line, GITHUB_ACTIONS) before and after the CliRuntime.main switch."
     },
@@ -81,6 +85,10 @@
     {
       "path": "ops/lockfiles-oracle.ts",
       "purpose": "Wave 3-5 oracle: the root bun.lock read by Lockfile.parse against bun pm ls, plus the fixture corpus."
+    },
+    {
+      "path": "ops/managed-section-adoption-parity.ts",
+      "purpose": "R8 parity: the Observability standard section, the Explore Atlas projection and every Models generated block fingerprinted before and after the @beep/managed-section switch, plus probes for each intended shift."
     },
     {
       "path": "ops/markdown-bench.ts",

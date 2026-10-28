@@ -1,6 +1,8 @@
 /**
  * Graph node & edge schemas for the NLP text graph.
  *
+ * **Details**
+ *
  * Schema-first domain types for the text-graph IR: structural nodes
  * ({@link TextNode}/{@link TextEdge}), the {@link NLPAnalysis} summary, and the
  * linguistic-annotation node classes ({@link POSNode}, {@link EntityNode},

@@ -12,7 +12,7 @@
  * **Example** (Fold number sum monoid)
  *
  * ```ts import.meta.vitest name="Fold number sum monoid"
- * import { Algebra } from "@beep/nlp"
+ * import * as Algebra from "@beep/nlp/Algebra"
  *
  * Algebra.Monoid.fold(Algebra.Monoid.NumberSum)([1, 2, 3]) // => 6
  * ```
@@ -27,7 +27,7 @@ export * as Algebra from "./Algebra/index.ts";
  * **Example** (Make document identifier)
  *
  * ```ts
- * import { Core } from "@beep/nlp"
+ * import * as Core from "@beep/nlp/Core"
  *
  * console.log(Core.DocumentId.make("doc-a"))
  * ```
@@ -42,7 +42,7 @@ export * as Core from "./Core/index.ts";
  * **Example** (Log text node schema)
  *
  * ```ts
- * import { Graph } from "@beep/nlp"
+ * import * as Graph from "@beep/nlp/Graph"
  *
  * console.log(Graph.Schema.TextNode)
  * ```
@@ -58,7 +58,7 @@ export * as Graph from "./Graph/index.ts";
  * **Example** (Log annotated document contract)
  *
  * ```ts
- * import { Handoff } from "@beep/nlp"
+ * import * as Handoff from "@beep/nlp/Handoff"
  *
  * console.log(Handoff.Contract.AnnotatedDocument)
  * ```
@@ -73,7 +73,7 @@ export * as Handoff from "./Handoff/index.ts";
  * **Example** (Tokenize identifier text)
  *
  * ```ts import.meta.vitest name="Tokenize identifier text"
- * import { IdentifierText } from "@beep/nlp"
+ * import * as IdentifierText from "@beep/nlp/IdentifierText"
  *
  * const result = IdentifierText.tokens("myVariable")
  * result // => ["my", "variable"]
@@ -89,7 +89,7 @@ export * as IdentifierText from "./IdentifierText.ts";
  * **Example** (Check kind containment)
  *
  * ```ts import.meta.vitest name="Check kind containment"
- * import { Ontology } from "@beep/nlp"
+ * import * as Ontology from "@beep/nlp/Ontology"
  *
  * Ontology.Kind.canContain("Document", "Sentence") // => true
  * ```
@@ -104,7 +104,7 @@ export * as Ontology from "./Ontology/index.ts";
  * **Example** (Normalize path phrase)
  *
  * ```ts import.meta.vitest name="Normalize path phrase"
- * import { PathText } from "@beep/nlp"
+ * import * as PathText from "@beep/nlp/PathText"
  *
  * const normalized = PathText.normalizePathPhrase("src\\utils")
  * normalized // => "src/utils"
@@ -120,7 +120,7 @@ export * as PathText from "./PathText.ts";
  * **Example** (Normalize question text)
  *
  * ```ts import.meta.vitest name="Normalize question text"
- * import { QueryText } from "@beep/nlp"
+ * import * as QueryText from "@beep/nlp/QueryText"
  *
  * const normalized = QueryText.normalizeQuestion("  hello   world  ")
  * normalized // => "hello world"
@@ -136,7 +136,7 @@ export * as QueryText from "./QueryText.ts";
  * **Example** (Ordered dedupe variants)
  *
  * ```ts import.meta.vitest name="Ordered dedupe variants"
- * import { VariantText } from "@beep/nlp"
+ * import * as VariantText from "@beep/nlp/VariantText"
  *
  * const deduped = VariantText.orderedDedupe(["foo", "bar", "foo"])
  * deduped // => ["foo", "bar"]

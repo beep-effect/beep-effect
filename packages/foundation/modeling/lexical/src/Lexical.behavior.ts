@@ -1,6 +1,8 @@
 /**
  * Pure, escaping-free node behavior for serialized Lexical state.
  *
+ * **Details**
+ *
  * This module owns the plain-text projection of the node tree — the "signal"
  * read off a node, distinct from the Md ↔ Lexical conversions in
  * `Lexical.codec.ts`. It imports the schema model but carries no schema of its
