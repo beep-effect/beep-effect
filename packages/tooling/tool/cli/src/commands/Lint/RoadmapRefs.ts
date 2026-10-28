@@ -22,6 +22,7 @@ import { LiteralKit } from "@beep/schema";
 import { A, thunkEmptyStr } from "@beep/utils";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { flow, pipe } from "effect/Function";
@@ -286,6 +287,10 @@ const phaseSnapshotFinding = Effect.fn("RoadmapRefs.phaseSnapshotFinding")(funct
 /**
  * Verifies roadmap packet links exist and reports goal phase-count drift.
  *
+ * **Details**
+ *
+ * The roadmap is read from `repoRootOverride` when it is `Some` and from the checkout found by `findRepoRoot()` otherwise.
+ *
  * **Example** (Verify Effect lint runner)
  *
  * ```ts
@@ -297,10 +302,13 @@ const phaseSnapshotFinding = Effect.fn("RoadmapRefs.phaseSnapshotFinding")(funct
  * @category commands
  * @since 0.0.0
  */
-export const runRoadmapRefsLint = Effect.fn(function* () {
+export const runRoadmapRefsLint = Effect.fn(function* (repoRootOverride: O.Option<string> = O.none()) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const repoRoot = yield* findRepoRoot();
+  const repoRoot = yield* O.match(repoRootOverride, {
+    onNone: () => findRepoRoot(),
+    onSome: flow(path.resolve, Effect.succeed),
+  });
   const roadmapPath = path.join(repoRoot, ROADMAP_PATH);
   const raw = yield* fs.readFileString(roadmapPath);
   const blocking = A.empty<RoadmapPolicyFinding>();
@@ -361,6 +369,13 @@ export const runRoadmapRefsLint = Effect.fn(function* () {
  * @category commands
  * @since 0.0.0
  */
-export const lintRoadmapRefsCommand = Command.make("roadmap-refs", {}, runRoadmapRefsLint).pipe(
-  Command.withDescription("Verify roadmap goal and exploration links resolve to existing targets")
-);
+export const lintRoadmapRefsCommand = Command.make(
+  "roadmap-refs",
+  {
+    repoRoot: Flag.String("repo-root").pipe(
+      Flag.withDescription("Repository root whose docs/ROADMAP.md is checked (default: the enclosing checkout)"),
+      Flag.optional
+    ),
+  },
+  ({ repoRoot }) => runRoadmapRefsLint(repoRoot)
+).pipe(Command.withDescription("Verify roadmap goal and exploration links resolve to existing targets"));
