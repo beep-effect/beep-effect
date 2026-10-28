@@ -17,3 +17,8 @@ with `quality jsdoc-ratchet --regenerate` still active. The owned run was
 interrupted and its processes exited before taking the documented hosted-CI
 fallback. A diff-scoped inventory or reusable exact-input receipt would avoid
 this full-repository scan for a packet-only update.
+
+The later final-check coverage gate also exceeded ten minutes (10m06s). Its
+original receipt is retained at `.beep/tsrs-closeout-before-coverage-skip.json`;
+all other gates passed on that head. The local skip and the same-head policy
+and Fallow reuse are recorded in the packet and PR body.

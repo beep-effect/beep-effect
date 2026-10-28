@@ -58,3 +58,25 @@ Effect Vitest and Oxlint. No failing check was converted to a pass.
 The branch uses the documented direct push and draft-PR fallback. Local
 `cheap-gates` replay is skipped for the final receipt with this reason; hosted CI
 must still pass before merge.
+
+## Final-check coverage and retained results
+
+On head `56a6d97ff45484315df37891a34e5c6986f85aa3`, the final-check
+coverage gate was interrupted after 10m06s under the constrained-compute rule.
+Its process tree exited. The original tool-produced receipt is retained at
+`.beep/tsrs-closeout-before-coverage-skip.json`. It records passing
+expectation-rewrite, lint-policy, lint, repo-sanity, scoped Check, docgen and
+Fallow gates, plus the interrupted coverage result.
+
+The passing final receipt for that head explicitly skips cheap-gates and
+coverage for constrained compute, and reuses the retained receipt's passed
+lint-policy and Fallow results from the same head. These are local skips, not
+hosted successes. The PR body records them. Hosted required checks still gate
+merge.
+
+`yeet ready` added reviewer-trigger commit `43be9bcde6a1`; both commits have
+tree `8a1e1355e95f862b5601369a5afe3018cc6ed30c`. Review then found a detached
+Decision Log table row and requested these coverage facts in the packet. Both
+findings are addressed together. The review-fix head must receive its own
+final-check receipt, hosted checks and a monitor started after its final push.
+Historical receipts remain evidence of what ran on their named heads.
