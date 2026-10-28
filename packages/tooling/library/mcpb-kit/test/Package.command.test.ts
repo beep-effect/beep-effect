@@ -77,7 +77,7 @@ it.layer(commandEnvironment, { concurrent: false, timeout: "5 seconds" })("MCPB 
     yield* fs.makeDirectory(nativeDir, { recursive: true });
     yield* fs.writeFileString(
       `${nativeDir}/package.json`,
-      yield* encodeBindings({ version: options.version ?? "1.5.6-r.2" })
+      yield* encodeBindings({ version: options.version ?? "2.0.0-r.1" })
     );
     yield* fs.writeFileString(`${nativeDir}/duckdb.node`, "synthetic native sidecar");
     yield* fs.makeDirectory(output, { recursive: true });
@@ -149,7 +149,7 @@ it.layer(commandEnvironment, { concurrent: false, timeout: "5 seconds" })("MCPB 
       const fixture = yield* prepare({
         listing: "manifest.json\nexample-mcp.exe\nnode_modules/@duckdb/node-bindings-win32-x64/duckdb.node\n",
       });
-      const cache = `${output}/.cache/node-bindings-win32-x64`;
+      const cache = `${output}/.cache/node-bindings-win32-x64-2.0.0-r.1`;
       yield* fixture.fs.makeDirectory(cache, { recursive: true });
       yield* fixture.fs.writeFileString(`${cache}/duckdb.node`, "cached Windows sidecar");
       yield* runCommand(["--target", "windows-x64", "--output", output]).pipe(
@@ -162,6 +162,17 @@ it.layer(commandEnvironment, { concurrent: false, timeout: "5 seconds" })("MCPB 
           `${output}/windows-x64/node_modules/@duckdb/node-bindings-win32-x64/duckdb.node`
         )
       ).toBe("cached Windows sidecar");
+    })
+  );
+
+  it.effect("never reuses a cached unpack from another DuckDB pin", () =>
+    Effect.gen(function* () {
+      const fixture = yield* prepare();
+      const stale = `${output}/.cache/node-bindings-win32-x64-1.5.6-r.2`;
+      yield* fixture.fs.makeDirectory(stale, { recursive: true });
+      yield* fixture.fs.writeFileString(`${stale}/duckdb.node`, "stale Windows sidecar");
+      yield* runCommand(["--target", "windows-x64", "--output", output]).pipe(Effect.result);
+      expect(A.map(fixture.calls, (args) => args[0])[0]).toBe("curl");
     })
   );
 
@@ -189,7 +200,7 @@ it.layer(commandEnvironment, { concurrent: false, timeout: "5 seconds" })("MCPB 
     Effect.gen(function* () {
       const fixture = yield* prepare();
       const cache = `${output}/.cache`;
-      const tarball = `${cache}/node-bindings-win32-x64.tgz`;
+      const tarball = `${cache}/node-bindings-win32-x64-2.0.0-r.1.tgz`;
       yield* fixture.fs.makeDirectory(cache, { recursive: true });
       yield* fixture.fs.writeFileString(tarball, "synthetic tampered tarball");
       const result = yield* runCommand(["--target", "windows-x64", "--output", output]).pipe(Effect.result);
@@ -199,7 +210,7 @@ it.layer(commandEnvironment, { concurrent: false, timeout: "5 seconds" })("MCPB 
       });
       expect(A.map(fixture.calls, (args) => args[0])).toEqual(["curl"]);
       expect(fixture.calls[0]).toContain(
-        "https://registry.npmjs.org/@duckdb/node-bindings-win32-x64/-/node-bindings-win32-x64-1.5.6-r.2.tgz"
+        "https://registry.npmjs.org/@duckdb/node-bindings-win32-x64/-/node-bindings-win32-x64-2.0.0-r.1.tgz"
       );
       expect(yield* fixture.fs.exists(tarball)).toBe(false);
     })

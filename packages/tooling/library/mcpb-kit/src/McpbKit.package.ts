@@ -208,8 +208,9 @@ const packageTarget = Effect.fn("McpbPackage.packageTarget")(function* (
  * `apps/<appName>/dist/mcpb`, resolved against the repository root. Each target
  * writes `<output>/<target>/` and `<output>/<appName>-<target>.mcpb`; the
  * Windows target downloads the pinned DuckDB win32 bindings into
- * `<output>/.cache` once and verifies their sha512 before unpacking. Running it
- * needs `bun`, `zip` and `unzip` (and `curl`, `tar` for Windows) on `PATH`.
+ * `<output>/.cache` once per pinned version and verifies their sha512 before
+ * unpacking. Running it needs `bun`, `zip` and `unzip` (and `curl`, `tar` for
+ * Windows) on `PATH`.
  *
  * **Example** (Build the command for an app)
  *
