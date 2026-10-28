@@ -23,14 +23,18 @@
  *    the sha256 of every file afterwards (as one tree digest plus the digest of
  *    each file that differs from the extracted input).
  *
- * The baseline is recorded on the unchanged code. `--compare <baseline.json>`
- * re-extracts the baseline's revision (so both runs see identical inputs),
- * runs the same matrix with the current code and fails on any difference.
+ * The baseline is recorded on the unchanged code. When the working tree holds
+ * the repo-cli sources of an older revision (`git checkout <rev> --
+ * packages/tooling/tool/cli/src`), `--code-rev <rev>` first proves that tree
+ * matches `<rev>` and records `<rev>` as the report's `commit`.
+ * `--compare <baseline.json>` re-extracts the baseline's revision (so both runs
+ * see identical inputs), runs the same matrix with the current code and fails
+ * on any difference in the runs or in the corpus counts.
  * Nothing here runs in CI; the reports ride in `research/` and the PR body.
  *
  * Usage (from the repo root):
  *
- *   bun goals/effected-promotion/ops/tsconfig-sync-parity.ts [--rev <git-rev>] [--out <report.json>]
+ *   bun goals/effected-promotion/ops/tsconfig-sync-parity.ts [--rev <git-rev>] [--code-rev <git-rev>] [--out <report.json>]
  *   bun goals/effected-promotion/ops/tsconfig-sync-parity.ts --compare <baseline.json> [--out <report.json>]
  */
 import * as NodeURL from "node:url";
@@ -114,7 +118,8 @@ class ParityFailure extends S.TaggedError<ParityFailure, { readonly brand: uniqu
 const failWith = (cause: unknown) => ParityFailure.make({ message: String(cause) });
 
 const repoRoot = NodeURL.fileURLToPath(new URL("../../..", import.meta.url));
-const cliEntry = `${repoRoot}packages/tooling/tool/cli/src/bin.ts`;
+const CLI_SOURCES = "packages/tooling/tool/cli/src";
+const cliEntry = `${repoRoot}${CLI_SOURCES}/bin.ts`;
 
 const flagValue = (flag: string): O.Option<string> =>
   O.flatMap(
@@ -135,18 +140,23 @@ const ROOT_INPUTS: ReadonlyArray<string> = [
   "vitest.aliases.generated.json",
 ];
 
-const isInput = (path: string): boolean => {
-  const base = pipe(
+const basename = (path: string): string =>
+  pipe(
     Str.split(path, "/"),
     A.last,
     O.getOrElse(() => path)
   );
-  return (
-    base === "package.json" ||
-    base === "docgen.json" ||
-    (Str.startsWith("tsconfig")(base) && Str.endsWith(".json")(base)) ||
-    A.contains(ROOT_INPUTS, path)
-  );
+
+// A tsconfig file by basename (`tsconfig.json`, `tsconfig.check.json`, ...), never
+// a `package.json` or report that merely sits below a `tsconfig` directory.
+const isTsconfigFile = (path: string): boolean => {
+  const base = basename(path);
+  return Str.startsWith("tsconfig")(base) && Str.endsWith(".json")(base);
+};
+
+const isInput = (path: string): boolean => {
+  const base = basename(path);
+  return base === "package.json" || base === "docgen.json" || isTsconfigFile(path) || A.contains(ROOT_INPUTS, path);
 };
 
 const git = Effect.fn("TsconfigSyncParity.git")(function* (args: ReadonlyArray<string>) {
@@ -194,15 +204,17 @@ const digestTree = Effect.fn("TsconfigSyncParity.digestTree")(function* (root: s
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const entries = A.sort(yield* fs.readDirectory(root, { recursive: true }), Order.String);
-  let digests = HashMap.empty<string, string>();
-  for (const entry of entries) {
+  const digests = yield* Effect.forEach(entries, (entry) => {
     const absolute = path.join(root, entry);
-    const info = yield* fs.stat(absolute);
-    if (info.type === "File") {
-      digests = digests.pipe(HashMap.set(Str.replaceAll("\\", "/")(entry), sha256(yield* fs.readFile(absolute))));
-    }
-  }
-  return digests;
+    return Effect.flatMap(fs.stat(absolute), (info) =>
+      info.type === "File"
+        ? Effect.map(fs.readFile(absolute), (bytes) =>
+            O.some([Str.replaceAll("\\", "/")(entry), sha256(bytes)] as const)
+          )
+        : Effect.succeed(O.none())
+    );
+  });
+  return HashMap.fromIterable(A.getSomes(digests));
 });
 
 const byKey = Order.mapInput(Order.String, ([key]: readonly [string, string]) => key);
@@ -330,6 +342,23 @@ const MUTATIONS: ReadonlyArray<Mutation> = [
     syncArgs: [],
   },
   {
+    mutation: "vitest-alias-drift",
+    description:
+      "vitest.aliases.generated.json loses its @beep/tsconfig alias, so the mirror is rewritten from root tsconfig paths.",
+    edit: setJsonc("vitest.aliases.generated.json", ["@beep/tsconfig"], undefined),
+    syncArgs: [],
+  },
+  {
+    mutation: "vitest-alias-follows-root",
+    description:
+      "The root @beep/tsconfig alias is stale and the mirror matches it, so one run rewrites both from the workspace.",
+    edit: sequence(
+      setJsonc("tsconfig.json", ["compilerOptions", "paths", "@beep/tsconfig"], [`./${KIT_PACKAGE}/lib/index.ts`]),
+      setJsonc("vitest.aliases.generated.json", ["@beep/tsconfig"], [`./${KIT_PACKAGE}/lib/index.ts`])
+    ),
+    syncArgs: [],
+  },
+  {
     mutation: "docgen-field-drift",
     description: "The @beep/tsconfig docgen.json srcLink is stale.",
     edit: setJsonc(`${KIT_PACKAGE}/docgen.json`, ["srcLink"], "https://example.invalid/stale/"),
@@ -418,11 +447,8 @@ const decodeTsconfigJson = decodeJsoncTextAs(TsconfigJson);
 
 const runCorpus = Effect.fn("TsconfigSyncParity.runCorpus")(function* () {
   const fs = yield* FileSystem.FileSystem;
-  const listing = yield* git(["ls-files", "-z", "--", "*tsconfig*.json"]);
-  const paths = A.sort(
-    A.filter(Str.split(listing, "\u0000"), (path) => Str.isNonEmpty(path)),
-    Order.String
-  );
+  const listing = yield* git(["ls-files", "-z"]);
+  const paths = A.sort(A.filter(Str.split(listing, "\u0000"), isTsconfigFile), Order.String);
   const failures = yield* Effect.forEach(paths, (path) =>
     fs.readFileString(`${repoRoot}${path}`).pipe(
       Effect.flatMap(decodeTsconfigJson),
@@ -434,7 +460,7 @@ const runCorpus = Effect.fn("TsconfigSyncParity.runCorpus")(function* () {
   );
   const rows = A.getSomes(failures);
   return {
-    scope: "git ls-files '*tsconfig*.json' decoded with decodeJsoncTextAs(TsconfigJson)",
+    scope: "git ls-files whose basename matches tsconfig*.json, decoded with decodeJsoncTextAs(TsconfigJson)",
     files: A.length(paths),
     decoded: A.length(paths) - A.length(rows),
     failures: rows,
@@ -444,13 +470,18 @@ const runCorpus = Effect.fn("TsconfigSyncParity.runCorpus")(function* () {
 // --- compare --------------------------------------------------------------------
 
 const differencesOf = (
-  baseline: ReadonlyArray<MutationRecord>,
-  head: ReadonlyArray<MutationRecord>
+  baseline: ParityReport,
+  head: Pick<ParityReport, "corpus" | "mutations">
 ): ReadonlyArray<typeof Difference.Type> => {
   const encode = (value: unknown): string => JSON.stringify(value);
-  return A.flatMap(baseline, (before) =>
+  const corpus = pipe(
+    ["files", "decoded", "failures"] as const,
+    A.filter((field) => encode(baseline.corpus[field]) !== encode(head.corpus[field])),
+    A.map((field) => ({ mutation: "corpus", field }))
+  );
+  const runs = A.flatMap(baseline.mutations, (before) =>
     O.match(
-      A.findFirst(head, (after) => after.mutation === before.mutation),
+      A.findFirst(head.mutations, (after) => after.mutation === before.mutation),
       {
         onNone: () => [{ mutation: before.mutation, field: "missing at head" }],
         onSome: (after) =>
@@ -462,6 +493,7 @@ const differencesOf = (
       }
     )
   );
+  return A.appendAll(corpus, runs);
 };
 
 // --- program --------------------------------------------------------------------
@@ -477,7 +509,14 @@ const program = Effect.gen(function* () {
     onNone: () => O.getOrElse(flagValue("--rev"), () => "HEAD"),
     onSome: (report) => report.rev,
   });
-  const commit = Str.trim(yield* git(["rev-parse", "HEAD"]));
+  const commit = yield* O.match(flagValue("--code-rev"), {
+    onNone: () => Effect.map(git(["rev-parse", "HEAD"]), Str.trim),
+    onSome: (codeRev) =>
+      exec("git", ["diff", "--quiet", codeRev, "--", CLI_SOURCES], repoRoot).pipe(
+        Effect.andThen(git(["rev-parse", codeRev])),
+        Effect.map(Str.trim)
+      ),
+  });
   const inputRev = Str.trim(yield* git(["rev-parse", rev]));
 
   const corpus = yield* runCorpus();
@@ -487,7 +526,7 @@ const program = Effect.gen(function* () {
   const input = yield* Effect.scoped(Effect.flatMap(extractInputs(inputRev, inputs), digestTree));
   const mutations = yield* Effect.forEach(MUTATIONS, (mutation) => runMutation(inputRev, inputs, input, mutation));
 
-  const differences = O.map(baseline, (report) => differencesOf(report.mutations, mutations));
+  const differences = O.map(baseline, (report) => differencesOf(report, { corpus, mutations }));
   const json = yield* encodeReport({
     schemaVersion: 1,
     tool: TOOL,
