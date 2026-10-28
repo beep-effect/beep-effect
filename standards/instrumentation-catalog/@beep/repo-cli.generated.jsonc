@@ -1086,6 +1086,7 @@
     {"name":"DeletePackage.runCheckMode","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"DeletePackage.runStep","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"DeletePackage.statBaselineOutput","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"DeletePackage.stripPackageFromFrontmatter","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"DeletePackage.workspacePathsAtRoot","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"DependencyReview.compare","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"DependencyReview.comparePage","owner":"@beep/repo-cli","family":"tooling","conforms":true},

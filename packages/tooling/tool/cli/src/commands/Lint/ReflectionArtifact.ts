@@ -16,7 +16,8 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { FrontmatterSource } from "@beep/markdown/FrontmatterSource";
-import { FrontmatterFormat } from "@beep/markdown/MarkdownNode";
+import { Frontmatter } from "@beep/markdown/MarkdownNode";
+import { YamlFrontmatter } from "@beep/markdown/YamlFrontmatter";
 import { LiteralKit } from "@beep/schema";
 import { ArrayKeyDefaultEmpty } from "@beep/schema/SchemaUtils/withKeyDefaults";
 import { A, thunkEmptyStr, thunkFalse } from "@beep/utils";
@@ -34,7 +35,6 @@ import { parse } from "jsonc-parser";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { optionalProp } from "../../internal/cli/OptionRecord.ts";
 import { makePolicyFindingLogger } from "../../internal/cli/PolicyFindingLogger.ts";
-import { decodeYamlTextWith } from "../../internal/schema/TextCodec.ts";
 import { GoalProposedCloseout, GoalStatus } from "../Goals/Goals.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Lint/ReflectionArtifact");
@@ -160,21 +160,16 @@ const { log: logPolicyFinding } = makePolicyFindingLogger({
     `- ${finding.goal}${finding.file !== undefined ? ` :: ${finding.file}` : ""} [${finding.severity}] ${finding.message}`,
 });
 
-const decodeFrontmatter = decodeYamlTextWith(S.decodeUnknownEffect(ReflectionFrontmatter));
+const decodeReflectionFrontmatter = S.decodeUnknownEffect(ReflectionFrontmatter);
 
-const yamlFrontmatterText = (raw: string): O.Option<string> =>
-  pipe(
-    O.fromUndefinedOr(FrontmatterSource.split(raw).frontmatter),
-    O.filter((block) => FrontmatterFormat.is.yaml(block.format)),
-    O.map((block) => Str.trim(block.value))
-  );
-
+// A non-YAML block fails the codec's format check, so `---json` and `+++` blocks are invalid too.
 const frontmatterIsValid = (raw: string): Effect.Effect<boolean> =>
-  O.match(yamlFrontmatterText(raw), {
+  O.match(O.fromUndefinedOr(FrontmatterSource.split(raw).frontmatter), {
     onNone: () => Effect.succeed(false),
-    onSome: (yamlText) =>
-      decodeFrontmatter(yamlText).pipe(
-        Effect.map(() => true),
+    onSome: (block) =>
+      YamlFrontmatter.decode(Frontmatter.make({ format: block.format, value: block.value })).pipe(
+        Effect.flatMap(decodeReflectionFrontmatter),
+        Effect.as(true),
         Effect.orElseSucceed(thunkFalse)
       ),
   });
