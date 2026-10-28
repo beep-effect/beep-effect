@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "tool": "goals/effected-promotion/ops/tsconfig-sync-parity.ts",
   "rev": "1515da682813d9e01f470eb4c8a85c0d523d218a",
-  "commit": "0860af87164aa6d695d5463562344c02abb55b36",
+  "commit": "70b86067ec45c18fdd31e8a1593a7d7247fe44c7",
   "inputs": 1039,
   "inputsSha256": "36c764a9a8c560e7cdf8eec185e08aca9fa45006e1cd4427c959bf243b992064",
   "corpus": {
