@@ -63,7 +63,7 @@ must:
    `preferEffectString` findings. The full graph had no affected-file filter.
 2. `quality tsgo-rules`, packet checks and reflection validation passed; rerun
    the cheap packet validators after the evidence update.
-3. The audit and reflection are published in draft #2318, now named by
+3. The audit and reflection are published in #2318, now named by
    `proposedCloseout.finalPullRequest`; operative lifecycle stays active.
 4. Pass content-final checks and capture a head-bound `--until-ready` Yeet
    verdict; merge only after required checks pass and review gates hold.

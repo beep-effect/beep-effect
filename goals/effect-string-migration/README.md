@@ -46,8 +46,13 @@ completion audit.
 
 At closeout base `d3c684edea26987cea6384b296d86960b0bb5d1a`, the catalog pins
 `@effect/tsgo` 0.59.0. The installed Effect-patched tsrs identifies that build.
-`preferEffectString` is `error` in the root map and all four copied profiles.
-The rule-map audit and reflection validation passed in the owning clone; they
+`preferEffectString` is `error` in the root map and all five copied profiles.
+The copied profiles are `apps/todox/tsconfig.json`, `apps/oip-web/tsconfig.json`,
+`packages/ecosystem/effect-drizzle/tsconfig.json`,
+`packages/ecosystem/effect-drizzle/tsconfig.test.json`, and
+`scratchpad/effected/tsconfig.lab.json`. The scratchpad lab profile also has all
+three Effect exit-code ignore flags false. The rule-map audit and reflection
+validation passed in the owning clone; they
 will be rerun on the final closeout head. The full Check graph and root
 configuration program passed at `3c36b00e29618aca3740c897e44f024e4cc05845`.
 Check completed 337 successful Turbo tasks, including 187 package Check tasks;
