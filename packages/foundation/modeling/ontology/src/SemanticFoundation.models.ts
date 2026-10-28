@@ -175,7 +175,7 @@ export type SkosMappingKind = typeof SkosMappingKind.Type;
  *
  * ```ts
  * import { ConceptAlignment } from "@beep/ontology/SemanticFoundation.models"
- * import { IRIReference } from "@beep/rdf"
+ * import { IRIReference } from "@beep/rdf/Iri"
  *
  * const alignment = ConceptAlignment.make({
  *   conceptIri: IRIReference.make("https://folio.openlegalstandard.org/example"),
@@ -208,7 +208,7 @@ export class ConceptAlignment extends S.Opaque<ConceptAlignment, { readonly bran
  * ```ts
  * import { $SemanticFoundationId } from "@beep/identity/packages"
  * import { TaxonomyConcept } from "@beep/ontology/SemanticFoundation.models"
- * import { IRIReference } from "@beep/rdf"
+ * import { IRIReference } from "@beep/rdf/Iri"
  *
  * const concept = TaxonomyConcept.make({
  *   alignments: [], broader: [], definition: "A legal document.", documentClasses: ["received"],
@@ -281,7 +281,7 @@ export type FilingRootKind = typeof FilingRootKind.Type;
  * ```ts
  * import { $SemanticFoundationId } from "@beep/identity/packages"
  * import { FilingRoot } from "@beep/ontology/SemanticFoundation.models"
- * import { IRIReference } from "@beep/rdf"
+ * import { IRIReference } from "@beep/rdf/Iri"
  *
  * const root = FilingRoot.make({ iri: IRIReference.make($SemanticFoundationId.create("filing-root/local-vault").iri), kind: "local-vault", rootSegment: "vault" })
  * console.log(root.rootSegment)
