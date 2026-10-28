@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-28T19:18:13.262Z",
+  "generatedAt": "2026-10-28T19:57:34.554Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -118660,8 +118660,8 @@
           "exportKind": "const",
           "filePath": "src/Claim/Claim.model.ts",
           "repoPath": "packages/foundation/modeling/epistemics/src/Claim/Claim.model.ts",
-          "line": 273,
-          "anchor": "packages-foundation-modeling-epistemics-src-claim-claim-model-ts-273-makeclaimenvelope",
+          "line": 276,
+          "anchor": "packages-foundation-modeling-epistemics-src-claim-claim-model-ts-276-makeclaimenvelope",
           "currentTags": [
             "@category",
             "@since"
@@ -118682,8 +118682,8 @@
           "exportKind": "type",
           "filePath": "src/Claim/Claim.model.ts",
           "repoPath": "packages/foundation/modeling/epistemics/src/Claim/Claim.model.ts",
-          "line": 375,
-          "anchor": "packages-foundation-modeling-epistemics-src-claim-claim-model-ts-375-bitemporalversion",
+          "line": 392,
+          "anchor": "packages-foundation-modeling-epistemics-src-claim-claim-model-ts-392-bitemporalversion",
           "currentTags": [
             "@category",
             "@since"
@@ -118704,8 +118704,8 @@
           "exportKind": "type",
           "filePath": "src/Claim/Claim.model.ts",
           "repoPath": "packages/foundation/modeling/epistemics/src/Claim/Claim.model.ts",
-          "line": 396,
-          "anchor": "packages-foundation-modeling-epistemics-src-claim-claim-model-ts-396-bitemporalscope",
+          "line": 413,
+          "anchor": "packages-foundation-modeling-epistemics-src-claim-claim-model-ts-413-bitemporalscope",
           "currentTags": [
             "@category",
             "@since"
@@ -364516,8 +364516,8 @@
           "exportKind": "type",
           "filePath": "src/Configuration.ts",
           "repoPath": "packages/tooling/tool/docgen/src/Configuration.ts",
-          "line": 410,
-          "anchor": "packages-tooling-tool-docgen-src-configuration-ts-410-compileroptionsinput",
+          "line": 411,
+          "anchor": "packages-tooling-tool-docgen-src-configuration-ts-411-compileroptionsinput",
           "currentTags": [
             "@category",
             "@since"
@@ -364582,9 +364582,10 @@
           "exportKind": "const",
           "filePath": "src/Configuration.ts",
           "repoPath": "packages/tooling/tool/docgen/src/Configuration.ts",
-          "line": 236,
-          "anchor": "packages-tooling-tool-docgen-src-configuration-ts-236-configurationjsonschema",
+          "line": 237,
+          "anchor": "packages-tooling-tool-docgen-src-configuration-ts-237-configurationjsonschema",
           "currentTags": [
+            "@returns",
             "@category",
             "@since"
           ],
@@ -364604,8 +364605,8 @@
           "exportKind": "class",
           "filePath": "src/Configuration.ts",
           "repoPath": "packages/tooling/tool/docgen/src/Configuration.ts",
-          "line": 277,
-          "anchor": "packages-tooling-tool-docgen-src-configuration-ts-277-configurationshape",
+          "line": 278,
+          "anchor": "packages-tooling-tool-docgen-src-configuration-ts-278-configurationshape",
           "currentTags": [
             "@category",
             "@since"
@@ -364626,8 +364627,8 @@
           "exportKind": "class",
           "filePath": "src/Configuration.ts",
           "repoPath": "packages/tooling/tool/docgen/src/Configuration.ts",
-          "line": 376,
-          "anchor": "packages-tooling-tool-docgen-src-configuration-ts-376-configuration",
+          "line": 377,
+          "anchor": "packages-tooling-tool-docgen-src-configuration-ts-377-configuration",
           "currentTags": [
             "@category",
             "@since"
@@ -364648,8 +364649,8 @@
           "exportKind": "const",
           "filePath": "src/Configuration.ts",
           "repoPath": "packages/tooling/tool/docgen/src/Configuration.ts",
-          "line": 448,
-          "anchor": "packages-tooling-tool-docgen-src-configuration-ts-448-defaultcompileroptions",
+          "line": 449,
+          "anchor": "packages-tooling-tool-docgen-src-configuration-ts-449-defaultcompileroptions",
           "currentTags": [
             "@internal",
             "@category",
@@ -364671,8 +364672,8 @@
           "exportKind": "class",
           "filePath": "src/Configuration.ts",
           "repoPath": "packages/tooling/tool/docgen/src/Configuration.ts",
-          "line": 500,
-          "anchor": "packages-tooling-tool-docgen-src-configuration-ts-500-docgenpackageidentity",
+          "line": 501,
+          "anchor": "packages-tooling-tool-docgen-src-configuration-ts-501-docgenpackageidentity",
           "currentTags": [
             "@internal",
             "@category",
@@ -364694,8 +364695,8 @@
           "exportKind": "const",
           "filePath": "src/Configuration.ts",
           "repoPath": "packages/tooling/tool/docgen/src/Configuration.ts",
-          "line": 541,
-          "anchor": "packages-tooling-tool-docgen-src-configuration-ts-541-readpackagejson",
+          "line": 542,
+          "anchor": "packages-tooling-tool-docgen-src-configuration-ts-542-readpackagejson",
           "currentTags": [
             "@param",
             "@returns",
@@ -364719,8 +364720,8 @@
           "exportKind": "const",
           "filePath": "src/Configuration.ts",
           "repoPath": "packages/tooling/tool/docgen/src/Configuration.ts",
-          "line": 637,
-          "anchor": "packages-tooling-tool-docgen-src-configuration-ts-637-encodeexamplestsconfig",
+          "line": 638,
+          "anchor": "packages-tooling-tool-docgen-src-configuration-ts-638-encodeexamplestsconfig",
           "currentTags": [
             "@category",
             "@since"
@@ -364741,8 +364742,8 @@
           "exportKind": "const",
           "filePath": "src/Configuration.ts",
           "repoPath": "packages/tooling/tool/docgen/src/Configuration.ts",
-          "line": 715,
-          "anchor": "packages-tooling-tool-docgen-src-configuration-ts-715-load",
+          "line": 716,
+          "anchor": "packages-tooling-tool-docgen-src-configuration-ts-716-load",
           "currentTags": [
             "@internal",
             "@effects",
@@ -364765,8 +364766,8 @@
           "exportKind": "const",
           "filePath": "src/Configuration.ts",
           "repoPath": "packages/tooling/tool/docgen/src/Configuration.ts",
-          "line": 806,
-          "anchor": "packages-tooling-tool-docgen-src-configuration-ts-806-configproviderlayer",
+          "line": 807,
+          "anchor": "packages-tooling-tool-docgen-src-configuration-ts-807-configproviderlayer",
           "currentTags": [
             "@internal",
             "@category",
@@ -552751,8 +552752,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Skills/SkillsReview.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/SkillsReview.service.ts",
-          "line": 96,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-96-skillreviewfailure",
+          "line": 102,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-102-skillreviewfailure",
           "currentTags": [
             "@category",
             "@since"
@@ -552773,8 +552774,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Skills/SkillsReview.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/SkillsReview.service.ts",
-          "line": 115,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-115-skillreviewbasesourceshape",
+          "line": 121,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-121-skillreviewbasesourceshape",
           "currentTags": [
             "@see",
             "@category",
@@ -552796,8 +552797,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Skills/SkillsReview.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/SkillsReview.service.ts",
-          "line": 140,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-140-skillreviewbasesource",
+          "line": 146,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-146-skillreviewbasesource",
           "currentTags": [
             "@see",
             "@category",
@@ -552819,8 +552820,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Skills/SkillsReview.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/SkillsReview.service.ts",
-          "line": 183,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-183-skillreviewbasesourcelive",
+          "line": 189,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-189-skillreviewbasesourcelive",
           "currentTags": [
             "@category",
             "@since"
@@ -552841,8 +552842,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Skills/SkillsReview.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/SkillsReview.service.ts",
-          "line": 209,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-209-skillreviewdecidershape",
+          "line": 215,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-215-skillreviewdecidershape",
           "currentTags": [
             "@see",
             "@category",
@@ -552864,8 +552865,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Skills/SkillsReview.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/SkillsReview.service.ts",
-          "line": 241,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-241-skillreviewdecider",
+          "line": 247,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-247-skillreviewdecider",
           "currentTags": [
             "@see",
             "@category",
@@ -552887,8 +552888,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Skills/SkillsReview.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/SkillsReview.service.ts",
-          "line": 274,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-274-dequeueghosted",
+          "line": 280,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-280-dequeueghosted",
           "currentTags": [
             "@internal",
             "@param",
@@ -552912,8 +552913,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Skills/SkillsReview.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/SkillsReview.service.ts",
-          "line": 337,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-337-skillreviewdeciderfromscript",
+          "line": 343,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-343-skillreviewdeciderfromscript",
           "currentTags": [
             "@param",
             "@returns",
@@ -552936,8 +552937,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Skills/SkillsReview.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/SkillsReview.service.ts",
-          "line": 438,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-438-makeskillreviewdeciderprompt",
+          "line": 468,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-468-makeskillreviewdeciderprompt",
           "currentTags": [
             "@category",
             "@since"
@@ -552958,8 +552959,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Skills/SkillsReview.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/SkillsReview.service.ts",
-          "line": 738,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-738-skillhunkreviewshape",
+          "line": 778,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-778-skillhunkreviewshape",
           "currentTags": [
             "@see",
             "@category",
@@ -552981,8 +552982,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Skills/SkillsReview.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/SkillsReview.service.ts",
-          "line": 789,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-789-skillhunkreview",
+          "line": 829,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-829-skillhunkreview",
           "currentTags": [
             "@see",
             "@category",
@@ -553004,8 +553005,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Skills/SkillsReview.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/SkillsReview.service.ts",
-          "line": 806,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-806-skillhunkreviewlayer",
+          "line": 846,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-846-skillhunkreviewlayer",
           "currentTags": [
             "@category",
             "@since"
@@ -553026,8 +553027,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Skills/SkillsReview.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/SkillsReview.service.ts",
-          "line": 833,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-833-skillhunkreviewlive",
+          "line": 873,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-873-skillhunkreviewlive",
           "currentTags": [
             "@category",
             "@since"

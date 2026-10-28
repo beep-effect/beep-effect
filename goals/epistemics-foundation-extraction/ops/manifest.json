@@ -6,7 +6,7 @@
     "title": "Epistemics Foundation Extraction",
     "status": "active",
     "created": "2026-10-21",
-    "updated": "2026-10-21",
+    "updated": "2026-10-28",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/epistemics-foundation-extraction",
@@ -23,7 +23,7 @@
     "acceptanceEvidence": [
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/feat_epistemics-foundation-p1-ada9d9015733/verdict.json",
+        "ref": ".beep/goals/epistemics-foundation-extraction/readiness-verdict.json",
         "gating": true
       }
     ]
@@ -37,7 +37,10 @@
     "goals/epistemics-foundation-extraction/GOAL.md",
     "goals/epistemics-foundation-extraction/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/2026-10-28-acceptance-audit.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -90,6 +93,6 @@
   ],
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 2017
+    "finalPullRequest": 2315
   }
 }
