@@ -1,6 +1,8 @@
 /**
  * Branded schema for canonical mainnet blockchain transaction identifiers.
  *
+ * **Details**
+ *
  * Supports EVM, Bitcoin, and Solana families.
  *
  * @since 0.0.0

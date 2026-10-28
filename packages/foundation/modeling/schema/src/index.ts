@@ -188,7 +188,7 @@ export * as PatternOntology from "./PatternOntology/index.ts";
  * ```ts import.meta.vitest name="Decode port from string"
  * import * as Effect from "effect/Effect";
  * import * as S from "effect/Schema"
- * import { PortFromString } from "@beep/schema"
+ * import { PortFromString } from "@beep/schema/Port"
  *
  * const port = await Effect.runPromise(S.decodeUnknownEffect(PortFromString)("443"))
  * port // => 443

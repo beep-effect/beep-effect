@@ -38,7 +38,7 @@ const doesNotEndWithHyphen = (value: unknown): boolean => P.isString(value) && !
  * **Example** (Reuse the checks on a length-capped identifier)
  *
  * ```ts
- * import { SlugChecks } from "@beep/schema"
+ * import { SlugChecks } from "@beep/schema/Slug"
  * import * as S from "effect/Schema"
  *
  * const ShortSlug = S.NonEmptyString.check(SlugChecks, S.isMaxLength(8))
