@@ -7,6 +7,8 @@
   "entry": [
     "packages/**/src/*.ts",
     "packages/**/src/*/index.ts",
+    // Standalone operator command invoked from the retention report runbook.
+    "packages/epistemic/server/scripts/retention-report.ts",
     "infra/src/internal/*-entry.ts",
     // Preloaded by every infra Pulumi.yaml (runtime.options.nodeargs).
     "infra/pulumi-typescript6.cjs",

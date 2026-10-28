@@ -23,7 +23,9 @@ untracked `sst-env.d.ts` files remain outside this change.
 | Domain verification | `bun run beep quality package-verify @beep/epistemic-domain`: audit 15.6s and docgen 9.2s, both pass. |
 | Historical merge | REST PR #2017 confirms accepted head `62fdeb3680c711f6218655ae8ef8d35f6b0ae71d` and merge `ab6000add2e779508f5b76e6c774a872cf3e629a` at `2026-10-22T06:00:03Z`. |
 | Historical readiness | Unsatisfied. Completion refresh observes required Docgen failure, pending/missing required contexts and a failed required-check merge-push suite. The declared verdict is absent. |
-| Final closeout readiness | Pending the new final PR, exact-head hosted checks, retained readiness verdict, review window and strict merge. |
+| Implementation repair readiness | #2315 merged as `559dcb6d2e777e6df3494560e91085ad25ca6631`; completion refresh verifies 15 required contexts and passing merge-time rule suite `4773338508`. Its interrupted monitor left the declared verdict absent. |
+| Documentation closeout #2325 | Merged as `b9c9223f4c94c8d9ec599e383d38cb80933a38e6` with required contexts green; coverage passed afterward. Its genuine monitor verdict is negative because the PR had already merged. Completion remains unknown. |
+| Final closeout readiness | Pending documentation-only #2334, exact-head hosted checks, retained readiness verdict before merge, review window and strict merge. The operator has held other merges. |
 
 ## Boundaries
 
@@ -38,7 +40,7 @@ minutes. Both owned processes were cancelled and exited 130. Package audits,
 docgen, all 39 foundation tests, local lint and changed-file formatting passed.
 The tool-produced content-final receipt explicitly skips `cheap-gates`,
 `lint-policy`, `repo-sanity`, `check`, `docgen`, `fallow` and `coverage` under
-the constrained-compute route. PR #2315 records those skips and requires exact-head
+the constrained-compute route. Implementation PR #2315 records those skips and requires exact-head
 hosted checks before strict merge. Phase P4 stays in progress while merge verification is pending; the proposal is
 prepared and the operative lifecycle remains active until completion refresh
 verifies the merge.

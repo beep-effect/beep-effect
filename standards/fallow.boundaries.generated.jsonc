@@ -4440,7 +4440,8 @@
           "@beep/uspto",
           "@beep/utils",
           "@beep/walker",
-          "@beep/xdg"
+          "@beep/xdg",
+          "@beep/yaml"
         ],
         "allowTypeOnly": [
           "@beep/ai-provider-cli",
@@ -4500,7 +4501,8 @@
           "@beep/uspto",
           "@beep/utils",
           "@beep/walker",
-          "@beep/xdg"
+          "@beep/xdg",
+          "@beep/yaml"
         ]
       },
       {

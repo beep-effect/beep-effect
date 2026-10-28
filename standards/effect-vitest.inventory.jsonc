@@ -3221,6 +3221,28 @@
       "reason": "The inner scope is the cancellation subject: the test interrupts its child fiber and checks that the real subprocess was killed and drained before the outer scope ends. Owner: @beep/effect-drizzle. Exit: retire when EV004 recognises assertions that run after a shorter scope closes (#1855 wave 8 register)."
     },
     {
+      "id": "EV004:packages/epistemic/server/test/RetentionAuthority.pglite.test.ts:276:scoped@18#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/epistemic-server",
+      "file": "packages/epistemic/server/test/RetentionAuthority.pglite.test.ts",
+      "line": 276,
+      "endLine": 276,
+      "symbol": "scoped",
+      "occurrence": "v2:16300555d4ce899ded58fe5a5815ba450e83c9a0814471e8cecf0c202d25625b",
+      "class": "inner-helper-scope-lifetime-review",
+      "evidence": "Effect.scoped",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The inner filesystem scope closes each generated-policy case before the final authoritative-row reread; the enclosing property continues after this scope, so it is not a redundant whole-body wrapper. Sharing the property tester scope would retain every case's temporary store until the property ends. Owner: @beep/epistemic-server. Exit: retire when EV004 recognises a shorter inner property-case lifetime."
+    },
+    {
       "id": "EV004:packages/epistemic/server/test/integration/ContradictionTriage.pg.test.ts:330:scoped@34#1",
       "lens": "resource",
       "ruleId": "EV004",
@@ -7663,6 +7685,28 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "One real SQLite file is shared between Node drizzle-kit, Bun Database and the Effect SQLite adapter; the memory filesystem cannot give native paths to those processes. Owner: @beep/effect-drizzle. Exit: retire when the three adapters can share an in-memory SQLite database."
+    },
+    {
+      "id": "EV010:packages/epistemic/server/test/RetentionAuthority.pglite.test.ts:19:@effect/platform-node/NodeServices@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/epistemic-server",
+      "file": "packages/epistemic/server/test/RetentionAuthority.pglite.test.ts",
+      "line": 19,
+      "endLine": 19,
+      "symbol": "@effect/platform-node/NodeServices",
+      "occurrence": "v2:fb7d6bba929488197f859519d08aea3efcf9ac097f647f2bbff02362d70850d7",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import * as NodeServices from \"@effect/platform-node/NodeServices\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The chosen projection store uses native filesystem creation, rename, complete directory deletion and byte-for-byte reconstruction. MemoryFileSystem would substitute the subject. NodeServices is provided at the it.layer boundary, with a deliberate shorter artifact scope per property case. Owner: @beep/epistemic-server. Exit: retire when EV010 recognises this native store/rebuild integration proof."
     },
     {
       "id": "EV010:packages/epistemic/server/test/integration/ContradictionTriage.p0.pglite.test.ts:15:@effect/platform-node/NodeFileSystem@0#1",
