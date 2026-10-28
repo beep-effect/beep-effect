@@ -3,36 +3,27 @@
   "upstreamRepository": "https://github.com/brunojppb/turbo-cache-server.git",
   "upstreamRelease": "4.0.20",
   "upstreamCommit": "0e893f63e1c7f1ac3c460d79e75fb63d4c9f7c85",
-  "patchSha256": "20b5ebacccc4bcabb84976342be1e7b74756cac5bb8fcbec467aec696e44e298",
+  "patchSha256": "87d06bb3632a51feeafa11b966e956e377c9a0a8f1a3f8dbca7aa1b841e652b4",
   "activation": "explicit signed-v1 policy only; not deployed",
   "compilerTested": "rustc1.96.0",
-  "thirdPartyDependencyChanges": false,
-  "rootLockMetadataSync": "decay0.0.0 to4.0.20 to match released Cargo.toml; dependency versions/checksums unchanged",
+  "thirdPartyDependencyChanges": true,
+  "rootLockMetadataSync": "Root version0.0.0 to4.0.20 plus reviewed security dependency updates; see adapter-dependency-review.json",
   "verification": {
     "crateUnitTests": 45,
     "middlewareTests": 2,
+    "dependencyScopeTests": 1,
     "nativeClientTests": 12,
     "wireProcessControls": 20,
-    "adapterOutputBytes": 0,
-    "scope": "local component only; synthetic storage; no IAM or deployment qualification",
-    "muslBuild": "passed",
+    "muslBuild": {
+      "status": "passed",
+      "sha256": "b6b08b91cd29d6c0ef5560ba307d42caad60e0b3e71633b08a0a3d3e60bbe2d6",
+      "bytes": 10035736,
+      "staticElf": true,
+      "target": "x86_64-unknown-linux-musl",
+      "buildSeconds": 125,
+      "trackedDriverVerified": true
+    },
     "fleetPortability": "pending"
   },
-  "productionReadiness": false,
-  "portableBuild": {
-    "target": "x86_64-unknown-linux-musl",
-    "profile": "release",
-    "rustc": "1.96.0",
-    "cargoZigbuild": "0.20.1",
-    "zig": "0.14.1",
-    "sha256": "eed2fd185915975720cc769116128f1bbfe631129387d1463c73d2dc6b114037",
-    "bytes": 11348552,
-    "staticElf": true,
-    "buildSeconds": 203,
-    "sourcePatchSha256": "20b5ebacccc4bcabb84976342be1e7b74756cac5bb8fcbec467aec696e44e298",
-    "runtimeVerification": "current Linux workstation only; fleet pending",
-    "trackedDriverVerified": true,
-    "trackedDriverRebuildSeconds": 0.33
-  },
-  "debugTestBinarySha256": "6fe6600e5e31faf18b83b7ab87884a966c8e5eae38e6122f614d3b510c0467c4"
+  "productionReadiness": false
 }

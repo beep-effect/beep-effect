@@ -2,7 +2,7 @@
   "schemaVersion": "r2-cache-policy-lab/v1",
   "authority": "isolated-process-component-only",
   "storage": "Moto5.1.15 synthetic S3; no R2 IAM qualification",
-  "adapterSha256": "eed2fd185915975720cc769116128f1bbfe631129387d1463c73d2dc6b114037",
+  "adapterSha256": "b6b08b91cd29d6c0ef5560ba307d42caad60e0b3e71633b08a0a3d3e60bbe2d6",
   "wire": [
     {
       "case": "missing-auth",
@@ -276,9 +276,9 @@
   "adapterOutputBytes": 0,
   "productionReadiness": false,
   "passed": true,
-  "recordedAt": "2026-10-28T23:01:59.650205+00:00",
+  "recordedAt": "2026-10-28T23:50:24.101490+00:00",
   "upstreamCommit": "0e893f63e1c7f1ac3c460d79e75fb63d4c9f7c85",
-  "patchSha256": "20b5ebacccc4bcabb84976342be1e7b74756cac5bb8fcbec467aec696e44e298",
+  "patchSha256": "87d06bb3632a51feeafa11b966e956e377c9a0a8f1a3f8dbca7aa1b841e652b4",
   "harnessSha256": "8913dcf8093cea3353193fc21268d46554f28cd70d534aeb015428de3bbed59d",
   "build": {
     "target": "x86_64-unknown-linux-musl",
@@ -286,21 +286,20 @@
     "rustc": "1.96.0",
     "cargoZigbuild": "0.20.1",
     "zig": "0.14.1",
-    "sha256": "eed2fd185915975720cc769116128f1bbfe631129387d1463c73d2dc6b114037",
-    "bytes": 11348552,
+    "sha256": "b6b08b91cd29d6c0ef5560ba307d42caad60e0b3e71633b08a0a3d3e60bbe2d6",
+    "bytes": 10035736,
     "staticElf": true,
-    "buildSeconds": 203,
-    "sourcePatchSha256": "20b5ebacccc4bcabb84976342be1e7b74756cac5bb8fcbec467aec696e44e298",
-    "runtimeVerification": "current Linux workstation only; fleet pending",
-    "trackedDriverVerified": true,
-    "trackedDriverRebuildSeconds": 0.33
+    "buildSeconds": 125,
+    "sourcePatchSha256": "87d06bb3632a51feeafa11b966e956e377c9a0a8f1a3f8dbca7aa1b841e652b4",
+    "runtimeVerification": "Current Linux workstation only; fleet pending",
+    "trackedDriverVerified": true
   },
-  "dotenvReloadTrap": "invalid encryption setting in cwd dotenv would prevent startup; both strict processes stayed healthy",
+  "dotenvReloadTrap": "Invalid encryption setting in cwd dotenv would prevent startup; both strict processes stayed healthy.",
   "readerWriterIndependence": "Both native-produced valid tags were denied reader PUT with zero storage calls.",
   "limitations": [
-    "The static musl binary passed on the current workstation only; remote fleet portability remains unproven.",
+    "Static musl binary passed on the current workstation only; remote fleet portability remains unproven.",
     "Synthetic S3 does not prove Cloudflare R2 IAM enforcement or deployed credentials.",
-    "No production rollout, artifact-key distribution, namespace migration, or task qualification.",
+    "No production rollout, artifact-key distribution, namespace migration or task qualification.",
     "No representative seven/seven/fourteen-day observation evidence."
   ]
 }

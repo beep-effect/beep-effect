@@ -268,9 +268,10 @@ Run `policy.sh cargo-test`, `policy.sh cargo-build` or
 `policy.sh cargo-build-musl` only inside the existing machine admission boundary
 or hosted CI. The caller must select the installed tested Rust 1.96.0 toolchain;
 no ordinary adapter startup compiles Rust. The source patch includes the root
-Cargo.lock metadata correction required by the release's Cargo.toml and preserves
-all third-party dependency versions/checksums. The upstream MIT notice is retained
-in `patches/LICENSE.upstream.txt`.
+Cargo.lock metadata correction required by the release's Cargo.toml, maintained
+dotenvy and security dependency updates. The loopback server compiles the HTTP1
+and macros features it uses. Native artifact bytes remain opaque. The upstream
+MIT notice is retained in `patches/LICENSE.upstream.txt`.
 
 The optional `policy-lab.py` uses the pinned Python environment in
 `policy-lab-requirements.txt`. It starts two actual patched adapter processes and
@@ -281,10 +282,21 @@ must match the independently reviewed digest. Only synthetic credentials are use
 and only exact owned child processes are stopped. See the packet's
 `research/adapter-policy-lab.json` for the local result and limits.
 
-A local glibc debug build and a statically linked x86_64 musl release build have
-passed these checks on the current workstation. The portable build uses installed
+The final dependency closure's statically linked x86_64 musl release build passed
+all20 wire and12 native controls on the current workstation. Earlier glibc
+receipts retain their original source inputs. The portable build uses installed
 Rust1.96.0 plus cargo-zigbuild0.20.1/Zig0.14.1, pinned in
 `policy-build-requirements.txt`; its checksum and byte size are retained beside
 the source patch. `cargo-build-musl` reproduces that build inside admission.
 Remote fleet execution, R2 grant negatives, producer attribution, rotation/rollback,
 deployment and representative observation remain required before activation.
+
+Run `policy.sh cargo-security` inside admission or hosted CI for the pinned
+Cargo lock scan. It mounts only public lock/config inputs into the exact OSV
+image, without a home or credential store. The adjacent `osv-scanner.toml`
+contains one expiring source-specific advisory assessment. The driver loads it
+only for the exact reviewed block-buffer0.10.4 archive and sole resolution;
+absent, different or mixed versions get an unfiltered scan. Other advisory IDs
+remain active. The source review and panic regression are retained in
+`research/adapter-dependency-review.json` under the trust packet. No shared
+repository security exceptions change.

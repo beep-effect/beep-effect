@@ -1,8 +1,234 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index e0b98f6..0fae3ae 100644
+index e0b98f6..e7dd452 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
-@@ -705,7 +705,7 @@
+@@ -21,40 +21,32 @@
+ 
+ [[package]]
+ name = "actix-http"
+-version = "3.18.13"
++version = "3.20.0"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "a3f290edc569ad10c07287eebb96629686b37f1e55283a093569151d3adde0c7"
++checksum = "d20a22850ea7fecad12c5f8cd97d246c3af1f04ef400033977c2f13425c45816"
+ dependencies = [
+  "actix-codec",
+  "actix-service",
+  "actix-utils",
+- "base64 0.22.1",
+  "bitflags",
+- "brotli",
+  "bytes",
+  "bytestring",
+  "derive_more",
+  "encoding_rs",
+- "flate2",
+  "foldhash",
+  "futures-core",
+- "h2 0.3.27",
+  "http 0.2.12",
+  "httparse",
+  "httpdate",
+  "itoa",
+  "language-tags",
+- "local-channel",
+  "mime",
+  "percent-encoding",
+  "pin-project-lite",
+- "rand 0.10.3",
+- "sha1",
+  "smallvec",
+  "tokio",
+  "tokio-util",
+  "tracing",
+- "zstd",
+ ]
+ 
+ [[package]]
+@@ -77,7 +69,6 @@
+  "bytestring",
+  "cfg-if",
+  "http 0.2.12",
+- "regex",
+  "regex-lite",
+  "serde",
+  "tracing",
+@@ -131,9 +122,9 @@
+ 
+ [[package]]
+ name = "actix-web"
+-version = "4.16.0"
++version = "4.18.1"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "824c7250d7e468feb7903e41efc5d6883cb1f3957e8db2c3d2402a9ff430b886"
++checksum = "81f8da0d2ae4200dde8773d72ba47a65c220b251ba7b9248db5bd263c247e959"
+ dependencies = [
+  "actix-codec",
+  "actix-http",
+@@ -147,7 +138,6 @@
+  "bytes",
+  "bytestring",
+  "cfg-if",
+- "cookie",
+  "derive_more",
+  "encoding_rs",
+  "foldhash",
+@@ -160,7 +150,6 @@
+  "mime",
+  "once_cell",
+  "pin-project-lite",
+- "regex",
+  "regex-lite",
+  "serde",
+  "serde_json",
+@@ -175,9 +164,9 @@
+ 
+ [[package]]
+ name = "actix-web-codegen"
+-version = "4.4.0"
++version = "4.5.0"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "b96b09c4878563f8ab4a5fd0c59f9f0d6e0e9f60eb9b748526a0b9604fd89c50"
++checksum = "f7c9f4c52b954a73c76757a3952d3437fca00a2fbcb49704f8a6ea9f767e73f0"
+ dependencies = [
+  "actix-router",
+  "proc-macro2",
+@@ -185,12 +174,6 @@
+  "syn 3.0.8",
+ ]
+ 
+-[[package]]
+-name = "adler2"
+-version = "2.0.1"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "320119579fcad9c21884f5c4861d16174d0e06250625266f50fe6898340abefa"
+-
+ [[package]]
+ name = "ahash"
+ version = "0.8.12"
+@@ -213,21 +196,6 @@
+  "memchr",
+ ]
+ 
+-[[package]]
+-name = "alloc-no-stdlib"
+-version = "2.0.4"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "cc7bb162ec39d46ab1ca8c77bf72e890535becd1751bb45f64c597edb4c8c6b3"
+-
+-[[package]]
+-name = "alloc-stdlib"
+-version = "0.2.4"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "0e76a019e91224d279006ff972f1e984179a6e9feb050adba6ce8274aef23195"
+-dependencies = [
+- "alloc-no-stdlib",
+-]
+-
+ [[package]]
+ name = "anyhow"
+ version = "1.0.104"
+@@ -401,36 +369,6 @@
+  "generic-array",
+ ]
+ 
+-[[package]]
+-name = "block-buffer"
+-version = "0.12.1"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "d2f6c7dbe95a6ed67ad9f18e57daf93a2f034c524b99fd2b76d18fdfeb6660aa"
+-dependencies = [
+- "hybrid-array",
+-]
+-
+-[[package]]
+-name = "brotli"
+-version = "8.0.4"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "5cc91aac060a7a1e25823bdccbfb6af1875b88f17c6daac97894eed8207166b3"
+-dependencies = [
+- "alloc-no-stdlib",
+- "alloc-stdlib",
+- "brotli-decompressor",
+-]
+-
+-[[package]]
+-name = "brotli-decompressor"
+-version = "5.0.3"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "3a32acac15fe1967bc3986b2a6347dffc965602354ea6f450ad07e8bfd253583"
+-dependencies = [
+- "alloc-no-stdlib",
+- "alloc-stdlib",
+-]
+-
+ [[package]]
+ name = "bumpalo"
+ version = "3.20.3"
+@@ -540,12 +478,6 @@
+  "serde_core",
+ ]
+ 
+-[[package]]
+-name = "const-oid"
+-version = "0.10.2"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "a6ef517f0926dd24a1582492c791b6a4818a4d94e789a334894aa15b0d12f55c"
+-
+ [[package]]
+ name = "const-random"
+ version = "0.1.18"
+@@ -575,17 +507,6 @@
+  "unicode-segmentation",
+ ]
+ 
+-[[package]]
+-name = "cookie"
+-version = "0.16.2"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "e859cd57d0710d9e06c381b550c06e76992472a8c6d527aecd2fc673dcc231fb"
+-dependencies = [
+- "percent-encoding",
+- "time",
+- "version_check",
+-]
+-
+ [[package]]
+ name = "core-foundation"
+ version = "0.9.4"
+@@ -636,15 +557,6 @@
+  "libc",
+ ]
+ 
+-[[package]]
+-name = "crc32fast"
+-version = "1.5.2"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "01a7799fd6b852db0e61728dde9a204c423b44d689dbd432522543614b490e78"
+-dependencies = [
+- "cfg-if",
+-]
+-
+ [[package]]
+ name = "crossbeam-channel"
+ version = "0.5.17"
+@@ -676,15 +588,6 @@
+  "typenum",
+ ]
+ 
+-[[package]]
+-name = "crypto-common"
+-version = "0.2.2"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "ce6e4c961d6cd6c9a86db418387425e8bdeaf05b3c8bc1411e6dca4c252f1453"
+-dependencies = [
+- "hybrid-array",
+-]
+-
+ [[package]]
+ name = "deadpool"
+ version = "0.12.3"
+@@ -705,10 +608,11 @@
  
  [[package]]
  name = "decay"
@@ -10,7 +236,336 @@ index e0b98f6..0fae3ae 100644
 +version = "4.0.20"
  dependencies = [
   "actix-web",
-  "dotenv",
+- "dotenv",
++ "block-buffer",
++ "dotenvy",
+  "futures",
+  "http 1.5.0",
+  "openssl",
+@@ -780,22 +684,11 @@
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "9ed9a281f7bc9b7576e61468ba615a66a5c8cfdff42420a70aa82701a3b1e292"
+ dependencies = [
+- "block-buffer 0.10.4",
+- "crypto-common 0.1.7",
++ "block-buffer",
++ "crypto-common",
+  "subtle",
+ ]
+ 
+-[[package]]
+-name = "digest"
+-version = "0.11.3"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "f1dd6dbb5841937940781866fa1281a1ff7bd3bf827091440879f9994983d5c2"
+-dependencies = [
+- "block-buffer 0.12.1",
+- "const-oid",
+- "crypto-common 0.2.2",
+-]
+-
+ [[package]]
+ name = "dispatch2"
+ version = "0.3.1"
+@@ -827,10 +720,10 @@
+ ]
+ 
+ [[package]]
+-name = "dotenv"
+-version = "0.15.0"
++name = "dotenvy"
++version = "0.15.7"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "77c90badedccf4105eca100756a0b1289e191f6fcbdadd3cee1d2f614f97da8f"
++checksum = "1aaf95b3e5c8f23aa320147307562d361db0ae0d51242340f558153b4eb2439b"
+ 
+ [[package]]
+ name = "dunce"
+@@ -886,17 +779,6 @@
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "aedcfb3409746eddb02b9e19ebda1c3394f759a152e48ee875a0844d1b955484"
+ 
+-[[package]]
+-name = "flate2"
+-version = "1.1.10"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "6e634e2e0ebac1ee034020da1ca582e17ffe4e0f5e985823721e168928136dcb"
+-dependencies = [
+- "crc32fast",
+- "miniz_oxide",
+- "zlib-rs",
+-]
+-
+ [[package]]
+ name = "fnv"
+ version = "1.0.7"
+@@ -1086,25 +968,6 @@
+  "wasm-bindgen",
+ ]
+ 
+-[[package]]
+-name = "h2"
+-version = "0.3.27"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "0beca50380b1fc32983fc1cb4587bfa4bb9e78fc259aad4a0032d2080309222d"
+-dependencies = [
+- "bytes",
+- "fnv",
+- "futures-core",
+- "futures-sink",
+- "futures-util",
+- "http 0.2.12",
+- "indexmap",
+- "slab",
+- "tokio",
+- "tokio-util",
+- "tracing",
+-]
+-
+ [[package]]
+ name = "h2"
+ version = "0.4.20"
+@@ -1154,7 +1017,7 @@
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "6c49c37c09c17a53d937dfbb742eb3a961d65a994e6bcdcf37e7399d0cc8ab5e"
+ dependencies = [
+- "digest 0.10.7",
++ "digest",
+ ]
+ 
+ [[package]]
+@@ -1222,15 +1085,6 @@
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "df3b46402a9d5adb4c86a0cf463f42e19994e3ee891101b1841f30a545cb49a9"
+ 
+-[[package]]
+-name = "hybrid-array"
+-version = "0.4.15"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "27f864f10dfb56725ce5ce5472bc52252c8f93a4ab86327122cebf62c5f59a17"
+-dependencies = [
+- "typenum",
+-]
+-
+ [[package]]
+ name = "hyper"
+ version = "1.12.0"
+@@ -1241,7 +1095,7 @@
+  "bytes",
+  "futures-channel",
+  "futures-core",
+- "h2 0.4.20",
++ "h2",
+  "http 1.5.0",
+  "http-body",
+  "httparse",
+@@ -1564,17 +1418,6 @@
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "47d9d19d1d6efa0109d2f65ff4c85cddd50bd572e5a00127ab10987290bcefae"
+ 
+-[[package]]
+-name = "local-channel"
+-version = "0.1.5"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "b6cbc85e69b8df4b8bb8b89ec634e7189099cea8927a276b7384ce5488e53ec8"
+-dependencies = [
+- "futures-core",
+- "futures-sink",
+- "local-waker",
+-]
+-
+ [[package]]
+ name = "local-waker"
+ version = "0.1.4"
+@@ -1655,16 +1498,6 @@
+  "rxml",
+ ]
+ 
+-[[package]]
+-name = "miniz_oxide"
+-version = "0.9.1"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "b63fbc4a50860e98e7b2aa7804ded1db5cbc3aff9193adaff57a6931bf7c4b4c"
+-dependencies = [
+- "adler2",
+- "simd-adler32",
+-]
+-
+ [[package]]
+ name = "mio"
+ version = "1.2.4"
+@@ -2368,7 +2201,7 @@
+  "futures-channel",
+  "futures-core",
+  "futures-util",
+- "h2 0.4.20",
++ "h2",
+  "http 1.5.0",
+  "http-body",
+  "http-body-util",
+@@ -2485,9 +2318,9 @@
+ 
+ [[package]]
+ name = "rustls"
+-version = "0.23.45"
++version = "0.23.46"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "0d41d731c7d2f962d1ccc364cec258de3c0e93b38c2fb3ba97ac74513048d634"
++checksum = "48e13bd8c0e9365c43cfa5c9e8f9ad49d3c8444926c9aac819e0e4dc503c8fdf"
+ dependencies = [
+  "aws-lc-rs",
+  "once_cell",
+@@ -2548,9 +2381,9 @@
+ 
+ [[package]]
+ name = "rustls-webpki"
+-version = "0.103.15"
++version = "0.103.16"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "f3c3cf1d8b1e7d4927e2d154c3fcb02979afb9939629c62cd9048d4f07b60ac2"
++checksum = "4443b1b6d39d7c663139942cc4558262562d2c84123bb6282ef177009ca8b281"
+ dependencies = [
+  "aws-lc-rs",
+  "ring",
+@@ -2706,17 +2539,6 @@
+  "serde",
+ ]
+ 
+-[[package]]
+-name = "sha1"
+-version = "0.11.0"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "aacc4cc499359472b4abe1bf11d0b12e688af9a805fa5e3016f9a386dc2d0214"
+-dependencies = [
+- "cfg-if",
+- "cpufeatures 0.3.1",
+- "digest 0.11.3",
+-]
+-
+ [[package]]
+ name = "sha2"
+ version = "0.10.9"
+@@ -2725,7 +2547,7 @@
+ dependencies = [
+  "cfg-if",
+  "cpufeatures 0.2.17",
+- "digest 0.10.7",
++ "digest",
+ ]
+ 
+ [[package]]
+@@ -2753,12 +2575,6 @@
+  "libc",
+ ]
+ 
+-[[package]]
+-name = "simd-adler32"
+-version = "0.3.10"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "3a219298ac11a56ea9a6d2120044824d6f01aeb034955e7af7bc16858527deea"
+-
+ [[package]]
+ name = "simd_cesu8"
+ version = "1.2.0"
+@@ -3012,9 +2828,9 @@
+ 
+ [[package]]
+ name = "tokio"
+-version = "1.53.2"
++version = "1.53.3"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "e95f91fcc7a621e8b030f6aa23c71fe9838ae2fb4d8118b75602a328f5144044"
++checksum = "ce3335fa71841cda333a58d7615b03901380ecf09d59b3296d21f8bbac0dde4e"
+ dependencies = [
+  "bytes",
+  "libc",
+@@ -3093,7 +2909,7 @@
+  "axum",
+  "base64 0.22.1",
+  "bytes",
+- "h2 0.4.20",
++ "h2",
+  "http 1.5.0",
+  "http-body",
+  "http-body-util",
+@@ -3530,9 +3346,9 @@
+ 
+ [[package]]
+ name = "webpki-root-certs"
+-version = "1.0.9"
++version = "1.0.10"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "b96554aa2acc8ccdb7e1c9a58a7a68dd5d13bccc69cd124cb09406db612a1c9b"
++checksum = "58ec80e73fd8baf57bf0d9615554c75348bda990d6d5bbeab964dd068319fecb"
+ dependencies = [
+  "rustls-pki-types",
+ ]
+@@ -4004,42 +3820,8 @@
+  "syn 3.0.8",
+ ]
+ 
+-[[package]]
+-name = "zlib-rs"
+-version = "0.6.8"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "b268e58e7c693d7c271f93ffc4ba3b380412554231c85bf61ca7af91042a4112"
+-
+ [[package]]
+ name = "zmij"
+ version = "1.0.23"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "29666d0abbfad1e3dc4dcf6144730dd3a3ab225bbbdac83319345b1b44ccfc1b"
+-
+-[[package]]
+-name = "zstd"
+-version = "0.13.3"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "e91ee311a569c327171651566e07972200e76fcfe2242a4fa446149a3881c08a"
+-dependencies = [
+- "zstd-safe",
+-]
+-
+-[[package]]
+-name = "zstd-safe"
+-version = "7.3.0"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "64d80649ab6db9d9f6f9c80a40becd948eda4714a0a5ac8c4d157a32231c7882"
+-dependencies = [
+- "zstd-sys",
+-]
+-
+-[[package]]
+-name = "zstd-sys"
+-version = "2.1.1+zstd.1.5.7"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "aeec9eaf2dffbbd09201e23bd0ffcbaa33bb8e9266a10734fd7ed90a85eca078"
+-dependencies = [
+- "cc",
+- "pkg-config",
+-]
+diff --git a/Cargo.toml b/Cargo.toml
+index 0756c91..9ed3d2b 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -16,8 +16,8 @@
+ name = "decay"
+ 
+ [dependencies]
+-actix-web = "4"
+-dotenv = "0.15.0"
++actix-web = { version = "4", default-features = false, features = ["macros"] }
++dotenvy = "0.15.7"
+ rust-s3 = "0.38"
+ serde = { version = "1.0", features = ["derive"] }
+ tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+@@ -51,6 +51,7 @@
+ subtle = "2"
+ 
+ [dev-dependencies]
++block-buffer = "=0.10.4"
+ pretty_assertions = "1.4.1"
+ reqwest = "0.13"
+ wiremock = "0.6"
 diff --git a/src/app_settings.rs b/src/app_settings.rs
 index 8890c8d..5e5d05a 100644
 --- a/src/app_settings.rs
@@ -429,7 +984,7 @@ index 625e944..794d195 100644
  /// Returns `None` when the scheme is not Bearer or the token is empty.
  fn parse_bearer_token(header_value: &str) -> Option<&str> {
 diff --git a/src/main.rs b/src/main.rs
-index d196b24..5d8a085 100644
+index d196b24..56a04ba 100644
 --- a/src/main.rs
 +++ b/src/main.rs
 @@ -13,27 +13,35 @@
@@ -439,7 +994,7 @@ index d196b24..5d8a085 100644
 -    dotenv::dotenv().ok();
 +    let signed_policy = std::env::var_os("BEEP_CACHE_POLICY").is_some();
 +    if !signed_policy {
-+        dotenv::dotenv().ok();
++        dotenvy::dotenv().ok();
 +    }
 +    // Validate before any logger starts. Strict mode neither reloads client dotenv
 +    // material nor initializes URL/payload-bearing request logs, files or OTEL.
@@ -621,6 +1176,33 @@ index 92b16f9..9048d30 100644
              host: "127.0.0.1".to_owned(),
              port: 8000,
              s3_access_key: Some("super-secret-access-key".into()),
+diff --git a/tests/dependency_scope.rs b/tests/dependency_scope.rs
+new file mode 100644
+index 0000000..49289bc
+--- /dev/null
++++ b/tests/dependency_scope.rs
+@@ -0,0 +1,21 @@
++// GHSA-qwgh-2vcv-g2f7 describes a later inline-cursor implementation.
++// In pinned0.10.4 the cursor is a separate private field, outside the block.
++use block_buffer::{EagerBuffer, generic_array::typenum::U4};
++use std::panic::{AssertUnwindSafe, catch_unwind};
++
++#[test]
++fn pinned_legacy_cursor_is_not_corrupted_by_a_panicking_callback() {
++    for value in 0..=u8::MAX {
++        let mut buffer = EagerBuffer::<U4>::new(&[1, 2]);
++        assert!(
++            catch_unwind(AssertUnwindSafe(|| {
++                buffer.digest_blocks(&[3, value], |_| panic!("synthetic compression failure"));
++            }))
++            .is_err()
++        );
++        assert_eq!(buffer.get_pos(), 2);
++        buffer.reset();
++        buffer.digest_blocks(&[4; 8], |_| {});
++        assert_eq!(buffer.get_pos(), 0);
++    }
++}
 diff --git a/tests/signed_policy.rs b/tests/signed_policy.rs
 new file mode 100644
 index 0000000..7efca46

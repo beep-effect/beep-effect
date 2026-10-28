@@ -60,3 +60,17 @@ the enrolled-root run reproduced six failures among437tests, while package-cwd
 execution had no inherited tuple. PR #2346 clears only the test-worker cache
 inputs; all561affected tests pass from the enrolled root. Run focused checks
 through the same parent launch path as the full audit to expose this mismatch.
+
+### Scan the adapter dependency closure independently
+
+The repository security workflow scans bun.lock and did not cover the patched
+Cargo lock. An exact-image Cargo scan found ten package names with findings.
+Applicable updates and removal of unused server features cleared nine groups.
+The remaining advisory describes an inline cursor and ReadBuffer absent from
+the exact older block-buffer archive. Its source assessment has one expiring
+advisory exception, an archive/version-set guard and an exhaustive256-value
+caught-panic regression; changed or mixed locks get no exception. The configured
+scan and all32 final-binary process controls pass. Make this independent Cargo
+scan part of each candidate build. A first scan could not read a mode0600 public
+lock through a capability-dropped container; copying only that public input to a
+mode0444 read-only bind preserved the private source cache permissions.
