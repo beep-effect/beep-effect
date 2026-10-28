@@ -5,7 +5,7 @@
  *
  * FreshBooks accounting endpoints wrap payloads in a `{ response: { result: ... } }` envelope;
  * list results additionally carry `page` / `pages` / `per_page` / `total` pagination fields
- * alongside the resource array. Every model here is an annotated `S.Class` that decodes a
+ * alongside the resource array. Every model here is an annotated `S.Opaque` schema that decodes a
  * deliberate subset of the wire shape — the API returns far more fields than the driver commits
  * to, and unmodeled keys are dropped at the boundary. Field names mirror the FreshBooks wire keys
  * (following the driver convention, e.g. `@beep/discord`, `@beep/ffmpeg`); the distinct
