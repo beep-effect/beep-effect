@@ -278,6 +278,25 @@ describe("review lane rounds to ready", () => {
   });
 });
 
+describe("review lane review window", () => {
+  it("opens the window at the earliest flip and places a head by its observation when it carries no push time", () => {
+    const observedOnly = ReviewLaneHeadRow.make({ ...base(), headSha: SHA_B, pushedAt: O.none(), observedAt: at(11) });
+    const rows = [
+      flip(9, SHA_B),
+      flip(5),
+      review(2, 6, O.some(SHA_A)),
+      observedOnly,
+      head(10, SHA_C),
+      mergeReady(15, SHA_B),
+    ];
+    const section = buildYeetEconomicsReviewLane([ledger(rows)], O.none());
+    const pullRequest = A.getUnsafe(section.roundsToReady.pullRequests, 0);
+    expect(pullRequest.flipAt).toBe(at(5));
+    expect(pullRequest.heads).toBe(2);
+    expect(pullRequest.rounds).toBe(1);
+  });
+});
+
 describe("review lane reviewer precision", () => {
   it("is fixed over fixed, rejected and immaterial, with intentional and unknown beside it", () => {
     const rows = [
@@ -501,6 +520,17 @@ const Platform = Layer.mergeAll(MemoryFileSystem.layer, NodePath.layer, NodeCryp
 it.layer(Layer.mergeAll(Platform, TestConsole.layer), { timeout: "30 seconds" })("review lane ledger", (layerIt) => {
   const tempRoot = (prefix: string) => FileSystem.FileSystem.use((fs) => fs.makeTempDirectoryScoped({ prefix }));
 
+  layerIt.effect("records nothing for an empty batch and never creates the ledger", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* tempRoot("review-lane-empty-");
+      expect(yield* recordYeetReviewLaneRows(root, [])).toBe(0);
+      const loaded = yield* readYeetReviewLaneLedger(root);
+      expect(loaded.rows).toEqual([]);
+      expect(yield* fs.exists(loaded.ledgerPath)).toBe(false);
+    })
+  );
+
   layerIt.effect("appends rows, skips the identities it already holds, and keeps every disposition", () =>
     Effect.gen(function* () {
       const root = yield* tempRoot("review-lane-append-");
@@ -598,6 +628,32 @@ const Sources = Layer.provideMerge(Layer.mergeAll(YeetEconomicsSource.layer, Yee
 it.layer(Layer.mergeAll(Sources, TestConsole.layer), { timeout: "30 seconds" })(
   "yeet economics review lane",
   (layerIt) => {
+    layerIt.effect("reads each sibling checkout's ledger once in a fleet scope, sorted by path", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const projects = yield* fs.makeTempDirectoryScoped({ prefix: "review-lane-fleet-" });
+        const clone = path.join(projects, "beep-effect7");
+        const sibling = path.join(projects, "beep-effect8");
+        yield* fs.makeDirectory(clone, { recursive: true });
+        yield* fs.makeDirectory(sibling, { recursive: true });
+        yield* recordYeetReviewLaneRows(clone, [flip(5)]);
+        yield* recordYeetReviewLaneRows(sibling, [flip(5), review(2, 6, O.some(SHA_A))]);
+        const source = yield* YeetReviewLaneSource;
+        const fleet = yield* source.read(
+          EconomicsScopeRequest.make({ repoRoot: sibling, branch: O.none(), fleet: true })
+        );
+        expect(A.map(fleet, (ledger) => [path.relative(projects, ledger.ledgerPath), A.length(ledger.rows)])).toEqual([
+          [`beep-effect7/.beep/yeet/${YEET_REVIEW_LANE_LEDGER_FILE_NAME}`, 1],
+          [`beep-effect8/.beep/yeet/${YEET_REVIEW_LANE_LEDGER_FILE_NAME}`, 2],
+        ]);
+        const alone = yield* source.read(
+          EconomicsScopeRequest.make({ repoRoot: sibling, branch: O.none(), fleet: false })
+        );
+        expect(A.length(alone)).toBe(1);
+      })
+    );
+
     layerIt.effect("prints rounds to ready and reviewer precision from the checkout's ledger", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
