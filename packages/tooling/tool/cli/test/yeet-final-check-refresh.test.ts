@@ -229,11 +229,50 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("checkFinalCheckRefresh 
     })
   );
 
-  it.effect("finds no receipt for a head whose ancestors carry only failing receipts", () =>
+  it.effect("refuses on the nearest ancestor receipt when it failed, never falling back to an older pass", () =>
     Effect.gen(function* () {
-      const { repoRoot, receiptHead, mergeHead } = yield* makeMergedLane();
-      yield* writeReceipt(repoRoot, receiptFor(receiptHead, { verdict: "fail" }));
-      assertNone(yield* checkFinalCheckRefresh(repoRoot, "main", mergeHead));
+      const { repoRoot, receiptHead } = yield* makeMergedLane();
+      yield* writeFile(repoRoot, SCHEMA_FIRST, '{ "entries": ["main-0", "main-1", "lane"] }\n');
+      const failedHead = yield* commitAll(repoRoot, "lane: inventory refresh whose final-check failed");
+      yield* writeReceipt(repoRoot, receiptFor(failedHead, { verdict: "fail" }));
+      yield* writeFile(repoRoot, SPEC, "# Demo\n\nstatus: completed-retained\n");
+      const finalHead = yield* commitAll(repoRoot, "lane: flip packet");
+      const verdict = yield* refreshAt(repoRoot, finalHead);
+      assertTrue(verdict._tag === "refused");
+      expect(verdict.reason).toBe("ancestor-receipt-not-passing");
+      expect(verdict.receiptHead).toBe(failedHead);
+      expect(verdict.receiptHead).not.toBe(receiptHead);
+    })
+  );
+
+  it.effect("counts a whitespace-only change to the lane's own patch as an own change", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const repoRoot = yield* fs.makeTempDirectoryScoped({ prefix: "final-check-refresh-ws-" });
+      const run = (args: ReadonlyArray<string>) => git(repoRoot, args);
+      const shared = (first: string, last: string) => `${first}\nb\nc\nd\ne\nf\ng\n${last}\n`;
+      yield* run(["init", "--quiet", "-b", "main"]);
+      yield* run(["config", "user.email", "final-check-refresh@example.invalid"]);
+      yield* run(["config", "user.name", "Final Check Refresh Test"]);
+      yield* run(["config", "commit.gpgsign", "false"]);
+      yield* writeFile(repoRoot, ".gitignore", ".beep/\n");
+      yield* writeFile(repoRoot, "src/shared.ts", shared("alpha", "omega"));
+      yield* commitAll(repoRoot, "main 0");
+      yield* run(["switch", "--quiet", "-c", "lane"]);
+      yield* writeFile(repoRoot, "src/shared.ts", shared("const s = 'a b'", "omega"));
+      const receiptHead = yield* commitAll(repoRoot, "lane: code");
+      yield* writeReceipt(repoRoot, receiptFor(receiptHead));
+      yield* run(["switch", "--quiet", "main"]);
+      yield* writeFile(repoRoot, "src/shared.ts", shared("alpha", "OMEGA"));
+      yield* commitAll(repoRoot, "main 1");
+      yield* run(["switch", "--quiet", "lane"]);
+      yield* run(["merge", "--quiet", "--no-ff", "--no-edit", "main"]);
+      yield* writeFile(repoRoot, "src/shared.ts", shared("const s = 'a  b'", "OMEGA"));
+      const finalHead = yield* commitAll(repoRoot, "lane: whitespace inside a string literal");
+      const verdict = yield* refreshAt(repoRoot, finalHead);
+      assertTrue(verdict._tag === "refused");
+      expect(verdict.reason).toBe("own-change-outside-allowlist");
+      expect(verdict.detail).toContain("src/shared.ts");
     })
   );
 });

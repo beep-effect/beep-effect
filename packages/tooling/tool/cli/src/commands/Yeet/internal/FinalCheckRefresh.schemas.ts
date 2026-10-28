@@ -59,6 +59,8 @@ export type FinalCheckRefreshAllowance = typeof FinalCheckRefreshAllowance.Type;
  * the receipt. `effect-vitest-status-drift`: the lane's net change to the
  * effect-vitest inventory status counts differs between R and F, the
  * take-main-then-`--write` hazard that silently reopens or closes findings.
+ * `ancestor-receipt-not-passing`: the nearest ancestor receipt failed or ran
+ * a `--gates` subset, so an older passing receipt cannot stand in for it.
  *
  * **Example** (Check a refusal reason)
  *
@@ -74,6 +76,7 @@ export type FinalCheckRefreshAllowance = typeof FinalCheckRefreshAllowance.Type;
 export const FinalCheckRefreshRefusalReason = LiteralKit([
   "own-change-outside-allowlist",
   "effect-vitest-status-drift",
+  "ancestor-receipt-not-passing",
 ]).pipe(
   $I.annoteSchema("FinalCheckRefreshRefusalReason", {
     description: "Why the final-check refresh rule refused to carry a receipt to a later head.",

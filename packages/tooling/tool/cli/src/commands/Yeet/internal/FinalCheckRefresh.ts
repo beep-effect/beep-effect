@@ -34,7 +34,6 @@ import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
@@ -206,28 +205,39 @@ const changedPaths = (repoRoot: string, from: string, to: string) =>
     Effect.map(HashSet.fromIterable)
   );
 
-// The patch as `git patch-id --stable` sees it: file headers, blob ids and hunk
-// line numbers dropped, whitespace ignored.
-const patchIdentity = (diff: string): string =>
-  pipe(
-    Str.split("\n")(diff),
-    A.filter(
-      (line) =>
-        !Str.startsWith("diff --git ")(line) &&
-        !Str.startsWith("index ")(line) &&
-        !Str.startsWith("--- ")(line) &&
-        !Str.startsWith("+++ ")(line) &&
-        !Str.startsWith("@@")(line)
-    ),
-    A.map(Str.replace(/\s+/g, "")),
-    A.filter(Str.isNonEmpty),
-    A.join("\n")
+// The lane's patch for one file, verbatim: the per-file header block (blob
+// ids, `---`/`+++` names) is dropped and hunk headers lose their line numbers,
+// so the same edit on a moved base still matches. Content lines keep every
+// byte, whitespace included, and `--binary --full-index` renders binary edits
+// as their bytes rather than "Binary files differ"; a binary delta on a
+// different base therefore never matches, which fails closed.
+const patchIdentity = (diff: string): string => {
+  const lines = Str.split("\n")(diff);
+  const body = A.dropWhile(lines, (line) => !Str.startsWith("@@")(line) && line !== "GIT binary patch");
+  const header = A.filter(
+    A.take(lines, A.length(lines) - A.length(body)),
+    (line) =>
+      !Str.startsWith("diff --git ")(line) &&
+      !Str.startsWith("index ")(line) &&
+      !Str.startsWith("--- ")(line) &&
+      !Str.startsWith("+++ ")(line)
   );
+  return A.join([...header, ...A.map(body, (line) => (Str.startsWith("@@")(line) ? "@@" : line))], "\n");
+};
 
 const filePatch = (repoRoot: string, from: string, to: string, path: string) =>
-  runGitOutput(repoRoot, ["diff", "--no-color", "--no-renames", "--no-ext-diff", from, to, "--", path]).pipe(
-    Effect.map(patchIdentity)
-  );
+  runGitOutput(repoRoot, [
+    "diff",
+    "--no-color",
+    "--no-renames",
+    "--no-ext-diff",
+    "--binary",
+    "--full-index",
+    from,
+    to,
+    "--",
+    path,
+  ]).pipe(Effect.map(patchIdentity));
 
 const StatusCountDocument = S.Struct({ findings: S.Array(S.Struct({ status: S.String })) });
 
@@ -342,10 +352,10 @@ const isAncestor = (repoRoot: string, ancestor: string, head: string) =>
  *
  * **Details**
  *
- * Reads every receipt under `.beep/yeet/final-check/`, keeps the complete,
- * passing ones whose head is a strict ancestor of `finalHead`, and returns the
- * one with the fewest commits to `finalHead`. A failing or partial receipt is
- * never a candidate.
+ * Reads every receipt under `.beep/yeet/final-check/`, keeps the ones whose
+ * head is a strict ancestor of `finalHead`, and returns the one with the
+ * fewest commits to `finalHead`, whatever its verdict: a nearer failing or
+ * partial receipt must refuse, never fall back to an older pass.
  *
  * **Example** (Build the receipt search)
  *
@@ -358,7 +368,7 @@ const isAncestor = (repoRoot: string, ancestor: string, head: string) =>
  *
  * @param repoRoot - Checkout holding `.beep/yeet/final-check/`.
  * @param finalHead - The head the flip would mark ready.
- * @returns The nearest passing ancestor receipt, or none.
+ * @returns The nearest ancestor receipt of any verdict, or none.
  * @category io
  * @since 0.0.0
  */
@@ -375,11 +385,8 @@ export const findFinalCheckRefreshReceipt = Effect.fn("Yeet.findFinalCheckRefres
     Str.endsWith(".json")(entry) ? [Str.slice(0, -".json".length)(entry)] : []
   );
   const receipts = yield* Effect.forEach(heads, (head) => readFinalCheckReceipt(repoRoot, head));
-  const passing = A.filter(
-    A.getSomes(receipts),
-    (receipt) => receipt.headSha !== finalHead && O.isNone(finalCheckRefusal(O.some(receipt), receipt.headSha))
-  );
-  const ancestors = yield* Effect.filter(passing, (receipt) => isAncestor(repoRoot, receipt.headSha, finalHead));
+  const others = A.filter(A.getSomes(receipts), (receipt) => receipt.headSha !== finalHead);
+  const ancestors = yield* Effect.filter(others, (receipt) => isAncestor(repoRoot, receipt.headSha, finalHead));
   const distances = yield* Effect.forEach(ancestors, (receipt) =>
     gitLine(repoRoot, ["rev-list", "--count", `${receipt.headSha}..${finalHead}`]).pipe(
       Effect.map((count) => [Number(count), receipt] as const),
@@ -402,9 +409,10 @@ export const findFinalCheckRefreshReceipt = Effect.fn("Yeet.findFinalCheckRefres
  *
  * **Details**
  *
- * Returns none when no strict ancestor carries a passing receipt, so the
- * caller keeps its ordinary "no final-check receipt" refusal; otherwise the
- * verdict for the nearest one.
+ * Returns none when no strict ancestor carries a receipt, so the caller keeps
+ * its ordinary "no final-check receipt" refusal. A nearest receipt that failed
+ * or ran a gate subset refuses outright; otherwise the rule judges the lane's
+ * own changes since that receipt.
  *
  * **Example** (Build the refresh check)
  *
@@ -433,6 +441,18 @@ export const checkFinalCheckRefresh = Effect.fn("Yeet.checkFinalCheckRefresh")(f
 > {
   const receipt = yield* findFinalCheckRefreshReceipt(repoRoot, finalHead);
   if (O.isNone(receipt)) return O.none();
+  const notPassing = finalCheckRefusal(receipt, receipt.value.headSha);
+  if (O.isSome(notPassing)) {
+    return O.some(
+      FinalCheckRefreshRefused.make({
+        receiptHead: receipt.value.headSha,
+        finalHead,
+        reason: "ancestor-receipt-not-passing",
+        ownChanges: [],
+        detail: `the nearest ancestor receipt does not pass (${notPassing.value}); an older passing receipt never stands in for it`,
+      })
+    );
+  }
   const facts = yield* collectFinalCheckRefreshFacts(repoRoot, base, receipt.value, finalHead);
   return O.some(decideFinalCheckRefresh(facts));
 });
