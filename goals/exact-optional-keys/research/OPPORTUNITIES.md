@@ -64,3 +64,14 @@
   no source fix, baseline edit, or exception is warranted.
 - Would have prevented it: isolated build outputs or serialized compiler/Babel
   writers for package verification sharing one checkout.
+
+## 2026-10-28: declared completion evidence lost at retirement
+
+- Doing: resuming this goal and verifying PR #2145 completion.
+- Evidence: `beep goals completion refresh --slug exact-optional-keys` returns
+  `unknown`; the declared Yeet verdict is absent. The original retirement
+  manifest has no archived material. All 17 historical required contexts and
+  the passing merge-push rule suite are independently verified.
+- Response: preserve the historical gap and obtain a new closeout PR's retained
+  exact-head readiness evidence. Keep operative lifecycle active until verified.
+- Prevention: archive every declared local completion artifact before retirement.

@@ -98,6 +98,7 @@ them and record each in the Decision Log.
 | 2026-10-23 | `ApiTransportDurationObject` keeps `UndefinedOr` | It mirrors effect's `Duration.DurationObject`, whose members admit `undefined` | Make exact once effect's `DurationObject` does |
 | 2026-10-23 | FileDiff's `optionalUndefined` helper deleted | Its only purpose was decoded-side `undefined` | Restore the helper from `9e3aff5de8^` |
 | 2026-10-23 | Publish past the cheap-gate `fallow:audit` red; attribute it under S11 | 19 duplication groups are pre-existing clones the codemod rename touched (0 hand-edited files; receipt in `research/OPPORTUNITIES.md`); operator ruling | Add reasoned `fallow-ignore-next-line code-duplication` suppressions, or land the dedupe follow-up first |
+| 2026-10-28 | Use a new documentation-only closeout PR with its own retained readiness verdict | The original PR is merged and its 17 historical required checks verify, but the declared local verdict was not retained; no historical proof is fabricated | Restore the original declared verdict with independent provenance, then revert the closeout declaration |
 | 2026-10-23 | Codemod pairing covers companion interfaces, not only type aliases | Lexical companions are `interface Encoded`; found on the first run, fixed in the rule and re-run from a clean tree | n/a |
 
 ## Exception Ledger
