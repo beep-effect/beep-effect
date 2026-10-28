@@ -1,0 +1,268 @@
+{
+  "tool": "cli-failure-render-differential",
+  "bin": "packages/tooling/tool/cli/src/bin.ts",
+  "normalization": [
+    "the checkout path is <repo>, the scratch root <tmp>",
+    "log timestamps [HH:MM:SS.mmm] are [<time>]",
+    "fiber ids (#N) are (#<fiber>)",
+    "stack-frame positions :L:C are :<line>:<col>"
+  ],
+  "cases": [
+    {
+      "id": "version",
+      "argv": ["--version"],
+      "githubActions": false,
+      "exitCode": 0,
+      "stdout": "beep-cli v0.0.0\n",
+      "stderr": ""
+    },
+    {
+      "id": "version",
+      "argv": ["--version"],
+      "githubActions": true,
+      "exitCode": 0,
+      "stdout": "beep-cli v0.0.0\n",
+      "stderr": ""
+    },
+    {
+      "id": "help",
+      "argv": ["--help"],
+      "githubActions": false,
+      "exitCode": 0,
+      "stdout": "DESCRIPTION\n  CLI tool for managing beep-effect monorepo packages\n\nUSAGE\n  beep-cli <subcommand> [flags]\n\nGLOBAL FLAGS\n  --help, -h                                                          Show help information\n  --version, -v                                                       Show version information\n  --wizard                                                            Start wizard mode for a command\n  --completions <bash|zsh|fish|powershell|sh|pwsh>                    Print shell completion script (choices: bash, zsh, fish, powershell, sh, pwsh)\n  --log-level <all|trace|debug|info|warn|warning|error|fatal|none>    Sets the minimum log level (choices: all, trace, debug, info, warn, warning, error, fatal, none)\n\nSUBCOMMANDS\n  topo-sort           Output workspace packages in topological dependency order\n  agent-effectiveness Inspect and sync AI-agent effectiveness evidence\n  agent-message       Durable scoped messages between explicitly owned agent sessions\n  ai-metrics          Collect, normalize, and plan deployment for AI-agent metrics\n  architecture        Schema-versioned architecture operation-plan utilities\n  cache               Turbo cache recovery and evidence operations\n  ci                  Continuous integration helper commands\n  codex               Codex agent helper commands\n  corpus              Corpus salvage and curation commands\n  docgen              Documentation generation, analysis, and report-only quality review utilities\n  docs                Discover laws, skills, and policies without path references\n  drawings            Design-figure sheet rendering, filing validation, approval, and reviewer intake\n  explore             Read-only packet-stream checks over explorations and goals (advisory)\n  fallow              Fallow quality-tooling helpers\n  files               Dataset file curation commands\n  goals               Goal-packet lifecycle tooling (doctor, index, capability graph, transitions, bootstrap, adoption, convention migration)\n  graft               Repo-owned operations on clone-local Graft caches\n  harness-ledger      Append-only harness evidence ledger (propose, disposition, list, prune-proposals, reconcile)\n  refs                Manage the manifest-defined reference workspace\n  image               Image and video curation commands\n  knowledge           Knowledge-surface verification commands\n  labs                Inspect lab apps under apps/labs\n  lint                Repository lint policy checks\n  laws                Effect governance validation and migration commands\n  models              Check every routing surface against the operator model manifest\n  observability       Instrumentation catalog and observability standards\n  palantiri           Agent-facing observability parcels: quota headroom, lane reds, host pressure and more\n  quality             Repository operational quality commands\n  research            Research knowledge-vault and source-library curation commands\n  reviewer            \n  runners             CI runner image operations\n  session             Record and read where harness sessions stopped across every clone on this machine\n  accounts            Live screen of every Claude, Codex, SuperGrok, and Muse account: which one to use next, per provider\n  create-package      Create a new package or app workspace following Effect v4 conventions\n  delete-package      Delete a leaf workspace package or doctor a deleted package for registration residue\n  codegen             Run a code generator\n  purge               Remove root and workspace build artifacts\n  qa                  Recorded UI verification: capture, extract, and judge motion evidence\n  skills              Manage repo-local Claude and Codex skill mirrors\n  sync-data-to-ts     Sync official upstream datasets into checked-in TypeScript modules\n  tsconfig-sync       Synchronize repo-managed config files including root tsconfig references, aliases, syncpack, package tsconfig.check.json references, package docgen, the generated Vitest alias data, and the generated Fallow boundary config\n  version-sync        Detect and fix version drift across Bun runtime pins and checksums, Node pins, CI workflows, Docker images, Biome, the root Effect catalog, and turbo.json schema URLs\n  worktree            Manage sibling git worktrees under the canonical worktrees root\n  yeet                Repair, verify, or publish repository work with canonical quality proof\n",
+      "stderr": ""
+    },
+    {
+      "id": "help",
+      "argv": ["--help"],
+      "githubActions": true,
+      "exitCode": 0,
+      "stdout": "DESCRIPTION\n  CLI tool for managing beep-effect monorepo packages\n\nUSAGE\n  beep-cli <subcommand> [flags]\n\nGLOBAL FLAGS\n  --help, -h                                                          Show help information\n  --version, -v                                                       Show version information\n  --wizard                                                            Start wizard mode for a command\n  --completions <bash|zsh|fish|powershell|sh|pwsh>                    Print shell completion script (choices: bash, zsh, fish, powershell, sh, pwsh)\n  --log-level <all|trace|debug|info|warn|warning|error|fatal|none>    Sets the minimum log level (choices: all, trace, debug, info, warn, warning, error, fatal, none)\n\nSUBCOMMANDS\n  topo-sort           Output workspace packages in topological dependency order\n  agent-effectiveness Inspect and sync AI-agent effectiveness evidence\n  agent-message       Durable scoped messages between explicitly owned agent sessions\n  ai-metrics          Collect, normalize, and plan deployment for AI-agent metrics\n  architecture        Schema-versioned architecture operation-plan utilities\n  cache               Turbo cache recovery and evidence operations\n  ci                  Continuous integration helper commands\n  codex               Codex agent helper commands\n  corpus              Corpus salvage and curation commands\n  docgen              Documentation generation, analysis, and report-only quality review utilities\n  docs                Discover laws, skills, and policies without path references\n  drawings            Design-figure sheet rendering, filing validation, approval, and reviewer intake\n  explore             Read-only packet-stream checks over explorations and goals (advisory)\n  fallow              Fallow quality-tooling helpers\n  files               Dataset file curation commands\n  goals               Goal-packet lifecycle tooling (doctor, index, capability graph, transitions, bootstrap, adoption, convention migration)\n  graft               Repo-owned operations on clone-local Graft caches\n  harness-ledger      Append-only harness evidence ledger (propose, disposition, list, prune-proposals, reconcile)\n  refs                Manage the manifest-defined reference workspace\n  image               Image and video curation commands\n  knowledge           Knowledge-surface verification commands\n  labs                Inspect lab apps under apps/labs\n  lint                Repository lint policy checks\n  laws                Effect governance validation and migration commands\n  models              Check every routing surface against the operator model manifest\n  observability       Instrumentation catalog and observability standards\n  palantiri           Agent-facing observability parcels: quota headroom, lane reds, host pressure and more\n  quality             Repository operational quality commands\n  research            Research knowledge-vault and source-library curation commands\n  reviewer            \n  runners             CI runner image operations\n  session             Record and read where harness sessions stopped across every clone on this machine\n  accounts            Live screen of every Claude, Codex, SuperGrok, and Muse account: which one to use next, per provider\n  create-package      Create a new package or app workspace following Effect v4 conventions\n  delete-package      Delete a leaf workspace package or doctor a deleted package for registration residue\n  codegen             Run a code generator\n  purge               Remove root and workspace build artifacts\n  qa                  Recorded UI verification: capture, extract, and judge motion evidence\n  skills              Manage repo-local Claude and Codex skill mirrors\n  sync-data-to-ts     Sync official upstream datasets into checked-in TypeScript modules\n  tsconfig-sync       Synchronize repo-managed config files including root tsconfig references, aliases, syncpack, package tsconfig.check.json references, package docgen, the generated Vitest alias data, and the generated Fallow boundary config\n  version-sync        Detect and fix version drift across Bun runtime pins and checksums, Node pins, CI workflows, Docker images, Biome, the root Effect catalog, and turbo.json schema URLs\n  worktree            Manage sibling git worktrees under the canonical worktrees root\n  yeet                Repair, verify, or publish repository work with canonical quality proof\n",
+      "stderr": ""
+    },
+    {
+      "id": "usage-error",
+      "argv": ["nosuchcmd"],
+      "githubActions": false,
+      "exitCode": 1,
+      "stdout": "DESCRIPTION\n  CLI tool for managing beep-effect monorepo packages\n\nUSAGE\n  beep-cli <subcommand> [flags]\n\nGLOBAL FLAGS\n  --help, -h                                                          Show help information\n  --version, -v                                                       Show version information\n  --wizard                                                            Start wizard mode for a command\n  --completions <bash|zsh|fish|powershell|sh|pwsh>                    Print shell completion script (choices: bash, zsh, fish, powershell, sh, pwsh)\n  --log-level <all|trace|debug|info|warn|warning|error|fatal|none>    Sets the minimum log level (choices: all, trace, debug, info, warn, warning, error, fatal, none)\n\nSUBCOMMANDS\n  topo-sort           Output workspace packages in topological dependency order\n  agent-effectiveness Inspect and sync AI-agent effectiveness evidence\n  agent-message       Durable scoped messages between explicitly owned agent sessions\n  ai-metrics          Collect, normalize, and plan deployment for AI-agent metrics\n  architecture        Schema-versioned architecture operation-plan utilities\n  cache               Turbo cache recovery and evidence operations\n  ci                  Continuous integration helper commands\n  codex               Codex agent helper commands\n  corpus              Corpus salvage and curation commands\n  docgen              Documentation generation, analysis, and report-only quality review utilities\n  docs                Discover laws, skills, and policies without path references\n  drawings            Design-figure sheet rendering, filing validation, approval, and reviewer intake\n  explore             Read-only packet-stream checks over explorations and goals (advisory)\n  fallow              Fallow quality-tooling helpers\n  files               Dataset file curation commands\n  goals               Goal-packet lifecycle tooling (doctor, index, capability graph, transitions, bootstrap, adoption, convention migration)\n  graft               Repo-owned operations on clone-local Graft caches\n  harness-ledger      Append-only harness evidence ledger (propose, disposition, list, prune-proposals, reconcile)\n  refs                Manage the manifest-defined reference workspace\n  image               Image and video curation commands\n  knowledge           Knowledge-surface verification commands\n  labs                Inspect lab apps under apps/labs\n  lint                Repository lint policy checks\n  laws                Effect governance validation and migration commands\n  models              Check every routing surface against the operator model manifest\n  observability       Instrumentation catalog and observability standards\n  palantiri           Agent-facing observability parcels: quota headroom, lane reds, host pressure and more\n  quality             Repository operational quality commands\n  research            Research knowledge-vault and source-library curation commands\n  reviewer            \n  runners             CI runner image operations\n  session             Record and read where harness sessions stopped across every clone on this machine\n  accounts            Live screen of every Claude, Codex, SuperGrok, and Muse account: which one to use next, per provider\n  create-package      Create a new package or app workspace following Effect v4 conventions\n  delete-package      Delete a leaf workspace package or doctor a deleted package for registration residue\n  codegen             Run a code generator\n  purge               Remove root and workspace build artifacts\n  qa                  Recorded UI verification: capture, extract, and judge motion evidence\n  skills              Manage repo-local Claude and Codex skill mirrors\n  sync-data-to-ts     Sync official upstream datasets into checked-in TypeScript modules\n  tsconfig-sync       Synchronize repo-managed config files including root tsconfig references, aliases, syncpack, package tsconfig.check.json references, package docgen, the generated Vitest alias data, and the generated Fallow boundary config\n  version-sync        Detect and fix version drift across Bun runtime pins and checksums, Node pins, CI workflows, Docker images, Biome, the root Effect catalog, and turbo.json schema URLs\n  worktree            Manage sibling git worktrees under the canonical worktrees root\n  yeet                Repair, verify, or publish repository work with canonical quality proof\n",
+      "stderr": "\nERROR\n  Unknown subcommand \"nosuchcmd\" for \"beep-cli\"\n"
+    },
+    {
+      "id": "usage-error",
+      "argv": ["nosuchcmd"],
+      "githubActions": true,
+      "exitCode": 1,
+      "stdout": "DESCRIPTION\n  CLI tool for managing beep-effect monorepo packages\n\nUSAGE\n  beep-cli <subcommand> [flags]\n\nGLOBAL FLAGS\n  --help, -h                                                          Show help information\n  --version, -v                                                       Show version information\n  --wizard                                                            Start wizard mode for a command\n  --completions <bash|zsh|fish|powershell|sh|pwsh>                    Print shell completion script (choices: bash, zsh, fish, powershell, sh, pwsh)\n  --log-level <all|trace|debug|info|warn|warning|error|fatal|none>    Sets the minimum log level (choices: all, trace, debug, info, warn, warning, error, fatal, none)\n\nSUBCOMMANDS\n  topo-sort           Output workspace packages in topological dependency order\n  agent-effectiveness Inspect and sync AI-agent effectiveness evidence\n  agent-message       Durable scoped messages between explicitly owned agent sessions\n  ai-metrics          Collect, normalize, and plan deployment for AI-agent metrics\n  architecture        Schema-versioned architecture operation-plan utilities\n  cache               Turbo cache recovery and evidence operations\n  ci                  Continuous integration helper commands\n  codex               Codex agent helper commands\n  corpus              Corpus salvage and curation commands\n  docgen              Documentation generation, analysis, and report-only quality review utilities\n  docs                Discover laws, skills, and policies without path references\n  drawings            Design-figure sheet rendering, filing validation, approval, and reviewer intake\n  explore             Read-only packet-stream checks over explorations and goals (advisory)\n  fallow              Fallow quality-tooling helpers\n  files               Dataset file curation commands\n  goals               Goal-packet lifecycle tooling (doctor, index, capability graph, transitions, bootstrap, adoption, convention migration)\n  graft               Repo-owned operations on clone-local Graft caches\n  harness-ledger      Append-only harness evidence ledger (propose, disposition, list, prune-proposals, reconcile)\n  refs                Manage the manifest-defined reference workspace\n  image               Image and video curation commands\n  knowledge           Knowledge-surface verification commands\n  labs                Inspect lab apps under apps/labs\n  lint                Repository lint policy checks\n  laws                Effect governance validation and migration commands\n  models              Check every routing surface against the operator model manifest\n  observability       Instrumentation catalog and observability standards\n  palantiri           Agent-facing observability parcels: quota headroom, lane reds, host pressure and more\n  quality             Repository operational quality commands\n  research            Research knowledge-vault and source-library curation commands\n  reviewer            \n  runners             CI runner image operations\n  session             Record and read where harness sessions stopped across every clone on this machine\n  accounts            Live screen of every Claude, Codex, SuperGrok, and Muse account: which one to use next, per provider\n  create-package      Create a new package or app workspace following Effect v4 conventions\n  delete-package      Delete a leaf workspace package or doctor a deleted package for registration residue\n  codegen             Run a code generator\n  purge               Remove root and workspace build artifacts\n  qa                  Recorded UI verification: capture, extract, and judge motion evidence\n  skills              Manage repo-local Claude and Codex skill mirrors\n  sync-data-to-ts     Sync official upstream datasets into checked-in TypeScript modules\n  tsconfig-sync       Synchronize repo-managed config files including root tsconfig references, aliases, syncpack, package tsconfig.check.json references, package docgen, the generated Vitest alias data, and the generated Fallow boundary config\n  version-sync        Detect and fix version drift across Bun runtime pins and checksums, Node pins, CI workflows, Docker images, Biome, the root Effect catalog, and turbo.json schema URLs\n  worktree            Manage sibling git worktrees under the canonical worktrees root\n  yeet                Repair, verify, or publish repository work with canonical quality proof\n",
+      "stderr": "\nERROR\n  Unknown subcommand \"nosuchcmd\" for \"beep-cli\"\n"
+    },
+    {
+      "id": "reported-exit-with-log-line",
+      "argv": ["version-sync", "--skip-network"],
+      "githubActions": false,
+      "exitCode": 1,
+      "stdout": "[<time>] WARN (#<fiber>): Bun resolution failed: Failed to read .bun-version: NotFound: FileSystem.readFile (<tmp>/version-sync/.bun-version)\n",
+      "stderr": "version-sync: Failed to read .nvmrc: NotFound: FileSystem.readFile (<tmp>/version-sync/.nvmrc) (.nvmrc)\n"
+    },
+    {
+      "id": "reported-exit-with-log-line",
+      "argv": ["version-sync", "--skip-network"],
+      "githubActions": true,
+      "exitCode": 1,
+      "stdout": "[<time>] WARN (#<fiber>): Bun resolution failed: Failed to read .bun-version: NotFound: FileSystem.readFile (<tmp>/version-sync/.bun-version)\n",
+      "stderr": "version-sync: Failed to read .nvmrc: NotFound: FileSystem.readFile (<tmp>/version-sync/.nvmrc) (.nvmrc)\n"
+    },
+    {
+      "id": "typed-failure",
+      "argv": [
+        "yeet",
+        "job",
+        "logs",
+        "0f5c9a3e-6d3b-4c1e-9a8f-2b7d1c4e5a60",
+        "--tail",
+        "-1"
+      ],
+      "githubActions": false,
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": "--tail must be nonnegative.\n"
+    },
+    {
+      "id": "typed-failure",
+      "argv": [
+        "yeet",
+        "job",
+        "logs",
+        "0f5c9a3e-6d3b-4c1e-9a8f-2b7d1c4e5a60",
+        "--tail",
+        "-1"
+      ],
+      "githubActions": true,
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": "--tail must be nonnegative.\n"
+    },
+    {
+      "id": "typed-failure-verbose",
+      "argv": [
+        "yeet",
+        "job",
+        "logs",
+        "0f5c9a3e-6d3b-4c1e-9a8f-2b7d1c4e5a60",
+        "--tail",
+        "-1",
+        "--log-level",
+        "debug"
+      ],
+      "githubActions": false,
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": "--tail must be nonnegative.\n@beep/repo-cli/commands/Yeet/Yeet.errors/YeetCommandError: --tail must be nonnegative.\n    at makeClassTrusted (<repo>/node_modules/effect/dist/Schema.js:<line>:<col>)\n    at transform (<repo>/node_modules/effect/dist/internal/schema/interpreter.js:<line>:<col>)\n    at <anonymous> (<repo>/node_modules/effect/dist/internal/schema/interpreter.js:<line>:<col>)\n    at <anonymous> (<repo>/node_modules/effect/dist/SchemaParser.js:<line>:<col>)\n    at <anonymous> (<repo>/packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts:<line>:<col>)\n    at Yeet.jobLogs (<repo>/node_modules/effect/dist/cli/Command.js:<line>:<col>)\n    at Yeet.jobLogs (definition) (<repo>/packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts:<line>:<col>)\n"
+    },
+    {
+      "id": "typed-failure-verbose",
+      "argv": [
+        "yeet",
+        "job",
+        "logs",
+        "0f5c9a3e-6d3b-4c1e-9a8f-2b7d1c4e5a60",
+        "--tail",
+        "-1",
+        "--log-level",
+        "debug"
+      ],
+      "githubActions": true,
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": "--tail must be nonnegative.\n@beep/repo-cli/commands/Yeet/Yeet.errors/YeetCommandError: --tail must be nonnegative.\n    at makeClassTrusted (<repo>/node_modules/effect/dist/Schema.js:<line>:<col>)\n    at transform (<repo>/node_modules/effect/dist/internal/schema/interpreter.js:<line>:<col>)\n    at <anonymous> (<repo>/node_modules/effect/dist/internal/schema/interpreter.js:<line>:<col>)\n    at <anonymous> (<repo>/node_modules/effect/dist/SchemaParser.js:<line>:<col>)\n    at <anonymous> (<repo>/packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts:<line>:<col>)\n    at Yeet.jobLogs (<repo>/node_modules/effect/dist/cli/Command.js:<line>:<col>)\n    at Yeet.jobLogs (definition) (<repo>/packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts:<line>:<col>)\n"
+    },
+    {
+      "id": "defect",
+      "argv": ["graft", "deep", "status"],
+      "githubActions": false,
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": "SchemaError(Expected string\n  at [\"HOME\"])\n"
+    },
+    {
+      "id": "defect",
+      "argv": ["graft", "deep", "status"],
+      "githubActions": true,
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": "SchemaError(Expected string\n  at [\"HOME\"])\n"
+    },
+    {
+      "id": "defect-verbose",
+      "argv": ["graft", "deep", "status", "--log-level=debug"],
+      "githubActions": false,
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": "SchemaError(Expected string\n  at [\"HOME\"])\nConfigError: SchemaError(Expected string\n  at [\"HOME\"])\n    at GraftCommand.runDeepStatus (<repo>/node_modules/effect/dist/cli/Command.js:<line>:<col>)\n    at GraftCommand.runDeepStatus (definition) (<repo>/packages/tooling/tool/cli/src/commands/Graft/Graft.command.ts:<line>:<col>) {\n  [cause]: SchemaError: Expected string\n    at [\"HOME\"]\n}\n"
+    },
+    {
+      "id": "defect-verbose",
+      "argv": ["graft", "deep", "status", "--log-level=debug"],
+      "githubActions": true,
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": "SchemaError(Expected string\n  at [\"HOME\"])\nConfigError: SchemaError(Expected string\n  at [\"HOME\"])\n    at GraftCommand.runDeepStatus (<repo>/node_modules/effect/dist/cli/Command.js:<line>:<col>)\n    at GraftCommand.runDeepStatus (definition) (<repo>/packages/tooling/tool/cli/src/commands/Graft/Graft.command.ts:<line>:<col>) {\n  [cause]: SchemaError: Expected string\n    at [\"HOME\"]\n}\n"
+    },
+    {
+      "id": "epipe",
+      "argv": ["--completions", "zsh"],
+      "githubActions": false,
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": "[beep-cli] stdout write failed: EPIPE: broken pipe, write; later stdout lines are dropped\n[beep-cli] exiting with code 0; stdout write failed: EPIPE: broken pipe, write; 1 line(s) dropped\n"
+    },
+    {
+      "id": "epipe",
+      "argv": ["--completions", "zsh"],
+      "githubActions": true,
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": "[beep-cli] stdout write failed: EPIPE: broken pipe, write; later stdout lines are dropped\n[beep-cli] exiting with code 0; stdout write failed: EPIPE: broken pipe, write; 1 line(s) dropped\n"
+    },
+    {
+      "id": "quality-fast-path-failure",
+      "argv": ["check"],
+      "githubActions": false,
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": "Could not find repository root (looked for .git, bun.lock) starting from \"<tmp>/empty\"\n"
+    },
+    {
+      "id": "quality-fast-path-failure",
+      "argv": ["check"],
+      "githubActions": true,
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": "Could not find repository root (looked for .git, bun.lock) starting from \"<tmp>/empty\"\n"
+    },
+    {
+      "id": "ci-fast-path-help",
+      "argv": ["ci"],
+      "githubActions": false,
+      "exitCode": 0,
+      "stdout": "CI commands:\n- bun run beep ci admission [--event-name n] [--event-path p] [--base b] [--no-json] [--github-output]\n- bun run beep ci append-turbo-summary\n- bun run beep ci dependency-review --base <sha> --head <sha>\n- bun run beep ci ruleset [--capture|--check]\n- bun run beep ci settings [--check]\n- bun run beep ci held-group\n- bun run beep ci pr-size <number>\n- bun run beep ci workflow-lint\n- bun run beep ci lane <id> [flags] (or --list)\n- bun run beep ci lane-timings [--runs n] [--tsv] or --window --since ISO --until ISO [--preview] [filters]\n- bun run beep ci local [--lanes ids] [--fast] [--affected]\n- bun run beep ci rerun-runner-loss --run-id <id> [--attempt n] [--max-attempt n] [--dry-run]\n",
+      "stderr": ""
+    },
+    {
+      "id": "ci-fast-path-help",
+      "argv": ["ci"],
+      "githubActions": true,
+      "exitCode": 0,
+      "stdout": "CI commands:\n- bun run beep ci admission [--event-name n] [--event-path p] [--base b] [--no-json] [--github-output]\n- bun run beep ci append-turbo-summary\n- bun run beep ci dependency-review --base <sha> --head <sha>\n- bun run beep ci ruleset [--capture|--check]\n- bun run beep ci settings [--check]\n- bun run beep ci held-group\n- bun run beep ci pr-size <number>\n- bun run beep ci workflow-lint\n- bun run beep ci lane <id> [flags] (or --list)\n- bun run beep ci lane-timings [--runs n] [--tsv] or --window --since ISO --until ISO [--preview] [filters]\n- bun run beep ci local [--lanes ids] [--fast] [--affected]\n- bun run beep ci rerun-runner-loss --run-id <id> [--attempt n] [--max-attempt n] [--dry-run]\n",
+      "stderr": ""
+    },
+    {
+      "id": "ci-fast-path-usage-error",
+      "argv": ["ci", "nosuch"],
+      "githubActions": false,
+      "exitCode": 1,
+      "stdout": "DESCRIPTION\n  Continuous integration helper commands\n\nUSAGE\n  beep-cli ci <subcommand> [flags]\n\nGLOBAL FLAGS\n  --help, -h                                                          Show help information\n  --version, -v                                                       Show version information\n  --wizard                                                            Start wizard mode for a command\n  --completions <bash|zsh|fish|powershell|sh|pwsh>                    Print shell completion script (choices: bash, zsh, fish, powershell, sh, pwsh)\n  --log-level <all|trace|debug|info|warn|warning|error|fatal|none>    Sets the minimum log level (choices: all, trace, debug, info, warn, warning, error, fatal, none)\n\nSUBCOMMANDS\n  patterns            Check the pre-runtime CI pattern projection, or regenerate with --write\n  change-profile      Export goals-only and desktop Rust lane profiles\n  job-env             Append the trusted event's explicit environment inputs to GITHUB_ENV\n  runner-resources    Measure host resources around a command while preserving its status\n  ruleset             Read-only ruleset drift check; --capture updates the local snapshot\n  settings            Read-only desktop release environment check\n  held-group          Detect a stalled main Check concurrency group without cancelling runs\n  pr-size             Replace contradictory size labels on a same-repository PR\n  workflow-lint       Lint trusted cache writers, push concurrency and artifact retention\n  admission           Decide heavy-matrix admission for the current GitHub event\n  append-turbo-summary Append a Turbo run summary to GitHub step summary or stdout\n  dependency-review   Review dependency changes between two commits, excluding declared fixture manifests\n  lane                Run one check.yml CI lane body exactly as hosted CI does\n  lane-timings        Collect recent hosted lane timings or a bounded admission census with attempt filtering\n  local               Run the locally-runnable CI battery from the same lane definitions as hosted CI\n  rerun-runner-loss   Re-run the jobs of a completed workflow run that lost their runner\n",
+      "stderr": "\nERROR\n  Unknown subcommand \"nosuch\" for \"beep-cli ci\"\n"
+    },
+    {
+      "id": "ci-fast-path-usage-error",
+      "argv": ["ci", "nosuch"],
+      "githubActions": true,
+      "exitCode": 1,
+      "stdout": "DESCRIPTION\n  Continuous integration helper commands\n\nUSAGE\n  beep-cli ci <subcommand> [flags]\n\nGLOBAL FLAGS\n  --help, -h                                                          Show help information\n  --version, -v                                                       Show version information\n  --wizard                                                            Start wizard mode for a command\n  --completions <bash|zsh|fish|powershell|sh|pwsh>                    Print shell completion script (choices: bash, zsh, fish, powershell, sh, pwsh)\n  --log-level <all|trace|debug|info|warn|warning|error|fatal|none>    Sets the minimum log level (choices: all, trace, debug, info, warn, warning, error, fatal, none)\n\nSUBCOMMANDS\n  patterns            Check the pre-runtime CI pattern projection, or regenerate with --write\n  change-profile      Export goals-only and desktop Rust lane profiles\n  job-env             Append the trusted event's explicit environment inputs to GITHUB_ENV\n  runner-resources    Measure host resources around a command while preserving its status\n  ruleset             Read-only ruleset drift check; --capture updates the local snapshot\n  settings            Read-only desktop release environment check\n  held-group          Detect a stalled main Check concurrency group without cancelling runs\n  pr-size             Replace contradictory size labels on a same-repository PR\n  workflow-lint       Lint trusted cache writers, push concurrency and artifact retention\n  admission           Decide heavy-matrix admission for the current GitHub event\n  append-turbo-summary Append a Turbo run summary to GitHub step summary or stdout\n  dependency-review   Review dependency changes between two commits, excluding declared fixture manifests\n  lane                Run one check.yml CI lane body exactly as hosted CI does\n  lane-timings        Collect recent hosted lane timings or a bounded admission census with attempt filtering\n  local               Run the locally-runnable CI battery from the same lane definitions as hosted CI\n  rerun-runner-loss   Re-run the jobs of a completed workflow run that lost their runner\n",
+      "stderr": "\nERROR\n  Unknown subcommand \"nosuch\" for \"beep-cli ci\"\n"
+    },
+    {
+      "id": "workflow-command-in-message",
+      "argv": ["check"],
+      "githubActions": false,
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": "Could not find repository root (looked for .git, bun.lock) starting from \"<tmp>/wf\n​::warning::injected\"\n"
+    },
+    {
+      "id": "workflow-command-in-message",
+      "argv": ["check"],
+      "githubActions": true,
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": "Could not find repository root (looked for .git, bun.lock) starting from \"<tmp>/wf\n​::warning::injected\"\n"
+    },
+    {
+      "id": "interrupt",
+      "argv": ["yeet", "inbox", "append", "--from-stdin"],
+      "githubActions": false,
+      "exitCode": 130,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "id": "interrupt",
+      "argv": ["yeet", "inbox", "append", "--from-stdin"],
+      "githubActions": true,
+      "exitCode": 130,
+      "stdout": "",
+      "stderr": ""
+    }
+  ]
+}
