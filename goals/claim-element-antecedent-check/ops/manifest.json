@@ -65,7 +65,7 @@
     {
       "id": "P3",
       "name": "Review items + evaluation",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P4",
@@ -94,5 +94,5 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "P2 source selection qualified/frozen: 60 positive families/538 selected claims, 200 allowed sets/3184 source claims. All 60 semantic-reference drafts pass integrity; 57 families/517 claims independently accepted under current conventions. Three round-limited families retain eight explicit attorney questions. Frozen six-family/50-claim attorney packet and separate one-question addendum are ready; actual attorney agreement not recorded. Domain, use-case, server and USPTO driver full package verification pass. P2 implementation hashes retained, no positive semantic benchmark predictions run. P3, PR and closeout incomplete."
+  "statusNote": "P2 corpus and native adapter committed locally in fac9ec7d8d; all 60 reference drafts /538 selected claims retained and pinned before positive predictions. Current-convention independent approval:57 families/517 claims; eight actual attorney decisions and50-claim spot-check agreement pending. Root AGENTS.md Autonomy authorizes independent P3 work during asynchronous human review. Read-only claim_self_check tool now returns source-quoted ReviewItems, candidate/evidence and unchecked claims; actual generated-item verdict projection and MCP dispatch tests pass. MCP template-fragment JSON-schema compatibility fix passes regression tests. Full package verification passes for MCP kit, use-cases and server after the P3 addition; earlier domain/USPTO verification remains green and their sources are unchanged. Evaluation, adjudicated FP interval, IPRally smoke, PR and closeout remain incomplete."
 }

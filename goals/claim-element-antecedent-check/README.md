@@ -61,11 +61,24 @@ ODP access works. The source selection is qualified and frozen: 60 positive
 families / 538 selected claims and 200 allowed sets / 3,184 source claims.
 All 60 families now have semantic-reference drafts covering all 538 selected
 claims. Independent semantic criticism, convention decisions and actual attorney
-agreement remain incomplete. P3, publication and closeout have not started.
+agreement remain incomplete. P3 read-only review-tool implementation is proceeding in parallel under the
+repository autonomy charter. Publication and closeout remain pending.
 
 ## Latest Evidence
 
-- **Current operator gate (2026-10-28):** all 60 reference drafts / 538 claims
+- **Read-only review tool verified (2026-10-28):** `claim_self_check` is now
+  declared in the practice toolkit and served by its actual MCP handler. It
+  returns full source quotes, `claim-finding` review items, candidate/evidence
+  envelopes and unchecked claims without source fetching or persistence.
+  Tests prove generated-item schema round-trip, document-distinct identities,
+  verdict projection and real MCP dispatch. Full MCP-kit, use-case and server
+  package verification passes. See
+  [P3 evidence](history/2026-10-28-p3-read-tool.md). Actual attorney acceptance
+  remains open while independent P3 evaluation work continues under root
+  `AGENTS.md` Autonomy.
+
+
+- **Pending human acceptance (2026-10-28):** all 60 reference drafts / 538 claims
   pass integrity, and independent review accepts 57 families / 517 claims.
   Three exhausted-round families retain eight explicit attorney decisions.
   Actual six-family spot-check agreement is not yet recorded. Full package
