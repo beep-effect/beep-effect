@@ -58,3 +58,9 @@ The collected publication proof exceeded ten minutes and was interrupted.
 The documented direct-push fallback preserved the normal pre-push runtime
 check and opened a draft with ready-for-heavy. Hosted checks remain mandatory.
 The user manager is unavailable, so the readiness monitor runs attached.
+
+The sparse Windows checkout also failed before tests: Git validates the full
+index even when those entries are excluded. The final workflow collects only
+PowerShell files on Linux and transfers them to Windows using the repository's
+pinned artifact actions. Windows never materializes the incompatible archive.
+No path protection, native check, or assertion is disabled.
