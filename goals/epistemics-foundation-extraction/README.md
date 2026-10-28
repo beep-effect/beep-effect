@@ -33,7 +33,8 @@ Use this command for execution-capable sessions:
 
 P0-P3 extraction work shipped in #2017 (`ab6000add2`); #2019 and #2021
 fixed its Docgen, Lint Policy and JSDoc failures. P4 proposal preparation is
-complete. Achievement remains pending verified readiness and merge evidence.
+ready, and closeout verification remains in progress. Achievement requires
+verified readiness and merge evidence.
 
 The 2026-10-28 acceptance audit found the claim factory lacked the logical-key
 function required by `SPEC.md`. The closeout change supplies it, rejects
@@ -60,7 +61,7 @@ and documentation checks pass on the revised implementation.
 
 ## Local proof disposition
 
-Both required package audits and docgen checks pass; the foundation has 38 passing
+Both required package audits and docgen checks pass; the foundation has 39 passing
 tests. Local lint and changed-file formatting pass. The publication preflight and
 scoped policy replay each exceeded ten minutes and were cancelled. Under the
 constrained-compute rule, the final-check receipt names skips for `cheap-gates`,

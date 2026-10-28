@@ -2,6 +2,7 @@ import { makeClaimEnvelope, validAt, versionsAt } from "@beep/epistemics/Claim";
 import { $EpistemicsId } from "@beep/identity/packages";
 import { describe, expect, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -12,11 +13,14 @@ import * as Str from "effect/String";
 
 const Knows = S.TaggedStruct("Knows", { left: S.String, right: S.String });
 
+const logicalKeyOfKnows = (p: typeof Knows.Type) =>
+  `Knows|${Str.length(p.left)}:${p.left}|${Str.length(p.right)}:${p.right}`;
+
 const bind = (path: string) =>
   makeClaimEnvelope({
     $I: $EpistemicsId.create(path),
     proposition: Knows,
-    logicalKey: (p) => `Knows|${Str.length(p.left)}:${p.left}|${Str.length(p.right)}:${p.right}`,
+    logicalKey: logicalKeyOfKnows,
     ids: {
       claimVersion: S.String.pipe(S.brand("TestClaimVersionId")),
       assertion: S.String.pipe(S.brand("TestAssertionId")),
@@ -120,6 +124,23 @@ describe("Claim envelope", () => {
       const wrongEncode = yield* Effect.exit(encodeNumeric({ ...decoded, logicalKey: "11" }));
       wrongDecode.pipe(Exit.isFailure, assertTrue);
       wrongEncode.pipe(Exit.isFailure, assertTrue);
+    })
+  );
+
+  it.effect("round-trips schema-derived arbitrary propositions with their keys", () =>
+    Effect.gen(function* () {
+      const result = yield* Arbitrary.checkEffect(Arbitrary.schema(Knows), (proposition) =>
+        Effect.gen(function* () {
+          const row = {
+            ...encoded("cv-generated", { _tag: "Unknown" }, 50, null),
+            proposition,
+            logicalKey: logicalKeyOfKnows(proposition),
+          };
+          expect(yield* encode(yield* decode(row))).toEqual(row);
+          return true;
+        })
+      );
+      expect(result._tag).toBe("Passed");
     })
   );
 

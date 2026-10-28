@@ -41,3 +41,26 @@ reported preflights passed. Cancelled the owned publication process and verified
 it exited 130 before pushing through the repo's constrained-compute fallback.
 The package audits and targeted root lint passed. Hosted CI remains authoritative;
 this partial local wave is not a green receipt.
+
+## 2026-10-28: query the organization-scoped runner pool
+
+The repository-level runner listing returned zero because this fleet registers
+at organization scope (`enable_organization_runners: true`). The organization
+listing showed six online busy workers and one offline registration; a later
+read showed seven online busy workers. This is a capacity queue, not evidence
+of an absent fleet. No pool settings or infrastructure were changed.
+
+The repository-only listing led to an unnecessary AWS sign-in request. Correct
+the scope before diagnosing availability. The existing aws-vault route then
+authenticated through masked Plasma delivery; no MFA value reached tool output,
+arguments or files. AWS access is not required to keep the goal monitors running.
+
+
+## 2026-10-28: hosted lint-policy closes gaps in local checks
+
+The completed Heavy / Lint Policy job reported `SFV4-arbitrary-tests` in the
+expanded claim codec test file and `phases-terminal-but-active` in this packet.
+Both were introduced here. Added real schema-derived property coverage and kept
+P4 in progress while the proposed closeout awaits verified merge evidence.
+Run the exact schema-first and goal-doctor gates locally after these fixes;
+package audit alone did not cover these repository-wide checks.
