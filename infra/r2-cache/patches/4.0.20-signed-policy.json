@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "r2-cache-source-patch/v1",
+  "upstreamRepository": "https://github.com/brunojppb/turbo-cache-server.git",
+  "upstreamRelease": "4.0.20",
+  "upstreamCommit": "0e893f63e1c7f1ac3c460d79e75fb63d4c9f7c85",
+  "patchSha256": "e28300cdf283aa1fb8bd00712e4a5332ff6c324b6b61d7f28e27d11b0f7190c0",
+  "activation": "explicit signed-v1 policy only; not deployed",
+  "compilerTested": "rustc1.96.0",
+  "thirdPartyDependencyChanges": false,
+  "rootLockMetadataSync": "decay0.0.0 to4.0.20 to match released Cargo.toml; dependency versions/checksums unchanged",
+  "verification": {
+    "crateUnitTests": 44,
+    "middlewareTests": 2,
+    "nativeClientTests": 12,
+    "muslBuildAndFleetPortability": "pending",
+    "wireProcessControls": 13,
+    "adapterOutputBytes": 0,
+    "scope": "local component only; synthetic storage; no IAM or deployment qualification"
+  },
+  "productionReadiness": false,
+  "localTestBinarySha256": "b3641473ca84788bfbe9b4b1e9d39912a52654b7242d9575e9790313ee398089"
+}

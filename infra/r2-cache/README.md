@@ -239,3 +239,45 @@ All Turbo-backed CI callers use the same optional startup in the existing setup
 action and exact-process cleanup at job exit. Protected main pushes write;
 same-repository PRs and main scheduled/manual jobs read. Forks stay local-only.
 The separate Cache Warm probe keeps its existing protected qualification path.
+
+## Signed-policy component lab
+
+`patches/4.0.20-signed-policy.patch` is a reviewed source patch to the exact
+upstream commit named by its adjacent metadata. It is unused by `adapter.sh`.
+Explicit `BEEP_CACHE_POLICY=signed-v1` requires a bearer, a canonical
+`BEEP_CACHE_NAMESPACE` beginning with `team_`, and
+`BEEP_CACHE_ACCESS_ROLE=reader|writer`. Each process binds one namespace and role;
+reader PUT and ambiguous/encoded selectors are denied before storage access.
+Writer uploads require one bounded opaque tag. The adapter never receives the
+artifact HMAC key or claims the tag proves a protected producer.
+
+Strict mode skips dotenv and telemetry initialization. Responses carry a finite
+`x-beep-cache-result`; an unclassified 404 stays `not-found`, and an unsuccessful
+PUT stays `write-ambiguous`. This preparation does not add production counters,
+trust-readiness, deployment authority or an accepted task profile.
+
+Prepare and check the reproducible source input:
+
+```sh
+RUSTUP_TOOLCHAIN=1.96.0 infra/r2-cache/policy.sh test-domain
+```
+
+Run `policy.sh cargo-test` only inside the existing machine admission boundary
+or hosted CI. The caller must select the installed tested Rust 1.96.0 toolchain;
+no ordinary adapter startup compiles Rust. The source patch includes the root
+Cargo.lock metadata correction required by the release's Cargo.toml and preserves
+all third-party dependency versions/checksums. The upstream MIT notice is retained
+in `patches/LICENSE.upstream.txt`.
+
+The optional `policy-lab.py` uses the pinned Python environment in
+`policy-lab-requirements.txt`. It starts two actual patched adapter processes and
+disposable loopback Moto S3, checks denials have zero storage calls, verifies
+metadata roundtrips, and tests valid and corrupt signed restores with both native
+Turbo pins. It takes `--adapter`, `--adapter-sha256` and `--output`; the executable
+must match the independently reviewed digest. Only synthetic credentials are used,
+and only exact owned child processes are stopped. See the packet's
+`research/adapter-policy-lab.json` for the local result and limits.
+
+A local glibc debug build has passed these checks. A portable build, R2 grant
+negatives, producer attribution, rotation/rollback, deployment and representative
+observation remain required before this patch can serve the enrolled fleet.

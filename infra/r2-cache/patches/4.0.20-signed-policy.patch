@@ -1,0 +1,637 @@
+diff --git a/Cargo.lock b/Cargo.lock
+index e0b98f6..0fae3ae 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -705,7 +705,7 @@ checksum = "092966b41edc516079bdf31ec78a2e0588d1d0c08f78b91d8307215928642b2b"
+ 
+ [[package]]
+ name = "decay"
+-version = "0.0.0"
++version = "4.0.20"
+ dependencies = [
+  "actix-web",
+  "dotenv",
+diff --git a/src/app_settings.rs b/src/app_settings.rs
+index 8890c8d..5e5d05a 100644
+--- a/src/app_settings.rs
++++ b/src/app_settings.rs
+@@ -57,6 +57,8 @@ impl FromStr for S3ServerSideEncryption {
+ 
+ #[derive(Clone)]
+ pub struct AppSettings {
++    /// Opt-in signed-epoch authorization; never contains the artifact HMAC key.
++    pub cache_policy: Option<crate::auth::policy::Policy>,
+     /// Host where to bind the server to
+     /// Defaults to the loopback address
+     pub host: String,
+@@ -102,7 +104,29 @@ pub fn get_settings() -> AppSettings {
+ 
+     let turbo_token = env::var("TURBO_TOKEN").ok().map(SecretString::from);
+ 
++    let cache_policy = match env::var("BEEP_CACHE_POLICY") {
++        Err(env::VarError::NotPresent) => None,
++        Ok(mode) if mode == "signed-v1" => {
++            assert!(
++                turbo_token.as_ref().is_some_and(|value| {
++                    use secrecy::ExposeSecret;
++                    !value.expose_secret().is_empty()
++                }),
++                "Signed policy requires a bearer credential"
++            );
++            Some(
++                crate::auth::policy::Policy::new(
++                    env::var("BEEP_CACHE_NAMESPACE").expect("Signed policy requires a namespace"),
++                    &env::var("BEEP_CACHE_ACCESS_ROLE").expect("Signed policy requires a role"),
++                )
++                .expect("Invalid signed cache policy"),
++            )
++        }
++        _ => panic!("Unsupported cache policy mode"),
++    };
++
+     AppSettings {
++        cache_policy,
+         host,
+         port,
+         s3_access_key,
+diff --git a/src/auth/mod.rs b/src/auth/mod.rs
+index f03291a..09d75c2 100644
+--- a/src/auth/mod.rs
++++ b/src/auth/mod.rs
+@@ -1 +1,3 @@
+ pub mod turbo_token;
++
++pub mod policy;
+diff --git a/src/auth/policy.rs b/src/auth/policy.rs
+new file mode 100644
+index 0000000..c04bb2a
+--- /dev/null
++++ b/src/auth/policy.rs
+@@ -0,0 +1,285 @@
++//! The signed-epoch policy is independent of artifact HMAC and S3 credentials.
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++pub enum Role {
++    Reader,
++    Writer,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++pub enum Code {
++    Allowed,
++    AuthenticationDenied,
++    WriteDenied,
++    TenantDenied,
++    SelectorInvalid,
++    RouteInvalid,
++    MethodDenied,
++    SignatureMissing,
++    MetadataInvalid,
++    NotFound,
++    Throttled,
++    BackendUnavailable,
++    WriteAmbiguous,
++    PayloadRejected,
++    UnexpectedStatus,
++}
++impl Code {
++    pub fn label(self) -> &'static str {
++        match self {
++            Self::Allowed => "allowed",
++            Self::AuthenticationDenied => "authentication-denied",
++            Self::WriteDenied => "write-denied",
++            Self::TenantDenied => "tenant-denied",
++            Self::SelectorInvalid => "selector-invalid",
++            Self::RouteInvalid => "route-invalid",
++            Self::MethodDenied => "method-denied",
++            Self::SignatureMissing => "signature-missing",
++            Self::MetadataInvalid => "metadata-invalid",
++            Self::NotFound => "not-found",
++            Self::Throttled => "throttled",
++            Self::BackendUnavailable => "backend-unavailable",
++            Self::WriteAmbiguous => "write-ambiguous",
++            Self::PayloadRejected => "payload-rejected",
++            Self::UnexpectedStatus => "unexpected-status",
++        }
++    }
++    pub fn status(self) -> u16 {
++        match self {
++            Self::Allowed => 200,
++            Self::AuthenticationDenied => 401,
++            Self::WriteDenied | Self::TenantDenied => 403,
++            Self::RouteInvalid | Self::NotFound => 404,
++            Self::MethodDenied => 405,
++            Self::Throttled => 429,
++            Self::BackendUnavailable | Self::WriteAmbiguous => 503,
++            Self::UnexpectedStatus => 502,
++            Self::SelectorInvalid
++            | Self::SignatureMissing
++            | Self::MetadataInvalid
++            | Self::PayloadRejected => 400,
++        }
++    }
++    pub fn from_response(method: &str, status: u16) -> Self {
++        match status {
++            200..=299 => Self::Allowed,
++            401 => Self::AuthenticationDenied,
++            404 => Self::NotFound,
++            429 => Self::Throttled,
++            400 | 413 => Self::PayloadRejected,
++            500..=599 if method == "PUT" => Self::WriteAmbiguous,
++            500..=599 => Self::BackendUnavailable,
++            _ => Self::UnexpectedStatus,
++        }
++    }
++}
++#[derive(Clone, Debug)]
++pub struct Policy {
++    namespace: String,
++    role: Role,
++}
++impl Policy {
++    pub fn new(namespace: String, role: &str) -> Result<Self, Code> {
++        if !(8..=96).contains(&namespace.len())
++            || !namespace.starts_with("team_")
++            || !namespace
++                .bytes()
++                .all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'-')
++        {
++            return Err(Code::SelectorInvalid);
++        }
++        let role = match role {
++            "reader" => Role::Reader,
++            "writer" => Role::Writer,
++            _ => return Err(Code::WriteDenied),
++        };
++        Ok(Self { namespace, role })
++    }
++    /// Accept exactly one canonical native selector, never a decoded alias or unknown query.
++    pub fn assess(&self, method: &str, path: &str, query: &str, tags: &[&str]) -> Code {
++        let namespace = query
++            .strip_prefix("teamId=")
++            .or_else(|| query.strip_prefix("slug="));
++        let Some(namespace) = namespace else {
++            return Code::SelectorInvalid;
++        };
++        if namespace.is_empty()
++            || !namespace
++                .bytes()
++                .all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'-')
++        {
++            return Code::SelectorInvalid;
++        }
++        if namespace != self.namespace {
++            return Code::TenantDenied;
++        }
++        match (method, path) {
++            ("GET", "/v8/artifacts/status")
++            | ("POST", "/v8/artifacts/events")
++            | ("POST", "/v8/artifacts") => Code::Allowed,
++            (_, "/v8/artifacts/status" | "/v8/artifacts/events" | "/v8/artifacts") => {
++                Code::MethodDenied
++            }
++            _ => {
++                let Some(hash) = path.strip_prefix("/v8/artifacts/") else {
++                    return Code::RouteInvalid;
++                };
++                if !(16..=64).contains(&hash.len())
++                    || !hash
++                        .bytes()
++                        .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
++                {
++                    return Code::RouteInvalid;
++                }
++                match method {
++                    "GET" | "HEAD" => Code::Allowed,
++                    "PUT" if self.role == Role::Reader => Code::WriteDenied,
++                    "PUT" if tags.is_empty() || tags.iter().any(|tag| tag.trim().is_empty()) => {
++                        Code::SignatureMissing
++                    }
++                    "PUT"
++                        if tags.len() != 1
++                            || tags.iter().any(|tag| tag.len() > 512 || !tag.is_ascii()) =>
++                    {
++                        Code::MetadataInvalid
++                    }
++                    "PUT" => Code::Allowed,
++                    _ => Code::MethodDenied,
++                }
++            }
++        }
++    }
++}
++#[cfg(test)]
++mod tests {
++    use super::*;
++    const PATH: &str = "/v8/artifacts/0123456789abcdef";
++    const TEAM: &str = "team_beep_signed_epoch_1";
++    fn policy(role: &str) -> Policy {
++        Policy::new(TEAM.to_owned(), role).unwrap()
++    }
++    #[test]
++    fn canonical_configuration_only() {
++        for team in [
++            "",
++            "beep",
++            "team_../escape",
++            "team_test%2fescape",
++            "team_test&slug=x",
++        ] {
++            assert!(Policy::new(team.to_owned(), "writer").is_err());
++        }
++        assert!(Policy::new(TEAM.to_owned(), "admin").is_err());
++    }
++    #[test]
++    fn reader_has_no_artifact_write_capability() {
++        assert_eq!(
++            policy("reader").assess("PUT", PATH, &format!("teamId={TEAM}"), &["opaque"]),
++            Code::WriteDenied
++        );
++        for method in ["GET", "HEAD"] {
++            assert_eq!(
++                policy("reader").assess(method, PATH, &format!("teamId={TEAM}"), &[]),
++                Code::Allowed
++            );
++        }
++    }
++    #[test]
++    fn writer_requires_one_bounded_opaque_tag() {
++        let p = policy("writer");
++        let query = format!("teamId={TEAM}");
++        assert_eq!(p.assess("PUT", PATH, &query, &[]), Code::SignatureMissing);
++        assert_eq!(p.assess("PUT", PATH, &query, &[""]), Code::SignatureMissing);
++        assert_eq!(
++            p.assess("PUT", PATH, &query, &["one", "two"]),
++            Code::MetadataInvalid
++        );
++        assert_eq!(
++            p.assess("PUT", PATH, &query, &[&"x".repeat(513)]),
++            Code::MetadataInvalid
++        );
++        assert_eq!(
++            p.assess("PUT", PATH, &query, &["v=1:opaque-tag"]),
++            Code::Allowed
++        );
++    }
++    #[test]
++    fn rejects_conflicting_duplicate_encoded_and_unknown_selectors() {
++        let p = policy("reader");
++        for query in [
++            "",
++            "teamId=",
++            "teamId=team_beep_signed_epoch_1&teamId=other",
++            "teamId=team_beep_signed_epoch_1&slug=other",
++            "slug=team_beep_signed_epoch_1&teamId=other",
++            "teamId=team_beep_signed_epoch_1%2fescape",
++            "teamId=team_beep_signed_epoch_1+suffix",
++            "unknown=team_beep_signed_epoch_1",
++        ] {
++            assert_eq!(p.assess("GET", PATH, query, &[]), Code::SelectorInvalid);
++        }
++        assert_eq!(
++            p.assess("GET", PATH, "teamId=team_foreign_epoch", &[]),
++            Code::TenantDenied
++        );
++        assert_eq!(
++            p.assess("GET", PATH, "teamId=team_beep_signed_epoch_0", &[]),
++            Code::TenantDenied
++        );
++    }
++    #[test]
++    fn accepts_native_id_and_slug_without_ambiguity() {
++        for selector in ["teamId", "slug"] {
++            assert_eq!(
++                policy("reader").assess("GET", PATH, &format!("{selector}={TEAM}"), &[]),
++                Code::Allowed
++            );
++        }
++    }
++    #[test]
++    fn rejects_escaping_and_encoded_artifact_paths() {
++        for path in [
++            "/v8/artifacts/../escape",
++            "/v8/artifacts/%30%31",
++            "/v8/artifacts/0123456789abcdef/extra",
++            "/v8/artifacts/ABCDEF0123456789",
++            "/v8/artifacts/hash",
++            "/v7/artifacts/0123456789abcdef",
++        ] {
++            assert_eq!(
++                policy("reader").assess("GET", path, &format!("teamId={TEAM}"), &[]),
++                Code::RouteInvalid
++            );
++        }
++        assert_eq!(
++            policy("writer").assess("DELETE", PATH, &format!("teamId={TEAM}"), &[]),
++            Code::MethodDenied
++        );
++    }
++    #[test]
++    fn metadata_routes_are_tenant_bound_and_method_limited() {
++        for (method, path) in [
++            ("GET", "/v8/artifacts/status"),
++            ("POST", "/v8/artifacts/events"),
++            ("POST", "/v8/artifacts"),
++        ] {
++            assert_eq!(
++                policy("reader").assess(method, path, &format!("teamId={TEAM}"), &[]),
++                Code::Allowed
++            );
++            assert_eq!(
++                policy("reader").assess(method, path, "slug=team_foreign_epoch", &[]),
++                Code::TenantDenied
++            );
++        }
++    }
++    #[test]
++    fn unknown_not_found_is_not_claimed_as_a_genuine_miss() {
++        assert_eq!(Code::from_response("GET", 404), Code::NotFound);
++    }
++    #[test]
++    fn preserve_ambiguous_writes_and_transient_faults() {
++        assert_eq!(Code::from_response("PUT", 500), Code::WriteAmbiguous);
++        assert_eq!(Code::from_response("GET", 500), Code::BackendUnavailable);
++        assert_eq!(Code::from_response("GET", 429), Code::Throttled);
++        assert_eq!(Code::from_response("PUT", 201), Code::Allowed);
++    }
++}
+diff --git a/src/auth/turbo_token.rs b/src/auth/turbo_token.rs
+index 625e944..794d195 100644
+--- a/src/auth/turbo_token.rs
++++ b/src/auth/turbo_token.rs
+@@ -12,6 +12,7 @@ use serde::Serialize;
+ use subtle::ConstantTimeEq;
+ 
+ use crate::app_settings::AppSettings;
++use crate::auth::policy::Code;
+ 
+ #[derive(Serialize)]
+ struct AuthError {
+@@ -57,6 +58,41 @@ pub async fn validate_turbo_token(
+         }
+     };
+ 
++    let policy = req
++        .app_data::<Data<AppSettings>>()
++        .and_then(|settings| settings.cache_policy.clone());
++    if let Some(policy) = policy {
++        if !matches!(outcome, Outcome::Valid) {
++            return Ok(policy_denied(req, Code::AuthenticationDenied));
++        }
++        let tags = req
++            .headers()
++            .get_all("x-artifact-tag")
++            .map(|value| value.to_str())
++            .collect::<Result<Vec<_>, _>>();
++        let tags = match tags {
++            Ok(tags) => tags,
++            Err(_) => return Ok(policy_denied(req, Code::MetadataInvalid)),
++        };
++        let decision = policy.assess(
++            req.method().as_str(),
++            req.uri().path(),
++            req.query_string(),
++            &tags,
++        );
++        if decision != Code::Allowed {
++            return Ok(policy_denied(req, decision));
++        }
++        let method = req.method().to_string();
++        return next.call(req).await.map(|mut response| {
++            let code = Code::from_response(&method, response.status().as_u16());
++            response.headers_mut().insert(
++                header::HeaderName::from_static("x-beep-cache-result"),
++                header::HeaderValue::from_static(code.label()),
++            );
++            response.map_into_boxed_body()
++        });
++    }
+     match outcome {
+         Outcome::NoTokenConfigured => {
+             tracing::debug!("No TURBO_TOKEN configured. Skipping token validation");
+@@ -77,6 +113,20 @@ pub async fn validate_turbo_token(
+     }
+ }
+ 
++/// A bounded machine-readable result, with no request-derived detail or raw cause.
++fn policy_denied(req: ServiceRequest, code: Code) -> ServiceResponse {
++    let status =
++        actix_web::http::StatusCode::from_u16(code.status()).expect("Policy status is valid");
++    let mut response = HttpResponse::build(status);
++    response.insert_header(("x-beep-cache-result", code.label()));
++    if code == Code::AuthenticationDenied {
++        response.insert_header((header::WWW_AUTHENTICATE, "Bearer"));
++    }
++    req.into_response(response.json(AuthError {
++        error: code.label(),
++    }))
++}
++
+ /// Extracts the token from an `Authorization` header value.
+ /// Returns `None` when the scheme is not Bearer or the token is empty.
+ fn parse_bearer_token(header_value: &str) -> Option<&str> {
+diff --git a/src/main.rs b/src/main.rs
+index d196b24..5d8a085 100644
+--- a/src/main.rs
++++ b/src/main.rs
+@@ -13,27 +13,35 @@ const PKG_VERSION: &str = env!("CARGO_PKG_VERSION");
+ 
+ #[tokio::main]
+ async fn main() -> Result<(), std::io::Error> {
+-    dotenv::dotenv().ok();
++    let signed_policy = std::env::var_os("BEEP_CACHE_POLICY").is_some();
++    if !signed_policy {
++        dotenv::dotenv().ok();
++    }
++    // Validate before any logger starts. Strict mode neither reloads client dotenv
++    // material nor initializes URL/payload-bearing request logs, files or OTEL.
++    let app_settings = get_settings();
+ 
+     let service_name = otel_service_name(PKG_NAME);
+ 
+     // Initialise our logger and telemetry stack
+     // for entire lifecycle of our web server
+-    let subscriber = get_telemetry_subscriber(
+-        PKG_NAME,
+-        Arc::clone(&service_name),
+-        PKG_VERSION,
+-        "info".into(),
+-        std::io::stdout,
+-    );
+-    init_telemetry_subscriber(subscriber);
+-
+-    // Initialize system metrics collection (CPU, RAM)
+-    // This must be called after the meter provider is set globally
+-    // The returned SystemMetrics struct must be kept alive for the application lifetime
+-    let _system_metrics = init_system_metrics(PKG_NAME, service_name, PKG_VERSION);
+-
+-    let app_settings = get_settings();
++    let _system_metrics = if signed_policy {
++        None
++    } else {
++        let subscriber = get_telemetry_subscriber(
++            PKG_NAME,
++            Arc::clone(&service_name),
++            PKG_VERSION,
++            "info".into(),
++            std::io::stdout,
++        );
++        init_telemetry_subscriber(subscriber);
++
++        // Initialize system metrics collection (CPU, RAM)
++        // This must be called after the meter provider is set globally
++        // The returned SystemMetrics struct must be kept alive for the application lifetime
++        Some(init_system_metrics(PKG_NAME, service_name, PKG_VERSION))
++    };
+ 
+     let address = format!("{}:{}", app_settings.host, app_settings.port);
+     let listener = TcpListener::bind(address)?;
+diff --git a/src/storage.rs b/src/storage.rs
+index 92b16f9..eca3bba 100644
+--- a/src/storage.rs
++++ b/src/storage.rs
+@@ -167,6 +167,7 @@ mod tests {
+ 
+     fn settings_with_credentials() -> AppSettings {
+         AppSettings {
++            cache_policy: None,
+             host: "127.0.0.1".to_owned(),
+             port: 8000,
+             s3_access_key: Some("super-secret-access-key".into()),
+diff --git a/tests/signed_policy.rs b/tests/signed_policy.rs
+new file mode 100644
+index 0000000..7efca46
+--- /dev/null
++++ b/tests/signed_policy.rs
+@@ -0,0 +1,133 @@
++use actix_web::{App, HttpResponse, http::Method, middleware::from_fn, test, web};
++use decay::{
++    app_settings::get_settings,
++    auth::{policy::Policy, turbo_token::validate_turbo_token},
++};
++use std::sync::{
++    Arc,
++    atomic::{AtomicUsize, Ordering},
++};
++
++#[actix_web::test]
++async fn signed_policy_denials_never_reach_the_backend_and_never_reflect_input() {
++    for role in ["reader", "writer"] {
++        let mut settings = get_settings();
++        settings.turbo_token = Some("synthetic-bound-bearer".into());
++        settings.cache_policy = Some(Policy::new("team_beep_epoch_1".to_owned(), role).unwrap());
++        let calls = Arc::new(AtomicUsize::new(0));
++        let observed = Arc::clone(&calls);
++        let app = test::init_service(
++            App::new()
++                .app_data(web::Data::new(settings))
++                .wrap(from_fn(validate_turbo_token))
++                .default_service(web::to(move || {
++                    observed.fetch_add(1, Ordering::SeqCst);
++                    async { HttpResponse::Created().finish() }
++                })),
++        )
++        .await;
++        let path = "/v8/artifacts/0123456789abcdef?teamId=team_beep_epoch_1";
++        let role_write = if role == "reader" {
++            (403, "write-denied")
++        } else {
++            (201, "allowed")
++        };
++        for (method, url, auth, tag, status, code) in [
++            (Method::GET, path, false, None, 401, "authentication-denied"),
++            (
++                Method::GET,
++                "/v8/artifacts/0123456789abcdef?teamId=team_private_selector",
++                true,
++                None,
++                403,
++                "tenant-denied",
++            ),
++            (
++                Method::GET,
++                "/v8/artifacts/0123456789abcdef?teamId=team_beep_epoch_1&slug=private_query_secret",
++                true,
++                None,
++                400,
++                "selector-invalid",
++            ),
++            (
++                Method::GET,
++                "/v8/artifacts/0123456789abcdef?teamId=team_beep_epoch_1%2fescape",
++                true,
++                None,
++                400,
++                "selector-invalid",
++            ),
++            (
++                Method::GET,
++                "/v8/artifacts/%30%31?teamId=team_beep_epoch_1",
++                true,
++                None,
++                404,
++                "route-invalid",
++            ),
++            (
++                Method::PUT,
++                path,
++                true,
++                Some("synthetic-private-opaque-tag"),
++                role_write.0,
++                role_write.1,
++            ),
++            (Method::GET, path, true, None, 201, "allowed"),
++        ] {
++            let before = calls.load(Ordering::SeqCst);
++            let mut request = test::TestRequest::default().method(method).uri(url);
++            if auth {
++                request = request.insert_header(("Authorization", "Bearer synthetic-bound-bearer"));
++            }
++            if let Some(tag) = tag {
++                request = request.insert_header(("x-artifact-tag", tag));
++            }
++            let response = test::call_service(&app, request.to_request()).await;
++            assert_eq!(response.status().as_u16(), status);
++            assert_eq!(response.headers().get("x-beep-cache-result").unwrap(), code);
++            let body = test::read_body(response).await;
++            let body = std::str::from_utf8(&body).unwrap();
++            for secret in [
++                "synthetic-bound-bearer",
++                "team_private_selector",
++                "private_query_secret",
++                "synthetic-private-opaque-tag",
++            ] {
++                assert!(!body.contains(secret));
++            }
++            assert_eq!(
++                calls.load(Ordering::SeqCst) - before,
++                usize::from(status < 400)
++            );
++        }
++    }
++}
++
++#[actix_web::test]
++async fn writer_tag_rejection_precedes_backend_io() {
++    let mut settings = get_settings();
++    settings.turbo_token = Some("synthetic-bound-bearer".into());
++    settings.cache_policy = Some(Policy::new("team_beep_epoch_1".to_owned(), "writer").unwrap());
++    let app = test::init_service(
++        App::new()
++            .app_data(web::Data::new(settings))
++            .wrap(from_fn(validate_turbo_token))
++            .default_service(web::to(|| async {
++                panic!("Denied upload reached backend");
++                HttpResponse::Ok().finish()
++            })),
++    )
++    .await;
++    for tags in [vec![], vec![""], vec!["one", "two"]] {
++        let mut request = test::TestRequest::put()
++            .uri("/v8/artifacts/0123456789abcdef?teamId=team_beep_epoch_1")
++            .insert_header(("Authorization", "Bearer synthetic-bound-bearer"));
++        for tag in &tags {
++            request = request.append_header(("x-artifact-tag", *tag));
++        }
++        let response = test::call_service(&app, request.to_request()).await;
++        assert_eq!(response.status().as_u16(), 400);
++    }
++}

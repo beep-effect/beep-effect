@@ -19,3 +19,19 @@ relationship validator for worker, supervisor and importer use would prevent
 validation rules from diverging and make edited transport evidence testable at
 the actual import boundary. This is a source-review finding, not a demonstrated
 escape or a new native failure.
+
+### Reproducible source patch and native fixture boundary
+
+The pinned 4.0.20 source release has root package version `0.0.0` in Cargo.lock
+while Cargo.toml names `4.0.20`; `cargo test --locked` refuses that mismatch.
+The reviewed patch synchronizes only the root metadata. No third-party dependency
+version or checksum changes. The first full crate compile also caught a test
+initializer missing the new optional policy field; that initializer is repaired.
+Both failures preceded the passing 44 crate and two middleware tests.
+
+The standalone native conformance runner also omitted `--skip-infer` and
+`--single-package`, although its fixture has no workspace packages. A separate
+small CLI repair will align its invocation with the native protocol fixture.
+Its regression must assert both flags; simulated cache responses alone cannot
+prove the real binary entered that fixture. The adapter process lab uses both
+flags and checks each pinned binary digest before invocation.

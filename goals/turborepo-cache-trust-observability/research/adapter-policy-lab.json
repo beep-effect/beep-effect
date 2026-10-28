@@ -1,0 +1,240 @@
+{
+  "schemaVersion": "r2-cache-policy-lab/v1",
+  "authority": "isolated-process-component-only",
+  "storage": "Moto5.1.15 synthetic S3; no R2 IAM qualification",
+  "adapterSha256": "b3641473ca84788bfbe9b4b1e9d39912a52654b7242d9575e9790313ee398089",
+  "wire": [
+    {
+      "case": "missing-auth",
+      "status": 401,
+      "result": "authentication-denied",
+      "storageCalls": 0,
+      "passed": true
+    },
+    {
+      "case": "reader-put",
+      "status": 403,
+      "result": "write-denied",
+      "storageCalls": 0,
+      "passed": true
+    },
+    {
+      "case": "unsigned-put",
+      "status": 400,
+      "result": "signature-missing",
+      "storageCalls": 0,
+      "passed": true
+    },
+    {
+      "case": "foreign-tenant",
+      "status": 403,
+      "result": "tenant-denied",
+      "storageCalls": 0,
+      "passed": true
+    },
+    {
+      "case": "old-epoch",
+      "status": 403,
+      "result": "tenant-denied",
+      "storageCalls": 0,
+      "passed": true
+    },
+    {
+      "case": "duplicate-selector",
+      "status": 400,
+      "result": "selector-invalid",
+      "storageCalls": 0,
+      "passed": true
+    },
+    {
+      "case": "encoded-selector",
+      "status": 400,
+      "result": "selector-invalid",
+      "storageCalls": 0,
+      "passed": true
+    },
+    {
+      "case": "encoded-artifact",
+      "status": 404,
+      "result": "route-invalid",
+      "storageCalls": 0,
+      "passed": true
+    },
+    {
+      "case": "delete-denied",
+      "status": 405,
+      "result": "method-denied",
+      "storageCalls": 0,
+      "passed": true
+    },
+    {
+      "case": "missing-selector",
+      "status": 400,
+      "result": "selector-invalid",
+      "storageCalls": 0,
+      "passed": true
+    },
+    {
+      "case": "status-selector",
+      "status": 400,
+      "result": "selector-invalid",
+      "storageCalls": 0,
+      "passed": true
+    },
+    {
+      "case": "metadata-get",
+      "passed": true
+    },
+    {
+      "case": "metadata-head",
+      "passed": true
+    }
+  ],
+  "native": [
+    {
+      "channel": "stable",
+      "version": "2.11.10",
+      "executableSha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6",
+      "case": "producer",
+      "hash": "b4f57e4bc39eb18f",
+      "cacheStatus": "MISS",
+      "exitCode": 0,
+      "outputMaterialized": true,
+      "passed": true
+    },
+    {
+      "channel": "stable",
+      "version": "2.11.10",
+      "executableSha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6",
+      "case": "replay",
+      "hash": "b4f57e4bc39eb18f",
+      "cacheStatus": "HIT",
+      "exitCode": 0,
+      "outputMaterialized": true,
+      "passed": true
+    },
+    {
+      "channel": "stable",
+      "version": "2.11.10",
+      "executableSha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6",
+      "case": "wrong-key",
+      "hash": "b4f57e4bc39eb18f",
+      "cacheStatus": "MISS",
+      "exitCode": 42,
+      "outputMaterialized": false,
+      "passed": true
+    },
+    {
+      "channel": "stable",
+      "version": "2.11.10",
+      "executableSha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6",
+      "case": "missing-tag",
+      "hash": "b4f57e4bc39eb18f",
+      "cacheStatus": "MISS",
+      "exitCode": 42,
+      "outputMaterialized": false,
+      "passed": true
+    },
+    {
+      "channel": "stable",
+      "version": "2.11.10",
+      "executableSha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6",
+      "case": "tampered-tag",
+      "hash": "b4f57e4bc39eb18f",
+      "cacheStatus": "MISS",
+      "exitCode": 42,
+      "outputMaterialized": false,
+      "passed": true
+    },
+    {
+      "channel": "stable",
+      "version": "2.11.10",
+      "executableSha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6",
+      "case": "tampered-body",
+      "hash": "b4f57e4bc39eb18f",
+      "cacheStatus": "MISS",
+      "exitCode": 42,
+      "outputMaterialized": false,
+      "passed": true
+    },
+    {
+      "channel": "canary",
+      "version": "2.11.9-canary.1",
+      "executableSha256": "f0686d3818ff00361d89919ec5e09d151aa6d9641cb5ddfda8fa734bf906cbbb",
+      "case": "producer",
+      "hash": "b4f57e4bc39eb18f",
+      "cacheStatus": "MISS",
+      "exitCode": 0,
+      "outputMaterialized": true,
+      "passed": true
+    },
+    {
+      "channel": "canary",
+      "version": "2.11.9-canary.1",
+      "executableSha256": "f0686d3818ff00361d89919ec5e09d151aa6d9641cb5ddfda8fa734bf906cbbb",
+      "case": "replay",
+      "hash": "b4f57e4bc39eb18f",
+      "cacheStatus": "HIT",
+      "exitCode": 0,
+      "outputMaterialized": true,
+      "passed": true
+    },
+    {
+      "channel": "canary",
+      "version": "2.11.9-canary.1",
+      "executableSha256": "f0686d3818ff00361d89919ec5e09d151aa6d9641cb5ddfda8fa734bf906cbbb",
+      "case": "wrong-key",
+      "hash": "b4f57e4bc39eb18f",
+      "cacheStatus": "MISS",
+      "exitCode": 42,
+      "outputMaterialized": false,
+      "passed": true
+    },
+    {
+      "channel": "canary",
+      "version": "2.11.9-canary.1",
+      "executableSha256": "f0686d3818ff00361d89919ec5e09d151aa6d9641cb5ddfda8fa734bf906cbbb",
+      "case": "missing-tag",
+      "hash": "b4f57e4bc39eb18f",
+      "cacheStatus": "MISS",
+      "exitCode": 42,
+      "outputMaterialized": false,
+      "passed": true
+    },
+    {
+      "channel": "canary",
+      "version": "2.11.9-canary.1",
+      "executableSha256": "f0686d3818ff00361d89919ec5e09d151aa6d9641cb5ddfda8fa734bf906cbbb",
+      "case": "tampered-tag",
+      "hash": "b4f57e4bc39eb18f",
+      "cacheStatus": "MISS",
+      "exitCode": 42,
+      "outputMaterialized": false,
+      "passed": true
+    },
+    {
+      "channel": "canary",
+      "version": "2.11.9-canary.1",
+      "executableSha256": "f0686d3818ff00361d89919ec5e09d151aa6d9641cb5ddfda8fa734bf906cbbb",
+      "case": "tampered-body",
+      "hash": "b4f57e4bc39eb18f",
+      "cacheStatus": "MISS",
+      "exitCode": 42,
+      "outputMaterialized": false,
+      "passed": true
+    }
+  ],
+  "adapterOutputBytes": 0,
+  "productionReadiness": false,
+  "passed": true,
+  "recordedAt": "2026-10-28T22:34:41.966128+00:00",
+  "upstreamCommit": "0e893f63e1c7f1ac3c460d79e75fb63d4c9f7c85",
+  "patchSha256": "e28300cdf283aa1fb8bd00712e4a5332ff6c324b6b61d7f28e27d11b0f7190c0",
+  "harnessSha256": "6bd3fde59e4f05ecb9b47f91d4e1345ce74f431de43540aa7e543e52ad1a094d",
+  "limitations": [
+    "Local glibc debug binary; no musl build or fleet portability proof.",
+    "Synthetic S3 does not prove Cloudflare R2 IAM enforcement or deployed credentials.",
+    "No production rollout, artifact-key distribution, namespace migration, or task qualification.",
+    "No representative seven/seven/fourteen-day observation evidence."
+  ]
+}
