@@ -50,7 +50,7 @@ TypeScript and repository Vitest configuration files. Infra is included as
 The raw command results and Turbo task hashes are retained locally under
 `.beep/effect-string-*-check-result.json` and
 `.beep/effect-string-full-check-tasks.json`. That receipt qualifies the named source snapshot. Later main merges require
-separate qualification, recorded below. Hosted readiness and verified merge evidence for #2318
+separate qualification, recorded below. Hosted readiness and verified merge evidence for #2324
 remain required before claiming completion.
 
 ## Historical evidence retained
