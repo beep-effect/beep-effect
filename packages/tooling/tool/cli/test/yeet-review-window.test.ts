@@ -169,13 +169,15 @@ const scripted =
     );
   };
 
+const reviewReadPlatform = Layer.mergeAll(NodeServices.layer, MemoryFileSystem.layer);
+
 const readWith = Effect.fn("readWith")(function* (answers: Answers) {
   const calls = yield* Ref.make<ReadonlyArray<string>>([]);
   const window = yield* readYeetReviewWindow(context, { prNumber: 42, headSha }, scripted(answers, calls));
   return { window, calls: yield* Ref.get(calls) };
 });
 
-it.layer(NodeServices.layer, { timeout: "30 seconds" })("review window read", (it) => {
+it.layer(reviewReadPlatform, { timeout: "30 seconds" })("review window read", (it) => {
   it.effect("reads the window open on the test clock, then elapsed once the clock passes it", () =>
     Effect.gen(function* () {
       const answers = {
@@ -195,7 +197,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("review window read", (i
   );
 });
 
-it.layer(NodeServices.layer, { timeout: "30 seconds" })("review window read", (it) => {
+it.layer(reviewReadPlatform, { timeout: "30 seconds" })("review window read", (it) => {
   it.effect("a new push to the head restarts a window that had elapsed", () =>
     Effect.gen(function* () {
       yield* TestClock.setTime(millis("2026-10-06T10:21:00Z"));

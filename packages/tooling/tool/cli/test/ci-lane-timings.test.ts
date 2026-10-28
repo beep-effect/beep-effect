@@ -1,4 +1,5 @@
 // Historical pre-retirement GitHub snapshots retain the former Knip context.
+import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   assessCiLaneTimingWindowBounds,
   assessCiLaneTimingWindowPopulation,
@@ -365,7 +366,7 @@ const laneTimingsWindowCliSpawner = (commands: Array<string>) =>
     return windowGithubResponse(command.args[1] ?? "").pipe(Effect.map(stubHandle));
   });
 
-const laneTimingsCommandLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer);
+const laneTimingsCommandLayer = Layer.mergeAll(NodeServices.layer, MemoryFileSystem.layer, TestConsole.layer);
 const runLaneTimingsCommand = Command.runWith(ciLaneTimingsCommand, { version: "0.0.0" });
 const isString = (value: unknown): value is string => typeof value === "string";
 

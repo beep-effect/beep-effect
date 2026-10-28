@@ -1,7 +1,7 @@
 import { OutboxAttachmentPolicy, OutboxAttachmentSource } from "@beep/m365-mcp";
+import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { it } from "@beep/test-runner";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
-import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { assert, describe } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -11,7 +11,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 
-const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer, NodeCrypto.layer);
+const PlatformLayer = Layer.mergeAll(MemoryFileSystem.layer, NodePath.layer, NodeCrypto.layer);
 
 // SHA-256 of the three ASCII bytes "abc" (FIPS 180-2 test vector).
 const ABC_SHA256 = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad";

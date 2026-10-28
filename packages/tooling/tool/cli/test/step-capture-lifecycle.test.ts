@@ -601,7 +601,7 @@ BunRuntime.runMain(
               cwd: process.cwd(),
               captureTimeoutMillis: PosInt.make(60_000),
             })
-          ).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner), Effect.scoped)
+          ).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner))
         );
 
         yield* TestClock.adjust("1 minute");
@@ -620,8 +620,7 @@ BunRuntime.runMain(
         const { killCount, spawner } = yield* makeStuckSpawner({ output: "partial output", killEndsStream: true });
         const fiber = yield* Effect.forkChild(
           runCaptured({ command: "fake-step", args: ["--flag"] }).pipe(
-            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
-            Effect.scoped
+            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
           )
         );
 
@@ -642,8 +641,7 @@ BunRuntime.runMain(
         const { killCount, spawner } = yield* makeStuckSpawner({ output: "partial", killEndsStream: false });
         const fiber = yield* Effect.forkChild(
           runCaptured({ command: "fake-step", args: ["--flag"] }).pipe(
-            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
-            Effect.scoped
+            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
           )
         );
 
@@ -668,8 +666,7 @@ BunRuntime.runMain(
         yield* Deferred.succeed(closed, void 0);
 
         const result = yield* runCaptured({ command: "fake-step", args: [] }).pipe(
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
-          Effect.scoped
+          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
         );
 
         expect(result.exitCode).toBe(0);
@@ -690,7 +687,7 @@ BunRuntime.runMain(
             args: ["--flag"],
             timeout: "1 minute",
             forceKillAfter: "1 second",
-          }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner), Effect.scoped)
+          }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner))
         );
 
         yield* TestClock.adjust("1 minute");
@@ -717,7 +714,7 @@ BunRuntime.runMain(
             command: "fake-step",
             args: ["--flag"],
             abortWhen: Effect.sleep("1 minute").pipe(Effect.andThen(Effect.fail("watchdog tripped"))),
-          }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner), Effect.scoped)
+          }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner))
         ).pipe(Effect.forkChild);
 
         yield* TestClock.adjust("1 minute");
@@ -739,7 +736,7 @@ BunRuntime.runMain(
             args: ["--flag"],
             timeout: "1 minute",
             forceKillAfter: "1 second",
-          }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner), Effect.scoped)
+          }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner))
         ).pipe(Effect.forkChild);
 
         yield* TestClock.adjust("1 minute");
@@ -767,7 +764,7 @@ BunRuntime.runMain(
             args: ["--flag"],
             timeout: "1 minute",
             forceKillAfter: "1 second",
-          }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner), Effect.scoped)
+          }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner))
         );
 
         yield* TestClock.adjust("1 minute");
