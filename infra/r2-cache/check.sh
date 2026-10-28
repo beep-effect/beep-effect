@@ -7,8 +7,8 @@ root="$(cd "$(dirname "$0")" && pwd)"
 python3 - "$root" <<'PY'
 import http.server,json,os,pathlib,re,shutil,socket,subprocess,sys,tarfile,tempfile,threading,time,uuid
 source=pathlib.Path(sys.argv[1]);parent=pathlib.Path.home()/'.cache/beep/r2-cache-check';parent.mkdir(parents=True,exist_ok=True)
-def run(args,env,ok=True):
-    p=subprocess.run(args,env=env,capture_output=True,text=True,timeout=30)
+def run(args,env,ok=True,cwd=None):
+    p=subprocess.run(args,env=env,capture_output=True,text=True,timeout=30,cwd=cwd)
     if ok and p.returncode:raise AssertionError('Subprocess failed: '+pathlib.Path(args[0]).name)
     return p
 with tempfile.TemporaryDirectory(dir=parent) as directory:
@@ -31,12 +31,23 @@ with tempfile.TemporaryDirectory(dir=parent) as directory:
     launcherop=launcherbin/'op';launcher_capture=base/'launcher-argv.json'
     launcherop.write_text('#!/usr/bin/python3\nimport json,os,sys\nfrom pathlib import Path\nPath('+repr(str(launcher_capture))+').write_text(json.dumps({"args":sys.argv[1:],"unrelated_present":"APPLICATION_REFERENCE" in os.environ}))\n')
     launcherop.chmod(0o700);(cfg/'client.env').write_text('TURBO_TOKEN=op://fixture/item/bearer\n')
+    run(['git','-C',str(checkout),'remote','add','origin','https://github.com/beep-effect/beep-effect.git'],env)
+    native=checkout/'node_modules/.bin/turbo';native.parent.mkdir(parents=True);native.write_text('inert fixture')
     launcher_env={**env,'PATH':str(launcherbin)+os.pathsep+env['PATH'],'APPLICATION_REFERENCE':'op://fixture/app/secret','TURBO_CACHE_DIR':str(base/'shared cache')}
-    run([str(source/'turbo.sh'),'build','--','--task-flag'],launcher_env)
+    run([str(source/'turbo.sh'),'build','--','--task-flag'],launcher_env,cwd=checkout)
     capture=json.loads(launcher_capture.read_text());assert not capture['unrelated_present']
     assert capture['args'][-5:]==['build','--cache-dir='+str(base/'shared cache'),'--summarize','--','--task-flag']
-    run([str(source/'turbo.sh'),'build','--cache-dir=explicit','--summarize=false','--','--cache-dir=task'],launcher_env)
+    assert capture['args'][capture['args'].index('--')+1]==str(native)
+    cli=checkout/'packages/tooling/tool/cli/src/bin.ts';cli.parent.mkdir(parents=True);cli.write_text('inert fixture')
+    runtime=cli.parent/'commands/Cache/Cache.runtime.ts';runtime.parent.mkdir(parents=True);runtime.write_text('inert fixture')
+    run([str(source/'turbo.sh'),'build','--cache-dir=explicit','--summarize=false','--','--cache-dir=task'],launcher_env,cwd=checkout)
+    modern=json.loads(launcher_capture.read_text())['args']
+    assert modern[modern.index('--')+1:][:7]==['bun','--no-env-file',str(cli),'cache','execute','--','run']
     assert json.loads(launcher_capture.read_text())['args'][-5:]==['build','--cache-dir=explicit','--summarize=false','--','--cache-dir=task']
+    previous=launcher_capture.read_text()
+    run(['git','-C',str(checkout),'remote','set-url','origin','https://github.com/private/fork.git'],env)
+    assert run([str(source/'turbo.sh'),'build'],launcher_env,False,cwd=checkout).returncode!=0
+    assert launcher_capture.read_text()==previous
     exported=original.replace('TURBO_','export TURBO_').replace('export TURBO_API=','  export TURBO_API  =').replace('export TURBO_TOKEN=op://fixture/item/old','export TURBO_TOKEN="op://fixture/item/old" # retain reference comment')
     dotenv.write_text(exported)
     run([str(source/'workstation.sh'),'enable',str(checkout)],env)

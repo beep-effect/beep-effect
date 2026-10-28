@@ -18,6 +18,12 @@ posture. An explicit local-only setting, different endpoint/reference, CI, priva
 origin or `BEEP_TURBO_HOST_CACHE_DISABLED=true` prevents that adoption. Remove
 `BEEP_TURBO_HOST_CACHE_MANAGED` to retain a manually chosen reader posture.
 
+Run `beep-turbo` from a canonical public checkout's root. Current sources use the
+existing `cache execute` runtime so governed tasks calculate their toolchain key;
+historical sources without that runtime use their installed native Turbo binary.
+Neither route reloads the checkout's unrelated environment references. Private
+origins are rejected before the launcher reads cache credentials.
+
 The offline TBK guest remains a rollout hold while its protective-stop latch is
 present. Windows requires a qualified Linux/WSL route or a separately qualified
 adapter runtime; the pinned upstream release has no native Windows binary.
