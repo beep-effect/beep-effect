@@ -1,6 +1,8 @@
 /**
  * Schema-first models for the identity-backed ontology fold.
  *
+ * **Details**
+ *
  * The fold accepts triples-as-tuples whose endpoints are schema handles,
  * known CURIEs, absolute IRIs, or typed literals, and assembles them into a
  * predicate-open {@link AssembledOntology}: subject/predicate/object facts
@@ -28,7 +30,7 @@ const $I = $OntologyId.create("Fold");
  *
  * **Example** (Usage)
  * ```ts
- * import type { AbsoluteIri } from "@beep/ontology"
+ * import type { AbsoluteIri } from "@beep/ontology/Fold.models"
  *
  * const iri: AbsoluteIri = "https://schema.org/CreativeWork"
  * console.log(iri)
@@ -48,11 +50,13 @@ export type AbsoluteIri =
 /**
  * Effect schema handle accepted at tuple endpoints.
  *
+ * **Details**
+ *
  * Handles resolve through their owned identity annotations during assembly.
  *
  * **Example** (Usage)
  * ```ts
- * import type { SchemaHandle } from "@beep/ontology"
+ * import type { SchemaHandle } from "@beep/ontology/Fold.models"
  * import * as S from "effect/Schema"
  *
  * const handle: SchemaHandle = S.String
@@ -69,7 +73,7 @@ export type SchemaHandle = S.Top;
  *
  * **Example** (Usage)
  * ```ts
- * import type { Subject } from "@beep/ontology"
+ * import type { Subject } from "@beep/ontology/Fold.models"
  *
  * const subject: Subject = "skos:Concept"
  * console.log(subject)
@@ -85,7 +89,7 @@ export type Subject = SchemaHandle | Curie<CoreVocab> | AbsoluteIri;
  *
  * **Example** (Usage)
  * ```ts
- * import type { LiteralScalar } from "@beep/ontology"
+ * import type { LiteralScalar } from "@beep/ontology/Fold.models"
  *
  * const scalar: LiteralScalar = 42
  * console.log(scalar)
@@ -99,12 +103,14 @@ export type LiteralScalar = string | number | boolean;
 /**
  * Typed literal object accepted at tuple object positions.
  *
+ * **Details**
+ *
  * Bare strings are always terms (CURIEs or absolute IRIs); literal values
  * must ride this wrapper, so the grammar never guesses.
  *
  * **Example** (Usage)
  * ```ts
- * import type { TypedLiteral } from "@beep/ontology"
+ * import type { TypedLiteral } from "@beep/ontology/Fold.models"
  *
  * const literal: TypedLiteral = { value: "Claim", language: "en" }
  * console.log(literal.value)
@@ -124,7 +130,7 @@ export type TypedLiteral = {
  *
  * **Example** (Usage)
  * ```ts
- * import type { TupleObject } from "@beep/ontology"
+ * import type { TupleObject } from "@beep/ontology/Fold.models"
  *
  * const object: TupleObject = { value: true }
  * console.log(object)
@@ -138,13 +144,15 @@ export type TupleObject = Subject | TypedLiteral;
 /**
  * Relational fact as a `[Subject, Predicate, Object]` tuple.
  *
+ * **Details**
+ *
  * The predicate is the composer's closed CURIE literal type, optionally
  * reverse-marked with `^` (SPARQL inverse-path syntax).
  *
  * **Example** (Usage)
  * ```ts
  * import { $I } from "@beep/identity/packages"
- * import type { Triple } from "@beep/ontology"
+ * import type { Triple } from "@beep/ontology/Fold.models"
  *
  * const triple: Triple = [$I.create("patent/Claim").iri, "rdfs:subClassOf", "owl:Thing"]
  * console.log(triple[1])
@@ -160,7 +168,7 @@ export type Triple = readonly [Subject, Predicate<CoreVocab>, TupleObject];
  *
  * **Example** (Usage)
  * ```ts
- * import type { OntologyFoldInput } from "@beep/ontology"
+ * import type { OntologyFoldInput } from "@beep/ontology/Fold.models"
  *
  * const input: OntologyFoldInput = { label: "Patent Core", schemas: [], triples: [] }
  * console.log(input.label)
@@ -190,7 +198,7 @@ const isKnownPredicate = (value: string): boolean => expandPredicate(value) !== 
  *
  * **Example** (Usage)
  * ```ts import.meta.vitest name="Usage"
- * import { isSchemaHandle } from "@beep/ontology"
+ * import { isSchemaHandle } from "@beep/ontology/Fold.models"
  * import * as S from "effect/Schema"
  *
  * isSchemaHandle(S.String) // => true
@@ -267,12 +275,14 @@ const ObjectValue = S.Union([SchemaHandleValue, TermString, TypedLiteralValue]);
 /**
  * Runtime schema for one relational fact tuple.
  *
+ * **Details**
+ *
  * The tuple grammar is itself schema-validated — the ontology definition is
  * an instance of schema-is-truth, not an exception.
  *
  * **Example** (Usage)
  * ```ts import.meta.vitest name="Usage"
- * import { TripleValue } from "@beep/ontology"
+ * import { TripleValue } from "@beep/ontology/Fold.models"
  * import * as S from "effect/Schema"
  *
  * const decoded = S.decodeUnknownOption(TripleValue)(["skos:Concept", "rdfs:seeAlso", "owl:Thing"])
@@ -293,7 +303,7 @@ export const TripleValue = S.Tuple([SubjectValue, PredicateString, ObjectValue])
  *
  * **Example** (Usage)
  * ```ts
- * import type { TripleValue } from "@beep/ontology"
+ * import type { TripleValue } from "@beep/ontology/Fold.models"
  *
  * const decoded: TripleValue = ["skos:Concept", "rdfs:seeAlso", "http://www.w3.org/2002/07/owl#Thing"]
  * console.log(decoded[1])
@@ -309,7 +319,7 @@ export type TripleValue = typeof TripleValue.Type;
  *
  * **Example** (Usage)
  * ```ts import.meta.vitest name="Usage"
- * import { SkosClassification } from "@beep/ontology"
+ * import { SkosClassification } from "@beep/ontology/Fold.models"
  * import * as S from "effect/Schema"
  *
  * S.is(SkosClassification)("concept") // => true
@@ -329,7 +339,7 @@ export const SkosClassification = LiteralKit(["concept", "conceptScheme"]).pipe(
  *
  * **Example** (Usage)
  * ```ts
- * import type { SkosClassification } from "@beep/ontology"
+ * import type { SkosClassification } from "@beep/ontology/Fold.models"
  *
  * const marker: SkosClassification = "conceptScheme"
  * console.log(marker)
@@ -343,12 +353,14 @@ export type SkosClassification = typeof SkosClassification.Type;
 /**
  * Predicate kind inferred from the schema AST at fold time.
  *
+ * **Details**
+ *
  * Scalar-valued keys become datatype predicates; schema-valued keys become
  * object predicates. The kind is inferred, never declared.
  *
  * **Example** (Usage)
  * ```ts import.meta.vitest name="Usage"
- * import { AssembledPredicateKind } from "@beep/ontology"
+ * import { AssembledPredicateKind } from "@beep/ontology/Fold.models"
  * import * as S from "effect/Schema"
  *
  * S.is(AssembledPredicateKind)("datatype") // => true
@@ -368,7 +380,7 @@ export const AssembledPredicateKind = LiteralKit(["datatype", "object"]).pipe(
  *
  * **Example** (Usage)
  * ```ts
- * import type { AssembledPredicateKind } from "@beep/ontology"
+ * import type { AssembledPredicateKind } from "@beep/ontology/Fold.models"
  *
  * const kind: AssembledPredicateKind = "object"
  * console.log(kind)
@@ -384,7 +396,7 @@ export type AssembledPredicateKind = typeof AssembledPredicateKind.Type;
  *
  * **Example** (Usage)
  * ```ts
- * import { FactLiteral } from "@beep/ontology"
+ * import { FactLiteral } from "@beep/ontology/Fold.models"
  * import * as O from "effect/Option"
  *
  * const literal = FactLiteral.make({ value: "Claim", datatypeIri: O.none(), language: O.none() })
@@ -411,7 +423,7 @@ export class FactLiteral extends S.Opaque<FactLiteral, { readonly brand: unique 
  *
  * **Example** (Usage)
  * ```ts import.meta.vitest name="Usage"
- * import { FactObject } from "@beep/ontology"
+ * import { FactObject } from "@beep/ontology/Fold.models"
  * import * as S from "effect/Schema"
  *
  * S.is(FactObject)("https://schema.org/CreativeWork") // => true
@@ -431,8 +443,8 @@ export const FactObject = S.Union([IRI, FactLiteral]).pipe(
  *
  * **Example** (Usage)
  * ```ts
- * import type { FactObject } from "@beep/ontology"
- * import { FactLiteral } from "@beep/ontology"
+ * import type { FactObject } from "@beep/ontology/Fold.models"
+ * import { FactLiteral } from "@beep/ontology/Fold.models"
  * import * as O from "effect/Option"
  *
  * const object: FactObject = FactLiteral.make({ value: 1, datatypeIri: O.none(), language: O.none() })
@@ -447,13 +459,15 @@ export type FactObject = typeof FactObject.Type;
 /**
  * One assembled relational fact with resolved IRIs.
  *
+ * **Details**
+ *
  * The assembled model is predicate-open: every relation is a fact record,
  * never an enumerated field.
  *
  * **Example** (Usage)
  * ```ts
  * import { $I } from "@beep/identity/packages"
- * import { AssembledFact } from "@beep/ontology"
+ * import { AssembledFact } from "@beep/ontology/Fold.models"
  * import * as S from "effect/Schema"
  *
  * const fact = S.decodeUnknownSync(AssembledFact)({
@@ -486,7 +500,7 @@ export class AssembledFact extends S.Opaque<AssembledFact, { readonly brand: uni
  *
  * **Example** (Usage)
  * ```ts
- * import { AssembledPredicate } from "@beep/ontology"
+ * import { AssembledPredicate } from "@beep/ontology/Fold.models"
  * import * as S from "effect/Schema"
  *
  * const predicate = S.decodeUnknownSync(AssembledPredicate)({
@@ -524,7 +538,7 @@ export class AssembledPredicate extends S.Opaque<AssembledPredicate, { readonly 
  * **Example** (Usage)
  * ```ts
  * import { $I } from "@beep/identity/packages"
- * import { AssembledClass } from "@beep/ontology"
+ * import { AssembledClass } from "@beep/ontology/Fold.models"
  * import * as S from "effect/Schema"
  *
  * const assembled = S.decodeUnknownSync(AssembledClass)({
@@ -559,7 +573,7 @@ export class AssembledClass extends S.Opaque<AssembledClass, { readonly brand: u
  *
  * **Example** (Usage)
  * ```ts import.meta.vitest name="Usage"
- * import { OntologyWarningCode } from "@beep/ontology"
+ * import { OntologyWarningCode } from "@beep/ontology/Fold.models"
  * import * as S from "effect/Schema"
  *
  * S.is(OntologyWarningCode)("missingConceptScheme") // => true
@@ -583,7 +597,7 @@ export const OntologyWarningCode = LiteralKit([
  *
  * **Example** (Usage)
  * ```ts
- * import type { OntologyWarningCode } from "@beep/ontology"
+ * import type { OntologyWarningCode } from "@beep/ontology/Fold.models"
  *
  * const code: OntologyWarningCode = "missingPrefLabel"
  * console.log(code)
@@ -597,12 +611,14 @@ export type OntologyWarningCode = typeof OntologyWarningCode.Type;
 /**
  * Observable warning attached to an assembled ontology.
  *
+ * **Details**
+ *
  * Warnings never fail the fold; hard SKOS integrity violations become typed
  * {@link OntologyAssemblyError} failures instead.
  *
  * **Example** (Usage)
  * ```ts
- * import { OntologyValidationWarning } from "@beep/ontology"
+ * import { OntologyValidationWarning } from "@beep/ontology/Fold.models"
  * import * as S from "effect/Schema"
  *
  * const warning = S.decodeUnknownSync(OntologyValidationWarning)({
@@ -633,7 +649,7 @@ export class OntologyValidationWarning extends S.Opaque<OntologyValidationWarnin
  * **Example** (Usage)
  * ```ts
  * import { $I } from "@beep/identity/packages"
- * import { AssembledOntology } from "@beep/ontology"
+ * import { AssembledOntology } from "@beep/ontology/Fold.models"
  * import * as S from "effect/Schema"
  *
  * const assembled = S.decodeUnknownSync(AssembledOntology)({
@@ -670,7 +686,7 @@ export class AssembledOntology extends S.Opaque<AssembledOntology, { readonly br
  *
  * **Example** (Usage)
  * ```ts import.meta.vitest name="Usage"
- * import { OntologyAssemblyErrorReason } from "@beep/ontology"
+ * import { OntologyAssemblyErrorReason } from "@beep/ontology/Fold.models"
  * import * as S from "effect/Schema"
  *
  * S.is(OntologyAssemblyErrorReason)("unknownTerm") // => true
@@ -699,7 +715,7 @@ export const OntologyAssemblyErrorReason = LiteralKit([
  *
  * **Example** (Usage)
  * ```ts
- * import type { OntologyAssemblyErrorReason } from "@beep/ontology"
+ * import type { OntologyAssemblyErrorReason } from "@beep/ontology/Fold.models"
  *
  * const reason: OntologyAssemblyErrorReason = "unresolvedHandle"
  * console.log(reason)
@@ -715,7 +731,7 @@ export type OntologyAssemblyErrorReason = typeof OntologyAssemblyErrorReason.Typ
  *
  * **Example** (Usage)
  * ```ts
- * import { OntologyAssemblyError } from "@beep/ontology"
+ * import { OntologyAssemblyError } from "@beep/ontology/Fold.models"
  * import * as O from "effect/Option"
  *
  * const error = OntologyAssemblyError.make({
@@ -756,7 +772,7 @@ export class OntologyAssemblyError extends S.TaggedError<OntologyAssemblyError, 
  *
  * **Example** (Usage)
  * ```ts import.meta.vitest name="Usage"
- * import { FactLiteral, isFactLiteral } from "@beep/ontology"
+ * import { FactLiteral, isFactLiteral } from "@beep/ontology/Fold.models"
  * import * as O from "effect/Option"
  *
  * const literal = FactLiteral.make({ value: 1, datatypeIri: O.none(), language: O.none() })

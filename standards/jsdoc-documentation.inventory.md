@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-10-27T21:13:24.594Z
+Generated: 2026-10-28T00:45:09.793Z
 
 ## Scope
 
@@ -11,23 +11,23 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | Metric | Count |
 |---|---:|
 | packages | 183 |
-| cleanPackages | 120 |
+| cleanPackages | 121 |
 | packagesWithoutPublicSrcSurface | 2 |
-| packagesNeedingRemediation | 61 |
+| packagesNeedingRemediation | 60 |
 | publicModules | 3546 |
 | publicExports | 25242 |
-| openModules | 335 |
-| openExports | 289 |
+| openModules | 330 |
+| openExports | 235 |
 | missingExportExamples | 7 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
 | forbiddenTagFindings | 0 |
 | malformedConditionalTagFindings | 0 |
-| exampleImportFindings | 212 |
+| exampleImportFindings | 157 |
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
-| undescribed-see | 10 |
-| multiple-description-paragraphs | 369 |
+| undescribed-see | 9 |
+| multiple-description-paragraphs | 356 |
 | leading-blank | 0 |
 | trailing-blank | 0 |
 | invalid-heading | 1 |
@@ -40,7 +40,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | duplicate-example | 0 |
 | loose-ts-fence | 0 |
 | forbidden-remarks | 0 |
-| no-root-package-import | 206 |
+| no-root-package-import | 151 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -188,7 +188,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 130 | `@beep/sanity` | `packages/drivers/sanity` | clean | 4 | 15 | 0 | 0 |
 | 131 | `@beep/epistemic-ui` | `packages/epistemic/ui` | clean | 6 | 14 | 0 | 0 |
 | 132 | `@beep/graph-3d` | `packages/drivers/graph-3d` | needs-remediation | 7 | 17 | 2 | 0 |
-| 133 | `@beep/ontology` | `packages/foundation/modeling/ontology` | needs-remediation | 15 | 157 | 5 | 54 |
+| 133 | `@beep/ontology` | `packages/foundation/modeling/ontology` | clean | 15 | 157 | 0 | 0 |
 | 134 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 473 | 4454 | 47 | 35 |
 | 135 | `@beep/dock-react` | `packages/foundation/ui-system/dock-react` | clean | 3 | 12 | 0 | 0 |
 | 136 | `@beep/drizzle` | `packages/drivers/drizzle` | clean | 3 | 11 | 0 | 0 |
@@ -914,73 +914,6 @@ Path: `packages/drivers/graph-3d`
 Module findings:
 - `src/Graph3D.react.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/Graph3D.renderer.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-
-### @beep/ontology
-
-Path: `packages/foundation/modeling/ontology`
-
-Module findings:
-- `src/Fold.assembly.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/Fold.markdown.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/Fold.models.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/Fold.projections.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-- `src/Ontology.models.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-
-Export findings:
-- `src/Fold.assembly.ts:68` `BoundComposer` (type) - 1 example import violation(s); 1 documentation section/link violation(s)
-- `src/Fold.assembly.ts:887` `fold` (const) - 1 example import violation(s); 1 documentation section/link violation(s)
-- `src/Fold.markdown.ts:46` `MarkdownLinkMode` (const) - 1 example import violation(s)
-- `src/Fold.markdown.ts:67` `MarkdownLinkMode` (type) - 1 example import violation(s)
-- `src/Fold.markdown.ts:84` `MarkdownOptions` (class) - 1 example import violation(s)
-- `src/Fold.markdown.ts:296` `toMarkdown` (const) - 1 example import violation(s)
-- `src/Fold.models.ts:40` `AbsoluteIri` (type) - 1 example import violation(s)
-- `src/Fold.models.ts:65` `SchemaHandle` (type) - 1 example import violation(s); 1 documentation section/link violation(s)
-- `src/Fold.models.ts:81` `Subject` (type) - 1 example import violation(s)
-- `src/Fold.models.ts:97` `LiteralScalar` (type) - 1 example import violation(s)
-- `src/Fold.models.ts:116` `TypedLiteral` (type) - 1 example import violation(s); 1 documentation section/link violation(s)
-- `src/Fold.models.ts:136` `TupleObject` (type) - 1 example import violation(s)
-- `src/Fold.models.ts:156` `Triple` (type) - 1 example import violation(s); 1 documentation section/link violation(s)
-- `src/Fold.models.ts:172` `OntologyFoldInput` (type) - 1 example import violation(s)
-- `src/Fold.models.ts:203` `isSchemaHandle` (const) - 1 example import violation(s)
-- `src/Fold.models.ts:285` `TripleValue` (const) - 1 example import violation(s); 1 documentation section/link violation(s)
-- `src/Fold.models.ts:305` `TripleValue` (type) - 1 example import violation(s)
-- `src/Fold.models.ts:321` `SkosClassification` (const) - 1 example import violation(s)
-- `src/Fold.models.ts:341` `SkosClassification` (type) - 1 example import violation(s)
-- `src/Fold.models.ts:360` `AssembledPredicateKind` (const) - 1 example import violation(s); 1 documentation section/link violation(s)
-- `src/Fold.models.ts:380` `AssembledPredicateKind` (type) - 1 example import violation(s)
-- `src/Fold.models.ts:397` `FactLiteral` (class) - 1 example import violation(s)
-- `src/Fold.models.ts:423` `FactObject` (const) - 1 example import violation(s)
-- `src/Fold.models.ts:445` `FactObject` (type) - 2 example import violation(s)
-- `src/Fold.models.ts:471` `AssembledFact` (class) - 1 example import violation(s); 1 documentation section/link violation(s)
-- `src/Fold.models.ts:505` `AssembledPredicate` (class) - 1 example import violation(s)
-- `src/Fold.models.ts:542` `AssembledClass` (class) - 1 example import violation(s)
-- `src/Fold.models.ts:571` `OntologyWarningCode` (const) - 1 example import violation(s)
-- `src/Fold.models.ts:595` `OntologyWarningCode` (type) - 1 example import violation(s)
-- `src/Fold.models.ts:618` `OntologyValidationWarning` (class) - 1 example import violation(s); 1 documentation section/link violation(s)
-- `src/Fold.models.ts:653` `AssembledOntology` (class) - 1 example import violation(s)
-- `src/Fold.models.ts:682` `OntologyAssemblyErrorReason` (const) - 1 example import violation(s)
-- `src/Fold.models.ts:711` `OntologyAssemblyErrorReason` (type) - 1 example import violation(s)
-- `src/Fold.models.ts:736` `OntologyAssemblyError` (class) - 1 example import violation(s)
-- `src/Fold.models.ts:770` `isFactLiteral` (const) - 1 example import violation(s)
-- `src/Fold.projections.ts:46` `JsonLdTerm` (type) - 1 example import violation(s)
-- `src/Fold.projections.ts:71` `JsonLdContext` (type) - 1 example import violation(s)
-- `src/Fold.projections.ts:88` `JsonLdNodeValue` (type) - 1 example import violation(s)
-- `src/Fold.projections.ts:112` `JsonLdNode` (type) - 1 example import violation(s)
-- `src/Fold.projections.ts:133` `JsonLdDocument` (type) - 1 example import violation(s)
-- `src/Fold.projections.ts:239` `toContext` (const) - 1 example import violation(s)
-- `src/Fold.projections.ts:392` `toJsonLd` (const) - 1 example import violation(s)
-- `src/Fold.projections.ts:635` `toTurtle` (const) - 1 example import violation(s)
-- `src/SemanticFoundation.models.ts:191` `ConceptAlignment` (class) - 1 example import violation(s)
-- `src/SemanticFoundation.models.ts:224` `TaxonomyConcept` (class) - 1 example import violation(s)
-- `src/SemanticFoundation.models.ts:293` `FilingRoot` (class) - 1 example import violation(s)
-- `src/TaxonomyLoader.ts:223` `VendorAlignmentManifestEntry` (class) - 1 example import violation(s)
-- `src/TaxonomyLoader.ts:282` `VendorConceptSlice` (class) - 1 example import violation(s)
-- `src/TaxonomyLoader.ts:492` `VendorSliceConceptMismatch` (class) - 1 example import violation(s)
-- `src/TaxonomyLoader.ts:528` `VendorAlignmentTargetNotFound` (class) - 1 example import violation(s)
-- `src/TaxonomyRegistry.ts:36` `LibrarianInput` (class) - 1 example import violation(s)
-- `src/TaxonomyRegistry.ts:110` `TaxonomyConceptNotFound` (class) - 1 example import violation(s)
-- `src/TaxonomyRegistry.ts:134` `UnsupportedDocumentClass` (class) - 1 example import violation(s)
-- `src/TaxonomyRegistry.ts:169` `runLibrarianLoop` (const) - 1 example import violation(s)
 
 ### @beep/repo-cli
 
