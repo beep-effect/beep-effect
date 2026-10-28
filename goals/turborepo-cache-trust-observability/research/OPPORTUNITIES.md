@@ -45,3 +45,23 @@ schema-derived fault guard. Both supervisors now consume one bounded capture
 validator in the existing Cache evidence module, reusing the shared process
 exit validator. No capture stream or cause is attached to these errors. The
 behavioral suite and Fallow audit must pass again before publication.
+
+## 2026-10-28: generated span catalog belongs in the source wave
+
+The exact-head final check reported one stale CLI instrumentation shard after
+adding `CacheEvidence.requireSupervisorCapture`. The protocol suite passed, but
+its generated span catalog was omitted from the initial push. Regenerated the
+existing catalog; the diff contains one span entry. Future span edits must run
+`beep observability catalog --write` before publication. This is an introduced
+metadata defect, not an inherited gate failure. Owner: this goal.
+
+## 2026-10-28: package audit does not carry the caller's fixture opt-out
+
+A second full package audit with the normal tool path passed 7,973 tests and
+failed the same six command-plan fixtures that inherited the enrolled host's
+cache references. Setting the opt-out only on the outer package audit did not
+isolate its nested test process. The independent fixture-isolation PR moves
+that default into the CLI Vitest configuration. The affected fixture suite
+passes there; the complete package audit must be repeated after that fix lands.
+The earlier missing ExifTool failures were caused by a reduced verification
+path and did not recur with the normal path. No product-cache setting changed.

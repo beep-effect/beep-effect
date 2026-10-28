@@ -300,6 +300,7 @@
     {"name":"CacheEvidence.readBytes","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheEvidence.readExperimentBytes","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheEvidence.requireLinuxX64","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"CacheEvidence.requireSupervisorCapture","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheExperiment.execute","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheExperiment.invoke","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheExperiment.localShadow","owner":"@beep/repo-cli","family":"tooling","conforms":true},
