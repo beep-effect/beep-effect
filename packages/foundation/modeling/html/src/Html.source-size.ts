@@ -810,6 +810,8 @@ const inspectSourceSizeEntries = (
  * Validates a WHATWG responsive-image source-size list and returns the
  * context-free facts needed by element-level conformance rules.
  *
+ * **Details**
+ *
  * This checks CSS tokenization, list structure, media-condition author
  * grammar, nonnegative literal lengths, CSS math syntax and numeric typing,
  * the percentage ban, and the exact first-entry form of `auto`. Whether an

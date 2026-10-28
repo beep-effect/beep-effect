@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "commit": "35faa4a00d2eba0603757b24cc181d32b9c0779d",
+  "tool": "goals/effected-promotion/ops/check-census-adoption-parity.ts",
+  "generatedAt": "2026-10-25T16:33:05.242Z",
+  "packages": 185,
+  "references": 1273,
+  "overlaysAgree": 185,
+  "overlayDiffs": [],
+  "declarationDiffs": [],
+  "ok": true
+}

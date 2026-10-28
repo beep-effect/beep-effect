@@ -1,6 +1,8 @@
 /**
  * GENERATED FILE — do not edit by hand. Run `bun run generate`.
  *
+ * **Details**
+ *
  * Per-element metadata for the HTML AST: DOM interface, conformance tier, void /
  * raw-text classification, and (advisory) content categories.
  *
@@ -589,6 +591,8 @@ export const XML_FOREIGN_ATTRIBUTE_NAMES: ReadonlyArray<string> = Object.freeze(
 
 /**
  * Shared current attributes permitted on every generated HTML element.
+ *
+ * **Details**
  *
  * Per-element metadata reuses this frozen inventory and appends only its
  * element-specific current attributes.

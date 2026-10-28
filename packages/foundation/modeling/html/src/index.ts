@@ -11,12 +11,10 @@
  * **Example** (Conform enforce serialize pipeline)
  *
  * ```ts import.meta.vitest name="Conform enforce serialize pipeline"
- * import {
- *   conform,
- *   enforceSafeHtml,
- *   HtmlFragment,
- *   serializeSafe
- * } from "@beep/html"
+ * import { conform } from "@beep/html/Html.conformance"
+ * import { enforceSafeHtml } from "@beep/html/Html.policy"
+ * import { HtmlFragment } from "@beep/html/Html.contract"
+ * import { serializeSafe } from "@beep/html/Html.serialize"
  * import * as Effect from "effect/Effect";
  * const program = conform(HtmlFragment.make({ children: [] })).pipe(
  *   Effect.flatMap(enforceSafeHtml),

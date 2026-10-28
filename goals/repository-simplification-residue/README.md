@@ -70,6 +70,7 @@ Wave 7 moved portable-filesystem EV010 tests in 17 files to the memory filesyste
 Wave 9 dropped 32 redundant `Effect.scoped` wrappers in 12 repo-cli tests and kept 9 whose close is observed, with the 12 lane EV010 rows confirmed live-resource ([record](./history/receipts/vitest-canon-wave-9.md)).
 Wave 8 lane A retired 77 of the 84 open EV002, EV004, EV010 and EV015 rows in 11 repo-cli files and left 7 live-resource or cwd-seam rows open ([record](./history/receipts/vitest-canon-wave-8.md)).
 Wave 10 retired 4 of 20 open rows outside repo-cli, moving two EV010 tests to the memory filesystem, and left 16 EV010 rows open with per-file live-resource evidence ([record](./history/receipts/vitest-canon-wave-10.md)).
+Wave 11 retired 14 of the last 15 #1875 migration rows, dropping 8 empty capture scopes and moving 6 EV010 tests to the memory filesystem, and converted the credential-gated live Graph smoke to an owner/exit exception, so 1 row stays open ([record](./history/receipts/vitest-canon-wave-11.md)).
 Issue #1876 is complete: the RDF failure assertions and the Pacer logout teardown
 witness are ported, with a per-hunk disposition of the preserved exports
 ([record](./history/receipts/rdf-pacer-ports.md)).

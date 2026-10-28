@@ -1,3 +1,4 @@
+import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { QualityTaskLaneRun, QualityTaskLaneRunReport } from "@beep/repo-cli/test/Quality";
 import { JsonStringCodec, nearestRank, UUID } from "@beep/repo-cli/test/SharedInternals";
 import {
@@ -34,7 +35,8 @@ import {
   YeetVerdictLane,
 } from "@beep/repo-cli/test/Yeet";
 import { fcRuns } from "@beep/test-utils";
-import { NodeServices } from "@effect/platform-node";
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
+import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -58,7 +60,8 @@ const DAY_MINUTES = 24 * 60;
 const PACKET_DIR = ".beep/yeet";
 const at = (minutes: number): string => DateTime.formatIso(DateTime.makeUnsafe(BASE_MS + minutes * MINUTE));
 
-const LiveSource = Layer.provideMerge(YeetEconomicsSource.layer, NodeServices.layer);
+const Platform = Layer.mergeAll(MemoryFileSystem.layer, NodePath.layer, NodeCrypto.layer);
+const LiveSource = Layer.provideMerge(YeetEconomicsSource.layer, Platform);
 const LiveSourceWithConsole = Layer.mergeAll(LiveSource, TestConsole.layer);
 const JournalEventJson = JsonStringCodec(YeetAttemptJournalEvent);
 
@@ -1123,7 +1126,7 @@ it.layer(LiveSourceWithConsole, { timeout: "30 seconds" })("yeet economics comma
 const sourceFailingWith = (reason: YeetEconomicsError["reason"]) =>
   Layer.merge(
     failingSource(() => Effect.fail(YeetEconomicsError.make({ reason, message: reason }))),
-    NodeServices.layer
+    Platform
   );
 
 it.layer(sourceFailingWith("run-id"), { timeout: "30 seconds" })("yeet economics command failures", (layerIt) => {
