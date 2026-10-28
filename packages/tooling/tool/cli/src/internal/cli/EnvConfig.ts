@@ -36,6 +36,7 @@ import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import { QualityTaskStep, runToExit } from "../process/StepExec.ts";
 import {
+  HostTurboCacheReferences,
   hasRemoteTurboCacheArgs,
   localOnlyTurboCacheArgs,
   TurboCacheEnvironment,
@@ -782,6 +783,78 @@ const TURBO_CACHE_OPTION_ENV_NAMES: ReadonlyArray<string> = ["TURBO_CACHE_DIR", 
 
 const configuredValue = (value: string | undefined): O.Option<string> =>
   pipe(O.fromUndefinedOr(value), O.map(Str.trim), O.filter(Str.isNonEmpty));
+
+/**
+ * Load the enrolled host's cache references for a fresh checkout without cache settings.
+ *
+ * **Details**
+ *
+ * Explicit checkout settings and CI always win. A managed legacy reader may adopt
+ * the matching enrolled host's writer posture. The host file contains only a loopback
+ * endpoint and secret references; malformed or missing configuration leaves execution local.
+ * It never resolves a secret or reads application configuration.
+ *
+ * **Example** (Skip host defaults in CI)
+ *
+ * ```ts
+ * import { loadHostTurboCacheDefaults } from "@beep/repo-cli/test/SharedInternals"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(loadHostTurboCacheDefaults({ HOME: "/home/dev" }, true)))
+ * ```
+ *
+ * @param environment - The caller's environment before host defaults.
+ * @param ci - Whether the caller is running in CI.
+ * @param origin - The checkout's Git origin; only the canonical public upstream is eligible.
+ * @returns Reference-only cache defaults, or an empty record when not applicable.
+ * @category configuration
+ * @since 0.0.0
+ */
+export const loadHostTurboCacheDefaults = Effect.fn("EnvConfig.loadHostTurboCacheDefaults")(function* (
+  environment: Readonly<Record<string, string | undefined>>,
+  ci: boolean,
+  origin = ""
+) {
+  const names = [...TurboCacheEnvName.literals, "BEEP_TURBO_TRUSTED_WRITER"];
+  const managedReader =
+    environment.BEEP_TURBO_HOST_CACHE_MANAGED === "true" &&
+    environment.TURBO_CACHE === "local:rw,remote:r" &&
+    environment.BEEP_TURBO_TRUSTED_WRITER === "false";
+  if (
+    ci ||
+    O.isNone(Str.match(/^(?:https:\/\/github\.com\/|git@github\.com:)beep-effect\/beep-effect(?:\.git)?$/u)(origin)) ||
+    environment.BEEP_TURBO_HOST_CACHE_DISABLED === "true" ||
+    (!managedReader && A.some(TurboCacheEnvName.literals, (name) => O.isSome(configuredValue(environment[name]))))
+  ) {
+    return R.empty<string, string>();
+  }
+  const home = configuredValue(environment.HOME);
+  if (O.isNone(home)) return R.empty<string, string>();
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const configRoot = pipe(
+    configuredValue(environment.XDG_CONFIG_HOME),
+    O.getOrElse(() => path.join(home.value, ".config"))
+  );
+  const contents = yield* fs.readFileString(path.join(configRoot, "beep/r2-cache/client.env")).pipe(Effect.option);
+  if (O.isNone(contents)) return R.empty<string, string>();
+  const provider = ConfigProvider.fromDotEnvContents(contents.value);
+  const entries = yield* Effect.forEach(names, (name) =>
+    Config.option(Config.String(name))
+      .parse(provider)
+      .pipe(Effect.option, Effect.map(O.flatten), Effect.map(O.map((value) => Tuple.make(name, value))))
+  );
+  const defaults = R.fromEntries(A.getSomes(entries));
+  if (
+    managedReader &&
+    !A.every(["TURBO_API", "TURBO_TOKEN", "TURBO_TEAM"], (name) => environment[name] === defaults[name])
+  )
+    return R.empty<string, string>();
+  return yield* S.decodeUnknownEffect(HostTurboCacheReferences)(defaults).pipe(
+    Effect.as(defaults),
+    Effect.orElseSucceed(R.empty<string, string>)
+  );
+});
 
 const turboCacheValueSource = (value: string | undefined): O.Option<TurboCacheValueSource> =>
   pipe(configuredValue(value), O.map(flow(isUnresolvedSecretReference, turboCacheValueSourceFor)));

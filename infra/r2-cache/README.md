@@ -4,10 +4,29 @@ This deployment uses Alchemy's Effect stack and Cloudflare provider for one priv
 Standard R2 bucket. A checksum-pinned `brunojppb/turbo-cache-server` 4.0.20 adapter
 runs on loopback on each consumer host. No shared API server or Worker is needed.
 
-The initial cohort is the operator's Linux workstation and AWS jobs in `heavy.yml`.
+The fleet covers the operator's Linux workstation, existing trusted Linux workers,
+and Turbo-backed CI jobs. The original first cohort used only `heavy.yml`.
 Named trusted workstation agents and protected main CI can write. Same-repository
 PR jobs read only; forks stay local-only. Existing AWS infrastructure stays intact.
 No task becomes cacheable as part of this transport change.
+
+New worktrees created by `beep worktree` inherit enrolled cache settings. The current
+CLI also loads the host's reference-only client file when a fresh canonical public
+checkout has no cache tuple. Historical readers receive a managed marker: when a
+newer CLI inherits that tuple, it adopts the matching host's approved writer
+posture. An explicit local-only setting, different endpoint/reference, CI, private
+origin or `BEEP_TURBO_HOST_CACHE_DISABLED=true` prevents that adoption. Remove
+`BEEP_TURBO_HOST_CACHE_MANAGED` to retain a manually chosen reader posture.
+
+Run `beep-turbo` from a canonical public checkout's root. Current sources use the
+existing `cache execute` runtime so governed tasks calculate their toolchain key;
+historical sources without that runtime use their installed native Turbo binary.
+Neither route reloads the checkout's unrelated environment references. Private
+origins are rejected before the launcher reads cache credentials.
+
+The offline TBK guest remains a rollout hold while its protective-stop latch is
+present. Windows requires a qualified Linux/WSL route or a separately qualified
+adapter runtime; the pinned upstream release has no native Windows binary.
 
 ## Ownership, pins and deployment state
 
@@ -101,8 +120,9 @@ that checkout. It refuses duplicate cache entries, symlinked dotenv files, and
 raw existing cache tokens. A private receipt retains only the old/new cache fields
 and references, retaining original cache lines for rollback, including `export`
 and spacing. Other dotenv values and unrelated later edits stay intact.
-Enroll one checkout initially; older CLI versions intentionally reject remote
-writes, so do not enroll clones before they contain the matching resolver change.
+Fleet enrollment checks the source revision before selecting a cache mode. Older
+resolvers receive their supported read mode; current resolvers permit trusted
+writes. An explicit direct-Turbo launcher supports historical source without edits.
 
 ## CI lifecycle and fallback
 
@@ -174,3 +194,47 @@ enrollment/rollback with inert credentials, including an occupied-port fallback.
 With an active user manager it also runs the rendered service through an inert
 credential helper to verify paths containing spaces, percent and dollar characters.
 It makes no 1Password or R2 data-plane requests.
+
+## Fleet enrollment and direct commands
+
+After installing the host adapter, inventory clones and registered worktrees with
+an exact upstream check. The default is a read-only plan:
+
+```sh
+python3 infra/r2-cache/fleet.py "$HOME/YeeBois/projects"
+python3 infra/r2-cache/fleet.py "$HOME/YeeBois/projects" --apply \
+  --output "$HOME/.local/state/beep/r2-cache/fleet-enrollment.json"
+```
+
+Enrollment writes only ignored cache references and retains per-checkout rollback
+receipts. Current resolvers receive trusted read/write mode; historical resolvers
+receive read mode. Sources without that resolver are reported explicitly. Their
+source and branch stay intact. `beep-turbo` provides the installed direct route:
+
+```sh
+beep-turbo lint --filter=@beep/brand
+beep-turbo check --filter=@beep/brand
+```
+
+It selects the shared filesystem cache, records a run summary, and resolves only
+the host client references. Use it for direct Turbo calls or historical branches;
+ordinary current `bun run` quality commands already select the same cache.
+
+Fresh current clones and raw Git/app worktrees with no cache settings load the
+installed reference-only `client.env` at CLI startup after verifying the canonical
+public upstream. Private forks and unrelated repositories do not inherit it. Explicit checkout settings,
+CI and `BEEP_TURBO_HOST_CACHE_DISABLED=true` take precedence. The canonical
+`beep worktree new` command also copies the enrolled primary checkout's `.env`.
+No discovery daemon or recurring fleet job is installed.
+
+The trusted Linux fleet initially shares the existing bucket-scoped host role.
+Each host resolves it through its own approved `op` backend; no 1Password auth
+store is copied. This role has joint revocation: rotate it on every enrolled
+host before revoking its predecessor. Protected CI writers/readers retain their
+separate grants. The grant expiry and replacement-before-day-60 rule above still
+apply. Offline hosts need a live service and reuse proof before they count.
+
+All Turbo-backed CI callers use the same optional startup in the existing setup
+action and exact-process cleanup at job exit. Protected main pushes write;
+same-repository PRs and main scheduled/manual jobs read. Forks stay local-only.
+The separate Cache Warm probe keeps its existing protected qualification path.

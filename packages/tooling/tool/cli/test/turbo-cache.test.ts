@@ -1,8 +1,10 @@
+import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   hasRemoteTurboCacheArgs,
   isTurboCacheControlArg,
   isTurboCacheDirArg,
   LocalOnlyTurboCache,
+  loadHostTurboCacheDefaults,
   localOnlyTurboCacheArgs,
   RemoteReadTurboCache,
   readTurboCacheEnvironment,
@@ -26,6 +28,9 @@ import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -45,6 +50,112 @@ const environmentWith = (token: TurboCacheValueSource, cache: string): TurboCach
 // The fully configured workstation posture: a 1Password-backed read token, a
 // literal endpoint and team, and the sanctioned read-only cache mode.
 const completeEnvironment = environmentWith("secret-reference", REMOTE_READ_MODE);
+
+it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "10 seconds" })(
+  "enrolled host cache defaults",
+  (it) => {
+    it.effect("loads only enrolled references and respects checkout, CI and explicit opt-out boundaries", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped();
+        const directory = path.join(root, "beep/r2-cache");
+        yield* fs.makeDirectory(directory, { recursive: true });
+        const file = path.join(directory, "client.env");
+        const contents = A.join(
+          [
+            "TURBO_API=http://127.0.0.1:9427",
+            "TURBO_TOKEN=op://fixture/cache/bearer",
+            "TURBO_TEAM=fixture",
+            "TURBO_CACHE=local:rw,remote:rw",
+            "BEEP_TURBO_TRUSTED_WRITER=true",
+            "DATABASE_URL=op://fixture/application/database",
+          ],
+          "\n"
+        );
+        yield* fs.writeFileString(file, contents);
+        const environment = { HOME: root, XDG_CONFIG_HOME: root };
+        expect(yield* loadHostTurboCacheDefaults(environment, false, "git@github.com:private/fork.git")).toEqual({});
+        expect(yield* loadHostTurboCacheDefaults(environment, false, "")).toEqual({});
+        const defaults = yield* loadHostTurboCacheDefaults(
+          environment,
+          false,
+          "git@github.com:beep-effect/beep-effect.git"
+        );
+        expect(defaults).toEqual({
+          TURBO_API: "http://127.0.0.1:9427",
+          TURBO_TOKEN: "op://fixture/cache/bearer",
+          TURBO_TEAM: "fixture",
+          TURBO_CACHE: "local:rw,remote:rw",
+          BEEP_TURBO_TRUSTED_WRITER: "true",
+        });
+        const inherited = {
+          ...environment,
+          ...defaults,
+          TURBO_CACHE: "local:rw,remote:r",
+          BEEP_TURBO_TRUSTED_WRITER: "false",
+          BEEP_TURBO_HOST_CACHE_MANAGED: "true",
+        };
+        expect(
+          yield* loadHostTurboCacheDefaults(inherited, false, "git@github.com:beep-effect/beep-effect.git")
+        ).toEqual(defaults);
+        for (const override of [
+          { BEEP_TURBO_HOST_CACHE_MANAGED: "false" },
+          { BEEP_TURBO_HOST_CACHE_DISABLED: "true" },
+          { TURBO_TOKEN: "op://fixture/other/bearer" },
+          { TURBO_CACHE: "local:rw" },
+        ]) {
+          expect(
+            yield* loadHostTurboCacheDefaults(
+              { ...inherited, ...override },
+              false,
+              "git@github.com:beep-effect/beep-effect.git"
+            )
+          ).toEqual({});
+        }
+        expect(
+          yield* loadHostTurboCacheDefaults(environment, true, "git@github.com:beep-effect/beep-effect.git")
+        ).toEqual({});
+        expect(
+          yield* loadHostTurboCacheDefaults(
+            { ...environment, TURBO_CACHE: "local:rw" },
+            false,
+            "git@github.com:beep-effect/beep-effect.git"
+          )
+        ).toEqual({});
+        expect(
+          yield* loadHostTurboCacheDefaults(
+            { ...environment, TURBO_API: "https://explicit.test" },
+            false,
+            "git@github.com:beep-effect/beep-effect.git"
+          )
+        ).toEqual({});
+        expect(
+          yield* loadHostTurboCacheDefaults(
+            { ...environment, BEEP_TURBO_HOST_CACHE_DISABLED: "true" },
+            false,
+            "git@github.com:beep-effect/beep-effect.git"
+          )
+        ).toEqual({});
+        for (const invalid of [
+          Str.replace("op://fixture/cache/bearer", "raw-fixture-token")(contents),
+          Str.replace("http://127.0.0.1:9427", "https://external.test")(contents),
+          Str.replace("BEEP_TURBO_TRUSTED_WRITER=true", "BEEP_TURBO_TRUSTED_WRITER=false")(contents),
+          "TURBO_API=http://127.0.0.1:9427",
+        ]) {
+          yield* fs.writeFileString(file, invalid);
+          expect(
+            yield* loadHostTurboCacheDefaults(environment, false, "git@github.com:beep-effect/beep-effect.git")
+          ).toEqual({});
+        }
+        yield* fs.remove(file);
+        expect(
+          yield* loadHostTurboCacheDefaults(environment, false, "git@github.com:beep-effect/beep-effect.git")
+        ).toEqual({});
+      })
+    );
+  }
+);
 
 const incompleteEnvironments: ReadonlyArray<readonly [TurboCacheEnvName, TurboCacheEnvironment]> = [
   ["TURBO_API", TurboCacheEnvironment.make({ token: "secret-reference", team: "literal", cache: REMOTE_READ_MODE })],
