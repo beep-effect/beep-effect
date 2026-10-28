@@ -3,7 +3,7 @@
  *
  * **Details**
  *
- * Ported from effect@4.0.6. DuckDB serializes writes on one connection.
+ * Ported from effect 4.0.6. DuckDB serializes writes on one connection.
  * Cluster storages cannot coordinate across processes sharing a DuckDB file.
  * Deviations from the upstream SQLite implementation carry `// beep:` markers.
  *
@@ -590,7 +590,7 @@ const makeEncodedStorage = Effect.fnUntraced(function* (
     ),
 
     unprocessedMessagesById(ids, now) {
-      const idArr = Array.from(ids, (id) => String(id));
+      const idArr = A.map(A.fromIterable(ids), String);
       return sql<MessageRow & ReplyJoinRow>`
         SELECT ${messageJoinColumns}
         FROM ${messagesTableSql} m

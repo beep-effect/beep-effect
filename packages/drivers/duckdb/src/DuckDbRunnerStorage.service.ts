@@ -3,7 +3,7 @@
  *
  * **Details**
  *
- * Ported from effect@4.0.6. DuckDB serializes writes on one connection.
+ * Ported from effect 4.0.6. DuckDB serializes writes on one connection.
  * Cluster storages cannot coordinate across processes sharing a DuckDB file.
  * Deviations from the upstream SQLite implementation carry `// beep:` markers.
  *

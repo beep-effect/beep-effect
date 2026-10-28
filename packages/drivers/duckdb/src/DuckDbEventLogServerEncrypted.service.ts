@@ -8,7 +8,7 @@
  * sequence numbers, and streams changes. Clients remain responsible for
  * encrypting writes and decrypting reads.
  *
- * Adapted from effect@4.0.6 SqlEventLogServerEncrypted (MIT, Effectful Technologies Inc.).
+ * Adapted from effect 4.0.6 SqlEventLogServerEncrypted (MIT, Effectful Technologies Inc.).
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -59,7 +59,6 @@ import type * as Statement from "effect/sql/Statement";
  * const storage = DuckDbEventLogServerEncrypted.makeStorage()
  * ```
  *
- * @stability unstable
  * @category constructors
  * @since 0.0.0
  */
@@ -356,7 +355,6 @@ const decodeSessionAuthBindings = decodeSessionAuthBindingRows;
  * const storage = DuckDbEventLogServerEncrypted.layerStorage()
  * ```
  *
- * @stability unstable
  * @category layers
  * @since 0.0.0
  */
@@ -379,7 +377,6 @@ export const layerStorage = (options?: {
  * const storage = DuckDbEventLogServerEncrypted.layerStorageSubtle()
  * ```
  *
- * @stability unstable
  * @category layers
  * @since 0.0.0
  */
