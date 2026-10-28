@@ -1,6 +1,8 @@
 /**
  * Generated namespace IRI and term inventory for this vocabulary.
  *
+ * **Details**
+ *
  * Single-sourced from the `@beep/identity` `CoreVocab` registry via
  * `bun run beep sync-data-to-ts --target vocab-terms`.
  *

@@ -1,6 +1,8 @@
 /**
  * Branded schema for canonical Ethereum validator public keys.
  *
+ * **Details**
+ *
  * Accepts lowercase `0x`-prefixed compressed BLS12-381 public keys.
  *
  * @since 0.0.0

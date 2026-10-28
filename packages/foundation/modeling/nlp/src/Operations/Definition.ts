@@ -1,6 +1,8 @@
 /**
  * Operations/Definition - structured definitions of composable NLP operations.
  *
+ * **Details**
+ *
  * An {@link OperationDefinition} separates an operation's metadata (name,
  * description), its type contract (input/output schemas), and its behavior (an
  * Effect-returning implementation). Dependencies `R` and errors `E` are inferred

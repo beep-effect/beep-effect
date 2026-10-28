@@ -20,7 +20,7 @@ import { makeNamedNode } from "../Rdf.ts";
  * stringDatatypeIri // => "http://www.w3.org/2001/XMLSchema#string"
  * ```
  *
- * @see https://www.w3.org/2001/XMLSchema#
+ * @see {@link https://www.w3.org/2001/XMLSchema#} W3C XML Schema namespace document.
  * @category configuration
  * @since 0.0.0
  */

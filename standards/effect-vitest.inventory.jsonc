@@ -1989,13 +1989,13 @@
       "reason": "Scoped SQL provision is the subject: per-call freshness, hooks, driver selection or a post-close reconnect must complete inside the test body with the real driver. Owner: @beep/test-utils. Exit: retire when EV002 recognises a provision whose per-call freshness or post-close reconnect the test asserts (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:packages/tooling/tool/cli/test/models-manifest-errors.test.ts:140:provideScopedLayer@10#1",
+      "id": "EV002:packages/tooling/tool/cli/test/models-manifest-errors.test.ts:164:provideScopedLayer@10#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/models-manifest-errors.test.ts",
-      "line": 140,
-      "endLine": 144,
+      "line": 164,
+      "endLine": 168,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:5d5f83e0d96b9a26d6c135ea063cb127753c7393a4f8bbcf6610ce0e1847e923",
       "class": "unresolved-layer-provide",

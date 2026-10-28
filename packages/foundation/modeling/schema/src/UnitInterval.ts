@@ -1,6 +1,8 @@
 /**
  * UnitInterval - value object for a real number in the closed unit interval [0, 1].
  *
+ * **Details**
+ *
  * A branded type constrained to `0 <= x <= 1` — the canonical, domain-agnostic
  * shape for probabilities, confidences, ratios, and normalized scores. Uses
  * `Schema.brand` for compile-time type safety. Slices give it a semantic name at
