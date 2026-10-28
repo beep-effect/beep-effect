@@ -623,6 +623,29 @@ layer(
     })
   );
 
+  it.effect("preserves a foreign backup named by an abandoned journal", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const target = yield* interrupted("recovery-abandoned-foreign-", "refuse");
+      const victim = path.join(target.root, "unrelated.txt");
+      yield* fs.writeFileString(victim, "unrelated recovery data");
+      yield* abandon(target.backups, (publication) =>
+        ModelsTrackedPublication.make({
+          ...publication,
+          backup: O.some(victim),
+          state: { _tag: "abandoned", from: "backed-up", detail: "synthetic interrupted writer" },
+        })
+      );
+      const writer = yield* writerWith();
+      const reports = yield* writer.recover(target.backups);
+      expect(A.map(reports, (report) => report.result)).toEqual([
+        expect.objectContaining({ _tag: "refused", reason: "foreign-artifact" }),
+      ]);
+      expect(yield* fs.readFileString(victim)).toBe("unrelated recovery data");
+    })
+  );
+
   it.effect("abandons a publication that failed before its exchange and drops its backup", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

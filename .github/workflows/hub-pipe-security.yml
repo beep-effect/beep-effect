@@ -1,0 +1,29 @@
+name: Hub pipe security
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - apps/practice-review-hub/deploy/windows/**
+      - .github/workflows/hub-pipe-security.yml
+  push:
+    branches: [main]
+    paths:
+      - apps/practice-review-hub/deploy/windows/**
+      - .github/workflows/hub-pipe-security.yml
+
+permissions:
+  contents: read
+
+jobs:
+  windows-pipe:
+    name: Windows pipe owner authentication
+    runs-on: windows-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Check same-user transfer and foreign-owned replacements
+        shell: powershell
+        run: ./apps/practice-review-hub/deploy/windows/test-send-token.ps1
