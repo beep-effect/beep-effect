@@ -9,6 +9,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Runtime from "effect/Runtime";
+import * as Str from "effect/String";
 import { expect } from "vitest";
 
 export const NodeTestLayer = Layer.mergeAll(NodeServices.layer);
@@ -51,6 +52,47 @@ export const permutedDirectoryReadsFileSystem: {
       ),
     })
 );
+
+/**
+ * Runs an effect with every path outside `dir` reported as absent by `exists`.
+ *
+ * **Details**
+ *
+ * Upward searches such as `findRepoRoot` probe each ancestor with `exists`.
+ * A bare temporary directory under a shared `/tmp` is not proof that no root
+ * exists: a stray `/tmp/.git` or `/tmp/bun.lock` from another process makes the
+ * search succeed. Hiding everything outside `dir` makes "no ancestor marker" a
+ * property of the test rather than of the host. Every other operation reaches
+ * the real file system.
+ *
+ * **Example** (Prove a bare directory has no repository root)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect";
+ * import { withAncestorsHidden } from "./CommandTest.ts"
+ *
+ * const program = Effect.void.pipe(withAncestorsHidden("/tmp/bare-123"))
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const withAncestorsHidden =
+  (dir: string) =>
+  <A, E, R>(self: Effect.Effect<A, E, R>): Effect.Effect<A, E, R | FileSystem.FileSystem> =>
+    Effect.provideServiceEffect(
+      self,
+      FileSystem.FileSystem,
+      Effect.map(Effect.service(FileSystem.FileSystem), (fileSystem) =>
+        FileSystem.FileSystem.of({
+          ...fileSystem,
+          exists: Effect.fn("CommandTest.ancestorsHiddenExists")((path) =>
+            path === dir || Str.startsWith(`${dir}/`)(path) ? fileSystem.exists(path) : Effect.succeed(false)
+          ),
+        })
+      )
+    );
 
 /**
  * Enters a fresh native temporary directory for the lifetime of the caller's scope.
