@@ -79,14 +79,14 @@ const ViolationRow = S.Struct({ file: S.String, line: S.Finite, kind: S.String, 
 type ViolationRow = typeof ViolationRow.Type;
 
 const CheckOutcome = S.Struct({
-  ok: S.Literal(true),
+  ok: S.tag(true),
   checkedMembers: S.Finite,
   scannedSourceFiles: S.Finite,
   violations: S.Array(ViolationRow),
   sortedViolations: S.Array(S.String),
 });
 type CheckOutcome = typeof CheckOutcome.Type;
-const FailureOutcome = S.Struct({ ok: S.Literal(false), error: S.String });
+const FailureOutcome = S.Struct({ ok: S.tag(false), error: S.String });
 const Outcome = S.Union([CheckOutcome, FailureOutcome]);
 type Outcome = typeof Outcome.Type;
 
@@ -117,7 +117,7 @@ const Compare = S.Struct({
 type Compare = typeof Compare.Type;
 
 const Report = S.Struct({
-  schemaVersion: S.Literal(1),
+  schemaVersion: S.tag(1),
   commit: S.String.pipe(S.optionalKey),
   tool: S.String,
   generatedAt: S.String,
