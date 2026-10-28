@@ -85,7 +85,15 @@ const BaseLayers = Layer.mergeAll(BunServices.layer, BunHttpClient.layer, BunCry
  */
 const ProgramLoggers = Logger.layer([Logger.defaultLogger, Logger.tracerLogger]);
 
-/** Run a program under {@link ProgramLoggers}, built once like every path's own layers. */
+/**
+ * Run a program under {@link ProgramLoggers}, built once like every path's own layers.
+ *
+ * @param effect - The scoped CLI program to run with Effect's default loggers provided.
+ * @returns The same program with the logger context provided and the logger scope closed on exit.
+ * @internal
+ * @category configuration
+ * @since 0.0.0
+ */
 const withProgramLoggers = <E, A>(effect: import("effect/Effect").Effect<A, E>) =>
   Effect.scoped(Effect.flatMap(Layer.build(ProgramLoggers), (context) => Effect.provide(effect, context)));
 
