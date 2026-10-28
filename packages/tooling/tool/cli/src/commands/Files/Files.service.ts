@@ -1636,7 +1636,7 @@ const buildRenamePlan = Effect.fn("Files.buildRenamePlan")(function* (
                   "files sort-and-rename: warning: exiftool could not read creation metadata; using filesystem birth time or current UTC for affected media. Install exiftool to inspect embedded dates."
                 );
               }),
-              Effect.orElseSucceed(() => O.none<DateTime.Utc>())
+              Effect.orElseSucceed(O.none<DateTime.Utc>)
             )
           )
         )

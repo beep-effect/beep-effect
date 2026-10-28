@@ -44,6 +44,8 @@ import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext } from "./ArtifactPaths.ts";
 import { writeTextFile } from "./IssueArtifacts.ts";
 import { parseYeetReviewBodySignal, YeetReviewBodySignal, YeetReviewBodySignalInput } from "./ReviewBodySignal.ts";
+import { ReviewLaneReviewRow, YEET_REVIEW_LANE_SCHEMA_VERSION } from "./ReviewLane.schemas.ts";
+import { recordYeetReviewLaneRows, yeetReviewerIdentity } from "./ReviewLane.ts";
 import type * as Crypto from "effect/Crypto";
 import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -194,6 +196,8 @@ export class YeetMonitorIssueComment extends S.Opaque<YeetMonitorIssueComment, {
  * rather than `createdAt` because that is the field GitHub advances when the
  * review leaves the pending state, and a review drafted hours earlier must not
  * appear to predate the watermark that was written while it was still pending.
+ * `commitId` is the head the review was submitted against, when GitHub still
+ * pins it to one: the review lane counts a round per reviewed head (ruling 81).
  *
  * **Example** (Describe a submitted review)
  *
@@ -225,6 +229,7 @@ export class YeetMonitorReviewBody extends S.Opaque<YeetMonitorReviewBody, { rea
     submittedAt: S.String,
     url: S.String,
     authorType: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    commitId: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
     $I.annoteSchema("YeetMonitorReviewBody", {
       description: "Normalized GitHub pull request review body streamed during Yeet monitoring.",
@@ -416,6 +421,7 @@ export class GhRestIssueComment extends S.Opaque<GhRestIssueComment, { readonly 
 export class GhRestReview extends S.Opaque<GhRestReview, { readonly brand: unique symbol }>()(
   S.Struct({
     body: S.NullOr(S.String),
+    commit_id: S.NullOr(S.String).pipe(S.optionalKey),
     html_url: S.String,
     id: S.Finite,
     state: S.String,
@@ -799,6 +805,7 @@ const normalizeReviewBody = (review: GhRestReview): O.Option<YeetMonitorReviewBo
             author: authorLogin(review.user),
             authorType: authorType(review.user),
             body,
+            commitId: O.fromNullishOr(review.commit_id),
             id: review.id,
             signal: parseYeetReviewBodySignal(
               YeetReviewBodySignalInput.make({ authorLogin: authorLogin(review.user), body })
@@ -811,6 +818,45 @@ const normalizeReviewBody = (review: GhRestReview): O.Option<YeetMonitorReviewBo
       )
     )
   );
+
+// Every submitted review is a review lane fact (ruling 81), body or not: the
+// stream prints nothing for a body-less approval, but the ledger must count
+// it as a review of that head. A pending review has no submission instant and
+// is not an event yet.
+const reviewLaneReviewRow =
+  (context: RepoRunContext, prNumber: number, recordedAt: string) =>
+  (review: GhRestReview): O.Option<ReviewLaneReviewRow> =>
+    O.map(O.fromNullishOr(review.submitted_at), (submittedAt) =>
+      ReviewLaneReviewRow.make({
+        schemaVersion: YEET_REVIEW_LANE_SCHEMA_VERSION,
+        prNumber,
+        branch: context.branch,
+        recordedAt,
+        reviewId: review.id,
+        reviewer: yeetReviewerIdentity(authorLogin(review.user), authorType(review.user)),
+        commitSha: O.fromNullishOr(review.commit_id),
+        state: review.state,
+        submittedAt,
+      })
+    );
+
+// The reviews collection returns every review on each poll, so the ledger is
+// kept by union: rows the ledger already holds are dropped by the recorder,
+// and the fold deduplicates by review id whatever reaches the file.
+const recordReviewLaneReviews = Effect.fn("YeetMonitor.recordReviewLaneReviews")(function* (
+  context: RepoRunContext,
+  prNumber: number,
+  reviews: ReadonlyArray<GhRestReview>
+): Effect.fn.Return<void, never, FileSystem.FileSystem | Path.Path> {
+  if (A.isReadonlyArrayEmpty(reviews)) {
+    return;
+  }
+  const recordedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
+  yield* recordYeetReviewLaneRows(
+    context.repoRoot,
+    A.getSomes(A.map(reviews, reviewLaneReviewRow(context, prNumber, recordedAt)))
+  );
+});
 
 /**
  * Review-body normalizer exposed through the source-only Yeet test kit.
@@ -1280,6 +1326,13 @@ const persistCommentState = (
  * cancellation or encoding failure from persisting past a comment that was
  * never actually surfaced.
  *
+ * The reviews the poll read are also recorded in the checkout's review lane
+ * ledger (ruling 81), every one of them, body or not: the ledger is the
+ * measurement's source, the stream is the operator's, and a body-less
+ * approval belongs in the first and not the second. Recording is best effort
+ * and keyed by review id, so a poll that reads the same reviews again writes
+ * nothing new.
+ *
  * **Example** (Build the collector effect)
  *
  * ```ts
@@ -1302,7 +1355,7 @@ export const collectNewYeetMonitorComments = Effect.fn("YeetMonitor.collectNewCo
 ): Effect.fn.Return<
   ReadonlyArray<YeetMonitorComment>,
   YeetCommandError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
 > {
   const watermark = yield* Ref.get(watermarkRef);
   const [reviewPayload, issuePayload, reviewBodyPayload] = yield* Effect.all(
@@ -1331,6 +1384,7 @@ export const collectNewYeetMonitorComments = Effect.fn("YeetMonitor.collectNewCo
     ],
     { concurrency: 3 }
   );
+  yield* recordReviewLaneReviews(context, pullRequestNumber, reviewBodyPayload);
   const reviewComments = pipe(reviewPayload, A.map(normalizeReviewComment));
   const issueComments = pipe(issuePayload, A.map(normalizeIssueComment));
   const reviewBodies = pipe(reviewBodyPayload, A.map(normalizeReviewBody), A.getSomes);

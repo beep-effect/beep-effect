@@ -123,6 +123,10 @@
       "purpose": "R1 differential: the deleted @beep/schema/Semver and hand-rolled VersionSync and CacheClientPin version code compared with @beep/semver over bun.lock and every tracked package.json."
     },
     {
+      "path": "ops/tsconfig-sync-parity.ts",
+      "purpose": "3-A7 parity: tsconfig-sync dry-run and write outputs (stdout, exit codes, sha256 of every file) over fixed mutations, before and after the @beep/tsconfig schema switch, plus a TsconfigJson decode of every tracked tsconfig."
+    },
+    {
       "path": "ops/xdg-systemd-differential.ts",
       "purpose": "Wave 4-X differential: @beep/xdg base and search directories against systemd-path over an environment matrix."
     }
