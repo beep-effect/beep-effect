@@ -756,10 +756,9 @@ const requireFinalCheck = Effect.fn("Yeet.requireFinalCheck")(function* (
   const receipt = yield* (dependencies.finalCheck ?? readFinalCheckForReady)(context, headSha);
   const refusal = finalCheckRefusal(receipt, headSha);
   if (O.isNone(refusal)) {
-    return yield* A.match(O.toArray(receipt), {
-      onEmpty: () => Effect.void,
-      onNonEmpty: ([found]) => logReceiptSkips(found, Str.slice(0, 12)(headSha)),
-    });
+    // A passing finalCheckRefusal requires a present receipt; an empty receipt
+    // always has a refusal. Do not keep an unreachable success branch here.
+    return yield* logReceiptSkips(O.getOrThrow(receipt), Str.slice(0, 12)(headSha));
   }
   if (O.isSome(receipt)) return yield* refuseFinalCheck(refusal.value);
   const refresh = yield* (dependencies.refresh ?? refreshForReady)(context, headSha);
