@@ -36,6 +36,28 @@ const generatedClaim = Arbitrary.map(
 );
 
 describe("ClaimElement rules", () => {
+  it.effect("preserves unsupported possessives and reports explicit coverage findings", () =>
+    Effect.gen(function* () {
+      const claim = PatentClaim.cases.independent.make({
+        claimNumber: 1,
+        claimText: "A device comprising a housing; its forward part; their tabs.",
+        preamble: "A device",
+        transition: "comprising",
+        body: "a housing; its forward part; their tabs.",
+      });
+      const claims: PatentClaims = [claim];
+      const tree = yield* decomposeClaim(claim, claims);
+      const findings = antecedentPolicy([tree], claims);
+      assert.deepStrictEqual(
+        A.map(findings, (finding) => [finding.kind, finding.rule, finding.referring.anchor.quote]),
+        [
+          ["pattern-not-covered", "unsupported-determiner", "its forward part"],
+          ["pattern-not-covered", "unsupported-determiner", "their tabs"],
+        ]
+      );
+    })
+  );
+
   it.effect("evaluates ordinary claim sets through one hundred multi-parent claims without budget abstention", () =>
     Effect.gen(function* () {
       const body = "a sensor; a controller; a housing; a lens; the sensor; the controller; the housing; the lens.";

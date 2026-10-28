@@ -1,0 +1,391 @@
+{
+  "familyId": "13822885-root-1",
+  "role": "source-eligibility-extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.7,
+  "verdict": "unresolved",
+  "quotedEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the side-by-side arrangement directional end surfaces",
+      "nativeQuote": "the side-by-side arrangement directional end surfaces",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the both end parts",
+      "nativeQuote": "the both end parts",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the bind bar",
+      "nativeQuote": "the bind bar",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the bar edge side",
+      "nativeQuote": "the bar edge side",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "said bent part",
+      "nativeQuote": "said bent part",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the bent part",
+      "nativeQuote": "the bent part",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the end plate",
+      "nativeQuote": "the end plate",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "said bent-part-side engagement structures",
+      "nativeQuote": "said bent-part-side engagement structures",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the end-plate-side engagement structures",
+      "nativeQuote": "the end-plate-side engagement structures",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the bind bar",
+      "nativeQuote": "The battery pack according to claim 1, wherein said bind bar is constructed so that the bent parts on both ends of said bind bar can be in press contact with the outside surfaces of said end plates.",
+      "literalMatch": false,
+      "explanation": "Examiner phrase not literal in numbered native claim; actual full source preserved for review."
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the outside surface",
+      "nativeQuote": "the outside surface",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the end plate",
+      "nativeQuote": "The battery pack according to claim 3, wherein said end plate includes a metal plate, wherein the metal plate is partially bent so that said engagement protrusion is formed.",
+      "literalMatch": false,
+      "explanation": "Examiner phrase not literal in numbered native claim; actual full source preserved for review."
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the end plate",
+      "nativeQuote": "The battery pack according to claim 1, wherein said end plate includes an inclined surface on a side part of the outside surface that is located on the engagement side where the substantially rectangular U-shaped opening of said bind bar is coupled, wherein the inclined surface descends toward the substantially rectangular U-shaped opening.",
+      "literalMatch": false,
+      "explanation": "Examiner phrase not literal in numbered native claim; actual full source preserved for review."
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the outside surface",
+      "nativeQuote": "the outside surface",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the engagement side",
+      "nativeQuote": "the engagement side",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the substantially rectangular u-shaped opening",
+      "nativeQuote": "the substantially rectangular U-shaped opening",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "said bind bar",
+      "nativeQuote": "said bind bar",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the inclined surface",
+      "nativeQuote": "the inclined surface",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the end plate",
+      "nativeQuote": "The battery pack according to claim 1, wherein said end plate includes a main plate that is formed of plastic, and a metal plate that is arranged on the outside surface of the main plate, wherein said metal plate is coupled to said main plate and arranged in a predetermined position on the main plate by a positioning mechanism, and the bent part of said bind bar is arranged in a predetermined position on said end plate by said positioning mechanism.",
+      "literalMatch": false,
+      "explanation": "Examiner phrase not literal in numbered native claim; actual full source preserved for review."
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the bent part",
+      "nativeQuote": "the bent part",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "said bind bar",
+      "nativeQuote": "said bind bar",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the bent part",
+      "nativeQuote": "the bent part",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "said bind bar",
+      "nativeQuote": "said bind bar",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "said end plate",
+      "nativeQuote": "said end plate",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "the side surface",
+      "nativeQuote": "the side surface",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "the vertical direction",
+      "nativeQuote": "the vertical direction",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "the side surface",
+      "nativeQuote": "the side surface",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 11,
+      "examinerPhrase": "the height",
+      "nativeQuote": "the height",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 11,
+      "examinerPhrase": "the both ends",
+      "nativeQuote": "the both ends",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 11,
+      "examinerPhrase": "the bind bar",
+      "nativeQuote": "the bind bar",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 11,
+      "examinerPhrase": "the strip-shaped main part",
+      "nativeQuote": "the strip-shaped main part",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 12,
+      "examinerPhrase": "upper and lower bar portions",
+      "nativeQuote": "upper and lower bar portions",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 12,
+      "examinerPhrase": "the upper and lower parts",
+      "nativeQuote": "the upper and lower parts",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 12,
+      "examinerPhrase": "the side surface",
+      "nativeQuote": "the side surface",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 12,
+      "examinerPhrase": "the both ends",
+      "nativeQuote": "the both ends",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 12,
+      "examinerPhrase": "said upper bar portion",
+      "nativeQuote": "said upper bar portion",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 12,
+      "examinerPhrase": "said lower bar portion",
+      "nativeQuote": "said lower bar portion",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 12,
+      "examinerPhrase": "said bind bar",
+      "nativeQuote": "said bind bar",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 12,
+      "examinerPhrase": "the central part",
+      "nativeQuote": "the central part",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 13,
+      "examinerPhrase": "said bind bar",
+      "nativeQuote": "said bind bar",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 13,
+      "examinerPhrase": "the side surface",
+      "nativeQuote": "the side surface",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 13,
+      "examinerPhrase": "the upper surface",
+      "nativeQuote": "the upper surface",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 13,
+      "examinerPhrase": "the bottom surfaces",
+      "nativeQuote": "the bottom surfaces",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 13,
+      "examinerPhrase": "dimensioned to cover",
+      "nativeQuote": "dimensioned to cover",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    }
+  ],
+  "concerns": [
+    "MATERIAL ORIGINAL DEPENDENCY VERSION CONFLICT: clean original3→1or2,5→3or4,6→any1–5,7→any1–6,9→any1–8; native3→1,5→3,6/7/9→1. Original13-node set lacks native14 vehicle; second8-node Original/Currently-Amended partial set has sparse parsed claims. Count/version differences not merely typography. Matching examiner body phrases do not establish which dependency version was in force. Examiner the end plate versus native said end plate additionally retained as nonliteral."
+  ],
+  "rationale": "Retained ground, numbered examiner phrases, selected natural dependencies and original versions examined. Chronology alone not used to qualify. No attorney adjudication.",
+  "identityEvidence": {
+    "nativeApplicationNumber": "13822885",
+    "nativePublicationNumber": "US20130183571A1",
+    "nativePublicationDate": "20130718",
+    "provenanceIdentityMatches": true,
+    "publicationSha256Matches": true,
+    "claimsXmlSha256Matches": true,
+    "publicationPrecedesOfficeAction": true,
+    "nativePublicationSha256": "5a9a95c87be66fc04ee09437c6fcc4f8661e58e5b41ea0038442bd84dc100e70",
+    "sourceClaimsXmlSha256": "48d2db856e0528556512d6a61440fd8c8dbd077bd2d8449187ed7b447ae12a2b"
+  },
+  "inventoryEvidence": {
+    "retainedInventoryRows": 101,
+    "retainedInventoryCount": 101,
+    "rowsEqualCount": true,
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "HE8XIC5HPXXIFW3",
+        "officialDate": "2013-03-13T00:00:00.000-0400"
+      },
+      {
+        "documentIdentifier": "HE8XICWCPXXIFW3",
+        "officialDate": "2013-03-13T00:00:00.000-0400"
+      }
+    ],
+    "officeActionMailDate": "2015-07-16",
+    "limitation": "Underlying inventory entries and full office-action document not independently retrieved; this audit uses retained public excerpts and cached originals. Date-only consistency does not establish in-force identity."
+  },
+  "originalEvidence": [
+    {
+      "documentIdentifier": "HE8XIC5HPXXIFW3",
+      "officialDate": "2013-03-13T00:00:00.000-0400",
+      "sha256": "9b351c9df385819b998fb012b2660e0d818f39989baf15f7300fe2166fbfefb8",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [2],
+      "sourceClaimCount": 13
+    },
+    {
+      "documentIdentifier": "HE8XICWCPXXIFW3",
+      "officialDate": "2013-03-13T00:00:00.000-0400",
+      "sha256": "b9b0daa187f3370e0bc0617daa1c4833f77f516ac7cf27d353a69498538e8f1f",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [1, 10, 11, 12],
+      "sourceClaimCount": 8
+    }
+  ],
+  "nativeContextClaimCount": 14,
+  "selectedClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+  "naturalMembershipAudit": "Selected numbered natural dependency text read independently; no XML proposal overrides wording. Any identified range/alternative discrepancy is described in concerns.",
+  "cachedOriginalChecks": [
+    {
+      "documentIdentifier": "HE8XIC5HPXXIFW3",
+      "cachedOriginalPresent": true,
+      "sha256Matches": true,
+      "headerApplicationNumbers": ["13822885"],
+      "headerMailRoomDates": ["2013-03-13"],
+      "applicationMatches": true,
+      "claimNodeCount": 13
+    },
+    {
+      "documentIdentifier": "HE8XICWCPXXIFW3",
+      "cachedOriginalPresent": true,
+      "sha256Matches": true,
+      "headerApplicationNumbers": ["13822885"],
+      "headerMailRoomDates": ["2013-03-13"],
+      "applicationMatches": true,
+      "claimNodeCount": 8
+    }
+  ]
+}

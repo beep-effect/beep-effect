@@ -1,0 +1,216 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A method for adaptive control of a heating, ventilation, and air conditioning (HVAC) system in a building based on model predictive control (MPC), comprising:
+<claim-text>acquiring, by sensors, operation data of the HVAC system in the building under different working conditions, and performing preprocessing on the acquired operation data;</claim-text>
+<claim-text>calculating, by a processor, a marginal fitness measure (MAD) of each data point in the preprocessed operation data for each class based on the preprocessed operation data, and calculating, by the processor, a fitness measure of the each data point for the each class by combining marginal fitness measures (MADs) of all descriptors to obtain a global fitness measure (GAD);</claim-text>
+<claim-text>setting, by the processor, a GAD threshold, and classifying current operation states of the system according to classification rules;</claim-text>
+<claim-text>adopting, by the processor, adaptive control strategies for different operation states since model parameters of each class are fixed after classification; and using a classification result for state estimation and adjustment of the adaptive control strategies,</claim-text>
+<claim-text>wherein in each control cycle, a state estimate updated by Kalman filtering is used as a current state input of an adaptive model based on the classification result, and an optimal control input sequence for a future period is solved based on a current state and a prediction model to adjust operation parameters of the HVAC system;</claim-text>
+<claim-text>when inputting the Kalman-filtered state estimate into MPC, a state estimate {circumflex over (x)}(k) provided by a Kalman filter is used as a current initial state to obtain a cost function of MPC;</claim-text>
+<claim-text>the cost function is:</claim-text>
+</claim-text>
+<claim-text>
+<maths id="MATH-US-00021" num="00021">
+<math overflow="scroll">
+<mrow>
+<mrow>
+<mi>J</mi>
+<mo>=</mo>
+<mrow>
+<munderover>
+<mo>∑</mo>
+<mrow>
+<mi>i</mi>
+<mo>=</mo>
+<mn>0</mn>
+</mrow>
+<mrow>
+<mi>N</mi>
+<mo>-</mo>
+<mn>1</mn>
+</mrow>
+</munderover>
+<mtext> </mtext>
+<mrow>
+<mo>[</mo>
+<mrow>
+<mrow>
+<msup>
+<mrow>
+<mo>(</mo>
+<mrow>
+<mrow>
+<mover accent="true">
+<mi>x</mi>
+<mi>ˆ</mi>
+</mover>
+<mo>(</mo>
+<mrow>
+<mi>k</mi>
+<mo>+</mo>
+<mrow>
+<mi>i</mi>
+<mo>⁢</mo>
+<mrow>
+<semantics definitionURL="">
+<mo>❘</mo>
+<annotation encoding="Mathematica">"\[LeftBracketingBar]"</annotation>
+</semantics>
+<mi>k</mi>
+</mrow>
+</mrow>
+</mrow>
+<mo>)</mo>
+</mrow>
+<mo>-</mo>
+<mrow>
+<msub>
+<mi>x</mi>
+<mi>ref</mi>
+</msub>
+<mo>(</mo>
+<mrow>
+<mi>k</mi>
+<mo>+</mo>
+<mi>i</mi>
+</mrow>
+<mo>)</mo>
+</mrow>
+</mrow>
+<mo>)</mo>
+</mrow>
+<mi>T</mi>
+</msup>
+<mo>⁢</mo>
+<mrow>
+<mover accent="true">
+<mi>Q</mi>
+<mi>¯</mi>
+</mover>
+<mo>(</mo>
+<mrow>
+<mrow>
+<mover accent="true">
+<mi>x</mi>
+<mi>ˆ</mi>
+</mover>
+<mo>(</mo>
+<mrow>
+<mi>k</mi>
+<mo>+</mo>
+<mrow>
+<mi>i</mi>
+<mo>⁢</mo>
+<mrow>
+<semantics definitionURL="">
+<mo>❘</mo>
+<annotation encoding="Mathematica">"\[LeftBracketingBar]"</annotation>
+</semantics>
+<mi>k</mi>
+</mrow>
+</mrow>
+</mrow>
+<mo>)</mo>
+</mrow>
+<mo>-</mo>
+<mrow>
+<msub>
+<mi>x</mi>
+<mi>ref</mi>
+</msub>
+<mo>(</mo>
+<mrow>
+<mi>k</mi>
+<mo>+</mo>
+<mi>i</mi>
+</mrow>
+<mo>)</mo>
+</mrow>
+</mrow>
+<mo>)</mo>
+</mrow>
+</mrow>
+<mo>+</mo>
+<mrow>
+<msup>
+<mrow>
+<mi>u</mi>
+<mo>⁡</mo>
+<mo>(</mo>
+<mrow>
+<mi>k</mi>
+<mo>+</mo>
+<mi>i</mi>
+</mrow>
+<mo>)</mo>
+</mrow>
+<mi>T</mi>
+</msup>
+<mo>⁢</mo>
+<mover accent="true">
+<mi>R</mi>
+<mi>¯</mi>
+</mover>
+<mo>⁢</mo>
+<mrow>
+<mi>u</mi>
+<mo>⁡</mo>
+<mo>(</mo>
+<mrow>
+<mi>k</mi>
+<mo>+</mo>
+<mi>i</mi>
+</mrow>
+<mo>)</mo>
+</mrow>
+</mrow>
+</mrow>
+<mo>]</mo>
+</mrow>
+</mrow>
+</mrow>
+<mo>;</mo>
+</mrow>
+</math>
+</maths>
+<claim-text>wherein, {circumflex over (x)}(k+i|k) is predicted through the state estimate {circumflex over (x)}(k) provided by the Kalman filter; x<sub>ref</sub>(k+i) is a target state; u(k+i) is a control input vector (such as cooling power, fan speed, etc.); <o ostyle="single">Q</o> is a temperature error weight matrix; <o ostyle="single">R</o> is a control input weight matrix; N is the length of a prediction time domain;</claim-text>
+<claim-text>constraints for optimization comprise a state constraint and a control input constraint;</claim-text>
+<claim-text>solving, by the processor, the optimal control input sequence by minimizing the cost function to satisfy the constraints;</claim-text>
+<claim-text>applying a first control input in the optimal control input sequence calculated through the MPC to the HVAC system to control start/stop of a compressor, fan speed and opening of a damper; and</claim-text>
+<claim-text>monitoring an actual output and a predicted output of the HVAC system in the building in real time, performing a calculation of an error therebetween and feeding back the calculated error to the MPC to achieve an adaptive closed-loop control.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the model parameters of the each class comprise a state transition matrix, a control input matrix, a control output matrix, a process noise covariance matrix, and a measurement noise covariance matrix.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising: updating a center of the each class, defined as a mean in a membership function, by weighted averaging based on memberships of data points in the preprocessed operation data.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein estimating a state of the HVAC system comprises:
+<claim-text>constructing a state space model for the HVAC system;</claim-text>
+<claim-text>linearizing a state transition equation in the state space model;</claim-text>
+<claim-text>linearizing an output equation in the state space model;</claim-text>
+<claim-text>performing real-time linearization and adjustment on preset parameters of the linearized state space model according to the current state and a control input during running; and</claim-text>
+<claim-text>performing prediction and updating steps of Kalman filtering using adjusted parameters, providing an accurate state estimate, and dynamically updating the model parameters to enable the prediction model to accurately reflect the current dynamic behavior of the system.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The method according to <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein linearizing the state transition equation in the state space model specifically comprises:
+<claim-text>performing first-order Taylor expansion on a nonlinear state transition equation in the state space model at a current state estimate and a control input;</claim-text>
+<claim-text>calculating a Jacobian matrix using the current state and the control input, modifying preset classification parameters, and seeking a partial derivative of a state transition function with respect to the control input to obtain the Jacobian matrix; and</claim-text>
+<claim-text>finally obtaining a linearized state transition function;</claim-text>
+<claim-text>wherein, linearizing an output equation in the state space model specifically comprises:</claim-text>
+<claim-text>performing first-order Taylor expansion on a nonlinear output equation at the current state estimate to obtain a linearized output equation.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. A computer program product comprising a computer program, the computer program, when executed by a processor, implementing the method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. A computer apparatus comprising a memory, a processor, and a computer program stored in the memory and runnable on the processor, the program, when executed by the processor, implementing the steps of the method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. A non-transitory computer-readable storage medium having a computer program stored therein, the program, when executed by a processor, implementing the steps of the method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>.</claim-text>
+</claim>
+</claims>

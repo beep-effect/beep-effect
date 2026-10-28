@@ -1,0 +1,147 @@
+{
+  "familyId": "12360911-root-1",
+  "rootClaimNumber": 1,
+  "labelClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "An X-ray CT apparatus comprising: an imaging unit that irradiates a subject, switching scanning conditions, with X-rays continuously or intermittently, and reconstructs an image by detecting X-rays passed through the subject; an index-value detecting unit that detects an index value that indicates a contrast medium density in an image reconstructed by the imaging unit during a scan; a switch-timing detecting unit that detects switch timing of the scanning conditions based on an index value detected by the index-value detecting unit; and an imaging control unit that controls the imaging unit so as to skip the rest of a scan with a first scanning condition in execution and to start a scan with a second scanning condition upon detecting switch timing of the scanning conditions by the switch-timing detecting unit.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The apparatus according to claim 1, wherein the imaging unit performs a dynamic scan through which a dynamic image of a scan subject portion of the subject is reconstructed by repeatedly irradiating a region including the scan subject portion with X-rays.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The apparatus according to claim 2, wherein the imaging unit detects X-rays with a Flat Panel Detector of multiple arrays that can simultaneously detect X-rays passed through a region including the scan subject portion.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The apparatus according to claim 1, wherein the switch-timing detecting unit creates a curve that indicates temporal variations in the contrast medium density based on the index value, and detects switch timing of the scanning conditions based on a gradient of the created curve.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The apparatus according to claim 4, wherein the index-value detecting unit detects an index value that indicates a contrast medium density in an region of interest set on the image as the index value, and the switch-timing detecting unit creates a curve that indicates temporal variations in the contrast medium density in the region of interest as the curve.",
+      "sourceXmlParentClaimNumbers": [4]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The apparatus according to claim 4, wherein the switch-timing detecting unit detects the switch timing by detecting an inflection point that appears on the curve based on a gradient of the curve.",
+      "sourceXmlParentClaimNumbers": [4]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The apparatus according to claim 1, wherein the imaging control unit controls the imaging unit so as to skip the rest of a scan currently in execution and to terminate scanning, when an index value detected by the index-value detecting unit becomes below a termination threshold value.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The apparatus according to claim 1, wherein the imaging control unit controls the imaging unit so as to skip the rest of a scan currently in execution and to terminate scanning, when a total scan time from a start of the scan reaches a predetermined maximum scan time.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "The apparatus according to claim 1, further comprising a display control unit that displays during a scan a curve that indicates temporal variations in the contrast medium density based on index values detected by the index-value detecting unit.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "An X-ray CT apparatus comprising: an imaging unit that irradiates a subject, switching scanning conditions, with X-rays continuously or intermittently, and reconstructs an image by detecting X-rays passed through the subject; an index-value detecting unit that detects an index value that indicates a contrast medium density in an image reconstructed by the imaging unit during a scan; and a display control unit that displays during a scan a curve that indicates temporal variations in the contrast medium density based on index values detected by the index-value detecting unit.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "The apparatus according to claim 10, further comprising: an instruction receiving unit that receives from an operator an instruction to skip the rest of a scan with a first scanning condition in execution and to start a scan with a second scanning condition; and an imaging control unit that controls the imaging unit so as to skip the rest of a scan with the first scanning condition and to start a scan with the second scanning condition upon receiving by the instruction receiving unit an instruction about switching of scanning conditions.",
+      "sourceXmlParentClaimNumbers": [10]
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "The apparatus according to claim 10, wherein the index-value detecting unit detects an index value that indicates a contrast medium density in an region of interest set on the image as the index value, and the display control unit displays during a scan a curve that indicates temporal variations in the contrast medium density in the region of interest as the curve.",
+      "sourceXmlParentClaimNumbers": [10]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "The apparatus according to claim 12, wherein the display control unit displays a plurality of curves that indicates temporal variations in contrast medium densities in respective regions of interest, when a plurality of regions of interest is set on the image as the region of interest.",
+      "sourceXmlParentClaimNumbers": [12]
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "The apparatus according to claim 10, wherein the display control unit further displays information about executed scans during a scan.",
+      "sourceXmlParentClaimNumbers": [10]
+    },
+    {
+      "claimNumber": 15,
+      "claimText": "A tomography method comprising: irradiating a subject, switching scanning conditions, with X-rays continuously or intermittently, and reconstructing an image by detecting X-rays passed through the subject, by an imaging unit; detecting by an index-value detecting unit an index value that indicates a contrast medium density in an image reconstructed by the imaging unit during a scan; detecting by a switch-timing detecting unit switch timing of the scanning conditions based on an index value detected by the index-value detecting unit; and controlling the imaging unit by an imaging control unit so as to skip the rest of a scan with a first scanning condition in execution and to start a scan with a second scanning condition upon detecting switch timing of the scanning conditions by the switch-timing detecting unit.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 16,
+      "claimText": "The method according to claim 15, wherein the imaging unit performs a dynamic scan through which a dynamic image of a scan subject portion of the subject is reconstructed by repeatedly irradiating a region including the scan subject portion with X-rays.",
+      "sourceXmlParentClaimNumbers": [15]
+    },
+    {
+      "claimNumber": 17,
+      "claimText": "The method according to claim 16, wherein the imaging unit detects X-rays with a Flat Panel detector of multiple arrays that can simultaneously detect X-rays passed through a region including the scan subject portion.",
+      "sourceXmlParentClaimNumbers": [16]
+    },
+    {
+      "claimNumber": 18,
+      "claimText": "The method according to claim 15, wherein the switch-timing detecting unit creates a curve that indicates temporal variations in the contrast medium density based on the index value, and detects switch timing of the scanning conditions based on a gradient of the created curve.",
+      "sourceXmlParentClaimNumbers": [15]
+    },
+    {
+      "claimNumber": 19,
+      "claimText": "The method according to claim 18, wherein the index-value detecting unit detects an index value that indicates a contrast medium density in an region of interest set on the image as the index value, and the switch-timing detecting unit creates a curve that indicates temporal variations in the contrast medium density in the region of interest as the curve.",
+      "sourceXmlParentClaimNumbers": [18]
+    },
+    {
+      "claimNumber": 20,
+      "claimText": "The method according to claim 18, wherein the switch-timing detecting unit detects the switch timing by detecting an inflection point that appears on the curve based on a gradient of the curve.",
+      "sourceXmlParentClaimNumbers": [18]
+    },
+    {
+      "claimNumber": 21,
+      "claimText": "The method according to claim 15, wherein the imaging control unit controls the imaging unit so as to skip the rest of a scan currently in execution and to terminate scanning, when an index value detected by the index-value detecting unit becomes below a termination threshold value.",
+      "sourceXmlParentClaimNumbers": [15]
+    },
+    {
+      "claimNumber": 22,
+      "claimText": "The method according to claim 15, wherein the imaging control unit controls the imaging unit so as to skip the rest of a scan currently in execution and to terminate scanning, when a total scan time from a start of the scan reaches a predetermined maximum scan time.",
+      "sourceXmlParentClaimNumbers": [15]
+    },
+    {
+      "claimNumber": 23,
+      "claimText": "The method according to claim 15, further comprising displaying by a display control unit during a scan a curve that indicates temporal variations in the contrast medium density based on index values detected by the index-value detecting unit.",
+      "sourceXmlParentClaimNumbers": [15]
+    },
+    {
+      "claimNumber": 24,
+      "claimText": "A tomography method comprising: irradiating a subject, switching scanning conditions, with X-rays continuously or intermittently, and reconstructing an image by detecting X-rays passed through the subject, by an imaging unit; detecting by an index-value detecting unit an index value that indicates a contrast medium density in an image reconstructed by the imaging unit during a scan; and displaying by a display control unit during a scan a curve that indicates temporal variations in the contrast medium density based on index values detected by the index-value detecting unit.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 25,
+      "claimText": "The method according to claim 24, further comprising: receiving by an instruction receiving unit from an operator an instruction to skip the rest of a scan with a first scanning condition in execution and to start a scan with a second scanning condition; and controlling the imaging unit by an imaging control unit so as to skip the rest of a scan with the first scanning condition and to start a scan with the second scanning condition upon receiving by the instruction receiving unit an instruction about switching of scanning conditions.",
+      "sourceXmlParentClaimNumbers": [24]
+    },
+    {
+      "claimNumber": 26,
+      "claimText": "The method according to claim 25, wherein the index-value detecting unit detects an index value that indicates a contrast medium density in an region of interest set on the image as the index value, and the display control unit displays during a scan a curve that indicates temporal variations in the contrast medium density in the region of interest as the curve.",
+      "sourceXmlParentClaimNumbers": [25]
+    },
+    {
+      "claimNumber": 27,
+      "claimText": "The method according to claim 24, wherein the display control unit displays a plurality of curves that indicates temporal variations in contrast medium densities in respective regions of interest, when a plurality of regions of interest is set on the image as the region of interest.",
+      "sourceXmlParentClaimNumbers": [24]
+    },
+    {
+      "claimNumber": 28,
+      "claimText": "The method according to claim 24, wherein the display control unit further displays information about executed scans during a scan.",
+      "sourceXmlParentClaimNumbers": [24]
+    }
+  ]
+}

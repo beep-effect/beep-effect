@@ -1,0 +1,217 @@
+{
+  "familyId": "11910514-root-1",
+  "role": "source-eligibility-extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.95,
+  "verdict": "eligible",
+  "quotedEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the position acquisition means",
+      "nativeQuote": "the position acquisition means",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the rotary position",
+      "nativeQuote": "the rotary position",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the output signals",
+      "nativeQuote": "the output signals",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the memory cells",
+      "nativeQuote": "the memory cells",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the image signals",
+      "nativeQuote": "the image signals",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the position acquisition means",
+      "nativeQuote": "the position acquisition means",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 3,
+      "examinerPhrase": "the position acquisition means",
+      "nativeQuote": "the position acquisition means",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 3,
+      "examinerPhrase": "the output signals",
+      "nativeQuote": "the output signals",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "a first cradle",
+      "nativeQuote": "a first cradle",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "a second cradle",
+      "nativeQuote": "a second cradle",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "can be",
+      "nativeQuote": "can be",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the position acquisition means",
+      "nativeQuote": "the position acquisition means",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the position acquisition means",
+      "nativeQuote": "the position acquisition means",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the output signals",
+      "nativeQuote": "the output signals",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "can be",
+      "nativeQuote": "can be",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the shaft",
+      "nativeQuote": "the shaft",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the axis",
+      "nativeQuote": "the axis",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "its axis",
+      "nativeQuote": "its axis",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the longitudinal axis",
+      "nativeQuote": "the longitudinal axis",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "the detector readout circuit",
+      "nativeQuote": "the detector readout circuit",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "the pixels",
+      "nativeQuote": "the pixels",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "the column",
+      "nativeQuote": "the column",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "the row direction",
+      "nativeQuote": "the row direction",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "the position acquisition means",
+      "nativeQuote": "the position acquisition means",
+      "literalMatch": true,
+      "explanation": "Exact native substring ignoring case."
+    }
+  ],
+  "concerns": [
+    "Native10/11 repeat3/6 cited outputs;12–15 repeat8 cited axes;16–20 repeat9 cited circuit/pixels/column/row/position means, all reviewed. Examiner ellipses/brackets abbreviate rather than change numbered native text. No original comparisons; detailed numbered correspondence supports qualification."
+  ],
+  "rationale": "Actual112(b)/second-paragraph ground read; selected natural dependencies manually checked. Native identity and retained inventory evidence supplement, never replace, numbered examiner correspondence and conflicting-version investigation. Not attorney adjudication.",
+  "identityEvidence": {
+    "nativeApplicationNumber": "11910514",
+    "nativePublicationNumber": "US20080187096A1",
+    "nativePublicationDate": "20080807",
+    "provenanceIdentityMatches": true,
+    "publicationSha256Matches": true,
+    "claimsXmlSha256Matches": true,
+    "publicationPrecedesOfficeAction": true,
+    "nativePublicationSha256": "3ad3e3233dcf94f50fc93ea190b2f535363a51c89014fa229ba2194c4cd181aa",
+    "sourceClaimsXmlSha256": "15048d81fa3b31fb7f1c83e91fcc7adb55ea66892756ec2ccebabb9912083239"
+  },
+  "inventoryEvidence": {
+    "retainedInventoryRows": 106,
+    "retainedInventoryCount": 106,
+    "rowsEqualCount": true,
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "FEWN6S0RPPOPPY1",
+        "officialDate": "2008-04-08T00:00:00.000-0400"
+      },
+      {
+        "documentIdentifier": "FEWNF46RPPOPPY1",
+        "officialDate": "2008-04-08T00:00:00.000-0400"
+      }
+    ],
+    "officeActionMailDate": "2009-07-15",
+    "limitation": "Underlying inventory entries and full office-action document not independently retrieved; this audit uses retained public excerpts and cached originals. Date-only consistency does not establish in-force identity."
+  },
+  "originalEvidence": [],
+  "nativeContextClaimCount": 20,
+  "selectedClaimNumbers": [
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
+  ],
+  "naturalMembershipAudit": "Selected numbered natural dependency text read independently; no XML proposal overrides wording. Any identified range/alternative discrepancy is described in concerns.",
+  "cachedOriginalChecks": []
+}

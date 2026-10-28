@@ -1,0 +1,127 @@
+{
+  "familyId": "12610700-root-5",
+  "rootClaimNumber": 5,
+  "labelClaimNumbers": [5, 6, 7, 8, 9, 10, 11, 12],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A computer implemented method for multiple fault diagnosis comprising: dissecting, by a computer processor, an overall hypothesis space into tiers of hypotheses, wherein each tier represents a different number of faults in a production system having a plurality of production system modules; starting diagnosis at the single fault tier, assuming that the overall system has only one fault; treating the overall system as a single group with only one fault and perform single-fault diagnosis; and storing in a memory, any acceptable fault diagnosis and corresponding probability.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The method of claim 1, wherein when the investigating fails to determine an acceptable fault diagnosis within the single-fault hypotheses tier further comprising: moving to double-fault tier consisting of all hypotheses with two faults in the overall production system; re-partitioning, by the computer processor, the plurality of production modules of the production system into two groups of the production modules, wherein each of the groups are formed to likely have a single fault; and storing in a memory any acceptable fault diagnosis and corresponding probability.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The method according to claim 2, wherein the dissecting step generates more than two tiers, and the partitioning and investigating steps operate for each of the generated tiers.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The method according to claim 1, wherein the probability or likelihood for each hypothesis is calculated using observation data from the production system.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "A computer-implemented method for tiered inference multiple fault diagnosis, comprising: A. using a computer processor, partitioning a hypothesis space into tiers, wherein a hypothesis identifies potential component faults in a production system; B. performing diagnosis on the lowest available tier until the lowest available tier is completely ruled out by the observation data; C. moving onto the next incremental tier; D. based on the current tier of diagnosis, partitioning the production system into a set of subsystems likely to have single faults; E. if the tier is ruled out, repeat actions C and D, otherwise move to a step F; F. applying a single-fault diagnosis algorithm to each subsystem in the new set of subsystems to identify any probable faults within the subsystem; and if the single-fault algorithm determines that each subsystem contains a probable single fault, then perform the following: F(1). identify any hypotheses within the determined set of hypotheses that identify the same subsystem faults as the single-fault diagnosis algorithm; and F(2). store the identified hypotheses into computer memory; and G. if the observation data suggest that a subsystem has more than one fault, store the invalidated single-fault diagnostic data in memory and remove any hypothesis assuming the single-fault subsystem from the hypotheses space.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The method of claim 5, further comprising iteratively repeating steps C, D, E and F until step F(2) is performed.",
+      "sourceXmlParentClaimNumbers": [5]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The method of claim 5, wherein the hypothesis space is partitioned into j tiers where each tier is defined as the collection of hypotheses assuming a total of χj faults in the system.",
+      "sourceXmlParentClaimNumbers": [5]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The method of claim 5, wherein the production system is partitioned into subsystems where each subsystem is likely to have at most one fault based on the current observation data from the production system.",
+      "sourceXmlParentClaimNumbers": [5]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "The method of claim 5, wherein the production system is partitioned into subsystems where each subsystem is likely to have at most one fault based on the aggregate of all the observation data from the production system.",
+      "sourceXmlParentClaimNumbers": [5]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "The method of claim 5, wherein steps C, D, E, and F iteratively repeat until at least one of the following conditions occur: the current tier reaches a predetermined tier; or a predetermined amount of time elapses.",
+      "sourceXmlParentClaimNumbers": [5]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "The method of claim 5, wherein the complexity of the method is O(M2), wherein O( ) is the standard complexity notation which means “in the order of”, and wherein M2 means the computation complexity is in the order of M×M.",
+      "sourceXmlParentClaimNumbers": [5]
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "The method of claim 5 wherein each hypothesis is represented as a bit vector containing M bits; where M is the number of components in the production system, and each component in the production system is represented in the bit vector by a bit indicating whether a component is considered faulty in the hypothesis.",
+      "sourceXmlParentClaimNumbers": [5]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "A computer-implemented method for partitioning a system into subsystems, comprising: providing to a computer memory: a set of hypotheses corresponding to a set of components in a production system; a probability for each hypothesis that the hypothesis contains a fault; and a number j of expected faults; or each component in the system, calculating a correlation coefficient between the each component and every other component in the system; using a computer processor, selecting the j components having the highest autocorrelation values as seed values for a set of j subsystems; assigning each of the remaining modules to one of the subsystems based on the calculated correlation coefficients; and storing the subsystems to computer memory.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "The method of claim 13, wherein the subsystems are single-fault subsystems.",
+      "sourceXmlParentClaimNumbers": [13]
+    },
+    {
+      "claimNumber": 15,
+      "claimText": "The method of claim 13, wherein the probability for each hypothesis is calculated using observation data from the production system.",
+      "sourceXmlParentClaimNumbers": [13]
+    },
+    {
+      "claimNumber": 16,
+      "claimText": "The method of claim 13, wherein the probability for each hypothesis that the hypothesis contains a fault is calculated at least in part by using a Bayesian rule.",
+      "sourceXmlParentClaimNumbers": [13]
+    },
+    {
+      "claimNumber": 17,
+      "claimText": "The method of claim 13, wherein each hypothesis is represented as a bit vector containing M bits; where M is the number of components in the production system, and each component in the production system is represented in the bit vector by one bit indicating whether a component is considered faulty in the hypothesis.",
+      "sourceXmlParentClaimNumbers": [13]
+    },
+    {
+      "claimNumber": 18,
+      "claimText": "A computer-based system for tiered inference multiple fault diagnosis, comprising: (i) an observation module configured to: receive observation data from a production system; and update probabilities for a hypothesis space based on the received observation data, where a hypothesis identifies potential component faults in the production system; (ii) a dynamic partitioning module configured to: partition the hypothesis space into tiers; and partition the production systems into a set of subsystems where each subsystem is likely to contain at most a single fault; (iii) a single fault diagnosis module configured to: apply a single-fault diagnosis algorithm to each subsystem in the set of subsystems to identify any probable faults within the subsystem; and if the single-fault algorithm determines that each subsystem contains a probable single fault, then perform the following: identify any hypotheses within the determined set of hypotheses that identify the same subsystem faults as the single-fault diagnosis algorithm; and store the identified hypotheses into computer memory.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 19,
+      "claimText": "The system of claim 18, wherein the hypothesis space is partitioned into j tiers where each tier χj is defined as the collection of hypotheses assuming a total of j faults in the system.",
+      "sourceXmlParentClaimNumbers": [18]
+    },
+    {
+      "claimNumber": 20,
+      "claimText": "The system of claim 18, wherein the production system is partitioned into subsystems where each subsystem is likely to have at most one fault based on the current observation data from the production system.",
+      "sourceXmlParentClaimNumbers": [18]
+    },
+    {
+      "claimNumber": 21,
+      "claimText": "The system of claim 18, wherein the overall complexity of the method performed is O(M2), wherein O( ) is the standard complexity notation which means “in the order of”, and wherein M2 means the computation complexity is in the order of M×M.",
+      "sourceXmlParentClaimNumbers": [18]
+    },
+    {
+      "claimNumber": 22,
+      "claimText": "The system of claim 18, wherein each hypothesis is represented as a bit vector containing M bits; where M is the number of components in the production system, and each component in the production system is represented in the bit vector by one bit indicating whether a component is considered faulty in the hypothesis.",
+      "sourceXmlParentClaimNumbers": [18]
+    },
+    {
+      "claimNumber": 23,
+      "claimText": "The system of claim 18, wherein the dynamic partitioning module is configured to partition a set of production system modules into a set of subsystems through a set of steps comprising: providing the following to computer memory: a set of hypotheses corresponding to a set of components in a production system; a probability for each hypothesis; and a number j of expected faults; for each component in the system, calculating the correlation coefficient between the component and every other component in the system; using a computer processor, selecting the j components having the highest autocorrelation values as seed values for a set of j subsystems; assigning each of the remaining modules to one of the subsystems based on the calculated correlation coefficients; and storing the subsystems to computer memory.",
+      "sourceXmlParentClaimNumbers": [18]
+    },
+    {
+      "claimNumber": 24,
+      "claimText": "The system of claim 23, wherein the probability for each hypothesis that the hypothesis contains a fault is calculated at least in part by using a Bayesian equation.",
+      "sourceXmlParentClaimNumbers": [23]
+    }
+  ]
+}

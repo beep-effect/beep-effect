@@ -298,7 +298,7 @@ const digitsPattern = /^[0-9]+$/u;
 const punctuation = HashSet.make(",", ";", ":", ".", "(", ")", "[", "]");
 const boundaryWords = HashSet.fromIterable(
   Str.split(
-    "that which wherein whereby where when configured adapted operable arranged having comprising comprises including includes containing contains being is are was were has have to for in on of at by with from into onto between through via and or such so than as each said the a an",
+    "that which wherein whereby where when configured adapted operable arranged having comprising comprises including includes containing contains being is are was were has have to for in on of at by with from into onto between through via and or such so than as each said the a an its their",
     " "
   )
 );
@@ -314,6 +314,9 @@ const determinerSurfaces: ReadonlyArray<readonly [ReadonlyArray<string>, ClaimTe
   [["a"], "a"],
   [["the"], "the"],
   [["said"], "said"],
+  // Preserve unsupported possessives as spans; the policy abstains explicitly.
+  [["its"], "bare"],
+  [["their"], "bare"],
 ];
 
 const quantifierSurfaces: ReadonlyArray<ReadonlyArray<string>> = [

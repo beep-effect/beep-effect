@@ -1,0 +1,66 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "11670278-root-61",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.97,
+  "confidenceScope": "Independent native-source semantic structure/corrections; separately accepted source qualification and pending attorney adjudication are not semantic/legal agreement.",
+  "verdict": "changes-required",
+  "reviewedClaimNumbers": [61, 62, 63, 64, 65, 67],
+  "findings": [
+    {
+      "severity": "actionable",
+      "claimNumber": 67,
+      "path": "67.b",
+      "quote": "the least one pair",
+      "span": [514, 532],
+      "issue": "This exact malformed referential phrase is retained correctly, but its source-clear antecedent edge is missing. Its immediately following of orthogonal magnetic fields identifies the generated actual-field pair introduced in61.a, while the same sentence separately refers to the calculated-field pair. Dependency67->61 excludes the later two-pair claim65. Source spelling does not itself create competing pair referents.",
+      "requiredCorrection": "Keep quote the least one pair, determiner the and head least one pair unchanged. Add antecedent from67.b [514,532) to61.a at least one pair [290,307). Do not insert at, change either source text or head, point to the calculated-field pair, or import65. If rejecting the source-context identity, state a concrete competing introduction rather than treating the malformed determiner as an implementation limitation."
+    }
+  ],
+  "sourceEligibility": "Separate independent source critic accepted. PDF-backed original corroboration for12360911/11670278 supersedes their earlier source-audit holds; native text remains canonical.",
+  "audit": {
+    "treesReviewed": 6,
+    "elementsReviewed": 23,
+    "termsReviewed": 142,
+    "typedEdgesReviewed": 116,
+    "edgeKinds": {
+      "antecedent": 78,
+      "part-of": 17,
+      "functional": 16,
+      "depends-on-element": 5
+    },
+    "allElementAndTermUtf16SlicesVerified": true,
+    "allFunctionalTextSlicesVerified": true,
+    "allFunctionalPartsOrderedLocallyOwnedAndCoverRelation": true,
+    "allLocalAndCrossClaimTermEndpointsVerified": true,
+    "schemaDecode": "passed every supplied tree",
+    "selectedScopeComplete": true
+  },
+  "attorneyAdjudication": "pending",
+  "independence": "Independent critic; not producer of these families. Reviewed canonical claims/context, source provenance/audit/critic, extractor/expected, v2 protocol and schema contracts. No production rules, predictions, synthetic fixtures, archived conformance, source repair, network, secrets, git or delegation. Helpers checked only supplied exact source/schema/span/reference geometry.",
+  "rationale": [
+    "Individually reviewed23 elements/142 terms/116 edges and16 functional relationships. All supplied lexical/source geometry and existing endpoints pass. Actual/calculated field pairs, current/sample-location variables and first/second modes remain distinct; the one missing actual-pair reference is identified above.",
+    "Source67 the least one pair stays exact. Its orthogonal-field qualifier uniquely identifies the actual generated pair under67->61, as opposed to the expressly separate calculated pair. Exact malformed wording can coexist with a semantic antecedent edge.",
+    "The selected set is61\u201365/67; self-referring66 is outside scope and remains unrepaired. Repeated rover introductions remain separately anchored, and operations explicitly use the mobile component introduction. No owner or object identity is invented merely from generic location/contour/intensity/polarity nouns."
+  ],
+  "ambiguityResolution": [
+    {
+      "claimNumber": 61,
+      "quote": "a rover unit",
+      "resolution": "Preamble and component enumeration introduce separate anchored indefinite recitations. Subsequent operations use the explicit mobile component with the auxiliary module; no physical equivalence between the two introductions is asserted."
+    },
+    {
+      "claimNumber": 64,
+      "quote": "the variables",
+      "resolution": "Current-location and sampled-location qualifications map the two occurrences respectively to63.a and63.b. Repeated heads do not merge those sets."
+    },
+    {
+      "claimNumber": 67,
+      "quote": "the least one pair",
+      "resolution": "The orthogonal-versus-calculated field distinction resolves the referential pair identity despite exact malformed quantifier wording; add the missing actual-pair edge without repairing text."
+    }
+  ]
+}

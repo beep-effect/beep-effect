@@ -1,0 +1,47 @@
+{
+  "applicationNumber": "14659462",
+  "publicationNumber": "US20150192169A1",
+  "publicationDate": "2015-07-09",
+  "nativeXmlSha256": "5219d69e084510b969a647809cfeb3c8ea2ed4b1deba247000917b384d01f168",
+  "claimsXmlSha256": "249a28c94a5d6e0b4ef4c590743d3f7bd139afbe2203dcae9124cc8da0670acb",
+  "officeActionDocumentIdentifiers": [
+    "IOAAT5U4RXEAPX4"
+  ],
+  "officeActionMailDate": "2016-05-17",
+  "officeActionSection112Text": [
+    "claims 1-20 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor, or for pre-aia the applicant regards as the invention.\r\nclaim 1, line 2, “the first item’ lacks antecedent basis.\r\nclaim 1, line 3, “the axis” lacks antecedent basis.\r\nclaim 1, line 4, “the second item” lacks antecedent basis.\r\nclaim 1, line 5, “the base” lacks antecedent basis.\r\nclaim 6, line 1, “the base portion” lacks antecedent basis.\r\nclaim 8, line 2, “the periphery” lacks antecedent basis.\r\nclaim 9, line 1, “the distance” lacks antecedent basis.\r\nclaim 9, line 2, “:said pin hole” lacks antecedent basis.\r\nclaim 10, line 7, “said floatably seated position” lacks antecedent basis.\r\nclaim 13, line 2, “the flange base” lacks antecedent basis.\r\nclaim 14, line 1, “the barrel nut assembly” lacks antecedent basis.\r\nclaim 14, line 5, “the outer periphery” lacks antecedent basis.\r\nclaim 15, line 1, “the distance” lacks antecedent basis.\r\nclaim 15, line 1, “the center point” lacks antecedent basis.\r\nclaim 15, line 2, “the aperture” lacks antecedent basis.\r\nclaim 15, line 3, “the edge” lacks antecedent basis."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "I7CKNTCNPXXIFW3",
+      "officialDate": "2015-03-16T00:00:00.000-0400"
+    }
+  ],
+  "originalComparisons": [
+    {
+      "documentIdentifier": "I7CKNTCNPXXIFW3",
+      "officialDate": "2015-03-16T00:00:00.000-0400",
+      "sha256": "51d739934e30f89c831553be337853018fe44faab0975a3118051c62986d4454",
+      "ocrCorroborationOnly": false,
+      "exactNonWhitespaceClaimNumbers": [
+        3,
+        6,
+        11,
+        12,
+        16,
+        19
+      ],
+      "sourceClaimCount": 18
+    }
+  ],
+  "documentInventoryCount": 43,
+  "documentInventoryRows": 43,
+  "primaryCpc": "F16B  37/044",
+  "inForceEvidence": "Native A1 publication precedes office action. Complete document inventory shows only the original CLM date before rejection, with no intervening CLM amendment. Claim text is sourced exclusively from native publication XML; OCR originals corroborate only. Independent critic must verify family/rejection association and flag uncertainty.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/14659462",
+    "https://api.uspto.gov/api/v1/patent/applications/14659462/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-agent-accepted; attorney-pending"
+}

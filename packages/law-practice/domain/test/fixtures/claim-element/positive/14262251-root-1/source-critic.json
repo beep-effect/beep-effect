@@ -1,0 +1,129 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "14262251-root-1",
+  "role": "independent-source-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "verdict": "accepted",
+  "extractorSourceEligibleConclusionStands": true,
+  "extractorDispositionStands": true,
+  "reviewedClaimNumbers": [1, 2, 3, 4],
+  "sourceIdentity": {
+    "publicationReference": ["US", "20140232400", "A1", "20140821"],
+    "applicationReference": ["US", "14262251", "20140425"],
+    "officeActionDocumentIdentifiers": ["IXRP377QRXEAPX5"],
+    "officeActionMailDate": "2017-01-12"
+  },
+  "digestEvidence": [
+    {
+      "file": "14262251.publication.xml",
+      "sha256": "b19d4f02517a6640c5aa2a3ffe646c880aa649fdc80a9679debe0e507de27eb9",
+      "matchesProvenance": true
+    },
+    {
+      "file": "14262251.claims.xml",
+      "sha256": "5261aca87821915f83c5818a1847f954410f70c93deafc9dfdfd8173fbd228b1",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "5261aca87821915f83c5818a1847f954410f70c93deafc9dfdfd8173fbd228b1",
+      "matchesProvenance": true
+    }
+  ],
+  "originalEvidence": [
+    {
+      "documentIdentifier": "HUFYJ3Z7PXXIFW3",
+      "xmlAvailable": true,
+      "sha256": "0b7003160f6b8d69a36c9a009c43f78f25d8a7be23f2a7d478ca727161169fd4",
+      "matchesProvenance": true
+    }
+  ],
+  "inventoryEvidence": {
+    "declaredCount": 51,
+    "actualRows": 51,
+    "preOrOnActionClaimOrAmendmentRows": [
+      {
+        "officialDate": "2014-04-25T00:00:00.000-0400",
+        "documentCode": "CLM",
+        "documentIdentifier": "HUFYJ3Z7PXXIFW3"
+      }
+    ]
+  },
+  "officeActionGroundQuotes": [
+    "claims 1-10 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor, or for pre-aia the applicant regards as the invention."
+  ],
+  "numberedPhraseEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the respective spin-lattice relaxation times t1",
+      "exactNativePhrasePresent": false,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the respective spin-lattice relaxation times T1"
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the signal intensity",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the signal intensity"
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the resonance frequency",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the resonance frequency"
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the time interval",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the time interval"
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the first parameter vector",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the first parameter vector"
+    },
+    {
+      "claimNumber": 3,
+      "examinerPhrase": "the spin-spin relaxation time t2",
+      "exactNativePhrasePresent": false,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the spin-spin relaxation time T2"
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the signal intensity",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the signal intensity"
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the resonance frequency",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the resonance frequency"
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the second parameter vector",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the second parameter vector"
+    }
+  ],
+  "assessment": "Original selected1-4 corroborate method wording/references with page/line artifacts and T1/T2 glyph spacing. Actual ground covers1-10 and named selected clauses. No substantive source-version discrepancy.",
+  "findings": [],
+  "limitations": [
+    "Public cached evidence only. OCR/PDF corroboration never replaces or repairs native reference text. Agent confidence is not attorney agreement."
+  ],
+  "independence": "No production rules, predictions, structural expected files, network, secrets, git or delegation used."
+}

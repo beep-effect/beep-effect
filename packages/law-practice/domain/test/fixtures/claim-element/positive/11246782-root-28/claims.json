@@ -1,0 +1,215 @@
+{
+  "familyId": "11246782-root-28",
+  "rootClaimNumber": 28,
+  "labelClaimNumbers": [
+    28,
+    29,
+    30
+  ],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A juvenile vehicle seat comprising a seat bottom, a seat back arranged to extend upwardly from the seat bottom and to cooperate with the seat bottom to provide a seating surface for a juvenile, and a shield mounted on the seat back for pivotable movement about an axis from a raised position to allow a juvenile to access the seating surface and a lowered position to retain a juvenile contacting the seating surface in a seated position on the seat bottom, the shield including a left swing arm pivotably coupled to a left side of the seat back, a right swing arm pivotably coupled to a right side of the seat back, a barrier arranged to interconnect the left and right swing arms and to lie above a portion of the seating surface included in the seat bottom upon movement of the shield to assume the lowered position, and a compressible shield lifter carried on the shield and arranged to engage the seat bottom upon movement of the shield to assume the lowered position.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The seat of claim 1, wherein the compressible shield lifter includes a pad receiver coupled to the shield, a movable pad mounted on the pad receiver for movement toward and away from the shield and arranged to engage the seat bottom upon movement of the shield to assume the lowered position, and a cushion system interposed between the pad receiver and the movable pad.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The seat of claim 2, wherein the pad receiver is formed to include a downwardly opening interior region and the movable pad is telescopically received in the downwardly opening interior region.",
+      "sourceXmlParentClaimNumbers": [
+        2
+      ]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The seat of claim 3, wherein the pad receiver and the movable pad are arranged to remain in mating engagement with one another during relative motion of the movable pad and the pad receiver.",
+      "sourceXmlParentClaimNumbers": [
+        3
+      ]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The seat of claim 3, wherein the cushion system includes a compression spring arranged to extend into the downwardly opening interior region and urge the movable pad in a direction away from the shield.",
+      "sourceXmlParentClaimNumbers": [
+        3
+      ]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The seat of claim 3, wherein the cushion system includes a pad tether coupled to the shield and to the movable pad and configured to limit movement of the movable pad relative to the shield and to the pad receiver to a maximum extended position.",
+      "sourceXmlParentClaimNumbers": [
+        3
+      ]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The seat of claim 2, wherein the cushion system includes a pad tether coupled to the shield and to the movable pad and configured to limit movement of the movable pad relative to the shield and to the pad receiver to a maximum extended position and the cushion system also includes a compressible spring interposed between the shield and the movable pad and arranged yieldably to urge the movable pad normally to the maximum extended position.",
+      "sourceXmlParentClaimNumbers": [
+        2
+      ]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The seat of claim 7, wherein the seat bottom includes left and right shield supports arranged to lie in spaced-apart relation to one another to locate the portion of the seating surface included in the seat bottom therebetween and to extend upwardly away from said portion of the seating surface, and the pad receiver is arranged to engage one of the left and right shield supports upon movement of the shield to assume the lowered position.",
+      "sourceXmlParentClaimNumbers": [
+        7
+      ]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "The seat of claim 7, wherein the shield includes a tether anchor arranged to lie in spaced-apart relation to the movable pad, the movable pad is formed to include a bottom wall, a head-motion channel having an opening in the bottom wall, and a tether guide located between the bottom wall and the tether anchor and formed to include a tether-receiver aperture, and the pad tether includes an enlarged head lying in the head-motion channel and a shank extending through the tether-receiver aperture and having one end fixed to the tether anchor and another end coupled to the enlarged head, and wherein the tether guide contacts the enlarged head to establish the maximum extended position of the movable pad upon movement of the shield to separate the movable pad from the seat bottom and the tether guide separates from the enlarged head to locate the enlarged head in the head-motion channel in spaced-apart relation to the tether guide upon movement of the shield to the lowered position.",
+      "sourceXmlParentClaimNumbers": [
+        7
+      ]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "The seat of claim 7, wherein the movable pad is formed to include an annular spring-receiver channel and the compressible spring includes an upper end arranged to engage the shield and a lower end arranged to extend into the annular spring-receiver channel to engage a floor of the annular spring-receiver channel.",
+      "sourceXmlParentClaimNumbers": [
+        7
+      ]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "The seat of claim 10, wherein the compressible spring is coiled to define a central passageway extending therethrough and the pad tether is arranged to lie in the central passageway.",
+      "sourceXmlParentClaimNumbers": [
+        10
+      ]
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "The seat of claim 1, wherein the seat bottom includes left and right shield supports arranged to lie in spaced-apart relation to one another to locate the portion of the seating surface included in the seat bottom therebetween and to extend upwardly away from said portion of the seating surface, and the pad receiver is arranged to engage one of the left and right shield supports upon movement of the shield to assume the lowered position",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "The seat of claim 12, further comprising an auxiliary compressible shield lifter carried on the shield and arranged to engage the other of the left and right shield supports upon movement of the shield to assume the lowered position.",
+      "sourceXmlParentClaimNumbers": [
+        12
+      ]
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "The seat of claim 1, further comprising a crotch belt arranged to extend between and coupled to the seat bottom and the barrier and the compressible shield lifter provides means for applying a lifting force to urge the shield away from the seat bottom upon movement of the shield to the lowered position so that a lifting force is applied by the barrier to the crotch belt to tension the crotch belt.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 15,
+      "claimText": "The seat of claim 14, wherein the barrier includes an upwardly facing top wall, a downwardly facing left thigh-restraint surface providing means for engaging a left thigh region of a juvenile seated on the seating surface, a downwardly facing right thigh-restraint surface providing means for engaging a right thigh region of a juvenile seated on the seating surface, and a harness mount interposed between the left and right thigh-restraint surfaces and located in a space above the downwardly facing left and right thigh-restraint surfaces and below the upwardly facing top wall and wherein the crotch belt is coupled to the harness mount.",
+      "sourceXmlParentClaimNumbers": [
+        14
+      ]
+    },
+    {
+      "claimNumber": 16,
+      "claimText": "The seat of claim 15, further comprising ajuvenile-restraint harness coupled to the seat back and to the seat bottom, the juvenile-restraint harness comprising a pair of shoulder straps, an upper strap coupled to the pair of shoulder straps and slidably coupled to the harness mount to receive the lifting force applied by the barrier, a lower strap coupled to the seat bottom, a buckle interconnecting the upper and lower straps and cooperating with the upper and lower straps to form the crotch belt that is tensioned by the lifting force applied to the barrier by the compressible shield lifter.",
+      "sourceXmlParentClaimNumbers": [
+        15
+      ]
+    },
+    {
+      "claimNumber": 17,
+      "claimText": "The seat of claim 1, wherein the compressible shield lifter comprises a left lifter unit coupled to an underside of the shield at a junction between the barrier and the left swing arm and a right lifter unit coupled to an underside of the shield at a junction between the barrier and the right swing arm and wherein the left and right lifter units cooperate to provide means for applying a lifting force to urge the shield away from the seat bottom upon movement of the shield to the lowered position so that a lifting force is applied by the barrier to the crotch belt to tension the crotch belt.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 18,
+      "claimText": "The seat of claim 17, further comprising a juvenile-restraint harness coupled to the seat back and to the seat bottom, the juvenile-restraint harness comprising a pair of shoulder straps, an upper strap coupled to the pair of shoulder straps and slidably coupled to the barrier to receive the lifting force applied by the barrier, a lower strap coupled to the seat bottom, a buckle interconnecting the upper and lower straps and cooperating with the upper and lower straps to form the crotch belt that is tensioned by the lifting force applied to the barrier by the left and right lifter units of the compressible shield lifter.",
+      "sourceXmlParentClaimNumbers": [
+        17
+      ]
+    },
+    {
+      "claimNumber": 19,
+      "claimText": "The seat of claim 17, wherein the seat bottom includes left and right shield supports arranged to lie in spaced-apart relation to one another to locate the portion of the seating surface included in the seat bottom therebetween and to extend upwardly away from said portion of the seating surface, the left lifter unit is arranged to contact a top surface of the left shield support upon movement of the shield to assume the lowered position, and the right lifter unit is arranged to contact a top surface of the right shield support upon movement of the shield to assume the lowered position.",
+      "sourceXmlParentClaimNumbers": [
+        17
+      ]
+    },
+    {
+      "claimNumber": 20,
+      "claimText": "The seat of claim 1, further comprising a juvenile-restraint harness coupled to the seat back, barrier, and seat bottom, and wherein a portion of the juvenile-restraint harness extends between the seat bottom and the barrier to define a crotch belt including an upper strap coupled to the barrier, a lower strap coupled to the seat bottom, and a buckle configured to move from a buckled position to interconnect the upper and lower straps to an unbuckled position to disconnect the upper and lower straps, and wherein the compressible shield lifter provides means for applying a lifting force to urge the barrier of the shield away from the seat bottom to tension the portion of the juvenile-restraint harness extending between the seat bottom and the barrier upon movement of the buckle to the buckled position and to increase a separation distance between the barrier and the seat bottom upon movement of the buckle to the unbuckled position.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 21,
+      "claimText": "A juvenile vehicle seat comprising a seat bottom, a seat back arranged to extend upwardly from the seat bottom and to cooperate with the seat bottom to provide a seating surface for a juvenile, a shield mounted on the seat back for pivotable movement about an axis from a raised position to allow a juvenile to access the seating surface and a lowered position to retain a juvenile contacting the seating surface in a seated position on the seat bottom, the shield including a left swing arm pivotably coupled to a left side of the seat back, a right swing arm pivotably coupled to a right side of the seat back, and a barrier arranged to interconnect the left and right swing arms and to lie above a portion of the seating surface included in the seat bottom upon movement of the shield to assume the lowered position, the barrier including a downwardly opening upper shell including a top wall and a downwardly extending side wall appended to the top wall and an upwardly opening lower shell including a bottom wall formed to include a belt-receiver slot and an upwardly extending side wall appended to the bottom wall and arranged to mate with the downwardly extending side wall of the upper shell to form a hollow interior region in the barrier, a crotch belt retainer located in the hollow interior region of the barrier, and a juvenile-restraint harness including a pair of shoulder straps coupled to the seat back and a crotch belt having a first end coupled to the seat bottom, an opposite second end coupled to the pair of shoulder straps, and a mid-portion configured to carry a buckle and located between the first and second ends and arranged to extend into the hollow interior region of the barrier through the belt-receiver slot to mate with the crotch belt retainer.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 22,
+      "claimText": "The seat of claim 20, wherein the lower shell of the barrier includes a downwardly facing, concave, left thigh-restraint surface providing means for engaging a left thigh region of a juvenile seated on the seating surface, a downwardly facing, concave, right thigh-restraint surface providing means for engaging a right thigh region of a juvenile seated on the seating surface, and a harness mount interposed between the left and right thigh-restraint surfaces and formed to include the belt-receiver slot.",
+      "sourceXmlParentClaimNumbers": [
+        20
+      ]
+    },
+    {
+      "claimNumber": 23,
+      "claimText": "The seat of claim 22, wherein the harness mount includes a ceiling formed to include the belt-receiver slot and the ceiling is arranged to lie in a space above the left and right thigh-restraint surfaces of the lower shell and below the top wall of the upper shell.",
+      "sourceXmlParentClaimNumbers": [
+        22
+      ]
+    },
+    {
+      "claimNumber": 24,
+      "claimText": "The seat of claim 22, wherein the upper shell further includes a downwardly extending barrier post located in the hollow interior region and arranged to extend downwardly toward one of the downwardly facing, concave, left and right thigh-restraint surfaces, the lower shell further includes an upwardly extending barrier post located in the hollow interior region and arranged to extend upwardly to mate with the downwardly extending barrier post, and wherein the shield further includes a fastener arranged to retain the upwardly and downwardly extending barrier posts in mated relation to one another to retain the upper and lower shells in fixed relation to one another.",
+      "sourceXmlParentClaimNumbers": [
+        22
+      ]
+    },
+    {
+      "claimNumber": 25,
+      "claimText": "The seat of claim 22, wherein the upper shell further includes a downwardly extending left barrier post located in the hollow interior region in close proximity to the left swing arm, a downwardly extending right barrier post located in the hollow interior region in close proximity to the right swing arm and in laterally spaced-apart relation to the left barrier post, and an unsupported thin-walled section defining a laterally extending central portion of the top wall located in spaced-apart relation to the underlying lower shell and between the left and right barrier posts and the lower shell is coupled to the left and right barrier posts to retain the upper and lower shells in fixed relation to one another.",
+      "sourceXmlParentClaimNumbers": [
+        22
+      ]
+    },
+    {
+      "claimNumber": 26,
+      "claimText": "The seat of claim 25, wherein the lower shell further includes an upwardly extending left barrier post located in the hollow interior region and arranged to mate with the downwardly extending left barrier post and an upwardly extending right barrier post located in the hollow interior region and arranged to mate with the downwardly extending right barrier post, and wherein the shield further includes a left fastener coupled to the upwardly and downwardly extending left barrier posts and a right fastener coupled to the upwardly and downwardly extending right barrier posts to retain the upper and lower shells in fixed relation to one another.",
+      "sourceXmlParentClaimNumbers": [
+        25
+      ]
+    },
+    {
+      "claimNumber": 27,
+      "claimText": "The seat of claim 25, wherein the belt-receiver slot is formed in a section of the bottom wall of the lower shell underlying the unsupported thin-walled section defining a laterally extending central portion of the top wall of the upper shell.",
+      "sourceXmlParentClaimNumbers": [
+        25
+      ]
+    },
+    {
+      "claimNumber": 28,
+      "claimText": "A juvenile vehicle seat comprising a seat bottom, a seat back arranged to extend upwardly from the seat bottom and to cooperate with the seat bottom to provide a seating surface for a juvenile, wherein the upper shell further includes a downwardly extending left barrier post located in the hollow interior region in close proximity to the left swing arm, a downwardly extending right barrier post located in the hollow interior region in close proximity to the right swing arm and in laterally spaced-apart relation to the left barrier post, and an unsupported thin-walled section defining a laterally extending central portion of the top wall located in spaced-apart relation to the underlying lower shell and between the left and right barrier posts and the lower shell is coupled to the left and right barrier posts to retain the upper and lower shells in fixed relation to one another.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 29,
+      "claimText": "The seat of claim 28, wherein the lower shell further includes an upwardly extending left barrier post located in the hollow interior region and arranged to mate with the downwardly extending left barrier post and an upwardly extending right barrier post located in the hollow interior region and arranged to mate with the downwardly extending right barrier post, and wherein the shield further includes a left fastener coupled to the upwardly and downwardly extending left barrier posts and a right fastener coupled to the upwardly and downwardly extending right barrier posts to retain the upper and lower shells in fixed relation to one another.",
+      "sourceXmlParentClaimNumbers": [
+        28
+      ]
+    },
+    {
+      "claimNumber": 30,
+      "claimText": "The seat of claim 28, further comprising a crotch belt retainer located in the hollow interior region of the barrier, a juvenile-restraint harness including a pair of shoulder straps coupled-to the seat back and a crotch belt having a first end coupled to the seat bottom, an opposite second end coupled to the pair of shoulder straps, and a mid-portion configured to carry a buckle and located between the first and second ends and arranged to extend into the hollow interior region of the barrier through the belt-receiver slot to mate with the crotch belt retainer, wherein the belt-receiver slot is formed in a section of the bottom wall of the lower shell underlying the unsupported thin-walled section defining a laterally extending central portion of the top wall of the upper shell.",
+      "sourceXmlParentClaimNumbers": [
+        28
+      ]
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "familyId": "12525441-root-1",
+  "role": "extractor-source-audit",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.98,
+  "verdict": "unresolved",
+  "quotedEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the protruding end",
+      "nativeQuote": "the protruding end",
+      "literalMatch": true,
+      "explanation": "Exact1."
+    },
+    {
+      "claimNumber": 3,
+      "examinerPhrase": "the magnitude",
+      "nativeQuote": "the magnitude",
+      "literalMatch": true,
+      "explanation": "Exact3."
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the threaded bolt",
+      "nativeQuote": "the threaded bolt",
+      "literalMatch": true,
+      "explanation": "Exact4."
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the course",
+      "nativeQuote": "the course",
+      "literalMatch": true,
+      "explanation": "Exact5."
+    }
+  ],
+  "concerns": [
+    "Legacy originals FXTBUQN0PPOPPY4/FXYSNLXOPPOPPY1 contain7 numbered claims plus heading, explaining prior count0. They disagree with native references3->1 versus1or2 and4/5->1 versus ranges1-3/1-4; second contains strike-looking remnants but no structured Del/Ins.",
+    "Reference numeral removals and characterized/wherein changes are substantial original-version differences; printed bullets and hyphenation alone do not explain them. Need authoritative amended rendering.",
+    "Publication identity/digest and75/75 inventory original2009-07-31 before OA2012-06-20 verified; natural native selected1-5 family membership holds."
+  ],
+  "rationale": "Actual secondparagraph positive selected grounds established, but exact operative claim version remains unresolved.",
+  "sourceIdentity": {
+    "applicationNumber": "12525441",
+    "publicationNumber": "US20100175240A1",
+    "publicationDate": "2010-07-15",
+    "officeActionMailDate": "2012-06-20",
+    "officeActionDocumentIdentifiers": ["H3NGHDGOPXXIFW4"],
+    "publicationXmlIdentity": {
+      "publication-reference": "US 20100175240 A1 20100715",
+      "application-reference": "US 12525441 20080121",
+      "nativeXmlDigestMatchesProvenance": true
+    }
+  },
+  "versionEvidence": {
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "FXTBUQN0PPOPPY4",
+        "officialDate": "2009-07-31T00:00:00.000-0400"
+      },
+      {
+        "documentIdentifier": "FXYSNLXOPPOPPY1",
+        "officialDate": "2009-07-31T00:00:00.000-0400"
+      }
+    ],
+    "originalComparisons": [
+      {
+        "documentIdentifier": "FXTBUQN0PPOPPY4",
+        "officialDate": "2009-07-31T00:00:00.000-0400",
+        "sha256": "3adebdd5595c3ca41b46ea8484a6dfeea97136f1e8ed74ca0495d8ffac41be43",
+        "ocrCorroborationOnly": false,
+        "exactNonWhitespaceClaimNumbers": [],
+        "sourceClaimCount": 0
+      },
+      {
+        "documentIdentifier": "FXYSNLXOPPOPPY1",
+        "officialDate": "2009-07-31T00:00:00.000-0400",
+        "sha256": "019415b20f714e7a03365decbf5be536e267276118a4e4f518d063734837756d",
+        "ocrCorroborationOnly": false,
+        "exactNonWhitespaceClaimNumbers": [],
+        "sourceClaimCount": 0
+      }
+    ],
+    "documentInventoryCount": 75,
+    "documentInventoryRows": 75,
+    "assessment": "Original cached XML was inspected where available; each reconciliation or unresolved gap is stated in concerns. Chronology alone is not treated as proof."
+  },
+  "attorneyAdjudication": "pending",
+  "independence": "Source/provenance/original-XML audit only. No implementation, predictions or rule fixtures inspected; no source/expected/code edits.",
+  "comparisonNote": "literalMatch means exact string equality, including case; typography/case/wording differences are explicitly explained. quotedEvidence is the source-binding evidence sample, not an exhaustive legal issue inventory."
+}

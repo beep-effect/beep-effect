@@ -1,0 +1,46 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "11502512-root-11",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.96,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+  ],
+  "findings": [],
+  "reviewScope": {
+    "claimCount": 7,
+    "elementCount": 20,
+    "termCount": 52,
+    "edgeCount": 44,
+    "functionalRelationCount": 13
+  },
+  "reviewNotes": [
+    "Independently reviewed all7 selected claims and complete source-defined process relationships: explicit a/b/c vector retrieval, motion detection/formula solving and motion judging; separate estimation/extraction and domain restrictions; storage/MUX and iterative DEMUX accumulation.",
+    "Changed system-and-operation-process subject in12\u201317 is original source wording and remains preserved, with actual dependency on11. Combined system/process subject is not falsely equated to process alone. Camera parameter and vector aliases refer to the sole relevant explicit source mentions.",
+    "Claims13/15 cannot borrow the sibling12 uncompression-domain introduction; root generic domain does not uniquely select compression versus uncompression mode. Claim17 cannot borrow address/MUX from sibling16. Its circuit, storage, result, cycle and property terms remain exact with genuine missing introductions disclosed.",
+    "MathML canonical coverage is explicit: the entire native camera-motion formula sequence, operators, indices and private-use glyphs remain exact flattened canonical functional text within11.b. No omitted operator, formula layout, numerical evaluation or new variable-group NP is invented. Source critic separately corroborates original formula pages; this review does not repeat originalPDF authentication.",
+    "Local17 parameter collection refers to its earlier explicit primary PAN1/PAN2/TILT1/TILT2 group. Earlier formula variables do not provide a single prose group NP warranting a fabricated collective or sibling reference. Complete final PAN/TILT/ZOOM collection and accumulation cycle remain represented."
+  ],
+  "verification": [
+    "Every tree independently decoded through ClaimElementTree. ExactUTF16 source anchors, normalized lexical-head shapes, complete noun phrases, nonoverlapping term ownership, full contiguous functional-source reconstruction, local/foreign term endpoints, actual natural ancestry, duplicate-edge absence and exact selected scope checked. Source grammar review supplies the semantic assessment; mechanical checks alone do not.",
+    "Native XML SHA256 matches provenance and all canonical/context claim strings agree with native under permitted printed-number/whitespace normalization. Retained independent source critic accepted source eligibility; no fresh originalPDF/inventory authentication or attorney agreement claimed."
+  ],
+  "referenceSha256": "4d5bb5c8571cbf0c2c9602cc5af8fea99dd7f91b60ddecc26b3c653a14615e9e",
+  "extractorSha256": "831d167f635de8a5c4a5c409caee797b1a0f43f6fc6f9979052040a88e5b17a6",
+  "sourceXmlSha256": "9caf45b70f19cdf2d0809c67183878b1c008bc3ac668349d7cc001748cc84e91",
+  "independence": "Separate GPT-6.1-Sol medium critic session; did not extract these families. Read canonical/native source/context, provenance/source critic, protocol/schema contracts and extractor annotations. No production behavior/decomposer/P2-DESIGN/predictions/synthetic/conformance inspection. Only assigned critic.json written.",
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement",
+  "corpusStatus": "Incremental reference acceptance only; no sample admission, accuracy result or human agreement claimed."
+}

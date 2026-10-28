@@ -1,0 +1,81 @@
+{
+  "familyId": "16819424-root-10",
+  "role": "extractor-source-audit",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.98,
+  "verdict": "eligible",
+  "quotedEvidence": [
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "the hold-down device",
+      "nativeQuote": "the hold-down device",
+      "literalMatch": true,
+      "explanation": "Exact10."
+    },
+    {
+      "claimNumber": 12,
+      "examinerPhrase": "the aid",
+      "nativeQuote": "the aid",
+      "literalMatch": true,
+      "explanation": "Exact12."
+    },
+    {
+      "claimNumber": 13,
+      "examinerPhrase": "the plunger sleeve",
+      "nativeQuote": "the plunger sleeve",
+      "literalMatch": true,
+      "explanation": "Exact13."
+    },
+    {
+      "claimNumber": 15,
+      "examinerPhrase": "the component support",
+      "nativeQuote": "the component support",
+      "literalMatch": true,
+      "explanation": "Exact15."
+    }
+  ],
+  "concerns": [
+    "Original K7W815LMLXEAPX5 matches every selected10-17 exactly apart from whitespace; count18 agrees with complete native set.",
+    "Natural refs11-15->10,16/17->15 agree; publication identity/digest and84/84 inventory original2020-03-16 before OA2021-02-16 verified."
+  ],
+  "rationale": "Actual112(b) rejection explicitly cites selected10,12-17 with matching numbered phrases and unconflicted version evidence.",
+  "sourceIdentity": {
+    "applicationNumber": "16819424",
+    "publicationNumber": "US20200215600A1",
+    "publicationDate": "2020-07-09",
+    "officeActionMailDate": "2021-02-16",
+    "officeActionDocumentIdentifiers": ["KL0V9XK0DFLYX11"],
+    "publicationXmlIdentity": {
+      "publication-reference": "US 20200215600 A1 20200709",
+      "application-reference": "US 16819424 20200316",
+      "nativeXmlDigestMatchesProvenance": true
+    }
+  },
+  "versionEvidence": {
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "K7W815LMLXEAPX5",
+        "officialDate": "2020-03-16T12:40:46.000-0400"
+      }
+    ],
+    "originalComparisons": [
+      {
+        "documentIdentifier": "K7W815LMLXEAPX5",
+        "officialDate": "2020-03-16T12:40:46.000-0400",
+        "sha256": "319e1d589be75ded8f27ccbabc76218d0f23ebd927048557ec40d25e2ddc400e",
+        "ocrCorroborationOnly": true,
+        "exactNonWhitespaceClaimNumbers": [
+          1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18
+        ],
+        "sourceClaimCount": 18
+      }
+    ],
+    "documentInventoryCount": 84,
+    "documentInventoryRows": 84,
+    "assessment": "Original cached XML was inspected where available; each reconciliation or unresolved gap is stated in concerns. Chronology alone is not treated as proof."
+  },
+  "attorneyAdjudication": "pending",
+  "independence": "Source/provenance/original-XML audit only. No implementation, predictions or rule fixtures inspected; no source/expected/code edits.",
+  "comparisonNote": "literalMatch means exact string equality, including case; typography/case/wording differences are explicitly explained. quotedEvidence is the source-binding evidence sample, not an exhaustive legal issue inventory."
+}

@@ -1,0 +1,32 @@
+{
+  "date": "2026-10-28",
+  "oldFamilyId": "14438042-root-4",
+  "oldClaimCount": 10,
+  "newFamilyId": "11246782-root-28",
+  "newClaimCount": 3,
+  "cpcSection": "B",
+  "reason": "source eligibility/fidelity only; no predictions inspected",
+  "previousSlot": {
+    "applicationNumber": "14438042",
+    "rootClaimNumber": 4,
+    "claimNumbers": [
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13
+    ],
+    "claimCount": 10,
+    "cpcSection": "B",
+    "familyId": "14438042-root-4",
+    "fixtureDirectory": "14438042-root-4",
+    "status": "source-ineligible",
+    "sourceAuditVerdict": "ineligible",
+    "sourceCriticStatus": "ineligible"
+  }
+}

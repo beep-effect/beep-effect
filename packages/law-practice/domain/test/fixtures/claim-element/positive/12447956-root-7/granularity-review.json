@@ -1,0 +1,84 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "convention": "entity-mentions/v1",
+  "familyId": "12447956-root-7",
+  "role": "extractor-granularity-review",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.96,
+  "reviewedAnchors": [
+    {
+      "claimNumber": 7,
+      "path": "7.a",
+      "anchor": {
+        "startChar": 113,
+        "endChar": 118,
+        "quote": "which"
+      },
+      "action": "term-to-functional-text",
+      "reason": "At an end of which is a relative modifying phrase governed by the explicit a support element in the immediately preceding root subject. The support element and end/end-cap participants remain in the tree and the full guidance clause remains functional text; which does not introduce another support entity.",
+      "removedAntecedents": [
+        {
+          "kind": "antecedent",
+          "referring": {
+            "path": "7.a",
+            "anchor": {
+              "startChar": 113,
+              "endChar": 118,
+              "quote": "which"
+            }
+          },
+          "introducing": {
+            "path": "7",
+            "anchor": {
+              "startChar": 76,
+              "endChar": 93,
+              "quote": "a support element"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "claimNumber": 15,
+      "path": "15.a",
+      "anchor": {
+        "startChar": 118,
+        "endChar": 126,
+        "quote": "a manner"
+      },
+      "action": "add-determiner-noun-phrase",
+      "reason": "A manner is a determiner-bearing noun phrase despite adverbial function. Entity-mentions/v1 explicitly preserves it. Split only the existing connecting span; no same-manner antecedent is inferred.",
+      "removedAntecedents": []
+    },
+    {
+      "claimNumber": 18,
+      "path": "18.a",
+      "anchor": {
+        "startChar": 119,
+        "endChar": 127,
+        "quote": "a manner"
+      },
+      "action": "add-determiner-noun-phrase",
+      "reason": "A manner is a determiner-bearing noun phrase despite adverbial function. Entity-mentions/v1 explicitly preserves it. Split only the existing connecting span; no same-manner antecedent is inferred.",
+      "removedAntecedents": []
+    }
+  ],
+  "before": {
+    "claims": 9,
+    "elements": 22,
+    "terms": 91,
+    "edges": 83
+  },
+  "after": {
+    "claims": 9,
+    "elements": 22,
+    "terms": 92,
+    "edges": 82
+  },
+  "remainingUncertainty": [],
+  "existingConcerns": "All prior source/referent concerns retained in extractor receipt. This is a bounded consistency correction, not source eligibility or attorney acceptance.",
+  "independence": "Read clarified v2/entity-mentions convention and decision entry, exact canonical source and reviewed annotations. No implementation/rules/predictions/synthetic/conformance artifacts/network/secrets/git/delegation. Helpers transform only the manually reviewed listed anchors, merge contiguous source text, and verify geometry.",
+  "validation": "Exact source spans; unchanged element anchors/kinds/paths; unrelated terms retained; ordered nonoverlapping terms; local/foreign reference coherence; full contiguous functional reconstruction; runtime ClaimElementTree decode all passed."
+}

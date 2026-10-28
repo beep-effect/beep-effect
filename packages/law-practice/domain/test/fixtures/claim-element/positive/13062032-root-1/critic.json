@@ -1,0 +1,61 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "13062032-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.96,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13
+  ],
+  "reviewScope": {
+    "claimCount": 13,
+    "elementCount": 39,
+    "termCount": 136,
+    "edgeCount": 133,
+    "functionalRelationCount": 26
+  },
+  "findings": [],
+  "verification": [
+    "Read selected canonical claims, all expected elements/terms/typed edges and extractor rationale; reviewed native source XML and independent source-critic evidence. Source eligibility is separately accepted; no fresh original-PDF/full-inventory authentication claimed.",
+    "Independent checks passed every exact UTF-16 anchor, term order/nonoverlap/ownership and normalized head shape, full contiguous functional reconstruction and exact participating terms, local/foreign endpoint membership and true dependency ancestry, path uniqueness and no duplicate edges. Native XML digest matches provenance and canonical/native source strings match under permitted printed-number/whitespace normalization. Geometry supplements manual semantics; no decomposer was called."
+  ],
+  "referenceSha256": "ff00ab93ad499a68e7160e665581588f8efef9c62d312633c7292f045f28da17",
+  "extractorSha256": "d1f0c6228e7cf1b0f077eb6b5fd734b40a8f8c7af3737fe812b3277f230d28eb",
+  "independence": "Separate GPT-6.1-Sol medium critic session independent of extractor. Only assigned critic.json written. Source/model/tree/edge schema evidence only; no production behavior/policy/decomposer, P2-DESIGN, predictions, synthetic/conformance fixtures, network, secrets, git or delegation.",
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement",
+  "corpusStatus": "Incremental semantic-reference review only; no active sample admission, goal completion, human agreement or accuracy result claimed.",
+  "reviewNotes": [
+    "Audited root pulse emission/reflection/reception, leading-body placement and sound-velocity/transducer relationships and every selected dependent. Claim7 actually depends2; the rest of2–12 depend1. Claim13 changes subject to Device but expressly refers to1 and retains that dependency. Device-local indefinite body/array/transmitter/receiver introductions remain distinct from method-local instances.",
+    "Complete numeric bounds more than two and two plane-parallel surfaces are preserved. Explicit lexical genitive leading body's coupling surface is retained; no pronominal-owner deletion applies. The latter in6 and it in13 have clear body antecedents. Functional parts retain all mutually exclusive shape/calculation options and calibration conditions.",
+    "Bare Method subjects2–12 now link the explicit root Method in their actual ancestry, including7→2→1. Device13 remains a separate subject. Full JSON comparison confirms exactly these11 antecedents changed; no actionable finding remains."
+  ],
+  "priorFindingDispositions": [
+    {
+      "id": "bare-dependent-method-reference",
+      "disposition": "resolved",
+      "evidence": "Exactly 11 requested source-supported antecedent edges added; entire element/term/head/functional structure and every prior edge preserved."
+    }
+  ],
+  "preservedPriorCritic": {
+    "file": "critic.round1.json",
+    "sha256": "7311b28eec48b39aab2d19a35ed22f8698080b95e34bb8d4aa8124029bc0a8ed"
+  },
+  "referenceConcernsDisposition": "Remaining source-specific concerns retained. Independent exact-delta review confirms every prior finding resolved without adding new unresolved identity choices."
+}

@@ -1,0 +1,260 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "11910514-root-1",
+  "role": "independent-source-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "verdict": "accepted",
+  "extractorSourceEligibleConclusionStands": true,
+  "extractorDispositionStands": true,
+  "reviewedClaimNumbers": [
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
+  ],
+  "sourceIdentity": {
+    "publicationReference": ["US", "20080187096", "A1", "20080807"],
+    "applicationReference": ["US", "11910514", "20060322"],
+    "officeActionDocumentIdentifiers": ["FX53M3KKPPOPPY5"],
+    "officeActionMailDate": "2009-07-15"
+  },
+  "digestEvidence": [
+    {
+      "file": "11910514.publication.xml",
+      "sha256": "3ad3e3233dcf94f50fc93ea190b2f535363a51c89014fa229ba2194c4cd181aa",
+      "matchesProvenance": true
+    },
+    {
+      "file": "11910514.claims.xml",
+      "sha256": "15048d81fa3b31fb7f1c83e91fcc7adb55ea66892756ec2ccebabb9912083239",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "15048d81fa3b31fb7f1c83e91fcc7adb55ea66892756ec2ccebabb9912083239",
+      "matchesProvenance": true
+    }
+  ],
+  "originalEvidence": [
+    {
+      "documentIdentifier": "FEWN6S0RPPOPPY1",
+      "xmlAvailable": false
+    },
+    {
+      "documentIdentifier": "FEWNF46RPPOPPY1",
+      "xmlAvailable": false
+    }
+  ],
+  "inventoryEvidence": {
+    "declaredCount": 106,
+    "actualRows": 106,
+    "preOrOnActionClaimOrAmendmentRows": [
+      {
+        "officialDate": "2008-04-08T00:00:00.000-0400",
+        "documentCode": "A.PE",
+        "documentIdentifier": "FESZV32IPPOPPY4"
+      },
+      {
+        "officialDate": "2008-04-08T00:00:00.000-0400",
+        "documentCode": "CLM",
+        "documentIdentifier": "FEWN6S0RPPOPPY1"
+      },
+      {
+        "officialDate": "2008-04-08T00:00:00.000-0400",
+        "documentCode": "REM",
+        "documentIdentifier": "FEWN6S1IPPOPPY1"
+      },
+      {
+        "officialDate": "2008-04-08T00:00:00.000-0400",
+        "documentCode": "CLM",
+        "documentIdentifier": "FEWNF46RPPOPPY1"
+      }
+    ]
+  },
+  "officeActionGroundQuotes": [
+    "claims 1-20 are rejected under 35 u.s.c. 112, second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which applicant regards as the invention."
+  ],
+  "numberedPhraseEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the position acquisition means",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the position acquisition means"
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the rotary position",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the rotary position"
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the output signals",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the output signals"
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the memory cells",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the memory cells"
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the image signals",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the image signals"
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the position acquisition means",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the position acquisition means"
+    },
+    {
+      "claimNumber": 3,
+      "examinerPhrase": "the position acquisition means",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the position acquisition means"
+    },
+    {
+      "claimNumber": 3,
+      "examinerPhrase": "the output signals",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the output signals"
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "a first cradle",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "a first cradle"
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "a second cradle",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "a second cradle"
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "can be",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "can be"
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the position acquisition means",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the position acquisition means"
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the position acquisition means",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the position acquisition means"
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the output signals",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the output signals"
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "can be",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "can be"
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the shaft",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the shaft"
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the axis",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the axis"
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "its axis",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "its axis"
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the longitudinal axis",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the longitudinal axis"
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "the detector readout circuit",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the detector readout circuit"
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "the pixels",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the pixels"
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "the column",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the column"
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "the row direction",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the row direction"
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "the position acquisition means",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the position acquisition means"
+    }
+  ],
+  "assessment": "Original marked PDF FEWN6S0RPPOPPY1 pages1-5 explicitly replaces prior listings, deletes alternatives in3/6/8/9 and adds10-20. Accepted visible text matches native selected1-20 and natural dependencies. Earlier clean copy is superseded by this substantive amendment, not dismissed as OCR.",
+  "findings": [],
+  "limitations": [
+    "Public cached evidence only. OCR/PDF corroboration never replaces or repairs native reference text. Agent confidence is not attorney agreement."
+  ],
+  "independence": "No production rules, predictions, structural expected files, network, secrets, git or delegation used.",
+  "pdfCorroboration": {
+    "documentIdentifier": "FEWN6S0RPPOPPY1",
+    "sha256": "b354c754738f5f0602cf54d7b6ff4b1b7e3b0f58ab7c66c9039c5c011b45f494",
+    "pdfPagesInspected": [1, 2, 3, 4, 5],
+    "printedPages": [10, 11, 12, 13, 14],
+    "purpose": "Independent visual corroboration only."
+  }
+}

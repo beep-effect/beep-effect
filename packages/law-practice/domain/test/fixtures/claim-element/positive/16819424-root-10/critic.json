@@ -1,0 +1,198 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "familyId": "16819424-root-10",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.96,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+  ],
+  "findings": [],
+  "priorFindingDispositions": [],
+  "reviewedGranularityCases": [
+    {
+      "claimNumber": 10,
+      "path": "10.a.iii",
+      "anchor": {
+        "startChar": 389,
+        "endChar": 400,
+        "quote": "one another"
+      },
+      "action": "term-to-functional-text",
+      "reason": "One another states mutual coupling of explicit punch and punch sleeve through axial forced guidance. Keep both participants and the complete source coupling relation.",
+      "removedAntecedents": []
+    },
+    {
+      "claimNumber": 11,
+      "path": "11.a",
+      "anchor": {
+        "startChar": 111,
+        "endChar": 122,
+        "quote": "one another"
+      },
+      "action": "term-to-functional-text",
+      "reason": "One another states relative rotation of the explicit punch sleeve and punch. Keep both participants and the full rotation/release/movement function.",
+      "removedAntecedents": []
+    },
+    {
+      "claimNumber": 12,
+      "path": "12.a",
+      "anchor": {
+        "startChar": 111,
+        "endChar": 122,
+        "quote": "one another"
+      },
+      "action": "term-to-functional-text",
+      "reason": "One another states relative rotation of the explicit punch sleeve and punch. Keep both participant terms and complete drive/driver rotation relation.",
+      "removedAntecedents": []
+    }
+  ],
+  "verifiedExactChanges": {
+    "removedTerms": [
+      {
+        "path": "10.a.iii",
+        "anchor": {
+          "startChar": 389,
+          "endChar": 400,
+          "quote": "one another"
+        },
+        "determiner": "bare",
+        "head": "one another"
+      },
+      {
+        "path": "11.a",
+        "anchor": {
+          "startChar": 111,
+          "endChar": 122,
+          "quote": "one another"
+        },
+        "determiner": "bare",
+        "head": "one another"
+      },
+      {
+        "path": "12.a",
+        "anchor": {
+          "startChar": 111,
+          "endChar": 122,
+          "quote": "one another"
+        },
+        "determiner": "bare",
+        "head": "one another"
+      }
+    ],
+    "addedTerms": [],
+    "removedNonfunctionalEdges": [],
+    "unchangedElementStructure": true,
+    "unchangedFunctionalSourceReconstruction": true,
+    "referenceSha256": "69e6bc2498229faaf7623b7c06c5f346d4b534c99c18dafaea4cf8a5c3dfc756"
+  },
+  "reviewScope": {
+    "claimCount": 8,
+    "elementCount": 34,
+    "termCount": 119,
+    "edgeCount": 111
+  },
+  "reviewNotes": [
+    "Targeted independent review under semantic-reference/v2/entity-mentions/v1 and the specific SPEC granularity decision; read the per-family granularity-review receipt, exact canonical changed contexts, prior/current reference snapshots and prior critic receipt. This is not a new source-eligibility or full original-document audit.",
+    "Independently compared the immediate pre-repair snapshot with current expected: element paths, kinds and spans are unchanged; term changes are exactly the listed removals/additions; nonfunctional edge changes are exactly the associated antecedent removals; every functional edge reconstructs the identical entire owner text before and after, with contiguous ordered source spans and valid local term ownership.",
+    "All current element/term/functional/antecedent anchors were checked against canonical UTF-16 text. Owned terms are ordered and nonoverlapping, local/foreign references exist, and typed containment/dependency endpoints are coherent. No source wording or unsupported introduction was supplied. Runtime schema success is reported in the extractor granularity receipt; this critic independently checked the specified geometry/schema constraints without rerunning production code.",
+    "Each removed relative/reciprocal surface retains its complete literal source clause or functional text and explicit governing participant(s). This applies source grammar individually; it is not a spelling-based blanket pronoun deletion rule."
+  ],
+  "previousRounds": [
+    {
+      "protocolVersion": "semantic-reference/v2",
+      "familyId": "16819424-root-10",
+      "role": "critic",
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "round": 1,
+      "confidence": 0.96,
+      "confidenceScope": "Source-grounded semantic annotation, including explicit unresolved referential concerns; source eligibility and attorney agreement separately governed.",
+      "verdict": "accepted",
+      "reviewedClaimNumbers": [
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17
+      ],
+      "findings": [],
+      "acceptanceBlockers": [],
+      "priorRounds": [],
+      "sourceEligibility": "accepted separately by source critic; not re-certified in structural lane",
+      "attorneyAdjudication": "pending",
+      "rationale": [
+        "Reviewed all34 elements,122 complete lexical terms and111 typed edges, including22 explicit functional relations. Root setting-unit constituents and procedural lists15/16/17 retain explicit grouping and actual grammatical ownership; ordered source text/term parts cover each functional relation.",
+        "Actual dependencies11-15->10,16/17->15 are preserved. Independent device1 and its descendants are not ancestors and supply no introductions. Punch, punch sleeve, feed direction, axial guidance, workpiece and connecting-element links refer to exact source-grounded entities on this chain.",
+        "Plunger sleeve is not silently equated to punch sleeve. Hold-down/control/component-support/embossing entities lacking introductions remain unlinked. Claim17 cannot borrow embossing sleeve or first fixed stop from sibling16. The new an axial forced guidance in16 and a centering pin in17 are preserved as literal new indefinite recitations. No actionable semantic finding remains."
+      ],
+      "ambiguityResolution": [
+        {
+          "claimNumber": 13,
+          "quote": "the plunger sleeve",
+          "span": [
+            42,
+            60
+          ],
+          "resolution": "No plunger-sleeve introduction exists in actual root10 chain. Shared sleeve noun and motion do not establish identity with punch sleeve; no edge."
+        },
+        {
+          "claimNumber": 17,
+          "quote": "the embossing sleeve",
+          "span": [
+            352,
+            372
+          ],
+          "resolution": "Actual17->15->10 excludes16 and independent root1. No antecedent is imported from those sources."
+        }
+      ],
+      "audit": {
+        "treesReviewed": 8,
+        "elementsReviewed": 34,
+        "termsReviewed": 122,
+        "elementAndTermAnchorsVerified": 156,
+        "functionalTextAnchorsVerified": 86,
+        "typedEdgesReviewed": 111,
+        "edgeKinds": {
+          "part-of": 26,
+          "functional": 22,
+          "antecedent": 56,
+          "depends-on-element": 7
+        },
+        "allElementAndTermUtf16SlicesVerified": true,
+        "allFunctionalTextSlicesVerified": true,
+        "allFunctionalPartsOrderedLocallyOwnedAndCoverRelation": true,
+        "allLocalAndCrossClaimTermEndpointsVerified": true,
+        "nestedListContainmentVerified": true,
+        "uniqueTermOwnershipVerified": true,
+        "selectedNativeClaimTextAndClaimsXmlDigestVerified": true,
+        "schemaDecode": "separate-root-validation",
+        "selectedScopeComplete": true
+      },
+      "independence": "Independent critic, not producer. Read exact canonical native source/context, fresh semantic proposals, protocol and schemas; no implementation/rules/predictions/synthetic/conformance archives/network/secrets/git/delegation. Helpers verified supplied source normalization,digest,spans,ordered functional parts and reference geometry only. No decomposer was run or reimplemented.",
+      "acceptanceScope": "Both extractor0.95 and critic0.96 meet threshold with no actionable semantic finding. Clear functional structure is accepted while missing or genuinely ambiguous identities remain explicitly recorded. No claim construction, attorney verdict, unrestricted semantic accuracy or corpus completion is asserted."
+    }
+  ],
+  "sourceConcerns": [],
+  "attorneyAdjudication": "pending; critic confidence is not attorney agreement",
+  "roundLimit": {
+    "finalPermittedRound": false,
+    "noFourthAgentRound": true
+  },
+  "independence": "Independent targeted semantic critic. Only this family critic.json written. No expected/source/code edits, production rules/predictions, synthetic/conformance archives, network, secrets, git or delegation. Helpers compare authorized reference snapshots and check exact span/schema geometry only.",
+  "corpusStatus": "Incremental reference consistency review; no active sample admission, goal completion, or attorney agreement claimed."
+}

@@ -137,6 +137,10 @@ extend-exclude = [
   # Exploration capture files are verbatim, append-only human dumps
   # (explorations/README.md conventions) — never spell-gated.
   "explorations/*/CAPTURE.md",
+  # Public USPTO claims and semantic reference receipts preserve source spelling
+  # and exact offsets. Correcting their typos would invalidate provenance/anchors.
+  "packages/law-practice/domain/test/fixtures/claim-element/**",
+  "packages/law-practice/server/test/fixtures/claim-element/**",
   # Semantica gold labels quote source papers verbatim (anchors verify
   # byte-exact against the corpus text) — their spelling is not ours to fix.
   "apps/labs/semantica/fixtures/gold/**",

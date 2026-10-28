@@ -1,0 +1,183 @@
+{
+  "familyId": "11457178-root-1",
+  "role": "source-eligibility-extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.95,
+  "verdict": "eligible",
+  "quotedEvidence": [
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the first pattern",
+      "nativeQuote": "the first pattern",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the first history table",
+      "nativeQuote": "the first history table",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the preset order",
+      "nativeQuote": "the preset order",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the second history table",
+      "nativeQuote": "the second history table",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the second sequential table",
+      "nativeQuote": "the second sequential table",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the corresponding index",
+      "nativeQuote": "the corresponding index",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the plurality of indices",
+      "nativeQuote": "the plurality of indices",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the current index",
+      "nativeQuote": "the current index",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the next history table",
+      "nativeQuote": "the next history table",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the pattern",
+      "nativeQuote": "the pattern",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the stream detection logic",
+      "nativeQuote": "the stream detection logic",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "each set of index bits",
+      "nativeQuote": "each set of index bits",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "each set of index bits",
+      "nativeQuote": "each set of index bits",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the prefetch logic",
+      "nativeQuote": "the prefetch logic",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the second table",
+      "nativeQuote": "the second table",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the first table",
+      "nativeQuote": "the first table",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "the corresponding register",
+      "nativeQuote": "the corresponding register",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "the previous address received",
+      "nativeQuote": "the previous address received",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "the second register",
+      "nativeQuote": "the second register",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "the third address",
+      "nativeQuote": "the third address",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    }
+  ],
+  "concerns": [
+    "All cited selected numbered phrases match. No original CLM comparison available; qualification rests on detailed numbered examiner correspondence plus native identity/inventory rather than chronology alone."
+  ],
+  "rationale": "Read actual112(b)/second-paragraph indefiniteness ground and all selected claims. Natural dependency membership checked, including unusual reference wording; all selected descendants connect to root1. Identity/original/inventory checks retained before handoff. Not attorney adjudication.",
+  "identityEvidence": {
+    "nativeApplicationNumber": "11457178",
+    "nativePublicationNumber": "US20080016330A1",
+    "nativePublicationDate": "20080117",
+    "provenanceIdentityMatches": true,
+    "publicationSha256Matches": true,
+    "claimsXmlSha256Matches": true,
+    "publicationPrecedesOfficeAction": true,
+    "nativePublicationSha256": "60e68d7a2fd427511bf0b0832a6215037636eaa2a423ec76965f735b0af3b9d6",
+    "sourceClaimsXmlSha256": "7fbb9123ce720029a6c7c988c769da93df48208d0fb53b6624856ad6b6630889"
+  },
+  "inventoryEvidence": {
+    "retainedInventoryRows": 52,
+    "retainedInventoryCount": 52,
+    "rowsEqualCount": true,
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "EPLA14J8PPOPPY2",
+        "officialDate": "2006-07-13T00:00:00.000-0400"
+      }
+    ],
+    "officeActionMailDate": "2008-06-26",
+    "limitation": "Underlying inventory entries and full office-action document not independently retrieved; this audit uses retained public excerpts and cached originals. Date-only consistency does not establish in-force identity."
+  },
+  "originalEvidence": [],
+  "nativeContextClaimCount": 20,
+  "selectedClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+  "naturalMembershipAudit": "Selected numbered natural dependency text read independently; no XML proposal overrides wording. Any identified range/alternative discrepancy is described in concerns.",
+  "cachedOriginalChecks": []
+}

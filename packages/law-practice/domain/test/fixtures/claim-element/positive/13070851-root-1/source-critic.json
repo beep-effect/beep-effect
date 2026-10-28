@@ -1,0 +1,133 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "13070851-root-1",
+  "role": "independent-source-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.98,
+  "verdict": "accepted",
+  "extractorSourceEligibleConclusionStands": false,
+  "extractorDispositionStands": false,
+  "reviewedClaimNumbers": [1, 2, 3, 4, 5, 6, 7],
+  "sourceIdentity": {
+    "publicationReference": ["US", "20110274057", "A1", "20111110"],
+    "applicationReference": ["US", "13070851", "20110324"],
+    "officeActionDocumentIdentifiers": ["HB9GFHSLPXXIFW4"],
+    "officeActionMailDate": "2013-01-02"
+  },
+  "digestEvidence": [
+    {
+      "file": "13070851.publication.xml",
+      "sha256": "8c31676fd8c2981faadc66c68c18b80d86ef7b624ed7aa3cf6752a57c698f9db",
+      "matchesProvenance": true
+    },
+    {
+      "file": "13070851.claims.xml",
+      "sha256": "d0cfa17ca520ecf770cc83a16479773c803740d9a7e592c8883ad830a6180645",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "d0cfa17ca520ecf770cc83a16479773c803740d9a7e592c8883ad830a6180645",
+      "matchesProvenance": true
+    }
+  ],
+  "originalEvidence": [
+    {
+      "documentIdentifier": "GLO1NLRJPPOPPY2",
+      "xmlAvailable": true,
+      "sha256": "1ee5b7b9fc51e87700bf580bee2c5fe8f71d4127c54be53c69b1e3c3c615b18c",
+      "matchesProvenance": true
+    }
+  ],
+  "inventoryEvidence": {
+    "declaredCount": 30,
+    "actualRows": 30,
+    "preOrOnActionClaimOrAmendmentRows": [
+      {
+        "officialDate": "2011-03-24T00:00:00.000-0400",
+        "documentCode": "CLM",
+        "documentIdentifier": "GLO1NLRJPPOPPY2"
+      }
+    ]
+  },
+  "officeActionGroundQuotes": [],
+  "numberedPhraseEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the harq entity",
+      "exactNativePhrasePresent": false,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the HARQ entity"
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the dl cc",
+      "exactNativePhrasePresent": false,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the DL CC"
+    },
+    {
+      "claimNumber": 3,
+      "examinerPhrase": "the dl cc",
+      "exactNativePhrasePresent": false,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the DL CC"
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the dl cc",
+      "exactNativePhrasePresent": false,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the DL CC"
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the dl cc",
+      "exactNativePhrasePresent": false,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the DL CC"
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the dl cc",
+      "exactNativePhrasePresent": false,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the DL CC"
+    }
+  ],
+  "assessment": "Full cached office-action record identifier/mail date matches retained action. Actual Claim Rejections - 35 USC \u00a7 112 heading and explicit112(b)/pre-AIA second-paragraph statute quotations precede the numbered antecedent findings. This establishes statutory ground for the cited numbered claims; no blanket selected-family scope is invented. Previously independently checked original selected wording/dependencies and source identity/hash evidence remain valid. The missing context hold is resolved.",
+  "findings": [],
+  "limitations": [
+    "Public cached evidence only. OCR/PDF corroboration never replaces or repairs native reference text. Agent confidence is not attorney agreement."
+  ],
+  "independence": "No production rules, predictions, structural expected files, network, secrets, git or delegation used.",
+  "previousRounds": [
+    {
+      "round": 1,
+      "verdict": "unresolved",
+      "confidence": 0.98,
+      "assessment": "Original legacy source contains14 numbered claims and selected1-7 match exactly after whitespace/printed labels. However retained OA has only antecedent comments, no statutory112(b)/second-paragraph rejection ground/scope. Natural any of claims1 to4 in5/6 expands1/2/3/4, despite XML endpoints1/4 only.",
+      "findings": [
+        {
+          "severity": "blocking",
+          "evidence": "Original legacy source contains14 numbered claims and selected1-7 match exactly after whitespace/printed labels. However retained OA has only antecedent comments, no statutory112(b)/second-paragraph rejection ground/scope. Natural any of claims1 to4 in5/6 expands1/2/3/4, despite XML endpoints1/4 only.",
+          "requiredAction": "Supply authoritative source evidence resolving this identified ground or operative-version gap; do not alter native source to force correspondence."
+        }
+      ]
+    }
+  ],
+  "additionalOfficeActionEvidence": {
+    "documentIdentifier": "HB9GFHSLPXXIFW4",
+    "submissionDate": "2013-01-02",
+    "cachedResponseSha256": "1a6d70643db30b7773356d012839d865041a8c343eeb7ea5732846d6b900df08",
+    "groundHeading": "Claim Rejections - 35 USC \u00a7 112",
+    "statuteHeadingQuotes": [
+      "The following is a quotation of 35 U.S.C. 112(b):",
+      "The following is a quotation of 35 U.S.C. 112 (pre-AIA ), second paragraph:"
+    ],
+    "numberedGroundQuote": "Claim 1 recites the limitation the HARQ entity in line 5.",
+    "scopeLimitation": "Ground applies to expressly discussed numbered claims; remaining selected members are family/dependency context."
+  }
+}

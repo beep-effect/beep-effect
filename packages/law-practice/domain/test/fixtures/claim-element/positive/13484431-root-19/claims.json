@@ -1,0 +1,132 @@
+{
+  "familyId": "13484431-root-19",
+  "rootClaimNumber": 19,
+  "labelClaimNumbers": [19, 20, 21, 22, 23, 24, 25],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A substrate processing apparatus for performing a predetermined process on a substrate, comprising: a holding plate having a holding surface configured to be opposed a back surface of a substrate; at least one vacuum suction port formed in said holding surface and configured to attract said substrate to said holding surface by vacuum suction; and a plurality of Bernoulli suction ports formed in said holding surface and configured to attract said substrate to said holding surface by Bernoulli suction, said holding surface including a circular region disposed concentrically with the center of said holding surface, and an annular region disposed concentrically with said circular region, at least one of said Bernoulli suction ports being disposed in said circular region, at least one of said Bernoulli suction ports being disposed in said annular region.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The substrate processing apparatus according to claim 1, further comprising: an embankment provided upright along the outer edge of said holding surface; and a plurality of protrusions provided upright in a region of said holding surface surrounded by said embankment, the tops of the respective protrusions being flush with the top of said embankment.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The substrate processing apparatus according to claim 1, wherein at least two of said Bernoulli suction ports are disposed in said annular region, and said at least two Bernoulli suction ports disposed in said annular region are arranged in a circumferential direction of said annular region.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The substrate processing apparatus according to claim 1, further comprising: an embankment provided upright so as to surround each of said circular region and a plurality of arcuate regions defined by dividing said annular region in a circumferential direction of said annular region; and a plurality of protrusions provided upright in each of the regions of said holding surface surrounded by said embankment, the tops of the respective protrusions being flush with the top of said embankment, said at least one vacuum suction port including a plurality of vacuum suction ports, at least one of said vacuum suction ports and at least one of said Bernoulli suction ports being disposed in each of said arcuate regions, at least one of said vacuum suction ports and at least one of said Bernoulli suction ports being disposed in said circular region.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The substrate processing apparatus according to claim 4, wherein said arcuate regions are equal in area to each other.",
+      "sourceXmlParentClaimNumbers": [4]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The substrate processing apparatus according to claim 1, further comprising a pressure sensor for detecting the pressure on said holding surface, wherein suction through said at least one vacuum suction port is started after the substrate is placed on said holding surface, and wherein suction through said Bernoulli suction ports is started, when said pressure sensor does not detect that the suction pressure on said holding surface becomes a lower pressure than a predetermined value after a lapse of a determined time period since the start of the suction through said at least one vacuum suction port.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The substrate processing apparatus according to claim 6, wherein the suction through said Bernoulli suction ports is stopped, when said pressure sensor detects that the suction pressure on said holding surface becomes a lower pressure than the predetermined value after the start of the suction through said Bernoulli suction ports.",
+      "sourceXmlParentClaimNumbers": [6]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The substrate processing apparatus according to claim 1, further comprising: a recess provided in the back surface of said holding plate and communicating with each of said Bernoulli suction ports at the bottom surface as seen in the depth direction; and a Bernoulli suction unit disposed inside said recesses, said Bernoulli suction unit including a body part having a cylindrical recessed space formed therein, said body part being fixedly supported inside said recess, with a slight gap produced between said body part and the bottom and wall surfaces of said recess as seen in the depth direction, and an ejection nozzle for ejecting a gas into said cylindrical recessed space to produce a swirl flow in said cylindrical recessed space.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "The substrate processing apparatus according to claim 8, wherein each of said Bernoulli suction ports has a diameter less than the diameter of said cylindrical recessed space.",
+      "sourceXmlParentClaimNumbers": [8]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "A substrate holding apparatus for holding a substrate, comprising: a holding plate having a holding surface configured to be opposed a back surface of a substrate; at least one vacuum suction port formed in said holding surface and configured to attract said substrate to said holding surface by vacuum suction; and a plurality of Bernoulli suction ports formed in said holding surface and configured to attract said substrate to said holding surface by Bernoulli suction, said holding surface including a circular region disposed concentrically with the center of said holding surface, and an annular region disposed concentrically with said circular region, at least one of said Bernoulli suction ports being disposed in said circular region, at least one of said Bernoulli suction ports being disposed in said annular region.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "The substrate holding apparatus according to claim 10, further comprising: an embankment provided upright along the outer edge of said holding surface; and a plurality of protrusions provided upright in a region of said holding surface surrounded by said embankment, the tops of the respective protrusions being flush with the top of said embankment.",
+      "sourceXmlParentClaimNumbers": [10]
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "The substrate holding apparatus according to claim 10, wherein at least two of said Bernoulli suction ports are disposed in said annular region, and said at least two Bernoulli suction ports disposed in said annular region are arranged in a circumferential direction of said annular region.",
+      "sourceXmlParentClaimNumbers": [10]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "The substrate holding apparatus according to claim 10, further comprising: an embankment provided upright so as to surround each of said circular region and a plurality of arcuate regions defined by dividing said annular region in a circumferential direction of said annular region; and a plurality of protrusions provided upright in each of the regions of said holding surface surrounded by said embankment, the tops of the respective protrusions being flush with the top of said embankment, said at least one vacuum suction port including a plurality of vacuum suction ports, at least one of said vacuum suction ports and at least one of said Bernoulli suction ports being disposed in each of said arcuate regions, at least one of said vacuum suction ports and at least one of said Bernoulli suction ports being disposed in said circular region.",
+      "sourceXmlParentClaimNumbers": [10]
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "The substrate holding apparatus according to claim 13, wherein said arcuate regions are equal in area to each other.",
+      "sourceXmlParentClaimNumbers": [13]
+    },
+    {
+      "claimNumber": 15,
+      "claimText": "The substrate holding apparatus according to claim 10, further comprising a pressure sensor for detecting the pressure on said holding surface, wherein suction through said at least one vacuum suction port is started after the substrate is placed on said holding surface, and wherein suction through said Bernoulli suction ports is started, when said pressure sensor does not detect that the suction pressure on said holding surface becomes a lower pressure than a predetermined value after a lapse of a determined time period since the start of the suction through said at least one vacuum suction port.",
+      "sourceXmlParentClaimNumbers": [10]
+    },
+    {
+      "claimNumber": 16,
+      "claimText": "The substrate holding apparatus according to claim 15, wherein the suction through said Bernoulli suction ports is stopped, when said pressure sensor detects that the suction pressure on said holding surface becomes a lower pressure than the predetermined value after the start of the suction through said Bernoulli suction ports.",
+      "sourceXmlParentClaimNumbers": [15]
+    },
+    {
+      "claimNumber": 17,
+      "claimText": "The substrate holding apparatus according to claim 10, further comprising: a recess provided in the back surface of said holding plate and communicating with each of said Bernoulli suction ports at the bottom surface as seen in the depth direction; and a Bernoulli suction unit disposed inside said recesses, said Bernoulli suction unit including a body part having a cylindrical recessed space formed therein, said body part being fixedly supported inside said recess, with a slight gap produced between said body part and the bottom and wall surfaces of said recess as seen in the depth direction, and an ejection nozzle for ejecting a gas into said cylindrical recessed space to produce a swirl flow in said cylindrical recessed space.",
+      "sourceXmlParentClaimNumbers": [10]
+    },
+    {
+      "claimNumber": 18,
+      "claimText": "The substrate holding apparatus according to claim 17, wherein each of said Bernoulli suction ports has a diameter less than the diameter of said cylindrical recessed space.",
+      "sourceXmlParentClaimNumbers": [17]
+    },
+    {
+      "claimNumber": 19,
+      "claimText": "A method of holding a substrate, comprising the steps of: a) placing a substrate on a holding surface formed on a holding plate, with a back surface of said substrate opposed to said holding surface; b) forming a suction pressure in at least one vacuum suction port formed in said holding surface by vacuum suction; and c) forming a suction pressure in at least one of a plurality of Bernoulli suction ports formed in said holding surface by Bernoulli suction, said holding surface including a circular region disposed concentrically with the center of said holding surface, and an annular region disposed concentrically with said circular region, at least one of said Bernoulli suction ports being disposed in said circular region, at least one of said Bernoulli suction ports being disposed in said annular region.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 20,
+      "claimText": "The method according to claim 19, wherein: an embankment is provided upright along the outer edge of said holding surface; a plurality of protrusions are provided upright in a region of said holding surface surrounded by said embankment; and the tops of the respective protrusions are flush with the top of said embankment.",
+      "sourceXmlParentClaimNumbers": [19]
+    },
+    {
+      "claimNumber": 21,
+      "claimText": "The method according to claim 19, wherein: at least two of said Bernoulli suction ports are disposed in said annular region; and said at least two Bernoulli suction ports disposed in said annular region are arranged in a circumferential direction of said annular region.",
+      "sourceXmlParentClaimNumbers": [19]
+    },
+    {
+      "claimNumber": 22,
+      "claimText": "The method according to claim 19, wherein: an embankment is provided upright so as to surround each of said circular region and a plurality of arcuate regions defined by dividing said annular region in a circumferential direction of said annular region; a plurality of protrusions are provided upright in each of the regions of said holding surface surrounded by said embankment; the tops of the respective protrusions are flush with the top of said embankment; said at least one vacuum suction port includes a plurality of vacuum suction ports; at least one of said vacuum suction ports and at least one of said Bernoulli suction ports are disposed in each of said arcuate regions; and at least one of said vacuum suction ports and at least one of said Bernoulli suction ports are disposed in said circular region.",
+      "sourceXmlParentClaimNumbers": [19]
+    },
+    {
+      "claimNumber": 23,
+      "claimText": "The method according to claim 22, wherein said arcuate regions are equal in area to each other.",
+      "sourceXmlParentClaimNumbers": [22]
+    },
+    {
+      "claimNumber": 24,
+      "claimText": "The method according to claim 19, wherein: said step b) is started after the substrate is placed on said holding surface; and said step c) is started, when a suction pressure on said holding surface does not become a lower pressure than a predetermined value after a lapse of a determined time period since the start of said step b).",
+      "sourceXmlParentClaimNumbers": [19]
+    },
+    {
+      "claimNumber": 25,
+      "claimText": "The method according to claim 24, wherein said Bernoulli suction is stopped, when the suction pressure on said holding surface becomes a lower pressure than the predetermined value after the start of said step c).",
+      "sourceXmlParentClaimNumbers": [24]
+    }
+  ]
+}

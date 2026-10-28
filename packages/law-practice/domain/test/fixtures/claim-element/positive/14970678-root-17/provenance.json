@@ -1,0 +1,50 @@
+{
+  "applicationNumber": "14970678",
+  "publicationNumber": "US20160174707A1",
+  "publicationDate": "2016-06-23",
+  "nativeXmlSha256": "5549fc5ff860d7f8d852894762a991d32635e3d41aaf16a107e34a3e68859e75",
+  "claimsXmlSha256": "bde97a2d6a8356446f76c37acffaa5ce8b91c080b5250f3c60c7baa87533d566",
+  "officeActionDocumentIdentifiers": [
+    "IRRSD7PYRXEAPX2"
+  ],
+  "officeActionMailDate": "2016-08-16",
+  "officeActionSection112Text": [
+    "claims 1-20 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor, or for pre-aia the applicant regards as the invention.\r\nwith respect to claim 1: the recitation the path (line 4) lacks antecedent basis. the recitation the other latch element (line 8) lacks antecedent basis. the recitation the bias (line 11) lacks antecedent basis.\r\nwith respect to claim 2: the recitation said bias (line 2) lacks antecedent basis.\r\nwith respect to claim 4: the recitation its longitudinal axis (line 2) lacks antecedent basis.\r\nwith respect to claim 6: the recitation said other latch elements (lines 1-2) lacks antecedent basis.\r\nwith respect to claim 7: the recitation “i.e. movable” is indefinite.\r\nwith respect to claim 8: the recitation the other latch element (line 1) lacks antecedent basis.\r\nwith respect to claim 9: the recitation the bias (line 2) lacks antecedent basis. the recitation “the slidable member” (line 2) lacks antecedent basis.\r\nwith respect to claim 10: the recitation “the slidable member” (lines 2-3) lacks antecedent basis.\r\nwith respect to claim 11: the recitation the bias (line 2) lacks antecedent basis. the recitation “the slidable member” (line 2) lacks antecedent basis.\r\nwith respect to claim 12: the recitation “a drawer in a cabinet drawer is indefinite. the recitation “the slidable member” (line 1) lacks antecedent basis.\r\nwith respect to claim 14: the recitation its longitudinal axis (line 2) lacks antecedent basis.\r\nwith respect to claim 17: it is unclear if “a cabinet housing” (line 1) and “a housing” are the same housing. the recitation the path (line 6) lacks antecedent basis. the recitation the other latch element (line 10) lacks antecedent basis. the recitation the bias (line 13) lacks antecedent basis.\r\nwith respect to claim 18: the recitation said bias (line 2) lacks antecedent basis.\r\nwith respect to claim 20: the recitation its longitudinal axis (line 2) lacks antecedent basis.\r\nwith respect to claims 3, 5, 13, 15, 16, and 19: the claims are rejected under 35 u.s.c. § 112 via dependency."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "II8ZYRTXPXXIFW3",
+      "officialDate": "2015-12-16T00:00:00.000-0500"
+    }
+  ],
+  "originalComparisons": [
+    {
+      "documentIdentifier": "II8ZYRTXPXXIFW3",
+      "officialDate": "2015-12-16T00:00:00.000-0500",
+      "sha256": "8a01042805c9bccae9a58fca0ea3fe039d2cec81301af7ca96f43a6644866371",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [
+        3,
+        4,
+        6,
+        8,
+        10,
+        12,
+        14,
+        15,
+        19
+      ],
+      "sourceClaimCount": 20
+    }
+  ],
+  "documentInventoryCount": 30,
+  "documentInventoryRows": 30,
+  "primaryCpc": "E05C  17/02",
+  "inForceEvidence": "Source-only replacement proposal. Native publication precedes OA and inventory chronology is preliminary only; numbered examiner association and actual operative original/adoption must be independently audited. No predictions inspected.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/14970678",
+    "https://api.uspto.gov/api/v1/patent/applications/14970678/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-agent-accepted; attorney-pending"
+}

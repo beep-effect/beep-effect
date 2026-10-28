@@ -1,0 +1,52 @@
+{
+  "applicationNumber": "13062032",
+  "publicationNumber": "US20110247417A1",
+  "publicationDate": "2011-10-13",
+  "nativeXmlSha256": "0bc4374ebc4d3f4036fc2291f5bae715afd8cabcc0a9f87257ce57c38d75c913",
+  "claimsXmlSha256": "2b33a6aabcd2936ff0644c943981d6dc7f04b9a7062d5979ee16ed9c3d8efdcb",
+  "officeActionDocumentIdentifiers": [
+    "HGF9NI6ZPXXIFW4"
+  ],
+  "officeActionMailDate": "2013-05-09",
+  "officeActionSection112Text": [
+    "claims 1-13 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor, or for pre-aia the applicant regards as the invention.\r\nin claim 1, line 4, the phrase “the reflected ultrasound” lacks antecedent basis. in line 5, the phrase “the associated signals” lacks antecedent basis. in line 5, the phrase the ultrasound lacks antecedent basis. in line 14, the phrase the ultrasound lacks antecedent basis. in lines 14-15, the phrase “the ultrasound” lacks antecedent basis. in line 15, the phrase “said spaced transducers” lacks antecedent basis.\r\nin claim 6, line 3, the phrase “the latter is uncoupled” is not clear on its meaning. what the latter? please clarify.\r\nin claim 7, line 3, the phrase “the leading body’s coupling surface” lacks antecedent basis.\r\nin claim 10, line 4, the phrase “the signals” lacks antecedent basis and is indefinite. what “signals”?\r\nin claim 11, line 2, the phrase “the outermost transducers” lacks antecedent basis.\r\nin claim 12, lines 3-4, the phrase “the received pulse echo lacks antecedent basis.\r\nin claim 13, line 5, the phrase the reflected ultrasound lacks antecedent basis. in line 6, the phrase the associated signals lacks antecedent basis. in line 7, the phrase the ultrasound lacks antecedent basis. in line 15, the phrase the ultrasound lacks antecedent basis. in line 16, the phrase said spaced transducers lacks antecedent basis."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "GPFBVMRRPPOPPY1",
+      "officialDate": "2011-06-22T00:00:00.000-0400"
+    },
+    {
+      "documentIdentifier": "GPFAIYRMPPOPPY1",
+      "officialDate": "2011-06-22T00:00:00.000-0400"
+    }
+  ],
+  "originalComparisons": [
+    {
+      "documentIdentifier": "GPFBVMRRPPOPPY1",
+      "officialDate": "2011-06-22T00:00:00.000-0400",
+      "sha256": "80e47452f351fb6867ae65b41e485fa3d6047488061e92faa4bc3dd580939614",
+      "ocrCorroborationOnly": false,
+      "exactNonWhitespaceClaimNumbers": [],
+      "sourceClaimCount": 0
+    },
+    {
+      "documentIdentifier": "GPFAIYRMPPOPPY1",
+      "officialDate": "2011-06-22T00:00:00.000-0400",
+      "sha256": "eb24862ad7c04b64ebb16cc438534812945b9ebd4c371e9b5b44157a4549b15a",
+      "ocrCorroborationOnly": false,
+      "exactNonWhitespaceClaimNumbers": [],
+      "sourceClaimCount": 0
+    }
+  ],
+  "documentInventoryCount": 81,
+  "documentInventoryRows": 81,
+  "primaryCpc": "G01N  29/07",
+  "inForceEvidence": "Source-only replacement proposal. Native publication precedes OA and inventory chronology is preliminary only; numbered examiner association and actual operative original/adoption must be independently audited. No predictions inspected.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/13062032",
+    "https://api.uspto.gov/api/v1/patent/applications/13062032/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-agent-accepted; attorney-pending"
+}

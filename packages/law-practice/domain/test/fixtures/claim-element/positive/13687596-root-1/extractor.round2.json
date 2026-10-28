@@ -1,0 +1,45 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "13687596-root-1",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.96,
+  "resolvedClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+  "unresolved": [],
+  "sourceConcerns": [
+    "Independent source critic accepted eligibility at 0.98 after legacy lowercase original XML count reconciliation; native wording is used unchanged, including claim 8 “the composite structure metal interface part”.",
+    "Claims 6 and 12 contain meaningful technical references to method 1 and assembly 6 while changing claimed subject. Trees preserve assembly/sub-assembly subjects; dependency edges encode technical reference, not an opinion about formal legal dependency.",
+    "Claim 5 “said apertures”, “said connections”, “said locking means” and claim 9 “said apertures” do not have unambiguous explicit noun introductions on their ancestry. No noun is extracted from slash-type modifiers to invent one. Claim 12’s terminal “the matching aperture or the lumen” has split alternatives, so no singular branch edge to the earlier disjunctive “an aperture or lumen” is invented.",
+    "Claim 1 “said interlock” names the result of interlocking without an explicit introductory noun. Missing introduction is preserved, as are unintroduced definite conditions, positions, phases and type phrases.",
+    "The phrases “said parts” in assemblies 6/12 and terminal “said part” in12 have distributed or singular/plural ownership uncertainty. These exact noun phrases remain with no fabricated single-entity antecedent edge.",
+    "Round 2 claim 12 tab review: “a locking tab” [830,843) and matching “a tab” [969,974) are both explicit indefinite introductions. The latter is the grammatical antecedent of “said tab” [976,984) and subsequent “the tab”; no additional equivalence edge between those two introductions is asserted. Their possible physical identity remains a matter for attorney review, not a silently chosen alias."
+  ],
+  "annotationRationale": [
+    "The root 1 preamble includes the elaborated assembly and its incidental comprising list; the main transition is said method comprising. Root 12 similarly retains its full actual sub-assembly preamble before wherein despite incidental earlier comprising. No incidental comprising/having shortcut controls boundaries.",
+    "Full lexical heads preserve composite structure part, metal interface part, metal structure part, assembling male/female mating connectors, assembling male/female type mating connectors, V-shaped cross-section, V-shaped cross section, tab/aperture type and stud/aperture type. Related lexical variants are not normalized into invented exact wording.",
+    "Structural introductions/type descriptions use limitation; explicit assembling, welding, interlocking, deforming, position transitions and movement relations use functional-relation with locally owned terms and exact ordered text.",
+    "Actual explicit claim references determine ancestry. Clear inherited components, connectors, locks and tab references get cross-claim edges. First/second series phrases in claim 4 are recorded as first definite recitations and their subsequent claim 5 references connect to those explicit ordinal entities, whose order distinguishes them. No type/part inference supplies missing introductions.",
+    "At-least-one determiner surfaces use the schema surface; numerical quantifiers outside that surface retain exact anchors with bare determiners. Nested of-phrases have separate nonoverlapping noun terms. Shared determiner coordinates remain one noun phrase when the text has one determiner.",
+    "Local referential concerns are explicitly retained; source-clear boundaries remain structurally annotatable. No implementation coverage limitation or legal construction is substituted for semantic labeling.",
+    "Round 2 extends the actual method/assembly preambles through their explicit resumptive subjects: claim 1 “said method” [142,153) and claim 6 “said assembly” [83,96), stopping before main comprising. Both receive exact owned said terms and local antecedents to their preamble introductions. Incidental earlier comprising is still not selected as the main transition. For claim 12, “each aperture or lumen being able to be positioned matching a tab, said tab being a deformable tab ... introducing the tab” directly resumes the tab introduced in that matching relation. Therefore said tab [976,984) and its subsequent the tab now point consistently to 12.d a tab [969,974), rather than bypassing it to 12.c a locking tab [830,843). This follows the explicit local subject continuation; whether those two indefinite introductions describe the same physical tab remains unasserted."
+  ],
+  "independence": "Fresh manually selected source grammar, lexical terms and semantic identities. Read only canonical claims/native XML, context, source/provenance/audit/critic, protocol and schema contracts. No rules, predictions, synthetic fixtures, conformance archives, network, secrets, git or delegation. Helper only locates manually selected quotes, formats annotations and checks span/reference coherence.",
+  "sourceStatus": "Independent source critic accepted; independent semantic critic and attorney adjudication pending.",
+  "validation": "Round-1 expected/extractor/critic preserved byte-for-byte. Selected scope unchanged; every source slice, term ownership, nonoverlap, referenced term membership and functional-part coverage mechanically rechecked after round-2 corrections.",
+  "roundReview": {
+    "previousRound": 1,
+    "findingDisposition": "accepted-and-corrected",
+    "changes": [
+      "Extended roots 1 and 6 through resumptive said subjects; added two exact terms and two local antecedents.",
+      "Repointed claim12.e said tab and the tab to the directly resumed 12.d a tab; no invented introduction equivalence."
+    ],
+    "previousReceipts": [
+      "expected.round1.json",
+      "extractor.round1.json",
+      "critic.round1.json"
+    ],
+    "criticRound2Status": "pending"
+  }
+}

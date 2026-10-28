@@ -1,0 +1,36 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "18734099-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.97,
+  "confidenceScope": "Independent semantic structure only; source eligibility and attorney adjudication separate.",
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+  "findings": [],
+  "acceptanceBlockers": [],
+  "sourceEligibility": "provisional-pending-independent-source-critic",
+  "structuralStatus": "reviewed-no-structural-correction",
+  "rationale": [
+    "All85 elements and223 terms were reviewed against source grammar with complete lexical heads, and all287 typed edges were checked for source meaning, ownership and dependency scope. All308 element/term anchors plus142 connecting-text anchors are exact UTF16 source slices. Fifty functional edges preserve explicit source predicates, ordered term/text parts and their full relation spans.",
+    "Natural-language dependencies:2->1,3->2,4->3,5->1,6->5,7/8/9/10->6,11->1,12->11. All antecedent links stay in these ancestors or the same claim. Distinct first/second rods introduced in3 and6 remain in their own dependency branches. Claim12 does not inherit claim2 upper-end introduction. No missing end, angle, range or base-seat-member introduction is fabricated.",
+    "Clause grouping and nested constituent enumerations are defensible source-grounded representations. Full heads such as forward-extending third connecting rod, receiving slot, rotational connection point and lower/upper ends retain lexical modifiers while predicates remain connecting text. No rule-conformance shortcut determined any boundary.",
+    "No actionable structural finding remains. Both structural confidences meet0.95, subject to root schema checks. Source identity/version corroboration in source-audit remains a separate extractor proposal pending its independent source critic; this acceptance is not source-certified positive or attorney agreement."
+  ],
+  "audit": {
+    "resolvedTreesReviewed": 12,
+    "elementsReviewed": 85,
+    "termsReviewed": 223,
+    "typedEdgesReviewed": 287,
+    "functionalEdgesReviewed": 50,
+    "allElementAndTermUtf16SlicesVerified": true,
+    "allFunctionalTextSlicesVerified": true,
+    "functionalPartsOrderedLocallyOwnedAndCoverRelation": true,
+    "selectedNativeClaimTextAndClaimsXmlDigestVerified": true,
+    "rootSchemaCheck": "pending-root",
+    "attorneyAdjudication": "pending"
+  },
+  "independence": "Independent reviewer of fresh semantic-reference/v2 proposals, not their producer. Did not reread P2 rules, implementation, predictions, synthetic fixtures or archived conformance drafts. Read fresh expected/extractor, canonical native claims, source audit proposal, v2 protocol and schema contracts. Helpers checked supplied span/reference coherence only; no decomposer run/copied/reimplemented."
+}

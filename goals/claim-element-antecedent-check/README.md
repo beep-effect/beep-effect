@@ -55,10 +55,88 @@ Sibling goals:
 
 ## Current Phase
 
-P2, in progress. P0 and P1 merged in #1764. P2a (rules) and P2b (Layer and a fixture-backed
-USPTO adapter) are in the P2 PR. P2c and the live acceptance wait on the USPTO key.
+P2, in progress. P0 and P1 merged in #1764. The deterministic rules, service,
+native USPTO adapter and recorded first contract slice are implemented locally.
+ODP access works. The source selection is qualified and frozen: 60 positive
+families / 538 selected claims and 200 allowed sets / 3,184 source claims.
+All 60 families now have semantic-reference drafts covering all 538 selected
+claims. Independent semantic criticism, convention decisions and actual attorney
+agreement remain incomplete. P3, publication and closeout have not started.
 
 ## Latest Evidence
+
+- **Current operator gate (2026-10-28):** all 60 reference drafts / 538 claims
+  pass integrity, and independent review accepts 57 families / 517 claims.
+  Three exhausted-round families retain eight explicit attorney decisions.
+  Actual six-family spot-check agreement is not yet recorded. Full package
+  verification passes for domain, use-cases, server and the USPTO driver.
+  See the [operator gate receipt](history/2026-10-28-operator-attorney-gate.json)
+  for evidence, review artifacts and the remaining P3/Yeet/closeout work.
+
+
+- **Implementation baseline recorded (2026-10-28):** the exact 18 P2 source
+  files are hashed in [implementation freeze](research/implementation-freeze.json)
+  before positive semantic benchmark predictions. This retains the rules being
+  measured while independent source labels continue. The earlier allowed-input
+  coverage replay remains separately disclosed; this is not a claim that no
+  allowed findings have been produced.
+
+
+- **Qualified source freeze and label checkpoint (2026-10-28):** all 60
+  positive source families passed independent source criticism. Failed source
+  versions were retained in the exclusion history and replaced within CPC;
+  selection did not use checker output. See
+  [source freeze](research/positive-source-freeze.json) and the current
+  [review snapshot](research/source-audit-summary.json). Semantic drafts remain
+  under bounded review. A source-grounded term/connecting-text convention was
+  clarified independently of production rules; affected references are being
+  checked consistently. Eight post-round-limit representation decisions (one connective and seven
+  lexical heads) are reserved for actual attorney review. The
+  [self-contained review packet](history/attorney-review/index.html) now
+  contains the frozen six-family, 50-claim spot-check and those seven
+  questions, with version-bound export and no prefilled verdicts. A separate
+  [one-question addendum](history/attorney-review/addendum.html) retains the
+  subsequently identified `each edge` head question without changing the
+  original review or agreement denominator. No human agreement or accuracy/FP result is claimed.
+
+- **Historical initial corpus audit (2026-10-28; superseded by source freeze):** all 60 source
+  proposals were audited by extractors: 39 eligible proposals (359 selected
+  claims), 18 unresolved and 3 ineligible at that checkpoint. Independent source
+  review and replacements subsequently qualified all 60 active families.
+  Earlier labels copied parser heuristics into references, so 14 family drafts
+  are preserved as auxiliary conformance evidence and excluded from semantic
+  accuracy. Fresh source-grounded labeling uses
+  [semantic-reference/v2](research/LABEL-PROTOCOL.md). The native vertical slice
+  remains a tested contract fixture; semantic-reference acceptance is separate.
+  The frozen allowed sample contains 200 sets / 3,184 source claims. Latest
+  full server package verification passes audit and docgen. No attorney
+  agreement, semantic accuracy or false-positive estimate is complete.
+
+- **First slice and source collection:** the final claim-1 tree was accepted
+  by independent extractor and critic in two bounded rounds; the public
+  replay test checks strict structural equality and both the examiner's
+  missing-antecedent phrase and an unsupported possessive span. All four
+  full package verifications pass. The expanded source acquisition retrieved
+  286 native grant claim sets / 3,960 claims; scope screening, stratification
+  and adjudication are still pending, so these are not clean negatives.
+
+- **Native live pipeline (2026-10-28):** `US20200109732A1` produced
+  16 normalized claims and 16 trees, no undecomposed claims, and 191 advisory
+  findings. Claim 1 includes `missing-antecedent` for the examiner-quoted
+  `the foot` at `[356, 364)`. Structural gold review and attorney sampling
+  remain separate acceptance gates.
+
+- **Access restored (2026-10-28):** after the operator updated the existing
+  secret, both status-only ODP probes returned HTTP 200. The live listing for
+  public application `16123456` supplies PDF then XML options for claims and
+  the non-final office action. Real parsing and provenance remain to be verified.
+
+- **2026-10-28 resumption:** authenticated USPTO application and document-list
+  probes both returned HTTP 403. The XML-option selection repair is implemented
+  locally with synthetic regression coverage; this does not satisfy the real
+  rejection slice or labelled corpus. See
+  [resumption evidence](history/2026-10-28-resumption.md).
+
 
 - **P0:** `values/ClaimElement/` in `@beep/law-practice-domain`, in four files: `ClaimElement.model.ts`,
   `ClaimElement.edge.model.ts`, `ClaimElement.tree.model.ts` (with coherence checks) and

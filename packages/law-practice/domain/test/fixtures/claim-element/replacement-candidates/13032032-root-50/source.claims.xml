@@ -1,0 +1,586 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A coated sleeved oil and gas well production device comprising:
+<claim-text>one or more cylindrical bodies,</claim-text>
+<claim-text>one or more sleeves proximal to the outer diameter or inner diameter of the one or more cylindrical bodies,</claim-text>
+<claim-text>hardbanding on at least a portion of the exposed outer surface, exposed inner surface, or a combination of both exposed outer or inner surface of the one or more sleeves,</claim-text>
+<claim-text>a coating on at least a portion of the inner sleeve surface, the outer sleeve surface, or a combination thereof of the one or more sleeves,</claim-text>
+<claim-text>wherein the coating comprises one or more ultra-low friction layers,</claim-text>
+<claim-text>and one or more buttering layers interposed between the hardbanding and the ultra-low friction coating.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The coated sleeved device of <claim-ref idref="CLM-00001">claim 1</claim-ref> wherein the hardbanding has a patterned surface.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The coated sleeved device of <claim-ref idref="CLM-00002">claim 2</claim-ref> wherein the patterned hardbanding surface includes recessed and raised features that range from 1 mm to 5 mm in depth.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The coated sleeved device of <claim-ref idref="CLM-00002">claim 2</claim-ref> wherein the recessed features comprise 10% to 90% of the area in the hardbanding region.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The coated sleeved device of <claim-ref idref="CLM-00002">claim 2</claim-ref> wherein the hardbanding has a pattern chosen from: lateral grooves or slots, longitudinal grooves or slots, angled grooves or slots, spiral grooves or slots, chevron shaped grooves or slots, recessed dimples, proud dimples, and combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The coated sleeved device of <claim-ref idref="CLM-00001">claim 1</claim-ref> wherein the ultra-low friction coating further comprises one or more buffer layers.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The coated sleeved device of <claim-ref idref="CLM-00001">claim 1</claim-ref> or <claim-ref idref="CLM-00006">claim 6</claim-ref> wherein at least one of the layers is graded, or at least one of the interfaces between adjacent layers is graded, or combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The coated sleeved device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the one or more ultra-low friction layers are chosen from: an amorphous alloy, an electroless nickel-phosphorous composite, graphite, MoS<sub>2</sub>, WS<sub>2</sub>, a fullerene based composite, a boride based cermet, a quasicrystalline material, a diamond based material, diamond-like-carbon (DLC), boron nitride, carbon nanotubes, graphene sheets, metallic particles of high aspect ratio (i.e. relatively long and thin), ring-shaped materials including carbon nanorings, oblong particles and combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The coated sleeved device of <claim-ref idref="CLM-00008">claim 8</claim-ref>, wherein the diamond based material is chemical vapor deposited (CVD) diamond or polycrystalline diamond compact (PDC).</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The coated sleeved device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein at least one ultra-low friction layer is diamond-like-carbon (DLC).</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The coated sleeved device of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the diamond-like-carbon (DLC) is chosen from: to-C, ta-C:H, DLCH, PLCH, GLCH, Si-DLC, Ti-DLC, Cr-DLC, N-DLC, O-DLC, B-DLC, Me-DLC, F-DLC, S-DLC and combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The coated sleeved device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the ultra-low friction coating provides a surface energy less than 1 J/m<sup>2</sup>.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The coated sleeved device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the ultra-low friction coating on at least a portion of the exposed outer surface of the body assembly provides a hardness greater than 400 VHN.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The coated sleeved device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the coefficient of friction of the coating is less than or equal to 0.15.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The coated sleeved device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the coating provides at least 3 times greater wear resistance than an uncoated device.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The coated sleeved device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the water contact angle of the ultra-low friction coating is greater than 60 degrees.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The coated sleeved device of <claim-ref idref="CLM-00001">claim 1</claim-ref> or <claim-ref idref="CLM-00006">6</claim-ref> wherein the thickness of the ultra-low friction coating ranges from 0.5 microns to 5000 microns.</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The coated sleeved device of <claim-ref idref="CLM-00001">claim 1</claim-ref> or <claim-ref idref="CLM-00006">6</claim-ref> wherein the thicknesses of each of the one or more ultra-low friction, buttering, and buffer layers is between 0.001 and 5000 microns.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The coated sleeved device of <claim-ref idref="CLM-00007">claim 7</claim-ref> wherein the thicknesses of the one or more interfaces are between 0.01 to 10 microns or between 5% to 95% of the thickness of the thinnest adjacent layer.</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The coated sleeved device of <claim-ref idref="CLM-00006">claim 6</claim-ref>, wherein the one or more buffer layers are chosen from elements, alloys, carbides, nitrides, carbo-nitrides, borides, sulfides, silicides, and oxides of silicon, aluminum, copper, molybdenum, titanium, chromium, tungsten, tantalum, niobium, vanadium, zirconium, hafnium, and combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00021" num="00021">
+<claim-text><b>21</b>. The coated sleeved device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the hardbanding comprises cermet based materials; metal matrix composites; nanocrystalline metallic alloys; amorphous alloys; hard metallic alloys; carbides, nitrides, borides, or oxides of elemental tungsten, titanium, niobium, molybdenum, iron, chromium, and silicon dispersed within a metallic alloy matrix; or combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00022" num="00022">
+<claim-text><b>22</b>. The coated sleeved device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the one or more buttering layers comprise a stainless steel, a chrome-based alloy, an iron-based alloy, a cobalt-based alloy, a titanium-based alloy, or a nickel-based alloy, alloys or carbides or nitrides or carbo-nitrides or borides or silicides or sulfides or oxides of the following elements: silicon, titanium, chromium, aluminum, copper, iron, nickel, cobalt, molybdenum, tungsten, tantalum, niobium, vanadium, zirconium, hafnium, or combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00023" num="00023">
+<claim-text><b>23</b>. The coated sleeved device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the one or more buttering layers is formed by one or more processes chosen from: PVD, PACVD, CVD, ion implantation, carburizing, nitriding, boronizing, sulfiding, siliciding, oxidizing, an electrochemical process, an electroless plating process, a thermal spray process, a kinetic spray process, a laser-based process, a friction-stir process, a shot peening process, a laser shock peening process, a welding process, a brazing process, an ultra-fine superpolishing process, a tribochemical polishing process, an electrochemical polishing process, and combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00024" num="00024">
+<claim-text><b>24</b>. The coated sleeved device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the one or more buttering layers provide an ultra-smooth surface finish of average surface roughness lower than 0.25 micron.</claim-text>
+</claim>
+<claim id="CLM-00025" num="00025">
+<claim-text><b>25</b>. The coated sleeved device of <claim-ref idref="CLM-00001">claim 1</claim-ref> wherein at least one of the buttering layers has a minimum hardness of 400 VHN.</claim-text>
+</claim>
+<claim id="CLM-00026" num="00026">
+<claim-text><b>26</b>. The coated sleeved device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the one or more cylindrical bodies include two or more cylindrical bodies in relative motion to each other.</claim-text>
+</claim>
+<claim id="CLM-00027" num="00027">
+<claim-text><b>27</b>. The coated sleeved device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the one or more cylindrical bodies include two or more cylindrical bodies that are static relative to each other.</claim-text>
+</claim>
+<claim id="CLM-00028" num="00028">
+<claim-text><b>28</b>. The coated sleeved device of <claim-ref idref="CLM-00026">claim 26</claim-ref> or <claim-ref idref="CLM-00027">27</claim-ref>, wherein the two or more cylindrical bodies include two or more radii.</claim-text>
+</claim>
+<claim id="CLM-00029" num="00029">
+<claim-text><b>29</b>. The coated sleeved device of <claim-ref idref="CLM-00028">claim 28</claim-ref>, wherein the two or more cylindrical bodies include one or more cylindrical bodies substantially within one or more other cylindrical bodies.</claim-text>
+</claim>
+<claim id="CLM-00030" num="00030">
+<claim-text><b>30</b>. The coated sleeved device of <claim-ref idref="CLM-00028">claim 28</claim-ref>, wherein the two or more cylindrical bodies are contiguous to each other.</claim-text>
+</claim>
+<claim id="CLM-00031" num="00031">
+<claim-text><b>31</b>. The coated sleeved device of <claim-ref idref="CLM-00028">claim 28</claim-ref>, wherein the two or more cylindrical bodies are not contiguous to each other.</claim-text>
+</claim>
+<claim id="CLM-00032" num="00032">
+<claim-text><b>32</b>. The coated sleeved device of <claim-ref idref="CLM-00030">claim 30</claim-ref> or <claim-ref idref="CLM-00031">31</claim-ref>, wherein the two or more cylindrical bodies are coaxial or non-coaxial.</claim-text>
+</claim>
+<claim id="CLM-00033" num="00033">
+<claim-text><b>33</b>. The coated sleeved device of <claim-ref idref="CLM-00032">claim 32</claim-ref>, wherein the two or more cylindrical bodies have substantially parallel axes.</claim-text>
+</claim>
+<claim id="CLM-00034" num="00034">
+<claim-text><b>34</b>. The coated sleeved device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the one or more cylindrical bodies are helical in inner surface, helical in outer surface or a combination thereof.</claim-text>
+</claim>
+<claim id="CLM-00035" num="00035">
+<claim-text><b>35</b>. The coated sleeved device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the one or more cylindrical bodies are solid, hollow or a combination thereof.</claim-text>
+</claim>
+<claim id="CLM-00036" num="00036">
+<claim-text><b>36</b>. The coated sleeved device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the one or more cylindrical bodies include at least one cylindrical body that is substantially circular, substantially elliptical, or substantially polygonal in outer cross-section, inner cross-section or inner and outer cross-section.</claim-text>
+</claim>
+<claim id="CLM-00037" num="00037">
+<claim-text><b>37</b>. The coated sleeved device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the one or more cylindrical bodies further include threads.</claim-text>
+</claim>
+<claim id="CLM-00038" num="00038">
+<claim-text><b>38</b>. The coated sleeved device of <claim-ref idref="CLM-00037">claim 37</claim-ref>, wherein at least a portion of the threads are coated.</claim-text>
+</claim>
+<claim id="CLM-00039" num="00039">
+<claim-text><b>39</b>. The coated sleeved device of <claim-ref idref="CLM-00037">claim 37</claim-ref> or <claim-ref idref="CLM-00038">38</claim-ref>, further comprising a sealing surface, wherein at least a portion of the sealing surface is coated.</claim-text>
+</claim>
+<claim id="CLM-00040" num="00040">
+<claim-text><b>40</b>. The coated sleeved device of any one of <claim-ref idref="CLM-00001">claim 1</claim-ref>, <claim-ref idref="CLM-00026">26</claim-ref>, or <b>27</b>, wherein the one or more cylindrical bodies are well construction devices.</claim-text>
+</claim>
+<claim id="CLM-00041" num="00041">
+<claim-text><b>41</b>. The coated sleeved device of <claim-ref idref="CLM-00040">claim 40</claim-ref>, wherein the well construction devices are chosen from: drill stem, casing, tubing string, wireline/braided line/multi-conductor/single conductor/slickline; coiled tubing, vaned rotors and stators of Moyno™ and progressive cavity pumps, expandable tubulars, expansion mandrels, centralizers, contact rings, wash pipes, shaker screens for solids control, overshot and grapple, marine risers, surface flow lines, and combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00042" num="00042">
+<claim-text><b>42</b>. The coated sleeved device of any one of <claim-ref idref="CLM-00001">claim 1</claim-ref>, <claim-ref idref="CLM-00026">26</claim-ref> or <claim-ref idref="CLM-00027">27</claim-ref>, wherein the one or more cylindrical bodies are completion and production devices.</claim-text>
+</claim>
+<claim id="CLM-00043" num="00043">
+<claim-text><b>43</b>. The coated sleeved device of <claim-ref idref="CLM-00042">claim 42</claim-ref>, wherein the completion and production devices are chosen from: plunger lifts; completion sliding sleeve assemblies; coiled tubing; sucker rods; Corods™; tubing string; pumping jacks; stuffing boxes; packoffs and lubricators; pistons and piston liners; vaned rotors and stators of Moyno™ and progressive cavity pumps; expandable tubulars; expansion mandrels; control lines and conduits; tools operated in well bores; wireline/braided line/multi-conductor/single conductor/slickline; centralizers; contact rings; perforated basepipe; slotted basepipe; screen basepipe for sand control; wash pipes; shunt tubes; service tools used in gravel pack operations; blast joints; sand screens disposed within completion intervals; Mazeflo™ completion screens; sintered screens; wirewrap screens; shaker screens for solids control; overshot and grapple; marine risers; surface flow lines, stimulation treatment lines, and combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00044" num="00044">
+<claim-text><b>44</b>. The coated sleeved device of <claim-ref idref="CLM-00001">claim 1</claim-ref> wherein the one or more cylindrical bodies are a pin or box connection of a pipe tool joint.</claim-text>
+</claim>
+<claim id="CLM-00045" num="00045">
+<claim-text><b>45</b>. The coated sleeved device of <claim-ref idref="CLM-00044">claim 44</claim-ref> wherein the one or more cylindrical bodies are configured with a proximal cylindrical cross-section that is circular in cross-section.</claim-text>
+</claim>
+<claim id="CLM-00046" num="00046">
+<claim-text><b>46</b>. The coated sleeved device of <claim-ref idref="CLM-00044">claim 44</claim-ref> wherein the one or more cylindrical bodies are configured with a proximal cylindrical cross-section that is non-circular in cross-section.</claim-text>
+</claim>
+<claim id="CLM-00047" num="00047">
+<claim-text><b>47</b>. The coated sleeved device of <claim-ref idref="CLM-00044">claim 44</claim-ref> wherein the pin or box connection is oriented such that the pin is facing up and the box is facing down relative to the direction of gravity.</claim-text>
+</claim>
+<claim id="CLM-00048" num="00048">
+<claim-text><b>48</b>. The coated sleeved device of <claim-ref idref="CLM-00044">claim 44</claim-ref> wherein the pin or box connection is oriented such that the pin is facing down and the box is facing up relative to the direction of gravity.</claim-text>
+</claim>
+<claim id="CLM-00049" num="00049">
+<claim-text><b>49</b>. The coated sleeved device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the one or more sleeves comprise iron based materials, carbon steels, steel alloys, stainless steels, Al-base alloys, Ni-base alloys, Ti-base alloys, ceramics, cermets, polymers, tungsten carbide cobalt, or combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00050" num="00050">
+<claim-text><b>50</b>. A coated sleeved oil and gas well production device comprising:
+<claim-text>an oil and gas well production device including one or more bodies with the proviso that the one or more bodies does not include a drill bit,</claim-text>
+<claim-text>one or more sleeves proximal to the outer surface or inner surface of the one or more bodies,</claim-text>
+<claim-text>a coating on at least a portion of the inner sleeve surface, the outer sleeve surface, or a combination thereof of the one or more sleeves,</claim-text>
+<claim-text>wherein the coating comprises one or more ultra-low friction layers,</claim-text>
+<claim-text>and one or more buttering layers interposed between the one or more sleeves and the ultra-low friction coating,</claim-text>
+<claim-text>wherein at least one of the buttering layers has a minimum hardness of 400 VHN.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00051" num="00051">
+<claim-text><b>51</b>. The coated sleeved device of <claim-ref idref="CLM-00050">claim 50</claim-ref> wherein the ultra-low friction coating further comprises one or more buffer layers.</claim-text>
+</claim>
+<claim id="CLM-00052" num="00052">
+<claim-text><b>52</b>. The coated sleeved device of <claim-ref idref="CLM-00050">claim 50</claim-ref> or <claim-ref idref="CLM-00051">claim 51</claim-ref> wherein at least one of the layers is graded, or at least one of the interfaces between adjacent layers is graded, or combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00053" num="00053">
+<claim-text><b>53</b>. The coated sleeved device of <claim-ref idref="CLM-00050">claim 50</claim-ref>, wherein the one or more ultra-low friction layers are chosen from: an amorphous alloy, an electroless nickel-phosphorous composite, graphite, MoS<sub>2</sub>, WS<sub>2</sub>, a fullerene based composite, a boride based cermet, a quasicrystalline material, a diamond based material, diamond-like-carbon (DLC), boron nitride, carbon nanotubes, graphene sheets, metallic particles of high aspect ratio (i.e. relatively long and thin), ring-shaped materials including carbon nanorings, oblong particles and combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00054" num="00054">
+<claim-text><b>54</b>. The coated sleeved device of <claim-ref idref="CLM-00053">claim 53</claim-ref>, wherein the diamond based material is chemical vapor deposited (CVD) diamond or polycrystalline diamond compact (PDC).</claim-text>
+</claim>
+<claim id="CLM-00055" num="00055">
+<claim-text><b>55</b>. The coated sleeved device of <claim-ref idref="CLM-00050">claim 50</claim-ref>, wherein at least one ultra-low friction layer is diamond-like-carbon (DLC).</claim-text>
+</claim>
+<claim id="CLM-00056" num="00056">
+<claim-text><b>56</b>. The coated sleeved device of <claim-ref idref="CLM-00055">claim 55</claim-ref>, wherein the diamond-like-carbon (DLC) is chosen from: to-C, ta-C:H, DLCH, PLCH, GLCH, Si-DLC, Ti-DLC, Cr-DLC, N-DLC, O-DLC, B-DLC, Me-DLC, F-DLC, S-DLC and combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00057" num="00057">
+<claim-text><b>57</b>. The coated sleeved device of <claim-ref idref="CLM-00050">claim 50</claim-ref>, wherein the ultra-low friction coating provides a surface energy less than 1 J/m<sup>2</sup>.</claim-text>
+</claim>
+<claim id="CLM-00058" num="00058">
+<claim-text><b>58</b>. The coated sleeved device of <claim-ref idref="CLM-00050">claim 50</claim-ref>, wherein the ultra-low friction coating on at least a portion of the exposed outer surface of the body assembly provides a hardness greater than 400 VHN.</claim-text>
+</claim>
+<claim id="CLM-00059" num="00059">
+<claim-text><b>59</b>. The coated sleeved device of <claim-ref idref="CLM-00050">claim 50</claim-ref>, wherein the coefficient of friction of the coating is less than or equal to 0.15.</claim-text>
+</claim>
+<claim id="CLM-00060" num="00060">
+<claim-text><b>60</b>. The coated sleeved device of <claim-ref idref="CLM-00050">claim 50</claim-ref>, wherein the coating provides at least 3 times greater wear resistance than an uncoated device.</claim-text>
+</claim>
+<claim id="CLM-00061" num="00061">
+<claim-text><b>61</b>. The coated sleeved device of <claim-ref idref="CLM-00050">claim 50</claim-ref>, wherein the water contact angle of the ultra-low friction coating is greater than 60 degrees.</claim-text>
+</claim>
+<claim id="CLM-00062" num="00062">
+<claim-text><b>62</b>. The coated sleeved device of <claim-ref idref="CLM-00050">claim 50</claim-ref> or <claim-ref idref="CLM-00051">51</claim-ref> wherein the thickness of the ultra-low friction coating ranges from 0.5 microns to 5000 microns.</claim-text>
+</claim>
+<claim id="CLM-00063" num="00063">
+<claim-text><b>63</b>. The coated sleeved device of <claim-ref idref="CLM-00050">claim 50</claim-ref> or <claim-ref idref="CLM-00051">51</claim-ref> wherein the thicknesses of the one or more layers are between 0.001 and 5000 microns.</claim-text>
+</claim>
+<claim id="CLM-00064" num="00064">
+<claim-text><b>64</b>. The coated sleeved device of <claim-ref idref="CLM-00052">claim 52</claim-ref> wherein the thicknesses of the one or more interfaces are between 0.01 to 10 microns or between 5% to 95% of the thickness of the thinnest adjacent layer.</claim-text>
+</claim>
+<claim id="CLM-00065" num="00065">
+<claim-text><b>65</b>. The coated sleeved device of <claim-ref idref="CLM-00051">claim 51</claim-ref>, wherein the one or more buffer layers are chosen from elements, alloys, carbides, nitrides, carbo-nitrides, borides, sulfides, silicides, and oxides of silicon, aluminum, copper, molybdenum, titanium, chromium, tungsten, tantalum, niobium, vanadium, zirconium, hafnium, or combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00066" num="00066">
+<claim-text><b>66</b>. The coated sleeved device of <claim-ref idref="CLM-00050">claim 50</claim-ref>, wherein the one or more sleeves further includes hardbanding on at least a portion thereof.</claim-text>
+</claim>
+<claim id="CLM-00067" num="00067">
+<claim-text><b>67</b>. The coated sleeved device of <claim-ref idref="CLM-00066">claim 66</claim-ref>, wherein the hardbanding comprises cermet based materials; metal matrix composites; nanocrystalline metallic alloys; amorphous alloys; hard metallic alloys; carbides, nitrides, borides, or oxides of elemental tungsten, titanium, niobium, molybdenum, iron, chromium, and silicon dispersed within a metallic alloy matrix; or combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00068" num="00068">
+<claim-text><b>68</b>. The coated sleeved device of <claim-ref idref="CLM-00066">claim 66</claim-ref> wherein the hardbanding has a patterned surface.</claim-text>
+</claim>
+<claim id="CLM-00069" num="00069">
+<claim-text><b>69</b>. The coated sleeved device of <claim-ref idref="CLM-00068">claim 68</claim-ref> wherein the patterned hardbanding surface includes recessed and raised features that range from 1 mm to 5 mm in depth.</claim-text>
+</claim>
+<claim id="CLM-00070" num="00070">
+<claim-text><b>70</b>. The coated sleeved device of <claim-ref idref="CLM-00069">claim 69</claim-ref> wherein the recessed features comprise 10% to 90% of the area in the hardbanding region.</claim-text>
+</claim>
+<claim id="CLM-00071" num="00071">
+<claim-text><b>71</b>. The coated sleeved device of <claim-ref idref="CLM-00068">claim 68</claim-ref> wherein the hardbanding has a pattern chosen from: lateral grooves or slots, longitudinal grooves or slots, angled grooves or slots, spiral grooves or slots, chevron shaped grooves or slots, recessed dimples, proud dimples, and combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00072" num="00072">
+<claim-text><b>72</b>. The coated sleeved device of <claim-ref idref="CLM-00050">claim 50</claim-ref>, wherein the one or more buttering layers comprise a stainless steel, a chrome-based alloy, an iron-based alloy, a cobalt-based alloy, a titanium-based alloy, or a nickel-based alloy, alloys or carbides or nitrides or carbo-nitrides or borides or silicides or sulfides or oxides of the following elements: silicon, titanium, chromium, aluminum, copper, iron, nickel, cobalt, molybdenum, tungsten, tantalum, niobium, vanadium, zirconium, hafnium, or combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00073" num="00073">
+<claim-text><b>73</b>. The coated sleeved device of <claim-ref idref="CLM-00050">claim 50</claim-ref>, wherein the one or more buttering layers is formed by one or more processes chosen from: PVD, PACVD, CVD, carburizing, nitriding, boronizing, sulfiding, siliciding, oxidizing, an electrochemical process, an electroless plating process, a thermal spray process, a kinetic spray process, a laser-based process, a friction-stir process, a shot peening process, a laser shock peening process, a welding process, a brazing process, an ultra-fine superpolishing process, a tribochemical polishing process, an electrochemical polishing process, and combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00074" num="00074">
+<claim-text><b>74</b>. The coated sleeved device of <claim-ref idref="CLM-00050">claim 50</claim-ref>, wherein the one or more buttering layers provide an ultra-smooth surface finish of average surface roughness lower than 0.25 micron.</claim-text>
+</claim>
+<claim id="CLM-00075" num="00075">
+<claim-text><b>75</b>. The coated sleeved device of <claim-ref idref="CLM-00050">claim 50</claim-ref>, wherein the one or more bodies include two or more bodies in relative motion to each other.</claim-text>
+</claim>
+<claim id="CLM-00076" num="00076">
+<claim-text><b>76</b>. The coated sleeved device of <claim-ref idref="CLM-00050">claim 50</claim-ref>, wherein the one or more bodies include two or more bodies that are static relative to each other.</claim-text>
+</claim>
+<claim id="CLM-00077" num="00077">
+<claim-text><b>77</b>. The coated sleeved device of <claim-ref idref="CLM-00050">claim 50</claim-ref>, wherein the one or more bodies include spheres and complex geometries.</claim-text>
+</claim>
+<claim id="CLM-00078" num="00078">
+<claim-text><b>78</b>. The coated sleeved device of <claim-ref idref="CLM-00077">claim 77</claim-ref>, wherein the complex geometries have at least a portion that is non-cylindrical in shape.</claim-text>
+</claim>
+<claim id="CLM-00079" num="00079">
+<claim-text><b>79</b>. The coated sleeved device of <claim-ref idref="CLM-00075">claim 75</claim-ref> or <claim-ref idref="CLM-00076">76</claim-ref>, wherein the two or more bodies include one or more bodies substantially within one or more other bodies.</claim-text>
+</claim>
+<claim id="CLM-00080" num="00080">
+<claim-text><b>80</b>. The coated sleeved device of <claim-ref idref="CLM-00075">claim 75</claim-ref> or <claim-ref idref="CLM-00076">76</claim-ref>, wherein the two or more bodies are contiguous to each other.</claim-text>
+</claim>
+<claim id="CLM-00081" num="00081">
+<claim-text><b>81</b>. The coated sleeved device of <claim-ref idref="CLM-00075">claim 75</claim-ref> or <claim-ref idref="CLM-00076">76</claim-ref>, wherein the two or more bodies are not contiguous to each other.</claim-text>
+</claim>
+<claim id="CLM-00082" num="00082">
+<claim-text><b>82</b>. The coated sleeved device of <claim-ref idref="CLM-00075">claim 75</claim-ref> or <claim-ref idref="CLM-00076">76</claim-ref>, wherein the two or more bodies are coaxial or non-coaxial.</claim-text>
+</claim>
+<claim id="CLM-00083" num="00083">
+<claim-text><b>83</b>. The coated sleeved device of <claim-ref idref="CLM-00050">claim 50</claim-ref>, wherein the one or more bodies are solid, hollow or a combination thereof.</claim-text>
+</claim>
+<claim id="CLM-00084" num="00084">
+<claim-text><b>84</b>. The coated sleeved device of <claim-ref idref="CLM-00050">claim 50</claim-ref>, wherein the one or more bodies include at least one body that is substantially circular, substantially elliptical, or substantially polygonal in outer cross-section, inner cross-section or inner and outer cross-section.</claim-text>
+</claim>
+<claim id="CLM-00085" num="00085">
+<claim-text><b>85</b>. The coated sleeved device of <claim-ref idref="CLM-00050">claim 50</claim-ref>, wherein the one or more bodies further include threads.</claim-text>
+</claim>
+<claim id="CLM-00086" num="00086">
+<claim-text><b>86</b>. The coated sleeved device of <claim-ref idref="CLM-00085">claim 85</claim-ref>, wherein at least a portion of the threads are coated.</claim-text>
+</claim>
+<claim id="CLM-00087" num="00087">
+<claim-text><b>87</b>. The coated sleeved device of <claim-ref idref="CLM-00085">claim 85</claim-ref> or <claim-ref idref="CLM-00086">86</claim-ref>, further comprising a sealing surface, wherein at least a portion of the sealing surface is coated.</claim-text>
+</claim>
+<claim id="CLM-00088" num="00088">
+<claim-text><b>88</b>. The coated sleeved device of any one of <claim-ref idref="CLM-00050">claim 50</claim-ref>, <claim-ref idref="CLM-00075">75</claim-ref>, or <b>76</b>, wherein the one or more cylindrical bodies are well construction devices.</claim-text>
+</claim>
+<claim id="CLM-00089" num="00089">
+<claim-text><b>89</b>. The coated sleeved device of <claim-ref idref="CLM-00088">claim 88</claim-ref>, wherein the well construction devices are chosen from: chokes, valves, valve seats, nipples, ball valves, annular isolation valves, subsurface safety valves, centrifuges, elbows, tees, couplings, blowout preventers, wear bushings, dynamic metal-to-metal seals in reciprocating and/or rotating seals assemblies, springs in safety valves, shock subs, and jars, logging tool arms, rig skidding equipment, pallets, and combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00090" num="00090">
+<claim-text><b>90</b>. The coated sleeved device of any one of <claim-ref idref="CLM-00050">claim 50</claim-ref>, <claim-ref idref="CLM-00075">75</claim-ref>, or <b>76</b>, wherein the one or more bodies are completion and production devices.</claim-text>
+</claim>
+<claim id="CLM-00091" num="00091">
+<claim-text><b>91</b>. The coated sleeved device of <claim-ref idref="CLM-00090">claim 90</claim-ref>, wherein the completion and production devices are chosen from: chokes, valves, valve seats, nipples, ball valves, inflow control devices, smart well valves, annular isolation valves, subsurface safety valves, centrifuges, gas lift and chemical injection valves, elbows, tees, couplings, blowout preventers, wear bushings, dynamic metal-to-metal seals in reciprocating and/or rotating seals assemblies, springs in safety valves, shock subs, and jars, logging tool arms, sidepockets, mandrels, packer slips, packer latches, sand probes, wellstream gauges, non-cylindrical components of sand screens, and combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00092" num="00092">
+<claim-text><b>92</b>. The coated sleeved device of <claim-ref idref="CLM-00050">claim 50</claim-ref>, wherein the one or more sleeves comprise iron based materials, carbon steels, steel alloys, stainless steels, Al-base alloys, Ni-base alloys, Ti-base alloys, ceramics, cermets, polymers, tungsten carbide cobalt, or combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00093" num="00093">
+<claim-text><b>93</b>. A method of using a coated sleeved oil and gas well production device comprising:
+<claim-text>providing a coated oil and gas well production device including one or more cylindrical bodies with one or more sleeves proximal to the outer diameter or the inner diameter of the one or more cylindrical bodies, hardbanding on at least a portion of the exposed outer surface, exposed inner surface, or a combination of both exposed outer or inner surface of the one or more sleeves, and a coating on at least a portion of the inner sleeve surface, the outer sleeve surface, or a combination thereof of the one or more sleeves, wherein the coating comprises one or more ultra-low friction layers, and one or more buttering layers interposed between the hardbanding and the ultra-low friction coating, and</claim-text>
+<claim-text>utilizing the coated sleeved oil and gas well production device in well construction, completion, or production operations.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00094" num="00094">
+<claim-text><b>94</b>. The method of <claim-ref idref="CLM-00093">claim 93</claim-ref> wherein the hardbanding has a patterned surface.</claim-text>
+</claim>
+<claim id="CLM-00095" num="00095">
+<claim-text><b>95</b>. The method of <claim-ref idref="CLM-00094">claim 94</claim-ref> wherein the patterned hardbanding surface includes recessed and raised features that range from 1 mm to 5 mm in depth.</claim-text>
+</claim>
+<claim id="CLM-00096" num="00096">
+<claim-text><b>96</b>. The method of <claim-ref idref="CLM-00094">claim 94</claim-ref> wherein the recessed features comprise 10% to 90% of the area in the hardbanding region.</claim-text>
+</claim>
+<claim id="CLM-00097" num="00097">
+<claim-text><b>97</b>. The method of <claim-ref idref="CLM-00094">claim 94</claim-ref> wherein the hardbanding has a pattern chosen from: lateral grooves or slots, longitudinal grooves or slots, angled grooves or slots, spiral grooves or slots, chevron shaped grooves or slots, recessed dimples, proud dimples, and combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00098" num="00098">
+<claim-text><b>98</b>. The method of <claim-ref idref="CLM-00093">claim 93</claim-ref> wherein the ultra-low friction coating further comprises one or more buffer layers.</claim-text>
+</claim>
+<claim id="CLM-00099" num="00099">
+<claim-text><b>99</b>. The method of <claim-ref idref="CLM-00093">claim 93</claim-ref> or <claim-ref idref="CLM-00098">claim 98</claim-ref> wherein at least one of the layers is graded, or at least one of the interfaces between adjacent layers is graded, or combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00100" num="00100">
+<claim-text><b>100</b>. The method of <claim-ref idref="CLM-00093">claim 93</claim-ref>, wherein the one or more ultra-low friction layers are chosen from: an amorphous alloy, an electroless nickel-phosphorous composite, graphite, MoS<sub>2</sub>, WS<sub>2</sub>, a fullerene based composite, a boride based cermet, a quasicrystalline material, a diamond based material, diamond-like-carbon (DLC), boron nitride, carbon nanotubes, graphene sheets, metallic particles of high aspect ratio (i.e. relatively long and thin), ring-shaped materials including carbon nanorings, oblong particles and combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00101" num="00101">
+<claim-text><b>101</b>. The method of <claim-ref idref="CLM-00100">claim 100</claim-ref>, wherein the diamond based material is chemical vapor deposited (CVD) diamond or polycrystalline diamond compact (PDC).</claim-text>
+</claim>
+<claim id="CLM-00102" num="00102">
+<claim-text><b>102</b>. The method of <claim-ref idref="CLM-00093">claim 93</claim-ref>, wherein at least one ultra-low friction layer is diamond-like-carbon (DLC).</claim-text>
+</claim>
+<claim id="CLM-00103" num="00103">
+<claim-text><b>103</b>. The method of <claim-ref idref="CLM-00102">claim 102</claim-ref>, wherein the diamond-like-carbon (DLC) is chosen from: to-C, ta-C:H, DLCH, PLCH, GLCH, Si-DLC, Ti-DLC, Cr-DLC, N-DLC, O-DLC, B-DLC, Me-DLC, F-DLC, S-DLC and combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00104" num="00104">
+<claim-text><b>104</b>. The method of <claim-ref idref="CLM-00093">claim 93</claim-ref>, wherein the ultra-low friction coating provides a surface energy less than 1 J/m<sup>2</sup>.</claim-text>
+</claim>
+<claim id="CLM-00105" num="00105">
+<claim-text><b>105</b>. The method of <claim-ref idref="CLM-00093">claim 93</claim-ref>, wherein the ultra-low friction coating on at least a portion of the exposed outer surface of the body assembly provides a hardness greater than 400 VHN.</claim-text>
+</claim>
+<claim id="CLM-00106" num="00106">
+<claim-text><b>106</b>. The method of <claim-ref idref="CLM-00093">claim 93</claim-ref>, wherein the coefficient of friction of the coating is less than or equal to 0.15.</claim-text>
+</claim>
+<claim id="CLM-00107" num="00107">
+<claim-text><b>107</b>. The method of <claim-ref idref="CLM-00093">claim 93</claim-ref>, wherein the coating provides at least 3 times greater wear resistance than an uncoated device.</claim-text>
+</claim>
+<claim id="CLM-00108" num="00108">
+<claim-text><b>108</b>. The method of <claim-ref idref="CLM-00093">claim 93</claim-ref>, wherein the water contact angle of the ultra-low friction coating is greater than 60 degrees.</claim-text>
+</claim>
+<claim id="CLM-00109" num="00109">
+<claim-text><b>109</b>. The method of <claim-ref idref="CLM-00093">claim 93</claim-ref> or <claim-ref idref="CLM-00098">98</claim-ref> wherein the thickness of the ultra-low friction coating ranges from 0.5 microns to 5000 microns.</claim-text>
+</claim>
+<claim id="CLM-00110" num="00110">
+<claim-text><b>110</b>. The method of <claim-ref idref="CLM-00093">claim 93</claim-ref> or <claim-ref idref="CLM-00098">98</claim-ref> wherein the thicknesses of each of the one or more ultra-low friction, buttering, and buffer layers is between 0.001 and 5000 microns.</claim-text>
+</claim>
+<claim id="CLM-00111" num="00111">
+<claim-text><b>111</b>. The method of <claim-ref idref="CLM-00099">claim 99</claim-ref> wherein the thicknesses of the one or more interfaces are between 0.01 to 10 microns or between 5% to 95% of the thickness of the thinnest adjacent layer.</claim-text>
+</claim>
+<claim id="CLM-00112" num="00112">
+<claim-text><b>112</b>. The method of <claim-ref idref="CLM-00098">claim 98</claim-ref>, wherein the one or more buffer layers are chosen from elements, alloys, carbides, nitrides, carbo-nitrides, borides, sulfides, silicides, and oxides of silicon, aluminum, copper, molybdenum, titanium, chromium, tungsten, tantalum, niobium, vanadium, zirconium, hafnium, and combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00113" num="00113">
+<claim-text><b>113</b>. The method of <claim-ref idref="CLM-00093">claim 93</claim-ref>, wherein the hardbanding comprises cermet based materials; metal matrix composites; nanocrystalline metallic alloys; amorphous alloys; hard metallic alloys; carbides, nitrides, borides, or oxides of elemental tungsten, titanium, niobium, molybdenum, iron, chromium, and silicon dispersed within a metallic alloy matrix; or combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00114" num="00114">
+<claim-text><b>114</b>. The method of <claim-ref idref="CLM-00093">claim 93</claim-ref>, wherein the one or more buttering layers comprise a stainless steel, a chrome-based alloy, an iron-based alloy, a cobalt-based alloy, a titanium-based alloy, or a nickel-based alloy, alloys or carbides or nitrides or carbo-nitrides or borides or silicides or sulfides or oxides of the following elements: silicon, titanium, chromium, aluminum, copper, iron, nickel, cobalt, molybdenum, tungsten, tantalum, niobium, vanadium, zirconium, hafnium, or combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00115" num="00115">
+<claim-text><b>115</b>. The method of <claim-ref idref="CLM-00093">claim 93</claim-ref>, wherein the one or more buttering layers is formed by one or more processes chosen from: PVD, PACVD, CVD, ion implantation, carburizing, nitriding, boronizing, sulfiding, siliciding, oxidizing, an electrochemical process, an electroless plating process, a thermal spray process, a kinetic spray process, a laser-based process, a friction-stir process, a shot peening process, a laser shock peening process, a welding process, a brazing process, an ultra-fine superpolishing process, a tribochemical polishing process, an electrochemical polishing process, and combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00116" num="00116">
+<claim-text><b>116</b>. The method of <claim-ref idref="CLM-00093">claim 93</claim-ref>, wherein the one or more buttering layers provide an ultra-smooth surface finish of average surface roughness lower than 0.25 micron.</claim-text>
+</claim>
+<claim id="CLM-00117" num="00117">
+<claim-text><b>117</b>. The method of <claim-ref idref="CLM-00093">claim 93</claim-ref> wherein at least one of the buttering layers has a minimum hardness of 400 VHN.</claim-text>
+</claim>
+<claim id="CLM-00118" num="00118">
+<claim-text><b>118</b>. The method of <claim-ref idref="CLM-00093">claim 93</claim-ref>, wherein the one or more cylindrical bodies include two or more cylindrical bodies in relative motion to each other.</claim-text>
+</claim>
+<claim id="CLM-00119" num="00119">
+<claim-text><b>119</b>. The method of <claim-ref idref="CLM-00093">claim 93</claim-ref>, wherein the one or more cylindrical bodies include two or more cylindrical bodies that are static relative to each other.</claim-text>
+</claim>
+<claim id="CLM-00120" num="00120">
+<claim-text><b>120</b>. The method of <claim-ref idref="CLM-00119">claim 119</claim-ref>, wherein the two or more cylindrical bodies include two or more radii.</claim-text>
+</claim>
+<claim id="CLM-00121" num="00121">
+<claim-text><b>121</b>. The method of <claim-ref idref="CLM-00120">claim 120</claim-ref>, wherein the two or more cylindrical bodies include one or more cylindrical bodies substantially within one or more other cylindrical bodies.</claim-text>
+</claim>
+<claim id="CLM-00122" num="00122">
+<claim-text><b>122</b>. The method of <claim-ref idref="CLM-00120">claim 120</claim-ref>, wherein the two or more cylindrical bodies are contiguous to each other.</claim-text>
+</claim>
+<claim id="CLM-00123" num="00123">
+<claim-text><b>123</b>. The method of <claim-ref idref="CLM-00120">claim 120</claim-ref>, wherein the two or more cylindrical bodies are not contiguous to each other.</claim-text>
+</claim>
+<claim id="CLM-00124" num="00124">
+<claim-text><b>124</b>. The method of <claim-ref idref="CLM-00122">claim 122</claim-ref> or <claim-ref idref="CLM-00123">123</claim-ref>, wherein the two or more cylindrical bodies are coaxial or non-coaxial.</claim-text>
+</claim>
+<claim id="CLM-00125" num="00125">
+<claim-text><b>125</b>. The method of <claim-ref idref="CLM-00124">claim 124</claim-ref>, wherein the two or more cylindrical bodies have substantially parallel axes.</claim-text>
+</claim>
+<claim id="CLM-00126" num="00126">
+<claim-text><b>126</b>. The method of <claim-ref idref="CLM-00093">claim 93</claim-ref>, wherein the one or more cylindrical bodies are helical in inner surface, helical in outer surface or a combination thereof.</claim-text>
+</claim>
+<claim id="CLM-00127" num="00127">
+<claim-text><b>127</b>. The method of <claim-ref idref="CLM-00093">claim 93</claim-ref>, wherein the one or more cylindrical bodies are solid, hollow or a combination thereof.</claim-text>
+</claim>
+<claim id="CLM-00128" num="00128">
+<claim-text><b>128</b>. The method of <claim-ref idref="CLM-00093">claim 93</claim-ref>, wherein the one or more cylindrical bodies include at least one cylindrical body that is substantially circular, substantially elliptical, or substantially polygonal in outer cross-section, inner cross-section or inner and outer cross-section.</claim-text>
+</claim>
+<claim id="CLM-00129" num="00129">
+<claim-text><b>129</b>. The method of <claim-ref idref="CLM-00093">claim 93</claim-ref>, wherein the one or more cylindrical bodies further include threads.</claim-text>
+</claim>
+<claim id="CLM-00130" num="00130">
+<claim-text><b>130</b>. The method of <claim-ref idref="CLM-00129">claim 129</claim-ref>, wherein at least a portion of the threads are coated.</claim-text>
+</claim>
+<claim id="CLM-00131" num="00131">
+<claim-text><b>131</b>. The method of <claim-ref idref="CLM-00129">claim 129</claim-ref> or <claim-ref idref="CLM-00130">130</claim-ref>, further comprising a sealing surface, wherein at least a portion of the sealing surface is coated.</claim-text>
+</claim>
+<claim id="CLM-00132" num="00132">
+<claim-text><b>132</b>. The method of any one of <claim-ref idref="CLM-00093">claim 93</claim-ref>, <claim-ref idref="CLM-00118">118</claim-ref>, or <b>119</b>, wherein the one or more cylindrical bodies are well construction devices.</claim-text>
+</claim>
+<claim id="CLM-00133" num="00133">
+<claim-text><b>133</b>. The method of <claim-ref idref="CLM-00132">claim 132</claim-ref>, wherein the well construction devices are chosen from: drill stem, casing, tubing string, wireline/braided line/multi-conductor/single conductor/slickline; coiled tubing, vaned rotors and stators of Moyno™ and progressive cavity pumps, expandable tubulars, expansion mandrels, centralizers, contact rings, wash pipes, shaker screens for solids control, overshot and grapple, marine risers, surface flow lines, and combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00134" num="00134">
+<claim-text><b>134</b>. The method of any one of <claim-ref idref="CLM-00093">claim 93</claim-ref>, <claim-ref idref="CLM-00118">118</claim-ref> or <claim-ref idref="CLM-00119">119</claim-ref>, wherein the one or more cylindrical bodies are completion and production devices.</claim-text>
+</claim>
+<claim id="CLM-00135" num="00135">
+<claim-text><b>135</b>. The method of <claim-ref idref="CLM-00134">claim 134</claim-ref>, wherein the completion and production devices are chosen from: plunger lifts; completion sliding sleeve assemblies; coiled tubing; sucker rods; Corods™; tubing string; pumping jacks; stuffing boxes; packoffs and lubricators; pistons and piston liners; vaned rotors and stators of Moyno™ and progressive cavity pumps; expandable tubulars; expansion mandrels; control lines and conduits; tools operated in well bores; wireline/braided line/multi-conductor/single conductor/slickline; centralizers; contact rings; perforated basepipe; slotted basepipe; screen basepipe for sand control; wash pipes; shunt tubes; service tools used in gravel pack operations; blast joints; sand screens disposed within completion intervals; Mazeflo™ completion screens; sintered screens; wirewrap screens; shaker screens for solids control; overshot and grapple; marine risers; surface flow lines, stimulation treatment lines, and combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00136" num="00136">
+<claim-text><b>136</b>. The method of <claim-ref idref="CLM-00093">claim 93</claim-ref> wherein the one or more cylindrical bodies are a pin or box connection of a pipe tool joint.</claim-text>
+</claim>
+<claim id="CLM-00137" num="00137">
+<claim-text><b>137</b>. The method of <claim-ref idref="CLM-00136">claim 136</claim-ref> wherein the one or more cylindrical bodies are configured with a proximal cylindrical cross-section that is circular in cross-section.</claim-text>
+</claim>
+<claim id="CLM-00138" num="00138">
+<claim-text><b>138</b>. The method of <claim-ref idref="CLM-00136">claim 136</claim-ref> wherein the one or more cylindrical bodies are configured with a proximal cylindrical cross-section that is non-circular in cross-section.</claim-text>
+</claim>
+<claim id="CLM-00139" num="00139">
+<claim-text><b>139</b>. The method of <claim-ref idref="CLM-00136">claim 136</claim-ref> wherein the pin or box connection is oriented such that the pin is facing up and the box is facing down relative to the direction of gravity.</claim-text>
+</claim>
+<claim id="CLM-00140" num="00140">
+<claim-text><b>140</b>. The method of <claim-ref idref="CLM-00136">claim 136</claim-ref> wherein the pin or box connection is oriented such that the pin is facing down and the box is facing up relative to the direction of gravity.</claim-text>
+</claim>
+<claim id="CLM-00141" num="00141">
+<claim-text><b>141</b>. The method of <claim-ref idref="CLM-00093">claim 93</claim-ref>, wherein the one or more sleeves comprise iron based materials, carbon steels, steel alloys, stainless steels, Al-base alloys, Ni-base alloys, Ti-base alloys, ceramics, cermets, polymers, tungsten carbide cobalt, or combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00142" num="00142">
+<claim-text><b>142</b>. The method of <claim-ref idref="CLM-00100">claim 100</claim-ref>, wherein the diamond-like-carbon (DLC) is applied by physical vapor deposition, chemical vapor deposition, or plasma assisted chemical vapor deposition coating techniques.</claim-text>
+</claim>
+<claim id="CLM-00143" num="00143">
+<claim-text><b>143</b>. The method of <claim-ref idref="CLM-00142">claim 142</claim-ref>, wherein the physical vapor deposition coating method is chosen from: RF-DC plasma reactive magnetron sputtering, ion beam assisted deposition, cathodic arc deposition and pulsed laser deposition.</claim-text>
+</claim>
+<claim id="CLM-00144" num="00144">
+<claim-text><b>144</b>. A method of using a coated sleeved oil and gas well production device comprising:
+<claim-text>providing a coated oil and gas well production device including one or more bodies with the proviso that the one or more bodies does not include a drill bit, with one or more sleeves proximal to the outer surface or inner surface of the one or more bodies, and a coating on at least a portion of the inner sleeve surface, the outer sleeve surface, or a combination thereof of the one or more sleeves, wherein the coating comprises one or more ultra-low friction layers, and one or more buttering layers interposed between the one or more sleeves and the ultra-low friction coating, wherein at least one of the buttering layers has a minimum hardness of 400 VHN, and</claim-text>
+<claim-text>utilizing the coated sleeved oil and gas well production device in well construction, completion, or production operations.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00145" num="00145">
+<claim-text><b>145</b>. The method of <claim-ref idref="CLM-00144">claim 144</claim-ref> wherein the ultra-low friction coating further comprises one or more buffer layers.</claim-text>
+</claim>
+<claim id="CLM-00146" num="00146">
+<claim-text><b>146</b>. The method of <claim-ref idref="CLM-00144">claim 144</claim-ref> or <claim-ref idref="CLM-00145">claim 145</claim-ref> wherein at least one of the layers is graded, or at least one of the interfaces between adjacent layers is graded, or combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00147" num="00147">
+<claim-text><b>147</b>. The method of <claim-ref idref="CLM-00144">claim 144</claim-ref>, wherein the one or more ultra-low friction layers are chosen from: an amorphous alloy, an electroless nickel-phosphorous composite, graphite, MoS<sub>2</sub>, WS<sub>2</sub>, a fullerene based composite, a boride based cermet, a quasicrystalline material, a diamond based material, diamond-likecarbon (DLC), boron nitride, carbon nanotubes, graphene sheets, metallic particles of high aspect ratio (i.e. relatively long and thin), ring-shaped materials including carbon nanorings, oblong particles and combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00148" num="00148">
+<claim-text><b>148</b>. The method of <claim-ref idref="CLM-00147">claim 147</claim-ref>, wherein the diamond based material is chemical vapor deposited (CVD) diamond or polycrystalline diamond compact (PDC).</claim-text>
+</claim>
+<claim id="CLM-00149" num="00149">
+<claim-text><b>149</b>. The method of <claim-ref idref="CLM-00144">claim 144</claim-ref>, wherein at least one ultra-low friction layer is diamond-like-carbon (DLC).</claim-text>
+</claim>
+<claim id="CLM-00150" num="00150">
+<claim-text><b>150</b>. The method of <claim-ref idref="CLM-00149">claim 149</claim-ref>, wherein the diamond-like-carbon (DLC) is chosen from: to-C, ta-C:H, DLCH, PLCH, GLCH, Si-DLC, Ti-DLC, Cr-DLC, N-DLC, O-DLC, B-DLC, Me-DLC, F-DLC, S-DLC and combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00151" num="00151">
+<claim-text><b>151</b>. The method of <claim-ref idref="CLM-00144">claim 144</claim-ref>, wherein the ultra-low friction coating provides a surface energy less than 1 J/m<sup>2</sup>.</claim-text>
+</claim>
+<claim id="CLM-00152" num="00152">
+<claim-text><b>152</b>. The method of <claim-ref idref="CLM-00144">claim 144</claim-ref>, wherein the ultra-low friction coating on at least a portion of the exposed outer surface of the body assembly provides a hardness greater than 400 VHN.</claim-text>
+</claim>
+<claim id="CLM-00153" num="00153">
+<claim-text><b>153</b>. The method of <claim-ref idref="CLM-00144">claim 144</claim-ref>, wherein the coefficient of friction of the coating is less than or equal to 0.15.</claim-text>
+</claim>
+<claim id="CLM-00154" num="00154">
+<claim-text><b>154</b>. The method of <claim-ref idref="CLM-00144">claim 144</claim-ref>, wherein the coating provides at least 3 times greater wear resistance than an uncoated device.</claim-text>
+</claim>
+<claim id="CLM-00155" num="00155">
+<claim-text><b>155</b>. The method of <claim-ref idref="CLM-00144">claim 144</claim-ref>, wherein the water contact angle of the ultra-low friction coating is greater than 60 degrees.</claim-text>
+</claim>
+<claim id="CLM-00156" num="00156">
+<claim-text><b>156</b>. The method of <claim-ref idref="CLM-00144">claim 144</claim-ref> or <claim-ref idref="CLM-00145">145</claim-ref> wherein the thickness of the ultra-low friction coating ranges from 0.5 microns to 5000 microns.</claim-text>
+</claim>
+<claim id="CLM-00157" num="00157">
+<claim-text><b>157</b>. The method of <claim-ref idref="CLM-00144">claim 144</claim-ref> or <claim-ref idref="CLM-00145">145</claim-ref> wherein the thicknesses of the one or more layers are between 0.001 and 5000 microns.</claim-text>
+</claim>
+<claim id="CLM-00158" num="00158">
+<claim-text><b>158</b>. The method of <claim-ref idref="CLM-00146">claim 146</claim-ref> wherein the thicknesses of the one or more interfaces are between 0.01 to 10 microns or between 5% to 95% of the thickness of the thinnest adjacent layer.</claim-text>
+</claim>
+<claim id="CLM-00159" num="00159">
+<claim-text><b>159</b>. The method of <claim-ref idref="CLM-00145">claim 145</claim-ref>, wherein the one or more buffer layers are chosen from elements, alloys, carbides, nitrides, carbo-nitrides, borides, sulfides, silicides, and oxides of silicon, aluminum, copper, molybdenum, titanium, chromium, tungsten, tantalum, niobium, vanadium, zirconium, hafnium, or combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00160" num="00160">
+<claim-text><b>160</b>. The method of <claim-ref idref="CLM-00144">claim 144</claim-ref>, wherein the one or more bodies further includes hardbanding on at least a portion thereof.</claim-text>
+</claim>
+<claim id="CLM-00161" num="00161">
+<claim-text><b>161</b>. The method of <claim-ref idref="CLM-00160">claim 160</claim-ref>, wherein the hardbanding comprises cermet based materials; metal matrix composites; nanocrystalline metallic alloys; amorphous alloys; hard metallic alloys; carbides, nitrides, borides, or oxides of elemental tungsten, titanium, niobium, molybdenum, iron, chromium, and silicon dispersed within a metallic alloy matrix; or combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00162" num="00162">
+<claim-text><b>162</b>. The method of <claim-ref idref="CLM-00160">claim 160</claim-ref> wherein the hardbanding has a patterned surface.</claim-text>
+</claim>
+<claim id="CLM-00163" num="00163">
+<claim-text><b>163</b>. The method of <claim-ref idref="CLM-00162">claim 162</claim-ref> wherein the patterned hardbanding surface includes recessed and raised features that range from 1 mm to 5 mm in depth.</claim-text>
+</claim>
+<claim id="CLM-00164" num="00164">
+<claim-text><b>164</b>. The method of <claim-ref idref="CLM-00163">claim 163</claim-ref> wherein the recessed features comprise 10% to 90% of the area in the hardbanding region.</claim-text>
+</claim>
+<claim id="CLM-00165" num="00165">
+<claim-text><b>165</b>. The method of <claim-ref idref="CLM-00162">claim 162</claim-ref> wherein the hardbanding has a pattern chosen from: lateral grooves or slots, longitudinal grooves or slots, angled grooves or slots, spiral grooves or slots, chevron shaped grooves or slots, recessed dimples, proud dimples, and combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00166" num="00166">
+<claim-text><b>166</b>. The method of <claim-ref idref="CLM-00144">claim 144</claim-ref>, wherein the one or more buttering layers comprise a stainless steel, a chrome-based alloy, an iron-based alloy, a cobalt-based alloy, a titanium-based alloy, or a nickel-based alloy, alloys or carbides or nitrides or carbo-nitrides or borides or silicides or sulfides or oxides of the following elements: silicon, titanium, chromium, aluminum, copper, iron, nickel, cobalt, molybdenum, tungsten, tantalum, niobium, vanadium, zirconium, hafnium, or combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00167" num="00167">
+<claim-text><b>167</b>. The method of <claim-ref idref="CLM-00144">claim 144</claim-ref>, wherein the one or more buttering layers is formed by one or more processes chosen from: PVD, PACVD, CVD, carburizing, nitriding, boronizing, sulfiding, siliciding, oxidizing, an electrochemical process, an electroless plating process, a thermal spray process, a kinetic spray process, a laser-based process, a friction-stir process, a shot peening process, a laser shock peening process, a welding process, a brazing process, an ultra-fine superpolishing process, a tribochemical polishing process, an electrochemical polishing process, and combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00168" num="00168">
+<claim-text><b>168</b>. The method of <claim-ref idref="CLM-00144">claim 144</claim-ref>, wherein the one or more buttering layers provide an ultra-smooth surface finish of average surface roughness lower than 0.25 micron.</claim-text>
+</claim>
+<claim id="CLM-00169" num="00169">
+<claim-text><b>169</b>. The method of <claim-ref idref="CLM-00144">claim 144</claim-ref>, wherein the one or more bodies include two or more bodies in relative motion to each other.</claim-text>
+</claim>
+<claim id="CLM-00170" num="00170">
+<claim-text><b>170</b>. The method of <claim-ref idref="CLM-00144">claim 144</claim-ref>, wherein the one or more bodies include two or more bodies that are static relative to each other.</claim-text>
+</claim>
+<claim id="CLM-00171" num="00171">
+<claim-text><b>171</b>. The method of <claim-ref idref="CLM-00144">claim 144</claim-ref>, wherein the one or more bodies include spheres and complex geometries.</claim-text>
+</claim>
+<claim id="CLM-00172" num="00172">
+<claim-text><b>172</b>. The method of <claim-ref idref="CLM-00171">claim 171</claim-ref>, wherein the complex geometries have at least a portion that is non-cylindrical in shape.</claim-text>
+</claim>
+<claim id="CLM-00173" num="00173">
+<claim-text><b>173</b>. The method of <claim-ref idref="CLM-00169">claim 169</claim-ref> or <claim-ref idref="CLM-00170">170</claim-ref>, wherein the two or more bodies include one or more bodies substantially within one or more other bodies.</claim-text>
+</claim>
+<claim id="CLM-00174" num="00174">
+<claim-text><b>174</b>. The method of <claim-ref idref="CLM-00169">claim 169</claim-ref> or <claim-ref idref="CLM-00170">170</claim-ref>, wherein the two or more bodies are contiguous to each other.</claim-text>
+</claim>
+<claim id="CLM-00175" num="00175">
+<claim-text><b>175</b>. The method of <claim-ref idref="CLM-00169">claim 169</claim-ref> or <claim-ref idref="CLM-00170">170</claim-ref>, wherein the two or more bodies are not contiguous to each other.</claim-text>
+</claim>
+<claim id="CLM-00176" num="00176">
+<claim-text><b>176</b>. The method of <claim-ref idref="CLM-00169">claim 169</claim-ref> or <claim-ref idref="CLM-00170">170</claim-ref>, wherein the two or more bodies are coaxial or non-coaxial.</claim-text>
+</claim>
+<claim id="CLM-00177" num="00177">
+<claim-text><b>177</b>. The method of <claim-ref idref="CLM-00144">claim 144</claim-ref>, wherein the one or more bodies are solid, hollow or a combination thereof.</claim-text>
+</claim>
+<claim id="CLM-00178" num="00178">
+<claim-text><b>178</b>. The method of <claim-ref idref="CLM-00144">claim 144</claim-ref>, wherein the one or more bodies include at least one body that is substantially circular, substantially elliptical, or substantially polygonal in outer cross-section, inner cross-section or inner and outer cross-section.</claim-text>
+</claim>
+<claim id="CLM-00179" num="00179">
+<claim-text><b>179</b>. The method of <claim-ref idref="CLM-00144">claim 144</claim-ref>, wherein the one or more bodies further include threads.</claim-text>
+</claim>
+<claim id="CLM-00180" num="00180">
+<claim-text><b>180</b>. The method of <claim-ref idref="CLM-00179">claim 179</claim-ref>, wherein at least a portion of the threads are coated.</claim-text>
+</claim>
+<claim id="CLM-00181" num="00181">
+<claim-text><b>181</b>. The method of <claim-ref idref="CLM-00179">claim 179</claim-ref> or <claim-ref idref="CLM-00180">180</claim-ref>, further comprising a sealing surface, wherein at least a portion of the sealing surface is coated.</claim-text>
+</claim>
+<claim id="CLM-00182" num="00182">
+<claim-text><b>182</b>. The method of any one of <claim-ref idref="CLM-00144">claim 144</claim-ref>, <claim-ref idref="CLM-00169">169</claim-ref>, or <b>170</b>, wherein the one or more cylindrical bodies are well construction devices.</claim-text>
+</claim>
+<claim id="CLM-00183" num="00183">
+<claim-text><b>183</b>. The method of <claim-ref idref="CLM-00182">claim 182</claim-ref>, wherein the well construction devices are chosen from: chokes, valves, valve seats, nipples, ball valves, annular isolation valves, subsurface safety valves, centrifuges, elbows, tees, couplings, blowout preventers, wear bushings, dynamic metal-to-metal seals in reciprocating and/or rotating seals assemblies, springs in safety valves, shock subs, and jars, logging tool arms, rig skidding equipment, pallets, and combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00184" num="00184">
+<claim-text><b>184</b>. The method of any one of <claim-ref idref="CLM-00144">claim 144</claim-ref>, <claim-ref idref="CLM-00169">169</claim-ref>, or <b>170</b>, wherein the one or more bodies are completion and production devices.</claim-text>
+</claim>
+<claim id="CLM-00185" num="00185">
+<claim-text><b>185</b>. The method of <claim-ref idref="CLM-00184">claim 184</claim-ref>, wherein the completion and production devices are chosen from: chokes, valves, valve seats, nipples, ball valves, inflow control devices, smart well valves, annular isolation valves, subsurface safety valves, centrifuges, gas lift and chemical injection valves, elbows, tees, couplings, blowout preventers, wear bushings, dynamic metal-to-metal seals in reciprocating and/or rotating seals assemblies, springs in safety valves, shock subs, and jars, logging tool arms, sidepockets, mandrels, packer slips, packer latches, sand probes, wellstream gauges, non-cylindrical components of sand screens, and combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00186" num="00186">
+<claim-text><b>186</b>. The method of <claim-ref idref="CLM-00144">claim 144</claim-ref>, wherein the one or more sleeves comprise iron based materials, carbon steels, steel alloys, stainless steels, Al-base alloys, Ni-base alloys, Ti-base alloys, ceramics, cermets, polymers, tungsten carbide cobalt, or combinations thereof.</claim-text>
+</claim>
+<claim id="CLM-00187" num="00187">
+<claim-text><b>187</b>. The method of <claim-ref idref="CLM-00147">claim 147</claim-ref>, wherein the diamond-like-carbon (DLC) is applied by physical vapor deposition, chemical vapor deposition, or plasma assisted chemical vapor deposition coating techniques.</claim-text>
+</claim>
+<claim id="CLM-00188" num="00188">
+<claim-text><b>188</b>. The method of <claim-ref idref="CLM-00187">claim 187</claim-ref>, wherein the physical vapor deposition coating method is chosen from: RF-DC plasma reactive magnetron sputtering, ion beam assisted deposition, cathodic arc deposition and pulsed laser deposition. </claim-text>
+</claim>
+</claims>

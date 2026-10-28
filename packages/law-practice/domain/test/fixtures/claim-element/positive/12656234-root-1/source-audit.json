@@ -1,0 +1,307 @@
+{
+  "familyId": "12656234-root-1",
+  "role": "source-eligibility-extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.95,
+  "verdict": "eligible",
+  "quotedEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the first sell level of the order book",
+      "nativeQuote": "the first sell level of the order book",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the first sell buy of the order book",
+      "nativeQuote": "the first buy level of the order book",
+      "literalMatch": false,
+      "explanation": "Apparent examiner sell/buy transcription error; native first buy phrase retained and other numbered correspondence verified."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "determining the value",
+      "nativeQuote": "determining the value",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the value “1",
+      "nativeQuote": "the value “1",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the value “2",
+      "nativeQuote": "the value “2",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the evolution in time of the buy limit price",
+      "nativeQuote": "the evolution in time of the buy limit price",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the sell orders of the book (ask)",
+      "nativeQuote": "the sell orders of the book (ASK)",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the sum of the executed volumes",
+      "nativeQuote": "the sum of the executed volumes",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the minimum representation time period",
+      "nativeQuote": "the minimum representation time period",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 3,
+      "examinerPhrase": "the evolution in time of the real bid/ask pressure",
+      "nativeQuote": "the evolution in time of the real Bid/Ask pressure",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 3,
+      "examinerPhrase": "the representation made for the time evolution of the buy limit price",
+      "nativeQuote": "the representation made for the time evolution of the buy limit price",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 3,
+      "examinerPhrase": "the side variable",
+      "nativeQuote": "the side variable",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 3,
+      "examinerPhrase": "the absolute value of pr",
+      "nativeQuote": "the absolute value of PR",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the evolution in time of the volume of each buy and sell level of the price limit order book",
+      "nativeQuote": "the evolution in time of the volume of each buy and sell level of the price limit order book",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the buy volumes",
+      "nativeQuote": "the buy volumes",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the price axis",
+      "nativeQuote": "the price axis",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the accumulated by price real bid/ask pressure",
+      "nativeQuote": "the accumulated by price real Bid/Ask pressure",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the stock price",
+      "nativeQuote": "the stock price",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the absolute value of pra",
+      "nativeQuote": "the absolute value of PRA",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the user",
+      "nativeQuote": "the user",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the volume imbalance",
+      "nativeQuote": "the volume imbalance",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the immediate evolution",
+      "nativeQuote": "the immediate evolution",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the volume of each registered level in the order book",
+      "nativeQuote": "the volume of each registered level in the order book",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the total number of levels",
+      "nativeQuote": "the total number of levels",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the number of time periods",
+      "nativeQuote": "the number of time periods",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the normalization",
+      "nativeQuote": "the normalization",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the normalized sell volumes",
+      "nativeQuote": "the normalized sell volumes",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "the gradient of level i for the period t",
+      "nativeQuote": "the gradient of level i for the period t",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "the normalized volume of level i",
+      "nativeQuote": "the normalized volume of level i",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "the absolute value of the gradient",
+      "nativeQuote": "the absolute value of the gradient",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "the transaction information",
+      "nativeQuote": "the transaction information",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "the two codes of the two members carrying out the transaction",
+      "nativeQuote": "the two codes of the two members carrying out the transaction",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "the radius",
+      "nativeQuote": "the radius",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "the variation",
+      "nativeQuote": "the variation",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "the upper right and lower left quadrants",
+      "nativeQuote": "the upper right and lower left quadrants",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    }
+  ],
+  "concerns": [
+    "Native full12 context equals original12, not selected10; original1–12 inspected by claimnumber and topics. OCR formula, bullet, quote typography explains zero exact comparisons. Examiner first sell buy is an apparent typo for native first buy level; other extensive numbered phrases correspond. Some examiner quotes abbreviate subscripts or singular/plural (PR/PRA versus PRt/PRAt; level1 versus leveli), retained as qualified discrepancy for critic, not source rewriting."
+  ],
+  "rationale": "Read actual112(b)/second-paragraph indefiniteness and selected natural dependency references; all selected descendants connect to declared root. Detailed examiner correspondence assessed with original-version evidence. Not attorney adjudication.",
+  "identityEvidence": {
+    "nativeApplicationNumber": "12656234",
+    "nativePublicationNumber": "US20110178950A1",
+    "nativePublicationDate": "20110721",
+    "provenanceIdentityMatches": true,
+    "publicationSha256Matches": true,
+    "claimsXmlSha256Matches": true,
+    "publicationPrecedesOfficeAction": true,
+    "nativePublicationSha256": "1c6364c7341c6923def1f831d1598a8ff9cc6219d5a01edeb4982894d32f18bd",
+    "sourceClaimsXmlSha256": "d170c033eaed8c8abcc41ee7478140c5d6a6b43685ccd26ec9f3214f25195f3a"
+  },
+  "inventoryEvidence": {
+    "retainedInventoryRows": 69,
+    "retainedInventoryCount": 69,
+    "rowsEqualCount": true,
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "G4YD8YCPPPOPPY5",
+        "officialDate": "2010-01-21T00:00:00.000-0500"
+      }
+    ],
+    "officeActionMailDate": "2012-08-17",
+    "limitation": "Underlying inventory entries and full office-action document not independently retrieved; this audit uses retained public excerpts and cached originals. Date-only consistency does not establish in-force identity."
+  },
+  "originalEvidence": [
+    {
+      "documentIdentifier": "G4YD8YCPPPOPPY5",
+      "officialDate": "2010-01-21T00:00:00.000-0500",
+      "sha256": "2117b45c26ec57b32fddc755703588571832a38354727289db43a0ea600b29ce",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [],
+      "sourceClaimCount": 12
+    }
+  ],
+  "nativeContextClaimCount": 12,
+  "selectedClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+  "naturalMembershipAudit": "Selected numbered natural dependency text read independently; no XML proposal overrides wording. Any identified range/alternative discrepancy is described in concerns.",
+  "cachedOriginalChecks": [
+    {
+      "documentIdentifier": "G4YD8YCPPPOPPY5",
+      "cachedOriginalPresent": true,
+      "sha256Matches": true,
+      "headerApplicationNumbers": ["12656234"],
+      "headerMailRoomDates": ["2010-01-21"],
+      "applicationMatches": true,
+      "claimNodeCount": 12
+    }
+  ]
+}

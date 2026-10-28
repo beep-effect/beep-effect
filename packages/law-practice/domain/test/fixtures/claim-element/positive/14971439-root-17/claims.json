@@ -1,0 +1,92 @@
+{
+  "familyId": "14971439-root-17",
+  "rootClaimNumber": 17,
+  "labelClaimNumbers": [17],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A tube-fitting-assembly ferrule for a tube-fitting assembly having sections of tube, having a circumferential point-seal surface, longitudinal axis, transverse shoulder, threaded socket, and threaded plug-nut, the tube-fitting-assembly ferrule comprising: (i) a ferrule body adapted to encircle the longitudinal axis of the tube, having an inner and outer surface in relation to the tube, and having a forward end oriented toward the transverse shoulder and the threaded socket; and (ii) a ferrule forward face on said forward end of said ferrule body, adapted to contact the transverse shoulder at an angle which promotes a desired deformation of said ferrule body upon compression; where pressure applied by the threaded plug nut against a rearward end of said ferrule body compresses said ferrule forward face against the transverse shoulder, producing a deformation constricting said inner surface of said ferrule body against the tube exterior surface, and bulging said outer surface of said ferrule body against the threaded socket interior surface; and where said deformations of said ferrule body create an additional sealing force against the circumferential point-seal surface between the connected tube sections.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The tube-fitting-assembly ferrule of claim 1, further comprising a circumferential groove.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The tube-fitting-assembly ferrule of claim 1, further comprising at least one cutout on said ferrule front face.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The tube-fitting-assembly ferrule of claim 1, further comprising a circumferential notch defining said transverse shoulder.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The tube-fitting-assembly ferrule of claim 1, further comprising a collar defining said transverse shoulder.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The tube-fitting-assembly ferrule of claim 1, wherein an arcuate camming surface is formed in said bore opposite the notch.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The tube-fitting-assembly ferrule of claim 1, wherein said notch is defined by a first arcuate surface and a second straight surface extending transversely to the longitudinal axis of the tube.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The tube-fitting-assembly ferrule of claim 1, wherein the arcuate camming surface extends a distance from the first arcuate surface, and wherein the front end of the tube gripping member fits between the arcuate camming surface and the first arcuate surface when sealing the tube end.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "The tube-fitting-assembly ferrule of claim 1, wherein the front end of the tube gripping member is configured to plastically deform along the first arcuate surface of the tube when the tube gripping member is in a sealing engagement with the tube.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "The tube-fitting-assembly ferrule of claim 1, wherein the internally threaded end of the first tube fitting member is configured to threadably engage with externally threaded end of the second tube fitting member.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "The tube-fitting-assembly ferrule of claim 1, wherein said tube gripping member has plasticity and resiliency sufficient to deform and partially fit into the notch when the first tube fitting member is tightened against the second tube fitting member.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "The tube-fitting-assembly ferrule of claim 1, wherein the second tube fitting member is provided with a drive shoulder configured to engage a back end of the tube gripping member.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "The tube-fitting-assembly ferrule of claim 1, wherein the threaded end of the first tube fitting member is configured to receive the threaded end of the second tube fitting member when the second fitting member is pulled up.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "The tube-fitting-assembly ferrule of claim 1, wherein the tube, the first tube fitting member, the first tube fitting member, and the tube gripping member are formed of metal or metal alloy.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 15,
+      "claimText": "The tube-fitting-assembly ferrule of claim 1, wherein the tube gripping member comprises a tapered front end configured to fit into the notch.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 16,
+      "claimText": "The tube-fitting-assembly ferrule of claim 1, wherein the second tube fitting member is a nut.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 17,
+      "claimText": "A tube-fitting-assembly method comprising: (i) providing a tube-fitting assembly having sections of tube, having a circumferential point-seal surface, longitudinal axis, transverse shoulder, threaded socket, and threaded plug-nut; (ii) providing a the tube-fitting-assembly ferrule comprising: (a) a ferrule body adapted to encircle the longitudinal axis of the tube, having an inner and outer surface in relation to the tube, and having a forward end oriented toward the transverse shoulder and the threaded socket; and (b) a ferrule forward face on said forward end of said ferrule body, adapted to contact the transverse shoulder at an angle which promotes a desired deformation of said ferrule body upon compression; where pressure applied by the threaded plug nut against a rearward end of said ferrule body compresses said ferrule forward face against the transverse shoulder, producing a deformation constricting said inner surface of said ferrule body against the tube exterior surface, and bulging said outer surface of said ferrule body against the threaded socket interior surface; and where said deformations of said ferrule body create an additional sealing force against the circumferential point-seal surface between the connected tube sections.",
+      "sourceXmlParentClaimNumbers": []
+    }
+  ]
+}

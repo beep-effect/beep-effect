@@ -1,0 +1,244 @@
+{
+  "familyId": "17045367-root-1",
+  "role": "source-eligibility-extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.7,
+  "verdict": "unresolved",
+  "quotedEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the electronics",
+      "nativeQuote": "the electronics",
+      "literalMatch": true,
+      "explanation": "Numbered native phrase exact ignoring case; does not itself establish statutory ground."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the battery",
+      "nativeQuote": "the battery",
+      "literalMatch": true,
+      "explanation": "Numbered native phrase exact ignoring case; does not itself establish statutory ground."
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the wind direction arrow",
+      "nativeQuote": "the wind direction arrow",
+      "literalMatch": true,
+      "explanation": "Numbered native phrase exact ignoring case; does not itself establish statutory ground."
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the circuit board",
+      "nativeQuote": "the circuit board",
+      "literalMatch": true,
+      "explanation": "Numbered native phrase exact ignoring case; does not itself establish statutory ground."
+    },
+    {
+      "claimNumber": 3,
+      "examinerPhrase": "the end",
+      "nativeQuote": "the end",
+      "literalMatch": true,
+      "explanation": "Numbered native phrase exact ignoring case; does not itself establish statutory ground."
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the base",
+      "nativeQuote": "the base",
+      "literalMatch": true,
+      "explanation": "Numbered native phrase exact ignoring case; does not itself establish statutory ground."
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the hollow pointer arm",
+      "nativeQuote": "the hollow pointer arm",
+      "literalMatch": true,
+      "explanation": "Numbered native phrase exact ignoring case; does not itself establish statutory ground."
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the wire",
+      "nativeQuote": "the wire",
+      "literalMatch": true,
+      "explanation": "Numbered native phrase exact ignoring case; does not itself establish statutory ground."
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the cap",
+      "nativeQuote": "the cap",
+      "literalMatch": true,
+      "explanation": "Numbered native phrase exact ignoring case; does not itself establish statutory ground."
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the plug",
+      "nativeQuote": "the plug",
+      "literalMatch": true,
+      "explanation": "Numbered native phrase exact ignoring case; does not itself establish statutory ground."
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the end",
+      "nativeQuote": "the end",
+      "literalMatch": true,
+      "explanation": "Numbered native phrase exact ignoring case; does not itself establish statutory ground."
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the battery wire",
+      "nativeQuote": "the battery wire",
+      "literalMatch": true,
+      "explanation": "Numbered native phrase exact ignoring case; does not itself establish statutory ground."
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the cap",
+      "nativeQuote": "the cap",
+      "literalMatch": true,
+      "explanation": "Numbered native phrase exact ignoring case; does not itself establish statutory ground."
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the base",
+      "nativeQuote": "the base",
+      "literalMatch": true,
+      "explanation": "Numbered native phrase exact ignoring case; does not itself establish statutory ground."
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the hollow pointer arm",
+      "nativeQuote": "the hollow pointer arm",
+      "literalMatch": true,
+      "explanation": "Numbered native phrase exact ignoring case; does not itself establish statutory ground."
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the circuit board",
+      "nativeQuote": "the circuit board",
+      "literalMatch": true,
+      "explanation": "Numbered native phrase exact ignoring case; does not itself establish statutory ground."
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the battery wire",
+      "nativeQuote": "the battery wire",
+      "literalMatch": true,
+      "explanation": "Numbered native phrase exact ignoring case; does not itself establish statutory ground."
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the tube",
+      "nativeQuote": "the tube",
+      "literalMatch": true,
+      "explanation": "Numbered native phrase exact ignoring case; does not itself establish statutory ground."
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the case",
+      "nativeQuote": "the case",
+      "literalMatch": true,
+      "explanation": "Numbered native phrase exact ignoring case; does not itself establish statutory ground."
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "the solar panels",
+      "nativeQuote": "the solar panels",
+      "literalMatch": true,
+      "explanation": "Numbered native phrase exact ignoring case; does not itself establish statutory ground."
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "the solar cells",
+      "nativeQuote": "the solar cells",
+      "literalMatch": true,
+      "explanation": "Numbered native phrase exact ignoring case; does not itself establish statutory ground."
+    },
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "the radio antenna",
+      "nativeQuote": "the radio antenna",
+      "literalMatch": true,
+      "explanation": "Numbered native phrase exact ignoring case; does not itself establish statutory ground."
+    },
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "the air molecules",
+      "nativeQuote": "the air molecules",
+      "literalMatch": true,
+      "explanation": "Numbered native phrase exact ignoring case; does not itself establish statutory ground."
+    }
+  ],
+  "concerns": [
+    "MISSING ACTUAL STATUTORY GROUND: retained action snippet has antecedent comments and prior-art notice, no112(b)/second-paragraph rejection statement/scope. Two originals inspected: KFX8SLX1 matches all10; LL586R3K claim1 says pointer versus native pointer arm, showing distinct wording not explained solely typography. Need full OA ground and adopted-version evidence."
+  ],
+  "rationale": "Read retained action and selected natural dependencies; actual ground presence distinguished from mere antecedent commentary. Original/version evidence investigated where needed. No attorney adjudication.",
+  "identityEvidence": {
+    "nativeApplicationNumber": "17045367",
+    "nativePublicationNumber": "US20210364542A1",
+    "nativePublicationDate": "20211125",
+    "provenanceIdentityMatches": true,
+    "publicationSha256Matches": true,
+    "claimsXmlSha256Matches": true,
+    "publicationPrecedesOfficeAction": true,
+    "nativePublicationSha256": "354192e5f5cfd48630fcdd4f0d1099731c67ee6f62b00fba3f70cad32a459e15",
+    "sourceClaimsXmlSha256": "5fb8980debef0bd2cac995aacae683e415cab8ce4c5f0949f5e0f081c8e01853"
+  },
+  "inventoryEvidence": {
+    "retainedInventoryRows": 41,
+    "retainedInventoryCount": 41,
+    "rowsEqualCount": true,
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "KFX8SLX1LDFLYX9",
+        "officialDate": "2020-10-05T20:46:11.000-0400"
+      },
+      {
+        "documentIdentifier": "LL586R3KGREENM5",
+        "officialDate": "2020-10-05T20:06:32.000-0400"
+      }
+    ],
+    "officeActionMailDate": "2023-08-14",
+    "limitation": "Underlying inventory entries and full office-action document not independently retrieved; this audit uses retained public excerpts and cached originals. Date-only consistency does not establish in-force identity."
+  },
+  "originalEvidence": [
+    {
+      "documentIdentifier": "KFX8SLX1LDFLYX9",
+      "officialDate": "2020-10-05T20:46:11.000-0400",
+      "sha256": "0b9e18132c0493189ce46e322ff7723e986c45d480b709d98d3c925edb9a8505",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "sourceClaimCount": 10
+    },
+    {
+      "documentIdentifier": "LL586R3KGREENM5",
+      "officialDate": "2020-10-05T20:06:32.000-0400",
+      "sha256": "4e546fde0cac2d03cd6d4f49fb5e78256d59b46e606fcfb35228dc97d485d101",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [],
+      "sourceClaimCount": 10
+    }
+  ],
+  "nativeContextClaimCount": 10,
+  "selectedClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+  "naturalMembershipAudit": "Selected numbered natural dependency text read independently; no XML proposal overrides wording. Any identified range/alternative discrepancy is described in concerns.",
+  "cachedOriginalChecks": [
+    {
+      "documentIdentifier": "KFX8SLX1LDFLYX9",
+      "cachedOriginalPresent": true,
+      "sha256Matches": true,
+      "headerApplicationNumbers": [],
+      "headerMailRoomDates": [],
+      "applicationMatches": true,
+      "claimNodeCount": 10
+    },
+    {
+      "documentIdentifier": "LL586R3KGREENM5",
+      "cachedOriginalPresent": true,
+      "sha256Matches": true,
+      "headerApplicationNumbers": [],
+      "headerMailRoomDates": [],
+      "applicationMatches": true,
+      "claimNodeCount": 10
+    }
+  ]
+}

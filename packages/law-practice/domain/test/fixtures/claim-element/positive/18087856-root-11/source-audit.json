@@ -1,0 +1,307 @@
+{
+  "familyId": "18087856-root-11",
+  "role": "source-eligibility-extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.95,
+  "verdict": "eligible",
+  "quotedEvidence": [
+    {
+      "claimNumber": 11,
+      "examinerPhrase": "the wireless communication system",
+      "nativeQuote": "the wireless communication system",
+      "literalMatch": true,
+      "explanation": "Case-insensitive numbered native substring."
+    },
+    {
+      "claimNumber": 11,
+      "examinerPhrase": "a base station comprising a user terminal",
+      "nativeQuote": "a base station comprising a user terminal",
+      "literalMatch": true,
+      "explanation": "Case-insensitive numbered native substring."
+    },
+    {
+      "claimNumber": 11,
+      "examinerPhrase": "the above-mentioned transceiver",
+      "nativeQuote": "the above-mentioned transceiver",
+      "literalMatch": true,
+      "explanation": "Case-insensitive numbered native substring."
+    },
+    {
+      "claimNumber": 11,
+      "examinerPhrase": "the data transmission",
+      "nativeQuote": "the data transmission",
+      "literalMatch": true,
+      "explanation": "Case-insensitive numbered native substring."
+    },
+    {
+      "claimNumber": 11,
+      "examinerPhrase": "the pilot",
+      "nativeQuote": "the pilot",
+      "literalMatch": true,
+      "explanation": "Case-insensitive numbered native substring."
+    },
+    {
+      "claimNumber": 11,
+      "examinerPhrase": "the data",
+      "nativeQuote": "the data",
+      "literalMatch": true,
+      "explanation": "Case-insensitive numbered native substring."
+    },
+    {
+      "claimNumber": 11,
+      "examinerPhrase": "the active user information",
+      "nativeQuote": "the active user information",
+      "literalMatch": true,
+      "explanation": "Case-insensitive numbered native substring."
+    },
+    {
+      "claimNumber": 11,
+      "examinerPhrase": "the active user terminal",
+      "nativeQuote": "the active user terminal",
+      "literalMatch": true,
+      "explanation": "Case-insensitive numbered native substring."
+    },
+    {
+      "claimNumber": 11,
+      "examinerPhrase": "the channel estimation information",
+      "nativeQuote": "the channel estimation information",
+      "literalMatch": true,
+      "explanation": "Case-insensitive numbered native substring."
+    },
+    {
+      "claimNumber": 12,
+      "examinerPhrase": "the pilot generation unit",
+      "nativeQuote": "the pilot generation unit",
+      "literalMatch": true,
+      "explanation": "Case-insensitive numbered native substring."
+    },
+    {
+      "claimNumber": 13,
+      "examinerPhrase": "the event that the signal",
+      "nativeQuote": "the event that the signal",
+      "literalMatch": true,
+      "explanation": "Case-insensitive numbered native substring."
+    },
+    {
+      "claimNumber": 13,
+      "examinerPhrase": "the signal",
+      "nativeQuote": "the signal",
+      "literalMatch": true,
+      "explanation": "Case-insensitive numbered native substring."
+    },
+    {
+      "claimNumber": 13,
+      "examinerPhrase": "the one generated in real time",
+      "nativeQuote": "the one generated in real time",
+      "literalMatch": true,
+      "explanation": "Case-insensitive numbered native substring."
+    },
+    {
+      "claimNumber": 14,
+      "examinerPhrase": "the step 1 learning",
+      "nativeQuote": "the step 1 learning",
+      "literalMatch": true,
+      "explanation": "Case-insensitive numbered native substring."
+    },
+    {
+      "claimNumber": 14,
+      "examinerPhrase": "the step 2 learning",
+      "nativeQuote": "the step 2 learning",
+      "literalMatch": true,
+      "explanation": "Case-insensitive numbered native substring."
+    },
+    {
+      "claimNumber": 14,
+      "examinerPhrase": "the information indicating the activation states",
+      "nativeQuote": "the information indicating the activation states",
+      "literalMatch": true,
+      "explanation": "Case-insensitive numbered native substring."
+    },
+    {
+      "claimNumber": 14,
+      "examinerPhrase": "the activation states",
+      "nativeQuote": "the activation states",
+      "literalMatch": true,
+      "explanation": "Case-insensitive numbered native substring."
+    },
+    {
+      "claimNumber": 14,
+      "examinerPhrase": "the information indicating the estimated activation states",
+      "nativeQuote": "the information indicating the estimated activation states",
+      "literalMatch": true,
+      "explanation": "Case-insensitive numbered native substring."
+    },
+    {
+      "claimNumber": 14,
+      "examinerPhrase": "the estimated activation states",
+      "nativeQuote": "the estimated activation states",
+      "literalMatch": true,
+      "explanation": "Case-insensitive numbered native substring."
+    },
+    {
+      "claimNumber": 15,
+      "examinerPhrase": "the length",
+      "nativeQuote": "the length",
+      "literalMatch": true,
+      "explanation": "Case-insensitive numbered native substring."
+    },
+    {
+      "claimNumber": 15,
+      "examinerPhrase": "the information indicating the length",
+      "nativeQuote": "the information indicating the length",
+      "literalMatch": true,
+      "explanation": "Case-insensitive numbered native substring."
+    },
+    {
+      "claimNumber": 15,
+      "examinerPhrase": "when a pre-set condition is satisfied",
+      "nativeQuote": "when a pre-set condition is satisfied",
+      "literalMatch": true,
+      "explanation": "Case-insensitive numbered native substring."
+    },
+    {
+      "claimNumber": 17,
+      "examinerPhrase": "the codeword",
+      "nativeQuote": "the codeword",
+      "literalMatch": true,
+      "explanation": "Case-insensitive numbered native substring."
+    },
+    {
+      "claimNumber": 17,
+      "examinerPhrase": "the multiple pilots",
+      "nativeQuote": "the multiple pilots",
+      "literalMatch": true,
+      "explanation": "Case-insensitive numbered native substring."
+    },
+    {
+      "claimNumber": 17,
+      "examinerPhrase": "the pilot generation unit",
+      "nativeQuote": "the pilot generation unit",
+      "literalMatch": true,
+      "explanation": "Case-insensitive numbered native substring."
+    },
+    {
+      "claimNumber": 18,
+      "examinerPhrase": "the event",
+      "nativeQuote": "the event",
+      "literalMatch": true,
+      "explanation": "Case-insensitive numbered native substring."
+    },
+    {
+      "claimNumber": 18,
+      "examinerPhrase": "the updated pilot generation unit",
+      "nativeQuote": "the updated pilot generation unit",
+      "literalMatch": true,
+      "explanation": "Case-insensitive numbered native substring."
+    },
+    {
+      "claimNumber": 19,
+      "examinerPhrase": "the step 1 learning",
+      "nativeQuote": "the step 1 learning",
+      "literalMatch": true,
+      "explanation": "Case-insensitive numbered native substring."
+    },
+    {
+      "claimNumber": 19,
+      "examinerPhrase": "the step 2 learning",
+      "nativeQuote": "the step 2 learning",
+      "literalMatch": true,
+      "explanation": "Case-insensitive numbered native substring."
+    },
+    {
+      "claimNumber": 19,
+      "examinerPhrase": "the information indicating the activation states",
+      "nativeQuote": "the information indicating the activation states",
+      "literalMatch": true,
+      "explanation": "Case-insensitive numbered native substring."
+    },
+    {
+      "claimNumber": 19,
+      "examinerPhrase": "the estimated activation states",
+      "nativeQuote": "the estimated activation states",
+      "literalMatch": true,
+      "explanation": "Case-insensitive numbered native substring."
+    },
+    {
+      "claimNumber": 20,
+      "examinerPhrase": "the information indicating the length",
+      "nativeQuote": "the information indicating the length",
+      "literalMatch": true,
+      "explanation": "Case-insensitive numbered native substring."
+    },
+    {
+      "claimNumber": 20,
+      "examinerPhrase": "the length",
+      "nativeQuote": "the length",
+      "literalMatch": true,
+      "explanation": "Case-insensitive numbered native substring."
+    },
+    {
+      "claimNumber": 20,
+      "examinerPhrase": "the the",
+      "nativeQuote": "the above-mentioned one or more processors control the above-mentioned user terminal",
+      "literalMatch": false,
+      "explanation": "Examiner/original doubled the the versus native single the; explicit typography-only difference."
+    },
+    {
+      "claimNumber": 20,
+      "examinerPhrase": "when a pre-set condition is satisfied",
+      "nativeQuote": "when a pre-set condition is satisfied",
+      "literalMatch": true,
+      "explanation": "Case-insensitive numbered native substring."
+    }
+  ],
+  "concerns": [
+    "Original20-claim full set manually checked11/12/20; source technical wording agrees. Original20 and examiner have duplicated the the in two clauses; native20 has single the. This is explicit typography-only difference requiring critic acceptance, not literal match. Some long examiner excerpts are abbreviations.16 changes subject to user terminal but expressly references11; remains selected family, not repaired."
+  ],
+  "rationale": "Actual112(b)/second-paragraph ground read and selected natural dependencies reviewed. Differing original versions/claim counts investigated and substantive changes not excused by chronology. No attorney adjudication.",
+  "identityEvidence": {
+    "nativeApplicationNumber": "18087856",
+    "nativePublicationNumber": "US20230412427A1",
+    "nativePublicationDate": "20231221",
+    "provenanceIdentityMatches": true,
+    "publicationSha256Matches": true,
+    "claimsXmlSha256Matches": true,
+    "publicationPrecedesOfficeAction": true,
+    "nativePublicationSha256": "bb78b1a3da420e84f449568d37aab837fa4bd843f58bab3ce8ae2593afe46f8a",
+    "sourceClaimsXmlSha256": "f616e9ce106d7cdac966b940ada9a7a4676fe5ca5ffc5ae445af4e25f253a0fb"
+  },
+  "inventoryEvidence": {
+    "retainedInventoryRows": 59,
+    "retainedInventoryCount": 59,
+    "rowsEqualCount": true,
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "LC0JWLT1XBLUEX0",
+        "officialDate": "2022-12-23T08:31:07.000-0500"
+      }
+    ],
+    "officeActionMailDate": "2025-08-12",
+    "limitation": "Underlying inventory entries and full office-action document not independently retrieved; this audit uses retained public excerpts and cached originals. Date-only consistency does not establish in-force identity."
+  },
+  "originalEvidence": [
+    {
+      "documentIdentifier": "LC0JWLT1XBLUEX0",
+      "officialDate": "2022-12-23T08:31:07.000-0500",
+      "sha256": "df3d455fc0c30a3696e5da3902aa08c3547836ca288a580eeb3adb318fa8d1f4",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [],
+      "sourceClaimCount": 20
+    }
+  ],
+  "nativeContextClaimCount": 20,
+  "selectedClaimNumbers": [11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+  "naturalMembershipAudit": "Selected numbered natural dependency text read independently; no XML proposal overrides wording. Any identified range/alternative discrepancy is described in concerns.",
+  "cachedOriginalChecks": [
+    {
+      "documentIdentifier": "LC0JWLT1XBLUEX0",
+      "cachedOriginalPresent": true,
+      "sha256Matches": true,
+      "headerApplicationNumbers": [],
+      "headerMailRoomDates": [],
+      "applicationMatches": true,
+      "claimNodeCount": 20
+    }
+  ]
+}

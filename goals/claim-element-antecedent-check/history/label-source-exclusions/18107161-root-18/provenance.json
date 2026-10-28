@@ -1,0 +1,40 @@
+{
+  "applicationNumber": "18107161",
+  "publicationNumber": "US20230264331A1",
+  "publicationDate": "2023-08-24",
+  "nativeXmlSha256": "fb84332fcd36742a1dcc9eee78443524120f64fb7472f83839260564f22545eb",
+  "claimsXmlSha256": "e868184a0fb34369bc142b86469031c70d59e72eb427206f9823d54c5317e051",
+  "officeActionDocumentIdentifiers": ["M1OZ0Q7XWFYBX99"],
+  "officeActionMailDate": "2024-09-30",
+  "officeActionSection112Text": [
+    "claims 1-26 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor (or for applications subject to pre-aia 35 u.s.c. 112, the applicant), regards as the invention.\r\nregarding claim 1, “said fastener” lacks antecedent basis.\r\nregarding claim 2, “said knob”, “the magazine surface”, and “said proximal, non-extended position” lack antecedent basis.\r\nregarding claim 3, “said knob” and “said gate” lack antecedent basis. additionally, “an engaged position” and “a disengaged position” is indefinite because it is unclear if “an engaged position” and “a disengaged position” of claim 3 is the same as “an engaged position” and “a disengaged position” of claim 1. for examination purposes, “an engaged position” and “a disengaged position” of claim 3 is being interpreted to be “the engaged position” and “the disengaged position”. if applicant wishes “an engaged position” and “a disengaged position” of claim 3 to be interpreted differently than “an engaged position” and “a disengaged position” of claim 1, examiner recommends changing the wording of the limitations.\r\nregarding claim 4, “said gate” and “the knob” lack antecedent basis.\r\nregarding claim 5, “said gate” and “the knob” lack antecedent basis.\r\nregarding claim 6, “said cylinder”, “said piston”, “said driver”, and “said fastener” lack antecedent basis.\r\nregarding claims 7, “the magazine” lacks antecedent basis.\r\nregarding claim 8, “the magazine” lacks antecedent basis.\r\nregarding claim 9, “said knob”, “said gate”, “the guide”, “said magazine”, and “the knob holding protrusion” lack antecedent basis.\r\nregarding claim 10, “the process” lacks antecedent basis.\r\nregarding claim 11, “said knob” lacks antecedent basis.\r\nregarding claim 12, “said knob” and “said knob holding protrusion” lack antecedent basis.\r\nregarding claim 13, “said knob” and “said gate” lack antecedent basis.\r\nregarding claim 14, “said knob” and “said gate” lack antecedent basis.\r\nregarding claim 15, “the tool”, “said second end”, “the fulcrum”, “the magazine” lack antecedent basis.\r\nregarding claim 16, “said fulcrum”, “said tool”, “the fastener magazine”, and “the magazine” lack antecedent basis.\r\nregarding claim 17, “said fastener magazine” and “said tool” lack antecedent basis.\r\nregarding claim 18, “said tool” lacks antecedent basis. additionally, “a removable fastener magazine” in line 10 is indefinite because it is unclear if “a removable fastener magazine” of line 10 is the same as “a removable fastener magazine” of line 1. for examination purposes, “a removable fastener magazine” in line 10 is being interpreted to be “the removable fastener magazine”.\r\nregarding claim 19, “the tool” lacks antecedent basis.\r\nregarding claim 20, “the tool”, “the nose portion rounded receptacle subassembly”, and “said fastener driving tool housing” lack antecedent basis.\r\nregarding claim 21, “the tool” lacks antecedent basis.\r\nregarding claim 22, “the tool” and “the nose portion rounded receptacle subassembly” lack antecedent basis.\r\nregarding claim 23, “the tool” lacks antecedent basis.\r\nregarding claim 24, “the tool” lacks antecedent basis.\r\nregarding claim 25, “the tool” lacks antecedent basis.\r\nregarding claim 26, “the tool” lacks antecedent basis."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "LDW11Q27GREENX2",
+      "officialDate": "2023-02-08T13:51:31.000-0500"
+    }
+  ],
+  "originalComparisons": [
+    {
+      "documentIdentifier": "LDW11Q27GREENX2",
+      "officialDate": "2023-02-08T13:51:31.000-0500",
+      "sha256": "7da1a38d429480a9b3f6d86011f887237fd78d709f0a94c25972e3474784ee4f",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [
+        1, 3, 4, 5, 7, 8, 10, 11, 14, 19, 20, 23, 25, 26
+      ],
+      "sourceClaimCount": 23
+    }
+  ],
+  "documentInventoryCount": 45,
+  "documentInventoryRows": 45,
+  "primaryCpc": "B25C   1/003",
+  "inForceEvidence": "Native A1 publication precedes office action. Complete document inventory shows only the original CLM date before rejection, with no intervening CLM amendment. Claim text is sourced exclusively from native publication XML; OCR originals corroborate only. Independent critic must verify family/rejection association and flag uncertainty.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/18107161",
+    "https://api.uspto.gov/api/v1/patent/applications/18107161/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "extractor-pending; critic-and-attorney-pending"
+}

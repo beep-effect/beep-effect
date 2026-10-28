@@ -1,0 +1,139 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A computer implemented method for multiple fault diagnosis comprising:
+<claim-text>dissecting, by a computer processor, an overall hypothesis space into tiers of hypotheses, wherein each tier represents a different number of faults in a production system having a plurality of production system modules;</claim-text>
+<claim-text>starting diagnosis at the single fault tier, assuming that the overall system has only one fault;</claim-text>
+<claim-text>treating the overall system as a single group with only one fault and perform single-fault diagnosis; and</claim-text>
+<claim-text>storing in a memory, any acceptable fault diagnosis and corresponding probability.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein when the investigating fails to determine an acceptable fault diagnosis within the single-fault hypotheses tier further comprising:
+<claim-text>moving to double-fault tier consisting of all hypotheses with two faults in the overall production system;</claim-text>
+<claim-text>re-partitioning, by the computer processor, the plurality of production modules of the production system into two groups of the production modules, wherein each of the groups are formed to likely have a single fault; and</claim-text>
+<claim-text>storing in a memory any acceptable fault diagnosis and corresponding probability.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The method according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the dissecting step generates more than two tiers, and the partitioning and investigating steps operate for each of the generated tiers.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the probability or likelihood for each hypothesis is calculated using observation data from the production system.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. A computer-implemented method for tiered inference multiple fault diagnosis, comprising:
+<claim-text>A. using a computer processor, partitioning a hypothesis space into tiers, wherein a hypothesis identifies potential component faults in a production system;</claim-text>
+<claim-text>B. performing diagnosis on the lowest available tier until the lowest available tier is completely ruled out by the observation data;</claim-text>
+<claim-text>C. moving onto the next incremental tier;</claim-text>
+<claim-text>D. based on the current tier of diagnosis, partitioning the production system into a set of subsystems likely to have single faults;</claim-text>
+<claim-text>E. if the tier is ruled out, repeat actions C and D, otherwise move to a step F;</claim-text>
+<claim-text>F. applying a single-fault diagnosis algorithm to each subsystem in the new set of subsystems to identify any probable faults within the subsystem; and if the single-fault algorithm determines that each subsystem contains a probable single fault, then perform the following:
+<claim-text>F(1). identify any hypotheses within the determined set of hypotheses that identify the same subsystem faults as the single-fault diagnosis algorithm; and</claim-text>
+<claim-text>F(2). store the identified hypotheses into computer memory; and</claim-text>
+</claim-text>
+<claim-text>G. if the observation data suggest that a subsystem has more than one fault, store the invalidated single-fault diagnostic data in memory and remove any hypothesis assuming the single-fault subsystem from the hypotheses space.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The method of <claim-ref idref="CLM-00005">claim 5</claim-ref>, further comprising iteratively repeating steps C, D, E and F until step F(2) is performed.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The method of <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein the hypothesis space is partitioned into j tiers where each tier is defined as the collection of hypotheses assuming a total of χ<sub>j </sub>faults in the system.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The method of <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein the production system is partitioned into subsystems where each subsystem is likely to have at most one fault based on the current observation data from the production system.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The method of <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein the production system is partitioned into subsystems where each subsystem is likely to have at most one fault based on the aggregate of all the observation data from the production system.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The method of <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein steps C, D, E, and F iteratively repeat until at least one of the following conditions occur:
+<claim-text>the current tier reaches a predetermined tier; or</claim-text>
+<claim-text>a predetermined amount of time elapses.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The method of <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein the complexity of the method is O(M<sup>2</sup>), wherein O( ) is the standard complexity notation which means “in the order of”, and wherein M<sup>2 </sup>means the computation complexity is in the order of M×M.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The method of <claim-ref idref="CLM-00005">claim 5</claim-ref> wherein each hypothesis is represented as a bit vector containing M bits;
+<claim-text>where M is the number of components in the production system, and</claim-text>
+<claim-text>each component in the production system is represented in the bit vector by a bit indicating whether a component is considered faulty in the hypothesis.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. A computer-implemented method for partitioning a system into subsystems, comprising:
+<claim-text>providing to a computer memory:</claim-text>
+<claim-text>a set of hypotheses corresponding to a set of components in a production system;</claim-text>
+<claim-text>a probability for each hypothesis that the hypothesis contains a fault; and</claim-text>
+<claim-text>a number j of expected faults;</claim-text>
+<claim-text>or each component in the system, calculating a correlation coefficient between the each component and every other component in the system;</claim-text>
+<claim-text>using a computer processor, selecting the j components having the highest autocorrelation values as seed values for a set of j subsystems;</claim-text>
+<claim-text>assigning each of the remaining modules to one of the subsystems based on the calculated correlation coefficients; and</claim-text>
+<claim-text>storing the subsystems to computer memory.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The method of <claim-ref idref="CLM-00013">claim 13</claim-ref>, wherein the subsystems are single-fault subsystems.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The method of <claim-ref idref="CLM-00013">claim 13</claim-ref>, wherein the probability for each hypothesis is calculated using observation data from the production system.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The method of <claim-ref idref="CLM-00013">claim 13</claim-ref>, wherein the probability for each hypothesis that the hypothesis contains a fault is calculated at least in part by using a Bayesian rule.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The method of <claim-ref idref="CLM-00013">claim 13</claim-ref>, wherein each hypothesis is represented as a bit vector containing M bits;
+<claim-text>where M is the number of components in the production system, and each component in the production system is represented in the bit vector by one bit indicating whether a component is considered faulty in the hypothesis.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. A computer-based system for tiered inference multiple fault diagnosis, comprising:
+<claim-text>(i) an observation module configured to:
+<claim-text>receive observation data from a production system; and</claim-text>
+<claim-text>update probabilities for a hypothesis space based on the received observation data, where a hypothesis identifies potential component faults in the production system;</claim-text>
+</claim-text>
+<claim-text>(ii) a dynamic partitioning module configured to:
+<claim-text>partition the hypothesis space into tiers; and</claim-text>
+<claim-text>partition the production systems into a set of subsystems where each subsystem is likely to contain at most a single fault;</claim-text>
+</claim-text>
+<claim-text>(iii) a single fault diagnosis module configured to:
+<claim-text>apply a single-fault diagnosis algorithm to each subsystem in the set of subsystems to identify any probable faults within the subsystem; and</claim-text>
+<claim-text>if the single-fault algorithm determines that each subsystem contains a probable single fault, then perform the following:
+<claim-text>identify any hypotheses within the determined set of hypotheses that identify the same subsystem faults as the single-fault diagnosis algorithm; and</claim-text>
+<claim-text>store the identified hypotheses into computer memory.</claim-text>
+</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The system of <claim-ref idref="CLM-00018">claim 18</claim-ref>, wherein the hypothesis space is partitioned into j tiers where each tier χ<sub>j </sub>is defined as the collection of hypotheses assuming a total of j faults in the system.</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The system of <claim-ref idref="CLM-00018">claim 18</claim-ref>, wherein the production system is partitioned into subsystems where each subsystem is likely to have at most one fault based on the current observation data from the production system.</claim-text>
+</claim>
+<claim id="CLM-00021" num="00021">
+<claim-text><b>21</b>. The system of <claim-ref idref="CLM-00018">claim 18</claim-ref>, wherein the overall complexity of the method performed is O(M<sup>2</sup>), wherein O( ) is the standard complexity notation which means “in the order of”, and wherein M<sup>2 </sup>means the computation complexity is in the order of M×M.</claim-text>
+</claim>
+<claim id="CLM-00022" num="00022">
+<claim-text><b>22</b>. The system of <claim-ref idref="CLM-00018">claim 18</claim-ref>, wherein each hypothesis is represented as a bit vector containing M bits;
+<claim-text>where M is the number of components in the production system, and each component in the production system is represented in the bit vector by one bit indicating whether a component is considered faulty in the hypothesis.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00023" num="00023">
+<claim-text><b>23</b>. The system of <claim-ref idref="CLM-00018">claim 18</claim-ref>, wherein the dynamic partitioning module is configured to partition a set of production system modules into a set of subsystems through a set of steps comprising:
+<claim-text>providing the following to computer memory:
+<claim-text>a set of hypotheses corresponding to a set of components in a production system;</claim-text>
+<claim-text>a probability for each hypothesis; and</claim-text>
+<claim-text>a number j of expected faults;</claim-text>
+</claim-text>
+<claim-text>for each component in the system, calculating the correlation coefficient between the component and every other component in the system;</claim-text>
+<claim-text>using a computer processor, selecting the j components having the highest autocorrelation values as seed values for a set of j subsystems;</claim-text>
+<claim-text>assigning each of the remaining modules to one of the subsystems based on the calculated correlation coefficients; and</claim-text>
+<claim-text>storing the subsystems to computer memory.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00024" num="00024">
+<claim-text><b>24</b>. The system of <claim-ref idref="CLM-00023">claim 23</claim-ref>, wherein the probability for each hypothesis that the hypothesis contains a fault is calculated at least in part by using a Bayesian equation.</claim-text>
+</claim>
+</claims>

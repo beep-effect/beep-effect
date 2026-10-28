@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `active` (P0–P1 merged in #1764; P2a and P2b in the P2 PR; P2c and live acceptance wait on the USPTO key)
+Status: `active` (P0–P1 merged; P2 deterministic rules and service exist; ODP access restored on 2026-10-28; native publication XML adapter implemented locally; live qualification and provenance-bound corpus acquisition in progress)
 
 ## Binding Sequencing
 
@@ -41,14 +41,57 @@ are fixed, never before.
 
 ## Current Blockers
 
-- **P2c and the live acceptance (USPTO key).** The workstation's ODP key returns 403 (see
-  `research/OPPORTUNITIES.md`). The operator has to regenerate it. Until then, the labelled set,
-  the vertical slice over a real rejection, and live `CLM` reads wait. P2a and P2b run on
-  synthetic fixtures.
-- **Driver follow-up before live reads.** `@beep/uspto` keeps only the first download option of
-  each document and drops its MIME type. It must expose the XML option before `UsptoClaimsLive`
-  can read real `CLM` claims.
-- **P3** is no longer blocked: `review-verdict-envelope` merged (#1761).
+- **Asynchronous human review precedence (2026-10-28):** root `AGENTS.md`
+  Autonomy requires operator review to remain asynchronous and not block
+  independent implementation. Continue P3 tool/evaluation preparation while
+  P2 attorney acceptance remains open; this does not claim P2 exit, attorney
+  agreement, adjudicated gold or final benchmark results. The SPEC Decision
+  Log retains this sequencing decision and its reversal path.
+
+
+- **Current P2 checkpoint (2026-10-28):** source qualification is complete for
+  all 60 active positive families (538 selected claims); source selection is
+  frozen before positive predictions. The 200 allowed sets retain all 3,184
+  source claims. Independent semantic references, targeted granularity
+  consistency and actual attorney agreement remain incomplete. Older source
+  holds below are historical and have been resolved or archived with
+  source-qualified replacements. Eight representation decisions reached the three-agent-round bound:
+  one reciprocal connector, six count/selector heads and one distributive head. They are explicit
+  questions in `history/attorney-review/index.html` and its separate
+  `addendum.html`, alongside the frozen
+  six-family (50-claim) actual attorney spot-check. No human verdict has been
+  recorded.
+
+- **Historical initial corpus qualification (2026-10-28; superseded):** extractor audits
+  yield 39 eligible source proposals, 18 unresolved and 3 ineligible. Critic
+  review and source-qualified replacements subsequently resolved this source
+  inventory; all 60 current source families are now accepted. Fourteen earlier family
+  drafts are conformance evidence only, excluded from semantic gold. Fresh
+  annotation follows semantic-reference/v2; unsupported parser inputs remain
+  measurable coverage failures. Attorney sampling and agreement remain pending.
+
+- **USPTO access restored (2026-10-28).** After the operator updated the existing
+  secret, authenticated application and document-list probes returned HTTP 200.
+  The public application `16123456` lists XML options after PDF for both `CLM`
+  records and its `CTNF` record. Live parsing, rejection provenance and the
+  labelled corpus are still in progress; access alone does not satisfy P2.
+- **Driver follow-up implemented locally (2026-10-28).** `@beep/uspto` now retains
+  all schema-valid download options and their format labels while keeping the
+  first URL for existing callers. `UsptoClaimsLive` selects explicitly labelled
+  XML even after a PDF; PDF-only records fail before download. Regression
+  fixtures remain synthetic. See `history/2026-10-28-resumption.md`.
+- **First vertical slice technically verified (2026-10-28):** native
+  `US20200109732A1`, original CLM `JSNRXQGZRXEAPX2`, non-final action
+  `K56UZ6OLRXEAPX4` mailed 2020-01-09. Two independent bounded labelling
+  rounds accept claim 1; strict tree equality and exact examiner phrase
+  `the foot` pass. Attorney sampling remains pending for the corpus.
+- **Native publication source implemented locally:** ODP application metadata
+  supplies individual native XML links. The publication branch resolves those
+  links and rejects OCR markers. A bounded download redirect path strips the
+  API key outside the API host. Corpus labels and in-force claim versions
+  still require qualification.
+- **P3 sibling dependency resolved:** `review-verdict-envelope` merged (#1761).
+  P3 still waits for this goal's P2 exit criteria, including the real slice and corpus.
 
 ## Closeout Checklist
 

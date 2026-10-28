@@ -1,0 +1,59 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "15927789-root-6",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.96,
+  "confidenceScope": "Independent native-source semantic structure and identified corrections; separately accepted source qualification is not re-certified, and attorney adjudication is pending.",
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [6, 7, 8, 9, 10],
+  "findings": [],
+  "sourceEligibility": "Separate source critic accepted at0.98; native text is canonical. For12447956 the PDF resolves earlier amended-root7 hold and merged XML numbering.",
+  "audit": {
+    "treesReviewed": 5,
+    "elementsReviewed": 16,
+    "termsReviewed": 58,
+    "typedEdgesReviewed": 44,
+    "edgeKinds": {
+      "part-of": 11,
+      "functional": 10,
+      "antecedent": 19,
+      "depends-on-element": 4
+    },
+    "allElementAndTermUtf16SlicesVerified": true,
+    "allFunctionalTextSlicesVerified": true,
+    "allFunctionalPartsOrderedLocallyOwnedAndCoverRelation": true,
+    "allLocalAndCrossClaimTermEndpointsVerified": true,
+    "schemaDecode": "passed all supplied trees",
+    "selectedScopeComplete": true
+  },
+  "attorneyAdjudication": "pending",
+  "sourceOrNormalizationAnomalies": [
+    "Examiner/native travel-of-the-transport-unit article and traveling/travelling differences are already recorded. Native quote/head preserved; no new normalized-span or source-version failure detected."
+  ],
+  "independence": "Independent critic, not producer of these families. Reviewed exact claims/context, provenance/source audit/source critic, fresh extractor/expected, semantic-reference/v2 and schema contracts. No rules, predictions, synthetic fixtures, archived conformance, network, secrets, git or delegation. Helpers verified supplied spans/schema/reference geometry only.",
+  "rationale": [
+    "Reviewed16 elements/58 terms/44 typed edges and10 functional relationships. Bare device preamble, operator/module clause, nested wire/length/angle list and terminal controls predicate preserve native grammar and exact source wording. No actionable structural defect found.",
+    "Actual children7\u201310->6 ancestry supplies explicit wire, unwinding length/angle and operator references. Location measurement module and positioning module are not silently identified, nor is sibling independent claim1 used as an ancestor.",
+    "The wire reference before later a wire has no forward edge. Terminal and controls has no invented agent term. The operation-signal alias in10 is the same expressly supplied user signal; this does not create a new controller identity."
+  ],
+  "ambiguityResolution": [
+    {
+      "claimNumber": 6,
+      "quote": "and controls the travelling motion",
+      "resolution": "The awkward attachment does not name its agent unambiguously. Keep exact functional text and refrain from supplying an operator/unit subject."
+    },
+    {
+      "claimNumber": 7,
+      "quote": "the positioning module",
+      "resolution": "Root6 introduces location measurement module, not an explicitly identical positioning module. No cross-module or sibling1 identity is invented."
+    },
+    {
+      "claimNumber": 10,
+      "quote": "the operation signal",
+      "resolution": "The preceding receives the user's operation signal/input relation identifies the sole signal used for the immediately following travelling-direction control. Existing local alias edge is supported."
+    }
+  ]
+}

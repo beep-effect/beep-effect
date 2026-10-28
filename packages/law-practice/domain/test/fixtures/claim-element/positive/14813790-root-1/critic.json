@@ -1,0 +1,78 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "14813790-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 3,
+  "confidence": 0.96,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "findings": [],
+  "headConsistencyReview": {
+    "schemaVersion": "head-review/v2",
+    "scope": "Independent head-only consistency review against manually read exact source; prior full semantic acceptance retained through independently verified complete structural invariance. No new full semantic extraction or attorney agreement claimed.",
+    "previousRound": 2,
+    "reviewedActionCount": 1,
+    "sourceSpecificJudgment": "Each distributes over adjacent pairs in the axial row. Complete pair of adjacent frustoconical sub-sections is retained, including pair, adjacent, frustoconical and sub-sections. No count, pair membership or front/rear relation is removed or inferred.",
+    "actions": [
+      {
+        "path": "3.a",
+        "anchor": {
+          "startChar": 140,
+          "endChar": 188,
+          "quote": "each pair of adjacent frustoconical sub-sections"
+        },
+        "beforeHead": "each pair of adjacent frustoconical sub-sections",
+        "acceptedHead": "pair of adjacent frustoconical sub-sections",
+        "verdict": "accepted"
+      }
+    ],
+    "invariance": "Verified every action anchor as exact UTF-16 source, every bare tag unchanged, exactly listed outer each removed and all remaining head words retained. Undoing only these head fields restores the entire prior parsed expected tree. Raw prior expected text transformed only at those declared head-value literals equals current text byte-for-byte; no anchor, determiner, element, edge, function part, scope or other value changed.",
+    "priorReceiptHashes": "Every expected/extractor/critic/head-review raw SHA256 named by head-review/v2 preservedPriorReceipts independently verified against the exact retained file bytes.",
+    "preservedPriorReceipts": [
+      {
+        "file": "expected.round2.json",
+        "sha256": "afd97720f0ce7cff12b8a377d72f066822286fefcf87b626ceb0c41d16d381ef"
+      },
+      {
+        "file": "extractor.round2.json",
+        "sha256": "7e6a883698d22d483df4a1a1edefd634a87d8f77fe02a1ca3663917c68a9074b"
+      },
+      {
+        "file": "critic.round2.json",
+        "sha256": "05506c5b12dea40523f0e5e9d7d3f1545c2d447f645029532a1d08e6a6f3c408"
+      },
+      {
+        "file": "head-review.round2.json",
+        "sha256": "468c23ae55294971fd45b6f2b7b7c980ad9837d5065610fc7793fc5e3eedaa2a"
+      }
+    ]
+  },
+  "verification": [
+    "All current trees decode through ClaimElementTree. Exact canonical UTF-16 element/term spans, ordering/nonoverlap/ownership, antecedent endpoints and complete contiguous functional reconstruction independently pass.",
+    "All canonical/context claims match native XML under permitted normalization, and source claims XML digest matches provenance. Source anchors/semantics and previously accepted full critic base remain unchanged.",
+    "Source grammar shows each is an outer distributive determiner in every assigned action; complete substantive lexical modifiers and any counts/partitive pair content are preserved. This is a bounded grammatical normalization, not a generic word stoplist."
+  ],
+  "referenceSha256": "7be31884a736ca56667a8e61cb60dce109e45011d11c04f3d0dda1727af3a0d7",
+  "extractorSha256": "b2a11a6aa7d64e2b655e07fe0a474f3173517a9c0f3337f9291382605efc46c5",
+  "reviewNotes": [
+    "Prior full semantic critic verdict was accepted with no remaining findings. Only assigned current lexical changes are newly adjudicated here; all earlier receipts remain intact.",
+    "Known human count/selector holds and16068637 each-edge/each-other matters remain outside this assignment and unchanged. No fourth agent round or attorney verdict is supplied."
+  ],
+  "independence": "Separate independent GPT-6.1-Sol medium critic session from head-consistency extractor. Read exact source contexts/full affected claims, head-review/v2 actions, previous expected/critic/extractor receipts and raw file hashes. No production implementation/decomposer, P2-DESIGN, predictions, synthetic/conformance fixtures or source changes. Only assigned current critic files written.",
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement",
+  "roundLimit": "Round3 of at most3; no remaining actionable assigned head findings.",
+  "corpusStatus": "Incremental head-consistency criticism only; no human agreement, new sample admission or accuracy claim."
+}

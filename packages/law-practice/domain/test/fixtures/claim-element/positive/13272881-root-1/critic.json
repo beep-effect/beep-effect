@@ -1,0 +1,48 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "convention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "13272881-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.96,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+  ],
+  "findings": [],
+  "sourceConcerns": [],
+  "reviewScope": {
+    "selectedClaimCount": 17,
+    "resolvedTreesReviewed": 17,
+    "elementCount": 94,
+    "termCount": 302,
+    "functionalRelationCount": 75
+  },
+  "reviewNotes": [
+    "Independent round2 verification of prior findings and all current selected claims1\u201317. The early method-insulator and support-drilled-hole references are now present; ambiguous top-surface edges are removed. The nested the two sides and distributed guide-pipe references are represented without selecting a member.",
+    "Earlier possessive-head objection C4 is superseded by independent lexical-head/v1: circumference is correct for anchored its circumference. Guide-tube/wire aliases, singular hole and later repeated-indefinite insulator ownership remain source-specific concerns rather than forced identity. Natural jig references in method steps supply ancestry; no sibling donation.",
+    "Every submitted tree decoded through ClaimElementTree. Independently checked exact UTF-16 element/term spans, nonoverlap, term ownership, antecedent endpoints and complete contiguous ordered functional-part reconstruction. Native XML agrees with canonical claims after permitted printed-number/whitespace normalization, and claims XML SHA256 matches provenance.",
+    "Read source-critic and source/rejection provenance; retained source eligibility is accepted separately. No fresh original-PDF/inventory authentication or attorney agreement is claimed. Genuine reference ambiguity remains explicit in extractor concerns."
+  ],
+  "independence": "Independent semantic critic; did not author these references. Reviewed exact canonical/native source, source critic, provenance, extractor and schemas against semantic-reference/v2, entity-mentions/v1 and lexical-head/v1. No production implementation, decomposer, P2-DESIGN, predictions or synthetic/conformance fixtures inspected. Helpers only validate manually reviewed source annotations. Only assigned critic receipts written.",
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement"
+}

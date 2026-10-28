@@ -6,12 +6,12 @@
     "title": "Claim Element Antecedent Check",
     "status": "active",
     "created": "2026-10-14",
-    "updated": "2026-10-14",
+    "updated": "2026-10-28",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/claim-element-antecedent-check",
   "lifecycle": "active",
-  "mission": "Give patent claims a span-anchored element tree and an advisory, deterministic §112(b) antecedent-basis and dependency self-check whose findings reach the attorney as claim-finding review items, measured on public USPTO claims with strict structural equality.",
+  "mission": "Give patent claims a span-anchored element tree and an advisory, deterministic \u00a7112(b) antecedent-basis and dependency self-check whose findings reach the attorney as claim-finding review items, measured on public USPTO claims with strict structural equality.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -94,5 +94,5 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "P0-P1 merged (#1764). P2a rules and P2b Layer plus fixture-backed USPTO adapter ship in the P2 PR; P2c labelled set and live acceptance wait on the operator regenerating the USPTO ODP key (403)."
+  "statusNote": "P2 source selection qualified/frozen: 60 positive families/538 selected claims, 200 allowed sets/3184 source claims. All 60 semantic-reference drafts pass integrity; 57 families/517 claims independently accepted under current conventions. Three round-limited families retain eight explicit attorney questions. Frozen six-family/50-claim attorney packet and separate one-question addendum are ready; actual attorney agreement not recorded. Domain, use-case, server and USPTO driver full package verification pass. P2 implementation hashes retained, no positive semantic benchmark predictions run. P3, PR and closeout incomplete."
 }

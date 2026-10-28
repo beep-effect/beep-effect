@@ -1,0 +1,76 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A computer-implemented method for non-invasive monitoring and exploitation detection in a third-party software process, the method comprising:
+<claim-text>scanning, by a memory monitoring module, a memory of the third-party software process to identify sensitive credentials including application programming interface (API) keys and tokens;</claim-text>
+<claim-text>monitoring, by a file descriptor monitoring module, opened file descriptors associated with the third-party software process, the opened file descriptors including files, network sockets and inter-process communication channels;</claim-text>
+<claim-text>analyzing, by a network activity monitoring module, network activity of the third-party software process, the network activity including domain name system (DNS) requests;</claim-text>
+<claim-text>collecting, by a runtime metadata monitoring module, runtime metadata from the third-party software process, the runtime metadata including privileges, environment variables and resource usage;</claim-text>
+<claim-text>correlating, by an exploitation detection module, data from the memory, the opened file descriptors, the network activity and the runtime metadata so as to detect one or more indicators of exploitation; and</claim-text>
+<claim-text>generating, by an alerting and reporting module, an alert in response to the one or more detected indicators of exploitation, wherein the method is performed without modifying or instrumenting the third-party software process.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The computer-implemented method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein scanning the memory comprises applying pattern-matching algorithms to detect the API keys based on predefined templates.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The computer-implemented method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein monitoring the opened file descriptors comprises logging file access events and capturing details including file paths and access types.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The computer-implemented method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein analyzing the network activity comprises decrypting secure sockets layer/transport layer security (SSL/TLS) traffic using session keys so as to inspect encrypted content.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The computer-implemented method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein collecting the runtime metadata comprises detecting unexpected privilege elevation or changes in process ownership.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The computer-implemented method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein collecting the runtime metadata further analyzing the environment variables for sensitive information or unexpected changes indicative of tampering.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The computer-implemented method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein correlating the data comprises matching observed behavior with known attack signatures from external intrusion detection systems.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The computer-implemented method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising monitoring, by a loaded libraries monitoring module, one or more of file paths, names, and versions of libraries loaded by the third-party software process so as to detect unusual or unauthorized library loads.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The computer-implemented method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein generating the alert comprises generating a report with one or more of incident details, recommended mitigation actions, and data captured from one or more of the memory monitoring module, the file descriptor monitoring module, the network activity monitoring module and the runtime metadata monitoring module.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The computer-implemented method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the one or more indicators of exploitation comprise one or more of unauthorized access and unexpected file manipulations.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. A non-transitory computer-readable medium for non-invasive monitoring and exploitation detection in a third-party software process, the non-transitory computer-readable medium comprising instructions that, when executed by a processor, cause the processor to perform a method comprising:
+<claim-text>scanning, by a memory monitoring module, a memory of the third-party software process to identify sensitive credentials including application programming interface (API) keys and tokens;</claim-text>
+<claim-text>monitoring, by a file descriptor monitoring module, opened file descriptors associated with the third-party software process, the opened file descriptors including files, network sockets and inter-process communication channels;</claim-text>
+<claim-text>analyzing, by a network activity monitoring module, network activity of the third-party software process, the network activity including domain name system (DNS) requests;</claim-text>
+<claim-text>collecting, by a runtime metadata monitoring module, runtime metadata from the third-party software process, the runtime metadata including privileges, environment variables and resource usage;</claim-text>
+<claim-text>correlating, by an exploitation detection module, data from the memory, the opened file descriptors, the network activity and the runtime metadata so as to detect one or more indicators of exploitation; and</claim-text>
+<claim-text>generating, by an alerting and reporting module, an alert in response to the one or more detected indicators of exploitation, wherein the method is performed without modifying or instrumenting the third-party software process.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The non-transitory computer-readable medium of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein scanning the memory comprises applying pattern-matching algorithms to detect the API keys based on predefined templates.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The non-transitory computer-readable medium of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein monitoring the opened file descriptors comprises logging file access events and capturing details including file paths and access types.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The non-transitory computer-readable medium of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein analyzing the network activity comprises decrypting secure sockets layer/transport layer security (SSL/TLS) traffic using session keys so as to inspect encrypted content.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The non-transitory computer-readable medium of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein collecting the runtime metadata comprises detecting unexpected privilege elevation or changes in process ownership.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The non-transitory computer-readable medium of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein collecting the runtime metadata comprises analyzing the environment variables for sensitive information or unexpected changes indicative of tampering.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The non-transitory computer-readable medium of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein correlating the data comprises matching observed behavior with known attack signatures from external intrusion detection systems.</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The non-transitory computer-readable medium of <claim-ref idref="CLM-00011">claim 11</claim-ref>, further comprising monitoring, by a loaded libraries monitoring module, one or more of file paths, names, and versions of libraries loaded by the third-party software process so as to detect unusual or unauthorized library loads.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The non-transitory computer-readable medium of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein generating the alert comprises generating a report with one or more of incident details, recommended mitigation actions, and data captured from one or more of the memory monitoring module, the file descriptor monitoring module, the network activity monitoring module and the runtime metadata monitoring module.</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The non-transitory computer-readable medium of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein the one or more indicators of exploitation comprise one or more of unauthorized access and unexpected file manipulations.</claim-text>
+</claim>
+</claims>

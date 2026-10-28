@@ -1,0 +1,140 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "11575704-root-1",
+  "role": "source-eligibility-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.98,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+  "findings": [],
+  "evidence": [
+    "Actual second-paragraph1\u201312 ground and selected1/7 numbered phrases present. Full inventory confirms two same-date CLMs, both absent from supplied cache; no originalComparisons rows. No contradiction invented, but adoption/version evidence absent.",
+    "Both inventoried same-date original PDF sets visibly agree for complete selected1-11. Wording and references2->1,3->2,4->3,5/7/8->2,6->3,9->8,10/11->9 corroborate native. Original6 further versus native farther is an isolated published spelling error in otherwise identical clause; preserve exact native farther. Actual retained second-paragraph rejection1-12 and selected1/7 phrases remain verified."
+  ],
+  "sourceChecks": {
+    "nativeApplicationPublicationDateMatch": true,
+    "nativePublicationSha256": "d87ef3757fd376f66b95f294a4d452e3ce7b92dd3d2ad2fbcd8e6c2250722e5f",
+    "nativePublicationHashMatches": true,
+    "sourceClaimsXmlSha256": "d665ccb73c27b7abde1d3d13fb5a273146402c7a39a55378d38d912c70ac9937",
+    "sourceClaimsHashMatches": true,
+    "fullInventorySha256": "12c41ec77d527044779cfdf49d3bfd88f82e43e9a7cb00cabc9a5bd46d5fca95",
+    "inventoryReportedCount": 48,
+    "inventoryActualRows": 48,
+    "preOfficeActionClaimAndAmendmentDocuments": [
+      {
+        "documentIdentifier": "EZQX8A9PPPOPPY1",
+        "documentCode": "CLM",
+        "officialDate": "2007-03-21T00:00:00.000-0400",
+        "description": "Claims"
+      },
+      {
+        "documentIdentifier": "F0C6TJNMPPOPPY5",
+        "documentCode": "CLM",
+        "officialDate": "2007-03-21T00:00:00.000-0400",
+        "description": "Claims"
+      }
+    ],
+    "citedOfficeActionInventoryRows": [
+      {
+        "documentIdentifier": "FY3QPPF4PPOPPY5",
+        "documentCode": "CTNF",
+        "officialDate": "2009-08-10T00:00:00.000-0400"
+      }
+    ],
+    "originalCachedHashes": []
+  },
+  "extractorVerdictReviewed": "unresolved",
+  "independence": "Independent critic did not extract source-audit for these indices. Read native claims/context, retained examiner/provenance, full cached inventories and relevant original XML. No structural expected trees, implementations, rules, predictions, network or attorney adjudication.",
+  "rationale": "Both inventoried same-date original PDF sets visibly agree for complete selected1-11. Wording and references2->1,3->2,4->3,5/7/8->2,6->3,9->8,10/11->9 corroborate native. Original6 further versus native farther is an isolated published spelling error in otherwise identical clause; preserve exact native farther. Actual retained second-paragraph rejection1-12 and selected1/7 phrases remain verified.",
+  "previousRounds": [
+    {
+      "protocolVersion": "semantic-reference/v2",
+      "familyId": "11575704-root-1",
+      "role": "source-eligibility-critic",
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "round": 1,
+      "confidence": 0.98,
+      "verdict": "unresolved",
+      "reviewedClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+      "findings": [
+        {
+          "claimNumber": 1,
+          "evidence": {
+            "examinerQuote": "the pattern of illumination",
+            "nativeQuote": "the pattern of illumination",
+            "inventoryOriginalIdentifiers": [
+              "EZQX8A9PPPOPPY1",
+              "F0C6TJNMPPOPPY5"
+            ]
+          },
+          "requiredCorrection": "Keep unresolved until both inventoried original claim sets can be compared or their differences otherwise reliably resolved; matching examiner excerpts alone do not establish full operative set."
+        }
+      ],
+      "evidence": [
+        "Actual second-paragraph1\u201312 ground and selected1/7 numbered phrases present. Full inventory confirms two same-date CLMs, both absent from supplied cache; no originalComparisons rows. No contradiction invented, but adoption/version evidence absent.",
+        "Both inventoried same-date original PDF sets visibly agree for complete selected1-11. Wording and references2->1,3->2,4->3,5/7/8->2,6->3,9->8,10/11->9 corroborate native. Original6 further versus native farther is an isolated published spelling error in otherwise identical clause; preserve exact native farther. Actual retained second-paragraph rejection1-12 and selected1/7 phrases remain verified."
+      ],
+      "sourceChecks": {
+        "nativeApplicationPublicationDateMatch": true,
+        "nativePublicationSha256": "d87ef3757fd376f66b95f294a4d452e3ce7b92dd3d2ad2fbcd8e6c2250722e5f",
+        "nativePublicationHashMatches": true,
+        "sourceClaimsXmlSha256": "d665ccb73c27b7abde1d3d13fb5a273146402c7a39a55378d38d912c70ac9937",
+        "sourceClaimsHashMatches": true,
+        "fullInventorySha256": "12c41ec77d527044779cfdf49d3bfd88f82e43e9a7cb00cabc9a5bd46d5fca95",
+        "inventoryReportedCount": 48,
+        "inventoryActualRows": 48,
+        "preOfficeActionClaimAndAmendmentDocuments": [
+          {
+            "documentIdentifier": "EZQX8A9PPPOPPY1",
+            "documentCode": "CLM",
+            "officialDate": "2007-03-21T00:00:00.000-0400",
+            "description": "Claims"
+          },
+          {
+            "documentIdentifier": "F0C6TJNMPPOPPY5",
+            "documentCode": "CLM",
+            "officialDate": "2007-03-21T00:00:00.000-0400",
+            "description": "Claims"
+          }
+        ],
+        "citedOfficeActionInventoryRows": [
+          {
+            "documentIdentifier": "FY3QPPF4PPOPPY5",
+            "documentCode": "CTNF",
+            "officialDate": "2009-08-10T00:00:00.000-0400"
+          }
+        ],
+        "originalCachedHashes": []
+      },
+      "extractorVerdictReviewed": "unresolved",
+      "independence": "Independent critic did not extract source-audit for these indices. Read native claims/context, retained examiner/provenance, full cached inventories and relevant original XML. No structural expected trees, implementations, rules, predictions, network or attorney adjudication.",
+      "rationale": "Numbered ground, actual family membership and operative source versions assessed separately. Full inventory chronology is supporting evidence only; unreadable/missing/dependency-conflicting originals remain unresolved."
+    }
+  ],
+  "extractorSourceEligibleConclusionStands": false,
+  "extractorDispositionStands": false,
+  "pdfClarificationReviewer": {
+    "role": "independent-source-critic",
+    "model": "gpt-6.1-sol",
+    "effort": "medium"
+  },
+  "pdfCorroboration": [
+    {
+      "documentIdentifier": "EZQX8A9PPPOPPY1",
+      "sha256": "66d7857d5957f43fcce35e94114e1600d56b7a2bd93eaf6734e2cf3f9887854f",
+      "pdfPagesInspected": [1, 2],
+      "printedPages": [7, 8],
+      "purpose": "Independent visual corroboration only; exact native source unchanged."
+    },
+    {
+      "documentIdentifier": "F0C6TJNMPPOPPY5",
+      "sha256": "edc934e078672f3e2a6c387d60afd8da48e5ff5a1040ec9d1dee843ef56a285d",
+      "pdfPagesInspected": [1, 2],
+      "printedPages": [7, 8],
+      "purpose": "Independent visual corroboration only; exact native source unchanged."
+    }
+  ]
+}

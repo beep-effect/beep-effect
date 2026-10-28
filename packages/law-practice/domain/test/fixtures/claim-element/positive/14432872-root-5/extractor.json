@@ -1,0 +1,27 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "14432872-root-5",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.95,
+  "resolvedClaimNumbers": [5, 6, 7, 8],
+  "unresolved": [],
+  "sourceConcerns": [
+    "Source critic accepted eligibility at 0.98 after original OCR page/line number reconciliation. Native text remains canonical; no OCR repair performed.",
+    "Claim 5 is independent. Context device claim 1 is not imported as an ancestor despite examiner questioning the intended relationship.",
+    "Claim 5 step c): “it thus passing” and “subsequently seal it” are pronouns with examiner-recorded ambiguity. They remain exact functional connecting text with no invented noun/identity edges. This local reference uncertainty does not erase otherwise clear step structure.",
+    "Unintroduced definite device/conduct/fiber/key/connection/channel/opening/laser phrases have no fabricated antecedent edges. Repeated definite references are not silently turned into indefinite introductions."
+  ],
+  "annotationRationale": [
+    "Preamble ends before characterized transition; four expressly lettered steps are separate functional-relation elements. Each step retains its internally coupled actions and ordered noun/text parts.",
+    "Bare components and medication are explicit introductions in step b and supply later unambiguous references. Full lexical head ““t” shaped connection” is preserved; it is not truncated at the quoted letter.",
+    "Claim 6 expressly further limits step b; claims 7/8 expressly further limit step c. Root inheritance and step-specific depends-on-element edges are both retained.",
+    "Context claims 1–4 are read only for source context and never added to selected score scope or treated as ancestors.",
+    "Quantities and timing remain exact connecting source text; medication, pressure, heat and treatment are explicit bare lexical entities. No clinical interpretation or claim construction supplied."
+  ],
+  "independence": "Fresh manually selected source grammar, lexical terms and semantic identities. Read only canonical claims/native XML, context, source/provenance/audit/critic, protocol and schema contracts. No rules, predictions, synthetic fixtures, conformance archives, network, secrets, git or delegation. Helper only locates manually selected quotes, formats annotations and checks span/reference coherence.",
+  "sourceStatus": "Independent source critic accepted; independent semantic critic and attorney adjudication pending.",
+  "validation": "Every selected claim resolved exactly once; exact spans, unique paths, nonoverlapping owned terms, referenced endpoint existence and ordered locally owned functional parts checked. Context claims not added to scoring."
+}

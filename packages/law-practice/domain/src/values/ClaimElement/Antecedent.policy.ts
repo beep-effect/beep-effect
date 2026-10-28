@@ -106,6 +106,7 @@ export type AntecedentPolicy = (
 ) => ReadonlyArray<AntecedentFinding>;
 
 const rule = {
+  unsupportedDeterminer: AntecedentRuleId.make("unsupported-determiner"),
   definiteWithoutIntroduction: AntecedentRuleId.make("definite-without-introduction"),
   multipleIntroductions: AntecedentRuleId.make("multiple-introductions"),
   determinerNumberMismatch: AntecedentRuleId.make("determiner-number-mismatch"),
@@ -137,7 +138,8 @@ type Verdict = O.Option<AntecedentFinding>;
 const isIntroducingDeterminer = S.is(ClaimTermIntroducingDeterminer);
 const isReferringDeterminer = S.is(ClaimTermReferringDeterminer);
 const isIntroducing = ({ term }: LocatedTerm): boolean => isIntroducingDeterminer(term.determiner);
-const isReferring = ({ term }: LocatedTerm): boolean => isReferringDeterminer(term.determiner);
+const isReferring = ({ term }: LocatedTerm): boolean =>
+  isReferringDeterminer(term.determiner) || ClaimTermDeterminer.is.bare(term.determiner);
 
 // Rule `non-referential-idiom`: "the same", "the art", ... carry no antecedent.
 const idiomWords = HashSet.make("same", "like", "art", "other", "following", "case");
@@ -403,15 +405,22 @@ const verdictFor =
     decomposed: HashSet.HashSet<number>,
     referring: LocatedTerm,
     chain: Chain
-  ): Verdict =>
-    chain.resolvable
+  ): Verdict => {
+    if (ClaimTermDeterminer.is.bare(referring.term.determiner)) {
+      return O.some(uncovered(referring, rule.unsupportedDeterminer));
+    }
+    return chain.resolvable
       ? readableVerdict(introductionsByHead, remaining)(terms, decomposed, referring, chain)
       : O.some(uncovered(referring, rule.chainUnresolvable));
+  };
 
 /**
  * Deterministic rule policy: resolves every referring term along each dependency chain of its claim.
  *
  * **Details**
+ *
+ * Unsupported possessives (`its` / `their`) are retained as `bare` terms and
+ * yield `pattern-not-covered`, without attempting antecedent resolution.
  *
  * Referring terms are `the`/`said` terms, except the idioms `the same`,
  * `the like`, `the art`, `the other`, `the following` and `the case`. Along one

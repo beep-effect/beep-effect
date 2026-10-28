@@ -1,0 +1,29 @@
+{
+  "date": "2026-10-28",
+  "oldFamilyId": "14172895-root-10",
+  "oldClaimCount": 7,
+  "newFamilyId": "14970678-root-17",
+  "newClaimCount": 4,
+  "cpcSection": "E",
+  "reason": "source eligibility/fidelity only; no predictions inspected",
+  "previousSlot": {
+    "applicationNumber": "14172895",
+    "rootClaimNumber": 10,
+    "claimNumbers": [
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16
+    ],
+    "claimCount": 7,
+    "cpcSection": "E",
+    "familyId": "14172895-root-10",
+    "fixtureDirectory": "14172895-root-10",
+    "status": "source-unresolved",
+    "sourceAuditVerdict": "unresolved",
+    "sourceCriticStatus": "unresolved"
+  }
+}
