@@ -75,7 +75,7 @@ type RemoteHostResolver = (hostname: string) => Effect.Effect<ReadonlyArray<stri
  * **Example** (Constructing a BlockedHostError)
  *
  * ```ts
- * import { BlockedHostError } from "@beep/schema"
+ * import { BlockedHostError } from "@beep/schema/SafeRemoteHost"
  * import * as O from "effect/Option"
  *
  * const error = BlockedHostError.make({
@@ -270,7 +270,7 @@ const assertResolvedAddressesAllowed: (
  * **Example** (Checking blocked hostnames)
  *
  * ```ts import.meta.vitest name="Checking blocked hostnames"
- * import { isBlockedRemoteHost } from "@beep/schema"
+ * import { isBlockedRemoteHost } from "@beep/schema/SafeRemoteHost"
  *
  * isBlockedRemoteHost("169.254.169.254") // => true
  * isBlockedRemoteHost("example.com") // => false
@@ -313,7 +313,7 @@ export const isBlockedRemoteHost: {
  * **Example** (Asserting an allowed hostname)
  *
  * ```ts
- * import { assertAllowedRemoteHost } from "@beep/schema"
+ * import { assertAllowedRemoteHost } from "@beep/schema/SafeRemoteHost"
  * import * as Effect from "effect/Effect"
  *
  * const program = assertAllowedRemoteHost("example.com")
@@ -377,7 +377,7 @@ export const assertAllowedRemoteHost: {
  * **Example** (Asserting an allowed remote URL)
  *
  * ```ts
- * import { assertAllowedRemoteUrl } from "@beep/schema"
+ * import { assertAllowedRemoteUrl } from "@beep/schema/SafeRemoteHost"
  * import * as Effect from "effect/Effect"
  *
  * const program = assertAllowedRemoteUrl("https://api.uspto.gov/data")

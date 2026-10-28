@@ -2,6 +2,8 @@
  * Schemas and model-field helpers for working with `globalThis.Float32Array`
  * values.
  *
+ * **Details**
+ *
  * Use this module when the domain model should keep native `Float32Array`
  * instances, but JSON create and update payloads still need a plain array-of-
  * numbers representation.

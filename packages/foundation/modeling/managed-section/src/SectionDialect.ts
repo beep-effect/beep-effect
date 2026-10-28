@@ -18,6 +18,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CommentStyle } from "./CommentStyle.ts";
 import { isValidAttributeName, isValidAttributeValue, parseAttributeRun } from "./internal/attributes.ts";
+import { SectionKey } from "./Section.ts";
 import type { Section, SectionId } from "./Section.ts";
 
 const $I = $ManagedSectionId.create("SectionDialect");
@@ -350,6 +351,161 @@ const invalidAttribute = (attributes: Readonly<Record<string, string>>): O.Optio
   );
 
 /**
+ * The text of one literal marker, between the comment prefix and suffix.
+ *
+ * **Details**
+ *
+ * Single-line, free of control characters, with no leading or trailing
+ * whitespace (both would be lost on a read), and never starting with the
+ * `---` rule, so a literal marker can never be read as a ruled one.
+ *
+ * @since 0.0.0
+ */
+const MarkerText = S.String.check(
+  S.isPattern(
+    /^[^\s\u0000-\u001f\u007f-\u009f](?:[^\u0000-\u001f\u007f-\u009f\u2028\u2029]*[^\s\u0000-\u001f\u007f-\u009f])?$/u,
+    $I.annote("MarkerTextCheck", {
+      description: "A literal marker text is one trimmed line without control characters.",
+      message: "Expected a trimmed single-line marker text without control characters.",
+    })
+  ),
+  S.makeFilter(
+    (text: string) => !Str.startsWith("---")(text),
+    $I.annote("MarkerTextRuleCheck", {
+      description: "A literal marker text does not start with the `---` rule of the ruled form.",
+      message: "Expected a marker text that does not start with '---'.",
+    })
+  )
+).pipe($I.annoteSchema("MarkerText", { description: "The text of one literal marker inside its comment." }));
+
+/** The scanner reads a run of spaces as one gap, so texts compare by that form. */
+const canonicalText = (text: string): string => Str.replace(/ +/g, " ")(text);
+
+/**
+ * A fixed BEGIN/END marker spelling for one section key.
+ *
+ * **Details**
+ *
+ * Some documents carry markers written before this package existed, such as
+ * `<!-- BEGIN GENERATED: INSTRUMENTATION CATALOG -->`. Listing them on a
+ * dialect lets those sections be read and rewritten byte for byte without a
+ * one-time marker migration. `begin` and `end` are the text between the
+ * comment prefix and suffix, compared with the same whitespace tolerance as
+ * the ruled form. A literal marker carries no attributes.
+ *
+ * **Example** (Spell a legacy section's markers)
+ *
+ * ```ts
+ * import { SectionMarkers } from "@beep/managed-section/SectionDialect";
+ *
+ * const markers = SectionMarkers.make({
+ *   key: "status",
+ *   begin: "BEGIN GENERATED: STATUS",
+ *   end: "END GENERATED: STATUS",
+ * });
+ * console.log(markers.begin) // BEGIN GENERATED: STATUS
+ * ```
+ *
+ * @public
+ * @category models
+ * @since 0.0.0
+ */
+export class SectionMarkers extends S.Opaque<SectionMarkers, { readonly brand: unique symbol }>()(
+  S.Struct({
+    key: SectionKey.pipe($I.annoteKey("SectionMarkers.key", { description: "The section key these markers spell." })),
+    begin: MarkerText.pipe(
+      $I.annoteKey("SectionMarkers.begin", { description: "The opening marker text inside its comment." })
+    ),
+    end: MarkerText.pipe(
+      $I.annoteKey("SectionMarkers.end", { description: "The closing marker text inside its comment." })
+    ),
+  })
+    .check(
+      S.makeFilter(
+        (markers) => canonicalText(markers.begin) !== canonicalText(markers.end),
+        $I.annote("SectionMarkers.DistinctEnds", {
+          description: "The opening and closing marker texts differ, also once space runs are collapsed.",
+          message: "Expected the begin and end marker texts to differ.",
+        })
+      )
+    )
+    .pipe(
+      $I.annoteSchema("SectionMarkers", {
+        description: "A fixed BEGIN/END marker spelling for one section key.",
+      })
+    )
+) {}
+
+/** No two literal spellings share a key, and no marker text is used twice. */
+const DistinctSpellings = S.makeFilter(
+  (markers: ReadonlyArray<SectionMarkers>) =>
+    A.length(A.dedupe(A.map(markers, (entry) => entry.key))) === A.length(markers) &&
+    A.length(A.dedupe(A.flatMap(markers, (entry) => [canonicalText(entry.begin), canonicalText(entry.end)]))) ===
+      2 * A.length(markers),
+  $I.annote("SectionDialect.DistinctSpellings", {
+    description:
+      "Each key has at most one literal spelling, and every literal marker text is distinct once space runs are collapsed.",
+    message: "Expected distinct keys and distinct marker texts across the literal spellings.",
+  })
+);
+
+/** A literal marker's text, with internal spaces read as "some whitespace". */
+const literalPattern = (text: string): string => `(${Str.replace(/ +/g, GAP)(escapeRegex(text))})`;
+
+/**
+ * Yields every literal marker in `text`, in the same capture shape the ruled
+ * scanner produces: `[1]` is BEGIN or END and `[2]` the section key.
+ */
+function* literalMatches(
+  text: string,
+  matcher: { readonly style: CommentStyle; readonly regex: RegExp },
+  markers: ReadonlyArray<SectionMarkers>
+): Generator<readonly [CommentStyle, RegExpMatchArray, Record<string, string>]> {
+  for (const match of Str.matchAll(matcher.regex)(text)) {
+    // Groups come in BEGIN/END pairs, one pair per spelling, in declared order.
+    // Exactly one alternative matched, so exactly one group is defined.
+    const group = O.getOrThrow(A.findFirstIndex(A.drop(match, 1), (capture) => capture !== undefined));
+    const spelling = A.getUnsafe(markers, group >> 1);
+    match[1] = group % 2 === 0 ? "BEGIN" : "END";
+    match[2] = spelling.key;
+    yield [matcher.style, match, {}] as const;
+  }
+}
+
+/** The literal spelling listed for a key, if any. */
+const spellingFor: {
+  (spellings: ReadonlyArray<SectionMarkers>, key: string): O.Option<SectionMarkers>;
+  (key: string): (spellings: ReadonlyArray<SectionMarkers>) => O.Option<SectionMarkers>;
+} = dual(
+  2,
+  (spellings: ReadonlyArray<SectionMarkers>, key: string): O.Option<SectionMarkers> =>
+    A.findFirst(spellings, (entry) => entry.key === key)
+);
+
+/** One line-anchored scanner per comment style over every literal spelling. */
+const compileLiteralMatchers = (
+  styles: ReadonlyArray<CommentStyle>,
+  markers: ReadonlyArray<SectionMarkers>
+): ReadonlyArray<{ readonly style: CommentStyle; readonly regex: RegExp }> => {
+  const texts = A.join(
+    A.flatMap(markers, (entry) => [literalPattern(entry.begin), literalPattern(entry.end)]),
+    "|"
+  );
+  return A.map(styles, (style) => {
+    const suffix = style.suffix === undefined ? "" : `${GAP}${escapeRegex(style.suffix)}`;
+    return {
+      style,
+      // Same line and leading-BOM anchors as the ruled scanner; the trailing
+      // line break is a lookahead, never consumed.
+      regex: new RegExp(
+        `(?:^|(?<=(?<![\\s\\S])\\uFEFF))${escapeRegex(style.prefix)}${GAP}(?:${texts})${suffix}[ \\t]*(?=[\\r\\n\\u2028\\u2029]|(?![\\s\\S]))`,
+        "gm"
+      ),
+    };
+  });
+};
+
+/**
  * The marker vocabulary: what phrase delimits a managed section, and which
  * comment styles a document is scanned for.
  *
@@ -361,8 +517,11 @@ const invalidAttribute = (attributes: Readonly<Record<string, string>>): O.Optio
  * caller's own sections, because a foreign block's style may appear nowhere
  * in them.
  *
- * One phrase per dialect is deliberate: two marker families in one document
- * make parsing ambiguous for no benefit anyone has asked for.
+ * One phrase per dialect is deliberate: two ruled marker families in one
+ * document make parsing ambiguous for no benefit anyone has asked for.
+ *
+ * A document whose markers predate this package is read with a
+ * {@link LiteralMarkerDialect}, which adds fixed spellings for individual keys.
  *
  * **Example** (Choose a custom marker phrase)
  *
@@ -622,7 +781,62 @@ export class SectionDialect extends S.Class<SectionDialect, { readonly brand: un
    */
   *markerMatches(text: string): Iterable<readonly [CommentStyle, RegExpMatchArray, Record<string, string>]> {
     const [endings, breaks] = lineEndings(text);
-    for (const matcher of this.matchers()) yield* styleMatches(text, matcher, breaks, endings);
+    for (const matcher of this.matchers()) {
+      for (const hit of styleMatches(text, matcher, breaks, endings)) {
+        // A key with a literal spelling has no ruled one.
+        if (O.isNone(spellingFor(this.spellings(), A.getUnsafe(hit[1], 2)))) yield hit;
+      }
+    }
+    for (const matcher of this.literalMatchers()) yield* literalMatches(text, matcher, this.spellings());
+  }
+
+  /**
+   * The fixed marker spellings this dialect renders and scans, by key.
+   *
+   * **Details**
+   *
+   * Empty for a ruled dialect; a {@link LiteralMarkerDialect} returns its
+   * `markers`. A key with a literal spelling has no ruled one.
+   *
+   * **Example** (Inspect the literal spellings)
+   *
+   * ```ts
+   * import { SectionDialect } from "@beep/managed-section/SectionDialect";
+   *
+   * console.log(SectionDialect.default.spellings().length) // 0
+   * ```
+   *
+   * @internal
+   * @category getters
+   * @since 0.0.0
+   */
+  spellings(): ReadonlyArray<SectionMarkers> {
+    return [];
+  }
+
+  /**
+   * The compiled literal-marker scanners, one per recognized comment style.
+   *
+   * **Details**
+   *
+   * Empty for a ruled dialect. A literal marker starts its line (after an
+   * optional leading BOM), and only horizontal whitespace may follow it
+   * before the line ending.
+   *
+   * **Example** (A ruled dialect has no literal scanners)
+   *
+   * ```ts
+   * import { SectionDialect } from "@beep/managed-section/SectionDialect";
+   *
+   * console.log(SectionDialect.default.literalMatchers().length) // 0
+   * ```
+   *
+   * @internal
+   * @category getters
+   * @since 0.0.0
+   */
+  literalMatchers(): ReadonlyArray<{ readonly style: CommentStyle; readonly regex: RegExp }> {
+    return [];
   }
 
   /**
@@ -742,7 +956,12 @@ export class SectionDialect extends S.Class<SectionDialect, { readonly brand: un
    * @since 0.0.0
    */
   private marker(kind: "BEGIN" | "END", id: SectionId, attributes?: Readonly<Record<string, string>>): string {
-    const tail = id.commentStyle.suffix === undefined ? "" : ` ${id.commentStyle.suffix}`;
+    const literal = spellingFor(this.spellings(), id.key);
+    if (O.isSome(literal)) {
+      // A literal marker has no attribute slot; `render` refuses attributes
+      // on it through the read-back check.
+      return id.commentStyle.comment(kind === "BEGIN" ? literal.value.begin : literal.value.end);
+    }
     // Emission order is the record's insertion order — the caller's declared
     // order — while equality over attributes is order-insensitive, so a
     // hand-reordered marker with equal pairs compares Unchanged and an actual
@@ -754,6 +973,137 @@ export class SectionDialect extends S.Class<SectionDialect, { readonly brand: un
             A.map(R.toEntries(attributes), ([name, value]) => ` ${name}="${value}"`),
             ""
           );
-    return `${id.commentStyle.prefix} --- ${kind} ${id.key} ${this.phrase}${run} ---${tail}`;
+    return id.commentStyle.comment(`--- ${kind} ${id.key} ${this.phrase}${run} ---`);
+  }
+}
+
+/**
+ * A dialect that adds fixed marker spellings for individual keys.
+ *
+ * **Details**
+ *
+ * Every key listed in `markers` is rendered and scanned with its literal
+ * {@link SectionMarkers} instead of the ruled
+ * `--- BEGIN <key> <phrase> ---` form; every other key keeps the ruled form.
+ * A listed key has exactly one spelling, so a ruled marker naming it is
+ * ordinary text to this dialect. Everything else, the scanner's refusals,
+ * line-ending handling and read-back check included, is the base dialect's.
+ * `markers` is non-empty, holds one spelling per key and never reuses a
+ * marker text.
+ *
+ * **Example** (Read and rewrite a legacy generated section)
+ *
+ * ```ts
+ * import { CommentStyle } from "@beep/managed-section/CommentStyle";
+ * import { SectionId } from "@beep/managed-section/Section";
+ * import { LiteralMarkerDialect, SectionMarkers } from "@beep/managed-section/SectionDialect";
+ * import { SectionDocument } from "@beep/managed-section/SectionDocument";
+ * import * as Result from "effect/Result";
+ *
+ * const dialect = LiteralMarkerDialect.make({
+ *   phrase: "MANAGED SECTION",
+ *   styles: [CommentStyle.html],
+ *   markers: [SectionMarkers.make({ key: "status", begin: "BEGIN STATUS", end: "END STATUS" })],
+ * });
+ * const id = SectionId.make({ key: "status", commentStyle: CommentStyle.html });
+ * const parsed = SectionDocument.parseResult("<!-- BEGIN STATUS -->\nold\n<!-- END STATUS -->\n", dialect);
+ * const next = Result.flatMap(parsed, (document) => document.reconcile([id.section("new")]));
+ * console.log(Result.isSuccess(next) && next.success.text) // <!-- BEGIN STATUS -->\nnew\n<!-- END STATUS -->\n
+ * ```
+ *
+ * @public
+ * @category models
+ * @since 0.0.0
+ */
+export class LiteralMarkerDialect extends SectionDialect.extend<LiteralMarkerDialect>($I`LiteralMarkerDialect`)(
+  {
+    /**
+     * The fixed spellings, one per key. Non-empty.
+     *
+     * @since 0.0.0
+     */
+    markers: S.NonEmptyArray(SectionMarkers)
+      .check(DistinctSpellings)
+      .pipe(
+        $I.annoteKey("LiteralMarkerDialect.markers", {
+          description: "The fixed BEGIN/END spellings, one per key, rendered and scanned instead of the ruled form.",
+        })
+      ),
+  },
+  $I.annote("LiteralMarkerDialect", {
+    description: "A dialect that adds fixed marker spellings for individual keys.",
+  })
+) {
+  /**
+   * Keeps the compiled literal-marker scanners on this instance, outside its wire form.
+   *
+   * **Example** (Observe the literal scanner cache)
+   *
+   * ```ts
+   * import { CommentStyle } from "@beep/managed-section/CommentStyle";
+   * import { LiteralMarkerDialect, SectionMarkers } from "@beep/managed-section/SectionDialect";
+   *
+   * const dialect = LiteralMarkerDialect.make({
+   *   phrase: "MANAGED SECTION",
+   *   styles: [CommentStyle.html],
+   *   markers: [SectionMarkers.make({ key: "status", begin: "BEGIN STATUS", end: "END STATUS" })],
+   * });
+   * console.log(dialect.literalMatchers() === dialect.literalMatchers()) // true
+   * ```
+   *
+   * @category constants
+   * @since 0.0.0
+   */
+  readonly #compiledLiteralMatchers = compileLiteralMatchers(this.styles, this.markers);
+
+  /**
+   * The listed spellings.
+   *
+   * **Example** (Read the spellings back)
+   *
+   * ```ts
+   * import { CommentStyle } from "@beep/managed-section/CommentStyle";
+   * import { LiteralMarkerDialect, SectionMarkers } from "@beep/managed-section/SectionDialect";
+   *
+   * const dialect = LiteralMarkerDialect.make({
+   *   phrase: "MANAGED SECTION",
+   *   styles: [CommentStyle.html],
+   *   markers: [SectionMarkers.make({ key: "status", begin: "BEGIN STATUS", end: "END STATUS" })],
+   * });
+   * console.log(dialect.spellings()[0]?.key) // status
+   * ```
+   *
+   * @internal
+   * @category getters
+   * @since 0.0.0
+   */
+  override spellings(): ReadonlyArray<SectionMarkers> {
+    return this.markers;
+  }
+
+  /**
+   * One compiled literal-marker scanner per recognized comment style, memoized.
+   *
+   * **Example** (Count the literal scanners)
+   *
+   * ```ts
+   * import { CommentStyle } from "@beep/managed-section/CommentStyle";
+   * import { LiteralMarkerDialect, SectionMarkers } from "@beep/managed-section/SectionDialect";
+   *
+   * const dialect = LiteralMarkerDialect.make({
+   *   phrase: "MANAGED SECTION",
+   *   styles: [CommentStyle.html, CommentStyle.hash],
+   *   markers: [SectionMarkers.make({ key: "status", begin: "BEGIN STATUS", end: "END STATUS" })],
+   * });
+   * console.log(dialect.literalMatchers().length) // 2
+   * ```
+   *
+   * @internal
+   * @category getters
+   * @since 0.0.0
+   */
+  override literalMatchers(): ReadonlyArray<{ readonly style: CommentStyle; readonly regex: RegExp }> {
+    const compile = () => compileLiteralMatchers(this.styles, this.markers);
+    return #compiledLiteralMatchers in this ? this.#compiledLiteralMatchers : compile();
   }
 }

@@ -43,6 +43,8 @@ type SemanticVersionSchemaBase = typeof SemanticVersionTemplate;
 /**
  * Named schema surface for {@link SemanticVersion}.
  *
+ * **Details**
+ *
  * Declaration emit references this interface by name instead of serializing
  * the template-literal schema structurally at every consumer
  * position.
