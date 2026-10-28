@@ -63,6 +63,23 @@ IDs. Bluebook codecs, document relationships and the remaining provisional
 extension branches are unfinished. See the exact field ownership and source
 receipt in `history/evidence/2026-10-28-canonical-models.md`.
 
+## Applied provisional-contract retirement — 2026-10-28
+
+All 37 remaining mixed/locator/relationship/extension-stub value directories
+are retired. The existing `Citation` union now contains only its eight
+canonical semantic families; future extension branches require an evidenced
+disposition and semantic schema. This does not reject any donor behavior or
+complete a donor row. The old local `CitationId`, generic warning bag,
+array-index resolution result and duplicate span/locator contracts are gone.
+
+`SourceRef` is a non-citation consumer of the old module's `TextQuote` selector.
+Its exact encoded shape and annotation identity are preserved by moving that
+selector into `SourceRef`. It provides no verification or locator operations.
+`CitationSignal`, `HistorySignal` and `StructuredDate` remain pure concepts;
+no parser or formatting behavior is claimed by retaining their schemas.
+See `history/evidence/2026-10-28-provisional-retirement.md` for the complete
+path/hash inventory, consumer findings and remaining proof obligations.
+
 ## Target boundaries
 
 ### Semantic legal values

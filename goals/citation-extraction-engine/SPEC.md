@@ -732,6 +732,17 @@ instead of silently splitting delivery or weakening scope.
   lawful structured Bluebook codecs remain an open P1 requirement. Reversal
   requires an evidenced field/consumer migration, not aliases or recursion.
 
+- **2026-10-28 provisional contract retirement:** remove the remaining mixed
+  base, local occurrence ID, generic warning/resolution bags, duplicate
+  span/locator models, embedded relationship copies and unproved extension
+  stubs. Keep all donor obligations open until their final evidenced
+  disposition. Preserve the existing non-citation `SourceRef` selector by
+  relocating `TextQuote` with its encoded shape and annotation identity intact;
+  it is unverified review data, not a citation anchor or locator replacement.
+  New mentions and document relationships must use the prerequisite proof and
+  role-specific IDs. Reintroduction requires the target ownership contract and
+  source/regression proof, not recovery of a provisional public alias.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from

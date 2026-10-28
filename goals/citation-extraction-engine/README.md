@@ -23,8 +23,10 @@ prerequisite/limits holdpoints pass. Occurrence/authority token schemas and a
 private verified-anchor occurrence digest producer are implemented. Canonical
 FullLawCitation replaces the provisional statute/regulation shapes in the
 existing union. The canonical case, short/named reference, unknown and journal
-forms now have semantic schemas. Verified mentions, Bluebook codecs, extension
-schemas, runtime enforcement and family safety remain unfinished.
+forms now have semantic schemas. Remaining mixed citation contracts and
+provisional extension stubs are retired. Verified mentions, Bluebook codecs,
+extension adoption/schema proof, runtime enforcement and family safety remain
+unfinished.
 
 Current evidence:
 
@@ -47,6 +49,7 @@ Current evidence:
 - [Verified occurrence IDs](./history/evidence/2026-10-28-mention-identity-producer.md)
 - [Canonical law schema](./history/evidence/2026-10-28-law-schema.md)
 - [Canonical model schemas](./history/evidence/2026-10-28-canonical-models.md)
+- [Retirement](./history/evidence/2026-10-28-provisional-retirement.md)
 
 ## Mission
 

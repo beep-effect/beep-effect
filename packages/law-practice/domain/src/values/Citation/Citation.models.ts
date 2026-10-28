@@ -1,27 +1,10 @@
 /**
  * Citation semantic union and schema-derived full/reference subsets.
- * Legacy extension branches remain provisional pending their donor dispositions.
  * @packageDocumentation
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
-import { AnnotationCitation } from "../AnnotationCitation/index.ts";
-import { CanonCitation } from "../CanonCitation/index.ts";
-import { ConstitutionalCitation } from "../ConstitutionalCitation/index.ts";
-import { DocketCitation } from "../DocketCitation/index.ts";
-import { FederalRegisterCitation } from "../FederalRegisterCitation/index.ts";
-import { FederalRuleCitation } from "../FederalRuleCitation/index.ts";
-import { LegislativeMaterialCitation } from "../LegislativeMaterialCitation/index.ts";
-import { LocalOrdinanceCitation } from "../LocalOrdinanceCitation/index.ts";
-import { NeutralCitation } from "../NeutralCitation/index.ts";
-import { PublicLawCitation } from "../PublicLawCitation/index.ts";
-import { RestatementCitation } from "../RestatementCitation/index.ts";
-import { SessionLawCitation } from "../SessionLawCitation/index.ts";
-import { StateRuleCitation } from "../StateRuleCitation/index.ts";
-import { StatutesAtLargeCitation } from "../StatutesAtLargeCitation/index.ts";
-import { TreatiseCitation } from "../TreatiseCitation/index.ts";
-import { TreatyCitation } from "../TreatyCitation/index.ts";
 import {
   FullCaseCitation,
   IdCitation,
@@ -36,8 +19,7 @@ import { FullLawCitation } from "./Citation.law.ts";
 const $I = $LawPracticeDomainId.create("values/Citation/Citation.models");
 
 /**
- * Citation meanings; canonical forms contain no occurrence or run state.
- * Remaining extension branches still await schema/disposition migration.
+ * Canonical citation meanings without occurrence or run state.
  * **Example** (Inspect the law discriminator)
  * ```ts
  * import { Citation } from "@beep/law-practice-domain/values"
@@ -51,22 +33,6 @@ export const Citation = S.Union([
   FullCaseCitation,
   FullLawCitation,
   FullJournalCitation,
-  AnnotationCitation,
-  CanonCitation,
-  ConstitutionalCitation,
-  DocketCitation,
-  FederalRegisterCitation,
-  FederalRuleCitation,
-  LegislativeMaterialCitation,
-  LocalOrdinanceCitation,
-  NeutralCitation,
-  PublicLawCitation,
-  RestatementCitation,
-  SessionLawCitation,
-  StateRuleCitation,
-  StatutesAtLargeCitation,
-  TreatiseCitation,
-  TreatyCitation,
   IdCitation,
   SupraCitation,
   ShortFormCaseCitation,
@@ -76,7 +42,7 @@ export const Citation = S.Union([
   S.toTaggedUnion("type"),
   $I.annoteSchema("Citation", {
     description:
-      "Citation semantic union; extension branches are provisional until their dispositions and schema separation are complete.",
+      "Canonical semantic citation union; any future extension requires an evidenced disposition and the same semantic/evidence separation.",
   })
 );
 /**
@@ -96,27 +62,7 @@ export type Citation = typeof Citation.Type;
  * @category models
  * @since 0.0.0
  */
-export const FullCitation = S.Union([
-  Citation.cases.case,
-  Citation.cases.law,
-  Citation.cases.journal,
-  Citation.cases.annotation,
-  Citation.cases.canon,
-  Citation.cases.constitutional,
-  Citation.cases.docket,
-  Citation.cases.federalRegister,
-  Citation.cases.federalRule,
-  Citation.cases.legislativeMaterial,
-  Citation.cases.localOrdinance,
-  Citation.cases.neutral,
-  Citation.cases.publicLaw,
-  Citation.cases.restatement,
-  Citation.cases.sessionLaw,
-  Citation.cases.stateRule,
-  Citation.cases.statutesAtLarge,
-  Citation.cases.treatise,
-  Citation.cases.treaty,
-]).pipe(
+export const FullCitation = S.Union([Citation.cases.case, Citation.cases.law, Citation.cases.journal]).pipe(
   S.toTaggedUnion("type"),
   $I.annoteSchema("FullCitation", {
     description: "Full-authority subset derived from Citation cases; no independent type literal list.",

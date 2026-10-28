@@ -14,19 +14,6 @@
  */
 export * from "./ActFrameElementRef/index.ts";
 /**
- * Annotation-citation value-object exports.
- *
- * **Example** (Import the annotation-citation value objects)
- *
- * ```ts
- * import { AnnotationCitation } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./AnnotationCitation/index.ts";
-/**
  * Answer-row value-object exports.
  *
  * **Example** (Import the answer-row value objects)
@@ -60,32 +47,6 @@ export * from "./ApplicationNumber/index.ts";
  */
 export * from "./CalendarDate/index.ts";
 /**
- * Canon-citation value-object exports.
- *
- * **Example** (Import the canon-citation value objects)
- *
- * ```ts
- * import { CanonCitation } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./CanonCitation/index.ts";
-/**
- * Case-group value-object exports.
- *
- * **Example** (Import the case-group value objects)
- *
- * ```ts
- * import { CaseGroup } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./CaseGroup/index.ts";
-/**
  * Citation value-object exports (the tagged-union `Citation`, its full/short-form
  * unions, canonical semantic forms and provisional extension members).
  *
@@ -100,32 +61,6 @@ export * from "./CaseGroup/index.ts";
  */
 export * from "./Citation/index.ts";
 /**
- * Citation-base value-object exports.
- *
- * **Example** (Import the citation-base value objects)
- *
- * ```ts
- * import { CitationBase } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./CitationBase/index.ts";
-/**
- * Citation-id value-object exports.
- *
- * **Example** (Import the citation-id value objects)
- *
- * ```ts
- * import { CitationId } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./CitationId/index.ts";
-/**
  * Citation-signal value-object exports.
  *
  * **Example** (Import the citation-signal value objects)
@@ -138,19 +73,6 @@ export * from "./CitationId/index.ts";
  * @since 0.0.0
  */
 export * from "./CitationSignal/index.ts";
-/**
- * Citation-warning value-object exports.
- *
- * **Example** (Import the citation-warning value objects)
- *
- * ```ts
- * import { CitationWarning } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./CitationWarning/index.ts";
 /**
  * Citing-application identity value-object exports.
  *
@@ -166,32 +88,6 @@ export * from "./CitingApplicationIdentity/index.ts";
  */
 export * from "./ClaimElement/index.ts";
 /**
- * Component-span value-object exports.
- *
- * **Example** (Import the case component-span value objects)
- *
- * ```ts
- * import { NeutralComponentSpan } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./ComponentSpan/index.ts";
-/**
- * Constitutional-citation value-object exports.
- *
- * **Example** (Import the constitutional-citation value objects)
- *
- * ```ts
- * import { ConstitutionalCitation } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./ConstitutionalCitation/index.ts";
-/**
  * Constitution-outcome vocabulary exports.
  *
  * **Example** (Import the constitution-outcome vocabulary)
@@ -204,45 +100,6 @@ export * from "./ConstitutionalCitation/index.ts";
  * @since 0.0.0
  */
 export * from "./ConstitutionOutcome/index.ts";
-/**
- * Context-options value-object exports.
- *
- * **Example** (Import the context-options value objects)
- *
- * ```ts
- * import { ContextOptions } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./ContextOptions/index.ts";
-/**
- * Court-inference value-object exports.
- *
- * **Example** (Import the court-inference value objects)
- *
- * ```ts
- * import { CourtInference } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./CourtInference/index.ts";
-/**
- * Docket-citation value-object exports.
- *
- * **Example** (Import the docket-citation value objects)
- *
- * ```ts
- * import { DocketCitation } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./DocketCitation/index.ts";
 /**
  * Docket deadline value-object and date-policy exports.
  *
@@ -258,100 +115,6 @@ export * from "./DocketCitation/index.ts";
 export * from "./DocketDeadline/index.ts";
 /** Atomic office-action evidence exports. @category services @since 0.0.0 */
 export * from "./DocStructure/index.ts";
-/**
- * Durable-locator value-object exports.
- *
- * **Example** (Import the durable-locator value objects)
- *
- * ```ts
- * import { DurableLocator } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./DurableLocator/index.ts";
-/**
- * Durable-locator-options value-object exports.
- *
- * **Example** (Import the durable-locator-options value objects)
- *
- * ```ts
- * import { DurableLocatorOptions } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./DurableLocatorOptions/index.ts";
-/**
- * Federal-register-citation value-object exports.
- *
- * **Example** (Import the federal-register-citation value objects)
- *
- * ```ts
- * import { FederalRegisterCitation } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./FederalRegisterCitation/index.ts";
-/**
- * Federal-rule-citation value-object exports.
- *
- * **Example** (Import the federal-rule-citation value objects)
- *
- * ```ts
- * import { FederalRuleCitation } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./FederalRuleCitation/index.ts";
-/**
- * Footnote namespace module export.
- *
- * **Example** (Detect footnotes in a document body)
- *
- * ```ts
- * import { Footnote } from "@beep/law-practice-domain";
- *
- * const footnoteMap: Footnote.FootnoteMap =
- *   Footnote.detectTextFootnotes("Body\n----------\n1. See Smith v. Jones.");
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./Footnote/index.ts";
-/**
- * History-chain value-object exports.
- *
- * **Example** (Import the history-chain value objects)
- *
- * ```ts
- * import { HistoryChain } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./HistoryChain/index.ts";
-/**
- * History-link value-object exports.
- *
- * **Example** (Import the history-link value objects)
- *
- * ```ts
- * import { HistoryLink } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./HistoryLink/index.ts";
 /**
  * History-signal value-object exports.
  *
@@ -473,51 +236,12 @@ export * from "./LegalScopeContext/index.ts";
  */
 export * from "./LegalVerdictFamily/index.ts";
 /**
- * Legislative-material-citation value-object exports.
- *
- * **Example** (Import the legislative-material-citation value objects)
- *
- * ```ts
- * import { LegislativeMaterialCitation } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./LegislativeMaterialCitation/index.ts";
-/**
- * Local-ordinance-citation value-object exports.
- *
- * **Example** (Import the local-ordinance-citation value objects)
- *
- * ```ts
- * import { LocalOrdinanceCitation } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./LocalOrdinanceCitation/index.ts";
-/**
  * Mail-tagging taxonomy, matching, ledger, and report value-object exports.
  *
  * @category value-objects
  * @since 0.0.0
  */
 export * from "./MailTagging/index.ts";
-/**
- * Neutral-citation value-object exports.
- *
- * **Example** (Import the neutral-citation value objects)
- *
- * ```ts
- * import { NeutralCitation } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./NeutralCitation/index.ts";
 /**
  * Norm source reference value-object exports.
  *
@@ -539,19 +263,6 @@ export * from "./ObservationVersionRef/index.ts";
  * @since 0.0.0
  */
 export * from "./OfficeCode/index.ts";
-/**
- * Parallel-group value-object exports.
- *
- * **Example** (Import the parallel-group value objects)
- *
- * ```ts
- * import { ParallelGroup } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./ParallelGroup/index.ts";
 /**
  * Party kind vocabulary exports.
  *
@@ -614,19 +325,6 @@ export * from "./PatentOffice/index.ts";
  */
 export * from "./PermissionStatus/index.ts";
 /**
- * Pincite value-object exports.
- *
- * **Example** (Import the pincite value objects)
- *
- * ```ts
- * import { PinciteInfo } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./PinciteInfo/index.ts";
-/**
  * Practice knowledge-graph epistemic-status exports.
  *
  * @category value-objects
@@ -655,19 +353,6 @@ export * from "./PracticeProfile/index.ts";
  */
 export * from "./PriorityBasis/index.ts";
 /**
- * Public-law-citation value-object exports.
- *
- * **Example** (Import the public-law-citation value objects)
- *
- * ```ts
- * import { PublicLawCitation } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./PublicLawCitation/index.ts";
-/**
  * Question value-object exports.
  *
  * **Example** (Import the question value objects)
@@ -680,32 +365,6 @@ export * from "./PublicLawCitation/index.ts";
  * @since 0.0.0
  */
 export * from "./Question/index.ts";
-/**
- * Resolution-result value-object exports.
- *
- * **Example** (Import the resolution-result value objects)
- *
- * ```ts
- * import { ResolutionResult } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./ResolutionResult/index.ts";
-/**
- * Restatement-citation value-object exports.
- *
- * **Example** (Import the restatement-citation value objects)
- *
- * ```ts
- * import { RestatementCitation } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./RestatementCitation/index.ts";
 /**
  * Review-item value-object exports.
  *
@@ -720,51 +379,12 @@ export * from "./RestatementCitation/index.ts";
  */
 export * from "./ReviewItem/index.ts";
 /**
- * Segment value-object exports.
- *
- * **Example** (Import the segment value objects)
- *
- * ```ts
- * import { Segment } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./Segment/index.ts";
-/**
- * Segment map value-object exports.
- *
- * **Example** (Import the segment-map value objects)
- *
- * ```ts
- * import { SegmentMap } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./SegmentMap/index.ts";
-/**
  * Lawyer seniority tier value-object exports.
  *
  * @category value-objects
  * @since 0.0.0
  */
 export * from "./SeniorityTier/index.ts";
-/**
- * Session-law-citation value-object exports.
- *
- * **Example** (Import the session-law-citation value objects)
- *
- * ```ts
- * import { SessionLawCitation } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./SessionLawCitation/index.ts";
 /**
  * Setup requirement value-object exports (workstation setup doctor).
  *
@@ -799,58 +419,6 @@ export * from "./SourceNormRef/index.ts";
  */
 export * from "./SourceRef/index.ts";
 /**
- * Span value-object exports.
- *
- * **Example** (Import the span value objects)
- *
- * ```ts
- * import { Span } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./Span/index.ts";
-/**
- * State-rule-citation value-object exports.
- *
- * **Example** (Import the state-rule-citation value objects)
- *
- * ```ts
- * import { StateRuleCitation } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./StateRuleCitation/index.ts";
-/**
- * Statutes-at-large-citation value-object exports.
- *
- * **Example** (Import the statutes-at-large-citation value objects)
- *
- * ```ts
- * import { StatutesAtLargeCitation } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./StatutesAtLargeCitation/index.ts";
-/**
- * String-citation-group value-object exports.
- *
- * **Example** (Import the string-citation-group value objects)
- *
- * ```ts
- * import { StringCitationGroup } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./StringCitationGroup/index.ts";
-/**
  * Structured-date value-object exports.
  *
  * **Example** (Import the structured-date value objects)
@@ -863,58 +431,6 @@ export * from "./StringCitationGroup/index.ts";
  * @since 0.0.0
  */
 export * from "./StructuredDate/index.ts";
-/**
- * Subsequent-history-entry value-object exports.
- *
- * **Example** (Import the subsequent-history-entry value objects)
- *
- * ```ts
- * import { SubsequentHistoryEntry } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./SubsequentHistoryEntry/index.ts";
-/**
- * Surrounding-context value-object exports.
- *
- * **Example** (Import the surrounding-context value objects)
- *
- * ```ts
- * import { SurroundingContext } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./SurroundingContext/index.ts";
-/**
- * Treatise-citation value-object exports.
- *
- * **Example** (Import the treatise-citation value objects)
- *
- * ```ts
- * import { TreatiseCitation } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./TreatiseCitation/index.ts";
-/**
- * Treaty-citation value-object exports.
- *
- * **Example** (Import the treaty-citation value objects)
- *
- * ```ts
- * import { TreatyCitation } from "@beep/law-practice-domain/values";
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./TreatyCitation/index.ts";
 /**
  * Verdict-row value-object exports.
  *

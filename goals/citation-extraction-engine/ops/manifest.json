@@ -11,7 +11,7 @@
   "packetPath": "goals/citation-extraction-engine",
   "lifecycle": "active",
   "mission": "Deliver Effect-native observable capability parity with pinned official eyecite 2.7.6, exact verified source evidence, schema-first legal models, lawful transformations, and proven TypeScript-port extensions.",
-  "statusNote": "P0/P1 remain in progress. All eight canonical model families now have semantic schemas in the existing union; law primitives are shared, historical case editions map to versioned public reporter IDs, and unknown courts/references remain data. Recursive citation copies, the old formatter and orphaned canonical span classes are removed. Verified mentions, document relationships, lawful Bluebook codecs, extension dispositions, actual parser behavior and safety/parity proof remain unfinished.",
+  "statusNote": "P0/P1 remain in progress. The existing Citation union contains only eight canonical semantic families after retirement of 37 provisional mixed/locator/relationship/extension directories. Shared persisted citation identity is distinct; SourceRef quote-selector encoding is preserved. No donor disposition or behavior parity is completed by removing obsolete APIs/tests. Verified mentions, document relationships, Bluebook codecs, extension proof and the bounded parser remain unfinished.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -62,7 +62,8 @@
     "goals/citation-extraction-engine/ops/citation-migration-surface.json",
     "goals/citation-extraction-engine/history/evidence/2026-10-28-mention-identity-producer.md",
     "goals/citation-extraction-engine/history/evidence/2026-10-28-law-schema.md",
-    "goals/citation-extraction-engine/history/evidence/2026-10-28-canonical-models.md"
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-canonical-models.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-provisional-retirement.md"
   ],
   "researchReports": [
     "research/EYECITE_BASELINE.md",

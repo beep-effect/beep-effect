@@ -2,16 +2,11 @@ import {
   ApplicationNumber,
   CandorDisposition,
   Citation,
-  CitationBase,
-  CitationWarning,
   CitingApplicationIdentity,
   Claim,
   ClaimNumber,
-  ContextOptions,
   Distinction,
   DistinctionDetail,
-  DocketCitation,
-  DurableLocatorOptions,
   extractPatentFigures,
   extractPatentNumber,
   FullCitation,
@@ -28,7 +23,6 @@ import {
   LegalContactRole,
   Matter,
   MatterType,
-  NeutralCitation,
   OfficeAction,
   OfficeCode,
   PatentAsset,
@@ -36,43 +30,29 @@ import {
   PatentCitationEvent,
   PatentDocumentTriplet,
   PatentNumber,
-  PinciteInfo,
   PriorArtReference,
   parsePatentSections,
   Rejection,
   RejectionGround,
-  ResolutionResult,
   ShortFormCitation,
-  Span,
-  StatutesAtLargeCitation,
-  TransformationMap,
-  WarningPosition,
   WipoSt13OfficeCode,
 } from "@beep/law-practice-domain";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import { it } from "@beep/test-runner";
 import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
-import { assertNone, assertSome, assertSuccess, assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertSuccess, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import { pipe } from "effect/Function";
-import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
 const decodeCitingApplicationIdentityOption = S.decodeOption(CitingApplicationIdentity);
-const decodeCitationBase = S.decodeEffect(CitationBase);
-const decodeContextOptions = S.decodeEffect(ContextOptions);
-const decodeDurableLocatorOptions = S.decodeEffect(DurableLocatorOptions);
-const decodeNeutralCitation = S.decodeEffect(NeutralCitation);
-const decodePinciteInfo = S.decodeEffect(PinciteInfo);
-const decodeResolutionResult = S.decodeEffect(ResolutionResult);
-const decodeStatutesAtLargeCitation = S.decodeEffect(StatutesAtLargeCitation);
 const decodeUnknownCitingApplicationIdentityOption = S.decodeUnknownOption(CitingApplicationIdentity);
 const decodeUnknownClaim = S.decodeUnknownEffect(Claim);
 const decodeUnknownDistinction = S.decodeUnknownEffect(Distinction);
@@ -83,22 +63,15 @@ const decodeUnknownOfficeAction = S.decodeUnknownEffect(OfficeAction);
 const decodeUnknownPatentAsset = S.decodeUnknownEffect(PatentAsset);
 const decodeUnknownPriorArtReference = S.decodeUnknownEffect(PriorArtReference);
 const decodeUnknownRejection = S.decodeUnknownEffect(Rejection);
-const encodeCitationBase = S.encodeEffect(CitationBase);
 const encodeClaim = S.encodeEffect(Claim);
-const encodeContextOptions = S.encodeEffect(ContextOptions);
 const encodeDistinction = S.encodeEffect(Distinction);
-const encodeDurableLocatorOptions = S.encodeEffect(DurableLocatorOptions);
 const encodeLegalClient = S.encodeEffect(LegalClient);
 const encodeLegalContact = S.encodeEffect(LegalContact);
 const encodeMatter = S.encodeEffect(Matter);
-const encodeNeutralCitation = S.encodeEffect(NeutralCitation);
 const encodeOfficeAction = S.encodeEffect(OfficeAction);
 const encodePatentAsset = S.encodeEffect(PatentAsset);
-const encodePinciteInfo = S.encodeEffect(PinciteInfo);
 const encodePriorArtReference = S.encodeEffect(PriorArtReference);
 const encodeRejection = S.encodeEffect(Rejection);
-const encodeResolutionResult = S.encodeEffect(ResolutionResult);
-const encodeStatutesAtLargeCitation = S.encodeEffect(StatutesAtLargeCitation);
 const isApplicationNumber = S.is(ApplicationNumber);
 const isClaimNumber = S.is(ClaimNumber);
 const isKindCode = S.is(KindCode);
@@ -120,32 +93,6 @@ const assertSchemaDecodesToSelf = Effect.fn("DomainTest.assertSchemaDecodesToSel
 >(schema: Schema, value: Schema["Type"], label: string) {
   const decoded = yield* S.decodeUnknownEffect(schema)(value);
   expect(S.is(schema)(value) && S.toEquivalence(schema)(decoded, value), label).toBe(true);
-});
-
-const span = (end: number) =>
-  Span.make({
-    cleanStart: S.Natural.make(0),
-    cleanEnd: S.Natural.make(end),
-    originalStart: S.Natural.make(0),
-    originalEnd: S.Natural.make(end),
-  });
-
-const citationBaseInput = (text: string) => ({
-  text,
-  span: span(text.length),
-  confidence: 1,
-  matchedText: text,
-  processTimeMs: 0,
-  patternsChecked: S.Natural.make(1),
-});
-
-const citationBaseWire = (text: string) => ({
-  text,
-  span: { cleanStart: 0, cleanEnd: text.length, originalStart: 0, originalEnd: text.length },
-  confidence: 1,
-  matchedText: text,
-  processTimeMs: 0,
-  patternsChecked: 1,
 });
 
 describe("@beep/law-practice-domain", () => {
@@ -575,142 +522,6 @@ describe("@beep/law-practice-domain", () => {
     })
   );
 
-  it("constructs citation values with schema-owned definitive defaults", () => {
-    const base = CitationBase.make(citationBaseInput("base"));
-    const neutral = NeutralCitation.make({
-      ...citationBaseInput("2023 IL 128749"),
-      year: S.Natural.make(2023),
-      documentNumber: "128749",
-    });
-    const statutesAtLarge = StatutesAtLargeCitation.make({
-      ...citationBaseInput("100 Stat. 3743"),
-      volume: S.Natural.make(100),
-      page: S.Natural.make(3743),
-    });
-    const pincite = PinciteInfo.make({ isRange: false, raw: "570" });
-    const resolution = ResolutionResult.make({ confidence: 1 });
-    const context = ContextOptions.make({});
-    const locator = DurableLocatorOptions.make({});
-
-    expect(base.warnings).toStrictEqual([]);
-    expect(neutral.unpublished).toBe(false);
-    expect(statutesAtLarge.pinciteIsRange).toBe(false);
-    expect(pincite.starPage).toBe(false);
-    expect(pincite.additionalPincites).toStrictEqual([]);
-    expect(resolution.warnings).toStrictEqual([]);
-    expect(context.type).toBe("sentence");
-    assertNone(context.maxLength);
-    expect(locator.space).toBe("original");
-    expect(locator.fullSpan).toBe(false);
-    expect(locator.contextLength).toBe(32);
-  });
-
-  it.effect(
-    "decodes sparse citation values and materializes definitive defaults when encoded",
-    Effect.fnUntraced(function* () {
-      const baseWire = citationBaseWire("citation");
-      const base = yield* decodeCitationBase(baseWire);
-      const neutral = yield* decodeNeutralCitation({
-        ...baseWire,
-        type: "neutral",
-        year: 2023,
-        documentNumber: "128749",
-      });
-      const statutesAtLarge = yield* decodeStatutesAtLargeCitation({
-        ...baseWire,
-        type: "statutesAtLarge",
-        volume: 100,
-        page: 3743,
-      });
-      const pincite = yield* decodePinciteInfo({ isRange: false, raw: "570" });
-      const resolution = yield* decodeResolutionResult({ confidence: 1 });
-      const context = yield* decodeContextOptions({});
-      const locator = yield* decodeDurableLocatorOptions({});
-
-      expect((yield* encodeCitationBase(base)).warnings).toStrictEqual([]);
-      expect((yield* encodeNeutralCitation(neutral)).unpublished).toBe(false);
-      expect((yield* encodeStatutesAtLargeCitation(statutesAtLarge)).pinciteIsRange).toBe(false);
-      expect(yield* encodePinciteInfo(pincite)).toMatchObject({
-        starPage: false,
-        additionalPincites: [],
-      });
-      expect((yield* encodeResolutionResult(resolution)).warnings).toStrictEqual([]);
-      expect((yield* encodeContextOptions(context)).type).toBe("sentence");
-      expect(yield* encodeDurableLocatorOptions(locator)).toMatchObject({
-        space: "original",
-        fullSpan: false,
-        contextLength: 32,
-      });
-    })
-  );
-
-  it("preserves explicit nondefault citation values", () => {
-    const warning = CitationWarning.make({
-      level: "warning",
-      message: "Ambiguous reporter",
-      position: WarningPosition.make({ start: 0, end: 3 }),
-    });
-    const extraPincite = PinciteInfo.make({
-      page: O.some(S.Natural.make(580)),
-      isRange: false,
-      raw: "580",
-    });
-
-    const base = CitationBase.make({
-      ...citationBaseInput("base"),
-      warnings: [warning],
-    });
-    const neutral = NeutralCitation.make({
-      ...citationBaseInput("2023 IL 128749-U"),
-      year: S.Natural.make(2023),
-      documentNumber: "128749",
-      unpublished: true,
-    });
-    const statutesAtLarge = StatutesAtLargeCitation.make({
-      ...citationBaseInput("100 Stat. 3743, 3755-58"),
-      volume: S.Natural.make(100),
-      page: S.Natural.make(3743),
-      pinciteIsRange: true,
-    });
-    const pincite = PinciteInfo.make({
-      isRange: false,
-      raw: "*2, 580",
-      starPage: true,
-      additionalPincites: [extraPincite],
-    });
-    const resolution = ResolutionResult.make({ confidence: 0.5, warnings: ["Multiple antecedents"] });
-    const context = ContextOptions.make({
-      type: "paragraph",
-      maxLength: O.some(S.Natural.make(1000)),
-    });
-    const locator = DurableLocatorOptions.make({
-      space: "clean",
-      fullSpan: true,
-      contextLength: S.Natural.make(64),
-    });
-
-    expect(base.warnings).toStrictEqual([warning]);
-    expect(neutral.unpublished).toBe(true);
-    expect(statutesAtLarge.pinciteIsRange).toBe(true);
-    expect(pincite.starPage).toBe(true);
-    expect(pincite.additionalPincites).toStrictEqual([extraPincite]);
-    expect(resolution.warnings).toStrictEqual(["Multiple antecedents"]);
-    expect(context.type).toBe("paragraph");
-    assertSome(context.maxLength, S.Natural.make(1000));
-    expect(locator.space).toBe("clean");
-    expect(locator.fullSpan).toBe(true);
-    expect(locator.contextLength).toBe(64);
-  });
-
-  it.effect.prop(
-    "round-trips leaf citation value schemas through encoded form",
-    {
-      DocketCitation: Arbitrary.schema(DocketCitation),
-    },
-    (values) => assertSchemaEncodedRoundTrip(DocketCitation, values.DocketCitation, "DocketCitation"),
-    { arbitrary: fcRuns(10) }
-  );
-
   it.effect.prop(
     "round-trips the citation unions via schema-derived arbitraries",
     {
@@ -721,22 +532,24 @@ describe("@beep/law-practice-domain", () => {
     (values) =>
       Effect.gen(function* () {
         yield* assertSchemaEncodedRoundTrip(Citation, values.Citation, "Citation");
+        const encoded: R.ReadonlyRecord<string, unknown> = yield* S.encodeEffect(Citation)(values.Citation);
+        for (const field of [
+          "id",
+          "text",
+          "span",
+          "matchedText",
+          "processTimeMs",
+          "patternsChecked",
+          "warnings",
+          "confidence",
+          "footnote",
+          "group",
+        ]) {
+          expect(R.has(encoded, field)).toBe(false);
+        }
         yield* assertSchemaEncodedRoundTrip(FullCitation, values.FullCitation, "FullCitation");
         yield* assertSchemaEncodedRoundTrip(ShortFormCitation, values.ShortFormCitation, "ShortFormCitation");
       }),
     { arbitrary: fcRuns(5) }
   );
-
-  it("rejects a negative or fractional clean position when resolving original span positions", () => {
-    const positions = HashMap.empty<number, number>();
-    const map = TransformationMap.make({
-      cleanToOriginal: positions,
-      cleanToOriginalSegments: O.none(),
-      originalToClean: positions,
-    });
-
-    expect(Span.resolveOriginal({ cleanEnd: 5, cleanStart: 0 }, map)).toEqual({ originalEnd: 5, originalStart: 0 });
-    expect(() => Span.resolveOriginal({ cleanEnd: 5, cleanStart: -1 }, map)).toThrow();
-    expect(() => Span.resolveOriginal({ cleanEnd: 1.5, cleanStart: 0 }, map)).toThrow();
-  });
 });
