@@ -75,6 +75,9 @@
       // upstream text. ops/check-operations.ts validates this generated corpus.
       "!packages/law-practice/use-cases/test/fixtures/eyecite/operation-cases.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/assertion-cases.json",
+      "!packages/law-practice/use-cases/test/fixtures/eyecite/source-inventory.json",
+      "!packages/law-practice/use-cases/test/fixtures/eyecite/canonical-cases.json",
+      "!packages/law-practice/use-cases/test/fixtures/eyecite/regex-inventory.json",
       "!scratchpad",
       // beep-ci-operational-ontology §4b: digest-locked run evidence. The
       // adapter engine bytes are pinned by a sha256 sidecar and the archived

@@ -21,6 +21,7 @@ Current evidence:
 - [Source baselines/discovery](./history/evidence/2026-10-28-source-baselines.md)
 - [Operation corpus](./history/evidence/2026-10-28-operation-corpus.md)
 - [Assertion corpus](./history/evidence/2026-10-28-assertion-corpus.md)
+- [Source/case/regex ledgers](./history/evidence/2026-10-28-source-case-ledgers.md)
 
 ## Mission
 

@@ -8,14 +8,17 @@ The official source is pinned, licensed, and executable under Python 3.11.
 The 2026-10-28 public prerequisite compatibility record is available and both
 authorized TypeScript donor suites have executable baselines. Independent AST
 discovery accounts for 66 assertion declarations and 1,583 runtime events with
-none unobserved. These are discovery events, not normalized semantic cases.
+none unobserved. Assertion operands and producer context now accompany all
+events, with 8,488 loop iterations and 241 complete literal-loop runs.
 Public-operation normalization now retains 826 observations at 31 static
 call sites, including token/filter stages, warnings, resolution groups,
 annotation outputs and 2,811 explicit coordinate records. Its portable codec,
 hash/source/span validator and corruption controls are evidenced in
-`history/evidence/2026-10-28-operation-corpus.md`. P0 still owes model/helper
-assertion normalization, independent semantic-case expansions, final portable
-ledgers/checker, donor dispositions, vocabulary-version mapping and regex-safety
+`history/evidence/2026-10-28-operation-corpus.md`. Source/case/regex ledgers now
+reconcile 372 source rows, 195 capability obligations, 1,583 assertion cases,
+110 regex families and 13,610 expanded extractor instances. All target/safety
+proof stays open. P0 still owes supplemental probes, donor dispositions,
+vocabulary-version mapping, final parity-gate integration and regex-safety
 limits. P1 remains blocked on those P0 gates.
 
 ## Delivery Rule

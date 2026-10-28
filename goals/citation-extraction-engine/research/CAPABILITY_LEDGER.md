@@ -53,6 +53,11 @@ they are not dispositions.
 | C-021 | `eyecite/helpers.py`, `utils.py` | Court parenthetical parser, name validity, punctuation, markup placeholders/style balancing | Port or subsume every test-observed behavior | required | audit |
 | C-022 | `tests/assets/opinion.txt` | Whole-opinion extraction/annotation fixture | Attributed normalized oracle fixture | required | audit |
 
+The source inventory additionally assigns `C-023` to the eight pinned
+`test_factories.py` constructors. These are explicit fixture-support obligations,
+not production exports. Each model/helper/public source row has its own
+capability obligation; seed family ownership does not waive individual proof.
+
 ## Official unittest-method inventory
 
 The exact pin has 52 unittest methods. These IDs are source anchors, not the
