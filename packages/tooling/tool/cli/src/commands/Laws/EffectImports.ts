@@ -1628,6 +1628,128 @@ const codeGlobsFor = (options: EffectImportRulesOptions): ReadonlyArray<string> 
   return pipe(options.includePaths ?? A.empty<string>(), A.appendAll(prefixGlobs), A.dedupe);
 };
 
+const FOUNDATION_SOURCE_GLOB = "packages/foundation/**/src/**/*.{ts,tsx}";
+
+const toCwdRelativePosixPath = (path: Path.Path, file: string): string =>
+  toPosixPath(path.isAbsolute(file) ? path.relative(process.cwd(), file) : file);
+
+const discoverFilesWithGlob = Effect.fn("EffectImports.discoverFilesWithGlob")(function* (
+  patterns: ReadonlyArray<string>,
+  ignore: ReadonlyArray<string>,
+  dot: boolean,
+  failure: string
+) {
+  const path = yield* Path.Path;
+  // Prune ignored directories and suppress inaccessible-entry errors during discovery.
+  const files = yield* Effect.tryPromise({
+    try: () =>
+      glob(A.fromIterable(patterns), {
+        cwd: process.cwd(),
+        dot,
+        ignore: A.fromIterable(ignore),
+        followSymbolicLinks: false,
+      }),
+    catch: () => EffectImportRulesConfigurationError.new(failure),
+  });
+  return pipe(
+    files,
+    A.map((file) => toCwdRelativePosixPath(path, file)),
+    A.dedupe,
+    A.sort(Order.String)
+  );
+});
+
+/**
+ * Discover the executable sources one `effect-imports` run reads, relative to
+ * the working directory.
+ *
+ * **Details**
+ *
+ * The set is the code corpus for the run's scope (every repository source
+ * family by default, or the explicit paths and prefixes) plus the foundation
+ * `src` files the mapping phase resolves exports from; in `markdown` mode only
+ * the foundation files remain. Generated and vendored directories
+ * (`.repos`, `node_modules`, `dist`, `vendor`, nested `.claude/worktrees`) are
+ * excluded, dot directories are not entered, symbolic links are not followed
+ * and an unreadable entry is skipped. Paths are POSIX, deduplicated and sorted;
+ * the per-run scope filter (`excludePaths`, deliberate exclusions, prefixes)
+ * is applied by the runner, not here.
+ *
+ * **Example** (Reference the source discovery step)
+ *
+ * ```ts
+ * import { discoverEffectImportSourceFiles, EffectImportRulesOptions } from "@beep/repo-cli/commands/Laws/EffectImports"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = discoverEffectImportSourceFiles(EffectImportRulesOptions.make({ excludePaths: [] }))
+ * console.log(Effect.isEffect(program))
+ * ```
+ *
+ * @param options - The run options whose mode, include paths and prefixes bound the corpus.
+ * @returns Sorted working-directory-relative POSIX paths of the sources the run reads.
+ * @category discovery
+ * @since 0.0.0
+ */
+export const discoverEffectImportSourceFiles = Effect.fn("EffectImports.discoverEffectImportSourceFiles")(function* (
+  options: EffectImportRulesOptions
+) {
+  return yield* discoverFilesWithGlob(
+    A.append(options.mode === "markdown" ? A.empty<string>() : codeGlobsFor(options), FOUNDATION_SOURCE_GLOB),
+    CODE_EXCLUSION_GLOBS,
+    false,
+    "Could not discover source files."
+  );
+});
+
+/**
+ * Discover the Markdown documents a `markdown` mode `effect-imports` run
+ * reads, relative to the working directory.
+ *
+ * **Details**
+ *
+ * Explicit `includePaths` are taken as given; otherwise every `.md` and `.mdx`
+ * file below the working directory is listed, dot directories included, except
+ * the generated and vendored directories the source corpus excludes plus
+ * `.git`, `.beep`, `docs/modules`, `docs/generated` and `docs/_internal`.
+ * Symbolic links are not followed and an unreadable entry is skipped. Paths are
+ * POSIX, deduplicated and sorted; the per-run scope filter is applied by the
+ * runner, not here.
+ *
+ * **Example** (Reference the Markdown discovery step)
+ *
+ * ```ts
+ * import { discoverEffectImportMarkdownFiles, EffectImportRulesOptions } from "@beep/repo-cli/commands/Laws/EffectImports"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = discoverEffectImportMarkdownFiles(EffectImportRulesOptions.make({ mode: "markdown", excludePaths: [] }))
+ * console.log(Effect.isEffect(program))
+ * ```
+ *
+ * @param options - The run options whose explicit include paths, when present, replace the walk.
+ * @returns Sorted working-directory-relative POSIX paths of the Markdown documents the run reads.
+ * @category discovery
+ * @since 0.0.0
+ */
+export const discoverEffectImportMarkdownFiles = Effect.fn("EffectImports.discoverEffectImportMarkdownFiles")(
+  function* (options: EffectImportRulesOptions) {
+    if (P.isNotUndefined(options.includePaths)) {
+      const path = yield* Path.Path;
+      return pipe(
+        options.includePaths,
+        A.map((file) => toCwdRelativePosixPath(path, file)),
+        A.dedupe,
+        A.sort(Order.String)
+      );
+    }
+    return yield* discoverFilesWithGlob(
+      MARKDOWN_GLOBS,
+      MARKDOWN_EXCLUSION_GLOBS,
+      true,
+      "Could not discover Markdown source files."
+    );
+  }
+);
+
 /**
  * Run per-module import migration/check logic.
  *
@@ -1681,19 +1803,10 @@ export const runEffectImportRules = Effect.fn("EffectImports.runEffectImportRule
     MutableHashSet.add(excludePaths, toPosixPath(excludePath));
   }
 
-  // Prune ignored directories and suppress inaccessible-entry errors during discovery.
   // Load only matches to avoid ts-morph recursively registering excluded directories.
-  const discoveredSourceFiles = yield* Effect.tryPromise({
-    try: () =>
-      glob(
-        A.append(
-          options.mode === "markdown" ? A.empty<string>() : codeGlobsFor(options),
-          "packages/foundation/**/src/**/*.{ts,tsx}"
-        ),
-        { cwd: process.cwd(), absolute: true, ignore: CODE_EXCLUSION_GLOBS, followSymbolicLinks: false }
-      ),
-    catch: () => EffectImportRulesConfigurationError.new("Could not discover source files."),
-  });
+  const discoveredSourceFiles = yield* discoverEffectImportSourceFiles(options).pipe(
+    Effect.map(A.map((relativePath) => path.join(process.cwd(), relativePath)))
+  );
   const project = createRepoTsMorphProject({
     tsConfigFilePath: path.join(process.cwd(), "tsconfig.json"),
     sourceFileGlobs: [],
@@ -1717,24 +1830,8 @@ export const runEffectImportRules = Effect.fn("EffectImports.runEffectImportRule
 
   if (options.mode === "markdown") {
     const fs = yield* FileSystem.FileSystem;
-    const discoveredFiles = P.isUndefined(options.includePaths)
-      ? yield* Effect.tryPromise({
-          try: () =>
-            glob(A.fromIterable(MARKDOWN_GLOBS), {
-              cwd: process.cwd(),
-              dot: true,
-              ignore: MARKDOWN_EXCLUSION_GLOBS,
-              followSymbolicLinks: false,
-            }),
-          catch: () => EffectImportRulesConfigurationError.new("Could not discover Markdown source files."),
-        })
-      : options.includePaths;
-    const markdownFiles = pipe(
-      discoveredFiles,
-      A.map((file) => toPosixPath(path.isAbsolute(file) ? path.relative(process.cwd(), file) : file)),
-      A.filter((file) => isPathInActiveScope(options, excludePaths, file)),
-      A.dedupe,
-      A.sort(Order.String)
+    const markdownFiles = yield* discoverEffectImportMarkdownFiles(options).pipe(
+      Effect.map(A.filter((file) => isPathInActiveScope(options, excludePaths, file)))
     );
     for (const relativePath of markdownFiles) {
       const absolutePath = path.join(process.cwd(), relativePath);
