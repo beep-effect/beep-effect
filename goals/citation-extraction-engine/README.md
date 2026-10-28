@@ -16,10 +16,12 @@ records. Donor accounting now binds 197 exports and 5,285 runtime cases to
 5,674 explicit disposition obligations. Thirteen supplemental extraction/
 resolution probes add 57 coordinate slices. Another 26 cleaning/annotation
 probes retain three expected failures and 23 coordinate records, including
-zero-width points. Five coverage families remain open. Remaining supplemental probes, final gate
-integration and regex review remain open before P1. The 29-field limit
-policy and process-isolation mechanism are now evidenced; runtime enforcement
-and family-level safety proof remain unfinished.
+zero-width points. Five coverage families remain open. The 29-field limit
+policy and process-isolation mechanism are evidenced. Limited P1 identity
+work now overlaps P0's unfinished proof bindings after the explicit
+prerequisite/limits holdpoints pass. Occurrence/authority token schemas and a
+private verified-anchor occurrence digest producer are implemented; semantic
+schema replacement, runtime enforcement and family safety remain unfinished.
 
 Current evidence:
 
@@ -38,6 +40,8 @@ Current evidence:
 - [Warning coverage and P0 audit](./history/evidence/2026-10-28-warning-and-p0-audit.md)
 - [Divergence ledger](./history/evidence/2026-10-28-divergence-ledger.md)
 - [Regex benchmark contract](./history/evidence/2026-10-28-regex-benchmark-contract.md)
+- [Identity foundations](./history/evidence/2026-10-28-identity-foundations.md)
+- [Verified occurrence IDs](./history/evidence/2026-10-28-mention-identity-producer.md)
 
 ## Mission
 

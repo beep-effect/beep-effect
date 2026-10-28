@@ -11,7 +11,7 @@
   "packetPath": "goals/citation-extraction-engine",
   "lifecycle": "active",
   "mission": "Deliver Effect-native observable capability parity with pinned official eyecite 2.7.6, exact verified source evidence, schema-first legal models, lawful transformations, and proven TypeScript-port extensions.",
-  "statusNote": "Ten component audits pass while strict parity correctly fails unfinished proof. Explicit prerequisite and limits holdpoints pass. Limited P1 occurrence/authority identity foundations now overlap unfinished P0 target proof bindings; neither phase is complete. Frozen consumer inventory and use-form controls support the pending legacy migration. Engine behavior, donor dispositions, fidelity, family safety and exhaustive parity remain open.",
+  "statusNote": "P0 and limited P1 remain in progress. Occurrence/authority token schemas and private verified-anchor cm1 digest production are implemented with replay, source-input, receipt rejection and privacy tests. No engine surface is published; semantic schema replacement, engine-artifact construction, authority-key production, strict parity and family safety proof remain unfinished.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -59,7 +59,8 @@
     "goals/citation-extraction-engine/history/evidence/2026-10-28-divergence-ledger.md",
     "goals/citation-extraction-engine/history/evidence/2026-10-28-regex-benchmark-contract.md",
     "goals/citation-extraction-engine/history/evidence/2026-10-28-identity-foundations.md",
-    "goals/citation-extraction-engine/ops/citation-migration-surface.json"
+    "goals/citation-extraction-engine/ops/citation-migration-surface.json",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-mention-identity-producer.md"
   ],
   "researchReports": [
     "research/EYECITE_BASELINE.md",

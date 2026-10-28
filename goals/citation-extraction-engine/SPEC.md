@@ -696,6 +696,17 @@ instead of silently splitting delivery or weakening scope.
   use a versioned migration once producers exist; never weaken anchor or
   historical authority distinctions to preserve a token.
 
+- **2026-10-28 occurrence digest protocol:** the private cm1 producer requires
+  a genuine prerequisite `VerifiedTextAnchor`, hashes an ordered JSON tuple
+  with every source identity field, the engine artifact digest, semantic
+  discriminant and exact UTF-16 range/quote, and emits only a mention token.
+  Structural receipts require source re-verification. Neither stage ordering
+  nor grouping enters identity. Internal failures retain only a finite reason;
+  the future engine boundary must map them into its closed union. The engine
+  artifact producer and semantic-union integration remain unfinished. Any
+  protocol/input change requires a new token version and migration; do not
+  silently reinterpret cm1. Authority-key generation remains separately open.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from
