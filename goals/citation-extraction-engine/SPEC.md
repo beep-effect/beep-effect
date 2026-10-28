@@ -564,6 +564,19 @@ instead of silently splitting delivery or weakening scope.
 - Earlier decisions limiting completion to the narrow v1 forms or preserving
   existing eyecite-ts-shaped values unchanged are superseded.
 
+- **2026-10-28 prerequisite admission:** public source/anchor and vocabulary
+  contracts are present and pass focused consumer tests; exact symbols,
+  versions and approved adaptations are recorded in
+  `history/evidence/prerequisite-compatibility.md`. The dependency hold is
+  cleared; P0 accounting and safety gates still block P1.
+- **2026-10-28 source isolation:** preserve the shared reference checkouts and
+  execute exact pins in detached cache worktrees. This is reversible by
+  removing those task-owned worktrees after retaining required evidence.
+- **2026-10-28 donor baseline environment:** the user authorized both donor
+  installs. An npm-configuration incompatibility is isolated process-locally
+  with install scripts disabled; workstation and donor configuration stay
+  intact. Remove the environment override to reproduce the initial failure.
+
 ## Exception Ledger
 
 | Exception | Scope | Owner | Removal condition |

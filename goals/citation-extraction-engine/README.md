@@ -6,9 +6,14 @@ Lifecycle: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
-P0 source acquisition is evidenced. Capability-case accounting, regex review,
-and dependency compatibility remain open; production contract work is blocked
-by the verified-span and public reporter-vocabulary goals.
+P0 source acquisition and public prerequisite compatibility are evidenced.
+The 2026-10-28 run passed the pinned official and authorized donor baselines;
+66 static assertion declarations produced 1,583 runtime assertion events with
+none unobserved. Semantic case/stage accounting, regex review, and hard safety
+limits remain open before P1 production contract work.
+
+Current evidence: [prerequisite compatibility](./history/evidence/prerequisite-compatibility.md)
+and [source baselines/discovery](./history/evidence/2026-10-28-source-baselines.md).
 
 ## Mission
 

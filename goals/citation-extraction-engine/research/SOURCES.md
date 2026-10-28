@@ -73,8 +73,8 @@ The official pin declares version 2.7.6 and production/stable status. See
 | Capability | Current state | Required disposition |
 | --- | --- | --- |
 | Law-practice citation values | Broad provisional schema surface, largely shaped after `eyecite-ts` | Rebuild per `SCHEMA_DISPOSITION.md`; no compatibility promise |
-| Generic `TextAnchor` | Basic half-open anchor exists in provenance | Do not treat as the unfinished verified-span/source-drift contract |
-| Generated courts/reporters data | Internal raw artifacts exist | Do not import directly; wait for public vocabulary contract |
+| Verified anchors | Public contracts available | See compatibility record |
+| Court/reporter vocabulary | Public contract available | No raw imports |
 | Root eyecite notice | Official BSD-2 terms and pin already present | Preserve and extend for newly incorporated TS-port material |
 
 ## Related research

@@ -5,13 +5,13 @@
     "title": "Citation Extraction Engine",
     "status": "active",
     "created": "2026-07-14",
-    "updated": "2026-07-30",
+    "updated": "2026-10-28",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/citation-extraction-engine",
   "lifecycle": "active",
   "mission": "Deliver Effect-native observable capability parity with pinned official eyecite 2.7.6, exact verified source evidence, schema-first legal models, lawful transformations, and proven TypeScript-port extensions.",
-  "statusNote": "Official eyecite is cloned, pinned, licensed, and green under Python 3.11. P0 case-level accounting and regex evidence remain; production phases are blocked by verified-span and public reporter-vocabulary contracts.",
+  "statusNote": "Public prerequisite contracts verified on 2026-10-28. Exact pinned official and authorized donor baselines executed; 66 static assertion declarations reconcile to 1,583 observed events. P0 semantic-case/stage accounting, regex strategy and hard limits remain open; no P1 implementation.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -43,14 +43,16 @@
     "goals/citation-extraction-engine/research/PARITY_METHOD.md",
     "goals/citation-extraction-engine/research/SOURCES.md",
     "goals/citation-verified-span-substrate/SPEC.md",
-    "goals/court-reporter-vocabulary/SPEC.md"
+    "goals/court-reporter-vocabulary/SPEC.md",
+    "goals/citation-extraction-engine/history/evidence/prerequisite-compatibility.md"
   ],
   "researchReports": [
     "research/EYECITE_BASELINE.md",
     "research/CAPABILITY_LEDGER.md",
     "research/SCHEMA_DISPOSITION.md",
     "research/PARITY_METHOD.md",
-    "research/SOURCES.md"
+    "research/SOURCES.md",
+    "research/OPPORTUNITIES.md"
   ],
   "agentLaunchers": [
     {
@@ -110,5 +112,11 @@
     "Parity would require a second public citation hierarchy, hosted truth, weakened exact-source fidelity, or unbounded execution.",
     "A claimed reversible transform would need to invent missing information.",
     "Verification requires unnamed credentials, unauthorized cost, destructive side effects, or broader product authority."
+  ],
+  "opsScripts": [
+    {
+      "path": "ops/check-discovery.ts",
+      "purpose": "Validate pinned source/runtime discovery through the test-only schema; does not assert semantic parity."
+    }
   ]
 }

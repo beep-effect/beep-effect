@@ -2,6 +2,12 @@
 
 Captured: 2026-07-29
 
+Revalidated: [2026-10-28 source baseline receipt](../history/evidence/2026-10-28-source-baselines.md).
+The historical failed donor attempts below are superseded by authorized,
+isolated frozen-lockfile runs. Official: 52 methods pass. eyecite-js: 423 tests
+pass. eyecite-ts: 4,844 tests pass, 10 skip, 8 todo after isolating incompatible
+npm user configuration. These counts do not establish target parity.
+
 ## Normative source
 
 - Repository: `https://github.com/freelawproject/eyecite`

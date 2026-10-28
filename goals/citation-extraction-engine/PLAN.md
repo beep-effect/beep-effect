@@ -4,11 +4,14 @@
 
 Status: `in-progress`
 
-The official source is cloned, pinned, licensed, and executable under Python
-3.11. P0 still owes independent source/runtime case reconciliation, executable
-ledger accounting, authorized TypeScript-donor baselines, prerequisite
-compatibility evidence, and regex-safety limits. P1 and later production work
-remain blocked by both prerequisite public contracts.
+The official source is pinned, licensed, and executable under Python 3.11.
+The 2026-10-28 public prerequisite compatibility record is available and both
+authorized TypeScript donor suites have executable baselines. Independent AST
+discovery accounts for 66 assertion declarations and 1,583 runtime events with
+none unobserved. These are discovery events, not normalized semantic cases.
+P0 still owes case/stage normalization, portable schema-decoded ledgers and
+accounting, donor export/test dispositions, and regex-safety limits. P1 remains
+blocked on those P0 gates.
 
 ## Delivery Rule
 
@@ -60,8 +63,9 @@ completion contract.
 - `goals/court-reporter-vocabulary`: stable public court/reporter IDs, lookups,
   artifact version, and compatibility classification.
 
-P0 may continue while blocked. Do not replace either dependency with a local
-look-alike or raw generated-file import.
+Both contracts are now available; the compatibility record was verified on
+2026-10-28. Preserve their exact public boundaries and version checks. Do not
+replace either dependency with a local look-alike or raw generated-file import.
 
 Before P1, create
 `history/evidence/prerequisite-compatibility.md`. It must name the exact

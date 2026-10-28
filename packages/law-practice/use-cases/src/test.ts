@@ -6,6 +6,14 @@
  */
 
 /**
+ * Pinned citation-oracle source/runtime discovery evidence, validated only at
+ * the test boundary and never presented as target parity proof.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export { CitationOracleDiscovery } from "./internal/citationOracleDiscovery.ts";
+/**
  * Port-output schema for the `Effect` a law-practice port method returns,
  * exported for package-local guard and codec tests.
  *

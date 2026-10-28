@@ -135,9 +135,10 @@ These are family-level seed rows. P0 must enumerate every public export and
 test-observed unique behavior at the pinned commits, identify overlap between
 the ports, and then assign one terminal disposition.
 
-Both pinned suite attempts are currently environment-blocked by absent
-JavaScript dependencies; see `EYECITE_BASELINE.md`. Source inspection can seed
-rows, but no extension becomes “proven” until its donor tests execute.
+The initial pinned suite attempts were environment-blocked. The authorized
+2026-10-28 runs now provide executable baselines; see `EYECITE_BASELINE.md` and
+the source baseline receipt. Source inspection can seed rows, but a passing
+donor suite alone does not prove any adopted extension or target regression.
 
 | ID | Reference capability | Provisional target | Reason/boundary | Disposition | Workflow |
 | --- | --- | --- | --- | --- | --- |
