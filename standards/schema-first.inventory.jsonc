@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-10-27",
+  "generatedOn": "2026-10-28",
   "scope": [
     "apps/**/*.{ts,tsx}",
     "packages/**/*.{ts,tsx}",
@@ -158,6 +158,96 @@
       "status": "exception",
       "owner": "@beep/box",
       "reason": "Keep-as-class allowlist (goals/schema-opaque-default/ops/codemod/keep-class.jsonc): Kept as a class: as S.Opaque its struct type is expanded inside BoxError, whose type then exceeds tsgo 0.51.1 declaration-mode instantiation depth (location-less TS2589 plus unknown BoxError fields in Box.errors.ts during box#build); as a class its instance type stays a named reference. Measured: 9 errors as Opaque, 0 as class (4 runs)."
+    },
+    {
+      "file": "packages/drivers/duckdb/src/DuckDbMessageStorage.service.ts",
+      "symbol": "layerMigrations",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-fn-schema",
+      "line": 805,
+      "owner": "@beep/duckdb",
+      "reason": "Drop-in replacement for the effect 4.0.6 effect/cluster/SqlMessageStorage export of the same name: the option bag (table prefixes, shard groups, migration hooks) mirrors the upstream signature verbatim so a consumer swaps one import (D63/D64, #2084). It configures DDL and layer wiring in memory and never crosses a decode or persistence boundary."
+    },
+    {
+      "file": "packages/drivers/duckdb/src/DuckDbMessageStorage.service.ts",
+      "symbol": "layerStorage",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-fn-schema",
+      "line": 822,
+      "owner": "@beep/duckdb",
+      "reason": "Drop-in replacement for the effect 4.0.6 effect/cluster/SqlMessageStorage export of the same name: the option bag (table prefixes, shard groups, migration hooks) mirrors the upstream signature verbatim so a consumer swaps one import (D63/D64, #2084). It configures DDL and layer wiring in memory and never crosses a decode or persistence boundary."
+    },
+    {
+      "file": "packages/drivers/duckdb/src/DuckDbMessageStorage.service.ts",
+      "symbol": "layerWith",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-fn-schema",
+      "line": 843,
+      "owner": "@beep/duckdb",
+      "reason": "Drop-in replacement for the effect 4.0.6 effect/cluster/SqlMessageStorage export of the same name: the option bag (table prefixes, shard groups, migration hooks) mirrors the upstream signature verbatim so a consumer swaps one import (D63/D64, #2084). It configures DDL and layer wiring in memory and never crosses a decode or persistence boundary."
+    },
+    {
+      "file": "packages/drivers/duckdb/src/DuckDbMessageStorage.service.ts",
+      "symbol": "migrations",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-fn-schema",
+      "line": 711,
+      "owner": "@beep/duckdb",
+      "reason": "Drop-in replacement for the effect 4.0.6 effect/cluster/SqlMessageStorage export of the same name: the option bag (table prefixes, shard groups, migration hooks) mirrors the upstream signature verbatim so a consumer swaps one import (D63/D64, #2084). It configures DDL and layer wiring in memory and never crosses a decode or persistence boundary."
+    },
+    {
+      "file": "packages/drivers/duckdb/src/DuckDbRunnerStorage.service.ts",
+      "symbol": "layerMigrations",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-fn-schema",
+      "line": 311,
+      "owner": "@beep/duckdb",
+      "reason": "Drop-in replacement for the effect 4.0.6 effect/cluster/SqlRunnerStorage export of the same name: the option bag (table prefixes, shard groups, migration hooks) mirrors the upstream signature verbatim so a consumer swaps one import (D63/D64, #2084). It configures DDL and layer wiring in memory and never crosses a decode or persistence boundary."
+    },
+    {
+      "file": "packages/drivers/duckdb/src/DuckDbRunnerStorage.service.ts",
+      "symbol": "layerStorage",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-fn-schema",
+      "line": 328,
+      "owner": "@beep/duckdb",
+      "reason": "Drop-in replacement for the effect 4.0.6 effect/cluster/SqlRunnerStorage export of the same name: the option bag (table prefixes, shard groups, migration hooks) mirrors the upstream signature verbatim so a consumer swaps one import (D63/D64, #2084). It configures DDL and layer wiring in memory and never crosses a decode or persistence boundary."
+    },
+    {
+      "file": "packages/drivers/duckdb/src/DuckDbRunnerStorage.service.ts",
+      "symbol": "layerWith",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-fn-schema",
+      "line": 346,
+      "owner": "@beep/duckdb",
+      "reason": "Drop-in replacement for the effect 4.0.6 effect/cluster/SqlRunnerStorage export of the same name: the option bag (table prefixes, shard groups, migration hooks) mirrors the upstream signature verbatim so a consumer swaps one import (D63/D64, #2084). It configures DDL and layer wiring in memory and never crosses a decode or persistence boundary."
+    },
+    {
+      "file": "packages/drivers/duckdb/src/DuckDbRunnerStorage.service.ts",
+      "symbol": "make",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-fn-schema",
+      "line": 237,
+      "owner": "@beep/duckdb",
+      "reason": "Drop-in replacement for the effect 4.0.6 effect/cluster/SqlRunnerStorage export of the same name: the option bag (table prefixes, shard groups, migration hooks) mirrors the upstream signature verbatim so a consumer swaps one import (D63/D64, #2084). It configures DDL and layer wiring in memory and never crosses a decode or persistence boundary."
+    },
+    {
+      "file": "packages/drivers/duckdb/src/DuckDbRunnerStorage.service.ts",
+      "symbol": "migrations",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-fn-schema",
+      "line": 258,
+      "owner": "@beep/duckdb",
+      "reason": "Drop-in replacement for the effect 4.0.6 effect/cluster/SqlRunnerStorage export of the same name: the option bag (table prefixes, shard groups, migration hooks) mirrors the upstream signature verbatim so a consumer swaps one import (D63/D64, #2084). It configures DDL and layer wiring in memory and never crosses a decode or persistence boundary."
     },
     {
       "file": "packages/drivers/freshbooks/src/Freshbooks.models.ts",
