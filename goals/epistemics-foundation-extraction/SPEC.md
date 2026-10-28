@@ -136,8 +136,8 @@ Rules:
 - `ClaimEvidenceReview` takes `reviewer` (the slice's `UserPrincipal`) and
   `claimRef` (the slice's `EpistemicFixtureKey`). `ClaimProjection` takes
   `claimRef`. `EpistemicFixtureKey` stays slice-local.
-- The `Claim<P>` envelope follows the same contract: `makeClaimVersion({ $I,
-  proposition, ids: { claimVersion, assertion, activity, principal } })`.
+- The `Claim<P>` envelope follows the same contract: `makeClaimEnvelope({ $I,
+  proposition, logicalKey, ids: { claimVersion, assertion, activity, principal } })`.
   Valid time is a `ValidTime` tagged union, `Unknown` or `Interval` over the
   `ValidInterval` fields. Knowledge time is `KnowledgeInterval`. Id-free signal
   pieces (`AbsenceReason`, `Measurement`, `StructuralVerdict`) export directly.
@@ -225,6 +225,10 @@ them and record each in the Decision Log.
 
 | Date | Decision | Reason | How to reverse |
 | --- | --- | --- | --- |
+| 2026-10-28 | Bind `makeClaimEnvelope` to a required proposition `logicalKey` function and check the encoded key after decoding | The normative inventory requires the function, but the existing factory accepted an unchecked string. Keep valid encodings unchanged and reject keys inconsistent with their proposition. The private-workspace migration note records the new required argument | Revert the key check, binding argument and regression together |
+| 2026-10-28 | Keep the required-argument migration note in packet history instead of the active release queue | `@beep/epistemics` is private, and ChangesetGraph forbids active notes for private workspaces. No published API is changed | Move the note into a major changeset only when publication is explicitly activated |
+| 2026-10-28 | Retain the tool-produced readiness verdict at `.beep/goals/epistemics-foundation-extraction/readiness-verdict.json` before merge | A normal Yeet monitor binds readiness to the observed final head; the stable declared path survives later commands and lane retirement when copied into the owning clone | Restore the original run path while retaining its file in the clone |
+| 2026-10-28 | Establish a new final closeout PR while retaining #2017 as the implementation PR | Live completion refresh proves #2017 merged with required Docgen red and cannot establish historical readiness. Subsequent remediation does not change its merge-time evidence | Restore the original proposal, leaving the lifecycle active and its completion receipt unsatisfied |
 | 2026-10-21 | Package name `@beep/epistemics` under `foundation/modeling` | Vocabulary, not a capability service; modeling is the schema substrate family | Rename via `create-package` before first release |
 | 2026-10-21 | Agent-authority values excluded from the move | Not epistemics; moving them would bake a misfiling into foundation | Include them in a later goal if a review decides otherwise |
 | 2026-10-21 | Intervals extracted as new values rather than left inline | Party and other slices need the same `[from, to)` semantics; inline fields can't be shared | Inline the fields back into `EdgeVersion` |

@@ -9,6 +9,11 @@ findings that matter are restated in §0.
 
 Amended in review round 1 of #1239 before the lock: rulings 73, 74 and 75.
 
+Amended 2026-10-27 by ruling 81 (`decisions.md`): the report is `yeet-economics/v2`, which adds a
+`reviewLane` section (rounds-to-ready and reviewer precision from the owning clone's
+`.beep/yeet/review-lane.ndjson`) beside the lane populations; every other field of this contract is
+unchanged.
+
 ## 0. What the A1 script cannot be as a checkout command (findings)
 
 1. **Post-A5 verdicts list wrapper lanes and inner lanes together**, both with `durationMs`

@@ -2,6 +2,8 @@
  * Effect service for provider CLI HOME resolution, child-env construction,
  * and Codex shadow-home maintenance.
  *
+ * **Details**
+ *
  * Mechanics ported from t3code (MIT, Copyright 2026 T3 Tools Inc.)
  * `apps/server/src/provider/Drivers/CodexHomeLayout.ts` and `ClaudeHome.ts`.
  *

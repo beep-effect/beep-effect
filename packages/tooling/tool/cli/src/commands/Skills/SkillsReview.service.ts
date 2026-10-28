@@ -25,7 +25,12 @@
  * @since 0.0.0
  */
 
+import { CliInteractive } from "@beep/cli-kit/CliInteractive";
+import { CliPrompt } from "@beep/cli-kit/CliPrompt";
 import { $RepoCliId } from "@beep/identity/packages";
+import { Audience } from "@beep/runtime-env/Audience";
+import { CurrentRuntimeEnv } from "@beep/runtime-env/RuntimeEnv";
+import { TerminalEnv } from "@beep/runtime-env/TerminalEnv";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
@@ -70,6 +75,7 @@ import type * as Crypto from "effect/Crypto";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import type * as Stdio from "effect/Stdio";
 import type * as Terminal from "effect/Terminal";
 import type { HunkLedgerKey } from "./internal/HunkLedger.ts";
 import type { SkillGitRevision, SkillPatchLabel } from "./Skills.schemas.ts";
@@ -414,6 +420,27 @@ const itemHeader = (item: SkillReviewItem): string =>
   );
 
 /**
+ * The review prompt's terminal gate: `CliPrompt.gateTerminal` over the real
+ * terminal, with this run's `CliInteractive` answer beside it.
+ *
+ * **Details**
+ *
+ * `gateTerminal` reads `CliInteractive` from the calling fiber on every
+ * terminal call, so the gated `Terminal` and the reference are provided
+ * together around the prompt. The answer is `true` only for a human audience
+ * (`Audience` from `CurrentRuntimeEnv`, so an agent or a CI is never asked) on
+ * a terminal whose stdin and stdout are TTYs and whose `TERM` is not `dumb`;
+ * otherwise the terminal's input is already ended and the prompt quits at once.
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+const SkillReviewPromptGate: Layer.Layer<Terminal.Terminal, never, Terminal.Terminal | Stdio.Stdio> = Layer.mergeAll(
+  CliPrompt.gateTerminal,
+  CliInteractive.layer
+).pipe(Layer.provide(Layer.mergeAll(Audience.layer(), TerminalEnv.layer())), Layer.provide(CurrentRuntimeEnv.layer));
+
+/**
  * Builds the terminal decider: it prints each queued hunk and asks for a decision.
  *
  * **Details**
@@ -421,7 +448,10 @@ const itemHeader = (item: SkillReviewItem): string =>
  * A classification item offers keep under each label or drop; a conflict
  * item offers rebase, keep, drop, or promote-candidate. Every item also
  * offers skip and quit, and an interrupted prompt (Ctrl-C) quits, so the
- * decisions already recorded stay in the ledger.
+ * decisions already recorded stay in the ledger. The prompt runs behind
+ * `CliPrompt.gateTerminal`: in a run that cannot prompt (a pipe, an agent, a
+ * CI) the first answer fails with a `SkillsCommandError` directing the caller
+ * to `--decisions <file>`, without reading a key.
  *
  * **Example** (Inspect the constructor)
  *
@@ -436,12 +466,20 @@ const itemHeader = (item: SkillReviewItem): string =>
  * @since 0.0.0
  */
 export const makeSkillReviewDeciderPrompt = Effect.gen(function* () {
-  const runtime = yield* Effect.context<Terminal.Terminal | FileSystem.FileSystem | Path.Path>();
+  const runtime = yield* Effect.context<Terminal.Terminal | Stdio.Stdio | FileSystem.FileSystem | Path.Path>();
+  // Built once per session over the real terminal; the layer holds no resource, so its scope closes here.
+  const gate = yield* SkillReviewPromptGate.pipe(Layer.build, Effect.scoped);
   return SkillReviewDecider.of({
     prepare: Effect.fn("SkillReviewDeciderPrompt.prepare")(function* (queue) {
       yield* Console.log(`skills review: ${A.length(queue)} hunk(s) queued.`);
     }),
     answer: Effect.fn("SkillReviewDeciderPrompt.answer")(function* (item) {
+      if (!(yield* CliInteractive.pipe(Effect.provide(gate)))) {
+        return yield* SkillsCommandError.make({
+          message:
+            "Interactive skill review requires a human terminal; use --decisions <file> for a non-interactive run.",
+        });
+      }
       yield* Console.log(itemHeader(item));
       const choices = A.appendAll(
         item.kind === "classification" ? classificationChoices : conflictChoices(item),
@@ -449,6 +487,8 @@ export const makeSkillReviewDeciderPrompt = Effect.gen(function* () {
       );
       return yield* Prompt.run(Prompt.Select({ message: "Decision", choices })).pipe(
         Effect.catchTag("QuitError", () => Effect.succeed<SkillReviewAnswer>(SkillReviewQuit.make({}))),
+        // The gated Terminal shadows the real one in `runtime`.
+        Effect.provide(gate),
         Effect.provide(runtime)
       );
     }),
