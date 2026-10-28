@@ -30,6 +30,7 @@ import {
   YeetEconomicsReportJson,
   YeetEconomicsSource,
   YeetExecutedStep,
+  YeetReviewLaneSource,
   YeetVerdict,
   YeetVerdictJson,
   YeetVerdictLane,
@@ -61,7 +62,7 @@ const PACKET_DIR = ".beep/yeet";
 const at = (minutes: number): string => DateTime.formatIso(DateTime.makeUnsafe(BASE_MS + minutes * MINUTE));
 
 const Platform = Layer.mergeAll(MemoryFileSystem.layer, NodePath.layer, NodeCrypto.layer);
-const LiveSource = Layer.provideMerge(YeetEconomicsSource.layer, Platform);
+const LiveSource = Layer.provideMerge(Layer.mergeAll(YeetEconomicsSource.layer, YeetReviewLaneSource.layer), Platform);
 const LiveSourceWithConsole = Layer.mergeAll(LiveSource, TestConsole.layer);
 const JournalEventJson = JsonStringCodec(YeetAttemptJournalEvent);
 
@@ -159,7 +160,7 @@ const journal = (
   });
 
 const report = (journals: ReadonlyArray<EconomicsJournal>): YeetEconomicsReport =>
-  buildYeetEconomicsReport(journals, scope, NOW);
+  buildYeetEconomicsReport(journals, scope, NOW, []);
 
 const verdict = (
   attemptId: O.Option<UUID>,
@@ -278,8 +279,17 @@ const readScope = Effect.fn("EconomicsTest.readScope")(function* (
 const shareTotal = (rows: YeetEconomicsReport["wrapperLanes"]["rows"]): number =>
   Num.sumAll(A.map(rows, (row) => O.getOrElse(row.sharePct, () => 0)));
 
+// The review lane source never fails, so a failing journal source is paired
+// with an empty review lane: the failure under test is the journals'.
 const failingSource = (read: YeetEconomicsSourceShape["read"]) =>
-  Layer.mergeAll(Layer.succeed(YeetEconomicsSource, YeetEconomicsSource.of({ read })), TestConsole.layer);
+  Layer.mergeAll(
+    Layer.succeed(YeetEconomicsSource, YeetEconomicsSource.of({ read })),
+    Layer.succeed(
+      YeetReviewLaneSource,
+      YeetReviewLaneSource.of({ read: Effect.fn("YeetReviewLaneSource.read")(() => Effect.succeed([])) })
+    ),
+    TestConsole.layer
+  );
 
 it.layer(LiveSource, { timeout: "30 seconds" })("yeet economics loader", (layerIt) => {
   layerIt.effect("counts every row kind, deduplicates repeats, and keys orphan verdicts", () =>
@@ -950,7 +960,9 @@ describe("yeet economics document", () => {
   it.effect("round-trips the JSON codec and encodes an empty report with null percentiles", () =>
     Effect.gen(function* () {
       const empty = report([]);
-      expect(empty.schemaVersion).toBe("yeet-economics/v1");
+      expect(empty.schemaVersion).toBe("yeet-economics/v2");
+      expect(empty.reviewLane.roundsToReady.closedPullRequests).toBe(0);
+      assertNone(empty.reviewLane.roundsToReady.p50Rounds);
       expect(empty.dataQuality.diagnostics.finishedAttempts).toBe(0);
       assertNone(empty.redToGreen.comparable24h.p50Ms);
       assertNone(empty.wrapperLanes.accountedPct);
@@ -985,7 +997,7 @@ describe("yeet economics document", () => {
         populated
       );
       const invalid = yield* Effect.flip(
-        YeetEconomicsReportJson.decode(Str.replace('"yeet-economics/v1"', '"yeet-economics/v0"')(text))
+        YeetEconomicsReportJson.decode(Str.replace('"yeet-economics/v2"', '"yeet-economics/v1"')(text))
       );
       expect(S.isSchemaError(invalid)).toBe(true);
     })
@@ -1170,6 +1182,9 @@ describe("yeet economics rendering", () => {
     "attempts:",
     "wrapper lanes:",
     "inner lanes:",
+    "review lane (rounds to ready; its own denominators, never summed with the lane populations):",
+    "precision (fixed / (fixed + rejected + immaterial)",
+    "ledger:",
     "first failure (M2)",
     "red to green (M1) comparable24h",
     "red to green (M1) uncut",
@@ -1221,8 +1236,8 @@ describe("yeet economics rendering", () => {
     );
     const fleetScope = EconomicsScope.make({ kind: "fleet", checkouts: ["a", "b", "c", "d"], branch: O.some("main") });
     expect(
-      Str.startsWith("yeet economics (yeet-economics/v1) — fleet main: a, b, c, +1 more;")(
-        renderYeetEconomicsReport(buildYeetEconomicsReport([], fleetScope, NOW))
+      Str.startsWith("yeet economics (yeet-economics/v2) — fleet main: a, b, c, +1 more;")(
+        renderYeetEconomicsReport(buildYeetEconomicsReport([], fleetScope, NOW, []))
       )
     ).toBe(true);
   });

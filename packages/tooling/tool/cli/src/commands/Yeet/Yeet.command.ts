@@ -1377,7 +1377,7 @@ const yeetEconomicsCommand = Command.make(
   {
     json: Flag.Boolean("json").pipe(
       Flag.withDefault(false),
-      Flag.withDescription("Render the economics report as JSON (yeet-economics/v1)")
+      Flag.withDescription("Render the economics report as JSON (yeet-economics/v2)")
     ),
     branch: Flag.String("branch").pipe(
       Flag.optional,
@@ -1394,7 +1394,7 @@ const yeetEconomicsCommand = Command.make(
   runYeetEconomicsCommand
 ).pipe(
   Command.withDescription(
-    "Print where the checkout's proof minutes went: attempt mixes, wrapper and inner lanes, first failure, red-to-green episodes, and terminations"
+    "Print where the checkout's proof minutes went: attempt mixes, wrapper and inner lanes, the review lane (rounds to ready, reviewer precision), first failure, red-to-green episodes, and terminations"
   )
 );
 
