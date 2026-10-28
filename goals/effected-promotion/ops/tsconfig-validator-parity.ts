@@ -32,7 +32,9 @@
 
 import * as Configuration from "@beep/repo-docgen/Configuration";
 import * as Domain from "@beep/repo-docgen/Domain";
-import { decodeTSConfigFromJsoncTextEffect, encodeTSConfigPrettyEffect, jsonStringifyPretty } from "@beep/repo-utils";
+import { TsconfigValidator } from "@beep/repo-tsconfig/TsconfigValidator";
+import { jsonStringifyPretty } from "@beep/repo-utils";
+import { TsconfigJsonFromString } from "@beep/tsconfig/TsconfigJson";
 import { HostProcessPlatform } from "@beep/utils";
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
 import * as A from "effect/Array";
@@ -57,8 +59,10 @@ const CONCURRENCY = 8;
 
 // --- the strict model under measurement -----------------------------------------------------------
 //
-// Legacy binding (lane base): repo-utils `schemas/TSConfig.ts`. The switch commit rebinds this block
-// to `@beep/repo-tsconfig/TsconfigValidator` without touching the record or compare code below.
+// Current binding: `@beep/repo-tsconfig/TsconfigValidator` (the strict verdict of the loaded document,
+// as `TsconfigValidator.load` judges it) and docgen's `encodeExamplesTsconfig`. The recording commit
+// bound this block to repo-utils `schemas/TSConfig.ts` (`decodeTSConfigFromJsoncTextEffect` and
+// `encodeTSConfigPrettyEffect`) without touching the record or compare code below.
 
 interface StrictModel {
   /** The examples `tsconfig.json` text docgen renders from resolved examples compiler options. */
@@ -68,10 +72,14 @@ interface StrictModel {
   readonly verdict: (text: string) => Effect.Effect<void, { readonly message: string }>;
 }
 
+const decodeDocument = S.decodeEffect(TsconfigJsonFromString);
 const MODEL: StrictModel = {
-  name: "legacy repo-utils schemas/TSConfig.ts",
-  verdict: (text) => Effect.asVoid(decodeTSConfigFromJsoncTextEffect(text)),
-  examplesTsconfig: (compilerOptions) => encodeTSConfigPrettyEffect({ compilerOptions }),
+  name: "@beep/repo-tsconfig TsconfigValidator",
+  verdict: (text) => Effect.asVoid(Effect.flatMap(decodeDocument(text), TsconfigValidator.validate)),
+  examplesTsconfig: (compilerOptions) =>
+    Effect.flatMap(S.decodeUnknownEffect(Configuration.CompilerOptionsShape)(compilerOptions), (options) =>
+      Configuration.encodeExamplesTsconfig(options)
+    ),
 };
 
 // --- record ---------------------------------------------------------------------------------------
@@ -257,6 +265,12 @@ const mentions = (text: string | null, pattern: RegExp): boolean => text !== nul
 
 const SHIFT_RULES: ReadonlyArray<ShiftRule> = [
   {
+    id: "paths-null-target-rejected",
+    pinnedBy: "TsconfigValidator.test.ts: rejects a null paths target",
+    claims: (_before, after, direction) =>
+      direction === "accept->reject" && mentions(after, /got null[\s|]*at \["compilerOptions"\]\["paths"\]/),
+  },
+  {
     id: "null-option-rejected",
     pinnedBy: "TsconfigValidator.test.ts: rejects null where the legacy model collapsed it to Option.none",
     claims: (_before, after, direction) => direction === "accept->reject" && mentions(after, /got null/),
@@ -272,7 +286,10 @@ const SHIFT_RULES: ReadonlyArray<ShiftRule> = [
     pinnedBy: "TsconfigValidator.test.ts: rejects es3, the legacy fallbackPolling aliases and ES2022.SharedMemory",
     claims: (_before, after, direction) =>
       direction === "accept->reject" &&
-      mentions(after, /"es3"|"fixedPollingInterval"|"priorityPollingInterval"|"dynamicPriorityPolling"|SharedMemory/i),
+      mentions(
+        after,
+        /got "(es3|fixedpollinginterval|prioritypollinginterval|dynamicprioritypolling|es2022\.sharedmemory)"/i
+      ),
   },
   {
     id: "empty-reference-path-rejected",
@@ -281,9 +298,11 @@ const SHIFT_RULES: ReadonlyArray<ShiftRule> = [
       direction === "accept->reject" && mentions(after, /\["references"\]\[\d+\]\["path"\]/),
   },
   {
-    id: "paths-null-target-rejected",
-    pinnedBy: "TsconfigValidator.test.ts: rejects a null paths target",
-    claims: (_before, after, direction) => direction === "accept->reject" && mentions(after, /\["paths"\].*got null/s),
+    id: "allow-importing-ts-extensions-tsc7-rule",
+    pinnedBy:
+      "TsconfigValidator.test.ts: allowImportingTsExtensions follows tsc 7 (noEmit, emitDeclarationOnly or rewriteRelativeImportExtensions; no moduleResolution requirement)",
+    claims: (before, _after, direction) =>
+      direction === "reject->accept" && mentions(before, /allowImportingTsExtensions requires/),
   },
   {
     id: "new-enum-value-accepted",
@@ -314,7 +333,7 @@ const sortKeys = (value: unknown): unknown =>
     : P.isObject(value)
       ? pipe(
           R.toEntries(value as Record<string, unknown>),
-          A.sort(Order.mapInput(Order.string, ([key]: readonly [string, unknown]) => key)),
+          A.sort(Order.mapInput(Order.String, ([key]: readonly [string, unknown]) => key)),
           A.map(([key, inner]) => [key, sortKeys(inner)] as const),
           R.fromEntries
         )
@@ -327,20 +346,22 @@ const canonical = (value: unknown): string =>
 
 const compareTsconfigs = (before: ParityRecord, after: ParityRecord): ReadonlyArray<Difference> => {
   const afterByPath = R.fromEntries(A.map(after.tsconfigs.entries, (entry) => [entry.path, entry] as const));
-  return A.filterMap(before.tsconfigs.entries, (entry) =>
-    pipe(
-      R.get(afterByPath, entry.path),
-      O.flatMap((next) => {
-        if (next.verdict === entry.verdict) return O.none();
-        const direction = entry.verdict === "accept" ? ("accept->reject" as const) : ("reject->accept" as const);
-        return O.some({
-          path: entry.path,
-          kind: `verdict ${direction}`,
-          before: entry.reason,
-          after: next.reason,
-          classified: classify(entry.reason, next.reason, direction),
-        });
-      })
+  return A.getSomes(
+    A.map(before.tsconfigs.entries, (entry) =>
+      pipe(
+        R.get(afterByPath, entry.path),
+        O.flatMap((next) => {
+          if (next.verdict === entry.verdict) return O.none();
+          const direction = entry.verdict === "accept" ? ("accept->reject" as const) : ("reject->accept" as const);
+          return O.some({
+            path: entry.path,
+            kind: `verdict ${direction}`,
+            before: entry.reason,
+            after: next.reason,
+            classified: classify(entry.reason, next.reason, direction),
+          });
+        })
+      )
     )
   );
 };
@@ -392,7 +413,7 @@ const compare = Effect.fnUntraced(function* (beforePath: string, afterPath: stri
   const differences = [...compareTsconfigs(before, after), ...compareDocgen(before, after)];
   const unclassified = A.filter(differences, (difference) => difference.classified === null);
   const byRule = pipe(
-    A.filterMap(differences, (difference) => O.fromNullishOr(difference.classified)),
+    A.getSomes(A.map(differences, (difference) => O.fromNullishOr(difference.classified))),
     A.groupBy((id) => id),
     R.map(A.length)
   );
