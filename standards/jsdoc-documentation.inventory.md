@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-10-28T07:44:27.177Z
+Generated: 2026-10-28T10:27:06.698Z
 
 ## Scope
 
@@ -11,13 +11,13 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | Metric | Count |
 |---|---:|
 | packages | 183 |
-| cleanPackages | 149 |
+| cleanPackages | 148 |
 | packagesWithoutPublicSrcSurface | 2 |
-| packagesNeedingRemediation | 32 |
-| publicModules | 3546 |
-| publicExports | 25246 |
-| openModules | 224 |
-| openExports | 122 |
+| packagesNeedingRemediation | 33 |
+| publicModules | 3552 |
+| publicExports | 25272 |
+| openModules | 225 |
+| openExports | 130 |
 | missingExportExamples | 6 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
@@ -27,7 +27,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
 | undescribed-see | 8 |
-| multiple-description-paragraphs | 224 |
+| multiple-description-paragraphs | 233 |
 | leading-blank | 0 |
 | trailing-blank | 0 |
 | invalid-heading | 1 |
@@ -97,7 +97,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 39 | `@beep/epistemic-domain` | `packages/epistemic/domain` | needs-remediation | 51 | 241 | 7 | 2 |
 | 40 | `@beep/codegen-kit` | `packages/tooling/library/codegen-kit` | clean | 6 | 45 | 0 | 0 |
 | 41 | `@beep/phoenix` | `packages/drivers/phoenix` | clean | 5 | 49 | 0 | 0 |
-| 42 | `@beep/duckdb` | `packages/drivers/duckdb` | clean | 7 | 43 | 0 | 0 |
+| 42 | `@beep/duckdb` | `packages/drivers/duckdb` | needs-remediation | 13 | 73 | 1 | 8 |
 | 43 | `@beep/observability` | `packages/foundation/capability/observability` | clean | 42 | 337 | 0 | 0 |
 | 44 | `@beep/cli-kit` | `packages/foundation/capability/cli-kit` | clean | 29 | 196 | 0 | 0 |
 | 45 | `@beep/xdg` | `packages/foundation/capability/xdg` | clean | 7 | 31 | 0 | 0 |
@@ -189,7 +189,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 131 | `@beep/epistemic-ui` | `packages/epistemic/ui` | clean | 6 | 14 | 0 | 0 |
 | 132 | `@beep/graph-3d` | `packages/drivers/graph-3d` | clean | 7 | 17 | 0 | 0 |
 | 133 | `@beep/ontology` | `packages/foundation/modeling/ontology` | clean | 15 | 157 | 0 | 0 |
-| 134 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 473 | 4454 | 47 | 35 |
+| 134 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 473 | 4450 | 47 | 35 |
 | 135 | `@beep/dock-react` | `packages/foundation/ui-system/dock-react` | clean | 3 | 12 | 0 | 0 |
 | 136 | `@beep/drizzle` | `packages/drivers/drizzle` | clean | 3 | 11 | 0 | 0 |
 | 137 | `@beep/repo-workspaces` | `packages/tooling/library/repo-workspaces` | clean | 27 | 244 | 0 | 0 |
@@ -373,6 +373,23 @@ Module findings:
 Export findings:
 - `src/values/GrantSet/GrantSet.model.ts:280` `addGrant` (const) - 1 documentation section/link violation(s)
 - `src/values/GrantSet/GrantSet.model.ts:509` `evaluateExecutionRequest` (const) - 1 documentation section/link violation(s)
+
+### @beep/duckdb
+
+Path: `packages/drivers/duckdb`
+
+Module findings:
+- `src/DuckDbEventLogServerEncrypted.service.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
+
+Export findings:
+- `src/DuckDbMessageStorage.service.ts:821` `layerMigrations` (const) - 1 documentation section/link violation(s)
+- `src/DuckDbMessageStorage.service.ts:856` `layerStorage` (const) - 1 documentation section/link violation(s)
+- `src/DuckDbMessageStorage.service.ts:887` `layerWith` (const) - 1 documentation section/link violation(s)
+- `src/DuckDbMessageStorage.service.ts:915` `layer` (const) - 1 documentation section/link violation(s)
+- `src/DuckDbRunnerStorage.service.ts:320` `layerMigrations` (const) - 1 documentation section/link violation(s)
+- `src/DuckDbRunnerStorage.service.ts:353` `layerStorage` (const) - 1 documentation section/link violation(s)
+- `src/DuckDbRunnerStorage.service.ts:379` `layerWith` (const) - 1 documentation section/link violation(s)
+- `src/DuckDbRunnerStorage.service.ts:405` `layer` (const) - 1 documentation section/link violation(s)
 
 ### @beep/agents-use-cases
 
