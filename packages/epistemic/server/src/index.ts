@@ -55,6 +55,7 @@ export * from "./GovernedTierGate/index.ts";
  * @since 0.0.0
  */
 export * from "./Layer.ts";
+export * from "./Retention/index.ts";
 /**
  * Bounded SHACL validation exports.
  *
