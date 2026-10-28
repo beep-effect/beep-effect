@@ -8764,13 +8764,13 @@
       "reason": "Fresh private SQLite mailboxes and grant-bound MCP authorization fixtures need the real filesystem and path services. Owner: @beep/repo-cli. Exit: retire when the tool cases run over an in-memory SQLite mailbox."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/accounts-usage.test.ts:58:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/accounts-usage.test.ts:59:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/accounts-usage.test.ts",
-      "line": 58,
-      "endLine": 58,
+      "line": 59,
+      "endLine": 59,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
@@ -9248,13 +9248,13 @@
       "reason": "The test reads committed sources at path.join(findRepoRoot(), relative) to pin the rerun contract. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the pinned sources are passed as fixture text instead of read from the checkout."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/cli-kits.test.ts:32:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/cli-kits.test.ts:34:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/cli-kits.test.ts",
-      "line": 32,
-      "endLine": 32,
+      "line": 34,
+      "endLine": 34,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
@@ -10150,28 +10150,6 @@
       "reason": "FsUtilsLive traverses the workspace with native SharedGlob, so MemoryFileSystem alone would change discovery semantics (goals/effect-vitest-canon/research/cli-package-scripts-policy-proof.json). Owner: @beep/repo-cli. Exit: retire when SharedGlob runs over the Effect FileSystem."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/package-verify.test.ts:25:@effect/platform-node/NodeFileSystem@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/package-verify.test.ts",
-      "line": 25,
-      "endLine": 25,
-      "symbol": "@effect/platform-node/NodeFileSystem",
-      "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
-      "class": "platform-filesystem-candidate",
-      "evidence": "import * as NodeFileSystem from \"@effect/platform-node/NodeFileSystem\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "NodeChildProcessSpawner.layer and Bun.spawnSync run git over a real temp package. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when package-verify runs behind a scripted spawner over a seeded volume."
-    },
-    {
       "id": "EV010:packages/tooling/tool/cli/test/palantiri-command.test.ts:34:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -10788,13 +10766,13 @@
       "reason": "The test runs real git over scratch repositories. #1875 wave 7 memory trial (H4): fails with posix_spawn 'git' against a directory that exists only in memory. Owner: @beep/repo-cli. Exit: retire when EV010 recognises real-git suites as a native-process subject (#1855 wave 8 register)."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/stream-console.test.ts:13:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/stream-console.test.ts:16:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/stream-console.test.ts",
-      "line": 13,
-      "endLine": 13,
+      "line": 16,
+      "endLine": 16,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",

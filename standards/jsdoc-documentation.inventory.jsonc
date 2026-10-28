@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-28T00:45:09.793Z",
+  "generatedAt": "2026-10-28T02:54:52.556Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -552599,8 +552599,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Skills/SkillsReview.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/SkillsReview.service.ts",
-          "line": 96,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-96-skillreviewfailure",
+          "line": 102,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-102-skillreviewfailure",
           "currentTags": [
             "@category",
             "@since"
@@ -552621,8 +552621,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Skills/SkillsReview.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/SkillsReview.service.ts",
-          "line": 115,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-115-skillreviewbasesourceshape",
+          "line": 121,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-121-skillreviewbasesourceshape",
           "currentTags": [
             "@see",
             "@category",
@@ -552644,8 +552644,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Skills/SkillsReview.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/SkillsReview.service.ts",
-          "line": 140,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-140-skillreviewbasesource",
+          "line": 146,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-146-skillreviewbasesource",
           "currentTags": [
             "@see",
             "@category",
@@ -552667,8 +552667,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Skills/SkillsReview.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/SkillsReview.service.ts",
-          "line": 183,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-183-skillreviewbasesourcelive",
+          "line": 189,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-189-skillreviewbasesourcelive",
           "currentTags": [
             "@category",
             "@since"
@@ -552689,8 +552689,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Skills/SkillsReview.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/SkillsReview.service.ts",
-          "line": 209,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-209-skillreviewdecidershape",
+          "line": 215,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-215-skillreviewdecidershape",
           "currentTags": [
             "@see",
             "@category",
@@ -552712,8 +552712,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Skills/SkillsReview.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/SkillsReview.service.ts",
-          "line": 241,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-241-skillreviewdecider",
+          "line": 247,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-247-skillreviewdecider",
           "currentTags": [
             "@see",
             "@category",
@@ -552735,8 +552735,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Skills/SkillsReview.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/SkillsReview.service.ts",
-          "line": 274,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-274-dequeueghosted",
+          "line": 280,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-280-dequeueghosted",
           "currentTags": [
             "@internal",
             "@param",
@@ -552760,8 +552760,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Skills/SkillsReview.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/SkillsReview.service.ts",
-          "line": 337,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-337-skillreviewdeciderfromscript",
+          "line": 343,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-343-skillreviewdeciderfromscript",
           "currentTags": [
             "@param",
             "@returns",
@@ -552784,8 +552784,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Skills/SkillsReview.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/SkillsReview.service.ts",
-          "line": 438,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-438-makeskillreviewdeciderprompt",
+          "line": 467,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-467-makeskillreviewdeciderprompt",
           "currentTags": [
             "@category",
             "@since"
@@ -552806,8 +552806,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Skills/SkillsReview.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/SkillsReview.service.ts",
-          "line": 738,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-738-skillhunkreviewshape",
+          "line": 771,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-771-skillhunkreviewshape",
           "currentTags": [
             "@see",
             "@category",
@@ -552829,8 +552829,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Skills/SkillsReview.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/SkillsReview.service.ts",
-          "line": 789,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-789-skillhunkreview",
+          "line": 822,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-822-skillhunkreview",
           "currentTags": [
             "@see",
             "@category",
@@ -552852,8 +552852,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Skills/SkillsReview.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/SkillsReview.service.ts",
-          "line": 806,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-806-skillhunkreviewlayer",
+          "line": 839,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-839-skillhunkreviewlayer",
           "currentTags": [
             "@category",
             "@since"
@@ -552874,8 +552874,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Skills/SkillsReview.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/SkillsReview.service.ts",
-          "line": 833,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-833-skillhunkreviewlive",
+          "line": 866,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skillsreview-service-ts-866-skillhunkreviewlive",
           "currentTags": [
             "@category",
             "@since"
