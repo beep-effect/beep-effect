@@ -27792,15 +27792,15 @@
     },
     "@beep/practice-kg-mcp": {
       "path": "apps/practice-kg-mcp",
-      "lines": 61.87,
-      "statements": 62.5,
+      "lines": 62.8,
+      "statements": 63.52,
       "branches": 64.06,
-      "functions": 60.26,
+      "functions": 61.61,
       "uncovered": {
-        "lines": 284,
-        "statements": 300,
+        "lines": 279,
+        "statements": 294,
         "branches": 46,
-        "functions": 122
+        "functions": 119
       },
       "files": {
         "apps/practice-kg-mcp/src/BundleGraph.ts": {
@@ -27828,15 +27828,15 @@
           }
         },
         "apps/practice-kg-mcp/src/NativeAddon.ts": {
-          "lines": 82.35,
-          "statements": 80.55,
+          "lines": 97.43,
+          "statements": 97.61,
           "branches": 100,
-          "functions": 66.66,
+          "functions": 100,
           "uncovered": {
-            "lines": 6,
-            "statements": 7,
+            "lines": 1,
+            "statements": 1,
             "branches": 0,
-            "functions": 3
+            "functions": 0
           }
         },
         "apps/practice-kg-mcp/src/PracticeKgMcp.errors.ts": {

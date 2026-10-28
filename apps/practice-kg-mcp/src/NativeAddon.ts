@@ -29,6 +29,8 @@
  * @since 0.0.0
  */
 import * as NodeModule from "node:module";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
@@ -153,16 +155,19 @@ export const toWideString = (value: string): Uint16Array =>
  * DuckDB 2's Windows addon (`duckdb.node`) links against `duckdb.dll` in the
  * same folder, which Windows does not search. `bun:ffi` is loaded
  * synchronously because the resolver runs while modules are evaluated. The
- * call never throws: when `bun:ffi`, `kernel32` or the call itself fails it
- * writes one line to stderr (without the folder, which names the user) and
- * the addon load reports the missing DLL.
+ * call never fails: when `bun:ffi`, `kernel32` or the call itself fails it
+ * logs one line through `Console.error` (without the folder, which names the
+ * user) and the addon load then reports the missing DLL.
  *
  * **Example** (Register the addon folder)
  *
  * ```ts
  * import { setDllDirectory } from "../../src/NativeAddon.ts"
+ * import * as Effect from "effect/Effect"
  *
- * const registered: boolean = setDllDirectory("C:\\Ext\\node_modules\\@duckdb\\node-bindings-win32-x64\\")
+ * const registered: boolean = Effect.runSync(
+ *   setDllDirectory("C:\\Ext\\node_modules\\@duckdb\\node-bindings-win32-x64\\")
+ * )
  * ```
  *
  * @param directory - The folder that holds the addon and its DLLs.
@@ -170,26 +175,21 @@ export const toWideString = (value: string): Uint16Array =>
  * @category use-cases
  * @since 0.0.0
  */
-export const setDllDirectory = (directory: string): boolean => {
-  const registered = O.getOrElse(
-    O.liftThrowable(() => {
-      const ffi = NodeModule.createRequire(import.meta.url)("bun:ffi") as typeof import("bun:ffi");
-      const kernel32 = ffi.dlopen("kernel32.dll", { SetDllDirectoryW: { args: ["ptr"], returns: "i32" } });
-      try {
-        return kernel32.symbols.SetDllDirectoryW(ffi.ptr(toWideString(Str.replaceAll("/", "\\")(directory)))) !== 0;
-      } finally {
-        kernel32.close();
-      }
-    })(),
-    () => false
-  );
-  if (!registered) {
-    process.stderr.write(
-      "practice-kg-mcp: could not add the DuckDB addon folder to the DLL search path; duckdb.dll may fail to load.\n"
-    );
-  }
+export const setDllDirectory = Effect.fnUntraced(function* (directory: string) {
+  const registered = yield* Effect.try(() => {
+    const ffi = NodeModule.createRequire(import.meta.url)("bun:ffi") as typeof import("bun:ffi");
+    const kernel32 = ffi.dlopen("kernel32.dll", { SetDllDirectoryW: { args: ["ptr"], returns: "i32" } });
+    try {
+      return kernel32.symbols.SetDllDirectoryW(ffi.ptr(toWideString(Str.replaceAll("/", "\\")(directory)))) !== 0;
+    } finally {
+      kernel32.close();
+    }
+  }).pipe(Effect.orElseSucceed(() => false));
+  yield* Console.error(
+    "practice-kg-mcp: could not add the DuckDB addon folder to the DLL search path; duckdb.dll may fail to load."
+  ).pipe(Effect.when(Effect.succeed(!registered)));
   return registered;
-};
+});
 
 type ResolveFilename = (this: unknown, request: string, ...rest: ReadonlyArray<unknown>) => string;
 
@@ -224,7 +224,7 @@ let dllDirectorySet = false;
  * @since 0.0.0
  */
 export const installNativeAddonResolver = (
-  registerDllDirectory: (directory: string) => unknown = setDllDirectory
+  registerDllDirectory: (directory: string) => Effect.Effect<unknown> = setDllDirectory
 ): void => {
   if (installed) {
     return;
@@ -239,7 +239,7 @@ export const installNativeAddonResolver = (
     );
     if (O.isSome(resolved) && process.platform === "win32" && !dllDirectorySet) {
       dllDirectorySet = true;
-      registerDllDirectory(executableDirectory(resolved.value));
+      Effect.runSync(registerDllDirectory(executableDirectory(resolved.value)));
     }
     return O.getOrElse(resolved, () => fallback.call(this, request, ...rest));
   };

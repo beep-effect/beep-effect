@@ -3,6 +3,7 @@ import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import {
@@ -75,20 +76,20 @@ describe("NativeAddon", () => {
     expect(Array.from(toWideString(""))).toEqual([0]);
   });
 
-  it("reports a failed DLL directory registration on stderr instead of throwing", () => {
-    const writes: Array<string> = [];
-    const write = process.stderr.write;
-    process.stderr.write = ((chunk: string) => writes.push(chunk) > 0) as typeof process.stderr.write;
-    try {
+  it.effect("reports a failed DLL directory registration through Console instead of failing", () =>
+    Effect.gen(function* () {
+      const errors: Array<ReadonlyArray<unknown>> = [];
+      const recording: Console.Console = { ...console, error: (...args) => errors.push(args) };
       // Off Windows `bun:ffi` or `kernel32.dll` is unavailable, so registration fails.
-      expect(setDllDirectory("/opt/ext/node_modules/@duckdb/node-bindings-linux-x64/")).toBe(false);
-    } finally {
-      process.stderr.write = write;
-    }
-    expect(writes).toEqual([
-      "practice-kg-mcp: could not add the DuckDB addon folder to the DLL search path; duckdb.dll may fail to load.\n",
-    ]);
-  });
+      const registered = yield* setDllDirectory("/opt/ext/node_modules/@duckdb/node-bindings-linux-x64/").pipe(
+        Effect.provideService(Console.Console, recording)
+      );
+      expect(registered).toBe(false);
+      expect(errors).toEqual([
+        ["practice-kg-mcp: could not add the DuckDB addon folder to the DLL search path; duckdb.dll may fail to load."],
+      ]);
+    })
+  );
 
   it("leaves other requests to the default resolution", () => {
     const seen: Array<string> = [];
@@ -124,7 +125,7 @@ describe("NativeAddon", () => {
         const addonDirectory = `${root}/node_modules/@duckdb/node-bindings-win32-x64`;
         Object.defineProperty(process, "execPath", { value: `${root}/practice-kg-mcp`, configurable: true });
         Object.defineProperty(process, "platform", { value: "win32", configurable: true });
-        installNativeAddonResolver((directory) => registered.push(directory));
+        installNativeAddonResolver((directory) => Effect.sync(() => registered.push(directory)));
         const installed = resolver._resolveFilename;
         yield* Effect.promise(() => import("../src/NativeAddon.install.ts"));
         installNativeAddonResolver();
