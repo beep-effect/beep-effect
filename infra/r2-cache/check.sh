@@ -43,8 +43,13 @@ with tempfile.TemporaryDirectory(dir=parent) as directory:
     run([str(source/'workstation.sh'),'enable',str(checkout),'local:rw,remote:r'],env)
     assert 'BEEP_TURBO_TRUSTED_WRITER=false' in dotenv.read_text()
     assert 'TURBO_CACHE=local:rw,remote:r' in dotenv.read_text()
+    # Re-enrollment upgrades only cache fields and retains the original AWS rollback.
+    assert 'BEEP_TURBO_HOST_CACHE_MANAGED=true' in dotenv.read_text()
+    dotenv.write_text(dotenv.read_text()+'LATER_EDIT=retained\n')
+    run([str(source/'workstation.sh'),'enable',str(checkout)],env)
+    assert 'TURBO_CACHE=local:rw,remote:rw' in dotenv.read_text()
     run([str(source/'workstation.sh'),'rollback',str(checkout)],env)
-    assert dotenv.read_text()==original
+    assert dotenv.read_text()==original+'LATER_EDIT=retained\n'
     # A failed CI bootstrap leaves the AWS environment file untouched.
     jobenv=base/'github.env';jobenv.write_text('ORIGINAL_CACHE=retained\n')
     ci={**os.environ,'GITHUB_ENV':str(jobenv),'RUNNER_TEMP':str(base)}

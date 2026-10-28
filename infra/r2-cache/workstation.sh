@@ -101,7 +101,7 @@ text=target.read_text() if target.exists() else ''
 def assignment(line):
     match=re.match(r'^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=(.*)$',line)
     return match.groups() if match else ('', '')
-updates={'TURBO_API':'http://127.0.0.1:'+values.get('R2_ADAPTER_PORT','9427'),'TURBO_TOKEN':ref,'TURBO_TEAM':values['TURBO_TEAM'],'TURBO_CACHE':mode,'BEEP_TURBO_TRUSTED_WRITER':'true' if mode.endswith(':rw') else 'false'}
+updates={'TURBO_API':'http://127.0.0.1:'+values.get('R2_ADAPTER_PORT','9427'),'TURBO_TOKEN':ref,'TURBO_TEAM':values['TURBO_TEAM'],'TURBO_CACHE':mode,'BEEP_TURBO_TRUSTED_WRITER':'true' if mode.endswith(':rw') else 'false','BEEP_TURBO_HOST_CACHE_MANAGED':'true'}
 before={};before_lines={}
 for key in updates:
     found=[line for line in text.splitlines() if assignment(line)[0]==key]
@@ -114,6 +114,13 @@ if old_token and (len(shlex.split(old_token,comments=True))!=1 or not shlex.spli
 if before==updates:
     print('Checkout already enrolled; recovery receipt unchanged.');raise SystemExit(0)
 state.mkdir(parents=True,exist_ok=True);stamp=datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
+# Preserve the original rollback baseline when updating our own active enrollment.
+# A manual cache edit breaks the chain; unrelated dotenv edits never enter it.
+previous=next((json.loads(p.read_text()) for p in sorted(state.glob('enrollment-*.json'),reverse=True)
+               if json.loads(p.read_text())['target']==str(target)),None)
+if previous and all(before.get(key)==value for key,value in previous['after'].items()) and all(
+    value is None for key,value in before.items() if key not in previous['after']):
+    before.update(previous['before']);before_lines.update(previous.get('beforeLines',{}))
 receipt=state/('enrollment-'+stamp+'.json')
 fd=os.open(receipt,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)
 with os.fdopen(fd,'w') as out:json.dump({'target':str(target),'before':before,'beforeLines':before_lines,'after':updates},out)

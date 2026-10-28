@@ -28,7 +28,7 @@ for root in args.roots:
 checkouts = set()
 for clone in clones:
     origin = git(clone, 'remote', 'get-url', 'origin')
-    if not re.search(r'github\.com[:/]beep-effect/beep-effect(?:\.git)?$', origin):
+    if not re.fullmatch(r'(?:https://github\.com/|git@github\.com:)beep-effect/beep-effect(?:\.git)?', origin):
         continue
     for line in git(clone, 'worktree', 'list', '--porcelain').splitlines():
         if line.startswith('worktree '):

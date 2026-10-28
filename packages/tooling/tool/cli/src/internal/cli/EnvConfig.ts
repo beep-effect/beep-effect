@@ -36,6 +36,7 @@ import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import { runToExit } from "../process/StepExec.ts";
 import {
+  HostTurboCacheReferences,
   TurboCacheEnvironment,
   TurboCacheEnvName,
   TurboCacheMode,
@@ -741,7 +742,8 @@ const configuredValue = (value: string | undefined): O.Option<string> =>
  *
  * **Details**
  *
- * Existing checkout settings and CI always win. The host file contains only a loopback
+ * Explicit checkout settings and CI always win. A managed legacy reader may adopt
+ * the matching enrolled host's writer posture. The host file contains only a loopback
  * endpoint and secret references; malformed or missing configuration leaves execution local.
  * It never resolves a secret or reads application configuration.
  *
@@ -767,11 +769,15 @@ export const loadHostTurboCacheDefaults = Effect.fn("EnvConfig.loadHostTurboCach
   origin = ""
 ) {
   const names = [...TurboCacheEnvName.literals, "BEEP_TURBO_TRUSTED_WRITER"];
+  const managedReader =
+    environment.BEEP_TURBO_HOST_CACHE_MANAGED === "true" &&
+    environment.TURBO_CACHE === "local:rw,remote:r" &&
+    environment.BEEP_TURBO_TRUSTED_WRITER === "false";
   if (
     ci ||
     O.isNone(Str.match(/^(?:https:\/\/github\.com\/|git@github\.com:)beep-effect\/beep-effect(?:\.git)?$/u)(origin)) ||
     environment.BEEP_TURBO_HOST_CACHE_DISABLED === "true" ||
-    A.some(TurboCacheEnvName.literals, (name) => O.isSome(configuredValue(environment[name])))
+    (!managedReader && A.some(TurboCacheEnvName.literals, (name) => O.isSome(configuredValue(environment[name]))))
   ) {
     return R.empty<string, string>();
   }
@@ -793,17 +799,14 @@ export const loadHostTurboCacheDefaults = Effect.fn("EnvConfig.loadHostTurboCach
   );
   const defaults = R.fromEntries(A.getSomes(entries));
   if (
-    O.isNone(Str.match(/^http:\/\/127\.0\.0\.1:\d{4,5}$/u)(defaults.TURBO_API ?? "")) ||
-    !Str.startsWith("op://")(defaults.TURBO_TOKEN ?? "") ||
-    O.isNone(configuredValue(defaults.TURBO_TEAM)) ||
-    !(
-      defaults.TURBO_CACHE === "local:rw,remote:r" ||
-      (defaults.TURBO_CACHE === "local:rw,remote:rw" && defaults.BEEP_TURBO_TRUSTED_WRITER === "true")
-    )
-  ) {
+    managedReader &&
+    !A.every(["TURBO_API", "TURBO_TOKEN", "TURBO_TEAM"], (name) => environment[name] === defaults[name])
+  )
     return R.empty<string, string>();
-  }
-  return defaults;
+  return yield* S.decodeUnknownEffect(HostTurboCacheReferences)(defaults).pipe(
+    Effect.as(defaults),
+    Effect.orElseSucceed(R.empty<string, string>)
+  );
 });
 
 const turboCacheValueSource = (value: string | undefined): O.Option<TurboCacheValueSource> =>
