@@ -1,0 +1,32 @@
+# Acceptance audit, 2026-10-28
+
+## Scope and provenance
+
+Recovery lane branches from `origin/main` at
+`d3c684edea26987cea6384b296d86960b0bb5d1a`. The source checkout's three
+untracked `sst-env.d.ts` files remain outside this change.
+
+## Requirement evidence
+
+| Requirement | Current evidence |
+| --- | --- |
+| Foundation package and moved vocabulary | `packages/foundation/modeling/epistemics/package.json` declares foundation/modeling, exact public subpaths and runtime-neutral dependencies. All four moved concepts, seven factories, intervals and Claim exports exist. |
+| No shared kernel or slice dependency | Source import census has no `@beep/shared-*` or `@beep/epistemic-domain` import. The only slice-name text is a CanonicalJson documentation reference. |
+| Second caller-owned id binding | `test/Factories.test.ts` exercises branded string ids; the slice binds numeric ids. `FactoryBinding.types.test.ts` checks decoded and encoded equality. Both package audits pass. |
+| Caller-owned proposition key function | The audit found this missing. `makeClaimEnvelope` now requires `logicalKey`, and its schema rejects inconsistent keys; `Claim.test.ts` proves decode/encode rejection and unchanged valid-row round-trip. All six foundation test files pass (36 tests). |
+| Valid and knowledge intervals | `EdgeVersion` composes shared interval fields; `EdgeVersionRowCompat.test.ts` compares decoded/re-encoded pre-extraction rows with open and closed ends. Included in passing domain audit. |
+| Schema identifiers | `ValueSchemaIdentifiers.test.ts` matches the retained 258-line pre-extraction fixture. Included in passing domain audit. |
+| Import migration | Targeted `rg` across apps, packages and scratchpad finds no external imports of the four moved value subpaths. Slice value directories contain bindings rather than transitional re-exports for those four concepts. |
+| Authority values excluded | Original merge diff has no changes in ExecutionGrant, GrantSet, ExecutionRecord or ExecutionVerdict concept directories. They remain absent from foundation. `ExecutionAuthority.test.ts` passes within the domain audit. |
+| Persistence and service behavior unchanged | Original merge changes to server/table production source consist of three import-path replacements. No SQL or migration change. Row compatibility test passes. |
+| Foundation verification | `bun run beep quality package-verify @beep/epistemics`: audit 21.3s and docgen 8.8s, both pass after key-binding repair. |
+| Domain verification | `bun run beep quality package-verify @beep/epistemic-domain`: audit 15.6s and docgen 9.2s, both pass. |
+| Historical merge | REST PR #2017 confirms accepted head `62fdeb3680c711f6218655ae8ef8d35f6b0ae71d` and merge `ab6000add2e779508f5b76e6c774a872cf3e629a` at `2026-10-22T06:00:03Z`. |
+| Historical readiness | Unsatisfied. Completion refresh observes required Docgen failure, pending/missing required contexts and a failed required-check merge-push suite. The declared verdict is absent. |
+| Final closeout readiness | Pending the new final PR, exact-head hosted checks, retained readiness verdict, review window and strict merge. |
+
+## Boundaries
+
+The historical failure is preserved. A new final PR proves the revised work;
+its merge cannot retroactively qualify #2017. No lifecycle status is flipped
+from this audit or from a proposal alone.

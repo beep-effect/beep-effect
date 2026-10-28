@@ -6,7 +6,7 @@
     "title": "Epistemics Foundation Extraction",
     "status": "active",
     "created": "2026-10-21",
-    "updated": "2026-10-21",
+    "updated": "2026-10-28",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/epistemics-foundation-extraction",
@@ -37,7 +37,10 @@
     "goals/epistemics-foundation-extraction/GOAL.md",
     "goals/epistemics-foundation-extraction/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/2026-10-28-acceptance-audit.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

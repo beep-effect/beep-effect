@@ -16,6 +16,7 @@ const bind = (path: string) =>
   makeClaimEnvelope({
     $I: $EpistemicsId.create(path),
     proposition: Knows,
+    logicalKey: (p) => `Knows|${p.left}|${p.right}`,
     ids: {
       claimVersion: S.String.pipe(S.brand("TestClaimVersionId")),
       assertion: S.String.pipe(S.brand("TestAssertionId")),
@@ -61,6 +62,17 @@ describe("Claim envelope", () => {
     Effect.gen(function* () {
       const row = encoded("cv-1", { _tag: "Interval", validFrom: 100, validTo: null }, 50, null);
       expect(yield* encode(yield* decode(row))).toEqual(row);
+    })
+  );
+
+  it.effect("rejects a logical key that disagrees with the proposition", () =>
+    Effect.gen(function* () {
+      const row = encoded("cv-wrong-key", { _tag: "Unknown" }, 50, null);
+      const mismatched = yield* Effect.exit(decode({ ...row, logicalKey: "Knows|other|key" }));
+      mismatched.pipe(Exit.isFailure, assertTrue);
+      const valid = yield* decode(row);
+      const mismatchedEncoding = yield* Effect.exit(encode({ ...valid, logicalKey: "Knows|other|key" }));
+      mismatchedEncoding.pipe(Exit.isFailure, assertTrue);
     })
   );
 
