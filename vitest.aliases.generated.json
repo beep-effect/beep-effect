@@ -2230,5 +2230,23 @@
   ],
   "@beep/schema/CredentialPatternBank": [
     "./packages/foundation/modeling/schema/src/CredentialPatternBank/index.ts"
+  ],
+  "@beep/duckdb/DuckDbEventJournal": [
+    "./packages/drivers/duckdb/src/DuckDbEventJournal.service.ts"
+  ],
+  "@beep/duckdb/DuckDbEventLogServerEncrypted": [
+    "./packages/drivers/duckdb/src/DuckDbEventLogServerEncrypted.service.ts"
+  ],
+  "@beep/duckdb/DuckDbMessageStorage": [
+    "./packages/drivers/duckdb/src/DuckDbMessageStorage.service.ts"
+  ],
+  "@beep/duckdb/DuckDbPersistedQueue": [
+    "./packages/drivers/duckdb/src/DuckDbPersistedQueue.service.ts"
+  ],
+  "@beep/duckdb/DuckDbPersistence": [
+    "./packages/drivers/duckdb/src/DuckDbPersistence.service.ts"
+  ],
+  "@beep/duckdb/DuckDbRunnerStorage": [
+    "./packages/drivers/duckdb/src/DuckDbRunnerStorage.service.ts"
   ]
 }

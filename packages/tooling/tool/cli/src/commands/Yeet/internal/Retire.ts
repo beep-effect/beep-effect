@@ -389,7 +389,7 @@ const isLiveLaneJob = (record: ProofJobRecord): boolean => !isSettledProofJob(re
  */
 export const stopLaneJobs = Effect.fn("Yeet.stopLaneJobs")(function* (plan: YeetRetirePlan) {
   const launcher = yield* ProofJobLauncher.make(plan.worktreePath);
-  const records = yield* launcher.list.pipe(Effect.orElseSucceed(() => A.empty<ProofJobRecord>()));
+  const records = yield* launcher.list.pipe(Effect.orElseSucceed(A.empty<ProofJobRecord>));
   return yield* Effect.forEach(A.filter(records, isLiveLaneJob), (record) =>
     // A cancel stamp would overwrite a finished job's outcome, so its unit is
     // only stopped; anything still running is cancelled.

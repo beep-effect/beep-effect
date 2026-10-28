@@ -212,7 +212,7 @@ export class BoxContentMigrationFolder extends S.Opaque<BoxContentMigrationFolde
  *   BoxContentMigrationFile,
  *   BoxContentMigrationRuleId
  * } from "@beep/box-provisioning/BoxContentMigrationMap"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  * import * as O from "effect/Option"
  *
  * const file = BoxContentMigrationFile.make({

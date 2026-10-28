@@ -74,6 +74,8 @@ export class TikaAppEngineConfig extends S.Opaque<TikaAppEngineConfig, { readonl
 /**
  * Create the real tika-app-backed file-processing engine.
  *
+ * **Details**
+ *
  * Captures the process-spawner service at construction so the returned
  * engine satisfies the requirement-free {@link FileProcessingEngineShape}
  * contract. `extract` runs `java -jar tika-app.jar -J -t` against the

@@ -25,7 +25,7 @@ import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { constTrue, dual, flow, identity, pipe } from "effect/Function";
+import { constTrue, dual, flow, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
@@ -48,7 +48,6 @@ import {
   EconomicsAttempt,
   EconomicsAttemptMix,
   EconomicsAttempts,
-  EconomicsCountRow,
   EconomicsDataQuality,
   EconomicsDiagnostics,
   EconomicsEpisodeSummary,
@@ -65,6 +64,7 @@ import {
   EconomicsScopeRequest,
   EconomicsTerminations,
   EconomicsUnchangedFingerprint,
+  economicsCountMix,
   YEET_ECONOMICS_OFFSET_METHOD,
   YEET_ECONOMICS_PERCENTILE_ESTIMATOR,
   YEET_ECONOMICS_ROUNDING,
@@ -76,8 +76,11 @@ import {
   YeetEconomicsReportJson,
 } from "./Economics.schemas.ts";
 import { YeetRunMode } from "./Planner.ts";
+import { buildYeetEconomicsReviewLane, readYeetReviewLaneLedger, renderYeetEconomicsReviewLane } from "./ReviewLane.ts";
 import { YeetFailureKind, YeetLaneStatus, YeetOutcome } from "./Verdict.ts";
 import type * as Crypto from "effect/Crypto";
+import type { EconomicsCountRow } from "./Economics.schemas.ts";
+import type { ReviewLaneLedger } from "./ReviewLane.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Economics");
 
@@ -692,11 +695,20 @@ const fleetCandidates = Effect.fnUntraced(function* (projectsRoot: string) {
   return A.flatten(nested);
 });
 
-const resolveCheckouts = Effect.fnUntraced(function* (request: EconomicsScopeRequest) {
+// The checkout roots a scope reads: the checkout alone, or with `--fleet`
+// every sibling checkout and lane under the projects root (ruling 73). Both
+// sources resolve their files from these roots.
+const resolveScopeRoots = Effect.fnUntraced(function* (request: EconomicsScopeRequest) {
   const path = yield* Path.Path;
   const repoRoot = path.resolve(request.repoRoot);
   const projectsRoot = yield* projectsRootOf(repoRoot);
   const roots = request.fleet ? A.dedupe(A.prepend(yield* fleetCandidates(projectsRoot), repoRoot)) : A.of(repoRoot);
+  return { repoRoot, projectsRoot, roots };
+});
+
+const resolveCheckouts = Effect.fnUntraced(function* (request: EconomicsScopeRequest) {
+  const path = yield* Path.Path;
+  const { repoRoot, projectsRoot, roots } = yield* resolveScopeRoots(request);
   // The packet dir resolves against each checkout unless absolute; checkouts
   // that resolve to the same runs directory are read once.
   const checkouts = A.dedupeWith(
@@ -859,22 +871,91 @@ export class YeetEconomicsSource extends Context.Service<YeetEconomicsSource, Ye
     Layer.effect(YeetEconomicsSource, YeetEconomicsSource.make);
 }
 
+const ledgerOrder = Order.mapInput(Order.String, (ledger: ReviewLaneLedger) => ledger.ledgerPath);
+
+// Sibling lanes of one clone share one ledger (ruling 71's location rule), so
+// the fleet reads each distinct ledger once.
+const readReviewLaneLedgers = Effect.fn("Yeet.Economics.readReviewLane")(function* (
+  request: EconomicsScopeRequest
+): Effect.fn.Return<ReadonlyArray<ReviewLaneLedger>, never, FileSystem.FileSystem | Path.Path> {
+  const { roots } = yield* resolveScopeRoots(request);
+  const ledgers = yield* Effect.forEach(roots, readYeetReviewLaneLedger, { concurrency: FLEET_READ_CONCURRENCY });
+  return A.sort(
+    A.dedupeWith(ledgers, (self, that) => Str.Equivalence(self.ledgerPath, that.ledgerPath)),
+    ledgerOrder
+  );
+});
+
+/**
+ * Operations the review lane source provides.
+ *
+ * **Example** (Describe a scope read)
+ *
+ * ```ts
+ * import { EconomicsScopeRequest } from "@beep/repo-cli/test/Yeet"
+ * import type { YeetReviewLaneSourceShape } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const request = EconomicsScopeRequest.make({ repoRoot: "/repo", branch: O.none(), fleet: false })
+ * const readScope = (source: YeetReviewLaneSourceShape) => source.read(request)
+ * console.log(readScope.length) // 1
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export interface YeetReviewLaneSourceShape {
+  readonly read: (request: EconomicsScopeRequest) => Effect.Effect<ReadonlyArray<ReviewLaneLedger>, YeetEconomicsError>;
+}
+
+const makeYeetReviewLaneSource: Effect.Effect<YeetReviewLaneSourceShape, never, FileSystem.FileSystem | Path.Path> =
+  Effect.map(Effect.context<FileSystem.FileSystem | Path.Path>(), (context) => ({
+    read: (request: EconomicsScopeRequest) => readReviewLaneLedgers(request).pipe(Effect.provide(context)),
+  }));
+
+/**
+ * Service boundary that reads a scope's review lane ledgers (ruling 81).
+ *
+ * **Details**
+ *
+ * The scope's checkout roots are the ones {@link YeetEconomicsSource} reads
+ * journals from; each root resolves to its owning clone's
+ * `.beep/yeet/review-lane.ndjson`, and sibling lanes of one clone read one
+ * ledger once. A missing ledger reads as empty, an unreadable one as an
+ * unreadable ledger with no rows; the read never fails. A scope with no runs
+ * directory still has a review lane.
+ *
+ * **Example** (Read the current checkout)
+ *
+ * ```ts
+ * import { EconomicsScopeRequest, YeetReviewLaneSource } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect";
+ * import * as O from "effect/Option"
+ *
+ * const program = Effect.gen(function* () {
+ *   const source = yield* YeetReviewLaneSource
+ *   return yield* source.read(EconomicsScopeRequest.make({ repoRoot: "/repo", branch: O.none(), fleet: false }))
+ * })
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export class YeetReviewLaneSource extends Context.Service<YeetReviewLaneSource, YeetReviewLaneSourceShape>()(
+  $I`YeetReviewLaneSource`,
+  { make: makeYeetReviewLaneSource }
+) {
+  /** Live source over the filesystem. */
+  static readonly layer: Layer.Layer<YeetReviewLaneSource, never, FileSystem.FileSystem | Path.Path> = Layer.effect(
+    YeetReviewLaneSource,
+    YeetReviewLaneSource.make
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Pure fold
 // ---------------------------------------------------------------------------
-
-const countRowOrder = Order.combine(
-  Order.mapInput(Order.flip(Order.Number), (row: EconomicsCountRow) => row.count),
-  Order.mapInput(Order.String, (row: EconomicsCountRow) => row.key)
-);
-
-const countMix = (keys: ReadonlyArray<string>): ReadonlyArray<EconomicsCountRow> =>
-  A.sort(
-    A.map(R.toEntries(A.groupBy(keys, identity)), ([key, members]) =>
-      EconomicsCountRow.make({ key, count: A.length(members) })
-    ),
-    countRowOrder
-  );
 
 const orUnknown: (value: O.Option<string>) => string = O.getOrElse(() => UNKNOWN_KEY);
 const isGreen = (attempt: EconomicsAttempt): boolean => O.exists(attempt.outcome, YeetOutcome.is.success);
@@ -889,9 +970,9 @@ const attemptKey = (attempt: EconomicsAttempt): string =>
 
 const attemptMix = (attempts: ReadonlyArray<EconomicsAttempt>): EconomicsAttemptMix =>
   EconomicsAttemptMix.make({
-    outcomeMix: countMix(A.map(attempts, (attempt) => orUnknown(attempt.outcome))),
-    modeMix: countMix(A.map(attempts, (attempt) => orUnknown(attempt.mode))),
-    failureKindMix: countMix(A.map(A.filter(attempts, isRed), (attempt) => orUnknown(attempt.failureKind))),
+    outcomeMix: economicsCountMix(A.map(attempts, (attempt) => orUnknown(attempt.outcome))),
+    modeMix: economicsCountMix(A.map(attempts, (attempt) => orUnknown(attempt.mode))),
+    failureKindMix: economicsCountMix(A.map(A.filter(attempts, isRed), (attempt) => orUnknown(attempt.failureKind))),
   });
 
 interface LaneObservation {
@@ -923,7 +1004,7 @@ const laneRow = (group: A.NonEmptyReadonlyArray<LaneObservation>, populationMs: 
     p95DurationMs: roundedRank(durations, 0.95),
     totalDurationMs: Math.round(totalMs),
     sharePct: percentOf(totalMs, populationMs),
-    statusMix: countMix(A.map(group, (observation) => observation.lane.status)),
+    statusMix: economicsCountMix(A.map(group, (observation) => observation.lane.status)),
   });
 };
 
@@ -1063,8 +1144,8 @@ const firstFailure = (attempts: ReadonlyArray<EconomicsAttempt>): EconomicsFirst
     startOffsetP95Ms: roundedRank(starts, 0.95),
     completionOffsetP50Ms: roundedRank(completions, 0.5),
     completionOffsetP95Ms: roundedRank(completions, 0.95),
-    actionableLaneMix: countMix(A.map(red, actionableLane)),
-    receiptProxyMix: countMix(A.map(red, receiptProxyClass)),
+    actionableLaneMix: economicsCountMix(A.map(red, actionableLane)),
+    receiptProxyMix: economicsCountMix(A.map(red, receiptProxyClass)),
   });
 };
 
@@ -1259,8 +1340,8 @@ const unchangedFingerprint = (
     classification: attemptsWithFingerprint > 0 ? "measured" : "unmeasurable",
     attemptsWithFingerprint,
     failedUnchangedFingerprintThenGreen: A.length(repeats),
-    byActionableLane: countMix(A.map(repeats, actionableLane)),
-    byReceiptProxy: countMix(A.map(repeats, receiptProxyClass)),
+    byActionableLane: economicsCountMix(A.map(repeats, actionableLane)),
+    byReceiptProxy: economicsCountMix(A.map(repeats, receiptProxyClass)),
   });
 };
 
@@ -1271,7 +1352,7 @@ const terminations = (
   EconomicsTerminations.make({
     starts: sumOf(journals, (journal) => journal.diagnostics.starts),
     startsWithoutFinish: sumOf(journals, (journal) => journal.diagnostics.startsWithoutFinish),
-    reasonMix: countMix(A.getSomes(A.map(attempts, (attempt) => attempt.terminationReason))),
+    reasonMix: economicsCountMix(A.getSomes(A.map(attempts, (attempt) => attempt.terminationReason))),
   });
 
 const dataQuality = (
@@ -1318,14 +1399,16 @@ const dataQuality = (
 };
 
 /**
- * Fold normalized journals into the `yeet-economics/v1` report.
+ * Fold normalized journals and review lane ledgers into the
+ * `yeet-economics/v2` report.
  *
  * **Details**
  *
- * Pure: the same journals, scope and instant always give the same document.
- * Lanes and first failure fold every attempt; red-to-green folds the
- * comparable attempts of each run separately; percentiles are nearest rank
- * rounded with `Math.round`.
+ * Pure: the same journals, ledgers, scope and instant always give the same
+ * document. Lanes and first failure fold every attempt; red-to-green folds
+ * the comparable attempts of each run separately; the review lane folds the
+ * ledgers, narrowed to the scope's branch when it has one (ruling 81);
+ * percentiles are nearest rank rounded with `Math.round`.
  *
  * **Example** (A report over no journals)
  *
@@ -1337,7 +1420,8 @@ const dataQuality = (
  * const report = buildYeetEconomicsReport(
  *   [],
  *   EconomicsScope.make({ kind: "checkout", checkouts: [], branch: O.none() }),
- *   DateTime.makeUnsafe("2026-09-25T00:00:00.000Z")
+ *   DateTime.makeUnsafe("2026-09-25T00:00:00.000Z"),
+ *   []
  * )
  * console.log(report.dataQuality.diagnostics.finishedAttempts) // 0
  * ```
@@ -1345,16 +1429,31 @@ const dataQuality = (
  * @param journals - The scope's normalized journals.
  * @param scope - The scope the journals were read from.
  * @param now - The measurement instant recorded as `measurementAsOf`.
+ * @param ledgers - The scope's review lane ledgers.
  * @returns The report document.
  * @category utilities
  * @since 0.0.0
  */
 export const buildYeetEconomicsReport: {
-  (scope: EconomicsScope, now: DateTime.Utc): (journals: ReadonlyArray<EconomicsJournal>) => YeetEconomicsReport;
-  (journals: ReadonlyArray<EconomicsJournal>, scope: EconomicsScope, now: DateTime.Utc): YeetEconomicsReport;
+  (
+    scope: EconomicsScope,
+    now: DateTime.Utc,
+    ledgers: ReadonlyArray<ReviewLaneLedger>
+  ): (journals: ReadonlyArray<EconomicsJournal>) => YeetEconomicsReport;
+  (
+    journals: ReadonlyArray<EconomicsJournal>,
+    scope: EconomicsScope,
+    now: DateTime.Utc,
+    ledgers: ReadonlyArray<ReviewLaneLedger>
+  ): YeetEconomicsReport;
 } = dual(
-  3,
-  (journals: ReadonlyArray<EconomicsJournal>, scope: EconomicsScope, now: DateTime.Utc): YeetEconomicsReport => {
+  4,
+  (
+    journals: ReadonlyArray<EconomicsJournal>,
+    scope: EconomicsScope,
+    now: DateTime.Utc,
+    ledgers: ReadonlyArray<ReviewLaneLedger>
+  ): YeetEconomicsReport => {
     const attempts = A.flatMap(journals, (journal) => journal.attempts);
     return YeetEconomicsReport.make({
       schemaVersion: YEET_ECONOMICS_SCHEMA_VERSION,
@@ -1366,6 +1465,7 @@ export const buildYeetEconomicsReport: {
       }),
       wrapperLanes: lanePopulation(attempts, EconomicsLaneKind.Enum.wrapper),
       innerLanes: lanePopulation(attempts, EconomicsLaneKind.Enum.inner),
+      reviewLane: buildYeetEconomicsReviewLane(ledgers, scope.branch),
       firstFailure: firstFailure(attempts),
       redToGreen: redToGreen(journals),
       terminations: terminations(journals, attempts),
@@ -1465,7 +1565,8 @@ const scopeLine = (report: YeetEconomicsReport): string =>
  *   buildYeetEconomicsReport(
  *     [],
  *     EconomicsScope.make({ kind: "checkout", checkouts: [], branch: O.none() }),
- *     DateTime.makeUnsafe("2026-09-25T00:00:00.000Z")
+ *     DateTime.makeUnsafe("2026-09-25T00:00:00.000Z"),
+ *     []
  *   )
  * )
  * console.log(text.startsWith("yeet economics")) // true
@@ -1493,6 +1594,7 @@ export const renderYeetEconomicsReport = (report: YeetEconomicsReport): string =
       `  failure kinds: ${formatMix(attempts.all.failureKindMix)}`,
       ...renderPopulation("wrapper lanes", report.wrapperLanes),
       ...renderPopulation("inner lanes", report.innerLanes),
+      ...renderYeetEconomicsReviewLane(report.reviewLane),
       `first failure (M2): ${failure.redAttempts} red attempt(s), ${failure.attemptsWithReconstructableOuterFailure} reconstructable, ${failure.attemptsWithoutReconstructableOuterFailure} not; start p50 ${formatOptionalMs(failure.startOffsetP50Ms)} p95 ${formatOptionalMs(failure.startOffsetP95Ms)}; completion p50 ${formatOptionalMs(failure.completionOffsetP50Ms)} p95 ${formatOptionalMs(failure.completionOffsetP95Ms)}`,
       `  actionable lanes: ${formatMix(failure.actionableLaneMix, TOP_LANE_ROWS)}`,
       `  receipt proxies: ${formatMix(failure.receiptProxyMix)}`,
@@ -1537,7 +1639,8 @@ export const renderYeetEconomicsReport = (report: YeetEconomicsReport): string =
  *   buildYeetEconomicsReport(
  *     [],
  *     EconomicsScope.make({ kind: "branch", checkouts: [], branch: O.some("main") }),
- *     DateTime.makeUnsafe("2026-09-25T00:00:00.000Z")
+ *     DateTime.makeUnsafe("2026-09-25T00:00:00.000Z"),
+ *     []
  *   )
  * )
  * console.log(lines.length <= 5) // true
@@ -1579,9 +1682,10 @@ const scopeFor = (request: EconomicsScopeRequest, journals: ReadonlyArray<Econom
 
 const reportFor = Effect.fnUntraced(function* (
   request: EconomicsScopeRequest,
-  journals: ReadonlyArray<EconomicsJournal>
+  journals: ReadonlyArray<EconomicsJournal>,
+  ledgers: ReadonlyArray<ReviewLaneLedger>
 ) {
-  return buildYeetEconomicsReport(journals, scopeFor(request, journals), yield* DateTime.now);
+  return buildYeetEconomicsReport(journals, scopeFor(request, journals), yield* DateTime.now, ledgers);
 });
 
 const locateRepoRoot: Effect.Effect<string, YeetEconomicsError, FileSystem.FileSystem> = findRepoRoot().pipe(
@@ -1623,8 +1727,9 @@ const isNoRunsDirectory = (error: YeetEconomicsError): boolean =>
 export const runYeetEconomics = Effect.fn("Yeet.runEconomics")(function* (
   options: YeetEconomicsOptions,
   repoRoot: Effect.Effect<string, YeetEconomicsError, FileSystem.FileSystem> = locateRepoRoot
-): Effect.fn.Return<void, YeetEconomicsError, FileSystem.FileSystem | YeetEconomicsSource> {
+): Effect.fn.Return<void, YeetEconomicsError, FileSystem.FileSystem | YeetEconomicsSource | YeetReviewLaneSource> {
   const source = yield* YeetEconomicsSource;
+  const reviewLane = yield* YeetReviewLaneSource;
   const request = EconomicsScopeRequest.make({
     repoRoot: yield* repoRoot,
     branch: options.branch,
@@ -1634,7 +1739,8 @@ export const runYeetEconomics = Effect.fn("Yeet.runEconomics")(function* (
   const journals = yield* source
     .read(request)
     .pipe(Effect.catchIf(isNoRunsDirectory, () => Effect.succeed(A.empty<EconomicsJournal>())));
-  const report = yield* reportFor(request, journals);
+  const ledgers = yield* reviewLane.read(request);
+  const report = yield* reportFor(request, journals, ledgers);
   if (options.json) {
     const json = yield* YeetEconomicsReportJson.encode(report).pipe(
       Effect.mapError((cause) =>
@@ -1670,7 +1776,8 @@ export const runYeetEconomicsCommand = (
   options: Parameters<typeof YeetEconomicsOptions.make>[0]
 ): Effect.Effect<void, YeetEconomicsError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> =>
   runYeetEconomics(YeetEconomicsOptions.make(options)).pipe(
-    Effect.provideServiceEffect(YeetEconomicsSource, YeetEconomicsSource.make)
+    Effect.provideServiceEffect(YeetEconomicsSource, YeetEconomicsSource.make),
+    Effect.provideServiceEffect(YeetReviewLaneSource, YeetReviewLaneSource.make)
   );
 
 const firstLine = (text: string): string => A.headNonEmpty(Str.split(text, "\n"));
@@ -1711,8 +1818,9 @@ export const printYeetEconomicsCloseoutSummary = Effect.fn("Yeet.printEconomicsC
   branch: string,
   packetDir: string,
   inFlightAttemptId: O.Option<string>
-): Effect.fn.Return<void, never, YeetEconomicsSource> {
+): Effect.fn.Return<void, never, YeetEconomicsSource | YeetReviewLaneSource> {
   const source = yield* YeetEconomicsSource;
+  const reviewLane = yield* YeetReviewLaneSource;
   const request = EconomicsScopeRequest.make({
     repoRoot,
     branch: O.some(branch),
@@ -1721,7 +1829,9 @@ export const printYeetEconomicsCloseoutSummary = Effect.fn("Yeet.printEconomicsC
     inFlightAttemptId,
   });
   const lines = yield* source.read(request).pipe(
-    Effect.flatMap((journals) => reportFor(request, journals)),
+    Effect.flatMap((journals) =>
+      Effect.flatMap(reviewLane.read(request), (ledgers) => reportFor(request, journals, ledgers))
+    ),
     Effect.map(renderYeetEconomicsCloseoutSummary),
     Effect.catchTag("YeetEconomicsError", (error) => Effect.succeed(A.of(`economics: ${error.message}`))),
     Effect.catchDefect((defect) =>
