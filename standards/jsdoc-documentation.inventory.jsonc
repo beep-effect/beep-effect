@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-28T00:45:09.793Z",
+  "generatedAt": "2026-10-28T02:35:14.233Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -66,7 +66,7 @@
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 60,
     "publicModules": 3546,
-    "publicExports": 25242,
+    "publicExports": 25238,
     "openModules": 330,
     "openExports": 235,
     "missingExportExamples": 7,
@@ -450224,7 +450224,7 @@
         "srcDir": "src",
         "sourceFileCount": 475,
         "publicModuleCount": 473,
-        "publicExportCount": 4454
+        "publicExportCount": 4450
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -460276,7 +460276,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 66,
+          "exportCount": 62,
           "remediationStatus": "resolved"
         },
         {
@@ -553997,8 +553997,8 @@
           "exportKind": "const",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.plan.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.plan.ts",
-          "line": 1325,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-plan-ts-1325-tsconfigsyncplan",
+          "line": 1320,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-plan-ts-1320-tsconfigsyncplan",
           "currentTags": [
             "@category",
             "@since"
@@ -555295,100 +555295,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "TsconfigReferenceEntry",
-          "exportKind": "class",
-          "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 1587,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1587-tsconfigreferenceentry",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "TsconfigCompilerOptionsPaths",
-          "exportKind": "class",
-          "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 1617,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1617-tsconfigcompileroptionspaths",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "TsconfigWithReferences",
-          "exportKind": "class",
-          "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 1646,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1646-tsconfigwithreferences",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "TsconfigWithPaths",
-          "exportKind": "class",
-          "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 1672,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1672-tsconfigwithpaths",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
           "symbolName": "byWorkspaceRelativeDirAscending",
           "exportKind": "const",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 1705,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1705-byworkspacerelativedirascending",
+          "line": 1593,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1593-byworkspacerelativedirascending",
           "currentTags": [
             "@category",
             "@since"
@@ -555409,8 +555321,8 @@
           "exportKind": "const",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 1742,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1742-byplannedchangefileascending",
+          "line": 1630,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1630-byplannedchangefileascending",
           "currentTags": [
             "@category",
             "@since"
@@ -555431,8 +555343,8 @@
           "exportKind": "const",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 1767,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1767-byplannedchangesectionascending",
+          "line": 1655,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1655-byplannedchangesectionascending",
           "currentTags": [
             "@category",
             "@since"
@@ -555453,8 +555365,8 @@
           "exportKind": "const",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 1792,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1792-byplannedchangeascending",
+          "line": 1680,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1680-byplannedchangeascending",
           "currentTags": [
             "@category",
             "@since"
@@ -555475,8 +555387,8 @@
           "exportKind": "const",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 1811,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1811-tsconfigsyncschemainternals",
+          "line": 1699,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1699-tsconfigsyncschemainternals",
           "currentTags": [
             "@category",
             "@since"
