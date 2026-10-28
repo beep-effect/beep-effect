@@ -9,7 +9,6 @@
  */
 
 import * as Result from "effect/Result";
-import { shouldRenderFailureCause } from "./internal/cli/FailureRendering.ts";
 import { LINT_POLICY_SUBCOMMANDS } from "./internal/cli/LintRouting.ts";
 
 const LINT_POLICY_SUBCOMMAND_NAMES: ReadonlyArray<string> = LINT_POLICY_SUBCOMMANDS;
@@ -43,20 +42,20 @@ const canUseQualityTaskFastPath = (argv: ReadonlyArray<string>): boolean =>
 const canUseCiFastPath = (argv: ReadonlyArray<string>): boolean => argv[0] === "ci" && !hasRootCliGlobalFlag(argv);
 
 const { BunCrypto, BunHttpClient, BunRuntime, BunServices } = await import("@effect/platform-bun");
-const [Cause, Console, Effect, Exit, Layer, Option, Runtime] = await Promise.all([
-  import("effect/Cause"),
+const [Console, Effect, Layer, Logger, Option, Runtime, { CliRuntime }, { renderCliFailure }] = await Promise.all([
   import("effect/Console"),
   import("effect/Effect"),
-  import("effect/Exit"),
   import("effect/Layer"),
+  import("effect/Logger"),
   import("effect/Option"),
   import("effect/Runtime"),
+  import("@beep/cli-kit/CliRuntime"),
+  import("./internal/cli/FailureRendering.ts"),
 ]);
 const { drainProcessStreams, ProcessStreamName, streamConsole, writeBestEffortLine } = await import(
   "./internal/cli/Stdout.ts"
 );
 const O = await import("effect/Option");
-const P = await import("effect/Predicate");
 
 /**
  * Foundation layer providing Node.js implementations of FileSystem, Path, and Terminal.
@@ -68,40 +67,18 @@ const P = await import("effect/Predicate");
  * @category configuration
  * @since 0.0.0
  */
-const BaseLayers = Layer.mergeAll(BunServices.layer, BunHttpClient.layer, BunCrypto.layer);
+const BaseLayers = Layer.mergeAll(
+  BunServices.layer,
+  BunHttpClient.layer,
+  BunCrypto.layer,
+  // `CliRuntime.main` installs `CliLogger` for the failure report. Command code
+  // keeps Effect's default loggers: `CliLogger` drops a logged `Cause` and
+  // renders an object message as `[object Object]`, and every `Effect.log*`
+  // line stays on stdout in the format it had before (SPEC W4-aa).
+  Logger.layer([Logger.defaultLogger, Logger.tracerLogger])
+);
 
 const argv = A.slice(process.argv, { start: 2 });
-
-const renderCliFailure = (exit: import("effect/Exit").Exit<unknown, unknown>) => {
-  if (Exit.isSuccess(exit)) {
-    return;
-  }
-
-  const error = Cause.squash(exit.cause);
-  if (!Runtime.getErrorReported(error)) {
-    return;
-  }
-
-  // Print the message, then the full cause. Previously this returned right after
-  // the message, so every typed error rendered as one bare sentence with no
-  // errno, path, or stack at ANY log level including --log-level debug. That is
-  // why the ai-metrics parquet-export regression sat unexplained for a month
-  // behind `Failed to read transcript input.`, and why the forwarder's systemd
-  // unit -- which captures 2000 bytes of stderr into status/latest.json -- had
-  // nothing useful to capture.
-  //
-  // The cause is appended rather than substituted so the common case still leads
-  // with the human-readable line.
-  if (P.hasProperty(error, "message") && P.isString(error.message)) {
-    writeBestEffortLine(process.stderr, process.stdout, `${error.message}\n`);
-    if (shouldRenderFailureCause(argv)) {
-      writeBestEffortLine(process.stderr, process.stdout, `${Cause.pretty(exit.cause)}\n`);
-    }
-    return;
-  }
-
-  writeBestEffortLine(process.stderr, process.stdout, `${Cause.pretty(exit.cause)}\n`);
-};
 
 /**
  * Reset the shared terminal on CLI exit.
@@ -131,38 +108,51 @@ const restoreSharedTerminal = (): void => {
 };
 
 const runRepoCliMain = <E, A>(effect: import("effect/Effect").Effect<A, E>) =>
-  BunRuntime.runMain(Effect.provideService(effect, Console.Console, streamConsole), {
-    disableErrorReporting: true,
-    // The runner's onExit only hard-exits on a signal or nonzero code; a clean
-    // success is left to event-loop drain, so any handle a child leaves behind
-    // (turbo daemon sockets, stuck bun wrappers) wedges the process after its
-    // work is done — the CI class where a lane prints success and never exits.
-    // Keep defaultTeardown as the sole exit-code authority and force the exit
-    // the runner declines on success.
-    teardown: (exit, onExit) => {
-      // A dead stderr must not abort before the drain and exit.
-      Result.try(() => renderCliFailure(exit));
-      // A dead terminal must not abort before the drain and exit.
-      Result.try(restoreSharedTerminal);
-      Runtime.defaultTeardown(exit, (code) => {
-        // The runner's onExit hard-exits on a nonzero code, so the drain must come first.
-        drainProcessStreams((failure) => {
-          if (Option.isSome(failure)) {
-            const { stream, message, droppedLines } = failure.value;
-            const channel = ProcessStreamName.is.stderr(stream) ? process.stdout : process.stderr;
-            const fallback = ProcessStreamName.is.stderr(stream) ? process.stderr : process.stdout;
-            writeBestEffortLine(
-              channel,
-              fallback,
-              `[beep-cli] exiting with code ${code}; ${stream} write failed: ${message}; ${droppedLines} line(s) dropped\n`
-            );
-          }
-          onExit(code);
-          process.exit(code);
+  BunRuntime.runMain(
+    // The stream console wraps the whole run, so the failure report the kit
+    // writes through its logger goes through the same EPIPE-latching writers.
+    Effect.provideService(
+      CliRuntime.main(effect, {
+        // Every path builds its own platform layer inside the program.
+        platform: Layer.empty,
+        // An unknown subcommand or a bad flag exits 1, as before the kit.
+        usageExitCode: 1,
+        render: renderCliFailure(argv),
+      }),
+      Console.Console,
+      streamConsole
+    ),
+    {
+      disableErrorReporting: true,
+      // The runner's onExit only hard-exits on a signal or nonzero code; a clean
+      // success is left to event-loop drain, so any handle a child leaves behind
+      // (turbo daemon sockets, stuck bun wrappers) wedges the process after its
+      // work is done — the CI class where a lane prints success and never exits.
+      // Keep defaultTeardown as the sole exit-code authority and force the exit
+      // the runner declines on success.
+      teardown: (exit, onExit) => {
+        // A dead terminal must not abort before the drain and exit.
+        Result.try(restoreSharedTerminal);
+        Runtime.defaultTeardown(exit, (code) => {
+          // The runner's onExit hard-exits on a nonzero code, so the drain must come first.
+          drainProcessStreams((failure) => {
+            if (Option.isSome(failure)) {
+              const { stream, message, droppedLines } = failure.value;
+              const channel = ProcessStreamName.is.stderr(stream) ? process.stdout : process.stderr;
+              const fallback = ProcessStreamName.is.stderr(stream) ? process.stderr : process.stdout;
+              writeBestEffortLine(
+                channel,
+                fallback,
+                `[beep-cli] exiting with code ${code}; ${stream} write failed: ${message}; ${droppedLines} line(s) dropped\n`
+              );
+            }
+            onExit(code);
+            process.exit(code);
+          });
         });
-      });
-    },
-  });
+      },
+    }
+  );
 
 /**
  * Top-level CLI program effect produced by running the root command tree

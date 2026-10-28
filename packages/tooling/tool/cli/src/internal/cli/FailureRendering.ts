@@ -1,16 +1,22 @@
 /**
- * Argv-only verbosity resolution for the CLI's terminal failure renderer.
+ * The repo CLI's failure report: the `render` hook it hands `@beep/cli-kit`
+ * `CliRuntime.main`, and the argv-only verbosity switch that hook reads.
  *
- * Lives here rather than in the entrypoint because the entrypoint runs after the
- * Effect runtime has torn down, where neither the parsed CLI config nor a
- * `Config` provider is reachable — so the decision has to be made from raw argv.
- * Keeping it a pure function of argv makes it directly testable instead of
- * stranded behind a module-level constant in a file with top-level await.
+ * The hook runs in `CliRuntime.main`'s failure reporting, outside `Command.run`,
+ * where neither the parsed CLI config nor a `Config` provider is reachable, so
+ * verbosity is decided from raw argv. Keeping both pure functions makes them
+ * directly testable instead of stranded behind a module-level constant in a
+ * file with top-level await.
  *
  * @internal
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import * as Cause from "effect/Cause";
+import * as P from "effect/Predicate";
+import * as Runtime from "effect/Runtime";
+import type { FailureDetails } from "@beep/cli-kit/CliRuntime";
 
 const VERBOSE_LOG_LEVELS: ReadonlyArray<string> = ["debug", "trace"];
 const VERBOSE_FLAG = "--verbose";
@@ -21,7 +27,6 @@ const isVerboseLevel = (value: string | undefined): boolean =>
   value !== undefined && VERBOSE_LOG_LEVELS.includes(value);
 
 /** `--log-level=debug` carries its value in the same argv entry. */
-// A regular expression, not String methods, keeps this module free of imports.
 const LOG_LEVEL_INLINE_PATTERN = new RegExp(`^${LOG_LEVEL_INLINE_PREFIX}([\\s\\S]*)$`);
 const inlineLogLevel = (entry: string): string | undefined => LOG_LEVEL_INLINE_PATTERN.exec(entry)?.[1];
 
@@ -52,8 +57,6 @@ const separatedLogLevel = (argv: ReadonlyArray<string>, index: number): string |
  * @since 0.0.0
  */
 export const shouldRenderFailureCause = (argv: ReadonlyArray<string>): boolean => {
-  // This module stays import-free (bin-main.ts loads it before every fast path),
-  // so the scan is a plain index loop rather than an effect/Array helper.
   for (let index = 0; index < argv.length; index++) {
     const entry = argv[index];
     if (
@@ -66,3 +69,50 @@ export const shouldRenderFailureCause = (argv: ReadonlyArray<string>): boolean =
   }
   return false;
 };
+
+/**
+ * Render a repo CLI failure: the `render` hook for `CliRuntime.main`.
+ *
+ * **Details**
+ *
+ * An error already reported (`Runtime.errorReported` is `false`, as on
+ * `CliReportedExit`, whose command printed its own output) renders no line, so
+ * the process exits silently with the error's code. Otherwise the report leads
+ * with the error's `message`, followed by the full `Cause` only when
+ * {@link shouldRenderFailureCause} opts in; an error with no string `message`
+ * renders as the full `Cause`. The kit writes the lines through its logger to
+ * stderr, after neutralizing any line a GitHub runner would read as a workflow
+ * command.
+ *
+ * **Example** (A reported exit renders nothing)
+ *
+ * ```ts
+ * import { renderCliFailure } from "@beep/repo-cli/test/Cli"
+ * import * as Cause from "effect/Cause"
+ *
+ * const error = new Error("boom")
+ * console.log(renderCliFailure([])(error, { cause: Cause.fail(error) })) // ["boom"]
+ * ```
+ *
+ * @param argv - The raw CLI arguments, read for `--verbose` and `--log-level`.
+ * @returns The hook, taking the squashed error and the failure details.
+ * @category utils
+ * @since 0.0.0
+ */
+export const renderCliFailure =
+  (argv: ReadonlyArray<string>) =>
+  (error: unknown, details: Pick<FailureDetails.Encoded, "cause">): ReadonlyArray<string> => {
+    if (!Runtime.getErrorReported(error)) {
+      return [];
+    }
+    // The message leads; the cause follows only on request, because it carries
+    // absolute transcript paths and upstream stderr. Before the cause could be
+    // requested at all, every typed error rendered as one bare sentence with no
+    // errno, path, or stack at ANY log level, which is why the ai-metrics
+    // parquet-export regression sat unexplained for a month behind
+    // `Failed to read transcript input.`.
+    if (P.hasProperty(error, "message") && P.isString(error.message)) {
+      return shouldRenderFailureCause(argv) ? [error.message, Cause.pretty(details.cause)] : [error.message];
+    }
+    return [Cause.pretty(details.cause)];
+  };

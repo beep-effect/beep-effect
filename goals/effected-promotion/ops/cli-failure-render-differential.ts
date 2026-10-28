@@ -245,9 +245,10 @@ const program = Effect.gen(function* () {
     const verdict = O.match(base, { onNone: () => "UNCLASSIFIED" as const, onSome: (b) => classify(b, head) });
     return `${head.id}${head.githubActions ? " [actions]" : ""}: ${verdict}`;
   });
+  // A baseline case the head run lost counts as unclassified, except under `--only`.
   const missing = A.filter(
     baseline.cases,
-    (b) => !A.some(cases, (c) => c.id === b.id && c.githubActions === b.githubActions)
+    (b) => O.isNone(only) && !A.some(cases, (c) => c.id === b.id && c.githubActions === b.githubActions)
   );
   yield* Console.log(A.join(verdicts, "\n"));
   const unclassified = A.filter(verdicts, Str.endsWith("UNCLASSIFIED")).length + missing.length;
