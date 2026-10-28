@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Fable 5.1 (tsrs-gates PR 2, feat/tsrs-gates-fold)",
-      "reason": "Re-record the input lists of //#lint:policy-fingerprint, //#lint:tsgo-rules, @beep/repo-cli#test and @beep/repo-cli#test:property after standards/effect-diagnostics.profile.json was folded into tsconfig.base.json and deleted (goals/tsrs-gates PR 2). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (effected-promotion roadmap R9, refactor/drivers-run-collect)",
+      "reason": "Record the R9 manifest edits that add the @beep/commands workspace dependency to @beep/exiftool, @beep/obs, @beep/pdf-tools and @beep/tailscale (Run.collect and Run.detach) and the root policy-fingerprint input that follows from repo-cli reaching @beep/commands; the turbo coupling is measured in the review; no qualification is granted.",
       "basis": {
-        "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-27-fold.md",
-        "sha256": "47ac4273781785982a9357b011692b8c94c5bdb55ddf9a136c51cfe7e08d9adb"
+        "path": "goals/effected-promotion/research/cache-baseline-review-r9.md",
+        "sha256": "ffe6422230b602e4868f45ceb9a5ed0e384a9fe75b195f8d7d560d047eea20ec"
       }
     },
     "@beep/acp": {
@@ -450,11 +450,11 @@
       }
     },
     "@beep/exiftool": {
-      "reviewer": "Claude Fable 5.1 (tsrs-gates, feat/tsrs-gates)",
-      "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (effected-promotion roadmap R9, refactor/drivers-run-collect)",
+      "reason": "Record the R9 manifest edits that add the @beep/commands workspace dependency to @beep/exiftool, @beep/obs, @beep/pdf-tools and @beep/tailscale (Run.collect and Run.detach) and the root policy-fingerprint input that follows from repo-cli reaching @beep/commands; the turbo coupling is measured in the review; no qualification is granted.",
       "basis": {
-        "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
+        "path": "goals/effected-promotion/research/cache-baseline-review-r9.md",
+        "sha256": "ffe6422230b602e4868f45ceb9a5ed0e384a9fe75b195f8d7d560d047eea20ec"
       }
     },
     "@beep/fc-runs": {
@@ -802,11 +802,11 @@
       }
     },
     "@beep/obs": {
-      "reviewer": "Claude Fable 5.1 (tsrs-gates, feat/tsrs-gates)",
-      "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (effected-promotion roadmap R9, refactor/drivers-run-collect)",
+      "reason": "Record the R9 manifest edits that add the @beep/commands workspace dependency to @beep/exiftool, @beep/obs, @beep/pdf-tools and @beep/tailscale (Run.collect and Run.detach) and the root policy-fingerprint input that follows from repo-cli reaching @beep/commands; the turbo coupling is measured in the review; no qualification is granted.",
       "basis": {
-        "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
+        "path": "goals/effected-promotion/research/cache-baseline-review-r9.md",
+        "sha256": "ffe6422230b602e4868f45ceb9a5ed0e384a9fe75b195f8d7d560d047eea20ec"
       }
     },
     "@beep/observability": {
@@ -962,11 +962,11 @@
       }
     },
     "@beep/pdf-tools": {
-      "reviewer": "Claude Fable 5.1 (tsrs-gates, feat/tsrs-gates)",
-      "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (effected-promotion roadmap R9, refactor/drivers-run-collect)",
+      "reason": "Record the R9 manifest edits that add the @beep/commands workspace dependency to @beep/exiftool, @beep/obs, @beep/pdf-tools and @beep/tailscale (Run.collect and Run.detach) and the root policy-fingerprint input that follows from repo-cli reaching @beep/commands; the turbo coupling is measured in the review; no qualification is granted.",
       "basis": {
-        "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
+        "path": "goals/effected-promotion/research/cache-baseline-review-r9.md",
+        "sha256": "ffe6422230b602e4868f45ceb9a5ed0e384a9fe75b195f8d7d560d047eea20ec"
       }
     },
     "@beep/pglite": {
@@ -1018,11 +1018,11 @@
       }
     },
     "@beep/practice-identify": {
-      "reviewer": "Claude Fable 5.1 (tsrs-gates, feat/tsrs-gates)",
-      "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (rsc residue #1875 wave 10, test/residue-vitest-canon-wave10)",
+      "reason": "Record the new @beep/pdf-tools -> @beep/memfs and @beep/practice-identify -> @beep/memfs devDependency edges; commands and cache settings are unchanged and no qualification is granted.",
       "basis": {
-        "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
+        "path": "goals/repository-simplification-residue/research/cache-baseline-review-vitest-canon-wave-10.md",
+        "sha256": "1e22b7dd91ed09027f5f78765395502af61176dfb375c2e18c97772e9e71f71f"
       }
     },
     "@beep/practice-kg-mcp": {
@@ -1130,11 +1130,11 @@
       }
     },
     "@beep/repo-cli": {
-      "reviewer": "Claude Fable 5.1 (tsrs-gates PR 2, feat/tsrs-gates-fold)",
-      "reason": "Re-record the input lists of //#lint:policy-fingerprint, //#lint:tsgo-rules, @beep/repo-cli#test and @beep/repo-cli#test:property after standards/effect-diagnostics.profile.json was folded into tsconfig.base.json and deleted (goals/tsrs-gates PR 2). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (effected-promotion roadmap R10, refactor/repo-cli-git-helpers)",
+      "reason": "Record the @beep/repo-cli manifest edit that adds the @beep/git workspace dependency for the R10 git adoptions; the task graphs gain only git build/transit, and the policy-tool fingerprint closure gains that one package, as measured in the review; no qualification is granted.",
       "basis": {
-        "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-27-fold.md",
-        "sha256": "47ac4273781785982a9357b011692b8c94c5bdb55ddf9a136c51cfe7e08d9adb"
+        "path": "goals/effected-promotion/research/cache-baseline-review-r10.md",
+        "sha256": "4643d6b3e3c0db41cc6f82bae825225cb378fcd760090059b9ea7e39522bf131"
       }
     },
     "@beep/repo-configs": {
@@ -1162,11 +1162,11 @@
       }
     },
     "@beep/repo-utils": {
-      "reviewer": "Claude Fable 5.1 (tsrs-gates, feat/tsrs-gates)",
-      "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (effected-promotion 3-A3, effected-3a3)",
+      "reason": "Record the dependency-only drift of @beep/repo-utils from its new @beep/package-json edge (PackageJson re-based on PackageManifest, map sites #47, #127, #128, #243, #267); dependent closures are unchanged except two devDependency-only test closures, as measured in the review; no qualification is granted.",
       "basis": {
-        "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
+        "path": "goals/effected-promotion/research/cache-baseline-review-3-a3.md",
+        "sha256": "d6845a1b51f0a4537f85080601beb6099757a492b141e02823e74dc3b4f2cba1"
       }
     },
     "@beep/repo-workspaces": {
@@ -1322,11 +1322,11 @@
       }
     },
     "@beep/tailscale": {
-      "reviewer": "Claude Fable 5.1 (tsrs-gates, feat/tsrs-gates)",
-      "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (effected-promotion roadmap R9, refactor/drivers-run-collect)",
+      "reason": "Record the R9 manifest edits that add the @beep/commands workspace dependency to @beep/exiftool, @beep/obs, @beep/pdf-tools and @beep/tailscale (Run.collect and Run.detach) and the root policy-fingerprint input that follows from repo-cli reaching @beep/commands; the turbo coupling is measured in the review; no qualification is granted.",
       "basis": {
-        "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
+        "path": "goals/effected-promotion/research/cache-baseline-review-r9.md",
+        "sha256": "ffe6422230b602e4868f45ceb9a5ed0e384a9fe75b195f8d7d560d047eea20ec"
       }
     },
     "@beep/technical-drawing": {
@@ -2946,12 +2946,16 @@
             "packages/drivers/acp/src/**",
             "packages/drivers/ai-provider-cli/package.json",
             "packages/drivers/ai-provider-cli/src/**",
+            "packages/drivers/commands/package.json",
+            "packages/drivers/commands/src/**",
             "packages/drivers/duckdb/package.json",
             "packages/drivers/duckdb/src/**",
             "packages/drivers/exiftool/package.json",
             "packages/drivers/exiftool/src/**",
             "packages/drivers/ffmpeg/package.json",
             "packages/drivers/ffmpeg/src/**",
+            "packages/drivers/git/package.json",
+            "packages/drivers/git/src/**",
             "packages/drivers/github-actions/package.json",
             "packages/drivers/github-actions/src/**",
             "packages/drivers/github/package.json",
@@ -40393,6 +40397,7 @@
         "command": "bun run --if-present beep:audit",
         "commandDigest": "a5440593c50549efaf3f77a8965d01a13b6397ab31db7bb1b9a92aaf90ec830d",
         "dependencies": [
+          "@beep/commands#audit",
           "@beep/identity#audit",
           "@beep/memfs#audit",
           "@beep/schema#audit",
@@ -40460,6 +40465,7 @@
         "command": "bun run beep:build",
         "commandDigest": "a5440593c50549efaf3f77a8965d01a13b6397ab31db7bb1b9a92aaf90ec830d",
         "dependencies": [
+          "@beep/commands#build",
           "@beep/identity#build",
           "@beep/memfs#build",
           "@beep/schema#build",
@@ -40516,6 +40522,7 @@
         "command": "bun run beep:check",
         "commandDigest": "a5440593c50549efaf3f77a8965d01a13b6397ab31db7bb1b9a92aaf90ec830d",
         "dependencies": [
+          "@beep/commands#build",
           "@beep/identity#build",
           "@beep/memfs#build",
           "@beep/schema#build",
@@ -40559,6 +40566,7 @@
         "command": "bunx vitest run --coverage --exclude=test/integration/**",
         "commandDigest": "a5440593c50549efaf3f77a8965d01a13b6397ab31db7bb1b9a92aaf90ec830d",
         "dependencies": [
+          "@beep/commands#build",
           "@beep/identity#build",
           "@beep/memfs#build",
           "@beep/schema#build",
@@ -40687,6 +40695,7 @@
         "commandDigest": "a5440593c50549efaf3f77a8965d01a13b6397ab31db7bb1b9a92aaf90ec830d",
         "dependencies": [
           "//#lint:policy-fingerprint",
+          "@beep/commands#transit",
           "@beep/identity#transit",
           "@beep/memfs#transit",
           "@beep/schema#transit",
@@ -40893,6 +40902,7 @@
         "command": "beep-cli quality test-tsgo-package",
         "commandDigest": "a5440593c50549efaf3f77a8965d01a13b6397ab31db7bb1b9a92aaf90ec830d",
         "dependencies": [
+          "@beep/commands#transit",
           "@beep/identity#transit",
           "@beep/memfs#transit",
           "@beep/schema#transit",
@@ -40939,6 +40949,7 @@
         "command": "bun run beep:test",
         "commandDigest": "a5440593c50549efaf3f77a8965d01a13b6397ab31db7bb1b9a92aaf90ec830d",
         "dependencies": [
+          "@beep/commands#transit",
           "@beep/identity#transit",
           "@beep/memfs#transit",
           "@beep/schema#transit",
@@ -40991,6 +41002,7 @@
         "command": "bun run beep:test:integration",
         "commandDigest": "a5440593c50549efaf3f77a8965d01a13b6397ab31db7bb1b9a92aaf90ec830d",
         "dependencies": [
+          "@beep/commands#build",
           "@beep/identity#build",
           "@beep/memfs#build",
           "@beep/schema#build",
@@ -41035,6 +41047,7 @@
         "command": "bun run beep:test:integration",
         "commandDigest": "a5440593c50549efaf3f77a8965d01a13b6397ab31db7bb1b9a92aaf90ec830d",
         "dependencies": [
+          "@beep/commands#build",
           "@beep/identity#build",
           "@beep/memfs#build",
           "@beep/schema#build",
@@ -70058,6 +70071,7 @@
         "command": "bun run --if-present beep:audit",
         "commandDigest": "a5440593c50549efaf3f77a8965d01a13b6397ab31db7bb1b9a92aaf90ec830d",
         "dependencies": [
+          "@beep/commands#audit",
           "@beep/identity#audit",
           "@beep/schema#audit",
           "@beep/test-runner#audit",
@@ -70123,6 +70137,7 @@
         "command": "bun run beep:build",
         "commandDigest": "a5440593c50549efaf3f77a8965d01a13b6397ab31db7bb1b9a92aaf90ec830d",
         "dependencies": [
+          "@beep/commands#build",
           "@beep/identity#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -70177,6 +70192,7 @@
         "command": "bun run beep:check",
         "commandDigest": "a5440593c50549efaf3f77a8965d01a13b6397ab31db7bb1b9a92aaf90ec830d",
         "dependencies": [
+          "@beep/commands#build",
           "@beep/identity#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -70218,6 +70234,7 @@
         "command": "bunx vitest run --coverage --exclude=test/integration/**",
         "commandDigest": "a5440593c50549efaf3f77a8965d01a13b6397ab31db7bb1b9a92aaf90ec830d",
         "dependencies": [
+          "@beep/commands#build",
           "@beep/identity#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -70344,6 +70361,7 @@
         "commandDigest": "a5440593c50549efaf3f77a8965d01a13b6397ab31db7bb1b9a92aaf90ec830d",
         "dependencies": [
           "//#lint:policy-fingerprint",
+          "@beep/commands#transit",
           "@beep/identity#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
@@ -70548,6 +70566,7 @@
         "command": "beep-cli quality test-tsgo-package",
         "commandDigest": "a5440593c50549efaf3f77a8965d01a13b6397ab31db7bb1b9a92aaf90ec830d",
         "dependencies": [
+          "@beep/commands#transit",
           "@beep/identity#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
@@ -70592,6 +70611,7 @@
         "command": "bun run beep:test",
         "commandDigest": "a5440593c50549efaf3f77a8965d01a13b6397ab31db7bb1b9a92aaf90ec830d",
         "dependencies": [
+          "@beep/commands#transit",
           "@beep/identity#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
@@ -70642,6 +70662,7 @@
         "command": "bun run beep:test:integration",
         "commandDigest": "a5440593c50549efaf3f77a8965d01a13b6397ab31db7bb1b9a92aaf90ec830d",
         "dependencies": [
+          "@beep/commands#build",
           "@beep/identity#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -70684,6 +70705,7 @@
         "command": "bun run beep:test:integration",
         "commandDigest": "a5440593c50549efaf3f77a8965d01a13b6397ab31db7bb1b9a92aaf90ec830d",
         "dependencies": [
+          "@beep/commands#build",
           "@beep/identity#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
@@ -83624,7 +83646,9 @@
         "command": "bun run --if-present beep:audit",
         "commandDigest": "a7d2eefb880f01b11ba058983ae917eef5b17aae18fc3d541960077fa1d91222",
         "dependencies": [
+          "@beep/commands#audit",
           "@beep/identity#audit",
+          "@beep/memfs#audit",
           "@beep/schema#audit",
           "@beep/test-runner#audit",
           "@beep/utils#audit"
@@ -83689,7 +83713,9 @@
         "command": "bun run beep:build",
         "commandDigest": "a7d2eefb880f01b11ba058983ae917eef5b17aae18fc3d541960077fa1d91222",
         "dependencies": [
+          "@beep/commands#build",
           "@beep/identity#build",
+          "@beep/memfs#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/utils#build"
@@ -83743,7 +83769,9 @@
         "command": "bun run beep:check",
         "commandDigest": "a7d2eefb880f01b11ba058983ae917eef5b17aae18fc3d541960077fa1d91222",
         "dependencies": [
+          "@beep/commands#build",
           "@beep/identity#build",
+          "@beep/memfs#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/utils#build"
@@ -83784,7 +83812,9 @@
         "command": "bunx vitest run --coverage --exclude=test/integration/**",
         "commandDigest": "a7d2eefb880f01b11ba058983ae917eef5b17aae18fc3d541960077fa1d91222",
         "dependencies": [
+          "@beep/commands#build",
           "@beep/identity#build",
+          "@beep/memfs#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/utils#build"
@@ -83910,7 +83940,9 @@
         "commandDigest": "a7d2eefb880f01b11ba058983ae917eef5b17aae18fc3d541960077fa1d91222",
         "dependencies": [
           "//#lint:policy-fingerprint",
+          "@beep/commands#transit",
           "@beep/identity#transit",
+          "@beep/memfs#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/utils#transit"
@@ -84114,7 +84146,9 @@
         "command": "beep-cli quality test-tsgo-package",
         "commandDigest": "a7d2eefb880f01b11ba058983ae917eef5b17aae18fc3d541960077fa1d91222",
         "dependencies": [
+          "@beep/commands#transit",
           "@beep/identity#transit",
+          "@beep/memfs#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/utils#transit"
@@ -84158,7 +84192,9 @@
         "command": "bun run beep:test",
         "commandDigest": "a7d2eefb880f01b11ba058983ae917eef5b17aae18fc3d541960077fa1d91222",
         "dependencies": [
+          "@beep/commands#transit",
           "@beep/identity#transit",
+          "@beep/memfs#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/utils#transit",
@@ -84208,7 +84244,9 @@
         "command": "bun run beep:test:integration",
         "commandDigest": "a7d2eefb880f01b11ba058983ae917eef5b17aae18fc3d541960077fa1d91222",
         "dependencies": [
+          "@beep/commands#build",
           "@beep/identity#build",
+          "@beep/memfs#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/utils#build"
@@ -84250,7 +84288,9 @@
         "command": "bun run beep:test:integration",
         "commandDigest": "a7d2eefb880f01b11ba058983ae917eef5b17aae18fc3d541960077fa1d91222",
         "dependencies": [
+          "@beep/commands#build",
           "@beep/identity#build",
+          "@beep/memfs#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/utils#build"
@@ -88270,6 +88310,7 @@
           "@beep/identity#audit",
           "@beep/law-practice-server#audit",
           "@beep/law-practice-use-cases#audit",
+          "@beep/memfs#audit",
           "@beep/schema#audit",
           "@beep/uspto#audit"
         ],
@@ -88336,6 +88377,7 @@
           "@beep/identity#build",
           "@beep/law-practice-server#build",
           "@beep/law-practice-use-cases#build",
+          "@beep/memfs#build",
           "@beep/schema#build",
           "@beep/uspto#build"
         ],
@@ -88378,6 +88420,7 @@
           "@beep/identity#build",
           "@beep/law-practice-server#build",
           "@beep/law-practice-use-cases#build",
+          "@beep/memfs#build",
           "@beep/schema#build",
           "@beep/uspto#build"
         ],
@@ -88420,6 +88463,7 @@
           "@beep/identity#build",
           "@beep/law-practice-server#build",
           "@beep/law-practice-use-cases#build",
+          "@beep/memfs#build",
           "@beep/schema#build",
           "@beep/uspto#build"
         ],
@@ -88508,6 +88552,7 @@
           "@beep/identity#transit",
           "@beep/law-practice-server#transit",
           "@beep/law-practice-use-cases#transit",
+          "@beep/memfs#transit",
           "@beep/schema#transit",
           "@beep/uspto#transit"
         ],
@@ -88713,6 +88758,7 @@
           "@beep/identity#transit",
           "@beep/law-practice-server#transit",
           "@beep/law-practice-use-cases#transit",
+          "@beep/memfs#transit",
           "@beep/schema#transit",
           "@beep/uspto#transit"
         ],
@@ -88758,6 +88804,7 @@
           "@beep/identity#transit",
           "@beep/law-practice-server#transit",
           "@beep/law-practice-use-cases#transit",
+          "@beep/memfs#transit",
           "@beep/schema#transit",
           "@beep/uspto#transit",
           "@beep/utils#transit"
@@ -97805,6 +97852,7 @@
           "@beep/fc-runs#audit",
           "@beep/ffmpeg#audit",
           "@beep/file-processing#audit",
+          "@beep/git#audit",
           "@beep/github#audit",
           "@beep/github-actions#audit",
           "@beep/github-commands#audit",
@@ -97920,6 +97968,7 @@
           "@beep/fc-runs#build",
           "@beep/ffmpeg#build",
           "@beep/file-processing#build",
+          "@beep/git#build",
           "@beep/github#build",
           "@beep/github-actions#build",
           "@beep/github-commands#build",
@@ -98024,6 +98073,7 @@
           "@beep/fc-runs#build",
           "@beep/ffmpeg#build",
           "@beep/file-processing#build",
+          "@beep/git#build",
           "@beep/github#build",
           "@beep/github-actions#build",
           "@beep/github-commands#build",
@@ -98115,6 +98165,7 @@
           "@beep/fc-runs#build",
           "@beep/ffmpeg#build",
           "@beep/file-processing#build",
+          "@beep/git#build",
           "@beep/github#build",
           "@beep/github-actions#build",
           "@beep/github-commands#build",
@@ -98255,6 +98306,7 @@
           "@beep/fc-runs#transit",
           "@beep/ffmpeg#transit",
           "@beep/file-processing#transit",
+          "@beep/git#transit",
           "@beep/github#transit",
           "@beep/github-actions#transit",
           "@beep/github-commands#transit",
@@ -98391,6 +98443,7 @@
           "@beep/fc-runs#transit",
           "@beep/ffmpeg#transit",
           "@beep/file-processing#transit",
+          "@beep/git#transit",
           "@beep/github#transit",
           "@beep/github-actions#transit",
           "@beep/github-commands#transit",
@@ -98645,6 +98698,7 @@
           "@beep/fc-runs#transit",
           "@beep/ffmpeg#transit",
           "@beep/file-processing#transit",
+          "@beep/git#transit",
           "@beep/github#transit",
           "@beep/github-actions#transit",
           "@beep/github-commands#transit",
@@ -98739,6 +98793,7 @@
           "@beep/fc-runs#transit",
           "@beep/ffmpeg#transit",
           "@beep/file-processing#transit",
+          "@beep/git#transit",
           "@beep/github#transit",
           "@beep/github-actions#transit",
           "@beep/github-commands#transit",
@@ -98857,6 +98912,7 @@
           "@beep/fc-runs#transit",
           "@beep/ffmpeg#transit",
           "@beep/file-processing#transit",
+          "@beep/git#transit",
           "@beep/github#transit",
           "@beep/github-actions#transit",
           "@beep/github-commands#transit",
@@ -100956,6 +101012,7 @@
           "@beep/glob#audit",
           "@beep/identity#audit",
           "@beep/memfs#audit",
+          "@beep/package-json#audit",
           "@beep/schema#audit",
           "@beep/test-runner#audit",
           "@beep/test-utils#audit",
@@ -101025,6 +101082,7 @@
           "@beep/glob#build",
           "@beep/identity#build",
           "@beep/memfs#build",
+          "@beep/package-json#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
@@ -101083,6 +101141,7 @@
           "@beep/glob#build",
           "@beep/identity#build",
           "@beep/memfs#build",
+          "@beep/package-json#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
@@ -101128,6 +101187,7 @@
           "@beep/glob#build",
           "@beep/identity#build",
           "@beep/memfs#build",
+          "@beep/package-json#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
@@ -101258,6 +101318,7 @@
           "@beep/glob#transit",
           "@beep/identity#transit",
           "@beep/memfs#transit",
+          "@beep/package-json#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
@@ -101466,6 +101527,7 @@
           "@beep/glob#transit",
           "@beep/identity#transit",
           "@beep/memfs#transit",
+          "@beep/package-json#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
@@ -101514,6 +101576,7 @@
           "@beep/glob#transit",
           "@beep/identity#transit",
           "@beep/memfs#transit",
+          "@beep/package-json#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
@@ -101568,6 +101631,7 @@
           "@beep/glob#transit",
           "@beep/identity#transit",
           "@beep/memfs#transit",
+          "@beep/package-json#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
@@ -113438,6 +113502,7 @@
         "command": "bun run --if-present beep:audit",
         "commandDigest": "561a145357c39392e9214e711712882a38aeab1e8270e0d4d1e641599a41278c",
         "dependencies": [
+          "@beep/commands#audit",
           "@beep/fc-runs#audit",
           "@beep/identity#audit",
           "@beep/schema#audit",
@@ -113503,6 +113568,7 @@
         "command": "bun run beep:build",
         "commandDigest": "561a145357c39392e9214e711712882a38aeab1e8270e0d4d1e641599a41278c",
         "dependencies": [
+          "@beep/commands#build",
           "@beep/fc-runs#build",
           "@beep/identity#build",
           "@beep/schema#build",
@@ -113557,6 +113623,7 @@
         "command": "bun run beep:check",
         "commandDigest": "561a145357c39392e9214e711712882a38aeab1e8270e0d4d1e641599a41278c",
         "dependencies": [
+          "@beep/commands#build",
           "@beep/fc-runs#build",
           "@beep/identity#build",
           "@beep/schema#build",
@@ -113598,6 +113665,7 @@
         "command": "bunx vitest run --coverage --exclude=test/integration/**",
         "commandDigest": "561a145357c39392e9214e711712882a38aeab1e8270e0d4d1e641599a41278c",
         "dependencies": [
+          "@beep/commands#build",
           "@beep/fc-runs#build",
           "@beep/identity#build",
           "@beep/schema#build",
@@ -113724,6 +113792,7 @@
         "commandDigest": "561a145357c39392e9214e711712882a38aeab1e8270e0d4d1e641599a41278c",
         "dependencies": [
           "//#lint:policy-fingerprint",
+          "@beep/commands#transit",
           "@beep/fc-runs#transit",
           "@beep/identity#transit",
           "@beep/schema#transit",
@@ -113928,6 +113997,7 @@
         "command": "beep-cli quality test-tsgo-package",
         "commandDigest": "561a145357c39392e9214e711712882a38aeab1e8270e0d4d1e641599a41278c",
         "dependencies": [
+          "@beep/commands#transit",
           "@beep/fc-runs#transit",
           "@beep/identity#transit",
           "@beep/schema#transit",
@@ -113972,6 +114042,7 @@
         "command": "bun run beep:test",
         "commandDigest": "561a145357c39392e9214e711712882a38aeab1e8270e0d4d1e641599a41278c",
         "dependencies": [
+          "@beep/commands#transit",
           "@beep/fc-runs#transit",
           "@beep/identity#transit",
           "@beep/schema#transit",
@@ -114022,6 +114093,7 @@
         "command": "bun run beep:test:integration",
         "commandDigest": "561a145357c39392e9214e711712882a38aeab1e8270e0d4d1e641599a41278c",
         "dependencies": [
+          "@beep/commands#build",
           "@beep/fc-runs#build",
           "@beep/identity#build",
           "@beep/schema#build",
@@ -129834,7 +129906,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "5efb4864484cc842608841da6b4a1898b75415d88a08f053ecc8ecddaa0ed253"
+        "sha256": "ed1b5b765ba479a578f19c0c1175b5248ecd14b2024c56d93c99f9546839e180"
       }
     ]
   }

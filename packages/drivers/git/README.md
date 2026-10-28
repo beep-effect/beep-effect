@@ -60,6 +60,8 @@ The ssh pin is the one that adapts to you rather than overriding you. Before a m
 
 The subprocess spawner comes from Effect core's `ChildProcessSpawner` contract, not from a platform package. A consumer provides it once at the edge — `NodeServices.layer` from `@effect/platform-node` on Node — and a test provides a scripted spawner built with `ChildProcessSpawner.make`, no processes involved.
 
+`Git.layer` is the usual way in: provide it once at the edge beside the spawner. `Git.make` is the same construction as a plain effect (`Effect<GitShape, never, ChildProcessSpawner>`), for a module that adopts one or two `Git` reads while its callers already provide `ChildProcessSpawner` but not `Git`. Such a module provides the service locally with `Effect.provideServiceEffect(Git, Git.make)`. That rebuilds the service on every call and hides `Git` from the caller's requirements, so a test cannot substitute a `Git` stub there; lift `Git` into the caller's `R` and provide `Git.layer` at the edge once more than a few call sites need it.
+
 ## Features
 
 Twenty-six service methods: eighteen that read repository state and eight that mutate it, all funneled through the same one-step classification.

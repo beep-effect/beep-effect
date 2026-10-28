@@ -1,6 +1,8 @@
 /**
  * The `api_key_required` envelope and its protocol translation.
  *
+ * **Details**
+ *
  * A typed `failureMode: "return"` tool failure for `soft`-gated (or
  * key-optional `none`-gated) sources whose credential is absent at call
  * time. `effect/ai`'s `Toolkit` folds `"return"`-mode failures into
@@ -55,7 +57,8 @@ type ApiKeyRequiredFailureParamsInput = Exclude<(typeof ApiKeyRequiredFailurePar
  *
  * ```ts
  * import * as O from "effect/Option"
- * import { ApiKeyRequiredFailure, SourceAuthRegistration } from "@beep/mcp-kit"
+ * import { ApiKeyRequiredFailure } from "@beep/mcp-kit/ApiKeyRequired"
+ * import { SourceAuthRegistration } from "@beep/mcp-kit/SourceAuth"
  *
  * const failure = ApiKeyRequiredFailure.make({
  *   tool: "search_patents",
@@ -105,16 +108,17 @@ export class ApiKeyRequiredFailure extends S.Opaque<ApiKeyRequiredFailure, { rea
  *
  * **When to use**
  *
- * Use inside a `soft`/`none`-gated tool's handler, guarded by
- * `Effect.fail(apiKeyRequiredFailure({ tool, registration }))` when the
- * resolved credential is absent, with the tool declared
- * `failureMode: "return"`.
+ * Use when a `soft`/`none`-gated tool's handler finds its resolved
+ * credential absent: fail with
+ * `Effect.fail(apiKeyRequiredFailure({ tool, registration }))`, with the tool
+ * declared `failureMode: "return"`.
  *
  * **Example** (Building failure from registration)
  *
  * ```ts
  * import * as O from "effect/Option"
- * import { apiKeyRequiredFailure, SourceAuthRegistration } from "@beep/mcp-kit"
+ * import { apiKeyRequiredFailure } from "@beep/mcp-kit/ApiKeyRequired"
+ * import { SourceAuthRegistration } from "@beep/mcp-kit/SourceAuth"
  *
  * const registration = SourceAuthRegistration.make({
  *   name: "USPTO Open Data Portal",

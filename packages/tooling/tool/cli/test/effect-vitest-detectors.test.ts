@@ -369,6 +369,29 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
     })
   );
 
+  it.effect("follows Context pipe chains and same-file Context factories into a Context provision", () =>
+    Effect.gen(function* () {
+      for (const body of [
+        'const ctx = Context.make(Source, {}).pipe(Context.add(Config, {})); it.effect("piped", () => Fx.provide(program, ctx));',
+        'const makeContext = (source: string) => Context.make(Source, source).pipe(Context.add(Config, {}), Context.merge(extra)); it.effect("factory", () => Fx.provide(program, makeContext("a")));',
+        'const makeContext = function () { return Context.make(Source, {}); }; it.effect("function", () => Fx.provide(program, makeContext()));',
+        'function makeContext() { return Context.add(Context.make(Source, {}), Config, {}); } it.effect("declaration", () => Fx.provide(program, makeContext()));',
+      ]) {
+        assertFalse(yield* hasRule(body, "EV002"));
+      }
+      for (const body of [
+        'const ctx = Context.make(Source, {}).pipe(mystery); it.effect("unknown stage", () => Fx.provide(program, ctx));',
+        'const ctx = mystery.pipe(Context.add(Config, {})); it.effect("unknown receiver", () => Fx.provide(program, ctx));',
+        'const makeLayer = () => L.effect(Service, Fx.succeed({})); it.effect("layer factory", () => Fx.provide(program, makeLayer()));',
+        'const makeContext = (flag: boolean) => { if (flag) return Context.make(Source, {}); return liveLayer; }; it.effect("mixed returns", () => Fx.provide(program, makeContext(true)));',
+        'const makeContext = () => Context.make(Source, {}); it.effect("shadowed", () => { const makeContext = () => liveLayer; return Fx.provide(program, makeContext()); });',
+        'const makeContext = (flag: boolean) => (flag ? Context.make(Source, {}) : liveLayer); it.effect("branch", () => Fx.provide(program, makeContext(true)));',
+      ]) {
+        assertTrue(yield* hasRule(body, "EV002"));
+      }
+    })
+  );
+
   it.effect("keeps property members when an unrelated import uses the same local name", () =>
     Effect.gen(function* () {
       assertTrue(
@@ -2387,6 +2410,35 @@ it.layer(NodeServices.layer)((it) => {
     })
   );
 
+  it.effect("exempts a nested single-test block whose own layer is a fresh TestClock.layer() call", () =>
+    Effect.gen(function* () {
+      const adjust = 'Fx.gen(function* () { yield* TC.adjust("1 second"); })';
+      for (const body of [
+        `it.layer(resource)("parent", (it) => { it.layer(TC.layer())((it) => { it.effect("a", () => ${adjust}); }); });`,
+        `it.layer(resource)((it) => { it.layer(TC.layer(), { timeout: "5 seconds" })("own clock", (it) => { it.effect("a", () => ${adjust}); }); it.effect("b", () => Fx.void); });`,
+        `it.layer(resource)((it) => { it.layer(child)((it) => { it.layer(TC.layer({}))((it) => { it.effect("a", () => ${adjust}); }); }); });`,
+      ]) {
+        assertFalse(yield* hasRule(body, "EV015"));
+      }
+      for (const body of [
+        `it.layer(resource)((it) => { it.layer(TC.layer())((it) => { it.effect("a", () => ${adjust}); it.effect("b", () => Fx.void); }); });`,
+        `it.layer(resource)((it) => { it.layer(TC.layer())((it) => { it.effect.each([1, 2])("case %d", () => ${adjust}); }); });`,
+        `const clock = TC.layer(); it.layer(resource)((it) => { it.layer(clock)((it) => { it.effect("a", () => ${adjust}); }); });`,
+        `import * as Local from "./clock"; it.layer(resource)((it) => { it.layer(Local.layer())((it) => { it.effect("a", () => ${adjust}); }); });`,
+        `it.layer(resource)((it) => { it.layer(TC.layer())((it) => { it.effect("x", () => ${adjust}); it.layer(child)((it) => { it.effect("a", () => ${adjust}); }); }); });`,
+      ]) {
+        assertTrue(yield* hasRule(body, "EV015"));
+      }
+      const rows = A.filter(
+        yield* findings(
+          `it.layer(resource)((it) => { it.layer(TC.layer())((it) => { it.effect("x", () => ${adjust}); it.layer(child)((it) => { it.effect("a", () => ${adjust}); }); }); });`
+        ),
+        (row) => row.ruleId === "EV015"
+      );
+      deepStrictEqual(rows.length, 2);
+    })
+  );
+
   it.effect("permits repeated lifecycles of a layer built from test-body values and keeps single provisions", () =>
     Effect.gen(function* () {
       const scoped = 'import { provideScopedLayer } from "@beep/test-utils";';
@@ -3017,6 +3069,112 @@ it.layer(NodeServices.layer)((it) => {
         `import { ${services} } from "${root}"; it.layer(${services}.layer)((it) => { it.effect("portable", () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.readFileString("fixture"); })); });`,
       ])
         assertTrue(yield* hasRule(body, "EV010"));
+    })
+  );
+
+  // #1855 wave 7, H1: a later memory filesystem operand replaces the bundle's FileSystem in the merged context.
+  it.effect.each([
+    { root: "@effect/platform-node", services: "NodeServices" },
+    { root: "@effect/platform-bun", services: "BunServices" },
+  ])("clears a $services bundle whose FileSystem a later memory layer replaces", ({ root, services }) =>
+    Effect.gen(function* () {
+      const bundle = `import { ${services} } from "${root}";`;
+      const memory = 'import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";';
+      const suite =
+        '((it) => { it.effect("reads", () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.readFileString("fixture"); })); });';
+      for (const body of [
+        `${bundle} ${memory} it.layer(L.mergeAll(${services}.layer, MemoryFileSystem.layer))${suite}`,
+        `${bundle} ${memory} it.layer(L.merge(${services}.layer, MemoryFileSystem.layer))${suite}`,
+        `${bundle} import { MemoryFileSystem as Memory } from "@beep/memfs"; const platform = L.mergeAll(${services}.layer, Memory.layer); it.layer(platform)${suite}`,
+        `${bundle} import * as Memfs from "@beep/memfs"; it.layer(L.mergeAll(${services}.layer, Memfs.MemoryFileSystem.layerWith({ "/a": "a" })))${suite}`,
+        `${bundle} ${memory} import { SubjectLive } from "@beep/example/Subject"; const live = SubjectLive.pipe(L.provideMerge(L.mergeAll(${services}.layer, MemoryFileSystem.layer))); it.layer(live)${suite}`,
+      ])
+        assertFalse(yield* hasRule(body, "EV010"), body);
+      for (const body of [
+        `${bundle} ${memory} it.layer(L.mergeAll(MemoryFileSystem.layer, ${services}.layer))${suite}`,
+        `${bundle} ${memory} it.layer(L.merge(MemoryFileSystem.layer, ${services}.layer))${suite}`,
+        `${bundle} import { MemoryFileSystem } from "./memory.ts"; it.layer(L.mergeAll(${services}.layer, MemoryFileSystem.layer))${suite}`,
+        `${bundle} ${memory} it.layer(L.mergeAll(${services}.layer, MemoryFileSystem.makeVolume))${suite}`,
+        `${bundle} ${memory} it.layer(L.provideMerge(${services}.layer, MemoryFileSystem.layer))${suite}`,
+        `${bundle} ${memory} it.layer(L.mergeAll(${services}.layer, MemoryFileSystem.layer))${suite} it.layer(${services}.layer)${suite}`,
+      ])
+        assertTrue(yield* hasRule(body, "EV010"), body);
+    })
+  );
+
+  // #1855 wave 7, H6: a native filesystem layer whose every harness exercises a native link operation.
+  it.effect.each([
+    { module: "@effect/platform-node/NodeFileSystem" },
+    { module: "@effect/platform-bun/BunFileSystem" },
+    { module: "@effect/platform-node-shared/NodeFileSystem" },
+  ])("clears a $module layer only when every harness proves native links", ({ module }) =>
+    Effect.gen(function* () {
+      const native =
+        '((it) => { it.effect("links", () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.symlink("target", "link"); })); });';
+      const portable =
+        '((it) => { it.effect("reads", () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.readFileString("fixture"); })); });';
+      for (const body of [
+        `import * as NodeFileSystem from "${module}"; it.layer(NodeFileSystem.layer)${native}`,
+        `import { layer as fileSystem } from "${module}"; const platform = L.mergeAll(fileSystem, Paths.layer); it.layer(platform)${native} it.layer(platform)${native}`,
+        `import * as NodeFileSystem from "${module}"; const link = () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.realPath("link"); }); it.layer(NodeFileSystem.layer)((it) => { it.effect("helper", () => link()); });`,
+      ])
+        assertFalse(yield* hasRule(body, "EV010"), body);
+      for (const body of [
+        `import * as NodeFileSystem from "${module}"; it.layer(NodeFileSystem.layer)${portable}`,
+        `import * as NodeFileSystem from "${module}"; it.layer(NodeFileSystem.layer)${native} it.layer(NodeFileSystem.layer)${portable}`,
+        `import * as NodeFileSystem from "${module}"; it.layer(NodeFileSystem.layer)${native} it.effect("x", () => program.pipe(Fx.provide(NodeFileSystem.layer)));`,
+        `import * as NodeFileSystem from "${module}"; import { SubjectLive } from "@beep/example/Subject"; it.layer(SubjectLive.pipe(L.provide(NodeFileSystem.layer)))${portable}`,
+        `import * as NodeFileSystem from "${module}"; it.layer(NodeFileSystem.layer)((it) => { it.effect("other", () => Fx.sync(() => other.symlink("target", "link"))); });`,
+        `import * as NodeFileSystem from "${module}"; import * as os from "node:os"; os.tmpdir(); it.layer(NodeFileSystem.layer)${native}`,
+      ])
+        assertTrue(yield* hasRule(body, "EV010"), body);
+      assertTrue(
+        yield* hasRule(
+          `import * as NodeFS from "node:fs"; it.layer(Platform.layer)${native} NodeFS.existsSync("x");`,
+          "EV010"
+        )
+      );
+    })
+  );
+
+  // #1855 wave 7, H6: a runtime choice between bundles keeps the chosen layer's harness flows.
+  it.effect("follows both branches of a conditional platform bundle", () =>
+    Effect.gen(function* () {
+      const imports =
+        'import { BunServices } from "@effect/platform-bun"; import { NodeServices } from "@effect/platform-node";';
+      const native =
+        '((it) => { it.effect("links", () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.symlink("target", "link"); })); });';
+      const portable =
+        '((it) => { it.effect("reads", () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.readFileString("fixture"); })); });';
+      assertFalse(
+        yield* hasRule(
+          `${imports} const platform = process.versions.bun === undefined ? NodeServices.layer : BunServices.layer; it.layer(platform)${native}`,
+          "EV010"
+        )
+      );
+      assertFalse(
+        yield* hasRule(
+          `${imports} it.layer(L.mergeAll(Subject.layer).pipe(L.provideMerge(isBun ? BunServices.layer : NodeServices.layer)))${native}`,
+          "EV010"
+        )
+      );
+      deepStrictEqual(
+        A.length(
+          A.filter(
+            yield* findings(
+              `${imports} const platform = process.versions.bun === undefined ? NodeServices.layer : BunServices.layer; it.layer(platform)${portable}`
+            ),
+            (row) => row.ruleId === "EV010"
+          )
+        ),
+        2
+      );
+      assertTrue(
+        yield* hasRule(
+          `${imports} const platform = NodeServices.layer ? BunServices.layer : Fallback.layer; it.layer(platform)${native}`,
+          "EV010"
+        )
+      );
     })
   );
 

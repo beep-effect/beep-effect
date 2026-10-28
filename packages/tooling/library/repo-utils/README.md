@@ -47,10 +47,9 @@ const program = Effect.gen(function* () {
 | **Workspaces** | `resolveWorkspaceDirs` | Expand workspace globs to `HashMap<name, dir>` |
 | **Dependencies** | `extractWorkspaceDependencies` | Classify deps as workspace vs NPM |
 | **DependencyIndex** | `buildRepoDependencyIndex` | Full `HashMap<pkg, TypedDeps>` for monorepo |
-| **UniqueDeps** | `collectUniqueNpmDependencies` | Union all NPM deps across packages |
 | **Graph** | `topologicalSort`, `detectCycles`, `computeTransitiveClosure` | Dependency graph analysis |
 | **TsConfig** | `collectTsConfigPaths` | Find all tsconfig files per workspace |
-| **PackageJson** | `PackageJson`, `decodePackageJson` | Type-safe package.json schema |
+| **PackageJson** | `PackageJson`, `decodePackageJson` | Strict repo package.json model extending `@beep/package-json` `PackageManifest` |
 | **TSMorphService** | `TSMorphService`, `TSMorphServiceLive` | Scoped ts-morph graph extraction, deterministic JSDoc derivation, symbol query/search, and JSDoc validate/plan/apply/drift flows |
 
 ## Installation

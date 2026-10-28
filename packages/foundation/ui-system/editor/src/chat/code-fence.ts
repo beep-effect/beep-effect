@@ -1,6 +1,8 @@
 /**
  * The markdown code-fence gesture, in a composer where Enter sends.
  *
+ * **Details**
+ *
  * `@lexical/markdown` already knows how to turn a fence into a code block — but only
  * on keystrokes this composer never lets it see. Its shortcut fires on a trailing
  * space, or on plain Enter; it bails outright when `shiftKey` is held. Here Enter

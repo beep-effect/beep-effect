@@ -337,11 +337,6 @@
         "count": 2
       }
     },
-    "packages/tooling/library/repo-utils/src/Dependencies.ts": {
-      "complexity_moderate": {
-        "count": 1
-      }
-    },
     "packages/tooling/library/repo-utils/src/Graph.ts": {
       "complexity_moderate": {
         "count": 1
@@ -357,16 +352,6 @@
         "count": 1
       },
       "crap_moderate": {
-        "count": 1
-      }
-    },
-    "packages/tooling/library/repo-utils/src/UniqueDeps.ts": {
-      "complexity_moderate": {
-        "count": 1
-      }
-    },
-    "packages/tooling/library/repo-utils/src/Workspaces.ts": {
-      "complexity_moderate": {
         "count": 1
       }
     },

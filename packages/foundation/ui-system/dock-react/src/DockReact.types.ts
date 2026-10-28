@@ -22,7 +22,7 @@ import type { RatioOverride, TabDrag } from "./internal/Gesture.models.ts";
  * **Example** (Access workspace atom)
  *
  * ```ts
- * import type { DockAtomGraph } from "@beep/dock-react"
+ * import type { DockAtomGraph } from "@beep/dock-react/DockReact.types"
  *
  * const workspaceAtom = (graph: DockAtomGraph) => graph.workspaceAtom
  * console.log(workspaceAtom)
@@ -41,8 +41,8 @@ const $I = $DockReactId.create("DockReact.types");
  * **Example** (Make panel API)
  *
  * ```ts
- * import { DockPanelApi } from "@beep/dock-react"
- * import { PanelId } from "@beep/dock"
+ * import { DockPanelApi } from "@beep/dock-react/DockReact.types"
+ * import { PanelId } from "@beep/dock/Dock.ids"
  *
  * const api = DockPanelApi.make({ id: PanelId.make("panel-1") })
  * ```
@@ -66,7 +66,7 @@ export class DockPanelApi extends S.Opaque<DockPanelApi, { readonly brand: uniqu
  * **Example** (Read panel id)
  *
  * ```ts
- * import type { DockPanelProps } from "@beep/dock-react"
+ * import type { DockPanelProps } from "@beep/dock-react/DockReact.types"
  *
  * const panelId = (props: DockPanelProps) => props.api.id
  * console.log(panelId)
@@ -87,7 +87,7 @@ export type DockPanelProps = {
  * **Example** (Read tab title)
  *
  * ```ts
- * import type { DockTabProps } from "@beep/dock-react"
+ * import type { DockTabProps } from "@beep/dock-react/DockReact.types"
  *
  * const tabTitle = (props: DockTabProps) => props.title
  * console.log(tabTitle)
@@ -104,7 +104,7 @@ export type DockTabProps = DockPanelProps & { readonly title: string };
  * **Example** (Null panel renderer)
  *
  * ```ts
- * import type { DockRenderer } from "@beep/dock-react"
+ * import type { DockRenderer } from "@beep/dock-react/DockReact.types"
  *
  * const Renderer: DockRenderer = () => null
  * console.log(Renderer)
@@ -121,7 +121,7 @@ export type DockRenderer = React.FunctionComponent<DockPanelProps>;
  * **Example** (Title tab renderer)
  *
  * ```ts
- * import type { DockTabRenderer } from "@beep/dock-react"
+ * import type { DockTabRenderer } from "@beep/dock-react/DockReact.types"
  *
  * const TabRenderer: DockTabRenderer = ({ title }) => title
  * console.log(TabRenderer)
@@ -138,7 +138,7 @@ export type DockTabRenderer = React.FunctionComponent<DockTabProps>;
  * **Example** (Access awaitIdle)
  *
  * ```ts
- * import type { DockviewAdapterApi } from "@beep/dock-react"
+ * import type { DockviewAdapterApi } from "@beep/dock-react/DockReact.types"
  *
  * const awaitIdle = (api: DockviewAdapterApi) => api.awaitIdle
  * console.log(awaitIdle)
@@ -174,7 +174,7 @@ export type DockviewAdapterApi = {
  * **Example** (Font and line height)
  *
  * ```ts
- * import type { DockTitleMinimaOptions } from "@beep/dock-react"
+ * import type { DockTitleMinimaOptions } from "@beep/dock-react/DockReact.types"
  *
  * const options: DockTitleMinimaOptions = { font: "16px sans-serif", lineHeight: 20 }
  * console.log(options.font)
@@ -198,7 +198,7 @@ export type DockTitleMinimaOptions = {
  * **Example** (Access components registry)
  *
  * ```ts
- * import type { DockviewReactProps } from "@beep/dock-react"
+ * import type { DockviewReactProps } from "@beep/dock-react/DockReact.types"
  *
  * const components = (props: DockviewReactProps) => props.components
  * console.log(components)

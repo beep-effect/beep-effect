@@ -267,17 +267,17 @@ export {
    * @category schemas
    * @since 0.0.0
    */
-  NpmPackageJson,
-  /**
-   * @category schemas
-   * @since 0.0.0
-   */
   PackageJson,
   /**
    * @category parsing
    * @since 0.0.0
    */
   readPackageJsonFile,
+  /**
+   * @category utilities
+   * @since 0.0.0
+   */
+  toSortedRecord,
 } from "./schemas/PackageJson.ts";
 /**
  * @category schemas
@@ -309,11 +309,6 @@ export {
    * @since 0.0.0
    */
   normalizePackageJsonEffect,
-  /**
-   * @category schemas
-   * @since 0.0.0
-   */
-  npmPackageJsonJsonSchema,
   /**
    * @category schemas
    * @since 0.0.0
@@ -410,7 +405,7 @@ export {
    * @category models
    * @since 0.0.0
    */
-  type DependencyRecord,
+  DependencyMap,
   /**
    * @category models
    * @since 0.0.0
@@ -443,38 +438,6 @@ export {
  * @since 0.0.0
  */
 export * from "./TypeScript/index.ts";
-/**
- * Collect unique NPM dependency names from the workspace graph.
- *
- * **Example** (Import dependency collector)
- *
- * ```ts
- * import { collectUniqueNpmDependencies } from "@beep/repo-utils"
- * console.log(collectUniqueNpmDependencies)
- * ```
- *
- * @category utilities
- * @since 0.0.0
- */
-export { collectUniqueNpmDependencies } from "./UniqueDeps.ts";
-/**
- * Result model for unique NPM dependency aggregation.
- *
- * **Example** (Build UniqueNpmDeps result)
- *
- * ```ts
- * import { UniqueNpmDeps } from "@beep/repo-utils"
- * const deps = UniqueNpmDeps.make({
- *   dependencies: ["effect"],
- *   devDependencies: ["vitest"]
- * })
- * console.log(deps)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export { UniqueNpmDeps } from "./UniqueDeps.ts";
 /**
  * @category utilities
  * @since 0.0.0

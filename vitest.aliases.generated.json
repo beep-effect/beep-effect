@@ -2209,5 +2209,23 @@
   ],
   "@beep/schema/IeeeNumber": [
     "./packages/foundation/modeling/schema/src/IeeeNumber.ts"
+  ],
+  "@beep/brand/Brand.assets": [
+    "./packages/foundation/ui-system/brand/src/Brand.assets.ts"
+  ],
+  "@beep/brand/Brand.css": [
+    "./packages/foundation/ui-system/brand/src/Brand.css.ts"
+  ],
+  "@beep/brand/Brand.schema": [
+    "./packages/foundation/ui-system/brand/src/Brand.schema.ts"
+  ],
+  "@beep/brand/Brand.svg": [
+    "./packages/foundation/ui-system/brand/src/Brand.svg.ts"
+  ],
+  "@beep/brand/Brand.tokens": [
+    "./packages/foundation/ui-system/brand/src/Brand.tokens.ts"
+  ],
+  "@beep/file-processing/SecretScrub": [
+    "./packages/foundation/capability/file-processing/src/SecretScrub/index.ts"
   ]
 }

@@ -11,7 +11,7 @@
  * ```ts import.meta.vitest name="Decode ObservedCause from fail"
  * import * as Cause from "effect/Cause";
  * import * as S from "effect/Schema"
- * import { ObservedCause } from "@beep/observability"
+ * import { ObservedCause } from "@beep/observability/Observed"
  *
  * const decodeCause = S.decodeUnknownSync(ObservedCause)
  * const observed = decodeCause(Cause.fail(new Error("boom")))
@@ -33,7 +33,7 @@ const $I = $ObservabilityId.create("Observed");
  *
  * ```ts import.meta.vitest name="Decode message-only error"
  * import * as S from "effect/Schema"
- * import { ObservedError } from "@beep/observability"
+ * import { ObservedError } from "@beep/observability/Observed"
  *
  * const decode = S.decodeUnknownSync(ObservedError)
  * const err = decode(new Error("boom"))
@@ -55,7 +55,7 @@ export const ObservedError = S.ErrorInstance().pipe(
  * **Example** (Access ObservedError message)
  *
  * ```typescript
- * import type { ObservedError } from "@beep/observability"
+ * import type { ObservedError } from "@beep/observability/Observed"
  *
  * const readMessage = (error: ObservedError) => error.message
  * console.log(readMessage)
@@ -73,7 +73,7 @@ export type ObservedError = typeof ObservedError.Type;
  *
  * ```ts import.meta.vitest name="Decode error preserving stack"
  * import * as S from "effect/Schema"
- * import { ObservedErrorWithStack } from "@beep/observability"
+ * import { ObservedErrorWithStack } from "@beep/observability/Observed"
  *
  * const decode = S.decodeUnknownSync(ObservedErrorWithStack)
  * const err = decode(new Error("boom"))
@@ -95,7 +95,7 @@ export const ObservedErrorWithStack = S.ErrorInstance({ includeStack: true }).pi
  * **Example** (Access error stack property)
  *
  * ```typescript
- * import type { ObservedErrorWithStack } from "@beep/observability"
+ * import type { ObservedErrorWithStack } from "@beep/observability/Observed"
  *
  * const readStack = (error: ObservedErrorWithStack) => error.stack
  * console.log(readStack)
@@ -113,7 +113,7 @@ export type ObservedErrorWithStack = typeof ObservedErrorWithStack.Type;
  *
  * ```typescript
  * import * as S from "effect/Schema"
- * import { ObservedDefect } from "@beep/observability"
+ * import { ObservedDefect } from "@beep/observability/Observed"
  *
  * const decode = S.decodeUnknownSync(ObservedDefect)
  * const defect = decode("unexpected crash")
@@ -135,7 +135,7 @@ export const ObservedDefect = S.Defect().pipe(
  * **Example** (Pass through ObservedDefect)
  *
  * ```typescript
- * import type { ObservedDefect } from "@beep/observability"
+ * import type { ObservedDefect } from "@beep/observability/Observed"
  *
  * const keepDefect = (defect: ObservedDefect) => defect
  * console.log(keepDefect)
@@ -153,7 +153,7 @@ export type ObservedDefect = typeof ObservedDefect.Type;
  *
  * ```typescript
  * import * as S from "effect/Schema"
- * import { ObservedDefectWithStack } from "@beep/observability"
+ * import { ObservedDefectWithStack } from "@beep/observability/Observed"
  *
  * const decode = S.decodeUnknownSync(ObservedDefectWithStack)
  * const defect = decode(new Error("unexpected crash"))
@@ -175,7 +175,7 @@ export const ObservedDefectWithStack = S.Defect({ includeStack: true }).pipe(
  * **Example** (Pass through stacked defect)
  *
  * ```typescript
- * import type { ObservedDefectWithStack } from "@beep/observability"
+ * import type { ObservedDefectWithStack } from "@beep/observability/Observed"
  *
  * const keepDefect = (defect: ObservedDefectWithStack) => defect
  * console.log(keepDefect)
@@ -195,7 +195,7 @@ export type ObservedDefectWithStack = typeof ObservedDefectWithStack.Type;
  * import * as Cause from "effect/Cause";
  * import * as A from "effect/Array"
  * import * as S from "effect/Schema"
- * import { ObservedCauseReason } from "@beep/observability"
+ * import { ObservedCauseReason } from "@beep/observability/Observed"
  *
  * const decodeReason = S.decodeUnknownSync(ObservedCauseReason)
  * const decoded = A.map(Cause.fail(new Error("boom")).reasons, (reason) => decodeReason(reason))
@@ -217,7 +217,7 @@ export const ObservedCauseReason = S.CauseReason(ObservedErrorWithStack, Observe
  * **Example** (Pass through cause reason)
  *
  * ```typescript
- * import type { ObservedCauseReason } from "@beep/observability"
+ * import type { ObservedCauseReason } from "@beep/observability/Observed"
  *
  * const keepReason = (reason: ObservedCauseReason) => reason
  * console.log(keepReason)
@@ -236,7 +236,7 @@ export type ObservedCauseReason = typeof ObservedCauseReason.Type;
  * ```ts import.meta.vitest name="Decode full Effect cause"
  * import * as Cause from "effect/Cause";
  * import * as S from "effect/Schema"
- * import { ObservedCause } from "@beep/observability"
+ * import { ObservedCause } from "@beep/observability/Observed"
  *
  * const observed = S.decodeUnknownSync(ObservedCause)(Cause.fail(new Error("boom")))
  * Cause.pretty(observed).includes("boom") // => true
@@ -257,7 +257,7 @@ export const ObservedCause = S.Cause(ObservedErrorWithStack, ObservedDefectWithS
  * **Example** (Pass through ObservedCause)
  *
  * ```typescript
- * import type { ObservedCause } from "@beep/observability"
+ * import type { ObservedCause } from "@beep/observability/Observed"
  *
  * const keepCause = (cause: ObservedCause) => cause
  * console.log(keepCause)
@@ -276,7 +276,7 @@ export type ObservedCause = typeof ObservedCause.Type;
  * ```ts import.meta.vitest name="Decode failed Exit value"
  * import * as Exit from "effect/Exit";
  * import * as S from "effect/Schema"
- * import { ObservedExit } from "@beep/observability"
+ * import { ObservedExit } from "@beep/observability/Observed"
  *
  * const observed = S.decodeUnknownSync(ObservedExit)(Exit.fail(new Error("boom")))
  * observed._tag // => "Failure"
@@ -297,7 +297,7 @@ export const ObservedExit = S.Exit(S.Unknown, ObservedErrorWithStack, ObservedDe
  * **Example** (Pass through ObservedExit)
  *
  * ```typescript
- * import type { ObservedExit } from "@beep/observability"
+ * import type { ObservedExit } from "@beep/observability/Observed"
  *
  * const keepExit = (exit: ObservedExit) => exit
  * console.log(keepExit)

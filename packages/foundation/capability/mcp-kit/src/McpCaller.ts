@@ -33,7 +33,7 @@ const $I = $McpKitId.create("McpCaller");
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { McpCallerIdentity } from "@beep/mcp-kit"
+ * import { McpCallerIdentity } from "@beep/mcp-kit/McpCaller"
  * const caller = McpCallerIdentity.make({ clientId: S.Natural.make(1) })
  * console.log(caller.clientId)
  * ```
@@ -66,7 +66,7 @@ export class McpCallerIdentity extends S.Opaque<McpCallerIdentity, { readonly br
  * **Example** (Read current MCP caller)
  *
  * ```ts
- * import { CurrentMcpCaller } from "@beep/mcp-kit"
+ * import { CurrentMcpCaller } from "@beep/mcp-kit/McpCaller"
  * import * as Effect from "effect/Effect";
  * console.log(Effect.runSync(CurrentMcpCaller))
  * ```

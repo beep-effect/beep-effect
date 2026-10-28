@@ -2384,6 +2384,7 @@
       {
         "from": "@beep/exiftool",
         "allow": [
+          "@beep/commands",
           "@beep/exiftool",
           "@beep/identity",
           "@beep/memfs",
@@ -2393,6 +2394,7 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/commands",
           "@beep/exiftool",
           "@beep/identity",
           "@beep/memfs",
@@ -3358,6 +3360,7 @@
       {
         "from": "@beep/obs",
         "allow": [
+          "@beep/commands",
           "@beep/identity",
           "@beep/obs",
           "@beep/schema",
@@ -3365,6 +3368,7 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/commands",
           "@beep/identity",
           "@beep/obs",
           "@beep/schema",
@@ -3808,14 +3812,18 @@
       {
         "from": "@beep/pdf-tools",
         "allow": [
+          "@beep/commands",
           "@beep/identity",
+          "@beep/memfs",
           "@beep/pdf-tools",
           "@beep/schema",
           "@beep/test-runner",
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/commands",
           "@beep/identity",
+          "@beep/memfs",
           "@beep/pdf-tools",
           "@beep/schema",
           "@beep/test-runner",
@@ -3966,6 +3974,7 @@
           "@beep/identity",
           "@beep/law-practice-server",
           "@beep/law-practice-use-cases",
+          "@beep/memfs",
           "@beep/practice-identify",
           "@beep/schema",
           "@beep/uspto"
@@ -3974,6 +3983,7 @@
           "@beep/identity",
           "@beep/law-practice-server",
           "@beep/law-practice-use-cases",
+          "@beep/memfs",
           "@beep/practice-identify",
           "@beep/schema",
           "@beep/uspto"
@@ -4382,6 +4392,7 @@
           "@beep/fc-runs",
           "@beep/ffmpeg",
           "@beep/file-processing",
+          "@beep/git",
           "@beep/github",
           "@beep/github-actions",
           "@beep/github-commands",
@@ -4439,6 +4450,7 @@
           "@beep/fc-runs",
           "@beep/ffmpeg",
           "@beep/file-processing",
+          "@beep/git",
           "@beep/github",
           "@beep/github-actions",
           "@beep/github-commands",
@@ -4564,6 +4576,7 @@
           "@beep/glob",
           "@beep/identity",
           "@beep/memfs",
+          "@beep/package-json",
           "@beep/repo-utils",
           "@beep/schema",
           "@beep/test-runner",
@@ -4575,6 +4588,7 @@
           "@beep/glob",
           "@beep/identity",
           "@beep/memfs",
+          "@beep/package-json",
           "@beep/repo-utils",
           "@beep/schema",
           "@beep/test-runner",
@@ -5079,6 +5093,7 @@
       {
         "from": "@beep/tailscale",
         "allow": [
+          "@beep/commands",
           "@beep/fc-runs",
           "@beep/identity",
           "@beep/schema",
@@ -5086,6 +5101,7 @@
           "@beep/test-runner"
         ],
         "allowTypeOnly": [
+          "@beep/commands",
           "@beep/fc-runs",
           "@beep/identity",
           "@beep/schema",

@@ -19,7 +19,7 @@ const descriptionFromOptions = (options: { readonly description: string }): stri
  * **Example** (Trim and drop empties)
  *
  * ```ts
- * import { Text } from "@beep/utils"
+ * import * as Text from "@beep/utils/Text"
  *
  * const tags = Text.splitCommaSeparatedTrimmed(" foo , bar , , baz ")
  * // ["foo", "bar", "baz"]
@@ -43,7 +43,7 @@ export const splitCommaSeparatedTrimmed = flow(Str.split(","), A.map(Str.trim), 
  * **Example** (Format name with aliases)
  *
  * ```ts
- * import { Text } from "@beep/utils"
+ * import * as Text from "@beep/utils/Text"
  *
  * const row = Text.formatNameWithAliases("ls", ["list", "dir"], { description: "List files" })
  * // "ls (list, dir): List files"
@@ -79,7 +79,7 @@ export const formatNameWithAliases: {
  * **Example** (Join lines with newline)
  *
  * ```ts
- * import { Text } from "@beep/utils"
+ * import * as Text from "@beep/utils/Text"
  *
  * const block = Text.joinLines(["hello", "world"])
  * // "hello\nworld"

@@ -1,6 +1,8 @@
 /**
  * Trust-boundary refinements for user-authored Markdown documents.
  *
+ * **Details**
+ *
  * The general {@link Document} schema remains lossless persistence truth.
  * `SafeDocument` is the narrower RPC/editor boundary: it rejects trusted raw
  * nodes, URL destinations outside the canonical user-content policies,
@@ -738,7 +740,7 @@ const htmlProjectionSafetyIssues = flow(
  * **Example** (Use documentSafetyIssues)
  *
  * ```ts
- * import { Md } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
  * import { documentSafetyIssues } from "@beep/md/Md.safe"
  *
  * console.log(documentSafetyIssues(Md.make([Md.p(Md.rawHtml("<b>trusted</b>"))])).length) // 1
@@ -764,7 +766,7 @@ export const documentSafetyIssues = (document: Document): ReadonlyArray<Document
  * **Example** (Use inlineSafetyIssuesAtRoot)
  *
  * ```ts import.meta.vitest name="Use inlineSafetyIssuesAtRoot"
- * import { Md } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
  * import { inlineSafetyIssuesAtRoot } from "@beep/md/Md.safe"
  *
  * inlineSafetyIssuesAtRoot(Md.a("http://example.com", "link")).length // => 1
@@ -956,7 +958,7 @@ export const decodeSafeDocumentUnsafe = (input: unknown): SafeDocument =>
  * **Example** (Use refineSafeDocument)
  *
  * ```ts import.meta.vitest name="Use refineSafeDocument"
- * import { Md } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
  * import { refineSafeDocument } from "@beep/md/Md.safe"
  * import * as Result from "effect/Result";
  * Result.isSuccess(refineSafeDocument(Md.make([Md.p("Hello")]))) // => true
