@@ -12,9 +12,12 @@
 | Authority unchanged | SELECT-only read-only repeatable-read adapter | all edge and disposition rows compared before and after the drill |
 | Repo-native implementation | P0 provenance inventory and source review | no donor imports, copied constants, authority migrations, operator memory, or fusion arithmetic |
 
-The ten focused reporting tests, the dedicated authority rebuild test and ten core-authority integration tests pass
-as one 21-test run. The new rebuild drill runs against migrated embedded
+The eleven focused reporting tests, the dedicated authority rebuild test and ten core-authority integration tests pass
+as one 22-test run. The new rebuild drill runs against migrated embedded
 Postgres through the real authority repository and the new Drizzle reader/store.
+The report and rebuild properties generate ordered candidate policies constructively
+from the policy schema's positive-number field, including shrink-safe minimal windows.
+The database authority is seeded once and remains read-only across property cases.
 This is fixture proof; no production database was read or changed.
 
 Full package verification (`bun run beep quality package-verify <package>`) is
@@ -50,3 +53,13 @@ Yeet publication, exact-head final-check, hosted checks, review resolution and
 review-window readiness remain required. Packet closure is proposed in the same
 PR as the implementation and reflection; the conversation goal remains active
 until its full completion audit succeeds.
+
+## Resource judgment review
+
+The authoritative Effect-test detector reports no findings for Retention.test.ts.
+The rebuild property has two documented judgment exceptions in
+`standards/effect-vitest.inventory.jsonc`: EV004 is the shorter artifact lifetime
+that closes before the final authority reread, and EV010 is the native filesystem
+which is the chosen projection-store subject. Neither is an assertion migration
+or a policy waiver. Platform services are provided at the `it.layer` boundary;
+the database is seeded once and is read-only throughout generated rebuild cases.

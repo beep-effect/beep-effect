@@ -45,14 +45,14 @@ is schema-validated data and cannot become active without calibration evidence.
 
 ## Acceptance Criteria
 
-- [ ] A standalone operator report shows tier and memory-pressure summaries.
-- [ ] Report rows can be queried as-of and filtered/grouped by disposition.
-- [ ] Policy data validates through schemas and cannot activate before the
+- [x] A standalone operator report shows tier and memory-pressure summaries.
+- [x] Report rows can be queried as-of and filtered/grouped by disposition.
+- [x] Policy data validates through schemas and cannot activate before the
       recorded calibration gate passes.
-- [ ] Deleting every projection artifact and rebuilding produces identical
+- [x] Deleting every projection artifact and rebuilding produces identical
       canonical output.
-- [ ] Authority rows are unchanged by report generation or rebuild.
-- [ ] Agentmemory is cited as reference-only and no donor code/constants land.
+- [x] Authority rows are unchanged by report generation or rebuild.
+- [x] Agentmemory is cited as reference-only and no donor code/constants land.
 
 ## First Vertical Slice
 

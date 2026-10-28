@@ -32,7 +32,7 @@ are verified; no production policy is active.
 
 ## Latest Evidence
 
-The [P0 contract](history/2026-10-28-p0-contract.md), ten focused reporting
+The [P0 contract](history/2026-10-28-p0-contract.md), eleven focused reporting
 tests, and the migrated-database delete/rebuild drill. See the
 [operator runbook](ops/REPORT.md). Full audits and docgen pass for all three packages; Yeet completion remains open.
 

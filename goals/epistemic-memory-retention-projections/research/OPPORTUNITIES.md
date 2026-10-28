@@ -16,3 +16,12 @@ returned `report.txt` before `report.json`. Byte comparisons and rebuild answers
 had passed; only the artifact-name assertion failed. The assertion now compares
 an explicitly sorted name list. Deterministic report ordering is tested
 separately using permuted authority records and request keys.
+
+## 2026-10-28 — ordered-window property generation
+
+Deriving an arbitrary directly from the policy's cross-field ordering filter
+exhausted 1,001 discards before a successful case: size-zero integer generators
+produce equal minima. The tests now derive a bounded positive field from the
+source schema and construct strictly ordered windows from positive gaps.
+This preserves the real policy schema and exercises shrink-safe cases without
+weakening the ordering invariant or activating policy.

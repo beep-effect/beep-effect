@@ -12,6 +12,8 @@ import {
 } from "@beep/epistemic-use-cases/Retention";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -28,7 +30,41 @@ import {
   queryInput,
 } from "./fixtures/Retention.ts";
 
+// Generate ordered windows constructively; filtering equal size-zero integers exhausts the generator.
+const PolicyPositive = RetentionPolicy.fields.hotThroughMillis.check(S.isLessThanOrEqualTo(1_000_000));
+const PolicyArbitrary = Arbitrary.schema(
+  S.Struct({
+    hotThroughMillis: PolicyPositive,
+    warmThroughMillis: PolicyPositive,
+    coldThroughMillis: PolicyPositive,
+    decayScaleMillis: PolicyPositive,
+    payloadBudgetBytes: PolicyPositive,
+  })
+).pipe(
+  Arbitrary.map((parts) =>
+    RetentionPolicy.make({
+      ...parts,
+      warmThroughMillis: parts.hotThroughMillis + parts.warmThroughMillis,
+      coldThroughMillis: parts.hotThroughMillis + parts.warmThroughMillis + parts.coldThroughMillis,
+    })
+  )
+);
+
 describe("retention reporting", () => {
+  it.effect.prop("keeps every schema-generated candidate inert without approval", [PolicyArbitrary], ([policy]) =>
+    Effect.gen(function* () {
+      const report = yield* generateRetentionReport(
+        yield* S.decodeEffect(RetentionQuery)(queryInput),
+        O.some(policy)
+      ).pipe(provideFixture(yield* makeSnapshot(), O.none()));
+      expect(report.admission.state).toBe("inert");
+      assertNone(report.pressureRatio);
+      for (const row of report.rows) {
+        expect(row.tier).toBe("unclassified");
+        assertNone(row.decay);
+      }
+    })
+  );
   it.effect(
     "preserves both as-of axes, dispositions, tenant scope and explicit absence without activating policy",
     () =>
@@ -53,8 +89,8 @@ describe("retention reporting", () => {
         ]);
         expect(later.missingKeys).toEqual([keyMissing]);
         expect(later.admission.state).toBe("inert");
-        expect(A.every(later.rows, (row) => row.tier === "unclassified" && O.isNone(row.decay))).toBe(true);
-        expect(O.isNone(later.pressureRatio)).toBe(true);
+        assertTrue(A.every(later.rows, (row) => row.tier === "unclassified" && O.isNone(row.decay)));
+        assertNone(later.pressureRatio);
         const beforeValid = yield* generateRetentionReport(
           yield* S.decodeEffect(RetentionQuery)({ ...queryInput, validAt: 999 }),
           O.none()
@@ -174,7 +210,7 @@ describe("retention reporting", () => {
         { hotThroughMillis: -1 },
         { payloadBudgetBytes: Number.POSITIVE_INFINITY },
       ]) {
-        expect(O.isNone(S.decodeOption(RetentionPolicy)({ ...policyInput, ...patch }))).toBe(true);
+        assertNone(S.decodeOption(RetentionPolicy)({ ...policyInput, ...patch }));
       }
     })
   );
