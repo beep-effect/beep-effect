@@ -275,3 +275,10 @@ inventory here. The current export is not a historical full-snapshot superset,
 so refresh cannot preserve provenance; forcing it would discard prior triage.
 The change is reversible through this branch's documentation diff. No Cloud
 status, credential, deployment or external permission changes during capture.
+
+Decision — 2026-10-28: PR #2333 is the final PR for the expanded goal.
+Preserve #1930's verified historical receipt and bind prospective completion to
+#2333's genuine final-head verdict. The new final PR must carry the linked
+seven-finding remediation, reflection, and hosted proof; Cloud closure remains
+an independently verified post-merge requirement. Reverse through this
+manifest/documentation diff; do not alter historical verdict bytes.

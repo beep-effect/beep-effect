@@ -41,3 +41,20 @@ Yeet repair's terse-helper output lists repository-wide audit candidates.
 These are not established required-gate failures. Optional cleanup was kept
 outside the security diff; its scratch lane was archive-retired. Actual gate
 results determine any needed inherited-failure repair.
+
+## Hosted qualification
+
+PR #2333 is published at `44debfb814`. The first Windows job failed before
+tests because a historical ontology archive name contains a colon, which
+Windows cannot materialize. The workflow now checks out only the deployment
+scripts needed for this test. This preserves the full repository and does not
+disable Windows path protections. Runtime qualification awaits the rerun.
+
+CLI and ACP package-owned test compilation artifacts both record exitCode 0
+and no diagnostics. The symlinked-parent recovery regression was rerun after
+the captured-service binding correction and passed (one selected, 70 skipped).
+
+The collected publication proof exceeded ten minutes and was interrupted.
+The documented direct-push fallback preserved the normal pre-push runtime
+check and opened a draft with ready-for-heavy. Hosted checks remain mandatory.
+The user manager is unavailable, so the readiness monitor runs attached.

@@ -24,6 +24,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          sparse-checkout: /apps/practice-review-hub/deploy/windows/
+          sparse-checkout-cone-mode: false
       - name: Check same-user transfer and foreign-owned replacements
         shell: powershell
         run: ./apps/practice-review-hub/deploy/windows/test-send-token.ps1

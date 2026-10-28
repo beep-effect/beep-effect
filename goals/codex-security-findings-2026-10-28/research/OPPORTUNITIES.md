@@ -8,3 +8,8 @@
   the supported explicit provider in the owning clone verified the original
   evidence without rewriting it. A portable evidence export would prevent
   redundant historical closeout diagnosis.
+
+- 2026-10-28: The new Windows job failed in checkout before tests on a
+  historical colon-containing archive filename. Check out only the deployment
+  scripts for this focused native test; retain Windows path protections and
+  repository history. Evidence: PR #2333 Windows job checkout failure.

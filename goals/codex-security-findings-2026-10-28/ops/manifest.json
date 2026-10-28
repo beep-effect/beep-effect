@@ -18,7 +18,25 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until the work ships as a Yeet-driven mergeable PR, is merged, and the exact 7 Codex findings are resolved with zero packet-applicable open findings.",
-    "grandfathered": false
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 2333,
+        "role": "final"
+      }
+    ],
+    "acceptanceEvidence": [
+      {
+        "kind": "hosted-required-checks",
+        "ref": "required",
+        "gating": true
+      },
+      {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/codex_security-findings-20261028-8caa64bef5f4/verdict.json",
+        "gating": true
+      }
+    ]
   },
   "branch": "codex/security-findings-20261028",
   "currentSourceOfTruth": [
@@ -120,12 +138,12 @@
     {
       "id": "P6",
       "name": "Publish",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P7",
       "name": "Monitor",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P8",
@@ -152,5 +170,9 @@
     "Tracked evidence contains secrets, auth values, signed URLs, email addresses, or raw developer-local paths.",
     "A remediation requires an architecture or product decision outside packet scope.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "proposedCloseout": {
+    "status": "completed-retained",
+    "finalPullRequest": 2333
+  }
 }
