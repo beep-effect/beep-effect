@@ -189,6 +189,47 @@ const temporaryRepository = Effect.gen(function* () {
   yield* fs.makeDirectory(path.join(tmpDir, ".git"), { recursive: true });
   return tmpDir;
 });
+const documentedCheckSource = `/**
+ * Package docs.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
+/**
+ * Documented fixture.
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const DocumentedFixture = 1;
+`;
+const undocumentedCheckSource = `export const MissingMetadata = "nope";\n`;
+const seedCheckWorkspace = Effect.gen(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  yield* fs.writeFileString(
+    path.join(process.cwd(), "package.json"),
+    yield* encodeJson({
+      name: "@beep/test-root",
+      private: true,
+      workspaces: ["packages/foundation/*/*"],
+    })
+  );
+});
+const seedCheckPackage = Effect.fn("DocgenTest.seedCheckPackage")(function* (
+  directory: string,
+  name: string,
+  source: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const packageDir = path.join(process.cwd(), "packages", "foundation", "modeling", directory);
+  yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
+  yield* fs.writeFileString(path.join(packageDir, "package.json"), yield* encodeJson({ name, version: "0.0.0" }));
+  yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
+  yield* fs.writeFileString(path.join(packageDir, "src", "index.ts"), source);
+});
 const withConfigEnv = <A, E, R>(
   env: { readonly [key: string]: string },
   use: Effect.Effect<A, E, R>
@@ -4086,6 +4127,116 @@ export const parseValue = (value: string): string => value.trim();
         expect(wroteMarkdown).toBe(false);
         expect(wroteJson).toBe(false);
         expectReportedExit(exit);
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+    { timeout: DOCGEN_COMMAND_TEST_TIMEOUT }
+  );
+
+  it.effect(
+    "checks every package named by repeated --package flags in the given order",
+    () =>
+      Effect.gen(function* () {
+        yield* temporaryRepository;
+        yield* seedCheckWorkspace;
+        yield* seedCheckPackage("identity", "@beep/identity", documentedCheckSource);
+        yield* seedCheckPackage("schema", "@beep/schema", documentedCheckSource);
+
+        yield* runDocgenCommand([
+          "check",
+          "-p",
+          "packages/foundation/modeling/schema",
+          "--package",
+          "packages/foundation/modeling/identity",
+        ]);
+
+        expect(A.filter(yield* TestConsole.logLines, isString)).toEqual([
+          "docgen: OK packages/foundation/modeling/schema",
+          "docgen: OK packages/foundation/modeling/identity",
+        ]);
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+    { timeout: DOCGEN_COMMAND_TEST_TIMEOUT }
+  );
+
+  it.effect(
+    "fails docgen check when a later repeated --package target is missing metadata",
+    () =>
+      Effect.gen(function* () {
+        yield* temporaryRepository;
+        yield* seedCheckWorkspace;
+        yield* seedCheckPackage("identity", "@beep/identity", undocumentedCheckSource);
+        yield* seedCheckPackage("schema", "@beep/schema", documentedCheckSource);
+
+        const exit = yield* Effect.exit(
+          runDocgenCommand(["check", "--package", "@beep/schema", "--package", "@beep/identity"])
+        );
+
+        const errorText = A.join(A.filter(yield* TestConsole.errorLines, isString), "\n");
+        expect(A.filter(yield* TestConsole.logLines, isString)).toEqual([
+          "docgen: OK packages/foundation/modeling/schema",
+        ]);
+        expect(errorText).toContain("packages/foundation/modeling/identity has 2 export(s) missing docgen metadata");
+        expect(errorText).toContain("MissingMetadata missing @category, @since");
+        expectReportedExit(exit);
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+    { timeout: DOCGEN_COMMAND_TEST_TIMEOUT }
+  );
+
+  it.effect(
+    "checks a single --package target",
+    () =>
+      Effect.gen(function* () {
+        yield* temporaryRepository;
+        yield* seedCheckWorkspace;
+        yield* seedCheckPackage("identity", "@beep/identity", undocumentedCheckSource);
+        yield* seedCheckPackage("schema", "@beep/schema", documentedCheckSource);
+
+        yield* runDocgenCommand(["check", "--package", "@beep/schema"]);
+
+        expect(A.filter(yield* TestConsole.logLines, isString)).toEqual([
+          "docgen: OK packages/foundation/modeling/schema",
+        ]);
+        expect(yield* TestConsole.errorLines).toEqual([]);
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+    { timeout: DOCGEN_COMMAND_TEST_TIMEOUT }
+  );
+
+  it.effect(
+    "rejects repeated --package flags on single-package docgen subcommands",
+    () =>
+      Effect.gen(function* () {
+        yield* temporaryRepository;
+        yield* seedCheckWorkspace;
+        yield* seedCheckPackage("identity", "@beep/identity", documentedCheckSource);
+        yield* seedCheckPackage("schema", "@beep/schema", documentedCheckSource);
+
+        const exit = yield* Effect.exit(
+          runDocgenCommand(["analyze", "--package", "@beep/schema", "--package", "@beep/identity", "--json"])
+        );
+
+        assertTrue(exit._tag === "Failure");
+        expect(A.join(A.filter(yield* TestConsole.errorLines, isString), "\n")).toContain(
+          'Invalid value for flag --package: "2 occurrences". Expected: at most 1 value'
+        );
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+    { timeout: DOCGEN_COMMAND_TEST_TIMEOUT }
+  );
+
+  it.effect(
+    "rejects repeated --package flags on docgen init",
+    () =>
+      Effect.gen(function* () {
+        yield* temporaryRepository;
+        yield* seedCheckWorkspace;
+        yield* seedCheckPackage("identity", "@beep/identity", documentedCheckSource);
+        yield* seedCheckPackage("schema", "@beep/schema", documentedCheckSource);
+
+        const exit = yield* Effect.exit(
+          runDocgenCommand(["init", "--package", "@beep/schema", "--package", "@beep/identity", "--dry-run"])
+        );
+
+        assertTrue(exit._tag === "Failure");
+        expect(A.join(A.filter(yield* TestConsole.errorLines, isString), "\n")).toContain(
+          'Invalid value for flag --package: "2 occurrences". Expected: at most 1 value'
+        );
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
     { timeout: DOCGEN_COMMAND_TEST_TIMEOUT }
   );
