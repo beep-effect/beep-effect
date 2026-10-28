@@ -20,8 +20,11 @@ reconcile 372 source rows, 195 capability obligations, 1,583 assertion cases,
 proof stays open. Donor discovery binds 197 exports, 191 own public class
 members, 5,285 runtime cases and one source-only branch to 5,674 disposition
 obligations. P0 still owes supplemental probes, donor decisions,
-vocabulary-version mapping, final parity-gate integration and regex-safety
-limits. P1 remains blocked on those P0 gates.
+final parity-gate integration and regex-safety
+limits. Vocabulary mapping accounts for all 2,430 frozen publications, 2,533
+editions and 2,798 courts, with three reviewed case-reporter identity
+transitions and explicit metadata drift. P1 remains blocked on the other
+P0 gates.
 
 ## Delivery Rule
 

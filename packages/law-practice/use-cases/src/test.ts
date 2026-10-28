@@ -43,6 +43,13 @@ export { CitationOracleLedgers } from "./internal/citationOracleLedgers.ts";
  */
 export { CitationOracleOperations } from "./internal/citationOracleOperations.ts";
 /**
+ * Frozen oracle publication/court identity and source-version mapping evidence.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export { CitationOracleVocabularyMapping } from "./internal/citationOracleVocabularyMapping.ts";
+/**
  * Pinned TypeScript donor export/test accounting and disposition obligations.
  *
  * @category testing

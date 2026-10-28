@@ -101,3 +101,14 @@ The consumer test imports only published subpaths. Its exact artifact check
 accepts the current version and rejects `stale`, validates 2,809 courts and
 1,262 reporters, resolves a stable court ID, and preserves reporter ambiguity.
 No production schema, engine service, or public API was frozen by this probe.
+
+## Full frozen-data coverage supplement
+
+The [2026-10-28 mapping audit](./2026-10-28-vocabulary-version-mapping.md)
+now accounts for every frozen publication/edition artifact and all 2,798 legacy
+court IDs through the public contract. Three case-reporter source tuples have
+explicit reviewed identity bindings. The remaining law/journal publications
+belong to canonical law/journal citation families and receive no invented
+case-reporter IDs. Current vocabulary metadata must not replace frozen parser
+bounds or selection order. This clears the earlier unproved data-coverage
+question only; engine behavior and the remaining P0 gates stay open.

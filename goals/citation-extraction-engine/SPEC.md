@@ -601,13 +601,29 @@ instead of silently splitting delivery or weakening scope.
   `history/evidence/edition-candidate-order.json`. Restore raw bag order only
   with a new declared comparison rule and deterministic oracle proof.
 
+- **2026-10-28 vocabulary vintage separation:** consume current public stable
+  court/case-reporter IDs while preserving reporters-db 3.2.53/courts-db 0.10.22
+  parser metadata, edition dates and court selection order. Three exact legacy
+  tuple transitions and all metadata differences are retained in
+  `history/evidence/2026-10-28-vocabulary-version-mapping.md`. Law/journal
+  publications remain their canonical legal citation families; no synthetic
+  public ReporterId is issued. A shared current reporter ID must not collapse
+  frozen authority groups: the CIT probe retains two separate resources for
+  the two legacy corrected reporter spellings. Reverse only through a reviewed
+  parser-data
+  version change and regenerated compatibility/parity proof.
+
 ## Exception Ledger
 
-The generated `operation-cases.json` is excluded by exact path from spellcheck
-and formatting: changing upstream legal abbreviations or hash-bound payload
-bytes would falsify evidence. Its separate schema/hash/source/coordinate gate
-and negative controls remain required. Remove those exact exclusions when the
-artifact is retired; they do not apply to authored code or other fixtures.
+The generated oracle evidence fixtures are excluded by exact path from
+spellcheck and formatting in the root tool configuration: `operation-cases`,
+`assertion-cases`, `source-inventory`, `canonical-cases`, `regex-inventory`,
+`typescript-extensions` and `vocabulary-mapping` JSON files below the eyecite
+fixture directory. They retain upstream legal spellings, source expressions
+or hash-bound payloads. Their separate schema/source/hash/coverage validators
+and corruption controls remain required. These exclusions do not apply to
+authored code or unrelated fixtures. Remove each exact exclusion when its
+artifact is retired.
 
 | Exception | Scope | Owner | Removal condition |
 | --- | --- | --- | --- |
