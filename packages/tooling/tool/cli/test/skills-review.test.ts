@@ -1,9 +1,11 @@
 import * as NodeURL from "node:url";
+import { TestTerminal } from "@beep/cli-kit/testing";
 import {
   decodeSkillsLockDocumentJson,
   dequeueGhosted,
   encodeSkillsLockDocumentJson,
   LocalSkillLockEntry,
+  makeSkillReviewDeciderPrompt,
   renderSkillReplayMarkdown,
   renderSkillReviewSessionSummary,
   renderUnifiedHunks,
@@ -53,6 +55,7 @@ import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { assert, expect, layer, vi } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as ConfigProvider from "effect/ConfigProvider";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -62,6 +65,7 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+import * as Stdio from "effect/Stdio";
 import * as Str from "effect/String";
 import type { SkillReviewAnswer, SkillReviewScript, SkillReviewSession } from "@beep/repo-cli/commands/Skills";
 
@@ -798,6 +802,54 @@ layer(TestLayer, { timeout: "60 seconds" })("skills patch", (it) => {
       ]);
       const plan = yield* recorder.label(repoRoot, SKILL, O.none());
       expect([plan.changes, A.map(plan.pending, (pending) => pending.reason)]).toEqual([[], ["dropped"]]);
+    })
+  );
+});
+
+// The interactive decider runs behind `CliPrompt.gateTerminal`: the gate decides from the audience and the
+// terminal whether a person can be asked, and a run that cannot prompt quits before reading a key.
+layer(TestLayer, { timeout: "60 seconds" })("skills review prompt gate", (it) => {
+  const firstItem = Effect.fn("SkillsReviewTest.firstItem")(function* () {
+    const repoRoot = yield* makeRepo();
+    const review = yield* reviewWith(pristineFiles);
+    return itemAt(yield* list(review, repoRoot), 1);
+  });
+
+  it.effect("quits without reading a key when the run cannot prompt", () =>
+    Effect.gen(function* () {
+      const item = yield* firstItem();
+      const terminal = yield* TestTerminal.make({ columns: 90, rows: 40 });
+      yield* terminal.input([{ name: "enter" }]);
+      const context = yield* Layer.build(Layer.mergeAll(terminal.layer, Stdio.layerTest({})));
+      const decider = yield* makeSkillReviewDeciderPrompt.pipe(Effect.provide(context));
+      const decided = yield* decider.answer(item);
+      assertTrue(S.is(SkillReviewQuit)(decided));
+      expect(yield* terminal.reads).toEqual({ keys: 0, lines: 0, subscriptions: 0 });
+      expect(yield* terminal.pending).toBe(1);
+      expect(yield* terminal.output).toBe("");
+    })
+  );
+
+  it.effect("asks a person on a terminal and decides by the keys they type", () =>
+    Effect.gen(function* () {
+      const item = yield* firstItem();
+      const terminal = yield* TestTerminal.make({ columns: 90, rows: 40 });
+      yield* terminal.input([{ name: "down" }, { name: "enter" }]);
+      const context = yield* Layer.build(
+        Layer.mergeAll(
+          terminal.layer,
+          Stdio.layerTest({ stdinIsTerminal: Effect.succeed(true), stdoutIsTerminal: Effect.succeed(true) })
+        )
+      );
+      // A person: no agent or CI variable, and a terminal that is not `dumb`.
+      const decider = yield* makeSkillReviewDeciderPrompt.pipe(
+        Effect.provide(context),
+        Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ TERM: "xterm-256color" }))
+      );
+      const decided = yield* decider.answer(item);
+      deepStrictEqual(decided, SkillReviewDecide.make({ decision: "keep", label: O.some("repo-adaptation") }));
+      expect((yield* terminal.reads).keys).toBe(2);
+      expect(yield* terminal.output).toContain("Decision");
     })
   );
 });
