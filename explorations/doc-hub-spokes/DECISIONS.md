@@ -125,7 +125,7 @@ options. Deferred questions are logged DEFERRED with the reason. Manifest
 ### D-12 Shape accepted; lab app named `oracle-loop` (shape review)
 
 - **Answer:** `BRIEF.md` matches the operator's picture as drafted. The lab app is
-  `apps/labs/oracle-loop` (`bun run beep create-package oracle-loop --type app --lab`).
+  the proposed `oracle-loop` app under `apps/labs` (`bun run beep create-package oracle-loop --type app --lab`).
 - **Rationale:** the name says what is under test (the admit-find-repair loop as the oracle
   for agent output) and stays domain-free per D-01.
 - **Rejected:** `doc-oracle` (narrower than the thesis), `backpressure` (the why, not the what).

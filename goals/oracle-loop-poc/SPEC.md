@@ -51,7 +51,7 @@ Higher sources outrank lower sources when they conflict.
 
 ## Target Surfaces
 
-- `apps/labs/oracle-loop` (new, via `bun run beep create-package oracle-loop --type app --lab`
+- The proposed `oracle-loop` app under `apps/labs` (new, via `bun run beep create-package oracle-loop --type app --lab`
   only). Third-party dependencies are allowed in this app and any lab-local package it owns
   (D-02): parse5 at minimum; Pandoc is invoked through `@beep/pandoc-ast`.
 - Read-only reuse of `@beep/md`, `@beep/markdown`, `@beep/html`, `@beep/pandoc-ast`,
@@ -102,7 +102,7 @@ Higher sources outrank lower sources when they conflict.
 
 ## Acceptance Criteria
 
-- [ ] `apps/labs/oracle-loop` exists via `create-package --lab` and passes
+- [ ] The proposed `oracle-loop` app under `apps/labs` exists via `create-package --lab` and passes
       `bun run beep quality package-verify` for every package it owns.
 - [ ] First vertical slice (MAP "days 1 to 5"): Markdown in, generic profile, findings with
       model path and derived span, splice repair, incremental re-validation, coverage map,
@@ -157,4 +157,4 @@ them and record each in the Decision Log.
 
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
-| Third-party runtime dependencies in a lab app (parse5 at minimum) | `apps/labs/oracle-loop` and lab-local packages | this goal | Operator ruling D-02: a POC validates by building from available pieces | `html-spoke-parser` graduates and vendors the parser |
+| Third-party runtime dependencies in a lab app (parse5 at minimum) | the proposed `oracle-loop` app under `apps/labs` and lab-local packages | this goal | Operator ruling D-02: a POC validates by building from available pieces | `html-spoke-parser` graduates and vendors the parser |
