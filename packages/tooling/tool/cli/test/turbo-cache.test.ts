@@ -75,6 +75,10 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "10 seco
         );
         yield* fs.writeFileString(file, contents);
         const environment = { HOME: root, XDG_CONFIG_HOME: root };
+        expect(yield* loadHostTurboCacheDefaults({}, false, "git@github.com:beep-effect/beep-effect.git")).toEqual({});
+        expect(
+          yield* loadHostTurboCacheDefaults({ HOME: root }, false, "git@github.com:beep-effect/beep-effect.git")
+        ).toEqual({});
         expect(yield* loadHostTurboCacheDefaults(environment, false, "git@github.com:private/fork.git")).toEqual({});
         expect(yield* loadHostTurboCacheDefaults(environment, false, "")).toEqual({});
         const defaults = yield* loadHostTurboCacheDefaults(

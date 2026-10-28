@@ -19,3 +19,5 @@
   cache defaults. They were moved into the entry point's existing deferred module
   group; the allowlist expectation stayed unchanged. Entry-point edits should run
   the narrow startup-boundary contract in the focused proof before publication.
+
+- Hosted coverage on the combined integration head found untested host-default fallbacks for a missing home and an unset config root. Added direct in-process assertions for both safe-local outcomes; keep coverage floors unchanged. This prevents setup probes from being tested only through spawned CLIs, whose execution does not contribute to the parent coverage report.
