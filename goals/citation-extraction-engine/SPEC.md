@@ -663,6 +663,16 @@ instead of silently splitting delivery or weakening scope.
   ambiguous-locator and nonempty-anchor boundaries. Reverse only through a
   schema/corpus migration with equivalent warning and anchor controls.
 
+- **2026-10-28 divergence accounting:** retain eleven source-bound
+  representation laws and four case-bound fidelity questions in the test-only
+  `citation-divergences/v1` ledger. Require each planned focused test identity
+  and source-bound receipt before its row can complete; the execution producer
+  and target tests remain future work. No semantic waiver variant exists.
+  Cataloguing a law does not authorize dropping a mismatch. The ninth audit
+  component checks accounting; final target comparison still must reject every
+  difference without a proved applicable rule. Reverse or extend through the
+  reviewed plan, schema and equivalent corruption controls.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from

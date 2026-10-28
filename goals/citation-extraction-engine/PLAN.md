@@ -21,7 +21,10 @@ proof stays open. Donor discovery binds 197 exports, 191 own public class
 members, 5,285 runtime cases and one source-only branch to 5,674 disposition
 obligations. Supplemental accounting now retains 13 extraction/resolution
 probes and 26 cleaning/annotation probes, with 80 coordinate records and five
-explicitly open coverage families. P0 still owes remaining supplemental proof,
+explicitly open coverage families. Divergence accounting now retains eleven
+representation laws and four fidelity questions, all with unfinished target
+proof. P0 still owes the regex adversarial/benchmark artifacts and remaining
+supplemental proof,
 donor decisions,
 final parity-gate integration and regex-safety
 limits. Vocabulary mapping accounts for all 2,430 frozen publications, 2,533

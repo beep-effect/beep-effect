@@ -1,4 +1,4 @@
-"""Exercise the actual package command, including eight corrupted component inputs."""
+"""Exercise the actual package command, including nine corrupted component inputs."""
 import argparse
 import json
 from pathlib import Path
@@ -21,11 +21,11 @@ def main():
                               capture_output=True, text=True, timeout=180)
 
     baseline = invoke("--audit")
-    if baseline.returncode or "audit passed: 8 components" not in baseline.stdout:
+    if baseline.returncode or "audit passed: 9 components" not in baseline.stdout:
         raise SystemExit("package audit baseline must pass")
     strict = invoke()
-    if (strict.returncode != 1 or "FAIL ledgers" not in strict.stdout or "FAIL donors" not in strict.stdout or "FAIL supplemental" not in strict.stdout
-            or strict.stdout.count("PENDING check-") != 3 or "portable parity checks passed" in strict.stdout):
+    if (strict.returncode != 1 or "FAIL ledgers" not in strict.stdout or "FAIL donors" not in strict.stdout or "FAIL supplemental" not in strict.stdout or "FAIL divergences" not in strict.stdout
+            or strict.stdout.count("PENDING check-") != 2 or "portable parity checks passed" in strict.stdout):
         raise SystemExit("default command must reject the actual unfinished proof")
     print("PASS default-strict-rejects-current-incomplete-proof")
     for name, flags in {
@@ -46,7 +46,7 @@ def main():
         shutil.copytree(evidence, copied_evidence)
         flags = ["--audit", "--fixtures", str(copied_fixtures), "--evidence", str(copied_evidence)]
         relocated = invoke(*flags)
-        if relocated.returncode or "audit passed: 8 components" not in relocated.stdout:
+        if relocated.returncode or "audit passed: 9 components" not in relocated.stdout:
             raise SystemExit("relocated baseline must pass")
         for component, file in {
             "discovery": copied_evidence / "oracle-discovery.json",
@@ -57,6 +57,7 @@ def main():
             "vocabulary": copied_fixtures / "vocabulary-mapping.json",
             "safety-contract": copied_evidence / "citation-policy-contract.json",
             "supplemental": copied_fixtures / "supplemental-extraction.json",
+            "divergences": copied_fixtures / "divergences.json",
         }.items():
             original = file.read_bytes()
             value = json.loads(original)
@@ -68,7 +69,7 @@ def main():
                     or "audit passed" in result.stdout or "portable parity checks passed" in result.stdout):
                 raise SystemExit(f"corrupt component escaped the package gate: {component}")
             print(f"PASS corrupted-{component}")
-    print("package and relocated audit baselines passed; 13 rejection controls passed")
+    print("package and relocated audit baselines passed; 14 rejection controls passed")
 
 
 if __name__ == "__main__":

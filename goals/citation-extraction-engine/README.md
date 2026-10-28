@@ -36,6 +36,7 @@ Current evidence:
 - [Supplemental extraction probes](./history/evidence/2026-10-28-supplemental-extraction.md)
 - [Cleaning/annotation probes](./history/evidence/2026-10-28-supplemental-text.md)
 - [Warning coverage and P0 audit](./history/evidence/2026-10-28-warning-and-p0-audit.md)
+- [Divergence ledger](./history/evidence/2026-10-28-divergence-ledger.md)
 
 ## Mission
 

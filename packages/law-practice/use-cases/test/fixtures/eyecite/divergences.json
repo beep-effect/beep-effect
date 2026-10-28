@@ -1,0 +1,291 @@
+{
+  "schemaVersion": "citation-divergences/v1",
+  "scope": "Representation laws and open fidelity questions; no semantic parity waiver.",
+  "commit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
+  "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
+  "license": "BSD-2-Clause",
+  "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
+  "planSha256": "dcfd680213d6e3d47043cb866d8bb2a5f94d2b356e9245b69ae0b935220ab206",
+  "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
+  "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
+  "normalizations": [
+    {
+      "kind": "representation-law",
+      "id": "python-codepoint-utf16",
+      "statement": "Convert code-point offsets through the canonical public converter; preserve exact source slices and boundary validity.",
+      "targetTest": {
+        "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
+        "name": "python-codepoint-utf16"
+      },
+      "references": [
+        {
+          "path": "packages/law-practice/use-cases/test/CitationPrerequisites.test.ts",
+          "sha256": "b76cd2d6f36ffc0415467f2e775c21dbf8316637a5868e2ca11d186811f1a4a5"
+        }
+      ],
+      "workflowState": "audit",
+      "proof": null
+    },
+    {
+      "kind": "representation-law",
+      "id": "edition-candidate-bag-order",
+      "statement": "Sort only exact/variation/all-edition candidate bags by artifact identity; preserve multiplicity, chosen editions, filtering and legal decisions.",
+      "targetTest": {
+        "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
+        "name": "edition-candidate-bag-order"
+      },
+      "references": [
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/edition-candidate-order.json",
+          "sha256": "b945c7893dbf6c7b72e6910971ae68c1d6525bdc6fa923df6302a42f94770707"
+        },
+        {
+          "path": "goals/citation-extraction-engine/ops/export-operations.py",
+          "sha256": "9a8176ca6d55de38ff94731a1c532b9d4788651bcdd497c8d308b8520bae15e8"
+        }
+      ],
+      "workflowState": "audit",
+      "proof": null
+    },
+    {
+      "kind": "representation-law",
+      "id": "integer-decimal-wrapper",
+      "statement": "Encode integers outside the exact JavaScript numeric range as decimal-string records; preserve their complete mathematical value.",
+      "targetTest": {
+        "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
+        "name": "integer-decimal-wrapper"
+      },
+      "references": [
+        {
+          "path": "goals/citation-extraction-engine/ops/export-operations.py",
+          "sha256": "9a8176ca6d55de38ff94731a1c532b9d4788651bcdd497c8d308b8520bae15e8"
+        }
+      ],
+      "workflowState": "audit",
+      "proof": null
+    },
+    {
+      "kind": "representation-law",
+      "id": "datetime-iso",
+      "statement": "Represent Python datetimes as ISO text while preserving every captured date component and date-based decision.",
+      "targetTest": {
+        "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
+        "name": "datetime-iso"
+      },
+      "references": [
+        {
+          "path": "goals/citation-extraction-engine/ops/export-operations.py",
+          "sha256": "9a8176ca6d55de38ff94731a1c532b9d4788651bcdd497c8d308b8520bae15e8"
+        }
+      ],
+      "workflowState": "audit",
+      "proof": null
+    },
+    {
+      "kind": "representation-law",
+      "id": "unordered-collections",
+      "statement": "Canonicalize sets and unordered mappings by complete normalized values; preserve all elements and membership relationships.",
+      "targetTest": {
+        "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
+        "name": "unordered-collections"
+      },
+      "references": [
+        {
+          "path": "goals/citation-extraction-engine/ops/export-operations.py",
+          "sha256": "9a8176ca6d55de38ff94731a1c532b9d4788651bcdd497c8d308b8520bae15e8"
+        }
+      ],
+      "workflowState": "audit",
+      "proof": null
+    },
+    {
+      "kind": "representation-law",
+      "id": "immutable-artifact-reference",
+      "statement": "Replace repeated deeply immutable values with content-hash references; retain full values and do not memoize mutable citation-bearing resources.",
+      "targetTest": {
+        "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
+        "name": "immutable-artifact-reference"
+      },
+      "references": [
+        {
+          "path": "goals/citation-extraction-engine/ops/export-operations.py",
+          "sha256": "9a8176ca6d55de38ff94731a1c532b9d4788651bcdd497c8d308b8520bae15e8"
+        }
+      ],
+      "workflowState": "audit",
+      "proof": null
+    },
+    {
+      "kind": "representation-law",
+      "id": "callable-source-descriptor",
+      "statement": "Represent oracle callable identities with source-bound descriptors in evidence; implement callable behavior through injected services and never request functions.",
+      "targetTest": {
+        "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
+        "name": "callable-source-descriptor"
+      },
+      "references": [
+        {
+          "path": "goals/citation-extraction-engine/ops/export-operations.py",
+          "sha256": "9a8176ca6d55de38ff94731a1c532b9d4788651bcdd497c8d308b8520bae15e8"
+        }
+      ],
+      "workflowState": "audit",
+      "proof": null
+    },
+    {
+      "kind": "representation-law",
+      "id": "python-class-to-semantic-tag",
+      "statement": "Map canonical Python citation classes to semantic union discriminants without requiring inheritance or losing observable legal fields/method behavior.",
+      "targetTest": {
+        "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
+        "name": "python-class-to-semantic-tag"
+      },
+      "references": [
+        {
+          "path": "goals/citation-extraction-engine/ops/export-operations.py",
+          "sha256": "9a8176ca6d55de38ff94731a1c532b9d4788651bcdd497c8d308b8520bae15e8"
+        }
+      ],
+      "workflowState": "audit",
+      "proof": null
+    },
+    {
+      "kind": "representation-law",
+      "id": "document-cycle-reference",
+      "statement": "Represent document/citation cycles through explicit owned document data and relationships; do not drop observable document behavior.",
+      "targetTest": {
+        "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
+        "name": "document-cycle-reference"
+      },
+      "references": [
+        {
+          "path": "goals/citation-extraction-engine/ops/export-operations.py",
+          "sha256": "9a8176ca6d55de38ff94731a1c532b9d4788651bcdd497c8d308b8520bae15e8"
+        }
+      ],
+      "workflowState": "audit",
+      "proof": null
+    },
+    {
+      "kind": "representation-law",
+      "id": "test-local-object-identity",
+      "statement": "Represent process memory identities as test-local slots; preserve identity relations and exact observed hash integers.",
+      "targetTest": {
+        "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
+        "name": "test-local-object-identity"
+      },
+      "references": [
+        {
+          "path": "goals/citation-extraction-engine/ops/export-assertions.py",
+          "sha256": "1dd1d20a7566a7c97a086a3ba9589cd36316639e070ef176687e3f082572b9d6"
+        }
+      ],
+      "workflowState": "audit",
+      "proof": null
+    },
+    {
+      "kind": "representation-law",
+      "id": "legacy-vocabulary-identity",
+      "statement": "Map frozen oracle vocabulary to public identities while preserving historical parser metadata, ambiguity and distinct historical authority semantics.",
+      "targetTest": {
+        "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
+        "name": "legacy-vocabulary-identity"
+      },
+      "references": [
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-10-28-vocabulary-version-mapping.md",
+          "sha256": "8bb4dc8b4b24f947e695441ad4ef797d06e07cddce34f8c8318fe413b29b87b4"
+        }
+      ],
+      "workflowState": "audit",
+      "proof": null
+    }
+  ],
+  "questions": [
+    {
+      "kind": "fidelity-question",
+      "id": "annotation-repeated-source-selection",
+      "blocker": "A deterministic diff selects the first repeated source citation while the public locator rejects duplicate matches. Prove separate operation contracts or preserve canonical rendering without manufacturing an anchor.",
+      "workflowState": "audit",
+      "targetTest": {
+        "path": "packages/law-practice/server/test/CitationFidelityContracts.test.ts",
+        "name": "annotation-repeated-source-selection"
+      },
+      "observations": [
+        {
+          "file": "supplemental-extraction.json",
+          "collection": "textCases",
+          "id": "annotation-repeat-insert",
+          "normalizedSha256": "fbf2517b3338e6ebdb516d6dda3639c5b2744416a9b01cb1f7c83a3b55bec61f"
+        },
+        {
+          "file": "supplemental-extraction.json",
+          "collection": "textCases",
+          "id": "annotation-repeat-insert-builtin",
+          "normalizedSha256": "3ed7c816ea875dd7e5ceaaf1e24620a91ccd7b8d052a6612589705cf591e82f7"
+        }
+      ]
+    },
+    {
+      "kind": "fidelity-question",
+      "id": "annotation-deleted-source-empty-point",
+      "blocker": "Diff reconciliation collapses a deleted occurrence to an empty insertion. Prove rendering behavior separately from nonempty verified citation evidence.",
+      "workflowState": "audit",
+      "targetTest": {
+        "path": "packages/law-practice/server/test/CitationFidelityContracts.test.ts",
+        "name": "annotation-deleted-source-empty-point"
+      },
+      "observations": [
+        {
+          "file": "supplemental-extraction.json",
+          "collection": "textCases",
+          "id": "annotation-repeat-delete",
+          "normalizedSha256": "17cf4ccbf580b07e0568e614ec55e2783bd9fa739c1e6281e6d8220aef5c1f7e"
+        },
+        {
+          "file": "supplemental-extraction.json",
+          "collection": "textCases",
+          "id": "annotation-repeat-delete-builtin",
+          "normalizedSha256": "d84d744571bb217fa49a11dc6e6ca4f6f9af6f004cfca98ed3010f8891eb8993"
+        }
+      ]
+    },
+    {
+      "kind": "fidelity-question",
+      "id": "annotation-zero-width-point",
+      "blocker": "The annotation API accepts a zero-width insertion but the prerequisite rejects it as a nonempty text range. Preserve both operation contracts without inventing a mention.",
+      "workflowState": "audit",
+      "targetTest": {
+        "path": "packages/law-practice/server/test/CitationFidelityContracts.test.ts",
+        "name": "annotation-zero-width-point"
+      },
+      "observations": [
+        {
+          "file": "supplemental-extraction.json",
+          "collection": "textCases",
+          "id": "annotation-zero-width",
+          "normalizedSha256": "19907facb3f3b3aec3c825d9f3c9d3c430d8f58f2b71c31d9c419d3068e454f0"
+        }
+      ]
+    },
+    {
+      "kind": "fidelity-question",
+      "id": "annotation-warning-privacy",
+      "blocker": "The oracle warning arguments include source text; preserve the observable warning decision while satisfying the engine privacy and diagnostic-translation contract.",
+      "workflowState": "audit",
+      "targetTest": {
+        "path": "packages/law-practice/server/test/CitationFidelityContracts.test.ts",
+        "name": "annotation-warning-privacy"
+      },
+      "observations": [
+        {
+          "file": "supplemental-extraction.json",
+          "collection": "textCases",
+          "id": "annotation-unbalanced-skip",
+          "normalizedSha256": "1bf77ee30fc84c3168d3d9c5870e17af6225516706786b7987ab48ba2fa32ecb"
+        }
+      ]
+    }
+  ],
+  "semanticWaivers": []
+}

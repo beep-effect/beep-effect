@@ -1,0 +1,172 @@
+{
+  "schemaVersion": "citation-divergence-plan/v1",
+  "scope": "Representation laws and open fidelity questions; no semantic parity waiver.",
+  "normalizations": [
+    {
+      "id": "python-codepoint-utf16",
+      "statement": "Convert code-point offsets through the canonical public converter; preserve exact source slices and boundary validity.",
+      "referencePaths": [
+        "packages/law-practice/use-cases/test/CitationPrerequisites.test.ts"
+      ],
+      "targetTest": {
+        "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
+        "name": "python-codepoint-utf16"
+      }
+    },
+    {
+      "id": "edition-candidate-bag-order",
+      "statement": "Sort only exact/variation/all-edition candidate bags by artifact identity; preserve multiplicity, chosen editions, filtering and legal decisions.",
+      "referencePaths": [
+        "goals/citation-extraction-engine/history/evidence/edition-candidate-order.json",
+        "goals/citation-extraction-engine/ops/export-operations.py"
+      ],
+      "targetTest": {
+        "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
+        "name": "edition-candidate-bag-order"
+      }
+    },
+    {
+      "id": "integer-decimal-wrapper",
+      "statement": "Encode integers outside the exact JavaScript numeric range as decimal-string records; preserve their complete mathematical value.",
+      "referencePaths": [
+        "goals/citation-extraction-engine/ops/export-operations.py"
+      ],
+      "targetTest": {
+        "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
+        "name": "integer-decimal-wrapper"
+      }
+    },
+    {
+      "id": "datetime-iso",
+      "statement": "Represent Python datetimes as ISO text while preserving every captured date component and date-based decision.",
+      "referencePaths": [
+        "goals/citation-extraction-engine/ops/export-operations.py"
+      ],
+      "targetTest": {
+        "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
+        "name": "datetime-iso"
+      }
+    },
+    {
+      "id": "unordered-collections",
+      "statement": "Canonicalize sets and unordered mappings by complete normalized values; preserve all elements and membership relationships.",
+      "referencePaths": [
+        "goals/citation-extraction-engine/ops/export-operations.py"
+      ],
+      "targetTest": {
+        "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
+        "name": "unordered-collections"
+      }
+    },
+    {
+      "id": "immutable-artifact-reference",
+      "statement": "Replace repeated deeply immutable values with content-hash references; retain full values and do not memoize mutable citation-bearing resources.",
+      "referencePaths": [
+        "goals/citation-extraction-engine/ops/export-operations.py"
+      ],
+      "targetTest": {
+        "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
+        "name": "immutable-artifact-reference"
+      }
+    },
+    {
+      "id": "callable-source-descriptor",
+      "statement": "Represent oracle callable identities with source-bound descriptors in evidence; implement callable behavior through injected services and never request functions.",
+      "referencePaths": [
+        "goals/citation-extraction-engine/ops/export-operations.py"
+      ],
+      "targetTest": {
+        "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
+        "name": "callable-source-descriptor"
+      }
+    },
+    {
+      "id": "python-class-to-semantic-tag",
+      "statement": "Map canonical Python citation classes to semantic union discriminants without requiring inheritance or losing observable legal fields/method behavior.",
+      "referencePaths": [
+        "goals/citation-extraction-engine/ops/export-operations.py"
+      ],
+      "targetTest": {
+        "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
+        "name": "python-class-to-semantic-tag"
+      }
+    },
+    {
+      "id": "document-cycle-reference",
+      "statement": "Represent document/citation cycles through explicit owned document data and relationships; do not drop observable document behavior.",
+      "referencePaths": [
+        "goals/citation-extraction-engine/ops/export-operations.py"
+      ],
+      "targetTest": {
+        "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
+        "name": "document-cycle-reference"
+      }
+    },
+    {
+      "id": "test-local-object-identity",
+      "statement": "Represent process memory identities as test-local slots; preserve identity relations and exact observed hash integers.",
+      "referencePaths": [
+        "goals/citation-extraction-engine/ops/export-assertions.py"
+      ],
+      "targetTest": {
+        "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
+        "name": "test-local-object-identity"
+      }
+    },
+    {
+      "id": "legacy-vocabulary-identity",
+      "statement": "Map frozen oracle vocabulary to public identities while preserving historical parser metadata, ambiguity and distinct historical authority semantics.",
+      "referencePaths": [
+        "goals/citation-extraction-engine/history/evidence/2026-10-28-vocabulary-version-mapping.md"
+      ],
+      "targetTest": {
+        "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
+        "name": "legacy-vocabulary-identity"
+      }
+    }
+  ],
+  "questions": [
+    {
+      "id": "annotation-repeated-source-selection",
+      "blocker": "A deterministic diff selects the first repeated source citation while the public locator rejects duplicate matches. Prove separate operation contracts or preserve canonical rendering without manufacturing an anchor.",
+      "observationIds": [
+        "annotation-repeat-insert",
+        "annotation-repeat-insert-builtin"
+      ],
+      "targetTest": {
+        "path": "packages/law-practice/server/test/CitationFidelityContracts.test.ts",
+        "name": "annotation-repeated-source-selection"
+      }
+    },
+    {
+      "id": "annotation-deleted-source-empty-point",
+      "blocker": "Diff reconciliation collapses a deleted occurrence to an empty insertion. Prove rendering behavior separately from nonempty verified citation evidence.",
+      "observationIds": [
+        "annotation-repeat-delete",
+        "annotation-repeat-delete-builtin"
+      ],
+      "targetTest": {
+        "path": "packages/law-practice/server/test/CitationFidelityContracts.test.ts",
+        "name": "annotation-deleted-source-empty-point"
+      }
+    },
+    {
+      "id": "annotation-zero-width-point",
+      "blocker": "The annotation API accepts a zero-width insertion but the prerequisite rejects it as a nonempty text range. Preserve both operation contracts without inventing a mention.",
+      "observationIds": ["annotation-zero-width"],
+      "targetTest": {
+        "path": "packages/law-practice/server/test/CitationFidelityContracts.test.ts",
+        "name": "annotation-zero-width-point"
+      }
+    },
+    {
+      "id": "annotation-warning-privacy",
+      "blocker": "The oracle warning arguments include source text; preserve the observable warning decision while satisfying the engine privacy and diagnostic-translation contract.",
+      "observationIds": ["annotation-unbalanced-skip"],
+      "targetTest": {
+        "path": "packages/law-practice/server/test/CitationFidelityContracts.test.ts",
+        "name": "annotation-warning-privacy"
+      }
+    }
+  ]
+}

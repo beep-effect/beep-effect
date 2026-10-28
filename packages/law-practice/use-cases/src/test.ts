@@ -6,6 +6,13 @@
  */
 
 /**
+ * Representation laws and unresolved citation fidelity questions.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export { CitationDivergenceProofReceipt, CitationDivergences } from "./internal/citationDivergences.ts";
+/**
  * Schema-decoded explicit citation policy fixture with no ambient config reads.
  *
  * @category testing

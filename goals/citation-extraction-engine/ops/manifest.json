@@ -11,7 +11,7 @@
   "packetPath": "goals/citation-extraction-engine",
   "lifecycle": "active",
   "mission": "Deliver Effect-native observable capability parity with pinned official eyecite 2.7.6, exact verified source evidence, schema-first legal models, lawful transformations, and proven TypeScript-port extensions.",
-  "statusNote": "Eight portable component audits are integrated. The v3 supplemental bundle contains 39 probes, 80 coordinate records, explicit warning evidence, and 66 corruption controls; target proof stays open. Two public prerequisite consumer tests preserve ambiguous-locator and nonempty-anchor boundaries. P0 still owes divergence accounting and an adversarial corpus/benchmark contract; implementation, donor dispositions, per-family safety and final strict parity remain open.",
+  "statusNote": "Nine component audits are integrated. The divergence ledger records 11 representation laws and four open fidelity questions with planned test identities; all 15 proof rows remain unfinished and no semantic waiver is permitted. Supplemental warning/anchor evidence is retained. P0 still owes the regex adversarial corpus/benchmark contract. Target implementation, donor dispositions, full family safety and strict parity remain unproved.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -55,7 +55,8 @@
     "goals/citation-extraction-engine/history/evidence/2026-10-28-portable-parity-command.md",
     "goals/citation-extraction-engine/history/evidence/2026-10-28-supplemental-extraction.md",
     "goals/citation-extraction-engine/history/evidence/2026-10-28-supplemental-text.md",
-    "goals/citation-extraction-engine/history/evidence/2026-10-28-warning-and-p0-audit.md"
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-warning-and-p0-audit.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-divergence-ledger.md"
   ],
   "researchReports": [
     "research/EYECITE_BASELINE.md",
@@ -117,6 +118,8 @@
     "bun run goals/citation-extraction-engine/ops/check-vocabulary-mapping.ts",
     "bun run goals/citation-extraction-engine/ops/check-safety-contract.ts",
     "python goals/citation-extraction-engine/ops/verify-evidence-presence.py --scratch-root \"$HOME/.cache/beep/citation-extraction-engine\"",
+    "python goals/citation-extraction-engine/ops/verify-divergence-controls.py --scratch-root \"$HOME/.cache/beep/citation-extraction-engine\"",
+    "bun run goals/citation-extraction-engine/ops/check-divergences.ts --audit",
     "python goals/citation-extraction-engine/ops/verify-parity-controls.py --scratch-root \"$HOME/.cache/beep/citation-extraction-engine\"",
     "python goals/citation-extraction-engine/ops/verify-supplemental-controls.py --scratch-root \"$HOME/.cache/beep/citation-extraction-engine\"",
     "bun run --cwd packages/law-practice/use-cases citation:parity-check",
@@ -195,6 +198,18 @@
     {
       "path": "ops/export-public-vocabulary.ts",
       "purpose": "Export the versioned public court/reporter vocabulary API for pinned oracle compatibility mapping."
+    },
+    {
+      "path": "ops/check-divergences.ts",
+      "purpose": "Validate source/case-bound representation laws and fidelity questions; strict mode rejects incomplete proof and semantic waivers."
+    },
+    {
+      "path": "ops/export-divergences.py",
+      "purpose": "Reproducibly bind the reviewed divergence plan to source references and supplemental observations without completing target proof."
+    },
+    {
+      "path": "ops/verify-divergence-controls.py",
+      "purpose": "Prove rejection of missing laws/questions, stale evidence, semantic waivers and premature proof in isolated copies."
     }
   ]
 }
