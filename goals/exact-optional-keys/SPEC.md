@@ -105,7 +105,6 @@ them and record each in the Decision Log.
 | 2026-10-28 | Bind the GritQL namespace reference to an effect/Schema import | Acceptance probe reproduced a missed arbitrary alias and a false positive on a local S object | Revert the import-binding pattern and its regression fixtures |
 | 2026-10-28 | Use closeout PR #2316 with its own retained readiness verdict | The original PR is merged and its 17 historical required checks verify, but the declared local verdict was not retained; no historical proof is fabricated | Restore the original declared verdict with independent provenance, then revert the closeout declaration |
 | 2026-10-23 | Codemod pairing covers companion interfaces, not only type aliases | Lexical companions are `interface Encoded`; found on the first run, fixed in the rule and re-run from a clean tree | n/a |
-
 | 2026-10-28 | Capture readiness in a final documentation closeout after PR #2316 merged during interruption | Completion refresh verifies the accepted head, all 15 merge-time required contexts and the elapsed window, but the interrupted monitor left no positive readiness verdict; the existing evidence gate stays unchanged | Recover an independently verifiable original readiness verdict and restore the previous closeout declaration |
 
 ## Exception Ledger
@@ -113,4 +112,3 @@ them and record each in the Decision Log.
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
 | None | N/A | N/A | N/A | N/A |
-
