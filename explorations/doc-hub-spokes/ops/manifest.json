@@ -6,7 +6,7 @@
     "status": "graduated",
     "stage": "graduate",
     "openQuestions": [],
-    "sources": ["research/SOURCES.md"],
+    "sources": ["research/SOURCES.md", "research/capture-2026-10-28.md"],
     "links": {
       "goals": ["goals/oracle-loop-poc", "goals/doc-hub-spokes-inversion"],
       "docs": [],

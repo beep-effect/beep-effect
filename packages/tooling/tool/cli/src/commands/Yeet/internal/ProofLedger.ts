@@ -26,10 +26,10 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { appendContainedFileString, readContainedFileStringNoFollow } from "../../../internal/cli/FsGuards.ts";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { resolveProofLedgerLocation } from "./ArtifactPaths.ts";
+import { appendLedgerRows, readLedgerRows } from "./LedgerFile.ts";
 import {
   PROOF_FACT_SCHEMA_VERSION,
   ProofLedgerFactRow,
@@ -45,6 +45,9 @@ import type { ProofFact, ProofInputDigest, ProofReuseDecision } from "./ProofFac
 
 const $I = $RepoCliId.create("commands/Yeet/internal/ProofLedger");
 const ProofLedgerRowJson = JsonStringCodec(ProofLedgerRow);
+const PROOF_LEDGER_LABEL = "proof ledger";
+const encodeProofLedgerRow = (row: ProofLedgerRow): Effect.Effect<string, YeetCommandError> =>
+  ProofLedgerRowJson.encode(row).pipe(Effect.mapError(YeetCommandError.new("Failed to encode a proof ledger row.")));
 const isFactRow = S.is(ProofLedgerFactRow);
 const isShadowRow = S.is(ProofLedgerShadowRow);
 const isHit = S.is(ProofReuseHit);
@@ -71,24 +74,7 @@ const loadProofLedger = Effect.fn("Yeet.ProofLedger.load")(function* (
   repoRoot: string
 ): Effect.fn.Return<LoadedProofLedger, YeetCommandError, FileSystem.FileSystem | Path.Path> {
   const { ledgerPath, ledgerRoot } = yield* resolveProofLedgerLocation(repoRoot);
-  const read = yield* readContainedFileStringNoFollow(ledgerRoot, ledgerPath).pipe(
-    Effect.mapError(YeetCommandError.new(`Failed to read proof ledger "${ledgerPath}".`))
-  );
-  if (!read.exists) {
-    return { malformedRows: 0, rows: A.empty<ProofLedgerRow>() };
-  }
-  if (O.isNone(read.contents)) {
-    return yield* YeetCommandError.make({
-      message: `Proof ledger "${ledgerPath}" exists but is not a readable regular file.`,
-      file: ledgerPath,
-    });
-  }
-  const contents = read.contents.value;
-  const splitLines = Str.split(contents, "\n");
-  const completeLines = Str.endsWith("\n")(contents) ? splitLines : A.dropRight(splitLines, 1);
-  const lines = A.filter(completeLines, Str.isNonEmpty);
-  const rows = A.getSomes(A.map(lines, ProofLedgerRowJson.decodeOption));
-  return { malformedRows: A.length(lines) - A.length(rows), rows };
+  return yield* readLedgerRows(ledgerRoot, ledgerPath, PROOF_LEDGER_LABEL, ProofLedgerRowJson.decodeOption);
 });
 
 /**
@@ -117,29 +103,7 @@ const appendRows = Effect.fn("Yeet.ProofLedger.appendRows")(function* (
     return;
   }
   const { ledgerPath, ledgerRoot } = yield* resolveProofLedgerLocation(repoRoot);
-  const read = yield* readContainedFileStringNoFollow(ledgerRoot, ledgerPath).pipe(
-    Effect.mapError(YeetCommandError.new(`Failed to inspect proof ledger "${ledgerPath}" before appending.`))
-  );
-  if (read.exists && O.isNone(read.contents)) {
-    return yield* YeetCommandError.make({
-      message: `Proof ledger "${ledgerPath}" exists but is not a readable regular file.`,
-      file: ledgerPath,
-    });
-  }
-  const recoveryPrefix = O.match(read.contents, {
-    onNone: () => "",
-    onSome: (contents) => (Str.isNonEmpty(contents) && !Str.endsWith("\n")(contents) ? "\n" : ""),
-  });
-  const lines = yield* Effect.forEach(rows, (row) =>
-    ProofLedgerRowJson.encode(row).pipe(Effect.mapError(YeetCommandError.new("Failed to encode a proof ledger row.")))
-  );
-  const text = A.join(
-    A.map(lines, (line) => `${line}\n`),
-    ""
-  );
-  yield* appendContainedFileString(ledgerRoot, ledgerPath, `${recoveryPrefix}${text}`).pipe(
-    Effect.mapError(YeetCommandError.new(`Failed to append proof ledger "${ledgerPath}".`))
-  );
+  yield* appendLedgerRows(ledgerRoot, ledgerPath, PROOF_LEDGER_LABEL, rows, encodeProofLedgerRow);
 });
 
 const factExpiredAt = (fact: ProofFact, now: DateTime.DateTime): boolean =>

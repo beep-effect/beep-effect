@@ -1,6 +1,8 @@
 /**
  * Deterministic EML assembly for pffexport-exported items.
  *
+ * **Details**
+ *
  * pffexport materializes message parts (headers, body, attachments) as plain
  * files; this module reassembles them into RFC 5322/2046 messages without any
  * runtime dependency, so assembly stays pure and byte-stable given the same
@@ -174,7 +176,7 @@ export const foldHeaderLine = (line: string): ReadonlyArray<string> =>
  *
  * ```ts
  * import { rfc5322DateFromOutlookTimestamp } from "@beep/libpff"
- * import { O } from "@beep/utils"
+ * import * as O from "effect/Option"
  *
  * console.log(
  *   O.getOrElse(rfc5322DateFromOutlookTimestamp("Nov 26, 2020 22:18:29.446000000 UTC"), () => "")
@@ -419,7 +421,7 @@ const bodySectionLines = (body: EmlBodyPart): ReadonlyArray<string> =>
  *
  * ```ts
  * import { assembleEml } from "@beep/libpff"
- * import { O } from "@beep/utils"
+ * import * as O from "effect/Option"
  *
  * const eml = assembleEml({
  *   attachments: [],

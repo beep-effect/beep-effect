@@ -1,6 +1,8 @@
 /**
  * Low-level obs-websocket v5 protocol service.
  *
+ * **Details**
+ *
  * Speaks the `obswebsocket.json` subprotocol over an Effect
  * {@link Socket.Socket}: performs the Hello → Identify → Identified handshake
  * inside scoped acquisition (including SHA256 challenge authentication),

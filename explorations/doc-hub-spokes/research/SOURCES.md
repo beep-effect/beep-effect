@@ -11,14 +11,16 @@
 ## 1. Mined source corpus
 
 Not applicable yet. No upstream code has been mined or ported for this packet. The scratch
-program `scratchpad/temp/` is repo-authored.
+programs the discussion was built on (html, lexical, pandoc and markdown projections of one
+`Md.Document`) are repo-authored and land with the `oracle-loop` lab app rather than in
+`scratchpad/temp`, so this docs PR stays docs-only.
 
 ## 2. Upstream repositories & licenses
 
 | Repo | License | Port discipline | What we take |
 |------|---------|-----------------|--------------|
-| `~/YeeBois/references/effect/alchemy` (`@alchemy.run/domain`) | Apache-2.0 (read from `LICENSE` and `packages/domain/package.json`) | port-with-attribution if any code is taken; so far reference-only | the declarative-class DSL shape (`Domain.Command/Aggregate/Projection/Policy`, `Story`, `Domain.verify`); the lesson that closure handlers cannot project |
-| `~/YeeBois/references/effect/effect` (`effect`, v4) | MIT (`packages/effect/package.json`) | port-with-attribution / direct dependency | `SchemaRepresentation` as the serializable schema-AST carrier candidate |
+| `~/YeeBois/references/effect/alchemy` (`@alchemy.run/domain`) | Apache-2.0 (read from its `LICENSE` and the domain package manifest) | port-with-attribution if any code is taken; so far reference-only | the declarative-class DSL shape (`Domain.Command/Aggregate/Projection/Policy`, `Story`, `Domain.verify`); the lesson that closure handlers cannot project |
+| `~/YeeBois/references/effect/effect` (`effect`, v4) | MIT (the effect package manifest) | port-with-attribution / direct dependency | `SchemaRepresentation` as the serializable schema-AST carrier candidate |
 | `~/YeeBois/references/effect/opencode/packages/codemode` | not verified this session | reference-only until the license is read | the restricted-interpreter stance for inline script (parse to a defined subset, `UnsupportedSyntax` with location) |
 | `~/YeeBois/workstation-apps/fx0` (vercel-labs/fx0) | not verified this session | reference-only | the raw-HTML design-agent baseline (speed, screenshot-only feedback) |
 | parse5 | not verified this session | reference-only until read | WHATWG parse-error codes with `sourceCodeLocationInfo` as the reference for the NET-NEW HTML spoke parser |
@@ -78,4 +80,5 @@ See the inventory table in [`../RESEARCH.md`](../RESEARCH.md). Summary of dispos
 - This packet: [`../CAPTURE.md`](../CAPTURE.md), [`../RESEARCH.md`](../RESEARCH.md),
   [`panel/`](./panel/), [`notes/`](./notes/),
   [`REPORT-2026-10-28-prior-art.md`](./REPORT-2026-10-28-prior-art.md).
-- Scratch program: `scratchpad/temp/` (tracked).
+- Scratch programs: carried into `goals/oracle-loop-poc` (the lab app hosts them with proper
+  JSDoc); `scratchpad/temp/index.ts` on main is the html projection they started from.

@@ -50,6 +50,8 @@ inversion goal.
 
 ## Trail
 
+- 2026-10-28 (CI reference repair): planned output workspaces are named beneath their existing parent directories; the friction ledger is established. Raw capture retained under `research/capture-2026-10-28.md`, with CAPTURE linking to the archive; no implementation or lifecycle change.
+
 - 2026-10-28 (decompose, graduate): shape accepted; lab app named `oracle-loop` (D-12);
   MAP.md names two promised-now goals and four gated ones; graduated with
   `bun run beep explore graduate` (plan 6d9f178d), SPECs seeded from the brief, SOURCES carried.
