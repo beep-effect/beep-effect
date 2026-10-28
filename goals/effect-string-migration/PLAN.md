@@ -58,12 +58,13 @@ The 2026-10-28 completion refresh rejects the historical #2027 proposal. Keep
 its failed merge-time evidence intact. The `chore/effect-string-closeout` lane
 must:
 
-1. Full Check and the root configuration program passed at `3c36b00e29`: 337
+1. Full Check and the root configuration program passed most recently at
+   `04c716043f`: 337
    successful Turbo tasks, including 187 package Check tasks, and zero
    `preferEffectString` findings. The full graph had no affected-file filter.
 2. `quality tsgo-rules`, packet checks and reflection validation passed; rerun
    the cheap packet validators after the evidence update.
-3. The audit and reflection are published in #2318, now named by
+3. The audit and reflection are published in #2324, now named by
    `proposedCloseout.finalPullRequest`; operative lifecycle stays active.
 4. Pass content-final checks and capture a head-bound `--until-ready` Yeet
    verdict; merge only after required checks pass and review gates hold.

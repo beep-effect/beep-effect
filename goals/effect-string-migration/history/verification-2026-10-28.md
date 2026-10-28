@@ -89,3 +89,21 @@ publication followed by a new terminal readiness monitor. Preserve the
 publisher's verdict and the monitor's status snapshot without rewriting their
 contents. Completion remains unproven until the exact published head is merged
 and completion refresh verifies it.
+
+## Publication race and final PR binding
+
+GitHub records `kriegcloud` merging #2318 at 2026-10-28T10:54:08Z,
+accepted head `91bd237d203d2b75aaf097bce48245ecad5aa139`, merge commit
+`f9adc3dcc7f5597dbd8d0df212485567971ea1aa`, while canonical publication
+was still running locally. The earlier statement that this head was not merged
+was true when qualification began; this later event supersedes it.
+The publisher consequently opened #2324 for the remaining evidence update.
+The final proposal now names #2324. Its canonical publication, readiness and
+merge evidence must verify before completion is claimed.
+
+After reconciling the squash merge and current main, stable head
+`04c716043fa6f11fce4f68862215362e39c07cba` passed the unfiltered full Check
+lane again: 337 successful tasks, including 187 package Check tasks, with
+258 cache hits and 79 executions. The separate root configuration program
+also exited zero. No String findings were reported. Final publication changes
+only this packet after that qualification.
