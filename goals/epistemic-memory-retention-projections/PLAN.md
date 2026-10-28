@@ -4,7 +4,7 @@
 
 Status: `completed-retained`
 
-This is the landing state proposed by [PR #2321](https://github.com/beep-effect/beep-effect/pull/2321),
+This is the landing state proposed by [PR #2322](https://github.com/beep-effect/beep-effect/pull/2322),
 effective only after its required gates, review window and merge. The running
 conversation goal remains active until merge and lane retirement are verified.
 

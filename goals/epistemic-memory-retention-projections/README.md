@@ -4,7 +4,7 @@
 
 Lifecycle: `completed-retained`
 
-This is the retained landing state proposed by [PR #2321](https://github.com/beep-effect/beep-effect/pull/2321);
+This is the retained landing state proposed by [PR #2322](https://github.com/beep-effect/beep-effect/pull/2322);
 it takes effect after the exact-head gates, review window and merge.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)

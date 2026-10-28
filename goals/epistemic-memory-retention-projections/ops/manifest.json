@@ -11,7 +11,7 @@
   "packetPath": "goals/epistemic-memory-retention-projections",
   "lifecycle": "completed-retained",
   "mission": "Ship rebuildable tier and memory-pressure projections with inert schema-validated retention policy behind calibration evidence.",
-  "statusNote": "Retained landing state proposed by PR #2321; effective only after exact-head Yeet/hosted gates, review resolution, review window and merge. Mechanism and delete/rebuild proof pass; shipped calibration registry remains inert.",
+  "statusNote": "Retained landing state proposed by PR #2322; effective only after exact-head Yeet/hosted gates, review resolution, review window and merge. Mechanism and delete/rebuild proof pass; shipped calibration registry remains inert.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {

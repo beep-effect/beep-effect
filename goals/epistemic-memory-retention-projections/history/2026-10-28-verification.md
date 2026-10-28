@@ -103,7 +103,7 @@ baseline or authority behavior changed.
 
 ## Landing closeout
 
-[PR #2321](https://github.com/beep-effect/beep-effect/pull/2321) carries the
+[PR #2322](https://github.com/beep-effect/beep-effect/pull/2322) carries the
 implementation and retained packet state together. The retained status is the
 proposed state at merge, not an assertion that an open draft has already shipped.
 The conversation goal stays active until current-head required checks, answered
@@ -123,6 +123,19 @@ base had a byte-identical tree and its ancestry is preserved.
 The standing constrained-compute fallback (after the original pre-push exceeded
 ten minutes) also parks the full local lint-policy replay. Targeted laws, native
 deprecated-API ownership audits, script typecheck, schema/test gates and package
-audits passed; exact-head hosted Lint Policy remains required. Both `cheap-gates`
-and `lint-policy` local skips must be explicit in the final-check receipt and PR
+audits passed; exact-head hosted Lint Policy remains required. The full repository docgen replay was interrupted for history repair; full
+package audits/docgen passed for all three touched packages. The `cheap-gates`,
+`lint-policy` and `docgen` local skips must be explicit in the final-check receipt and PR
 body. No baseline is weakened.
+
+## Preserved history and replacement PR
+
+[PR #2322](https://github.com/beep-effect/beep-effect/pull/2322) supersedes
+[PR #2321](https://github.com/beep-effect/beep-effect/pull/2321). A separately
+published merge on the original branch used a commit type rejected by Commitlint.
+Yeet's inherited-red exception applies to main, so it does not cover that branch
+commit. Rather than rewrite published history or relax the check, the original
+branch and PR are preserved and the same feature diff is committed conventionally
+on current main. The epistemic package trees are byte-identical across this
+transfer; only closeout links/evidence change afterward. The replacement PR must
+satisfy all current-head required hosted checks and the normal review window.
