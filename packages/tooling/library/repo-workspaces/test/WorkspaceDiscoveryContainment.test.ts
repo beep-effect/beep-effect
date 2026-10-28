@@ -28,7 +28,7 @@ const root = (patterns: ReadonlyArray<string>): string =>
 
 /** A tree with links that leave `/repo` and links that stay inside it. */
 const linked: Seed = {
-  "/repo/package.json": root(["packages/*", "escape", "groups/**", "outer/*", "inner", "dangling/*"]),
+  "/repo/package.json": root(["packages/*", "escape", "groups/**", "outer/*", "inner", "dangling/*", "absent"]),
   "/repo/packages/a/package.json": manifest("a"),
   // Leaves the root: its manifest is not even JSON.
   "/repo/packages/out": MemoryFileSystem.symlink("/outside/broken"),
@@ -45,7 +45,8 @@ const linked: Seed = {
   "/repo/outer": MemoryFileSystem.symlink("/outside/tree"),
   // A literal link that stays inside the root.
   "/repo/inner": MemoryFileSystem.symlink("/repo/packages/a"),
-  // A dangling link under a wildcard base.
+  // A dangling link under a wildcard base; `absent` names nothing at all, so
+  // its real path cannot be resolved.
   "/repo/dangling/gone": MemoryFileSystem.symlink("/repo/nowhere"),
 };
 
