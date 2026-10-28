@@ -173,7 +173,7 @@ export const EnumerationFailure = EnumerationFailureKind.mapMembers(
 export type EnumerationFailure = typeof EnumerationFailure.Type;
 
 /**
- * Controls the descent bound for {@link enumerate}.
+ * Controls the descent bound and root containment for {@link enumerate}.
  *
  * **Example** (Leave enumeration defaults unresolved)
  *
@@ -193,6 +193,12 @@ export class EnumerateOptions extends S.Opaque<EnumerateOptions, { readonly bran
     maxDepth: S.optionalKey(S.declare(P.isNumber)).pipe(
       $I.annoteKey("EnumerateOptions.maxDepth", {
         description: "An optional numeric descent cap, validated and defaulted only by enumeration.",
+      })
+    ),
+    /** Skip directories whose real path leaves the root's real path. Defaults to `false`. */
+    containWithinRoot: S.optionalKey(S.Boolean).pipe(
+      $I.annoteKey("EnumerateOptions.containWithinRoot", {
+        description: "Whether directories whose real path leaves the root are skipped before they are read.",
       })
     ),
   }).pipe(
@@ -224,6 +230,7 @@ const baseOf = (pattern: GlobPattern): string => Str.replace(/\/$/, "")(pattern.
  * @internal
  */
 interface EnumerationScope {
+  readonly contains: (absolute: string) => Effect.Effect<boolean>;
   readonly fs: FileSystem.FileSystem;
   readonly included: MutableHashMap.MutableHashMap<string, string>;
   readonly isExcluded: (relative: string) => boolean;
@@ -243,6 +250,44 @@ const isDirectoryAt = (scope: EnumerationScope, absolute: string): Effect.Effect
     Effect.orElseSucceed(() => false)
   );
 
+/**
+ * Whether `real` is `canonicalRoot` or lies beneath it.
+ *
+ * **Details**
+ *
+ * Both paths are already canonical, so a lexical `relative` decides it: a
+ * result that climbs (`..`) or stays absolute (another drive) is outside.
+ */
+const isWithin = (path: Path.Path, canonicalRoot: string, real: string): boolean => {
+  const relative = path.relative(canonicalRoot, real);
+  return relative !== ".." && !Str.startsWith(`..${path.sep}`)(relative) && !path.isAbsolute(relative);
+};
+
+/**
+ * The containment probe for one enumeration.
+ *
+ * **Details**
+ *
+ * Off, every directory is admitted without a probe. On, the root is
+ * canonicalized once and each probed directory is canonicalized through
+ * `realPath`; a directory whose real path cannot be resolved (a dangling link)
+ * is not admitted. A root that cannot be canonicalized is compared as given.
+ */
+const containmentOf = Effect.fnUntraced(function* (
+  fs: FileSystem.FileSystem,
+  path: Path.Path,
+  root: string,
+  containWithinRoot: boolean
+): Effect.fn.Return<(absolute: string) => Effect.Effect<boolean>> {
+  if (!containWithinRoot) return () => Effect.succeed(true);
+  const canonicalRoot = yield* fs.realPath(root).pipe(Effect.orElseSucceed(() => root));
+  return (absolute) =>
+    fs.realPath(absolute).pipe(
+      Effect.map((real) => isWithin(path, canonicalRoot, real)),
+      Effect.orElseSucceed(() => false)
+    );
+});
+
 /** A shared-traversal stop, materialized as this module's failure record. */
 const failureOf = (
   stop: { readonly kind: EnumerationFailureKind; readonly detail: string },
@@ -250,11 +295,15 @@ const failureOf = (
 ): EnumerationFailure => ({ kind: stop.kind, pattern, detail: stop.detail });
 
 /** A literal include that names a package directory, as an `included` entry. */
-const literalHit = (scope: EnumerationScope, literal: string): Effect.Effect<O.Option<readonly [string, string]>> => {
-  if (scope.isExcluded(literal)) return Effect.succeedNone;
+const literalHit = Effect.fnUntraced(function* (
+  scope: EnumerationScope,
+  literal: string
+): Effect.fn.Return<O.Option<readonly [string, string]>> {
+  if (scope.isExcluded(literal)) return O.none();
   const absolute = scope.path.join(scope.root, literal);
-  return Effect.map(isPackageAt(scope, absolute), (hit) => (hit ? O.some([literal, absolute] as const) : O.none()));
-};
+  if (!(yield* scope.contains(absolute))) return O.none();
+  return (yield* isPackageAt(scope, absolute)) ? O.some([literal, absolute] as const) : O.none();
+});
 
 /**
  * Literals: an exact lookup, no directory read at all.
@@ -328,6 +377,7 @@ const visitEntry = Effect.fnUntraced(function* (
   const relative = joinRelative(frame.relative, entry);
   const absolute = scope.path.join(frame.absolute, entry);
   if (!(yield* isDirectoryAt(scope, absolute))) return;
+  if (!(yield* scope.contains(absolute))) return;
   if (wildcard.crossesSegments && !traversal.admits(frame)) {
     return yield* Effect.fail(failureOf(traversal.depthStop(), wildcard.source));
   }
@@ -356,6 +406,9 @@ const enumerateWildcard = Effect.fnUntraced(function* (scope: EnumerationScope, 
       detail: base === "" ? scope.root : base,
     });
   }
+  // A base that exists but leaves the root is not a typo: there is simply
+  // nothing inside the root to enumerate under it.
+  if (!(yield* scope.contains(absoluteBase))) return;
   const traversal = new Traversal(base, absoluteBase, scope.maxDepth);
   for (let current = traversal.next(); current !== undefined; current = traversal.next()) {
     const spent = traversal.charge();
@@ -375,7 +428,9 @@ const enumerateWildcard = Effect.fnUntraced(function* (scope: EnumerationScope, 
  *
  * Every returned directory holds a `package.json`, matches at least one include
  * (literal or wildcard), and is rejected by no exclude. Results are sorted by
- * relative path.
+ * relative path. With `containWithinRoot`, a literal member, a wildcard base or
+ * a listed directory whose real path leaves the root's real path is skipped
+ * before it is probed for a `package.json` or descended into.
  *
  * **Gotchas**
  *
@@ -423,9 +478,12 @@ export const enumerate: {
     if (!isValidMaxDepth(maxDepth)) {
       return yield* Effect.die(EnumerationOptionsError.make({ message: `enumerate: ${badMaxDepthMessage(maxDepth)}` }));
     }
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
     const scope: EnumerationScope = {
-      fs: yield* FileSystem.FileSystem,
-      path: yield* Path.Path,
+      contains: yield* containmentOf(fs, path, root, options?.containWithinRoot ?? false),
+      fs,
+      path,
       root,
       maxDepth,
       included: MutableHashMap.empty<string, string>(),
