@@ -613,6 +613,16 @@ instead of silently splitting delivery or weakening scope.
   parser-data
   version change and regenerated compatibility/parity proof.
 
+- **2026-10-28 safety policy:** freeze the 29-field numeric/Duration ceilings
+  and explicit fixture in `CitationEngineLimits` / `CitationEngineEffectivePolicy`.
+  Select parent-owned force-stoppable processes for native regex execution;
+  an Effect timeout plus the standard worker's five-second graceful finalizer
+  is insufficient. Twelve Node/Bun controls confirm parent responsiveness and
+  owned-child cleanup, with no pattern-family approval implied. The detailed
+  counter/queue/deadline/cleanup contract is retained in
+  `history/evidence/2026-10-28-limits-isolation-contract.md`. Reverse only with
+  a reviewed policy-version change and equivalent bounded execution proof.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from

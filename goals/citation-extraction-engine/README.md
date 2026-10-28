@@ -14,8 +14,9 @@ context alongside 8,488 traced iterations and 241 complete literal-loop runs.
 The public-operation corpus retains 826 observations and 2,811 coordinate
 records. Donor accounting now binds 197 exports and 5,285 runtime cases to
 5,674 explicit disposition obligations. Supplemental probes, final gate
-integration, regex review, and hard safety limits remain
-open before P1.
+integration and regex review remain open before P1. The 29-field limit
+policy and process-isolation mechanism are now evidenced; runtime enforcement
+and family-level safety proof remain unfinished.
 
 Current evidence:
 
@@ -26,6 +27,7 @@ Current evidence:
 - [Source/case/regex ledgers](./history/evidence/2026-10-28-source-case-ledgers.md)
 - [Donor accounting](./history/evidence/2026-10-28-typescript-donor-accounting.md)
 - [Vocabulary mapping](./history/evidence/2026-10-28-vocabulary-version-mapping.md)
+- [Limits/isolation](./history/evidence/2026-10-28-limits-isolation-contract.md)
 
 ## Mission
 

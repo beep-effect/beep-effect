@@ -24,7 +24,9 @@ final parity-gate integration and regex-safety
 limits. Vocabulary mapping accounts for all 2,430 frozen publications, 2,533
 editions and 2,798 courts, with three reviewed case-reporter identity
 transitions and explicit metadata drift. P1 remains blocked on the other
-P0 gates.
+P0 gates. The 29-field limits/default policy and parent-owned process
+isolation mechanism are evidenced; production enforcement, pattern-level
+compatibility/scaling and strict evidence-presence checks remain open.
 
 ## Delivery Rule
 

@@ -6,6 +6,13 @@
  */
 
 /**
+ * Schema-decoded explicit citation policy fixture with no ambient config reads.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export { defaultCitationEnginePolicy } from "./internal/citationEnginePolicyFixture.ts";
+/**
  * Assertion and loop evidence for the pinned official citation oracle.
  *
  * @category testing

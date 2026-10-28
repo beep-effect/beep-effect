@@ -7,6 +7,18 @@
  */
 
 /**
+ * Schema-owned citation safety ceilings and explicitly supplied execution policy.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export {
+  CitationEngineAbsoluteMaxima,
+  CitationEngineEffectivePolicy,
+  CitationEngineLimits,
+  CitationEngineLimitTightening,
+} from "./CitationEngine/CitationEngine.limits.ts";
+/**
  * Claim self-check models, errors, USPTO claims port and service contract.
  *
  * **Example** (Verify the self-check service export)
