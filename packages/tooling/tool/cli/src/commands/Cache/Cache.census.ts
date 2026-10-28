@@ -321,18 +321,44 @@ export const cacheTaskSelectionArgs = Effect.fn("Cache.taskSelectionArgs")(funct
 // Turbo env entries are glob patterns (`BEEP_*`). The dot dialect keeps the
 // previous matcher's behaviour, which never special-cased a leading dot, and a
 // `!` or `#` prefix stays a literal character to the compiler: Turbo's own
-// negation is read below, and Turbo has no comment entries.
+// negation is read below, and Turbo has no comment entries. `?`, `[..]`, `{a,b}`,
+// `+(..)`, `\` and an in-segment `**` are minimatch magic here where the old
+// compiler read them literally; no live entry uses them (R2b oracle,
+// `dialectMagic` section).
 const turboEnvGlob = GlobPatternOptions.make({ dot: true, nonegate: true, nocomment: true });
 const isTurboEnvExclusion = Str.startsWith("!");
 
-// Whether some `env` or `passThroughEnv` entry forwards BIOME_CONFIG_PATH. A
-// `!`-prefixed entry is a Turbo exclusion: it forwards nothing, and it never
-// subtracts a positive match either, because the identity-profile gate rejects a
-// positive declaration conservatively even when a later negative would exclude
-// the profile (the previous matcher read the `!` as a literal, which matched no
-// env name, so the set of forwarding entries is unchanged). An entry the glob
-// compiler rejects is a configuration failure, not a defect.
-const forwardsBiomeConfigPath = Effect.fn("Cache.forwardsBiomeConfigPath")(function* (entries: ReadonlyArray<string>) {
+/**
+ * Whether some Turbo `env` or `passThroughEnv` entry forwards `BIOME_CONFIG_PATH`.
+ *
+ * **Details**
+ *
+ * Entries are glob patterns under the dot dialect. A `!`-prefixed entry is a
+ * Turbo exclusion: it forwards nothing, and it never subtracts a positive match
+ * either, because the identity-profile gate rejects a positive declaration
+ * conservatively even when a later negative would exclude the profile (the
+ * previous matcher read the `!` as a literal, which matched no env name, so the
+ * set of forwarding entries is unchanged). An entry the glob compiler rejects
+ * fails with `CacheCommandError`: a configuration failure, not a defect.
+ *
+ * **Example** (A Turbo exclusion forwards nothing)
+ *
+ * ```ts
+ * import { forwardsBiomeConfigPath } from "@beep/repo-cli/test/Cache"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.runSync(forwardsBiomeConfigPath(["!BIOME_CONFIG_PATH"]))) // false
+ * console.log(Effect.runSync(forwardsBiomeConfigPath(["BIOME_*"]))) // true
+ * ```
+ *
+ * @param entries - Turbo `env` or `passThroughEnv` entries.
+ * @returns Whether a positive entry matches `BIOME_CONFIG_PATH`.
+ * @category queries
+ * @since 0.0.0
+ */
+export const forwardsBiomeConfigPath = Effect.fn("Cache.forwardsBiomeConfigPath")(function* (
+  entries: ReadonlyArray<string>
+) {
   const patterns = yield* Effect.forEach(A.filter(entries, P.not(isTurboEnvExclusion)), (entry) =>
     Effect.fromResult(GlobPattern.compileResult(entry, turboEnvGlob)).pipe(
       Effect.mapError((error) =>

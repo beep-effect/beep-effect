@@ -93,7 +93,11 @@ const COVERAGE_REPOSITORY_FIXTURE_OWNER_FILES: ReadonlyArray<readonly [string, s
 
 // The owner patterns are static literals compiled once; a guard trip here is a
 // wiring defect. The dot dialect keeps the previous matcher's behaviour, which
-// let `*` match a dot-leading segment.
+// let `*` match a dot-leading segment; negation and comment prefixes stay the
+// literal characters they were to it.
+// `?`, `[..]`, `{a,b}`, `+(..)`, `\` and an in-segment `**` (`src/**.ts`) are
+// minimatch magic here where the old compiler read them literally; no live
+// pattern uses them (R2b oracle, `dialectMagic` section).
 const fixtureOwnerGlob = GlobPatternOptions.make({ dot: true, nonegate: true, nocomment: true });
 const COVERAGE_REPOSITORY_FIXTURE_OWNER_PATTERNS: ReadonlyArray<readonly [GlobPattern, string]> = A.map(
   COVERAGE_REPOSITORY_FIXTURE_OWNER_FILES,

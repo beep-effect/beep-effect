@@ -21,11 +21,11 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Regex from "effect/RegExp";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { Node, Project } from "ts-morph";
 import { boundedText, firstLine } from "../../../../internal/cli/Timing.ts";
-import { escapeRegExp } from "../../../Quality/internal/QualityArtifactSupport.ts";
 import { DocgenConfigDocument } from "../../Docgen.schemas.ts";
 import { getDeclaredJsDocs } from "../JsDocNodes.ts";
 import { loadDocgenConfigDocument } from "../Workspace.ts";
@@ -78,6 +78,9 @@ const normalizeSlashes = (value: string): string => Str.replace(/\\/g, "/")(valu
 // wiring defect. The dot dialect keeps the previous matcher's behaviour, which
 // let `*` match a dot-leading segment; negation and comment prefixes stay the
 // literal characters they were to it.
+// `?`, `[..]`, `{a,b}`, `+(..)`, `\` and an in-segment `**` (`src/**.ts`) are
+// minimatch magic here where the old compiler read them literally; no live
+// pattern uses them (R2b oracle, `dialectMagic` section).
 const excludeGlob = GlobPatternOptions.make({ dot: true, nonegate: true, nocomment: true });
 
 /**
@@ -288,19 +291,19 @@ const hasInheritDoc = (rawJsDoc: string): boolean => /\{@inheritDoc\s+[^}]+\}/.t
 const isSchemaCompanionTypeAlias = (exportName: string, declarationKind: string, signature: string): boolean =>
   declarationKind === "type" &&
   (new RegExp(
-    `^export\\s+type\\s+${escapeRegExp(exportName)}\\s+=\\s+typeof\\s+${escapeRegExp(exportName)}\\.Type\\b`
+    `^export\\s+type\\s+${Regex.escape(exportName)}\\s+=\\s+typeof\\s+${Regex.escape(exportName)}\\.Type\\b`
   ).test(signature) ||
     new RegExp(
-      `^export\\s+type\\s+${escapeRegExp(exportName)}\\s+=\\s+\\w+\\.Schema\\.Type<\\s*typeof\\s+${escapeRegExp(exportName)}\\s*>`
+      `^export\\s+type\\s+${Regex.escape(exportName)}\\s+=\\s+\\w+\\.Schema\\.Type<\\s*typeof\\s+${Regex.escape(exportName)}\\s*>`
     ).test(signature));
 
 const isCompanionNamespace = (exportName: string, declarationKind: string, signature: string): boolean =>
   declarationKind === "namespace" &&
-  new RegExp(`^export\\s+declare\\s+namespace\\s+${escapeRegExp(exportName)}\\b`).test(signature);
+  new RegExp(`^export\\s+declare\\s+namespace\\s+${Regex.escape(exportName)}\\b`).test(signature);
 
 const isSchemaCompanionInterface = (exportName: string, declarationKind: string, signature: string): boolean =>
   declarationKind === "interface" &&
-  new RegExp(`^export\\s+interface\\s+${escapeRegExp(exportName)}\\b[\\s\\S]*\\bextends\\s+\\w+\\.`).test(signature);
+  new RegExp(`^export\\s+interface\\s+${Regex.escape(exportName)}\\b[\\s\\S]*\\bextends\\s+\\w+\\.`).test(signature);
 
 const descriptionFromRawJsDoc = (rawJsDoc: string): string | null => {
   if (Str.trim(rawJsDoc).length === 0) {

@@ -22,7 +22,7 @@ export {
   previewCacheProducerImport,
   validateCacheProducerImport,
 } from "../commands/Cache/Cache.acceptance.ts";
-export { joinCacheCensusPlan } from "../commands/Cache/Cache.census.ts";
+export { forwardsBiomeConfigPath, joinCacheCensusPlan } from "../commands/Cache/Cache.census.ts";
 export {
   makeCacheCommandForTesting,
   runCacheWarmForTesting,
