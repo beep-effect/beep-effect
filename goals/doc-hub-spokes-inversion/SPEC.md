@@ -53,7 +53,7 @@ the bridge above `@beep/md`") this goal takes as a rule.
   the import-boundary test flips to assert the hub imports no spoke.
 - `goals/effected-promotion/SPEC.md`: one Decision Log row amending D-02 and D-50 (written
   against `@beep/doc`), and the D-50 churn threshold retired as moot.
-- `scratchpad/temp/*.ts`: imports rewired as the demonstration.
+- `scratchpad/temp/index.ts`: imports rewired as the demonstration.
 - Changesets: a major changeset for the public rename.
 
 ## Constraints

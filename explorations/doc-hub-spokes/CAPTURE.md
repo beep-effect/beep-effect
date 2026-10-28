@@ -176,3 +176,10 @@ good but only as seeds for what the core must be able to codify."
 "the POC needs to demonstrate that something like the Patent rules could be enforced given a
 primitive model of (say a word .docx document for example) with domain specific rules applied
 on top."
+
+### 10. Note on the scratch programs (2026-10-28, publishing)
+
+The four projection programs (`shared.ts`, `lexical.ts`, `pandoc.ts`, `markdown.ts`) are not
+in the docs PR: they tripped the JSDoc ratchet and pulled the inherited `scratchpad/effect-ontology`
+law findings into the lane. They move into the `oracle-loop` lab app under
+`goals/oracle-loop-poc`. `scratchpad/temp/index.ts` on main is the html projection.

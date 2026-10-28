@@ -11,7 +11,9 @@
 ## 1. Mined source corpus
 
 Not applicable yet. No upstream code has been mined or ported for this packet. The scratch
-program `scratchpad/temp/` is repo-authored.
+programs the discussion was built on (html, lexical, pandoc and markdown projections of one
+`Md.Document`) are repo-authored and land with the `oracle-loop` lab app rather than in
+`scratchpad/temp`, so this docs PR stays docs-only.
 
 ## 2. Upstream repositories & licenses
 
@@ -78,4 +80,5 @@ See the inventory table in [`../RESEARCH.md`](../RESEARCH.md). Summary of dispos
 - This packet: [`../CAPTURE.md`](../CAPTURE.md), [`../RESEARCH.md`](../RESEARCH.md),
   [`panel/`](./panel/), [`notes/`](./notes/),
   [`REPORT-2026-10-28-prior-art.md`](./REPORT-2026-10-28-prior-art.md).
-- Scratch program: `scratchpad/temp/` (tracked).
+- Scratch programs: carried into `goals/oracle-loop-poc` (the lab app hosts them with proper
+  JSDoc); `scratchpad/temp/index.ts` on main is the html projection they started from.
