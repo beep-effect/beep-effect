@@ -26,6 +26,17 @@ with tempfile.TemporaryDirectory(dir=parent) as directory:
     dotenv.write_text(enrolled+'LATER_EDIT=retained\n')
     run([str(source/'workstation.sh'),'rollback',str(checkout)],env)
     assert dotenv.read_text()==original+'LATER_EDIT=retained\n'
+    # The direct launcher keeps its own options before the task-argument boundary.
+    launcherbin=base/'launcher-bin';launcherbin.mkdir()
+    launcherop=launcherbin/'op';launcher_capture=base/'launcher-argv.json'
+    launcherop.write_text('#!/usr/bin/python3\nimport json,os,sys\nfrom pathlib import Path\nPath('+repr(str(launcher_capture))+').write_text(json.dumps({"args":sys.argv[1:],"unrelated_present":"APPLICATION_REFERENCE" in os.environ}))\n')
+    launcherop.chmod(0o700);(cfg/'client.env').write_text('TURBO_TOKEN=op://fixture/item/bearer\n')
+    launcher_env={**env,'PATH':str(launcherbin)+os.pathsep+env['PATH'],'APPLICATION_REFERENCE':'op://fixture/app/secret','TURBO_CACHE_DIR':str(base/'shared cache')}
+    run([str(source/'turbo.sh'),'build','--','--task-flag'],launcher_env)
+    capture=json.loads(launcher_capture.read_text());assert not capture['unrelated_present']
+    assert capture['args'][-5:]==['build','--cache-dir='+str(base/'shared cache'),'--summarize','--','--task-flag']
+    run([str(source/'turbo.sh'),'build','--cache-dir=explicit','--summarize=false','--','--cache-dir=task'],launcher_env)
+    assert json.loads(launcher_capture.read_text())['args'][-5:]==['build','--cache-dir=explicit','--summarize=false','--','--cache-dir=task']
     exported=original.replace('TURBO_','export TURBO_').replace('export TURBO_API=','  export TURBO_API  =').replace('export TURBO_TOKEN=op://fixture/item/old','export TURBO_TOKEN="op://fixture/item/old" # retain reference comment')
     dotenv.write_text(exported)
     run([str(source/'workstation.sh'),'enable',str(checkout)],env)
