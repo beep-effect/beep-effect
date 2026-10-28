@@ -93,3 +93,15 @@ separate namespace lookup; `typeof` follows the value binding.
 The expanded fixture suite passes with 28 invalid references and zero hits on
 allowed forms, including nested sibling scopes, exact exports with renamed local
 bindings, local methods and parameters, and shadowed `typeof` queries.
+
+## Full package-verification accounting
+
+All 25 registered workspaces touched by the original migration were checked.
+23 default verifiers pass. Repo CLI has six ambient-cache wrapper failures with
+a passing six-test local-only replay; scratchpad reproduces the same 443 docgen
+metadata failures on clean main, with zero diagnostic delta. Commands, results
+and attribution are in [package-verification-2026-10-28.md](./package-verification-2026-10-28.md).
+
+All 33 hosted checks passed at published head `d92846e9cb`; the final update
+requires fresh exact-head readiness. The classic `beep yeet monitor` command,
+after the detached readiness loop, will write the declared readiness verdict.

@@ -98,3 +98,24 @@
   distinctions and sibling scopes.
 - Prevention: fixture both sides of aliased imports and re-exports, and test
   imported APIs inside scopes that reuse the import's local name.
+
+## 2026-10-28: ambient cache configuration changes command-plan test expectations
+
+- Doing: full `quality package-verify @beep/repo-cli` for the migration's package matrix.
+- Evidence: 7,930 tests pass, but six unchanged command-plan assertions observe
+  `op run` wrappers and a cache-session probe. A focused replay reproduces all
+  six. Explicit blank Turbo credential variables and a local-only cache posture
+  make all six pass. Unsetting variables alone was insufficient.
+- Attribution: environment-dependent; the tests and cache-planner source match
+  main. The raw failure and isolated passing control remain separate evidence.
+- Prevention: use an explicit local-only posture for native-command assertions,
+  while testing secret-session wrappers in their dedicated configured cases.
+
+## 2026-10-28: scratchpad metadata baseline reproduced without migration changes
+
+- Doing: full workspace verification for the goal's package matrix.
+- Evidence: scratchpad docgen emits 443 metadata diagnostics on this branch and
+  on clean main, with identical sets and no scratchpad source diff.
+- Disposition: retain the existing inherited-gate disposition already recorded
+  above and the user goal's explicit unrelated-failure allowance. No new baseline,
+  suppression or expiring waiver is introduced.
