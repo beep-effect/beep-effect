@@ -67,16 +67,27 @@ const O = await import("effect/Option");
  * @category configuration
  * @since 0.0.0
  */
-const BaseLayers = Layer.mergeAll(
-  BunServices.layer,
-  BunHttpClient.layer,
-  BunCrypto.layer,
-  // `CliRuntime.main` installs `CliLogger` for the failure report. Command code
-  // keeps Effect's default loggers: `CliLogger` drops a logged `Cause` and
-  // renders an object message as `[object Object]`, and every `Effect.log*`
-  // line stays on stdout in the format it had before (SPEC W4-aa).
-  Logger.layer([Logger.defaultLogger, Logger.tracerLogger])
-);
+const BaseLayers = Layer.mergeAll(BunServices.layer, BunHttpClient.layer, BunCrypto.layer);
+
+/**
+ * Effect's default loggers, provided around each whole program.
+ *
+ * `CliRuntime.main` installs `CliLogger` outermost for the failure report. The
+ * program itself keeps Effect's default loggers: `CliLogger` drops a logged
+ * `Cause` and renders an object message as `[object Object]`. Provided around
+ * the scoped program, not beside the platform layers, so a line logged while a
+ * layer builds or a finalizer runs keeps the stdout format it had before, like
+ * a command handler's line (SPEC W4-aa).
+ *
+ * @internal
+ * @category configuration
+ * @since 0.0.0
+ */
+const ProgramLoggers = Logger.layer([Logger.defaultLogger, Logger.tracerLogger]);
+
+/** Run a program under {@link ProgramLoggers}, built once like every path's own layers. */
+const withProgramLoggers = <E, A>(effect: import("effect/Effect").Effect<A, E>) =>
+  Effect.scoped(Effect.flatMap(Layer.build(ProgramLoggers), (context) => Effect.provide(effect, context)));
 
 const argv = A.slice(process.argv, { start: 2 });
 
@@ -112,7 +123,7 @@ const runRepoCliMain = <E, A>(effect: import("effect/Effect").Effect<A, E>) =>
     // The stream console wraps the whole run, so the failure report the kit
     // writes through its logger goes through the same EPIPE-latching writers.
     Effect.provideService(
-      CliRuntime.main(effect, {
+      CliRuntime.main(withProgramLoggers(effect), {
         // Every path builds its own platform layer inside the program.
         platform: Layer.empty,
         // An unknown subcommand or a bad flag exits 1, as before the kit.
