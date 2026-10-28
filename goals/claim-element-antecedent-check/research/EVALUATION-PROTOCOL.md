@@ -1,6 +1,6 @@
 # Structural evaluation protocol
 
-Version: strict-source-map/v1. No positive benchmark predictions have been run yet. Actual attorney agreement remains pending; any measurement against this reference baseline is provisional.
+Version: strict-source-map/v1, declared before positive predictions. The first run is now recorded in [the provisional measurement report](../history/2026-10-28-positive-evaluation.md); it triggered the poor-floor stop condition. Actual attorney agreement remains pending; any measurement against this reference baseline is provisional.
 
 ## Fixed scope
 
@@ -22,4 +22,4 @@ Report primary strict recovery overall, per CPC stratum, and in overlapping gold
 
 The checked-in scorer and synthetic regression tests are under `packages/law-practice/server/test/evaluation/Structural.ts` and `test/ClaimElement.structural-evaluation.test.ts`. Tests cover producer/path renaming invariance, lexical-head changes, exact span shifts, removed typed edges, missing predictions, cross-claim donor identity, ordered functional parts, and rejection of ambiguous node identities. Synthetic fixtures are not corpus annotations and supply no attorney agreement.
 
-The remaining evaluation runner must replay the exact frozen native XML through the actual USPTO adapter and ClaimSelfCheck implementation, check input/version hashes before execution, retain every selected result or stage failure, and disclose provisional references. Source fetching reliability is separate from this offline replay. Allowed-claim false-positive estimates require an independently declared probability sample and actual adjudication; raw findings or allowed status alone are not an adjudicated rate. The non-US IPRally sample remains a separate non-gold smoke test.
+The evaluation runner must replay the exact frozen native XML through the actual USPTO adapter and ClaimSelfCheck implementation, check input/version hashes before execution, retain every selected result or stage failure, and disclose provisional references. Source fetching reliability is separate from this offline replay. Allowed-claim false-positive estimates require an independently declared probability sample and actual adjudication; raw findings or allowed status alone are not an adjudicated rate. The non-US IPRally sample remains a separate non-gold smoke test.

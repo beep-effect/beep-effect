@@ -41,6 +41,9 @@ are fixed, never before.
 
 ## Current Blockers
 
+- **Poor deterministic floor stop (2026-10-28):** the frozen end-to-end replay returned 0/538 exact claim structures (186 normalization failures, eight undecomposed, 344 mismatches). Per GOAL/SPEC Appetite, stop at this measurement without tuning to the benchmark or expanding scope. [Report and receipts](history/2026-10-28-positive-evaluation.md) retain every selected claim. Human acceptance, adjudicated FP interval, publication and closeout remain unproven; this is not goal completion.
+
+
 - **Asynchronous human review precedence (2026-10-28):** root `AGENTS.md`
   Autonomy requires operator review to remain asynchronous and not block
   independent implementation. Continue P3 tool/evaluation preparation while

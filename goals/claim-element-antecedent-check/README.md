@@ -61,16 +61,20 @@ ODP access works. The source selection is qualified and frozen: 60 positive
 families / 538 selected claims and 200 allowed sets / 3,184 source claims.
 All 60 families now have semantic-reference drafts covering all 538 selected
 claims. Independent semantic criticism, convention decisions and actual attorney
-agreement remain incomplete. P3 read-only review-tool implementation is proceeding in parallel under the
-repository autonomy charter. Publication and closeout remain pending.
+agreement remain incomplete. The P3 read-only tool is implemented and verified.
+The first structural measurement triggered the explicit poor-floor stop condition;
+further implementation and publication stop at that measurement. Closeout remains incomplete.
 
 ## Latest Evidence
+
+- **Poor-floor stop (2026-10-28):** [the first frozen positive replay](history/2026-10-28-positive-evaluation.md) measured **0/538 strict matches**: 186 input failures, eight undecomposed claims, 344 structural mismatches. The 517 current-convention accepted claims also scored zero. The explicit GOAL/SPEC poor-floor condition now stops further implementation and publication pending a new direction. The actual attorney agreement and adjudicated FP interval remain absent; this goal is not complete. The full-corpus scorer self-comparison passes all 538 references.
+
 
 - **Evaluator and non-US smoke (2026-10-28):** the strict structural scorer
   passes seven regression tests and full server verification. Its
   [pre-prediction protocol](research/EVALUATION-PROTOCOL.md) declares exact
   source-node alignment, typed-edge diagnostics, reporting groups and the full
-  denominator. Positive benchmark replay has not run. The pinned
+  denominator. The first positive benchmark replay is recorded above; this earlier protocol evidence predates it. The pinned
   [IPRally smoke](history/2026-10-28-iprally-smoke.md) used one non-US mechanical
   token reconstruction and returned one tree / 61 unreviewed findings. It is
   explicitly non-gold and supplies no accuracy or false-positive estimate.

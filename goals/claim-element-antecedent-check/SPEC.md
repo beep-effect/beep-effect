@@ -305,3 +305,5 @@ there.
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
 | None | N/A | N/A | N/A | N/A |
+
+| 2026-10-28 | Invoke the explicit poor-floor stop after the first frozen positive replay: 0/538 exact structures, including 186 input failures and eight undecomposed; preserve all labels, rules and denominators. | The normative Appetite requires stopping at a poor measurement rather than tuning or expanding scope. All 538 reference self-comparisons pass, so zero recovery is not an always-false scorer. Actual human agreement remains pending and no full-goal completion is claimed. | A subsequent authorized direction can propose a new design with a fresh held-out evaluation; retain this first result and original freezes. |

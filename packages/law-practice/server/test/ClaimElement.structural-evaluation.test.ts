@@ -1,8 +1,13 @@
 import { ClaimElementTree } from "@beep/law-practice-domain/values/ClaimElement";
 import { it } from "@beep/test-runner";
+import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
+import * as BunPath from "@effect/platform-bun/BunPath";
 import { assert, describe } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { compareStructuralFamily, StructuralEvaluationError } from "./evaluation/Structural.ts";
 
@@ -128,4 +133,41 @@ describe("strict source-anchored structural measurement", () => {
       assert.isTrue(S.is(StructuralEvaluationError)(error));
     })
   );
+});
+
+// A positive control on the complete frozen corpus guards against an always-false scorer.
+describe("frozen corpus scorer control", () => {
+  it.layer(Layer.mergeAll(BunFileSystem.layer, BunPath.layer))((it) => {
+    it.effect("accepts every reference against itself without invoking production decomposition", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const freezePath = yield* path.fromFileUrl(
+          new URL("../../../../goals/claim-element-antecedent-check/research/reference-freeze.json", import.meta.url)
+        );
+        const freeze = yield* S.decodeEffect(
+          S.fromJsonString(S.Struct({ families: S.Array(S.Struct({ familyId: S.String })) }))
+        )(yield* fs.readFileString(freezePath));
+        let passed = 0;
+        for (const family of freeze.families) {
+          const filename = yield* path.fromFileUrl(
+            new URL(
+              `../../domain/test/fixtures/claim-element/positive/${family.familyId}/expected.json`,
+              import.meta.url
+            )
+          );
+          const trees = yield* ClaimElementTree.pipe(
+            S.Array,
+            S.fromJsonString,
+            S.decodeEffect
+          )(yield* fs.readFileString(filename));
+          const scores = yield* compareStructuralFamily(trees, trees);
+          assert.isTrue(A.every(scores, (score) => score.strict));
+          passed += scores.length;
+        }
+        assert.strictEqual(freeze.families.length, 60);
+        assert.strictEqual(passed, 538);
+      })
+    );
+  });
 });
