@@ -931,6 +931,19 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       })
     );
 
+    it.effect("re-serializes the whole block: sibling spacing, trailing blank lines and the fence line ending", () =>
+      Effect.gen(function* () {
+        const read = yield* pruneChangesets("@beep/a", [
+          ["spacing.md", "---\n\"@beep/a\": patch\n'@beep/b':   minor\n---\n\nSibling spacing.\n"],
+          ["blank.md", '---\n"@beep/a": patch\n"@beep/b": minor\n\n---\n\nTrailing blank.\n'],
+          ["mixed.md", '---\n"@beep/a": patch\r\n"@beep/b": minor\n---\n\nMixed.\n'],
+        ]);
+        assertSome(yield* read("spacing.md"), "---\n'@beep/b': minor\n---\n\nSibling spacing.\n");
+        assertSome(yield* read("blank.md"), '---\n"@beep/b": minor\n---\n\nTrailing blank.\n');
+        assertSome(yield* read("mixed.md"), '---\n"@beep/b": minor\n---\n\nMixed.\n');
+      })
+    );
+
     it.effect("removes a single-package changeset and leaves a sibling-only changeset untouched", () =>
       Effect.gen(function* () {
         const sibling = '---\n"@beep/schema-org": minor\n---\n\nSibling only.\n';

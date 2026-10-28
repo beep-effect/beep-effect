@@ -16,8 +16,8 @@ import * as FileSystem from "effect/FileSystem";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import * as P from "effect/Predicate";
 import * as Str from "effect/String";
+import { errorMessage } from "../../../internal/cli/Timing.ts";
 import {
   SKILL_BODY_LINE_LIMIT,
   SkillBodyAdvisory,
@@ -30,11 +30,6 @@ import type { FrontmatterSourceBlock } from "@beep/markdown/FrontmatterSource";
 const countLines = (text: string): number =>
   Str.isEmpty(text) ? 0 : A.length(Str.split(text, "\n")) - (Str.endsWith("\n")(text) ? 1 : 0);
 
-// The YAML engine's own failure (a `YamlParseError`, or a `FrontmatterKeyError` for a duplicate,
-// complex or set key) carries the diagnostic text; the decode error's own message names only the format.
-const decodeFailureDetail = (cause: unknown): string =>
-  P.hasProperty(cause, "message") && P.isString(cause.message) ? cause.message : String(cause);
-
 const blockIssue = (skill: string, block: FrontmatterSourceBlock): Effect.Effect<O.Option<string>> =>
   YamlFrontmatter.decode(Frontmatter.make({ format: block.format, value: block.value })).pipe(
     Effect.flatMap(decodeAgentSkillFrontmatterStrict),
@@ -46,8 +41,10 @@ const blockIssue = (skill: string, block: FrontmatterSourceBlock): Effect.Effect
     Effect.catchTags({
       FrontmatterFormatMismatchError: (error) =>
         Effect.succeedSome(`SKILL.md frontmatter is ${error.actual}; the Agent Skills format requires a YAML block.`),
+      // The YAML engine's own failure (a `YamlParseError`, or a `FrontmatterKeyError` for a duplicate,
+      // complex or set key) carries the diagnostic text; the decode error's own message names only the format.
       FrontmatterDecodeError: (error) =>
-        Effect.succeedSome(`Invalid YAML frontmatter (${decodeFailureDetail(error.cause)}).`),
+        Effect.succeedSome(`Invalid YAML frontmatter (${errorMessage(error.cause, String(error.cause))}).`),
       SchemaError: (error) => Effect.succeedSome(error.message),
     })
   );

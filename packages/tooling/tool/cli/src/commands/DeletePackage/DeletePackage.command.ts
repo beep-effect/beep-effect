@@ -367,8 +367,11 @@ export const removeShapeTestRow = Effect.fn("DeletePackage.removeShapeTestRow")(
 const CRLF = "\r\n";
 
 // Remove the package's key from a changeset's YAML frontmatter through the YAML edit layer, so a
-// quoted or escaped key is matched by its YAML value. A removal re-serializes the block with LF line
-// endings (`YamlFormat.modify`), so a CRLF block gets its CRLFs back; the body is never touched.
+// quoted or escaped key is matched by its YAML value. A removal re-serializes the whole block with LF
+// line endings (`YamlFormat.modify`): sibling entries are normalized (`key:   minor` becomes
+// `key: minor`), trailing blank lines inside the block are dropped, and a comment line directly above
+// the removed key goes with it even when its text names surviving keys. A block whose recorded
+// terminator (`block.newline`) is CRLF gets its CRLFs back; the body is never touched.
 const stripPackageFromFrontmatter = Effect.fn("DeletePackage.stripPackageFromFrontmatter")(function* (
   file: string,
   content: string,
@@ -382,7 +385,7 @@ const stripPackageFromFrontmatter = Effect.fn("DeletePackage.stripPackageFromFro
       ChangesetGraphError.new(cause, `Failed to remove ${packageName} from the changeset frontmatter in ${file}.`, file)
     )
   );
-  const restored = Str.includes(CRLF)(block.value) ? Str.replaceAll("\n", CRLF)(value) : value;
+  const restored = block.newline === CRLF ? Str.replaceAll("\n", CRLF)(value) : value;
   return FrontmatterSource.join(
     FrontmatterSourceSplit.make({
       frontmatter: FrontmatterSourceBlock.make({ ...block, value: restored }),
