@@ -27,9 +27,18 @@ PYCONFIG
     # Validate references without displaying resolved values.
     if ! op run --env-file="$config" -- true >/dev/null; then op-doctor; exit 1; fi
     mkdir -p "$(dirname "$installed")" "$(dirname "$unit")" "$state"
-    [[ ! -f "$unit" ]] || cp "$unit" "$state/service-before-install.unit"
+    [[ ! -f "$unit" ]] || cp "$unit" "$state/service-before-install-$(date -u +%Y%m%dT%H%M%S%N).unit"
+    if [[ "$source_dir" != "$(dirname "$installed")" ]]; then
     cp "$source_dir/adapter.sh" "$installed"
     chmod 700 "$installed"
+    cp "$source_dir/workstation.sh" "$(dirname "$installed")/workstation.sh"
+    cp "$source_dir/fleet.py" "$(dirname "$installed")/fleet.py"
+    cp "$source_dir/turbo.sh" "$(dirname "$installed")/turbo.sh"
+    chmod 700 "$(dirname "$installed")/"{workstation.sh,fleet.py,turbo.sh}
+    fi
+    bin_home="${BEEP_R2_BIN_HOME:-$HOME/.local/bin}"
+    mkdir -p "$bin_home"
+    ln -sfn "$(dirname "$installed")/turbo.sh" "$bin_home/beep-turbo"
     "$installed" install
     exec_start="$(python3 - "$(command -v op)" "$config" "$installed" <<'PYUNIT'
 import json,sys
@@ -74,11 +83,13 @@ EOF
   enable)
     checkout="${2:?Pass the checkout to enroll}"
     checkout="$(git -C "$checkout" rev-parse --show-toplevel)"
+    mode="${3:-local:rw,remote:rw}"
+    case "$mode" in local:rw,remote:r|local:rw,remote:rw) ;; *) echo 'Unsupported cache mode' >&2; exit 2 ;; esac
     [[ -f "$config" ]] || exit 1
-    python3 - "$checkout" "$config" "$state" <<'PYENROLL'
+    python3 - "$checkout" "$config" "$state" "$mode" <<'PYENROLL'
 from pathlib import Path
 import datetime,json,os,re,shlex,sys
-checkout,config,state=map(Path,sys.argv[1:]);values={}
+checkout,config,state=map(Path,sys.argv[1:4]);mode=sys.argv[4];values={}
 for line in config.read_text().splitlines():
     if line and not line.startswith('#') and '=' in line:
         key,value=line.split('=',1);values[key]=value
@@ -90,7 +101,7 @@ text=target.read_text() if target.exists() else ''
 def assignment(line):
     match=re.match(r'^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=(.*)$',line)
     return match.groups() if match else ('', '')
-updates={'TURBO_API':'http://127.0.0.1:'+values.get('R2_ADAPTER_PORT','9427'),'TURBO_TOKEN':ref,'TURBO_TEAM':values['TURBO_TEAM'],'TURBO_CACHE':'local:rw,remote:rw','BEEP_TURBO_TRUSTED_WRITER':'true'}
+updates={'TURBO_API':'http://127.0.0.1:'+values.get('R2_ADAPTER_PORT','9427'),'TURBO_TOKEN':ref,'TURBO_TEAM':values['TURBO_TEAM'],'TURBO_CACHE':mode,'BEEP_TURBO_TRUSTED_WRITER':'true' if mode.endswith(':rw') else 'false'}
 before={};before_lines={}
 for key in updates:
     found=[line for line in text.splitlines() if assignment(line)[0]==key]
@@ -158,5 +169,5 @@ PYROLLBACK
     systemctl --user disable --now beep-turbo-r2.service
     echo 'R2 service stopped. Run workstation.sh rollback for each enrolled checkout.'
     ;;
-  *) echo 'Usage: workstation.sh install|enable <checkout>|rollback <checkout>|stop' >&2; exit 2 ;;
+  *) echo 'Usage: workstation.sh install|enable <checkout> [local:rw,remote:r|local:rw,remote:rw]|rollback <checkout>|stop' >&2; exit 2 ;;
 esac

@@ -39,6 +39,12 @@ with tempfile.TemporaryDirectory(dir=parent) as directory:
     assert run([str(source/'workstation.sh'),'enable',str(checkout)],env,False).returncode!=0
     dotenv.write_text(original.replace('op://fixture/item/old','fixture-raw-token'))
     assert run([str(source/'workstation.sh'),'enable',str(checkout)],env,False).returncode!=0
+    dotenv.write_text(original)
+    run([str(source/'workstation.sh'),'enable',str(checkout),'local:rw,remote:r'],env)
+    assert 'BEEP_TURBO_TRUSTED_WRITER=false' in dotenv.read_text()
+    assert 'TURBO_CACHE=local:rw,remote:r' in dotenv.read_text()
+    run([str(source/'workstation.sh'),'rollback',str(checkout)],env)
+    assert dotenv.read_text()==original
     # A failed CI bootstrap leaves the AWS environment file untouched.
     jobenv=base/'github.env';jobenv.write_text('ORIGINAL_CACHE=retained\n')
     ci={**os.environ,'GITHUB_ENV':str(jobenv),'RUNNER_TEMP':str(base)}
@@ -89,7 +95,7 @@ with tempfile.TemporaryDirectory(dir=parent) as directory:
     argsfile=base/'op-argv.jsonl';fakeop=fixturebin/'op';fakecontrol=fixturebin/'systemctl'
     fakeop.write_text('#!/usr/bin/python3\nimport json,sys\nfrom pathlib import Path\nwith Path('+repr(str(argsfile))+').open("a") as out:out.write(json.dumps(sys.argv[1:])+"\\n")\n')
     fakeop.chmod(0o700);fakecontrol.write_text('#!/bin/sh\nexit 0\n');fakecontrol.chmod(0o700)
-    install_env={**os.environ,'PATH':str(fixturebin)+os.pathsep+os.environ['PATH'],'XDG_CONFIG_HOME':str(cfgroot),'XDG_DATA_HOME':str(dataroot),'XDG_STATE_HOME':str(base/'install-state')}
+    install_env={**os.environ,'PATH':str(fixturebin)+os.pathsep+os.environ['PATH'],'XDG_CONFIG_HOME':str(cfgroot),'XDG_DATA_HOME':str(dataroot),'XDG_STATE_HOME':str(base/'install-state'),'BEEP_R2_BIN_HOME':str(base/'installed-bin')}
     run([str(source/'workstation.sh'),'install'],install_env)
     client=(fixturecfg.with_name('client.env')).read_text();assert 'R2_SECRET_ACCESS_KEY' not in client
     rendered=cfgroot/'systemd/user/beep-turbo-r2.service'
