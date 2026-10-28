@@ -66,6 +66,12 @@ API, root `src/index.ts`, package exports, or docgen surface. Runtime proof apps
 package-like when the app exists to prove a runtime contract from a public
 workspace API.
 
+`apps/beep` (`@beep/beep`) is the one repo-operations app. It composes the
+`beep` command line from `@beep/beep-<group>` command tools, may depend on any
+tooling package, publishes no TypeScript API, and nothing depends on it
+(DECISIONS 2026-10-28). Until `goals/beep-cli-composition` completes,
+`@beep/repo-cli` still holds that role.
+
 Law-abiding experimental apps live under `apps/labs/*`: they are
 production-shaped, durable while useful, and mechanically deletable without
 per-app shared-registration edits. They obey
@@ -535,9 +541,14 @@ Public package names follow the family role:
 ```txt
 foundation -> @beep/<purpose>
 drivers    -> @beep/<driver>
-tooling    -> @beep/repo-<purpose>
+tooling    -> @beep/repo-<purpose> (libraries, policy packs, test kits)
+tooling    -> @beep/beep-<group> (command tools composed by apps/beep)
 ecosystem  -> @beep/<name> (the npm name; workspace name = published name)
 ```
+
+Ten tooling packages that predate the `beep-` rule keep their names as
+recorded exceptions (DECISIONS 2026-10-28), among them `@beep/test-utils`
+below. New tooling names follow the rule.
 
 Examples:
 
@@ -643,7 +654,9 @@ These rules are dependency ceilings, not permission for cycles.
 | `test-kit`    | any `foundation` kind, `tooling/library`, `tooling/policy-pack`, `test-kit`    |
 
 Repo-wide orchestration is behavior inside `tool`. It is not a separate
-canonical kind.
+canonical kind. Tools never import other tools; code that two tools share
+moves into a `tooling/library` package. The `beep` command line is composed
+from command tools by `apps/beep`, which is an app, not a tooling kind.
 
 Tooling packages may depend on a driver only for a narrowly scoped operational
 adapter: repository analytics, code generation, migration, fixture, or CLI work
@@ -706,7 +719,7 @@ canonical:
 | `foundation/ui-system`     | `components/`, `themes/`, `styles/`, `hooks/`, `assets/`, `index.ts`             |
 | `drivers`                  | `*.service.ts`, `*.layer.ts`, `*.errors.ts`, `*.config.ts`, optional `*.browser.ts`, `*.test-layer.ts` |
 | `tooling/library`          | library modules plus `index.ts`                                                   |
-| `tooling/tool`             | `src/bin.ts`, `commands/`, `*.command.ts`, `*.service.ts`, `*.schemas.ts`, `index.ts` |
+| `tooling/tool`             | `src/bin.ts` (optional when `apps/beep` composes the tool), `commands/`, `*.command.ts`, `*.service.ts`, `*.schemas.ts`, `index.ts` |
 | `tooling/policy-pack`      | `*.config.ts`, `*.policy.ts`, `index.ts`                                          |
 | `tooling/test-kit`         | `*.test-kit.ts`, optional `fixtures/`, `layers/`, `index.ts`                     |
 
@@ -720,10 +733,12 @@ and `index.ts` as the curated public facade. Use earned semantic roles such as
 `<Group>.render.ts`, `<Group>.progress.ts`, `<Group>.media.ts`, or
 `<Group>.plan.ts`; reserve `<Group>.config.ts` for runtime/config-provider
 backed settings and `<Group>.layer.ts` for non-trivial layer variants.
-`@beep/repo-cli` exposes package root and explicit
-`@beep/repo-cli/commands/<Group>` facades only; deep role files are private, and
-package-local tests use source-only `@beep/repo-cli/test/<Group>` aliases rather
-than package exports.
+Each command tool exposes its package root and explicit `/commands/<Group>`
+facades only; deep role files are private, and package-local tests use
+source-only `/test/<Group>` aliases rather than package exports. Until
+`goals/beep-cli-composition` completes, every command group still lives in
+`@beep/repo-cli`, so today those surfaces are
+`@beep/repo-cli/commands/<Group>` and `@beep/repo-cli/test/<Group>`.
 
 `@beep/schema` uses namespace-first schema concept modules. Reusable schema
 concepts publish flat public subpaths such as `@beep/schema/Color`,

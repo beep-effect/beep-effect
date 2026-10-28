@@ -330,13 +330,20 @@ private parser seams, and root alias drift.
 
 ## Repo CLI Command Topology
 
-`packages/tooling/tool/cli` is the canonical repo-operational CLI home. Its
-command topology is thresholded: tiny leaf commands may stay single-file, but
-command groups and commands with schemas, services, renderers, or multiple
-subcommands move into `commands/<Group>/`. The `commands/` namespace is for
-registered command surfaces and command-owned private roles; non-command helper
-models belong under `src/internal/cli/` or the package that owns the reusable
-substrate.
+The `beep` command line is composed by `apps/beep` (`@beep/beep`) from command
+tools named `@beep/beep-<group>` under `packages/tooling/tool/beep-<group>`
+(DECISIONS 2026-10-28). The app owns the bins, the lazy dispatch manifest, and
+the per-group runtime Layers; command tools own the commands and never import
+each other. Until `goals/beep-cli-composition` completes,
+`packages/tooling/tool/cli` (`@beep/repo-cli`) is still the composition root
+and holds every command group.
+
+Inside a command tool, command topology is thresholded: tiny leaf commands may
+stay single-file, but command groups and commands with schemas, services,
+renderers, or multiple subcommands move into `commands/<Group>/`. The
+`commands/` namespace is for registered command surfaces and command-owned
+private roles; non-command helper models belong under `src/internal/cli/` or
+the package that owns the reusable substrate.
 
 Canonical command group roles:
 
@@ -355,11 +362,13 @@ Earned roles should be semantic: prefer `<Group>.render.ts`,
 runtime/config-provider settings, and add `<Group>.layer.ts` only when a
 command group has multiple or non-trivial layer variants.
 
-Only package root and explicit `@beep/repo-cli/commands/<Group>` facades are
-public command import surfaces. Deep role files, `internal/`, and command-owned
-shards are private. Package-local tests that need internals use source-only
-`@beep/repo-cli/test/<Group>` aliases; those aliases are not package exports and
-must not appear in the public export catalog.
+Only a command tool's package root and explicit `/commands/<Group>` facades
+are public command import surfaces. Deep role files, `internal/`, and
+command-owned shards are private. Package-local tests that need internals use
+source-only `/test/<Group>` aliases; those aliases are not package exports and
+must not appear in the public export catalog. While every group still lives in
+`@beep/repo-cli`, these are `@beep/repo-cli/commands/<Group>` and
+`@beep/repo-cli/test/<Group>`.
 
 ## Worked Examples
 
