@@ -31,7 +31,7 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P3: implementation PR #2145 is merged. A closeout PR repairs arbitrary-alias
+P3: implementation PR #2145 is merged. Closeout PR #2316 repairs arbitrary-alias
 rule recall and supplies retained readiness evidence; operative lifecycle stays active.
 
 ## Latest Evidence

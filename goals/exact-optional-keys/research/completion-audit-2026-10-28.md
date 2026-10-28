@@ -44,8 +44,8 @@ verdict. A merge and green required checks do not replace that declared proof.
 
 ## Completion route
 
-A closeout PR will retain this audit and the fresh reflection,
-name itself as the final PR, and declare its own Yeet verdict. Its exact-head
+[Closeout PR #2316](https://github.com/beep-effect/beep-effect/pull/2316) retains this audit and the fresh reflection,
+names itself as the final PR, and declares its own Yeet verdict. Its exact-head
 readiness and merge must pass the existing completion verifier. Initiative
 status stays active until the derived completion receipt verifies. The original
 implementation and its historical proof gap remain recorded separately.
@@ -68,3 +68,15 @@ and [Biome JavaScript grammar](https://github.com/biomejs/biome/blob/main/xtask/
 The expanded focused rule suite passes (22 invalid references, zero valid-source
 hits). `beep quality package-verify @beep/lint-rules` passes the complete package
 audit and docgen (73.2 seconds and 6.4 seconds respectively).
+
+## Publication
+
+The local publication gate was stopped after 648 seconds in the documentation
+inventory regeneration step. Previously reported local passes are retained;
+unexecuted gates are not reported green. The direct push and draft PR route is
+AGENTS.md's prescribed response after a local gate waits ten minutes. Hosted
+CI on PR #2316 supplies the remaining authoritative proof.
+
+Readiness artifacts must be retained in the owning clone before worktree
+retirement. The final proposal remains `completed-retained` while operative
+status remains `active` until completion refresh verifies the merge.
