@@ -264,16 +264,12 @@ jobs:
           if-no-files-found: warn
 
       - name: Save post-lane Turbo fallback
-        if: github.event_name == 'push' && matrix.uses_turbo == 'true' && steps.lane-gate.outputs.should_run == 'true' && success()
+        if: github.event_name == 'push' && matrix.uses_turbo == 'true' && matrix.id != 'docgen' && steps.lane-gate.outputs.should_run == 'true' && success()
         continue-on-error: true
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .turbo/cache
           key: turbo-${{ runner.os }}-${{ startsWith(runner.name, 'beep-ci-') && 'fleet' || 'shared' }}-${{ github.job }}-${{ matrix.id }}-${{ hashFiles('turbo.json', 'package.json', 'bun.lock') }}-${{ github.sha }}
-
-      - name: Append Turbo summary (docgen)
-        if: matrix.id == 'docgen' && steps.lane-gate.outputs.should_run == 'true' && always()
-        run: bun run beep ci append-turbo-summary
 
       - name: Skip lane
         if: steps.lane-gate.outputs.should_run != 'true'
