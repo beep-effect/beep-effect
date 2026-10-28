@@ -16,6 +16,10 @@
  * 2. Bun's default resolution, which honours `NODE_PATH` (the manifest sets it
  *    for Claude Desktop) and finally the working directory.
  *
+ * On Windows the resolved addon's folder is also added to the DLL search
+ * path (`SetDllDirectoryW`), so the addon finds the `duckdb.dll` it links
+ * against.
+ *
  * Only `@duckdb/node-bindings-*` requests are touched; every other specifier
  * goes straight to the default resolution. When the host runs from source,
  * `process.execPath` is the `bun` binary, nothing sits beside it, and the
@@ -117,6 +121,20 @@ export const resolveNativeAddon: {
   return exists(candidate) ? O.some(candidate) : O.none();
 });
 
+// Add a folder to the Windows DLL search path with `SetDllDirectoryW`. DuckDB 2's
+// Windows addon (`duckdb.node`) links against `duckdb.dll` in the same folder,
+// which Windows does not search; `bun:ffi` is loaded synchronously because the
+// resolver runs while modules are evaluated.
+const setDllDirectory = (directory: string): void => {
+  const ffi = NodeModule.createRequire(import.meta.url)("bun:ffi") as typeof import("bun:ffi");
+  const kernel32 = ffi.dlopen("kernel32.dll", { SetDllDirectoryW: { args: ["ptr"], returns: "i32" } });
+  const wide = Uint16Array.from(`${Str.replaceAll("/", "\\")(directory)}\0`, (char) =>
+    O.getOrElse(Str.charCodeAt(char, 0), () => 0)
+  );
+  kernel32.symbols.SetDllDirectoryW(ffi.ptr(wide));
+  kernel32.close();
+};
+
 type ResolveFilename = (this: unknown, request: string, ...rest: ReadonlyArray<unknown>) => string;
 
 type ModuleResolver = {
@@ -124,6 +142,7 @@ type ModuleResolver = {
 };
 
 let installed = false;
+let dllDirectorySet = false;
 
 /**
  * Route DuckDB native addon requests through {@link resolveNativeAddon}.
@@ -142,10 +161,15 @@ let installed = false;
  * installNativeAddonResolver()
  * ```
  *
+ * @param registerDllDirectory - Adds the resolved addon's folder to the
+ *   Windows DLL search path; `SetDllDirectoryW` through `bun:ffi` by default,
+ *   replaced in tests.
  * @category use-cases
  * @since 0.0.0
  */
-export const installNativeAddonResolver = (): void => {
+export const installNativeAddonResolver = (
+  registerDllDirectory: (directory: string) => void = setDllDirectory
+): void => {
   if (installed) {
     return;
   }
@@ -154,9 +178,13 @@ export const installNativeAddonResolver = (): void => {
   const fallback = resolver._resolveFilename;
   const require = NodeModule.createRequire(import.meta.url);
   resolver._resolveFilename = function (this: unknown, request: string, ...rest: ReadonlyArray<unknown>) {
-    return O.getOrElse(
-      resolveNativeAddon(request, process.execPath, (path) => O.isSome(O.liftThrowable(require.resolve)(path))),
-      () => fallback.call(this, request, ...rest)
+    const resolved = resolveNativeAddon(request, process.execPath, (path) =>
+      O.isSome(O.liftThrowable(require.resolve)(path))
     );
+    if (O.isSome(resolved) && process.platform === "win32" && !dllDirectorySet) {
+      dllDirectorySet = true;
+      registerDllDirectory(executableDirectory(resolved.value));
+    }
+    return O.getOrElse(resolved, () => fallback.call(this, request, ...rest));
   };
 };

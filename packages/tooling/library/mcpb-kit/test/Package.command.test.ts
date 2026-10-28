@@ -77,7 +77,7 @@ it.layer(commandEnvironment, { concurrent: false, timeout: "5 seconds" })("MCPB 
     yield* fs.makeDirectory(nativeDir, { recursive: true });
     yield* fs.writeFileString(
       `${nativeDir}/package.json`,
-      yield* encodeBindings({ version: options.version ?? "1.5.6-r.2" })
+      yield* encodeBindings({ version: options.version ?? "2.0.0-r.1" })
     );
     yield* fs.writeFileString(`${nativeDir}/duckdb.node`, "synthetic native sidecar");
     yield* fs.makeDirectory(output, { recursive: true });
@@ -199,7 +199,7 @@ it.layer(commandEnvironment, { concurrent: false, timeout: "5 seconds" })("MCPB 
       });
       expect(A.map(fixture.calls, (args) => args[0])).toEqual(["curl"]);
       expect(fixture.calls[0]).toContain(
-        "https://registry.npmjs.org/@duckdb/node-bindings-win32-x64/-/node-bindings-win32-x64-1.5.6-r.2.tgz"
+        "https://registry.npmjs.org/@duckdb/node-bindings-win32-x64/-/node-bindings-win32-x64-2.0.0-r.1.tgz"
       );
       expect(yield* fixture.fs.exists(tarball)).toBe(false);
     })

@@ -81,6 +81,8 @@ describe("NativeAddon", () => {
         _resolveFilename: (request: string, ...rest: ReadonlyArray<unknown>) => string;
       };
       const original = resolver._resolveFilename;
+      const platform = process.platform;
+      const registered: Array<string> = [];
       const calls: Array<string> = [];
       resolver._resolveFilename = (request, ...rest) => {
         if (request === `${root}/node_modules/${addon}`) {
@@ -98,11 +100,15 @@ describe("NativeAddon", () => {
       try {
         const addonDirectory = `${root}/node_modules/@duckdb/node-bindings-win32-x64`;
         Object.defineProperty(process, "execPath", { value: `${root}/practice-kg-mcp`, configurable: true });
-        yield* Effect.promise(() => import("../src/NativeAddon.install.ts"));
+        Object.defineProperty(process, "platform", { value: "win32", configurable: true });
+        installNativeAddonResolver((directory) => registered.push(directory));
         const installed = resolver._resolveFilename;
+        yield* Effect.promise(() => import("../src/NativeAddon.install.ts"));
         installNativeAddonResolver();
         expect(resolver._resolveFilename).toBe(installed);
         expect(resolver._resolveFilename(addon)).toBe(`${addonDirectory}/duckdb.node`);
+        expect(resolver._resolveFilename(addon)).toBe(`${addonDirectory}/duckdb.node`);
+        expect(registered).toEqual([`${addonDirectory}/`]);
         expect(resolver._resolveFilename("@duckdb/node-bindings-missing/duckdb.node")).toBe(
           "fallback:@duckdb/node-bindings-missing/duckdb.node"
         );
@@ -111,6 +117,7 @@ describe("NativeAddon", () => {
       } finally {
         resolver._resolveFilename = original;
         Object.defineProperty(process, "execPath", { value: executablePath, configurable: true });
+        Object.defineProperty(process, "platform", { value: platform, configurable: true });
       }
     })
   );
