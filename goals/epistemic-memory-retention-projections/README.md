@@ -32,8 +32,8 @@ are verified; no production policy is active.
 
 ## Latest Evidence
 
-The [P0 contract](history/2026-10-28-p0-contract.md), eleven focused reporting
-tests, and the migrated-database delete/rebuild drill. See the
+The [P0 contract](history/2026-10-28-p0-contract.md), eleven use-case reporting
+tests, three domain tests, and the migrated-database delete/rebuild drill. See the
 [operator runbook](ops/REPORT.md). Full audits and docgen pass for all three packages; Yeet completion remains open.
 
 ## Notes

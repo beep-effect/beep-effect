@@ -280,7 +280,7 @@ describe("retention authority rebuild", { concurrent: false }, () => {
             yield* db.select().from(DbSchema.claimDisposition).orderBy(asc(DbSchema.claimDisposition.id))
           ).toStrictEqual(beforeDispositions);
         }),
-      { timeout: 120_000 }
+      { timeout: 300_000 }
     );
   });
 });

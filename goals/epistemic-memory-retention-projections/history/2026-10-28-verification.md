@@ -12,8 +12,9 @@
 | Authority unchanged | SELECT-only read-only repeatable-read adapter | all edge and disposition rows compared before and after the drill |
 | Repo-native implementation | P0 provenance inventory and source review | no donor imports, copied constants, authority migrations, operator memory, or fusion arithmetic |
 
-The eleven focused reporting tests, the dedicated authority rebuild test and ten core-authority integration tests pass
-as one 22-test run. The new rebuild drill runs against migrated embedded
+The eleven use-case reporting tests, three domain tests, dedicated server authority
+rebuild property and ten core-authority integration tests pass in their owning
+packages (25 focused tests in total). The new rebuild drill runs against migrated embedded
 Postgres through the real authority repository and the new Drizzle reader/store.
 The report and rebuild properties generate ordered candidate policies constructively
 from the policy schema's positive-number field, including shrink-safe minimal windows.
@@ -56,7 +57,9 @@ until its full completion audit succeeds.
 
 ## Resource judgment review
 
-The authoritative Effect-test detector reports no findings for Retention.test.ts.
+The authoritative Effect-test detector reports no findings for the use-case
+Retention.test.ts; domain tests separately cover policy identity, admission shape
+and canonical UTF-8 measurement.
 The rebuild property has two documented judgment exceptions in
 `standards/effect-vitest.inventory.jsonc`: EV004 is the shorter artifact lifetime
 that closes before the final authority reread, and EV010 is the native filesystem
