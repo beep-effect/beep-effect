@@ -89,5 +89,8 @@
     "@electric-sql/pglite": "catalog:",
     "@types/node": "catalog:",
     "bun-types": "catalog:"
+  },
+  "imports": {
+    "#retention-diagnostics": "./src/internal/retentionReadFailureKind.ts"
   }
 }

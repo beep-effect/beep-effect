@@ -150,3 +150,26 @@ Its result is parked, not claimed green or attributed as a source failure.
 The final receipt records an explicit `coverage` skip alongside the other local
 skips; current-head hosted Test Unit and Coverage Regression remain required.
 No coverage baseline is changed.
+
+## Hosted review and coverage repair
+
+The separately published `61eeb93a29` retained sanitized diagnostic categories
+for reader, store and schema failures, corrected the report-validation comment,
+and added empty-read and failure cases. Its hosted run passed unit tests but
+reported two formatting errors and real coverage gaps in the new diagnostic
+paths. These are remediated with tests, without lowering any baseline.
+
+The reader's category selector is now a private pure function. Redaction tests
+exercise converter errors, direct SQL errors, wrapped SQL causes, unknown query
+causes and unknown database failures. They distinguish connection and permission
+errors while excluding messages, SQL and credential details. A package-private
+import keeps the helper out of the public API and satisfies test import policy.
+
+Use-case tests now cover absent claim dispositions, half-open valid-time expiry,
+timestamp/id disposition ties, overlapping fixture version ordering, calibrated
+text output, corrupted serialization inputs and the actual shipped inert registry.
+The schema diagnostic boundary accepts only its real SchemaError channel. Full
+audits/docgen pass for server and use cases; scoped coverage ratchet comparison
+passes for both packages. Native Effect test and schema-first scans introduce no
+findings, package laws pass, and targeted Fallow audit reports zero findings.
+There are now 33 focused tests across the four relevant suites plus core authority.

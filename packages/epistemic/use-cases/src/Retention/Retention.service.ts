@@ -35,16 +35,14 @@ import type * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 
 const unavailable =
   (operation: string) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, RetentionUnavailable, R> =>
+  <A, R>(effect: Effect.Effect<A, S.SchemaError, R>): Effect.Effect<A, RetentionUnavailable, R> =>
     effect.pipe(
-      Effect.tapError((error) =>
+      Effect.tapError(() =>
         Effect.logWarning("Retention boundary validation failed").pipe(
-          Effect.annotateLogs({ operation, errorKind: S.isSchemaError(error) ? "SchemaError" : "BoundaryError" })
+          Effect.annotateLogs({ operation, errorKind: "SchemaError" })
         )
       ),
-      Effect.mapError(() =>
-        RetentionUnavailable.make({ operation, message: "Retention boundary validation failed" })
-      )
+      Effect.mapError(() => RetentionUnavailable.make({ operation, message: "Retention boundary validation failed" }))
     );
 const dispositionOrder = Order.combine(
   Order.mapInput(N.Order, (d: ClaimDisposition) => DateTime.toEpochMillis(d.resolvedAt)),

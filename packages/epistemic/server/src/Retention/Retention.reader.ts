@@ -3,6 +3,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
 import { RetentionSnapshot } from "@beep/epistemic-domain/values/Retention";
 import { DbSchema } from "@beep/epistemic-tables";
 import { fromClaimDispositionRow } from "@beep/epistemic-tables/entities/ClaimDisposition";
@@ -11,13 +12,10 @@ import { RetentionAuthorityReader, RetentionUnavailable } from "@beep/epistemic-
 import { PostgresDrizzle } from "@beep/postgres";
 import { and, eq, gt, inArray, isNull, lte, or } from "drizzle-orm";
 import * as A from "effect/Array";
-import * as Cause from "effect/Cause";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as Match from "effect/Match";
-import * as P from "effect/Predicate";
-import * as SqlError from "effect/sql/SqlError";
+import { retentionReadFailureKind } from "../internal/retentionReadFailureKind.ts";
 
 /**
  * Read accepted edge versions and associated claim dispositions in one read-only repeatable-read transaction.
@@ -93,18 +91,7 @@ export const RetentionAuthorityReaderDrizzle = Layer.effect(
               Effect.logWarning("Retention authority read failed").pipe(
                 Effect.annotateLogs({
                   operation: "read",
-                  errorKind: Match.value(error).pipe(
-                    Match.when(P.isTagged("EdgeVersionConverterError"), () => "EdgeVersionConverterError"),
-                    Match.when(P.isTagged("ClaimDispositionConverterError"), () => "ClaimDispositionConverterError"),
-                    Match.when(SqlError.isSqlError, (error) => error.reason._tag),
-                    Match.when(P.isTagged("EffectDrizzleQueryError"), (error) =>
-                      Match.value(Cause.isCause(error.cause) ? Cause.squash(error.cause) : error.cause).pipe(
-                        Match.when(SqlError.isSqlError, (cause) => cause.reason._tag),
-                        Match.orElse(() => "QueryError")
-                      )
-                    ),
-                    Match.orElse(() => "DatabaseError")
-                  ),
+                  errorKind: retentionReadFailureKind(error),
                 })
               )
             ),

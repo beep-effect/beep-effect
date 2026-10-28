@@ -1,3 +1,5 @@
+import { ClaimDisposition } from "@beep/epistemic-domain/entities/ClaimDisposition";
+import { EdgeVersion } from "@beep/epistemic-domain/entities/EdgeVersion";
 import {
   RetentionCalibration,
   RetentionPolicy,
@@ -8,11 +10,14 @@ import {
 import {
   encodeRetentionReport,
   generateRetentionReport,
+  RetentionAuthorityReader,
+  RetentionCalibrationRegistry,
+  RetentionUnavailable,
   renderRetentionReport,
 } from "@beep/epistemic-use-cases/Retention";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { assertNone, assertTrue } from "@effect/vitest/utils";
+import { assertFailure, assertNone, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
@@ -134,6 +139,7 @@ describe("retention reporting", () => {
         O.some(policy)
       ).pipe(provideFixture(snapshot, O.some(receipt)));
       expect(report.admission.state).toBe("calibrated");
+      expect(renderRetentionReport(report)).toContain(`Budget ratio: ${report.payloadBytes / 10}`);
       expect(A.map(report.rows, (row) => row.tier)).toEqual(["warm", "evictable"]);
       expect(O.getOrUndefined(report.rows[0]?.decay ?? O.none())).toBe(0.5);
       expect(O.getOrUndefined(report.pressureRatio)).toBe(report.payloadBytes / 10);
@@ -214,4 +220,87 @@ describe("retention reporting", () => {
       }
     })
   );
+  it.effect("keeps unresolved claims distinct and excludes the valid-time upper bound", () =>
+    Effect.gen(function* () {
+      const snapshot = yield* makeSnapshot();
+      const unresolved = yield* generateRetentionReport(
+        yield* S.decodeEffect(RetentionQuery)(queryInput),
+        O.none()
+      ).pipe(provideFixture(RetentionSnapshot.make({ ...snapshot, dispositions: [] }), O.none()));
+      expect(unresolved.rows[0]?.sourceDisposition).toBe("unresolved");
+      const bounded = RetentionSnapshot.make({
+        ...snapshot,
+        edges: A.map(snapshot.edges, (edge) =>
+          EdgeVersion.make({ ...edge, validTo: O.some(DateTime.makeUnsafe(1500)) })
+        ),
+      });
+      const expired = yield* generateRetentionReport(yield* S.decodeEffect(RetentionQuery)(queryInput), O.none()).pipe(
+        provideFixture(bounded, O.none())
+      );
+      expect(expired.rows).toEqual([]);
+    })
+  );
+  it.effect("orders tied dispositions and overlapping fixture versions independently of response order", () =>
+    Effect.gen(function* () {
+      const snapshot = yield* makeSnapshot();
+      const overlapping = RetentionSnapshot.make({
+        ...snapshot,
+        edges: A.reverse(A.map(snapshot.edges, (edge) => EdgeVersion.make({ ...edge, expiredAt: O.none() }))),
+        dispositions: A.reverse(
+          A.map(snapshot.dispositions, (disposition) =>
+            ClaimDisposition.make({ ...disposition, resolvedAt: DateTime.makeUnsafe(2000) })
+          )
+        ),
+      });
+      const report = yield* generateRetentionReport(yield* S.decodeEffect(RetentionQuery)(queryInput), O.none()).pipe(
+        provideFixture(overlapping, O.none())
+      );
+      expect(report.rows[0]?.sourceDisposition).toBe("superseded");
+      expect(A.map(report.rows, (row) => [row.logicalKey, row.version])).toEqual([
+        [keyA, 1],
+        [keyA, 2],
+        [keyB, 1],
+      ]);
+    })
+  );
+  it.effect("sanitizes corrupted policy and report values at serialization boundaries", () =>
+    Effect.gen(function* () {
+      const policy = yield* S.decodeEffect(RetentionPolicy)(policyInput);
+      // Simulate a JavaScript caller corrupting a value after schema admission.
+      expect(Reflect.set(policy, "payloadBudgetBytes", 0)).toBe(true);
+      const rejected = yield* generateRetentionReport(
+        yield* S.decodeEffect(RetentionQuery)(queryInput),
+        O.some(policy)
+      ).pipe(provideFixture(yield* makeSnapshot(), O.none()), Effect.result);
+      assertFailure(
+        rejected,
+        RetentionUnavailable.make({ operation: "policy", message: "Retention boundary validation failed" })
+      );
+      const report = yield* generateRetentionReport(yield* S.decodeEffect(RetentionQuery)(queryInput), O.none()).pipe(
+        provideFixture(yield* makeSnapshot(), O.none())
+      );
+      expect(Reflect.set(report, "visibleCount", -1)).toBe(true);
+      assertFailure(
+        yield* encodeRetentionReport(report).pipe(Effect.result),
+        RetentionUnavailable.make({ operation: "encode", message: "Retention boundary validation failed" })
+      );
+    })
+  );
+  it.layer(RetentionCalibrationRegistry.inert)("shipped inert registry", (it) => {
+    it.effect("uses the shipped inert registry even for a schema-valid candidate", () =>
+      Effect.gen(function* () {
+        const snapshot = yield* makeSnapshot();
+        const report = yield* generateRetentionReport(
+          yield* S.decodeEffect(RetentionQuery)(queryInput),
+          O.some(yield* S.decodeEffect(RetentionPolicy)(policyInput))
+        ).pipe(
+          Effect.provideService(RetentionAuthorityReader, {
+            read: Effect.fn("RetentionTest.inertRead")(() => Effect.succeed(snapshot)),
+          })
+        );
+        expect(report.admission.state).toBe("inert");
+        assertNone(report.pressureRatio);
+      })
+    );
+  });
 });
