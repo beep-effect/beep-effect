@@ -141,6 +141,11 @@ because the declared closeout-mode verdict has no `mergeReady.ready`. The
 readiness job was interrupted before recording a positive result, and classic
 monitor refuses to run after merge. Thirteen original evidence files were
 retained unchanged in the owning clone. No retrospective readiness verdict is
-fabricated. A final documentation closeout obtains fresh canonical readiness
+fabricated. Final documentation closeout PR #2326 obtains fresh canonical readiness
 and retains it before merge; the operative lifecycle remains active until the
 completion refresher verifies the full declaration.
+
+The updated-main census on the receipt branch scans 8,456 files with 221
+candidates, zero rewrites, zero residue and zero quarantined cases. The new
+publication scan exceeded ten minutes after multiple passing policy checks;
+hosted CI supplies the remaining proof under the constrained-compute route.

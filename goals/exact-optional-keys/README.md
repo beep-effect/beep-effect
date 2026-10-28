@@ -34,7 +34,7 @@ Use this command for execution-capable sessions:
 P3: implementation PRs #2145 and #2316 are merged. PR #2316 has 15 green
 required checks at its accepted head and zero outstanding review threads. The
 readiness monitor stopped before recording a positive local verdict, so a final
-documentation closeout must retain that verdict before merging. Lifecycle stays active.
+documentation closeout PR #2326 must retain that verdict before merging. Lifecycle stays active.
 
 ## Latest Evidence
 
