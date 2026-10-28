@@ -63,3 +63,29 @@ zero String findings and seven Array findings. Completion refresh returned
 `unsatisfied` because required checks were pending at merge and GitHub's
 merge-push rule suite recorded a required-status bypass. The original local
 Yeet verdict is unavailable. A new closeout does not change those facts.
+
+## Base synchronization and canonical publication
+
+Before merge, main advanced to `440e6d00529b77ec79569510d69f68c54f8a7acf`.
+A clean merge produced `8d4fee6759dfcbfdd6294fd3e29a66a593f79b9a`.
+Frozen installation passed. The full, unfiltered Check lane and the separate
+root configuration program both passed again on that stable head. Check
+completed 337 successful tasks, including 187 package Check tasks; 226 tasks
+were cache hits and 111 executed. The new raw results and Turbo summary are
+retained in the owning clone's `.beep/goals/effect-string-qualification-2026-10-28/base-sync-8d4fee6759/`.
+Only packet documentation changes follow this source qualification.
+
+The earlier closeout head `91bd237d203d2b75aaf097bce48245ecad5aa139`
+reached terminal readiness in monitor `7a2cd4f9-df69-4643-9584-c93093374755`:
+all 15 required checks passed, all review threads were resolved, and the review
+window elapsed. Its two Vercel failures reported deployment rate limiting, the
+standing allowed exception. That head was not merged. Its evidence is retained
+separately and does not qualify the synchronized head.
+
+The constrained direct-push fallback did not create the successful publish-mode
+receipt required by completion recovery. A later generic closeout command wrote
+a closeout-mode verdict. The synchronized branch therefore requires canonical
+publication followed by a new terminal readiness monitor. Preserve the
+publisher's verdict and the monitor's status snapshot without rewriting their
+contents. Completion remains unproven until the exact published head is merged
+and completion refresh verifies it.

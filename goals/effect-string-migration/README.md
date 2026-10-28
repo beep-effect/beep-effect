@@ -59,8 +59,12 @@ Check completed 337 successful Turbo tasks, including 187 package Check tasks;
 334 tasks were cache hits and three executed. The root configuration program
 also exited zero. Both runs observed a stable head and reported no String
 findings. Their full-source coverage is recorded in the
-[verification receipt](history/verification-2026-10-28.md). Subsequent closeout
-edits change this packet only, preserving the checked compiler inputs.
+[verification receipt](history/verification-2026-10-28.md). Main was subsequently synchronized at `8d4fee6759dfcbfdd6294fd3e29a66a593f79b9a`;
+the full Check graph (337 tasks, 187 package Check tasks) and root configuration
+program passed again. The updated graph had 226 cache hits and 111 executions.
+Packet-only edits follow that qualification. The earlier head reached terminal
+readiness but was not merged; the synchronized head requires fresh publication
+and readiness evidence.
 
 `bun run beep goals completion refresh --slug effect-string-migration`
 returned `unsatisfied` for #2027. GitHub's merge-push rule suite
