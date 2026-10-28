@@ -2,11 +2,11 @@
 
 ## Status
 
-Lifecycle: `paused`
+Lifecycle: `active`
 
 Source: [ops/manifest.json](./ops/manifest.json).
-Authored but not started. Launch begins P0; see [PLAN.md](./PLAN.md) for resume
-conditions and milestone dependencies.
+Launched 2026-10-28. See [PLAN.md](./PLAN.md) for the current audit and milestone
+dependencies.
 
 ## Mission
 
@@ -30,15 +30,19 @@ Adopt every eligible quality computation in its proven profiles and optimize the
 
 ## Current phase
 
-P0 Population, feature and value audit, not started.
+P0 Population, feature and value audit, in progress.
 
 Refresh actual task/lane/workflow population and create the stable/canary feature and computation-disposition matrices using the existing owners' baselines.
 
 ## Latest evidence
 
-[Graduation receipt](./history/graduation-2026-09-08.md) records approval and
-packet creation only. Implementation tests, deployment and observation have
-not started.
+The [current population](./research/current-population.json) records 2,571
+executable computations across 190 workspaces. The
+[feature inventory](./research/current-feature-matrix.json) and
+[client pins](./research/current-client-pins.json) record the current review
+surface. The [completion audit](./research/current-completion-audit.json) keeps
+the remaining acceptance evidence explicit. These inventories do not qualify
+tasks or complete production observation.
 
 ## Notes
 

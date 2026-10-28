@@ -32,6 +32,9 @@ import { executionInput } from "./helpers/cache-protocol-fixture.ts";
 import { signedPilotInput } from "./helpers/cache-signed-pilot-fixture.ts";
 
 const Fault = LiteralKit(["none", "pin", "git", "exit", "truncated", "identity", "issuer-change", "issuer-exposed"]);
+const isPrivateCaptureFault = S.is(Fault.pick(["exit", "truncated"]));
+const privateSupervisorStream = (fault: unknown) =>
+  isPrivateCaptureFault(fault) ? "synthetic-private-supervisor-stream" : "";
 const digest = Sha256Hex.make(Str.repeat(64)("a"));
 const hash = S.decodeEffect(Sha256HexFromBytes);
 const encodeDependencies = S.encodeEffect(S.fromJsonString(CacheDependencyMaterialization));
@@ -147,8 +150,8 @@ const fixture = Effect.fn("SignedRunnerTest.fixture")(function* (fault: typeof F
       if (fault === "issuer-change") yield* fs.writeFileString(issuer, "changed fixture");
       return CacheRuntimeProcess.CapturedStreams.make({
         exitCode: fault === "exit" ? 1 : 0,
-        stdout: "",
-        stderr: "",
+        stdout: privateSupervisorStream(fault),
+        stderr: privateSupervisorStream(fault),
         truncated: fault === "truncated",
       });
     }, Effect.orDie)
@@ -239,18 +242,21 @@ it.layer(
         (yield* runCacheSignedPilotExperiment(root, request, O.some(issuer)).pipe(Effect.result)).pipe(
           Result.match({
             onSuccess: () => expect.fail("Supervisor accepted the injected fault"),
-            onFailure: (error) =>
+            onFailure: (error) => {
               expect(error.message).toContain(
                 {
                   pin: "binary pin",
                   git: "Git metadata",
-                  exit: "capture bound",
+                  exit: "exit code 1",
                   truncated: "capture bound",
                   identity: "supervised identities",
                   "issuer-change": "exposed or changed",
                   "issuer-exposed": "exposed or changed",
                 }[fault]
-              ),
+              );
+              expect(error.message).not.toContain("synthetic-private-supervisor-stream");
+              if (fault === "exit" || fault === "truncated") expect(error.cause).toBeUndefined();
+            },
           })
         );
       })
@@ -304,8 +310,8 @@ const protocolFixture = Effect.fn("ProtocolSupervisorTest.fixture")(function* (f
       yield* fs.writeFileString(path.join(directory, "report.json"), yield* encodeExecution(report));
       return CacheRuntimeProcess.CapturedStreams.make({
         exitCode: fault === "exit" ? 1 : 0,
-        stdout: "",
-        stderr: "",
+        stdout: privateSupervisorStream(fault),
+        stderr: privateSupervisorStream(fault),
         truncated: fault === "truncated",
       });
     }, Effect.orDie)
@@ -353,10 +359,19 @@ it.layer(
         const { root, request } = yield* protocolFixture(fault);
         Result.match(yield* runCacheProtocolExperiment(root, request).pipe(Effect.result), {
           onSuccess: () => expect.fail("Supervisor accepted the injected fault"),
-          onFailure: (error) =>
+          onFailure: (error) => {
             expect(error.message).toContain(
-              fault === "exit" || fault === "truncated" ? "capture bound" : "supervised identities"
-            ),
+              {
+                exit: "exit code 1",
+                truncated: "capture bound",
+                client: "supervised identities",
+                channel: "supervised identities",
+                bun: "supervised identities",
+              }[fault]
+            );
+            expect(error.message).not.toContain("synthetic-private-supervisor-stream");
+            if (fault === "exit" || fault === "truncated") expect(error.cause).toBeUndefined();
+          },
         });
       })
     );
