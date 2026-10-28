@@ -31,6 +31,7 @@ import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -237,6 +238,64 @@ it.layer(Layer.mergeAll(CountedFileSystem, Path.layer), { timeout: "30 seconds" 
         ]);
         strictEqual(A.filter(manifestReads, (read) => read === "/repo/packages/a/package.json").length, 1);
         strictEqual(A.filter(manifestReads, (read) => read === "/repo/packages/b/package.json").length, 1);
+      })
+    );
+  }
+);
+
+const denied = (method: string, path: string) =>
+  Effect.fail(
+    PlatformError.systemError({ _tag: "PermissionDenied", module: "FileSystem", method, pathOrDescriptor: path })
+  );
+
+const faultedRepository = {
+  "/repo/package.json": JSON.stringify({ name: "@beep/root", workspaces: ["packages/*"] }),
+  "/repo/packages/a/package.json": JSON.stringify({ name: "@beep/a" }),
+};
+
+// The member manifest exists but cannot be read.
+const UnreadableMember = MemoryFileSystem.layerWith(faultedRepository, {
+  faults: {
+    readFileString: (path: string) =>
+      path === "/repo/packages/a/package.json" ? denied("readFileString", path) : undefined,
+  },
+});
+
+it.layer(Layer.mergeAll(UnreadableMember, Path.layer), { timeout: "30 seconds" })(
+  "QualityArtifactSupport unreadable member manifest",
+  (it) => {
+    it.effect("fails a member manifest the kit cannot read as its read", () =>
+      Effect.gen(function* () {
+        const path = yield* Path.Path;
+        const error = yield* Effect.flip(discoverWorkspacePackages("/repo", path));
+        strictEqual(error.message, "Failed to read /repo/packages/a/package.json.");
+      })
+    );
+  }
+);
+
+// The root manifest reads once for the strict reader, then stops reading, so
+// the kit's root ascent finds no workspace root.
+let rootReads = 0;
+const VanishingRoot = MemoryFileSystem.layerWith(faultedRepository, {
+  faults: (base) => ({
+    readFileString: (path: string, encoding?: string) => {
+      if (path !== "/repo/package.json") return base.readFileString(path, encoding);
+      rootReads += 1;
+      return rootReads === 1 ? base.readFileString(path, encoding) : denied("readFileString", path);
+    },
+  }),
+});
+
+it.layer(Layer.mergeAll(VanishingRoot, Path.layer), { timeout: "30 seconds" })(
+  "QualityArtifactSupport vanishing workspace root",
+  (it) => {
+    it.effect("fails as the root's resolution when the kit finds no workspace root", () =>
+      Effect.gen(function* () {
+        const path = yield* Path.Path;
+        rootReads = 0;
+        const error = yield* Effect.flip(discoverWorkspacePackages("/repo", path));
+        strictEqual(error.message, "Failed to resolve workspace root /repo.");
       })
     );
   }
