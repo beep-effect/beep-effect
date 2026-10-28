@@ -39,9 +39,12 @@ and facet; there are zero missing or extra matches. The eight raw-text exclusion
 are enumerated. The old "446 references" label counted matching lines; the
 correct raw-reference count is 448, normalizing to 440 actual references.
 
-The current fixture has 32 invalid references and zero hits on allowed cases.
+The current fixture has 33 invalid references and zero hits on allowed cases.
 Review found that recursive `contains` in parameter lists treated nested callback
 parameters as outer shadows. Four regression cases failed before the fix and
-pass after matching only direct `JsParameters.items` with `some`. The final
+pass after matching only direct `JsParameters.items` with `some`. A second
+review found that constructors use `JsConstructorParameters.parameters`; its
+direct-item alternative restores plain and property-parameter shadows without
+hiding a nested callback-type violation. The final
 lint-rules audit and docgen pass. The isolated Biome invalid fixture exits 1
-with 32 plugin errors, while the allowed fixture exits 0 with no diagnostics.
+with 33 plugin errors, while the allowed fixture exits 0 with no diagnostics.

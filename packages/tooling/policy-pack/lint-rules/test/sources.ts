@@ -71,7 +71,7 @@ export const SOURCES: { readonly [K in RuleName]: RuleSource } = {
     ),
   },
   "prefer-exact-optional-key": {
-    invalidCount: 32,
+    invalidCount: 33,
     messageIncludes: "exact optional keys",
     invalid: A.join(
       [
@@ -109,6 +109,7 @@ export const SOURCES: { readonly [K in RuleName]: RuleSource } = {
         "export function nestedMethodType(opts: { map(Codec: number): number }) { return Codec.withDecodingDefault(() => 'x')(Codec.String); }",
         "export function nestedDefault(x = (Codec: number) => Codec) { return Codec.OptionFromOptional(Codec.String); }",
         "export function nestedQuery(cb: (Codec: number) => void) { type T = typeof Codec.optional; return 1; }",
+        "export class NestedConstructor { constructor(cb: (Codec: number) => void) { Codec.optional(Codec.String); } }",
         "import DefaultSchema2, { optional as combinedOptional, OptionFromOptional as combinedOption } from 'effect/Schema';",
         "export { withDecodingDefault } from 'effect/Schema';",
       ],
@@ -138,6 +139,8 @@ export const SOURCES: { readonly [K in RuleName]: RuleSource } = {
         "export const localExpression = function (Codec: { optional: (x: number) => number }) { return Codec.optional(1); };",
         "export const methods = { local(Codec: { optional: (x: number) => number }) { return Codec.optional(1); } };",
         "export class LocalMethods { local(Codec: { optional: (x: number) => number }) { return Codec.optional(1); } }",
+        "export class LocalConstructor { constructor(Codec: { optional: (x: number) => number }) { Codec.optional(1); } }",
+        "export class LocalPropertyConstructor { constructor(private Codec: { optional: (x: number) => number }) { Codec.optional(1); } }",
         "{ const Codec = { optional: (x: number) => x }; Codec.optional(1); }",
         "export function localBinding() { const Codec = { optional: (x: number) => x }; return Codec.optional(1); }",
         "export function localQuery(Codec: { optional: number }) { type T = typeof Codec.optional; return Codec.optional; }",

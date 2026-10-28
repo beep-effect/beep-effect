@@ -32,6 +32,11 @@ pattern shadowing_parameters($ns) {
     JsParameters(items=some or {
       JsFormalParameter(binding=$ns),
       JsRestParameter(binding=$ns)
+    }),
+    JsConstructorParameters(parameters=some or {
+      JsFormalParameter(binding=$ns),
+      JsRestParameter(binding=$ns),
+      TsPropertyParameter(formal_parameter=JsFormalParameter(binding=$ns))
     })
   }
 }

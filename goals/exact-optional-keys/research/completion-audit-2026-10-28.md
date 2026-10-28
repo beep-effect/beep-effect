@@ -110,7 +110,7 @@ after the detached readiness loop, will write the declared readiness verdict.
 
 The P2 discussion `4399481243` identified recursive parameter-list matching that
 hid real Schema references. The fix matches direct parameter items, with four
-regression cases. All 32 invalid references are detected; allowed input has
+regression cases. All 33 invalid references are detected; allowed input has
 zero diagnostics. Full lint-rules audit and docgen pass after the correction.
 
 The historical Biome replay over 8,301 tracked TS/TSX files yields exactly the
@@ -118,3 +118,10 @@ same 440 sites as the codemod and normalized text census. File, line, member
 column and facet reconciliation has zero missing or extra matches. The raw
 text count is 448 references on 446 matching lines, including eight enumerated
 comments or strings. The machine-readable report retains all counts.
+
+The follow-up P2 discussion `4399802834` reproduced constructor shadow false
+positives because constructor parameters have a separate Biome node shape.
+The direct-item constructor alternative handles formal, rest and property
+parameters. Plain and private-parameter constructors are allowed, while a
+nested callback parameter cannot suppress the actual Schema reference. The
+focused regression fails before the correction and passes after it.
