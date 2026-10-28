@@ -17,6 +17,7 @@ const refs = (value: unknown): ReadonlyArray<string> => {
   );
 };
 const same = S.toEquivalence(S.Json);
+const LiteralGroupKey = S.fromJsonString(S.Tuple([S.String, S.Array(S.String), S.String]));
 const program = Effect.gen(function* () {
   const text = yield* Effect.tryPromise(() =>
     Bun.file(
@@ -136,7 +137,7 @@ const program = Effect.gen(function* () {
     seenLoops[row.loopId] = true;
     if (row.literalParameterId !== undefined) {
       if (parameters[row.literalParameterId] === undefined) return yield* reject("unknown literal parameter");
-      const key = JSON.stringify([ordinalKey, row.parentIterationIds, row.literalParameterId]);
+      const key = yield* S.encodeEffect(LiteralGroupKey)([ordinalKey, row.parentIterationIds, row.literalParameterId]);
       const group = literalGroups[key] ?? { parameter: row.literalParameterId, indexes: [] };
       group.indexes.push(row.indexWithinParent);
       literalGroups[key] = group;
