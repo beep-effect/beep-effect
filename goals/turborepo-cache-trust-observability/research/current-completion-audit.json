@@ -232,7 +232,7 @@
   "priorSpecSha256AtUploadJoin": "cc3e2b7fa50d899586f3a1db1d8250253210fea0e9bbd42ffa7fe364106f55f7",
   "nativeUploadJoinCheckpoint": {
     "path": "goals/turborepo-cache-trust-observability/research/native-upload-join-checkpoint.json",
-    "sha256": "3caed76b81a86050607c752d8e167089ec16e9e280f253b746defc4329fcab68",
+    "sha256": "864adb455506dd9eab7fff4525b3d07ceb26980c82a033d6dce06e38858a7b91",
     "scope": "Current local component; whole-goal acceptance remains unproven."
   },
   "signedCredentialReadinessCheckpoint": {
@@ -256,5 +256,10 @@
     "sha256": "f80c99e883d4ba37f3033bfac6dda453039df81af98c36c75cf22de07502b8d0",
     "scope": "Component progress only; whole-goal acceptance remains unproven."
   },
-  "priorSpecSha256AtRoleDeployment": "47d95a38ee3ccd92b66b2eaf1cb31180246ddee1d3c059bc76ffedcf567cd25e"
+  "priorSpecSha256AtRoleDeployment": "47d95a38ee3ccd92b66b2eaf1cb31180246ddee1d3c059bc76ffedcf567cd25e",
+  "currentRuntimeProfileCheckpoint": {
+    "path": "goals/turborepo-quality-cache-adoption/research/current-runtime-profile-checkpoint.json",
+    "sha256": "cf82796c23638de060dc7bf603de0e85091e188f9766bcb90c6cc33bec79416e",
+    "scope": "Runtime observation only; current whole-package proof and all qualification/rollout obligations remain open."
+  }
 }

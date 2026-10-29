@@ -67,3 +67,32 @@ actual native executable through the selected Bun's `process.execPath` instead.
 Both pinned clients now complete all eighteen executions. Description-only
 configuration edits also change hashes here, so preserve this observation and
 avoid promising metadata-only reuse without a supported implementation.
+
+
+## 2026-10-29: Current pin blocked by a historical observation domain
+
+The actual collector rejects Bun1.4.4 before qualification because the snapshot
+schema permits only1.4.1/1.4.2. Expand observation support for the exact current
+pin, while retaining the declared-pin and historical-key barriers. Current
+native collection and a real wrong-pin fixture now pass/refuse respectively.
+The first scratch driver had an incorrect export and omitted FsUtils; neither
+result was accepted as runtime evidence. The retained driver uses curated test
+APIs and provides the real platform/admission services.
+
+A known encoded test fixture initially used decodeUnknownEffect. The type check
+requires decodeEffect; retain the failed check and its repair. The2.5MiB census
+exceeds Biome's default file limit. Keep the retained recipe's JSON serialization
+and validate JSON/source hashes directly. Forcing a larger formatting limit
+introduced unrelated array-layout churn, which was removed without changing
+the observed data or the repository-wide limit.
+
+
+## 2026-10-29: Ignored non-workspace metadata enters the real lint hash
+
+Both exact pinned clients include an owned Git-ignored tmp/package.json fixture
+in the real identity lint dry plan. The selected input count rises1153to1154
+and its task hash changes; cleanup restores the exact original hash in both
+clients. No quality task executes and no remote cache is used. Root-wide
+metadata globs are a narrowing candidate, but exclusion still requires tracing
+the wrapper's real reads and proving actual output/verdict equivalence. The
+current task remains cache:false. Keep that work in this active adoption goal.

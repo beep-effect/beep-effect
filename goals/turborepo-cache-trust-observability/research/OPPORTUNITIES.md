@@ -481,3 +481,14 @@ confirmed absent.
 The full laboratory requirements include an uncached package; the storage
 control needs only the already cached pinned boto3 dependency. Use that narrow
 invocation rather than expanding the install or spending a new environment.
+
+
+## 2026-10-29: Healthy vault reads do not establish item-creation authority
+
+The approved agent item-creation command failed. A single required op-doctor
+run passes on the service-account backend, and a fresh inventory confirms no
+trial item exists. An inert template dry-run passes; it proves input shape,
+not write authority. Stop that write path. The human-only bootstrap is prepared
+outside the repository, resumes a matching item, refuses changed reference
+files, and emits only a sanitized receipt. No desktop sign-in is attempted by
+the agent. The already created Alchemy roles remain unassigned.

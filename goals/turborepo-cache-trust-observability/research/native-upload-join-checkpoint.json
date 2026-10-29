@@ -141,10 +141,12 @@
     "scope": "Historical frozen source and original category repair remain unchanged; new tests/model semantics are covered by this checkpoint."
   },
   "currentPopulation": {
-    "sourcesVerified": 430,
     "path": "goals/turborepo-quality-cache-adoption/research/current-population.json",
-    "sha256": "1f8b426d7af4fd601eadab872eaa6bc11d482e904ca6ae890b848d4bfac0325d",
-    "base": "repository-root"
+    "sha256": "acf0a0e81c5936df4758bf688ac8420d4b0c9c512bdae6b6f7585e39c2cdabcb",
+    "base": "repository-root",
+    "sourcesVerified": 430,
+    "refreshedAt": "2026-10-29T10:05:33.391812+00:00",
+    "scope": "Inventory metadata only; the original native execution and qualification limitations are unchanged."
   },
   "productionChanges": false,
   "qualified": false,
@@ -155,5 +157,12 @@
     "Current real-computation qualification and signed rollout",
     "Epoch rotation, warm-process behavior and deployed rollback",
     "Representative seven/seven/fourteen-day windows"
-  ]
+  ],
+  "priorPopulationAtUploadJoin": {
+    "sha256": "1f8b426d7af4fd601eadab872eaa6bc11d482e904ca6ae890b848d4bfac0325d",
+    "retainedArtifact": "runtime-profile-control/population-before-runtime-profile.json",
+    "referenceBase": "private completion evidence bundle",
+    "retainedAtSourceRevision": "d5181fbc27fab7755061eb9825169f8aaaccf6c9",
+    "scope": "Frozen earlier inventory; original native observations are unchanged."
+  }
 }

@@ -3,7 +3,7 @@
   "goal": "turborepo-quality-cache-adoption",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "9c2c1c88a7f13efab9252774f154d1e1e31e8d395695b2ab37dabc212af27e5c",
+  "specSha256": "bf920216aed78bfef9065e4129e12ac08356e88307cf7fcb03f0395d6c5a88a6",
   "acceptance": [
     {
       "id": "AC-01",
@@ -162,5 +162,11 @@
     "Representative observation cannot be replaced by synthetic samples",
     "Final PR readiness, reflection and lifecycle"
   ],
-  "referenceBase": "repository root"
+  "referenceBase": "repository root",
+  "priorSpecSha256AtRuntimeObservation": "9c2c1c88a7f13efab9252774f154d1e1e31e8d395695b2ab37dabc212af27e5c",
+  "currentRuntimeProfileCheckpoint": {
+    "path": "goals/turborepo-quality-cache-adoption/research/current-runtime-profile-checkpoint.json",
+    "sha256": "cf82796c23638de060dc7bf603de0e85091e188f9766bcb90c6cc33bec79416e",
+    "scope": "Runtime observation only; current whole-package proof and all qualification/rollout obligations remain open."
+  }
 }

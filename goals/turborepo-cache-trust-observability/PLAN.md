@@ -474,3 +474,12 @@ changes. The roles remain unassigned. See
 This supplies storage-role evidence only. Durable runtime/key handoff, signed
 adapter activation, protected publication, qualification, rotation/rollback and
 all representative windows remain open.
+
+
+### Current-runtime prerequisite and pending secret handoff
+
+The adoption-owned current-runtime control now observes the pinned Bun1.4.4
+without inheriting historical qualification. Durable secret handoff remains
+pending after an agent item-creation failure; the approved backend diagnostic
+passes and no item/reference files were created. A human-only resumable command
+is prepared. Signed runtime activation and protected publication remain closed.

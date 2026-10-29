@@ -238,3 +238,21 @@ binds changed runner source bytes. Historical claims above keep their dates.
   tuple or a representative production window. Description-only edits caused
   invalidation on both pins; the earlier private reuse hypothesis remains
   separately retained and was not promoted into an assertion.
+
+
+### Current pinned runtime control
+
+- [Runtime checkpoint](current-runtime-profile-checkpoint.json),
+  [physical observation](current-runtime-profile-observation.json), and
+  [retained admitted control](current-runtime-profile-control.ts): current
+  binaries/dependencies/linkage, actual wrong-pin refusal, cleanup, cross-runtime
+  regressions and source-restored support-removal control. No qualification.
+- The current population was regenerated with Cache's canonical census and the
+  retained recipe. All430source digests agree; counts and ledger are unchanged.
+  The prior upload-join inventory and complete checkpoint are retained in the
+  private completion evidence bundle before metadata refresh.
+
+- [Actual ignored-input dry observation](actual-ignored-input-observation.json)
+  and [retained control](actual-ignored-input-control.py): both pinned clients,
+  one real computation, no task execution/remote use, and exact baseline
+  restoration after the scoped ignored fixture is removed.

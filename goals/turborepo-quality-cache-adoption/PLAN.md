@@ -111,3 +111,30 @@ is written. Seven matrix rows now link this partial evidence; all real
 computation qualification and acceptance statuses remain pending. See
 [the observations](research/native-input-controls.json) and
 [their reproducible driver](research/native-input-controls.py).
+
+
+### Actual current-runtime observation
+
+The real collector initially refused the repository-pinned Bun1.4.4 because
+its profile domain stopped at1.4.2. The current runtime is now observed with
+actual binary, dependency-tree and startup-linker identities. A wrong declared
+pin still fails, historical profile keys reject the new snapshot, and binary
+changes alter its digest. Both focused runtimes pass45tests; removing the new
+support produces the intended schema failure. The fresh430-source population
+retains190workspaces/2571computations/1621configured flags. See
+[the checkpoint](research/current-runtime-profile-checkpoint.json),
+[physical observation](research/current-runtime-profile-observation.json) and
+[retained control](research/current-runtime-profile-control.ts).
+Whole-package replay on the new committed source remains pending. No task is
+qualified or enabled by this observation support.
+
+
+### Real computation input counterexample
+
+The [retained dry observation](research/actual-ignored-input-observation.json)
+and [control](research/actual-ignored-input-control.py) show that an ignored
+non-workspace manifest changes identity lint's native hash on both pinned
+clients. Cleanup restores each baseline. Inspect real wrapper reads, narrow
+the metadata boundary where justified, and prove actual lint-output/verdict
+equivalence before qualification. These dry plans prove no task result or
+speed improvement; the candidate stays disabled.

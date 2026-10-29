@@ -1,0 +1,122 @@
+{
+  "schemaVersion": "cache-current-runtime-profile-checkpoint/v1",
+  "recordedAt": "2026-10-29T10:05:33.391812+00:00",
+  "authority": "local-runtime-observation-and-regression-only",
+  "sourceFiles": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.schemas.ts",
+      "sha256": "9d003f173bb5181577ace15195d94ba4e4844580b2f81bdb11dd4e4841bc44ed"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.fingerprint.ts",
+      "sha256": "36c69fa69e539bcacd74cd2bc72b6f601e821ff5c4567eecc0b7ff7c90f5a955"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.dependencies.ts",
+      "sha256": "74e58902aaea5dc0ab6684fdb6a68a60edc36ef37fbd263096f4c126d6a264e0"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.linker.ts",
+      "sha256": "ac563e51e4b48c5c6d663e8f4bcb6f18400f0cb5fbbc8aea1f22e6441a72f368"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts",
+      "sha256": "d443672935b5ae9c4bfacb9672180d3c70dfd2faa6b885e0bae06d91a67c2573"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-census.test.ts",
+      "sha256": "1856ea93ec938b54a820d58725d62ebc0e786d6c08462286d9d3a71cf8e528cf"
+    },
+    {
+      "path": "goals/turborepo-quality-cache-adoption/research/current-runtime-profile-control.ts",
+      "sha256": "48bffbbb8e42191aac8908e33e052ca474bdbdbfff16d7fad86cf9e26cdc44c1"
+    }
+  ],
+  "change": "Admit the repository-pinned Bun1.4.4 observation alongside historical1.4.1/1.4.2; retain exact pin checks and separate qualification keys.",
+  "verification": {
+    "node": {
+      "passed": 45,
+      "files": 2,
+      "seconds": 7.59,
+      "logSha256": "bf08b1cc0a2a6a8e3e3fbddb6e742c9b0eadb6b378350898d199e06d1053eb5b"
+    },
+    "bun": {
+      "passed": 45,
+      "files": 2,
+      "seconds": 6.3,
+      "logSha256": "f2ed840ba848726a4e7742b4f6751b6ee9a3dc7a4b1960478d6c006c18976c1b"
+    },
+    "quickPackage": {
+      "lintSeconds": 6.6,
+      "checkSeconds": 15.7,
+      "logSha256": "918f813b8c7ff7969a586d6bde69a22940b60409daf862073bb36b93e06c0d73"
+    },
+    "nativeRuntime": {
+      "observation": "current-runtime-profile-observation.json",
+      "recordedAt": "2026-10-29T09:56:19.732Z",
+      "scope": "Actual binaries, complete installed dependency view and startup linker; wrong declaration rejected and scoped fixture removed.",
+      "sha256": "cb4a728cee0fc45ecc85607338494d0e26c6a27096af1432ca6f9df3a0f208dc"
+    },
+    "supportRemoval": {
+      "sourceSha256": "9d003f173bb5181577ace15195d94ba4e4844580b2f81bdb11dd4e4841bc44ed",
+      "restoredSha256": "9d003f173bb5181577ace15195d94ba4e4844580b2f81bdb11dd4e4841bc44ed",
+      "testSha256": "1856ea93ec938b54a820d58725d62ebc0e786d6c08462286d9d3a71cf8e528cf",
+      "removedSupport": "local-linux-x64-bun1.4.4",
+      "intendedSchemaFailure": true,
+      "exit": 1,
+      "logSha256": "10a31d850d69e02727bf038be5e5e822589f5e19e178796c68341a3297c44927"
+    },
+    "typedDecoderRepair": {
+      "introducedCheckFailure": "Known encoded fixture used decodeUnknownEffect; typed-schema diagnostic required decodeEffect.",
+      "fixed": true,
+      "originalLogSha256": "aae88fb608c1262438e4e67d3c3d96e241f308ada2a586640a9a02af1e956f67"
+    },
+    "wholePackage": "pending after the prepared source and manifest commit"
+  },
+  "population": {
+    "path": "goals/turborepo-quality-cache-adoption/research/current-population.json",
+    "sha256": "acf0a0e81c5936df4758bf688ac8420d4b0c9c512bdae6b6f7585e39c2cdabcb",
+    "sourcesVerified": 430,
+    "counts": {
+      "workspaces": 190,
+      "rootScripts": 113,
+      "configuredGraphNodes": 4586,
+      "executableComputations": 2571,
+      "graphOnlyNodes": 2015,
+      "cacheEnabledExecutableComputations": 1621,
+      "newSinceRetainedHandoff": 638,
+      "retainedCommandTextUnchanged": 1923,
+      "retainedQualificationRecordStates": {
+        "excluded": 5
+      }
+    },
+    "qualificationLedgerSha256": "13067bf343f413b4cc99b4cefca3ce7d094a1f09247a54ffc20114e766d4d2bb",
+    "configuredFlagsChanged": false,
+    "qualificationEntriesChanged": false
+  },
+  "secretHandoff": {
+    "agentCreateFailed": true,
+    "doctorPassed": true,
+    "backend": "service-account",
+    "namedItemVerifiedAbsent": true,
+    "plannedSecretFields": 7,
+    "createdSecretFields": 0,
+    "referenceFilesWritten": 0,
+    "humanBootstrapPrepared": true,
+    "operatorResult": "pending"
+  },
+  "qualified": false,
+  "signedTrialActivated": false,
+  "protectedProducerPublished": false,
+  "remaining": [
+    "Durable secret/key handoff",
+    "Closed protected producer and immutable hosted publication",
+    "Current real-computation qualification and adoption",
+    "Signed deployment, rotation, rollback and representative7/7/14-day windows"
+  ],
+  "realComputationInputObservation": {
+    "path": "goals/turborepo-quality-cache-adoption/research/actual-ignored-input-observation.json",
+    "sha256": "ffc155409a9a8860b0d878981105778cc6a8864736a159b7738c07a3d6659400",
+    "scope": "Native dry input counterexample only; semantic irrelevance and task output equivalence remain unproven."
+  }
+}

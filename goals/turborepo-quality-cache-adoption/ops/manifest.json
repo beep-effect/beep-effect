@@ -44,7 +44,12 @@
     "research/current-feature-matrix.json",
     "research/current-client-pins.json",
     "research/population-source-refresh-checkpoint.json",
-    "research/native-input-controls.json"
+    "research/native-input-controls.json",
+    "research/current-runtime-profile-control.ts",
+    "research/current-runtime-profile-observation.json",
+    "research/current-runtime-profile-checkpoint.json",
+    "research/actual-ignored-input-control.py",
+    "research/actual-ignored-input-observation.json"
   ],
   "agentLaunchers": [
     {
