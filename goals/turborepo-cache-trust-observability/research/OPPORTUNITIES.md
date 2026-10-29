@@ -345,3 +345,13 @@ complete/empty/oversize/interrupted reply controls and unexpected-status tests.
 Both runtimes pass; Node/V8 observes the previously uncovered paths. Keep the
 committed floors and require the fresh hosted comparison. Do not infer coverage
 acceptance from a unit-pass aggregate or lower the baseline to make it green.
+
+
+## 2026-10-29: Post-format report bytes must be hashed after the commit hook
+
+Review on PR #2352 caught two coverage-checkpoint references hashed before the
+formatter collapsed a numeric array. The report data and source bindings were
+unchanged, but the recorded byte digest was wrong. Both pointers now hash the
+formatted report. Audit every path/digest reference in the current checkpoint
+and completion audit against committed bytes after hooks, not merely source
+file bindings or pre-format serialization. Preserve historical proof scopes.

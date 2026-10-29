@@ -224,7 +224,7 @@
   "priorSpecSha256AtNodeRuntimeRepair": "303691f34fcf85630f8c42857c85dae44fc5a0dab12553668e6572631111fd79",
   "replyErrorCoverageCheckpoint": {
     "path": "goals/turborepo-cache-trust-observability/research/reply-error-coverage-checkpoint.json",
-    "sha256": "1f18796d33f586ae9f1f8bd1908669f180c94dde61b42308b4d50817939c41dd",
+    "sha256": "e584ed096093741dc6324c4a4d619d427e6c7a1ded384fb418b8f2dfdbd7ad5c",
     "scope": "Tests-only repair; earlier implementation/runtime proofs retain their original source bindings."
   }
 }
