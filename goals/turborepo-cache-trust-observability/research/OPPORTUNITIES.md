@@ -286,3 +286,22 @@ not treated as permanent qualification.
   result is restored from its immutable revision; the restoration now names its
   file/state and includes a digest-verified reconstruction without inventing a
   commit for that earlier working tree. Current implementation proof is separate.
+
+## 2026-10-29: hosted assertion and interrupted-request repair
+
+The completed Check run on PR #2352 found seven EV006 Boolean assertions in
+`cache-conformance-lab.test.ts` and one interrupted-upload failure. The unit
+aggregate and coverage guard failed because of that unit failure. Required
+logs were read before any rerun. The Boolean assertions now use the canonical
+polarity-preserving helper; no expected error payload was invented and no
+baseline was enlarged.
+
+The interrupted-upload control used fifty/one-hundred-millisecond sleeps. It
+now observes the real request-body read and handler completion with bounded
+Deferred signals. A capture snapshot must also reject admitted requests that
+have no recorded event, including pending or interrupted handlers. The prior
+count-only limit did not establish that completion invariant. Removing that
+invariant or restoring the old empty-upload fallback separately makes the
+synchronized control fail. Both counterfactuals restore exact source bytes.
+Retain these controls in hosted and CPU-constrained native verification rather
+than compensating with larger sleeps or retries.

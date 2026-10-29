@@ -262,3 +262,12 @@ test-codec hoisting, canonical catalog refresh and main integration.
   state. The checkpoint names the restored file and state; the base commit is
   explicitly not presented as a revision of the restored state. Its digest was
   reproduced by applying the patch in a disposable directory.
+
+### Hosted request-completion repair, 2026-10-29
+
+[The completion checkpoint](proxy-request-completion-checkpoint.json) binds
+the current capture and test bytes to 271 tests, package checks, full style
+scan, zero Fallow findings, two counterfactuals and three CPU-constrained
+loopback processes. The prior capture checkpoint remains byte-identical and
+retains its own historical source maps and full-audit scope. No native
+artifact, signing activation, deployed grant or observation window changes.

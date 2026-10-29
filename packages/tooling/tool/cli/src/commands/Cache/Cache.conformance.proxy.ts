@@ -22,6 +22,7 @@ import * as Match from "effect/Match";
 import * as Redacted from "effect/Redacted";
 import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
@@ -261,9 +262,23 @@ const makeProxyCapture = Effect.fnUntraced(function* (options: CacheConformanceP
     }),
     invalidate: Ref.set(invalid, true),
     events: Effect.gen(function* () {
-      if (yield* Ref.get(invalid))
+      const state = yield* Effect.all({
+        captured: Ref.get(events),
+        requests: Ref.get(requests),
+        invalid: Ref.get(invalid),
+      }).pipe(
+        Effect.repeat({
+          until: (state) => state.invalid || state.captured.length === state.requests,
+          schedule: Schedule.spaced(Duration.millis(10)),
+        }),
+        Effect.timeoutOrElse({
+          duration: Duration.sum(Duration.millis(options.holdMs), Duration.seconds(5)),
+          orElse: () => Effect.fail(CacheCommandError.new("Conformance proxy capture has unfinished requests.")),
+        })
+      );
+      if (state.invalid)
         return yield* CacheCommandError.new("Conformance proxy capture is incomplete or exceeded its bounds.");
-      return yield* Ref.get(events);
+      return state.captured;
     }),
   };
 });

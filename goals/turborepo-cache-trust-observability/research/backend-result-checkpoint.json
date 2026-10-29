@@ -121,6 +121,11 @@
     }
   },
   "latestSourceCheckpoint": {
+    "path": "goals/turborepo-cache-trust-observability/research/proxy-request-completion-checkpoint.json",
+    "sha256": "778db87a2b3b9066c5cc60da811bd1601612d260e03211c225927fe0ea2f4e01",
+    "scope": "Current hosted repair, bounded request settlement and synchronized interrupted-upload control. Older audits and evidence retain their recorded source scope."
+  },
+  "priorCaptureCheckpoint": {
     "path": "goals/turborepo-cache-trust-observability/research/proxy-capture-bounds-checkpoint.json",
     "sha256": "acc277a914542bc29ed2950f892db464db9e2cf005532a0c4ec1d63f131a0379",
     "scope": "Bounded capture and streamed reply repair. All earlier source maps and full audits remain historical; no full-audit transfer to these new bytes."

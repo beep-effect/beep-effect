@@ -1,0 +1,84 @@
+{
+  "schemaVersion": "cache-request-completion-checkpoint/v1",
+  "recordedAt": "2026-10-29T05:23:01.696373+00:00",
+  "authority": "component-observation-only",
+  "headAtVerification": "96d381096c501bf731929c3ab1a2b77b194bf01b",
+  "sourceState": "uncommitted-working-tree-with-exact-file-digests",
+  "sourceSha256": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.proxy.ts": "015467e91f40b15e017c9ffa0d68db60ff544802992a8bb5196b15d624e99508",
+    "packages/tooling/tool/cli/test/cache-conformance-lab.test.ts": "dd339a3a81a7b6437ea121ef01cb5b6ec11b539aad3ce0581a648304f74d5b76"
+  },
+  "priorCheckpoint": {
+    "path": "goals/turborepo-cache-trust-observability/research/proxy-capture-bounds-checkpoint.json",
+    "sha256": "acc277a914542bc29ed2950f892db464db9e2cf005532a0c4ec1d63f131a0379",
+    "scope": "Earlier source-bound full audits, capture controls and historical restoration evidence remain unchanged."
+  },
+  "hostedAttribution": {
+    "run": 40816557501,
+    "introduced": [
+      "Seven EV006 Boolean assertions",
+      "Interrupted-upload test used unsynchronized short sleeps"
+    ],
+    "dependentFailures": ["Test Unit aggregate", "Coverage Regression guard"],
+    "baselineExpanded": false
+  },
+  "behavior": {
+    "completeReceipt": "All admitted requests have recorded outcomes.",
+    "settlementPollMillis": 10,
+    "settlementBound": "configured hold plus five seconds",
+    "invalidCapture": "fail immediately",
+    "unfinishedRequest": "refuse receipt at the settlement bound"
+  },
+  "counterfactuals": {
+    "sourceSha256": "015467e91f40b15e017c9ffa0d68db60ff544802992a8bb5196b15d624e99508",
+    "restoredSha256": "015467e91f40b15e017c9ffa0d68db60ff544802992a8bb5196b15d624e99508",
+    "results": [
+      {
+        "control": "early-receipt",
+        "exit": 1
+      },
+      {
+        "control": "empty-upload-fallback",
+        "exit": 1
+      }
+    ]
+  },
+  "verification": {
+    "focused": {
+      "files": 11,
+      "passed": 271,
+      "seconds": 26.43
+    },
+    "packageQuick": {
+      "lintSeconds": 6.6,
+      "checkSeconds": 13.8
+    },
+    "fallow": {
+      "auditNewFindings": 0,
+      "healthNewFindings": 0
+    },
+    "effectVitest": {
+      "files": 3009,
+      "retainedFindings": 546,
+      "introducedFindings": 0,
+      "inventoryChanged": false
+    },
+    "cpuControl": {
+      "independentProcesses": 3,
+      "cpuQuotaPercent": 100,
+      "memoryMaxBytes": 3221225472,
+      "tasksMax": 512,
+      "result": "success",
+      "scope": "Actual loopback body interruption and receipt settling on this Linux host; no AWS runtime equivalence claim."
+    }
+  },
+  "specSha256": "88c6039bf568c301316491068626927a71af9f21e93d76d4109526e15066d0a0",
+  "productionChanges": false,
+  "notProven": [
+    "Protected CI producer publication and upload join",
+    "Deployed grants, tenant and epoch isolation",
+    "Production signing and warm rotation or rollback",
+    "Current full computation qualification and adoption",
+    "Representative seven/seven/fourteen-day windows"
+  ]
+}

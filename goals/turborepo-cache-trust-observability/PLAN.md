@@ -333,3 +333,17 @@ ecosystem-polarity tests. Current package lint/check pass in 5.8/15.7 seconds;
 Fallow audit, Fallow health and repository oxlint pass with zero findings. The
 catalog remains current and all 427 census source bindings verify. Earlier
 256-test and full-audit snapshots remain separate historical evidence.
+
+## 2026-10-29: hosted request-completion repair
+
+The completed hosted run identified seven introduced assertion-style findings
+and an interrupted-upload race. Canonical polarity-preserving assertions,
+actual body/handler signals and bounded complete-request settlement now pass
+271 tests across eleven files (26.43 seconds), package lint/check (6.6/13.8
+seconds), zero-new-finding Fallow audit/health and the full Effect/Vitest scan.
+Two separate counterfactuals fail at their intended assertions; three fresh
+processes pass under one CPU and a three-GiB limit. See the source-bound
+[completion checkpoint](research/proxy-request-completion-checkpoint.json).
+Historical full audits are not transferred to these new implementation bytes.
+The live R2 configuration, signing setting and all representative windows are
+unchanged. Full goals remain active.

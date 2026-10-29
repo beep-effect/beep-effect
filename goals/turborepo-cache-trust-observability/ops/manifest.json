@@ -65,7 +65,8 @@
     "research/adapter-policy-lab.json",
     "research/adapter-dependency-review.json",
     "research/backend-result-checkpoint.json",
-    "research/proxy-capture-bounds-checkpoint.json"
+    "research/proxy-capture-bounds-checkpoint.json",
+    "research/proxy-request-completion-checkpoint.json"
   ],
   "agentLaunchers": [
     {

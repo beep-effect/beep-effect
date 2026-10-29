@@ -21,6 +21,7 @@ import {
   runCacheConformanceNative,
 } from "@beep/repo-cli/commands/Cache";
 import * as Evidence from "@beep/repo-cli/commands/Cache/Cache.evidence";
+import * as ProtocolFixture from "@beep/repo-cli/commands/Cache/Cache.protocol.fixture";
 import { CacheRuntimeProcess } from "@beep/repo-cli/test/Cache";
 import { Sha256Hex } from "@beep/schema";
 import { NodeServices } from "@effect/platform-node";
@@ -29,13 +30,16 @@ import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Crypto from "effect/Crypto";
+import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
+import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Headers from "effect/http/Headers";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as HttpServerRequest from "effect/http/HttpServerRequest";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -55,11 +59,35 @@ import {
   targetFor,
   teamId,
 } from "./cache-conformance-server.ts";
+import type * as HttpServerResponse from "effect/http/HttpServerResponse";
 import type { ServerMode } from "./cache-conformance-server.ts";
 
 afterEach(() => vi.restoreAllMocks());
 
 const Services = Layer.mergeAll(NodeServices.layer, FetchHttpClient.layer);
+const observeProxyBody = Effect.fn("ConformanceTest.observeProxyBody")(function* () {
+  const started = yield* Deferred.make<void>();
+  const completed = yield* Deferred.make<void>();
+  const serve = ProtocolFixture.serveCacheLoopback;
+  vi.spyOn(ProtocolFixture, "serveCacheLoopback").mockImplementation(
+    <E, R>(app: Effect.Effect<HttpServerResponse.HttpServerResponse, E, R>, maxRequestBodySize: number) =>
+      serve(
+        Effect.gen(function* () {
+          const request = yield* HttpServerRequest.HttpServerRequest;
+          const watched = new Proxy(request, {
+            get(target, property) {
+              return property === "arrayBuffer"
+                ? Deferred.succeed(started, undefined).pipe(Effect.andThen(target.arrayBuffer))
+                : Reflect.get(target, property, target);
+            },
+          });
+          return yield* app.pipe(Effect.provideService(HttpServerRequest.HttpServerRequest, watched));
+        }).pipe(Effect.ensuring(Deferred.succeed(completed, undefined))),
+        maxRequestBodySize
+      )
+  );
+  return { started, completed };
+});
 // The fault proxy injects `reset` and `truncated-body` by failing the response
 // stream, which Bun.serve turns into a connection abort. The CLI only runs on
 // Bun; vitest's Node run serves through a Bun.serve shim that completes the
@@ -147,7 +175,7 @@ it.layer(Services, { timeout: "60 seconds", excludeTestServices: true })("cache 
       expect(yield* put).toBe(503);
       expect(yield* put).toBe(503);
       expect((yield* server.tags).length).toBe(2);
-      expect(Result.isFailure(yield* proxy.events.pipe(Effect.result))).toBe(true);
+      (yield* proxy.events.pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
     })
   );
 
@@ -171,7 +199,7 @@ it.layer(Services, { timeout: "60 seconds", excludeTestServices: true })("cache 
       );
       expect(response.status).toBe(413);
       expect(yield* server.tags).toEqual([]);
-      expect(Result.isFailure(yield* proxy.events.pipe(Effect.result))).toBe(true);
+      (yield* proxy.events.pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
     })
   );
 
@@ -198,33 +226,44 @@ it.layer(Services, { timeout: "60 seconds", excludeTestServices: true })("cache 
       expect(yield* put).toBe(200);
       expect(yield* put).toBe(503);
       expect((yield* server.tags).length).toBe(2);
-      expect(Result.isFailure(yield* proxy.events.pipe(Effect.result))).toBe(true);
+      (yield* proxy.events.pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
     })
   );
 
   it.effect("does not turn an interrupted upload into an empty upstream write", () =>
     Effect.gen(function* () {
       const server = yield* makeConformanceServer(goodMode);
+      const { started, completed } = yield* observeProxyBody();
+      const release = yield* Deferred.make<void>();
       const proxy = yield* makeCacheConformanceFaultProxy(
         CacheConformanceProxyOptions.make({ target: targetFor({ url: server.url }), bearers, holdMs: 400 })
       );
-      yield* HttpClientRequest.put(`${proxy.url}/v8/artifacts/00112233445566778899aabbccddeeff?teamId=${teamId}`).pipe(
+      const upload = yield* HttpClientRequest.put(
+        `${proxy.url}/v8/artifacts/00112233445566778899aabbccddeeff?teamId=${teamId}`
+      ).pipe(
         HttpClientRequest.setHeaders({ authorization: `Bearer ${secrets.writer}`, "x-artifact-tag": "A" }),
         HttpClientRequest.bodyStream(
           Stream.concat(
             Stream.make(new TextEncoder().encode("partial")),
-            Stream.fromEffect(Effect.sleep("50 millis")).pipe(
+            Stream.fromEffect(release.pipe(Deferred.await, Effect.timeout("5 seconds"))).pipe(
               Stream.drain,
               Stream.concat(Stream.fail("synthetic request abort"))
             )
           )
         ),
         HttpClient.execute,
-        Effect.result
+        Effect.result,
+        Effect.forkChild
       );
-      yield* Effect.sleep("100 millis");
+      yield* started.pipe(Deferred.await, Effect.timeout("5 seconds"));
+      const pendingReceipt = yield* proxy.events.pipe(Effect.forkChild);
+      yield* Effect.yieldNow;
+      yield* Effect.sync(() => O.fromUndefinedOr(pendingReceipt.pollUnsafe()).pipe(assertNone));
+      yield* Deferred.succeed(release, undefined);
+      yield* Fiber.join(upload);
+      yield* Deferred.await(completed).pipe(Effect.timeout("5 seconds"));
       expect(yield* server.tags).toEqual([]);
-      expect(Result.isFailure(yield* proxy.events.pipe(Effect.result))).toBe(true);
+      (yield* Fiber.join(pendingReceipt).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
     })
   );
 
@@ -250,7 +289,7 @@ it.layer(Services, { timeout: "60 seconds", excludeTestServices: true })("cache 
         headers: { authorization: `Bearer ${secrets.reader}` },
       });
       expect(response.status).toBe(503);
-      expect(Result.isFailure(yield* proxy.events.pipe(Effect.result))).toBe(true);
+      (yield* proxy.events.pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
     })
   );
 
@@ -279,7 +318,7 @@ it.layer(Services, { timeout: "60 seconds", excludeTestServices: true })("cache 
       expect(A.filter(statuses, (status) => status === 200).length).toBeLessThanOrEqual(2);
       expect(A.filter(statuses, (status) => status === 503).length).toBeGreaterThanOrEqual(6);
       expect((yield* server.tags).length).toBeLessThanOrEqual(2);
-      expect(Result.isFailure(yield* proxy.events.pipe(Effect.result))).toBe(true);
+      (yield* proxy.events.pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
     })
   );
 
@@ -302,7 +341,7 @@ it.layer(Services, { timeout: "60 seconds", excludeTestServices: true })("cache 
       );
       expect(statuses).toContain(503);
       expect((yield* server.tags).length).toBe(64);
-      expect(Result.isFailure(yield* proxy.events.pipe(Effect.result))).toBe(true);
+      (yield* proxy.events.pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
     })
   );
 

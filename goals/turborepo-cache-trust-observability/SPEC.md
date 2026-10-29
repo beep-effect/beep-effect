@@ -303,3 +303,17 @@ The local process report does not satisfy those deployment or observation gates.
   admission/recording seam while retaining public options, bounds and controls.
   No suppression or baseline change. Reversal is to halt candidate experiments;
   the live incumbent is unaffected.
+
+### Complete request capture and hosted repair
+
+- 2026-10-29: A capture is complete only when every admitted request has a
+  recorded outcome. Receipt reads allow deliberate in-flight timeout probes to
+  finish, polling through Effect Schedule every ten milliseconds for at most
+  the configured hold plus five seconds. Invalid capture fails immediately;
+  requests still unaccounted for at that bound refuse the receipt. This adds
+  no backend, signing, credential or qualification authority. Reversal keeps
+  affected evidence and reuse disabled rather than accepting a partial prefix.
+- Synchronize the native interrupted-upload control with actual body-read and
+  handler-completion signals. Preserve Boolean assertion polarity through
+  canonical helpers. No expected error payload, baseline waiver, fixed sleep
+  extension or test retry substitutes for those controls.
