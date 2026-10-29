@@ -53,7 +53,9 @@
     "research/actual-persistent-issuer-canary.json",
     "research/owned-producer-workflow.json",
     "research/owned-producer-frozen-profile.json",
-    "research/owned-producer-private-approval.json"
+    "research/owned-producer-private-approval.json",
+    "research/adapter-policy-lab.json",
+    "research/adapter-dependency-review.json"
   ],
   "agentLaunchers": [
     {
