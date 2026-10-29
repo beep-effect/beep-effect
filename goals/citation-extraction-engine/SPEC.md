@@ -1067,6 +1067,15 @@ instead of silently splitting delivery or weakening scope.
   Default registered descriptors, richer diagnostics and the live Layer remain
   open; no exhaustive completion or semantic waiver follows.
 
+- **2026-10-29 canonical session descriptors:** capture owned Canonical/Host
+  origins inside issued snapshots. Derive private canonical labels from final
+  semantics, authenticated frozen editions and pinned Resource hashes. Three
+  case rows plus real law/journal rows match source-observed hash descriptors.
+  Mutable-key scenes restore identical receipts across independent owners.
+  Host presentation cannot select the canonical path; explicit host descriptors
+  remain required. Unavailable null-page identity inputs fail closed. The live
+  Layer, general host normalization and exhaustive completion remain open.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from

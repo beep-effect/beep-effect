@@ -33,6 +33,10 @@ import {
 import { prepareCitationResolution } from "@beep/law-practice-server/_test/Citation/ResolutionInput";
 import { CitationResourceIdentity } from "@beep/law-practice-server/_test/Citation/ResourceIdentity";
 import {
+  CitationSessionHostResourceDescriptors,
+  makeCitationRegisteredSessionDescriptors,
+} from "@beep/law-practice-server/_test/Citation/SessionDescriptors";
+import {
   CitationSessionResourceDescriptors,
   makeCitationSessionDocumentProjector,
 } from "@beep/law-practice-server/_test/Citation/SessionDocument";
@@ -248,6 +252,70 @@ const load = Effect.fn("HostTest.load")(function* () {
   return yield* S.decodeEffect(Corpus)(raw);
 });
 it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resources", (it) => {
+  it.effect("classifies deceptive default-looking presentation by owned host origin and requires a host port", () =>
+    Effect.gen(function* () {
+      const row = A.getUnsafe((yield* load()).callbacks, 0);
+      const prepared = yield* prepare("deceptive-default-presentation");
+      const host = harness([row.host], { [row.host.hashRaw]: row.host.hashRaw });
+      const deceptive = CitationHostResourceAdapterFactory.of({
+        build: Effect.fn("DescriptorOriginTest.build")(function* (canonical) {
+          const adapter = yield* host.factory.build(canonical);
+          return {
+            ...adapter,
+            presentation: Effect.fn("DescriptorOriginTest.presentation")(() =>
+              Effect.succeed({ kind: "default", mentionId: A.getUnsafe(prepared.mentions, 0).id })
+            ),
+          };
+        }),
+      });
+      const frozen = yield* makeCitationFrozenEditions((yield* loadCitationFrozenEditionFixtures()).bundle);
+      const factory = yield* makeCitationCallbackRuntimeIndexFactory().pipe(
+        Effect.provideService(CitationFrozenEditions, frozen),
+        Effect.provideService(CitationHostResourceAdapterFactory, deceptive)
+      );
+      const work = yield* makeCitationResolutionWork(prepared.limits);
+      const owner = yield* makeCitationCallbackDictionary(prepared).pipe(
+        Effect.provideService(CitationResolutionWork, work),
+        Effect.provideService(CitationCallbackRuntimeIndexFactory, factory)
+      );
+      const defaults = yield* makeDefaultCitationResolutionCallbacks(prepared).pipe(
+        Effect.provideService(CitationResolutionWork, work),
+        Effect.provideService(CitationCallbackDictionary, owner)
+      );
+      const state = yield* runPreparedCitationCallbackSession(prepared).pipe(
+        Effect.provideService(CitationResolutionWork, work),
+        Effect.provideService(CitationCallbackDictionary, owner),
+        Effect.provideService(
+          CitationResolutionCallbacks,
+          CitationResolutionCallbacks.of({
+            ...defaults,
+            full: Effect.fn("DescriptorOriginTest.full")(() => owner.hostResource(A.getUnsafe(host.states, 0))),
+          })
+        )
+      );
+      expect(A.map(state.resourceOrigins, (origin) => origin._tag)).toEqual(["Host"]);
+      const descriptors = yield* makeCitationRegisteredSessionDescriptors(state).pipe(
+        Effect.provideService(CitationFrozenEditions, frozen)
+      );
+      const resource = A.getUnsafe(state.groups, 0).resource;
+      expect((yield* Effect.flip(descriptors.describe(resource))).reason).toBe("identity-failed");
+      const identity = CitationResourceIdentity.cases.External.make({
+        scope: prepared.engineArtifact,
+        key: prepared.engineArtifact,
+      });
+      const explicit = yield* makeCitationRegisteredSessionDescriptors(state).pipe(
+        Effect.provideService(CitationFrozenEditions, frozen),
+        Effect.provideService(
+          CitationSessionHostResourceDescriptors,
+          CitationSessionHostResourceDescriptors.of({
+            describe: Effect.fn("DescriptorOriginTest.explicitHost")(() => Effect.succeed(identity)),
+          })
+        )
+      );
+      expect(yield* explicit.describe(resource)).toEqual(identity);
+      expect(host.trace()).toEqual(row.trace);
+    })
+  );
   it.effect("captures actual returned objects and append destinations independently of surviving groups", () =>
     Effect.gen(function* () {
       const raw = yield* (yield* FileSystem.FileSystem).readFileString(

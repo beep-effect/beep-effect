@@ -31,7 +31,11 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import * as Tuple from "effect/Tuple";
-import { CitationCallbackFailure, CitationCallbackResource } from "./CallbackResource.ts";
+import {
+  CitationCallbackFailure,
+  CitationCallbackResource,
+  CitationCallbackResourceOrigin,
+} from "./CallbackResource.ts";
 
 export { CitationCallbackFailure, CitationCallbackResource } from "./CallbackResource.ts";
 
@@ -304,22 +308,44 @@ const SessionState = S.Struct({
   fulls: S.Array(CitationCallbackFull),
   groups: S.Array(CitationCallbackEntry),
   decisions: S.Array(CitationCallbackDecision),
+  resourceOrigins: S.Array(CitationCallbackResourceOrigin),
   last: CitationCallbackResource,
   detachedCitations: S.Array(CitationDetached),
 })
   .check(
     S.makeFilter(
-      (state) =>
-        A.length(state.decisions) === A.length(state.mentions) &&
-        A.every(
-          A.zip(state.decisions, state.mentions),
-          ([decision, mention]) =>
-            decision.mentionId === mention.id && (decision.resource._tag !== "None" || O.isNone(decision.assignment))
-        ) &&
-        HashSet.size(HashSet.fromIterable(A.map(state.groups, (group) => group.entrySlot))) === A.length(state.groups),
+      (state) => {
+        const originKeys = HashSet.fromIterable(
+          A.map(state.resourceOrigins, (origin) => `${origin.scope}:${origin.slot}`)
+        );
+        const resources = [
+          state.last,
+          ...A.map(state.fulls, (full) => full.resource),
+          ...A.map(state.groups, (group) => group.resource),
+          ...A.flatMap(state.decisions, (decision) => [
+            decision.resource,
+            ...O.toArray(O.map(decision.assignment, (assignment) => assignment.resource)),
+          ]),
+        ];
+        return (
+          HashSet.size(originKeys) === A.length(state.resourceOrigins) &&
+          A.every(
+            resources,
+            (resource) =>
+              resource._tag !== "Registered" || HashSet.has(originKeys, `${resource.scope}:${resource.slot}`)
+          ) &&
+          A.length(state.decisions) === A.length(state.mentions) &&
+          A.every(
+            A.zip(state.decisions, state.mentions),
+            ([decision, mention]) =>
+              decision.mentionId === mention.id && (decision.resource._tag !== "None" || O.isNone(decision.assignment))
+          ) &&
+          HashSet.size(HashSet.fromIterable(A.map(state.groups, (group) => group.entrySlot))) === A.length(state.groups)
+        );
+      },
       $I.annote("SessionDecisionCoherence", {
         description:
-          "Exactly one ordered decision per verified occurrence; None has no append, final insertion identities are unique, and removed historical destinations need not survive.",
+          "Exactly one ordered decision per occurrence; None has no append, final insertion and registered origin identities are unique, all registered references have owned origins, and removed destinations need not survive.",
       })
     )
   )
@@ -449,6 +475,7 @@ export class CitationCallbackDictionary extends Context.Service<
     readonly start: Effect.Effect<void, CitationCallbackFailure>;
     readonly close: Effect.Effect<void>;
     readonly read: Effect.Effect<ReadonlyArray<CitationCallbackGroup>, CitationCallbackFailure>;
+    readonly resourceOrigins: Effect.Effect<ReadonlyArray<CitationCallbackResourceOrigin>, CitationCallbackFailure>;
     readonly readEntries: Effect.Effect<ReadonlyArray<CitationCallbackEntry>, CitationCallbackFailure>;
     readonly clear: Effect.Effect<void, CitationCallbackFailure>;
     readonly get: (resource: CitationCallbackResource) => Effect.Effect<CitationCallbackList, CitationCallbackFailure>;
@@ -883,6 +910,13 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
   });
   const api = CitationCallbackDictionary.of({
     currentResource,
+    resourceOrigins: alive.pipe(
+      Effect.andThen(
+        Effect.suspend(() =>
+          O.isSome(runtime) ? runtime.value.origins : Effect.succeed(A.empty<CitationCallbackResourceOrigin>())
+        )
+      )
+    ),
     hostResource: Effect.fn("Citation.callbackHostResource")(function* (input: unknown) {
       yield* alive;
       if (O.isNone(runtime)) return yield* invalid();
@@ -1117,6 +1151,7 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
   return CitationCallbackDictionary.of({
     ...api,
     readEntries: mutex.withPermit(api.readEntries),
+    resourceOrigins: mutex.withPermit(api.resourceOrigins),
     currentResource: Effect.fn("Citation.serialCurrentResource")((resource: CitationCallbackResource) =>
       mutex.withPermit(api.currentResource(resource))
     ),
@@ -1306,6 +1341,7 @@ export const runPreparedCitationCallbackSession = Effect.fn("Citation.runPrepare
           fulls: yield* dictionary.readFulls,
           groups,
           decisions,
+          resourceOrigins: yield* dictionary.resourceOrigins,
           last: yield* dictionary.currentResource(last),
           detachedCitations: yield* dictionary.detachedCitations,
         }).pipe(Effect.mapError(invalid));

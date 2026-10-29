@@ -160,6 +160,15 @@ native hooks. Issuance, tamper isolation, anchor retention and independent repla
 controls are target identity/proof laws, not extra oracle capabilities. The pure
 trusted descriptor port still needs its default registered implementation.
 
+The [canonical session descriptor evidence](
+../history/evidence/2026-10-29-canonical-session-descriptors.md) reuses the
+unchanged case/publication hash corpora and authenticated frozen editions.
+Source-observed decimal hashes independently determine expected labels for
+three case rows and real law/journal rows. Owned origin classification,
+presentation spoofing, unused null-page failure and independent replay are
+target proof laws. They do not expand source runtime coverage or complete the
+production Layer. Attribution remains the existing eyecite BSD-2-Clause notice.
+
 ## Incorporated-source discipline
 
 - A local clone is research state, not an incorporated dependency.

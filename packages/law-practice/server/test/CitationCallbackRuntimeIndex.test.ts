@@ -29,7 +29,7 @@ import {
   makeCitationFrozenEditions,
 } from "@beep/law-practice-server/_test/Citation/FrozenEditions";
 import { prepareCitationResolution } from "@beep/law-practice-server/_test/Citation/ResolutionInput";
-import { CitationResourceIdentity } from "@beep/law-practice-server/_test/Citation/ResourceIdentity";
+import { makeCitationRegisteredSessionDescriptors } from "@beep/law-practice-server/_test/Citation/SessionDescriptors";
 import {
   CitationSessionResourceDescriptors,
   makeCitationSessionDocumentProjector,
@@ -267,17 +267,11 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered callback
           yield* Effect.forEach(result.mentions, (mention) => semanticView(ref(mention), mention.citation)),
           row.name
         ).toEqual(row.objects);
-        const identity = CitationResourceIdentity.cases.External.make({
-          scope: prepared.engineArtifact,
-          key: yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(`${row.name}:resource:0`)),
-        });
+        const descriptors = yield* makeCitationRegisteredSessionDescriptors(result).pipe(
+          Effect.provideService(CitationFrozenEditions, frozen)
+        );
         const projector = yield* makeCitationSessionDocumentProjector().pipe(
-          Effect.provideService(
-            CitationSessionResourceDescriptors,
-            CitationSessionResourceDescriptors.of({
-              describe: Effect.fn("RuntimeSessionProjector.describe")(() => Effect.succeed(identity)),
-            })
-          )
+          Effect.provideService(CitationSessionResourceDescriptors, descriptors)
         );
         const { document, receipt, resourceBindings } = yield* projector.project(result);
         const authorityId = A.getUnsafe(document.authorities, 0).id;
@@ -355,7 +349,13 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered callback
               secondResource._tag === "Registered" &&
               firstResource.scope !== secondResource.scope
           ).toBe(true);
-          const projectedReplay = yield* projector.project(replay);
+          const replayDescriptors = yield* makeCitationRegisteredSessionDescriptors(replay).pipe(
+            Effect.provideService(CitationFrozenEditions, frozen)
+          );
+          const replayProjector = yield* makeCitationSessionDocumentProjector().pipe(
+            Effect.provideService(CitationSessionResourceDescriptors, replayDescriptors)
+          );
+          const projectedReplay = yield* replayProjector.project(replay);
           expect(projectedReplay.receipt).toEqual(receipt);
           expect(projectedReplay.resourceBindings).toEqual(resourceBindings);
         }

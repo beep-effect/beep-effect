@@ -50,6 +50,8 @@ unfinished.
 
 Current evidence:
 
+- [Canonical session descriptors](./history/evidence/2026-10-29-canonical-session-descriptors.md)
+
 - [Callback mutation shapes](./history/evidence/2026-10-28-callback-mutation-shapes.md)
 
 - [Production default callbacks](./history/evidence/2026-10-28-production-default-callbacks.md)

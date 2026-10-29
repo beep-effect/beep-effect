@@ -4,7 +4,9 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
 import { $LawPracticeServerId } from "@beep/identity/packages";
+import { CitationGroupMember } from "@beep/law-practice-domain/values";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import * as S from "effect/Schema";
 import { CitationResourceIdentity } from "./ResourceIdentity.ts";
@@ -36,6 +38,28 @@ export const CitationCallbackResource = S.TaggedUnion({
  * @since 0.0.0
  */
 export type CitationCallbackResource = typeof CitationCallbackResource.Type;
+/**
+ * Registry-issued origin, captured before owner close. Presentation fields
+ * cannot establish whether an object is a canonical Resource or host object.
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
+export const CitationCallbackResourceOrigin = S.TaggedUnion({
+  Canonical: { scope: Sha256Hex, slot: S.Natural, reference: CitationGroupMember },
+  Host: { scope: Sha256Hex, slot: S.Natural },
+}).pipe(
+  $I.annoteSchema("CitationCallbackResourceOrigin", {
+    description: "Authenticated operation registry classification, independent of resource presentation.",
+  })
+);
+/**
+ * Schema-derived registry origin.
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
+export type CitationCallbackResourceOrigin = typeof CitationCallbackResourceOrigin.Type;
 const Reason = LiteralKit([
   "invalid-input",
   "evidence-failed",

@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { FullCitation } from "@beep/law-practice-domain/values";
+import { CitationGroupMember, FullCitation } from "@beep/law-practice-domain/values";
 import { Sha256HexFromBytes } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
@@ -15,7 +15,11 @@ import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { CitationCallbackFailure, CitationCallbackResource } from "./CallbackResource.ts";
+import {
+  CitationCallbackFailure,
+  CitationCallbackResource,
+  CitationCallbackResourceOrigin,
+} from "./CallbackResource.ts";
 import { CitationFrozenEditions } from "./FrozenEditions.ts";
 import {
   CitationHostComparisonOperand,
@@ -36,7 +40,7 @@ import {
   makeCitationRuntimeDictionary,
 } from "./RuntimeDictionary.ts";
 import { makeCitationRuntimeSet } from "./RuntimeSet.ts";
-import type { Citation, CitationGroupMember } from "@beep/law-practice-domain/values";
+import type { Citation } from "@beep/law-practice-domain/values";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationHostResourceAdapter } from "./HostResources.ts";
 import type { CitationRuntimeDictionaryEntry } from "./RuntimeDictionary.ts";
@@ -89,6 +93,7 @@ export class CitationCallbackRuntimeIndexFactory extends Context.Service<
           resource: CitationCallbackResource
         ) => Effect.Effect<O.Option<typeof Entry.Type>, CitationCallbackFailure>;
         readonly read: Effect.Effect<ReadonlyArray<typeof Entry.Type>, CitationCallbackFailure>;
+        readonly origins: Effect.Effect<ReadonlyArray<CitationCallbackResourceOrigin>, CitationCallbackFailure>;
         readonly clear: Effect.Effect<void>;
         readonly close: Effect.Effect<void>;
       },
@@ -143,7 +148,11 @@ export const makeCitationCallbackRuntimeIndexFactory = Effect.fn("Citation.makeC
           Effect.mapError(mapped)
         );
         const Record = S.TaggedUnion({
-          Canonical: { object: CitationResourceObject, resource: CitationCallbackResource },
+          Canonical: {
+            object: CitationResourceObject,
+            resource: CitationCallbackResource,
+            reference: CitationGroupMember,
+          },
           Host: { handle: CitationHostResource, resource: CitationCallbackResource },
         });
         let registered = HashMap.empty<number, typeof Record.Type>();
@@ -287,10 +296,11 @@ export const makeCitationCallbackRuntimeIndexFactory = Effect.fn("Citation.makeC
           create: Effect.fn("Citation.callbackRuntimeCreate")(function* (reference: CitationGroupMember) {
             const slot = yield* issueSlot;
             const object = yield* objects.create(reference).pipe(Effect.mapError(mapped));
+            const ownedReference = yield* objects.referenceOf(object).pipe(Effect.mapError(mapped));
             const value: S.Json =
-              reference._tag === "Mention"
-                ? { kind: "default", mentionId: reference.mentionId }
-                : { kind: "default", detachedId: reference.detachedId };
+              ownedReference._tag === "Mention"
+                ? { kind: "default", mentionId: ownedReference.mentionId }
+                : { kind: "default", detachedId: ownedReference.detachedId };
             const resource = CitationCallbackResource.cases.Registered.make({
               scope,
               slot,
@@ -300,7 +310,12 @@ export const makeCitationCallbackRuntimeIndexFactory = Effect.fn("Citation.makeC
             const captured = yield* S.decodeEffect(codec)(
               yield* S.encodeEffect(codec)(resource).pipe(Effect.mapError(bad))
             ).pipe(Effect.mapError(bad));
-            registered = HashMap.set(registered, slot, { _tag: "Canonical", object, resource: captured });
+            registered = HashMap.set(registered, slot, {
+              _tag: "Canonical",
+              object,
+              resource: captured,
+              reference: ownedReference,
+            });
             return resource;
           }),
           uniqueCount: Effect.fn("Citation.callbackRuntimeUniqueCount")(function* (
@@ -333,6 +348,21 @@ export const makeCitationCallbackRuntimeIndexFactory = Effect.fn("Citation.makeC
             return O.isSome(hit) ? O.some(yield* entry(hit.value)) : O.none();
           }),
           read,
+          origins: Effect.suspend(() =>
+            closed
+              ? Effect.fail(bad())
+              : Effect.succeed(
+                  A.map(registered.pipe(HashMap.entries, A.fromIterable), ([slot, record]) =>
+                    record._tag === "Canonical"
+                      ? CitationCallbackResourceOrigin.cases.Canonical.make({
+                          scope,
+                          slot,
+                          reference: record.reference,
+                        })
+                      : CitationCallbackResourceOrigin.cases.Host.make({ scope, slot })
+                  )
+                )
+          ),
           clear: table.clear,
           close: Effect.sync(() => {
             closed = true;

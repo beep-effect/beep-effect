@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "e3641e12c8ac9ecb4c22b534b11a501912f02139498616d3aac659642992196b",
+  "planSha256": "9f30a4071197de1a8e4e3d8019b5f45e488139ace0097af54d6e73a2baadf6c7",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -149,7 +149,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationCallbackRuntimeIndex.test.ts",
-          "sha256": "363ad7ab5b23a3e01a81acb604d391de8f22deaf0994059ca0d246e7c0020b94"
+          "sha256": "784b293a303ea29d93b4a900f44bcf4ed47b1cd9af79d003d53e70d8a809d607"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-10-29-host-resource-protocol.md",
@@ -157,7 +157,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationHostResources.test.ts",
-          "sha256": "fdc9297791003e087356a7da52e01d5461f0542bb209951b2156c97e5c0fef4e"
+          "sha256": "44e3206107a66eb496b7f4723e83a1c3fac7592effa36cbe8e797c6a8b8a1e80"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-10-29-insertion-entry-receipts.md",
@@ -190,6 +190,18 @@
         {
           "path": "packages/law-practice/server/src/internal/Citation/SessionDocument.ts",
           "sha256": "15404943364d460742406287e0b821f7ed63a8e60e0bddffe2b9bad3dd98801c"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-10-29-canonical-session-descriptors.md",
+          "sha256": "35a1f38286f52e60926359fb53f0c7a6a5b6a5970fa204f6222a5d182becf31d"
+        },
+        {
+          "path": "packages/law-practice/server/src/internal/Citation/SessionDescriptors.ts",
+          "sha256": "876ba33855ba1da404839f6fc7cbcaace6ebd6d679b53a178455adea559160f2"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationSessionDescriptors.test.ts",
+          "sha256": "d392483035449415933cc57786b82ac5d67e443c210286ea0c5d379da2883cc4"
         }
       ],
       "workflowState": "audit",
@@ -277,7 +289,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationCallbackRuntimeIndex.test.ts",
-          "sha256": "363ad7ab5b23a3e01a81acb604d391de8f22deaf0994059ca0d246e7c0020b94"
+          "sha256": "784b293a303ea29d93b4a900f44bcf4ed47b1cd9af79d003d53e70d8a809d607"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-10-29-host-resource-protocol.md",
@@ -285,7 +297,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationHostResources.test.ts",
-          "sha256": "fdc9297791003e087356a7da52e01d5461f0542bb209951b2156c97e5c0fef4e"
+          "sha256": "44e3206107a66eb496b7f4723e83a1c3fac7592effa36cbe8e797c6a8b8a1e80"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-10-29-candidate-runtime-set.md",
@@ -326,6 +338,18 @@
         {
           "path": "packages/law-practice/server/src/internal/Citation/SessionDocument.ts",
           "sha256": "15404943364d460742406287e0b821f7ed63a8e60e0bddffe2b9bad3dd98801c"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-10-29-canonical-session-descriptors.md",
+          "sha256": "35a1f38286f52e60926359fb53f0c7a6a5b6a5970fa204f6222a5d182becf31d"
+        },
+        {
+          "path": "packages/law-practice/server/src/internal/Citation/SessionDescriptors.ts",
+          "sha256": "876ba33855ba1da404839f6fc7cbcaace6ebd6d679b53a178455adea559160f2"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationSessionDescriptors.test.ts",
+          "sha256": "d392483035449415933cc57786b82ac5d67e443c210286ea0c5d379da2883cc4"
         }
       ],
       "workflowState": "audit",
