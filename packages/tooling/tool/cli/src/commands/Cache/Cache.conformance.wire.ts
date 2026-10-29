@@ -14,7 +14,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Base64 from "effect/encoding/Base64";
 import * as Hex from "effect/encoding/Hex";
-import { flow } from "effect/Function";
+import { dual, flow } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Headers from "effect/http/Headers";
 import * as HttpClient from "effect/http/HttpClient";
@@ -29,6 +29,7 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { nearestRank } from "../../internal/stats/NearestRank.ts";
 import {
+  CacheConformanceBackendResult,
   CacheConformanceExchange,
   CacheConformanceMeasurement,
   CacheConformanceTarget,
@@ -238,6 +239,85 @@ export const classifyCacheConformanceMediaType = (header: O.Option<string>): O.O
     O.filter(isReceiptMediaType)
   );
 
+const isBackendResult = S.is(CacheConformanceBackendResult);
+const backendResultCompatible = (
+  result: CacheConformanceBackendResult,
+  method: CacheConformanceMethod,
+  status: number
+): boolean =>
+  Match.value(result).pipe(
+    Match.when("allowed", () => status >= 200 && status <= 299),
+    Match.when("authentication-denied", () => status === 401),
+    Match.when("write-denied", () => method === "PUT" && status === 403),
+    Match.when("tenant-denied", () => status === 403),
+    Match.when("selector-invalid", () => status === 400),
+    Match.when("route-invalid", () => status === 404),
+    Match.when("method-denied", () => status === 405),
+    Match.when("signature-missing", () => method === "PUT" && status === 400),
+    Match.when("metadata-invalid", () => status === 400),
+    Match.when("not-found", () => status === 404),
+    Match.when("throttled", () => status === 429),
+    Match.when("backend-unavailable", () => method !== "PUT" && status >= 500 && status <= 599),
+    Match.when("write-ambiguous", () => method === "PUT" && status >= 500 && status <= 599),
+    Match.when("payload-rejected", () => status === 400 || status === 413),
+    Match.when(
+      "unexpected-status",
+      () => status === 502 || (status >= 300 && status <= 499 && !A.contains([400, 401, 404, 413, 429], status))
+    ),
+    Match.when("invalid-evidence", () => false),
+    Match.exhaustive
+  );
+
+/**
+ * Project an untrusted adapter claim into a finite, method/status-checked label.
+ *
+ * **Details**
+ * Missing headers remain absent. Unknown, duplicate or inconsistent claims become
+ * a static invalid-evidence label. This preserves an observation alongside the
+ * independent transport outcome; it proves neither HMAC validity nor protected
+ * producer identity. A reported not-found never establishes a genuine miss.
+ *
+ * **Example** (Retain a read-side backend failure)
+ * ```ts
+ * import { classifyCacheConformanceBackendResult } from "@beep/repo-cli/commands/Cache"
+ * import * as O from "effect/Option"
+ * const result = O.some("backend-unavailable").pipe(classifyCacheConformanceBackendResult("GET", O.some(503)))
+ * console.assert(O.contains(result, "backend-unavailable"))
+ * ```
+ *
+ * @param method - Observed request method.
+ * @param status - Observed HTTP response status, when available.
+ * @param header - Optional untrusted backend-result header.
+ * @returns A bounded observation; no raw header text is retained.
+ * @category validation
+ * @since 0.0.0
+ */
+export const classifyCacheConformanceBackendResult: {
+  (
+    method: CacheConformanceMethod,
+    status: O.Option<number>
+  ): (header: O.Option<string>) => O.Option<CacheConformanceBackendResult>;
+  (
+    header: O.Option<string>,
+    method: CacheConformanceMethod,
+    status: O.Option<number>
+  ): O.Option<CacheConformanceBackendResult>;
+} = dual(
+  3,
+  (
+    header: O.Option<string>,
+    method: CacheConformanceMethod,
+    status: O.Option<number>
+  ): O.Option<CacheConformanceBackendResult> =>
+    O.map(header, (value) =>
+      O.some(value).pipe(
+        O.filter(isBackendResult),
+        O.filter((result) => O.exists(status, (code) => backendResultCompatible(result, method, code))),
+        O.getOrElse((): CacheConformanceBackendResult => "invalid-evidence")
+      )
+    )
+);
+
 const authorization = (bearers: CacheConformanceBearers, role: CacheConformanceCredentialRole) =>
   Match.value(role).pipe(
     Match.when("missing", O.none<string>),
@@ -369,6 +449,11 @@ const send = Effect.fnUntraced(function* (context: WireContext, unsigned: WireSt
       })
     ),
     status: observed.status,
+    backendResult: classifyCacheConformanceBackendResult(
+      Headers.get(observed.headers, "x-beep-cache-result"),
+      step.method,
+      observed.status
+    ),
     contentType: classifyCacheConformanceMediaType(Headers.get(observed.headers, "content-type")),
     requestBytes: S.Natural.make(
       O.match(requestBody, {

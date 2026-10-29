@@ -100,3 +100,16 @@ compiler version. The corrected drivers use the tracked source preparation and
 pin the actual installed compiler bin in child PATH, rather than relying on
 RUSTUP_TOOLCHAIN across shim/default differences. Rust1.96.0 passes48tests and
 the exact static executable passes all33process controls.
+
+### Preserve backend fault causes beside transport outcomes
+
+Actual wire controls showed that backend-unavailable response metadata was
+discarded. A finite optional projection now retains the cause, validates its
+method/status pairing, and records only invalid-evidence for unsafe claims.
+Keep the independent never-written evidence: a known-written 404 must not become
+a genuine miss because of a response label. Initial test assumptions incorrectly
+required a header on exchanges without a response and treated a never-written
+fixture as already written; corrected controls use observed responses and an
+actual successful upload before the 404. Type checking also caught introduced
+codec/opaque test construction mistakes; package-owned tests and lint/check pass
+after fixing them. These are component controls, not production observability.

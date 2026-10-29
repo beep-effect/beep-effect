@@ -56,7 +56,8 @@
     "research/owned-producer-private-approval.json",
     "research/receipt-media-type-checkpoint.json",
     "research/adapter-policy-lab.json",
-    "research/adapter-dependency-review.json"
+    "research/adapter-dependency-review.json",
+    "research/backend-result-checkpoint.json"
   ],
   "agentLaunchers": [
     {

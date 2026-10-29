@@ -32,6 +32,7 @@ import {
   CacheConformanceTarget,
 } from "./Cache.conformance.schemas.ts";
 import {
+  classifyCacheConformanceBackendResult,
   classifyCacheConformanceMediaType,
   classifyCacheConformanceStatus,
   readCacheConformanceReply,
@@ -253,6 +254,11 @@ const proxyExchange = Effect.fnUntraced(function* (input: {
       })
     ),
     status: delivered.status,
+    backendResult: classifyCacheConformanceBackendResult(
+      Headers.get(delivered.headers, "x-beep-cache-result"),
+      parsed.method,
+      delivered.status
+    ),
     contentType: classifyCacheConformanceMediaType(Headers.get(delivered.headers, "content-type")),
     requestBytes: S.Natural.make(body.byteLength),
     requestSha256: yield* digestOf(body, body.byteLength > 0),

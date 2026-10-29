@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "cache-backend-result-checkpoint/v1",
+  "recordedAt": "2026-10-29T01:29:10.873351+00:00",
+  "authority": "component-preparation-only",
+  "sourceSha256": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.schemas.ts": "d725101c2f8077c03e4e5a296b343365cd504f5780ab45c3e242f3e9d1c46ede",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.wire.ts": "3dba2c21b93c0d053eb5c8310f29c1eff3f5c63a0603a3aa3180371547f19783",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.proxy.ts": "fa1f8a01146720da021607f21a746f0fa662acda60a98ca2c590322a6071e1ff",
+    "packages/tooling/tool/cli/src/commands/Cache/index.ts": "73c3749a47f73eeda85529b24746bb8747aa8a26aa092e735628d670734917ec",
+    "packages/tooling/tool/cli/test/cache-conformance.test.ts": "ed75cd23e2676a7012e0b48baa640ccdf1fcb6e228c3c4fce891af7a7d34d302",
+    "packages/tooling/tool/cli/test/cache-conformance-lab.test.ts": "4608adcf2cc724d43708f13b434828b60781ff042ba556615afa97c72c527547",
+    "packages/tooling/tool/cli/test/cache-conformance-server.ts": "71a9e0644694135b7a647816b107b181a50262492c197d079285cb434db699d8"
+  },
+  "adapterVocabularySource": {
+    "path": "infra/r2-cache/patches/4.0.20-signed-policy.patch",
+    "sha256": "4cbc8cd80bc680d86a1cf43726ff0bb042ac93951dacb6214a9b61c732c143c5",
+    "reportedLabels": 15,
+    "observation": "Pinned source vocabulary only; no fresh deployed adapter or storage grant proof."
+  },
+  "focusedTests": {
+    "passed": 34,
+    "files": 3,
+    "seconds": 16.7,
+    "negativeControls": [
+      "Two actual wire regressions failed before the optional field existed.",
+      "All fifteen labels tested against method/status and absent status.",
+      "Unknown, repeated, padded and synthetic credential/path/artifact claims become a static label.",
+      "Known-written proxy object with 404 remains not-found independently of the backend claim.",
+      "Historical encoded exchanges omit the new key and decode as absent; JSON round trips pass."
+    ]
+  },
+  "packageQuick": {
+    "status": "passed",
+    "lintSeconds": 5.5,
+    "checkSeconds": 11.3
+  },
+  "fullPackageAudit": {
+    "status": "pending"
+  },
+  "limits": [
+    "Observation-only, not protected producer or HMAC authority.",
+    "No raw header, path, bearer, tag or body retained in the new field.",
+    "No production event collector or telemetry-volume qualification.",
+    "No production configuration, key, epoch or cloud resource changes.",
+    "No task qualification or whole-goal acceptance."
+  ]
+}

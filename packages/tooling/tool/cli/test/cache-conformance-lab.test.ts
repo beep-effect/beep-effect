@@ -122,6 +122,40 @@ it.layer(Services, { timeout: "60 seconds", excludeTestServices: true })("cache 
 });
 
 it.layer(Services, { timeout: "60 seconds", excludeTestServices: true })("cache conformance fault proxy", (it) => {
+  it.effect("preserves bounded backend claims through proxy capture and rejects secret text", () =>
+    Effect.gen(function* () {
+      for (const responseCacheResult of ["not-found", `${secrets.reader} /fixture/private/result body-canary-15ab`]) {
+        const server = yield* makeConformanceServer({ ...goodMode, readFault: O.some(404), responseCacheResult });
+        const proxy = yield* makeCacheConformanceFaultProxy(
+          CacheConformanceProxyOptions.make({ target: targetFor({ url: server.url }), bearers, holdMs: 400 })
+        );
+        const url = `${proxy.url}/v8/artifacts/00112233445566778899aabbccddeeff?teamId=${teamId}`;
+        yield* HttpClientRequest.put(url).pipe(
+          HttpClientRequest.setHeaders({ authorization: `Bearer ${secrets.writer}`, "x-artifact-tag": "fixture-tag" }),
+          HttpClientRequest.bodyUint8Array(new TextEncoder().encode("owned fixture body")),
+          HttpClient.execute,
+          Effect.flatMap((reply) => reply.arrayBuffer)
+        );
+        yield* HttpClient.get(url, {
+          headers: { authorization: `Bearer ${secrets.reader}` },
+        }).pipe(Effect.flatMap((reply) => reply.arrayBuffer));
+        const events = yield* proxy.events;
+        const reads = A.filter(events, (event) => event.exchange.method === "GET");
+        expect(reads.length).toBe(1);
+        for (const event of reads) {
+          assertSome(
+            event.exchange.backendResult,
+            responseCacheResult === "not-found" ? "not-found" : "invalid-evidence"
+          );
+          expect(event.exchange.outcome).toBe("not-found");
+        }
+        const encoded = yield* encodeProxyEvents(events);
+        for (const secret of [secrets.reader, "/fixture/private/result", "body-canary-15ab"])
+          expect(encoded).not.toContain(secret);
+      }
+    })
+  );
+
   it.effect("redacts untrusted response media-type values from proxy receipts", () =>
     Effect.gen(function* () {
       const canary = "proxy-header-artifact-content-4ef2";

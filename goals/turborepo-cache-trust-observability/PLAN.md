@@ -226,3 +226,16 @@ focused tests and source type checking pass. Full package verification passes:
 audit 649.6 seconds and docgen 39.2 seconds.
 The accepted policy document, complete authenticated evidence bundle and
 operational promotion importer remain open. No qualification is granted.
+
+## 2026-10-29: finite backend-result capture
+
+The optional exchange field preserves fifteen pinned adapter labels, with a
+static invalid-evidence result for incompatible method/status pairs or unknown
+claims. Direct and proxy controls retain failure causes through JSON and reject
+synthetic credential/path/artifact text. A known-written object returning 404
+remains not-found; the backend header cannot establish a genuine miss. Historical
+receipts default to absent attribution. The focused set passes 34 tests, and
+package lint/check pass. Full audit/docgen is pending; see
+[the component checkpoint](research/backend-result-checkpoint.json).
+Protected producer integration, production event capture and representative
+observation remain open. No current adapter/service/cloud configuration changes.

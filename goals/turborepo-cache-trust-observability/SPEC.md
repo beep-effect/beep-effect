@@ -210,6 +210,18 @@ fault receipts. Remote fallback must never mean unsigned restore.
 
 ## Decision log
 
+### Finite backend-result capture
+
+- 2026-10-29: Preserve the pinned adapter’s finite result vocabulary in optional
+  conformance exchange metadata. Both direct and proxy capture validate the
+  method/status combination and replace unknown or inconsistent claims with a
+  static invalid-evidence label. Historical exchanges decode with absent metadata.
+  The field is an untrusted observation, grants no protected producer or HMAC
+  authority, and cannot classify a not-found response as a genuine miss. Actual
+  synthetic-secret and known-written-404 controls justify the boundary. Reversal:
+  disable the optional projection while retaining independent transport outcomes;
+  never retain raw header text as a fallback. No deployed collector is enabled.
+
 ### Receipt media-type safety
 
 - 2026-10-29: Project response Content-Type evidence through the existing
