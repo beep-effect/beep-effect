@@ -299,6 +299,8 @@ operator reviews them asynchronously.
 
 | 2026-10-28 | PR #2329 takeover merges current main, regenerates the JSDoc inventory, and removes the second identical `ops/github-reporting-gfm-differential.ts` registration. | Hosted Lint Policy failed `goals doctor` with `ops-script-duplicate`; one registration preserves the oracle and passes the manifest uniqueness check. | Restore the removed registration only if the manifest contract permits duplicate script paths. |
 
+| 2026-10-28 | PR #2329 review fixes preserve inherited `paths` without `baseUrl` by resolving targets against the loader's `pathsBase` before returning compiler options; docgen preserves `TsconfigParseError.message`, including a malformed base file's path. | Both failures reproduced in new regression tests. Explicit `baseUrl` keeps its existing target semantics. | Revert the two boundary fixes and their regression tests. |
+
 ## Exception Ledger
 
 | Exception | Scope | Owner | Rationale | Removal condition |

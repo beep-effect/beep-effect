@@ -466,6 +466,18 @@ const compilerOptions = Effect.fn("TsconfigValidator.compilerOptions")(function*
   const document = yield* TsconfigLoader.load(configPath);
   yield* validateAt(abs)(document);
   const resolved = yield* TsconfigLoader.resolveDocument(document, abs);
+  const { compilerOptions: options, pathsBase } = resolved;
+  const paths = options.paths;
+  // The options-only result cannot carry pathsBase to the consumer.
+  if (options.baseUrl === undefined && paths !== undefined && pathsBase !== undefined) {
+    return yield* validateCompilerOptionsAt(abs)({
+      ...options,
+      paths: R.map(
+        paths,
+        A.map((target) => normalizeSlashes(path.resolve(pathsBase, target)))
+      ),
+    });
+  }
   return yield* validateCompilerOptionsAt(abs)(resolved.compilerOptions);
 });
 
@@ -578,6 +590,9 @@ export abstract class TsconfigValidator {
    * fails here too, since the merged record is validated strictly. Failures
    * add `TsconfigExtendsError` (a broken chain) to those of
    * {@link TsconfigValidator.load}.
+   * Without `baseUrl`, `paths` targets are made absolute against the directory
+   * that declared them, preserving resolution after the loader's `pathsBase`
+   * metadata is dropped. With `baseUrl`, targets stay relative to that option.
    *
    * **Example** (Construct a strict effective-options query)
    *

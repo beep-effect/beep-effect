@@ -411,6 +411,50 @@ describe("Configuration", () => {
       )
     );
 
+    it.layer(
+      makeTsconfigLayer({
+        [`${PKG}/tsconfig.json`]: '{ "extends": "../base.json" }',
+        "/base.json": '{ "compilerOptions": { "paths": { "@shared/*": ["./packages/*/src", "/external/*"] } } }',
+      }),
+      { timeout: "30 seconds" }
+    )((it) =>
+      it.effect("resolves inherited paths against the declaring config directory without baseUrl", () =>
+        Effect.gen(function* () {
+          const config = yield* Configuration.load(makeLoadArgs());
+          expect(config.parseCompilerOptions.paths).toEqual({ "@shared/*": ["/packages/*/src", "/external/*"] });
+        })
+      )
+    );
+
+    it.layer(
+      makeTsconfigLayer({
+        [`${PKG}/tsconfig.json`]: '{ "extends": "../base.json" }',
+        "/base.json":
+          '{ "compilerOptions": { "baseUrl": "./workspace", "paths": { "@shared/*": ["./packages/*/src"] } } }',
+      }),
+      { timeout: "30 seconds" }
+    )((it) =>
+      it.effect("keeps paths relative to an explicit inherited baseUrl", () =>
+        Effect.gen(function* () {
+          const config = yield* Configuration.load(makeLoadArgs());
+          expect(config.parseCompilerOptions.baseUrl).toBe("/workspace");
+          expect(config.parseCompilerOptions.paths).toEqual({ "@shared/*": ["./packages/*/src"] });
+        })
+      )
+    );
+
+    it.layer(
+      makeTsconfigLayer({
+        [`${PKG}/tsconfig.json`]: '{ "extends": "../broken-base.json" }',
+        "/broken-base.json": '{ "compilerOptions": ',
+      }),
+      { timeout: "30 seconds" }
+    )((it) =>
+      it.effect("names the malformed base config in a parse failure", () =>
+        expectReadTsconfigError("decode", "/broken-base.json", "JSONC parse failed")
+      )
+    );
+
     it.layer(makeTsconfigLayer({ [`${PKG}/tsconfig.json`]: "{}" }), { timeout: "30 seconds" })((it) =>
       it.effect("falls back to the default compiler options when the chain declares none", () =>
         Effect.gen(function* () {

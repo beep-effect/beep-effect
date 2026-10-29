@@ -262,7 +262,10 @@ layer(
       ["/proj/malformed.json", '{"compilerOptions":'],
       ["/proj/broken-chain.json", '{"extends":"./missing.json","compilerOptions":{"strict":true}}'],
       ["/proj/loose-base.json", '{"extends":"./base-with-future.json"}'],
-      ["/proj/base-with-future.json", '{"compilerOptions":{"futureOption":true}}']
+      ["/proj/base-with-future.json", '{"compilerOptions":{"futureOption":true}}'],
+      ["/proj/paths.json", '{"extends":"../paths-base.json"}'],
+      ["/proj/base-url.json", '{"extends":"../paths-base.json","compilerOptions":{"baseUrl":"./workspace"}}'],
+      ["/paths-base.json", '{"compilerOptions":{"paths":{"@shared/*":["./packages/*/src","/external/*"]}}}']
     )
   ),
   { timeout: "30 seconds" }
@@ -274,6 +277,21 @@ layer(
       const options = yield* TsconfigValidator.compilerOptions("/proj/tsconfig.json");
       // tsc semantics: inherited options merged, path options absolute.
       assert.deepStrictEqual(options, { target: "es2022", module: "nodenext", strict: true, outDir: "/proj/out" });
+    })
+  );
+
+  it.effect("makes inherited paths independent of the consumer directory without baseUrl", () =>
+    Effect.gen(function* () {
+      const options = yield* TsconfigValidator.compilerOptions("/proj/paths.json");
+      assert.deepStrictEqual(options.paths, { "@shared/*": ["/packages/*/src", "/external/*"] });
+    })
+  );
+
+  it.effect("keeps paths relative to an explicit baseUrl", () =>
+    Effect.gen(function* () {
+      const options = yield* TsconfigValidator.compilerOptions("/proj/base-url.json");
+      strictEqual(options.baseUrl, "/proj/workspace");
+      assert.deepStrictEqual(options.paths, { "@shared/*": ["./packages/*/src", "/external/*"] });
     })
   );
 

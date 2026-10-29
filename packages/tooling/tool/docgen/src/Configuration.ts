@@ -14,6 +14,7 @@ import { jsonStringifyPretty } from "@beep/repo-utils";
 import { ArrayKeyDefaultEmpty } from "@beep/schema/SchemaUtils/withKeyDefaults";
 import { ClosedCompilerOptions } from "@beep/tsconfig/CompilerOptions";
 import { A } from "@beep/utils";
+import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -602,7 +603,7 @@ const readTSConfig = Effect.fn("Configuration.readTSConfig")(function* (
   const strict = yield* TsconfigValidator.compilerOptions(resolved).pipe(
     Effect.catchTags({
       TsconfigValidationError: (error) => fail("decode", error.message),
-      TsconfigParseError: (error) => fail("decode", String(error.cause)),
+      TsconfigParseError: (error) => fail("decode", pipe(error, Cause.fail, Cause.pretty)),
       TsconfigExtendsError: (error) => fail("resolve", error.message),
       PlatformError: (error) => fail("read", String(error)),
     })
