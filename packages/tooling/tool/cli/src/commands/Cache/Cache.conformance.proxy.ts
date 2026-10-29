@@ -31,7 +31,11 @@ import {
   CacheConformanceProxyEvent,
   CacheConformanceTarget,
 } from "./Cache.conformance.schemas.ts";
-import { classifyCacheConformanceStatus, readCacheConformanceReply } from "./Cache.conformance.wire.ts";
+import {
+  classifyCacheConformanceMediaType,
+  classifyCacheConformanceStatus,
+  readCacheConformanceReply,
+} from "./Cache.conformance.wire.ts";
 import { corruptCacheArtifactBody, serveCacheLoopback, tamperCacheArtifactTag } from "./Cache.protocol.fixture.ts";
 import { CacheCommandError } from "./Cache.schemas.ts";
 import type { Sha256Hex } from "@beep/schema";
@@ -249,7 +253,7 @@ const proxyExchange = Effect.fnUntraced(function* (input: {
       })
     ),
     status: delivered.status,
-    contentType: Headers.get(delivered.headers, "content-type").pipe(O.map(Str.slice(0, 128))),
+    contentType: classifyCacheConformanceMediaType(Headers.get(delivered.headers, "content-type")),
     requestBytes: S.Natural.make(body.byteLength),
     requestSha256: yield* digestOf(body, body.byteLength > 0),
     requestTagSha256: yield* digestTag(Headers.get(input.request.headers, "x-artifact-tag")),

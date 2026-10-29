@@ -216,6 +216,17 @@ fault receipts. Remote fallback must never mean unsigned restore.
 | 2026-10-28 | Treat the already approved R2 fleet as the current consumer path and retain AWS as its rollback. The user approved named trusted workstation writers; this grants upload capability, not protected-workflow producer identity. Refresh both boundaries before claiming production trust. | Disable affected remote reuse, stop mixed writes and restore the prior approved endpoint and epoch through a rehearsed path. |
 | 2026-10-28 | Pin native experiment execution with `--skip-infer --single-package`; a zero-task fixture is a failure. Keep supervisor failures bounded to exit code or capture truncation without attaching private worker streams. | Revert the runner change through Yeet; keep promotion closed when exact native execution is unproven. |
 
+### Receipt media-type safety
+
+- 2026-10-29: Project response Content-Type evidence through the existing
+  registered MimeType schema, discarding parameters and unknown subtypes at
+  both direct and proxy capture boundaries. Actual synthetic-secret regressions
+  demonstrated that truncation retained private material. Historical receipt
+  decoding remains compatible. Reversal: disable the affected collection path
+  while repairing its projection; raw header retention must not be re-enabled
+  without passing the synthetic-secret/path/artifact controls. This is a
+  receipt-safety repair and grants no deployment or task qualification.
+
 ### Pinned loopback policy component
 
 2026-10-28: prepare a minimal patch against upstream adapter 4.0.20 commit

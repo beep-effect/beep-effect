@@ -58,6 +58,7 @@
     "research/current-native-stable.json",
     "research/current-native-canary.json",
     "research/current-native-checkpoint.json",
+    "research/receipt-media-type-checkpoint.json",
     "research/adapter-policy-lab.json",
     "research/adapter-dependency-review.json"
   ],
