@@ -45,3 +45,14 @@ integration; all retained census-source digests now match. Counts remain190
 workspaces and2571 executable computations. The recipe now reads explicit UTF-8
 and writes UTF-8 with LF under an ASCII locale. Source refresh is inventory
 maintenance and grants no qualification or adoption.
+
+
+## 2026-10-29: Census-source drift survived a later proxy repair
+
+Review on PR #2352 found the population snapshot still retained an earlier
+proxy digest. A proof that current census inputs are internally consistent did
+not establish that the checked-in derived population had been regenerated.
+Re-ran the canonical census and retained refresh recipe, verified every retained
+source digest, and compared all population counts. Counts and qualification
+states are unchanged. Future source-changing waves must regenerate the derived
+population as well as inspecting a newly emitted private census.
