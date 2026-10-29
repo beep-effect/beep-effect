@@ -34,9 +34,10 @@ and 2,798 courts, with three reviewed case-reporter identity transitions and
 explicit metadata drift. Private verified-anchor cm1 digest production now
 passes the server package gate. Canonical law semantics now replace the two
 provisional statute/regulation shapes. Canonical case/reference/journal forms
-now have semantic schemas in the same union. Verified mention integration,
-Bluebook codecs and extension adoption/schema proof stay open. The remaining
-37 provisional contract directories are retired; their donor obligations
+now have semantic schemas in the same union. Verified mention composition and
+explicit persisted-receipt restoration pass local package gates. Document
+relationships, Bluebook codecs and extension adoption/schema proof stay open.
+The remaining 37 provisional contract directories are retired; their donor obligations
 remain open. The non-citation SourceRef selector contract is preserved. The
 29-field limits/default policy and parent-owned process
 isolation mechanism are evidenced; production enforcement, pattern-level

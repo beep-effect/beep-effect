@@ -32,6 +32,12 @@ export { FullJournalCitation } from "./Citation.journal.ts";
  */
 export { CitationLawMetadata, FullLawCitation } from "./Citation.law.ts";
 /**
+ * Runtime verified occurrences and their structural persistence receipts.
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./Citation.mention.ts";
+/**
  * Citation model exports.
  *
  * **Example** (Import Citation module)

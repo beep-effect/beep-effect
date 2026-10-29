@@ -6,9 +6,9 @@ Lifecycle: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
-P0 source acquisition and public prerequisite compatibility are evidenced.
-The 2026-10-28 run passed the pinned official and authorized donor baselines;
-66 static assertion declarations produced 1,583 runtime assertion events with
+P0 source acquisition and public prerequisite compatibility are evidenced. The
+2026-10-28 run passed the pinned official and authorized donor baselines; 66
+static assertion declarations produced 1,583 runtime assertion events with
 none unobserved. Those events now retain normalized operands and producer
 context alongside 8,488 traced iterations and 241 complete literal-loop runs.
 The public-operation corpus retains 826 observations and 2,811 coordinate
@@ -17,16 +17,17 @@ records. Donor accounting now binds 197 exports and 5,285 runtime cases to
 resolution probes add 57 coordinate slices. Another 26 cleaning/annotation
 probes retain three expected failures and 23 coordinate records, including
 zero-width points. Five coverage families remain open. The 29-field limit
-policy and process-isolation mechanism are evidenced. Limited P1 identity
-work now overlaps P0's unfinished proof bindings after the explicit
+policy and process-isolation mechanism are evidenced. Limited P1 identity work
+now overlaps P0's unfinished proof bindings after the explicit
 prerequisite/limits holdpoints pass. Occurrence/authority token schemas and a
 private verified-anchor occurrence digest producer are implemented. Canonical
 FullLawCitation replaces the provisional statute/regulation shapes in the
 existing union. The canonical case, short/named reference, unknown and journal
 forms now have semantic schemas. Remaining mixed citation contracts and
-provisional extension stubs are retired. Verified mentions, Bluebook codecs,
-extension adoption/schema proof, runtime enforcement and family safety remain
-unfinished.
+provisional extension stubs are retired. Verified mention composition and
+explicit receipt restoration now pass local package gates. Document/resolution
+relationships, Bluebook codecs, extension adoption/schema proof, runtime
+enforcement and family safety remain unfinished.
 
 Current evidence:
 
@@ -50,6 +51,7 @@ Current evidence:
 - [Canonical law schema](./history/evidence/2026-10-28-law-schema.md)
 - [Canonical model schemas](./history/evidence/2026-10-28-canonical-models.md)
 - [Retirement](./history/evidence/2026-10-28-provisional-retirement.md)
+- [Verified mentions](./history/evidence/2026-10-28-verified-mentions.md)
 
 ## Mission
 

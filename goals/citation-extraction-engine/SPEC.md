@@ -743,6 +743,17 @@ instead of silently splitting delivery or weakening scope.
   role-specific IDs. Reintroduction requires the target ownership contract and
   source/regression proof, not recovery of a provisional public alias.
 
+- **2026-10-28 verified mention composition:** compose semantic citations with
+  genuine prerequisite anchor proofs and role-specific cm1 identity. Persist
+  only the explicit versioned structural receipt. Restore against trusted
+  expected source/engine identity and raw text, reverify all anchors and
+  recompute cm1. Snapshot mutable inputs before hashing. Neither receipts nor
+  mention IDs authenticate semantic metadata. Named components share a source;
+  optional footnote zones contain the primary token. Detection, warning
+  emission, document relationships and full runtime budgets remain unproved.
+  Reversal requires equivalent proof and persistence boundaries with consumer
+  migration, not decoding structural receipts as opaque runtime capabilities.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from
