@@ -142,7 +142,7 @@
   },
   "currentPopulation": {
     "path": "goals/turborepo-quality-cache-adoption/research/current-population.json",
-    "sha256": "bd81cef5053d4329d1547391b0387c45a32d90157f31809eb45812c23eb09d9e",
+    "sha256": "1f21cbd2ff7d0a539a02abfbae5ed74c60d679a20262b3b8a44a59a9ff9ec00b",
     "base": "repository-root",
     "sourcesVerified": 431,
     "refreshedAt": "2026-10-29T10:05:33.391812+00:00",
@@ -150,7 +150,8 @@
     "priorInventoryAtRuntimeObservation": "acf0a0e81c5936df4758bf688ac8420d4b0c9c512bdae6b6f7585e39c2cdabcb",
     "integrationScope": "Canonical inventory metadata refresh after merged parent; original native upload observations and their source/proof scope are unchanged.",
     "priorInventoryBeforePropertyCoverageRefresh": "8e355c913f6b9faf61ce77f7fdc8d06cad6572539c6d172b9741ae7d19f7132c",
-    "priorInventoryBeforeMainSync": "0ea49f7b903162d1ee7cdfa985d9caff0ab4573657e27b5156dc14a9f724b46f"
+    "priorInventoryBeforeMainSync": "0ea49f7b903162d1ee7cdfa985d9caff0ab4573657e27b5156dc14a9f724b46f",
+    "priorInventoryBeforeScopeRepair": "bd81cef5053d4329d1547391b0387c45a32d90157f31809eb45812c23eb09d9e"
   },
   "productionChanges": false,
   "qualified": false,
@@ -171,7 +172,7 @@
   },
   "publicationGateRepair": {
     "path": "goals/turborepo-cache-trust-observability/research/producer-publication-gate-repair-checkpoint.json",
-    "sha256": "9be84095dee220351afea02f63161e56f9c07c9e3859ff9732215e84c36cd553",
+    "sha256": "843c651c5a681bc8be0e39ba6af31713ce26706158f57e00b6d52499baaa3fb9",
     "scope": "Later test-only properties and generated catalog; original component proof keeps its original source map."
   }
 }

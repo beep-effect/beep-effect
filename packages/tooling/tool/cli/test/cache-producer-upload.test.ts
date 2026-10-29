@@ -69,24 +69,22 @@ it.layer(Services, { timeout: "30 seconds", excludeTestServices: true })("owned 
     "joins schema-generated native hashes and refuses a different owned summary hash",
     { taskHash: CacheHostedProducerUpload.fields.taskHash },
     ({ taskHash }) =>
-      Effect.scoped(
-        Effect.gen(function* () {
-          const f = yield* fixture(taskHash);
-          const upload = yield* joinCacheProducerUpload(f.binding, f.summary, f.events);
-          expect(upload.taskHash).toBe(taskHash);
-          expect(upload.archiveSha256).toBe(f.archiveSha256);
-          expect(upload.archiveBytes).toBe(f.archiveBytes);
-          const wrongHash = taskHash === hash ? "fedcba9876543210" : hash;
-          const altered = CacheProtocolNativeSummary.make({
-            ...f.summary,
-            tasks: A.map(f.summary.tasks, (task) => ({ ...task, hash: wrongHash })),
-          });
-          (yield* joinCacheProducerUpload(f.binding, altered, f.events).pipe(Effect.result)).pipe(
-            Result.isFailure,
-            assertTrue
-          );
-        })
-      ),
+      Effect.gen(function* () {
+        const f = yield* fixture(taskHash);
+        const upload = yield* joinCacheProducerUpload(f.binding, f.summary, f.events);
+        expect(upload.taskHash).toBe(taskHash);
+        expect(upload.archiveSha256).toBe(f.archiveSha256);
+        expect(upload.archiveBytes).toBe(f.archiveBytes);
+        const wrongHash = taskHash === hash ? "fedcba9876543210" : hash;
+        const altered = CacheProtocolNativeSummary.make({
+          ...f.summary,
+          tasks: A.map(f.summary.tasks, (task) => ({ ...task, hash: wrongHash })),
+        });
+        (yield* joinCacheProducerUpload(f.binding, altered, f.events).pipe(Effect.result)).pipe(
+          Result.isFailure,
+          assertTrue
+        );
+      }),
     { arbitrary: fcRuns(12) }
   );
 

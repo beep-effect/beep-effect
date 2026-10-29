@@ -540,3 +540,18 @@ the agent. The already created Alchemy roles remain unassigned.
   regenerated/checked the catalog from combined source. No own cache source
   or test byte changed. Package quick checks, instrumentation and cache audit
   pass; the current census is refreshed. No stale-base bypass was used.
+
+
+### Effect property scopes and the collected publication gate
+
+The next collected run found EV004 in both newly added schema-derived properties.
+The first diagnosis incorrectly blamed their import; the exact detector identified
+redundant whole-body scopes supplied by it.effect.prop already. Removed only
+those wrappers, retained generated assertions, and verified both intended-failure
+controls after the repair. The full policy scan has zero introduced findings.
+Read the finding code before changing imports or weakening an inventory.
+
+The dependency snapshot waited 392 seconds behind the publication lease, then
+materialized and verified 213,133 files. Current code deliberately leases the
+cheap gates because the schema catalog can peak near 12.6 GiB; push-first prose
+does not justify deleting that memory guard. No admission bypass was added.

@@ -184,20 +184,18 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("immutable hosted produc
     "binds schema-generated run references and rejects a different authenticated artifact identity",
     { selectedReference: CacheHostedProducerReference },
     ({ selectedReference }) =>
-      Effect.scoped(
-        Effect.gen(function* () {
-          const f = yield* fixture(selectedReference);
-          const observed = yield* f.verify();
-          expect(observed.reference).toEqual(selectedReference);
-          expect(observed.report.runId).toBe(selectedReference.runId);
-          expect(observed.report.attempt).toBe(selectedReference.attempt);
-          const otherId = selectedReference.artifactId === 1 ? 2 : 1;
-          (yield* f.verify({ artifact: { ...f.artifact, id: otherId } }).pipe(Effect.result)).pipe(
-            Result.isFailure,
-            assertTrue
-          );
-        })
-      ),
+      Effect.gen(function* () {
+        const f = yield* fixture(selectedReference);
+        const observed = yield* f.verify();
+        expect(observed.reference).toEqual(selectedReference);
+        expect(observed.report.runId).toBe(selectedReference.runId);
+        expect(observed.report.attempt).toBe(selectedReference.attempt);
+        const otherId = selectedReference.artifactId === 1 ? 2 : 1;
+        (yield* f.verify({ artifact: { ...f.artifact, id: otherId } }).pipe(Effect.result)).pipe(
+          Result.isFailure,
+          assertTrue
+        );
+      }),
     { arbitrary: fcRuns(12) }
   );
 
