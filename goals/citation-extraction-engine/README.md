@@ -171,5 +171,9 @@ mutable default-key scenes remain open, along with general host/model behavior
 and final session projection. The new
 [runtime dictionary backend](
 ./history/evidence/2026-10-29-runtime-dictionary.md) matches eight frozen histories
-and sixty-two events; live hash production and owner integration are still
-required before the three mutable-key engine cases can close.
+and sixty-two events. The private
+[case/resource hash helper](
+./history/evidence/2026-10-29-case-resource-hashes.md) matches twenty-four source
+observations, including controlled null-page identities. Live identity
+allocation and owner integration are still required before the three mutable-key
+engine cases can close.

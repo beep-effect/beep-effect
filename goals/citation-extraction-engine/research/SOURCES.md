@@ -68,6 +68,19 @@ No C implementation file or Python interpreter is incorporated. The isolated
 backend proof does not promote the three mutable-key engine cases or any
 canonical/donor/safety/divergence row.
 
+## Exact case/resource hash reference
+
+The private case-resource hash helper adapts the pinned eyecite models.py
+FullCaseCitation/Resource methods and utils.py hash_sha256. It preserves source
+JSON spacing, ASCII escaping and frozen CPython integer reduction. BSD-2-Clause
+attribution is retained in its module and the existing root notice.
+
+The [hash evidence](../history/evidence/2026-10-29-case-resource-hashes.md)
+records twenty-four actual source observations, fixture digest, source hashes,
+controlled identity-hook scope, fresh replay and remaining live integration.
+No source process address is incorporated or inferred from citation content.
+This proof does not promote the three mutable-key engine cases.
+
 ## Incorporated-source discipline
 
 - A local clone is research state, not an incorporated dependency.
