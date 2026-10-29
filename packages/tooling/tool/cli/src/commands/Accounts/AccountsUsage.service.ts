@@ -7,6 +7,9 @@
  * Proxy logins are never refreshed or written. Junie is refreshed in memory
  * only; JetBrains refresh tokens are not rotated on the proven route. A
  * rotation guard rejects any changed refresh token, and nothing is persisted.
+ * Kimi rotates its refresh token on every refresh and its access token lives
+ * fifteen minutes, so only the proxy's stored login is read: the proxy's own
+ * refresh lead keeps it current, and the CLI's credential file is never read.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -78,6 +81,11 @@ import {
   JunieRefreshBodyJson,
   JunieStoredCredential,
   JunieStoredCredentialJson,
+  KimiProfileBodyJson,
+  KimiUsageBodyJson,
+  kimiCreditBalances,
+  kimiProfileIdentity,
+  kimiUsageWindows,
   MuseKeyBodyJson,
   museUsageWindows,
   ProxyAuthFileJson,
@@ -89,6 +97,7 @@ import type {
   JunieQuotaBody,
   JunieRefillBody,
   JunieRefreshBody,
+  KimiUsageBody,
   ProxyAuthFile,
 } from "./Accounts.wire.schemas.ts";
 
@@ -148,6 +157,38 @@ const CLAUDE_USAGE_URL = "https://api.anthropic.com/api/oauth/usage";
 const CODEX_USAGE_URL = "https://chatgpt.com/backend-api/wham/usage";
 const MUSE_KEY_URL = "https://api.meta.ai/muse-code/key";
 const GROK_BILLING_URL = "https://grok.com/grok_api_v2.GrokBuildBilling/GetGrokCreditsConfig";
+// The proxy records the API root of a Kimi login's region without the `/v1`
+// segment the usages and profile endpoints live under (verified 2026-10-29:
+// `base_url` is `https://api.kimi.com/coding`, and `/coding/usages` is a 404);
+// a login without a root is on the global deployment.
+const KIMI_GLOBAL_BASE_URL = "https://api.kimi.ai/coding/v1";
+
+/**
+ * The Kimi Code API root for a proxy login: its `base_url` with `/v1` appended
+ * when the proxy left it off, else the global deployment's root.
+ *
+ * **Example** (Complete the proxy's root)
+ *
+ * ```ts
+ * import { kimiApiBase } from "@beep/repo-cli/test/Accounts"
+ *
+ * console.log(kimiApiBase("https://api.kimi.com/coding/")) // "https://api.kimi.com/coding/v1"
+ * console.log(kimiApiBase(undefined)) // "https://api.kimi.ai/coding/v1"
+ * ```
+ *
+ * @param baseUrl - The `base_url` the proxy stored for the login, if any.
+ * @returns The root the usages and profile paths are appended to.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const kimiApiBase = (baseUrl: string | undefined): string =>
+  pipe(
+    O.fromNullishOr(baseUrl),
+    O.map(Str.replace(/\/+$/, "")),
+    O.filter(Str.isNonEmpty),
+    O.map((root) => (Str.endsWith("/v1")(root) ? root : `${root}/v1`)),
+    O.getOrElse(() => KIMI_GLOBAL_BASE_URL)
+  );
 // An empty gRPC-web request: one uncompressed frame holding a zero-length message.
 const GROK_EMPTY_REQUEST = new Uint8Array(5);
 const REQUEST_TIMEOUT = Duration.seconds(20);
@@ -156,14 +197,18 @@ const POLL_CONCURRENCY = 4;
 const isPolledProvider = S.is(AccountProvider);
 
 // The proxy names a stored login by its upstream; the report names the product.
-const providerOfLoginType = (type: string): O.Option<AccountProvider> =>
-  type === "claude" || type === "codex"
-    ? O.some(type)
-    : type === "meta"
-      ? O.some("muse")
-      : type === "xai"
-        ? O.some("grok")
-        : O.none();
+// A Kimi login is typed by its region (`kimi` for kimi.com, `kimi-ai` for the
+// global deployment); both are the one Kimi Code membership.
+const providerOfLogin: Readonly<Record<string, AccountProvider>> = {
+  claude: "claude",
+  codex: "codex",
+  meta: "muse",
+  xai: "grok",
+  kimi: "kimi",
+  "kimi-ai": "kimi",
+};
+
+const providerOfLoginType = (type: string): O.Option<AccountProvider> => O.fromNullishOr(providerOfLogin[type]);
 
 const mapPlatformError = (cause: PlatformError.PlatformError): AccountsError =>
   AccountsError.make({
@@ -333,6 +378,48 @@ export const museUsageOutcome: (response: UsageTextResponse) => AccountUsageOutc
       asOf: O.none(),
     })
 );
+
+/**
+ * Turn a Kimi Code usages response, and the profile read beside it, into an
+ * outcome.
+ *
+ * **Details**
+ *
+ * The profile supplies the identity and membership tier; when it cannot be
+ * read the usage still counts, with the identity the proxy login carries.
+ *
+ * **Example** (Read a quiet account)
+ *
+ * ```ts
+ * import { kimiUsageOutcome } from "@beep/repo-cli/test/Accounts"
+ * import * as O from "effect/Option"
+ *
+ * const outcome = kimiUsageOutcome({ identity: O.none(), status: 200, body: '{"usages":{}}' }, O.none())
+ * console.log(outcome._tag) // "Ok"
+ * ```
+ *
+ * @param response - The account's identity, the HTTP status, and the usages body text.
+ * @param profile - The profile body text, when the profile request answered 200.
+ * @returns The windows, a re-login request, or the failure.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const kimiUsageOutcome: {
+  (profile: O.Option<string>): (response: UsageTextResponse) => AccountUsageOutcome;
+  (response: UsageTextResponse, profile: O.Option<string>): AccountUsageOutcome;
+} = dual(2, (response: UsageTextResponse, profile: O.Option<string>): AccountUsageOutcome => {
+  const decodedProfile = O.flatMap(profile, KimiProfileBodyJson.decodeOption);
+  return decodedOutcome<KimiUsageBody>("Kimi Code usages", KimiUsageBodyJson.decodeOption, (body) =>
+    AccountUsageOutcome.cases.Ok.make({
+      identity: O.orElse(O.flatMap(decodedProfile, kimiProfileIdentity), () => response.identity),
+      plan: O.flatMap(decodedProfile, (value) => O.filter(O.fromNullishOr(value.user_level_name), Str.isNonEmpty)),
+      windows: kimiUsageWindows(body),
+      credits: kimiCreditBalances(body),
+      limitResets: O.none(),
+      asOf: O.none(),
+    })
+  )(response);
+});
 
 // Proven AI Pro tariff: 1,000,000 wire units = 10 JetBrains credits.
 // Evidence: goals/agent-pool-doctrine/history/2026-10-14-routing-refresh.md R9.
@@ -1008,7 +1095,7 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
     );
 
   const fetchOutcome = (provider: AccountProvider, login: ProxyAuthFile) => {
-    const identity = O.some(login.email);
+    const identity = O.fromNullishOr(login.email);
     const token = Redacted.value(login.access_token);
     return AccountProvider.match(provider, {
       claude: () =>
@@ -1056,6 +1143,31 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
             ),
         }),
       junie: () => pollJunie(),
+      // The proxy refreshes the fifteen-minute Kimi access token ahead of
+      // expiry, so the stored one is read as it is. The profile is read beside
+      // the usages for the identity and tier; a failed profile read keeps the
+      // usages.
+      kimi: () => {
+        const base = kimiApiBase(login.base_url);
+        const get = (suffix: string) =>
+          client.execute(
+            HttpClientRequest.get(`${base}/${suffix}`).pipe(
+              HttpClientRequest.bearerToken(token),
+              HttpClientRequest.acceptJson
+            )
+          );
+        return Effect.all(
+          [
+            Effect.flatMap(get("usages"), (response) =>
+              Effect.map(response.text, (body) => ({ identity, status: response.status, body }))
+            ),
+            Effect.flatMap(get("me"), (response) =>
+              response.status === 200 ? Effect.asSome(response.text) : Effect.succeedNone
+            ).pipe(Effect.orElseSucceed(O.none<string>)),
+          ],
+          { concurrency: 2 }
+        ).pipe(Effect.map(([usage, profile]) => kimiUsageOutcome(usage, profile)));
+      },
       grok: () =>
         Effect.flatMap(
           client.execute(
@@ -1078,7 +1190,14 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
     return O.flatMap(login, (file) =>
       file.disabled === true
         ? O.none()
-        : O.map(providerOfLoginType(file.type), (provider) => AccountRef.make({ provider, label: file.email, source }))
+        : O.map(providerOfLoginType(file.type), (provider) =>
+            AccountRef.make({
+              provider,
+              // A login the proxy stored without an identity is named after its file.
+              label: O.getOrElse(O.fromNullishOr(file.email), () => path.basename(source, ".json")),
+              source,
+            })
+          )
     );
   });
 

@@ -40,6 +40,14 @@ import {
   JunieStoredCredentialJson,
   junieRefreshOutcome,
   junieUsageOutcome,
+  KimiProfileBody,
+  KimiUsageBody,
+  KimiUsageBodyJson,
+  kimiApiBase,
+  kimiCreditBalances,
+  kimiProfileIdentity,
+  kimiUsageOutcome,
+  kimiUsageWindows,
   layerAccountsUsageLive,
   loadAccountsReport,
   MuseKeyBodyJson,
@@ -155,6 +163,11 @@ const claudeBody = `{
 
 const codexBody = `{"plan_type":"pro","email":"work@example.com","rate_limit":{"primary_window":{"used_percent":38,"limit_window_seconds":604800,"reset_after_seconds":10,"reset_at":1767916800},"secondary_window":null}}`;
 
+// The live shape on 2026-10-29 for a Pro member: no seven-day limit, no wallet.
+const kimiBody = `{"limits":[{"window":{"duration":300,"timeUnit":"TIME_UNIT_MINUTE"},"detail":{"limit":"100","used":"1","remaining":"99","resetTime":"2026-01-05T05:00:00.653687Z"}}],"usages":{"limit_5h":{"used_ratio":0.0104,"reset_time":"2026-01-05T05:00:00Z"},"limit_month_total":{"used_ratio":"0.0006","reset_time":"2026-01-31T00:00:00Z"},"limit_month_code":{"used_ratio":0.0006,"reset_time":"2026-01-31T00:00:00Z"}}}`;
+
+const kimiProfile = `{"user_id":"u_1","nickname":"Someone","status":"USER_STATUS_NORMAL","region":"REGION_OVERSEA","user_level":25,"user_level_name":"Pro","email":"kimi@example.com"}`;
+
 describe("account usage wire mapping", () => {
   it.effect("reads Claude's normalized limits and skips kinds it does not know", () =>
     Effect.gen(function* () {
@@ -266,6 +279,92 @@ describe("credits, resets, and the Muse and Grok providers", () => {
     })
   );
 
+  it.effect("reads Kimi's five-hour, legacy weekly, and monthly limits as windows", () =>
+    Effect.gen(function* () {
+      const body = yield* KimiUsageBodyJson.decode(kimiBody);
+      expect(
+        A.map(kimiUsageWindows(body), (window) => [
+          window.kind,
+          Math.round(window.usedPercent * 100) / 100,
+          O.getOrNull(window.scope),
+          O.getOrNull(O.map(window.resetsAt, DateTime.formatIso)),
+        ])
+      ).toEqual([
+        ["session", 1.04, null, "2026-01-05T05:00:00.000Z"],
+        ["cycle", 0.06, null, "2026-01-31T00:00:00.000Z"],
+        ["cycle-scoped", 0.06, "coding", "2026-01-31T00:00:00.000Z"],
+      ]);
+      const legacy = yield* KimiUsageBodyJson.decode(
+        `{"usages":{"limit_7d":{"used_ratio":0.5,"reset_time":""},"limit_5h":{"used_ratio":1}}}`
+      );
+      expect(
+        A.map(kimiUsageWindows(legacy), (window) => [window.kind, window.usedPercent, O.isNone(window.resetsAt)])
+      ).toEqual([
+        ["session", 100, true],
+        ["weekly", 50, true],
+      ]);
+      expect(kimiUsageWindows(KimiUsageBody.make({}))).toEqual([]);
+    })
+  );
+
+  it.effect("reads the Kimi extra-usage wallet in its own currency units", () =>
+    Effect.gen(function* () {
+      const wallet = yield* KimiUsageBodyJson.decode(
+        `{"usages":{},"boosterWallet":{"balance":{"type":"BOOSTER","amount":"2500000000","amountLeft":1000000000},"monthlyChargeLimitEnabled":false,"monthlyChargeLimit":{"priceInCents":0,"currency":"CNY"},"monthlyUsed":{"priceInCents":1500,"currency":"CNY"}}}`
+      );
+      expect(
+        A.map(kimiCreditBalances(wallet), (credit) => [
+          credit.label,
+          credit.unit,
+          credit.remaining,
+          O.getOrNull(credit.limit),
+        ])
+      ).toEqual([["extra usage (CNY)", "credits", 10, 25]]);
+      const dollars = yield* KimiUsageBodyJson.decode(
+        `{"boosterWallet":{"balance":{"type":"BOOSTER","amount":500000000},"monthlyUsed":{"currency":"USD"}}}`
+      );
+      expect(A.map(kimiCreditBalances(dollars), (credit) => [credit.label, credit.unit, credit.remaining])).toEqual([
+        ["extra usage", "usd", 0],
+      ]);
+      expect(
+        kimiCreditBalances(KimiUsageBody.make({ boosterWallet: { balance: { type: "GIFT", amount: 5 } } }))
+      ).toEqual([]);
+    })
+  );
+
+  it("completes the proxy's Kimi API root with the version segment", () => {
+    expect(kimiApiBase("https://api.kimi.com/coding")).toBe("https://api.kimi.com/coding/v1");
+    expect(kimiApiBase("https://api.kimi.ai/coding/v1/")).toBe("https://api.kimi.ai/coding/v1");
+    expect(kimiApiBase("")).toBe("https://api.kimi.ai/coding/v1");
+    expect(kimiApiBase(undefined)).toBe("https://api.kimi.ai/coding/v1");
+  });
+
+  it("builds the Kimi outcome from the usages and the profile beside it", () => {
+    const identity = O.some("kimi-1761717000000");
+    const outcome = kimiUsageOutcome({ identity, status: 200, body: kimiBody }, O.some(kimiProfile));
+    expect(outcome._tag).toBe("Ok");
+    if (outcome._tag !== "Ok") return;
+    assertSome(outcome.identity, "kimi@example.com");
+    assertSome(outcome.plan, "Pro");
+    expect(A.length(outcome.windows)).toBe(3);
+    const usage = AccountUsage.make({
+      account: AccountRef.make({ provider: "kimi", label: "kimi-1761717000000", source: "synthetic" }),
+      outcome,
+    });
+    const ranked = rankAccount(usage, now);
+    expect(ranked.availability).toBe("ready");
+    expect(O.getOrElse(ranked.weeklyRemainingPercent, () => 0)).toBeCloseTo(99.94);
+    expect(plainBoard(reportOf([usage]))).toMatch(/Kimi Code[\s\S]*kimi@example\.com +ready/);
+    const unread = kimiUsageOutcome({ identity, status: 200, body: kimiBody }, O.some("<html>"));
+    expect(unread._tag === "Ok" ? [O.getOrNull(unread.identity), O.getOrNull(unread.plan)] : []).toEqual([
+      "kimi-1761717000000",
+      null,
+    ]);
+    assertSome(kimiProfileIdentity(KimiProfileBody.make({ email: null, nickname: "Someone" })), "Someone");
+    expect(kimiUsageOutcome({ identity, status: 401, body: "" }, O.none())._tag).toBe("NeedsLogin");
+    expect(kimiUsageOutcome({ identity, status: 200, body: "not json" }, O.none())._tag).toBe("Failed");
+  });
+
   it("decodes the Grok weekly pool from a gRPC-web protobuf reply", () => {
     const windows = O.getOrElse(grokUsageWindows(grokReply), () => A.empty<UsageWindow>());
     expect(
@@ -374,15 +473,9 @@ describe("account ranking", () => {
 
 describe("provider panels", () => {
   it("places each provider in its panel", () => {
-    expect(A.map(["claude", "codex", "grok", "cursor", "grok-bot", "muse", "kimi"], accountSection)).toEqual([
-      "claude",
-      "codex",
-      "supergrok",
-      "supergrok",
-      "supergrok",
-      "muse",
-      "other",
-    ]);
+    expect(A.map(["claude", "codex", "grok", "cursor", "grok-bot", "muse", "kimi", "someone"], accountSection)).toEqual(
+      ["claude", "codex", "supergrok", "supergrok", "supergrok", "muse", "kimi", "other"]
+    );
   });
 
   it("groups ranked rows by panel in a fixed order and marks the signed-in account", () => {
@@ -694,7 +787,7 @@ const authFiles = {
   "claude-off.json": `{"type":"claude","email":"off@example.com","access_token":"off-token","disabled":true}`,
   "xai-me.json": `{"type":"xai","email":"me@example.com","access_token":"xai-token"}`,
   "meta-me.json": `{"type":"meta","email":"me@example.com","access_token":"muse-key","dca_token":"muse-device"}`,
-  "kimi-me.json": `{"type":"kimi","email":"me@example.com","access_token":"kimi-token"}`,
+  "kimi-1761717000000.json": `{"type":"kimi","access_token":"kimi-token","base_url":"https://api.kimi.com/coding","domain":"kimi.com"}`,
   "config.yaml": "port: 8317",
   "broken.json": "{",
 };
@@ -707,6 +800,8 @@ it.layer(inheritedPlatform, { timeout: "30 seconds" })("live account poller", (i
         if (Str.includes("anthropic")(request.url)) return respond(request, claudeBody);
         if (Str.includes("chatgpt")(request.url)) return respond(request, codexBody);
         if (Str.includes("meta.ai")(request.url)) return respond(request, `{"subs_tier_name":"Tier"}`);
+        if (Str.endsWith("/usages")(request.url)) return respond(request, kimiBody);
+        if (Str.endsWith("/me")(request.url)) return respond(request, kimiProfile);
         return HttpClientResponse.fromWeb(request, new Response(grokReply, { status: 200 }));
       };
       const client = HttpClient.make((request) =>
@@ -725,8 +820,14 @@ it.layer(inheritedPlatform, { timeout: "30 seconds" })("live account poller", (i
         ["claude", "me@example.com", "Ok"],
         ["codex", "work@example.com", "Ok"],
         ["grok", "me@example.com", "Ok"],
+        ["kimi", "kimi-1761717000000", "Ok"],
         ["muse", "me@example.com", "Ok"],
       ]);
+      const kimi = A.findFirst(usages, (usage) => usage.account.provider === "kimi");
+      assertSome(
+        O.map(kimi, (usage) => (usage.outcome._tag === "Ok" ? O.getOrNull(usage.outcome.identity) : null)),
+        "kimi@example.com"
+      );
       expect(
         A.sort(
           yield* Ref.get(seen),
@@ -734,6 +835,8 @@ it.layer(inheritedPlatform, { timeout: "30 seconds" })("live account poller", (i
         )
       ).toEqual([
         ["GET", "https://api.anthropic.com/api/oauth/usage", "Bearer claude-token", "oauth-2025-04-20"],
+        ["GET", "https://api.kimi.com/coding/v1/me", "Bearer kimi-token", undefined],
+        ["GET", "https://api.kimi.com/coding/v1/usages", "Bearer kimi-token", undefined],
         ["POST", "https://api.meta.ai/muse-code/key", "Bearer muse-device", undefined],
         ["GET", "https://chatgpt.com/backend-api/wham/usage", "Bearer codex-token", "acct-1"],
         ["POST", "https://grok.com/grok_api_v2.GrokBuildBilling/GetGrokCreditsConfig", "Bearer xai-token", "1"],
