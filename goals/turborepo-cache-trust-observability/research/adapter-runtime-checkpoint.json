@@ -72,5 +72,10 @@
     "Fixed core/HTTP/blocking configuration and observed fixture cgroup caps do not qualify the actual deployed launcher chain.",
     "No R2 IAM, production producer binding, artifact-key distribution, epoch transition or warm rollback proof.",
     "No fleet portability, task qualification, performance benefit or representative observation acceptance."
-  ]
+  ],
+  "mainIntegration": {
+    "reviewedMain": "9e06ce011505c859d69e210a2084fa9cfd27efb8",
+    "runtimeSourcesUnchanged": true,
+    "scope": "Reviewed main exports and packet evidence imported; exact runtime source/build/lab bindings remain unchanged."
+  }
 }
