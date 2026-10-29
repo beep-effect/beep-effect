@@ -210,6 +210,29 @@ fault receipts. Remote fallback must never mean unsigned restore.
 
 ## Decision log
 
+### Owned request-tag capture, 2026-10-29
+
+- Retain the complete minimal native summary in each newly executed signed
+  pilot run, decoded from the same supervised summary bytes before any task
+  selection. Move the existing summary schema into the existing runner schema
+  role and retain its original export. Decode historical absence as `None`;
+  absence cannot satisfy a future producer upload join. This captures evidence
+  only: full-graph comparison, actual adapter results and protected publication
+  still need their owned integration and runtime proof. Reverse by reverting
+  the additive field and schema move before enabling such a consumer.
+- Retain only a SHA-256 digest of the actual incoming opaque artifact-tag header
+  in fixture observations. Keep request evidence distinct from response tag
+  presence, and decode historical events without this field as absent. The
+  digest grants neither signature validity nor backend authorization. A real
+  adapter result must still be observed independently before producer upload
+  publication. Reverse by reverting the additive capture before activating any
+  consumer that requires it.
+- Develop the capture continuation in an unpublished sibling lane based on
+  PR #2358's frozen head while its validation runs. Publish only after that
+  dependency lands and the unpublished continuation is reconciled with main.
+  This preserves the current proof's source and avoids parallel edits to its
+  workflow owner. Reverse by archive-retiring the unpublished lane.
+
 ### Signed-client component, 2026-10-28
 
 - Route optional artifact-key references through the existing cache secret-session
@@ -452,3 +475,28 @@ The local process report does not satisfy those deployment or observation gates.
 - Verification runs the real full Docgen command, the script generator and
   package lint/check. Reversal restores the prior implementation string;
   this change grants no cache qualification, credential access or signing.
+
+
+### Deterministic contained-directory error control, 2026-10-29
+
+- Exercise the existing filesystem parent-creation error adapter with a scoped
+  service failure and its actual typed platform cause. Require the contained
+  root, target and failing directory, preserved cause, and no target write.
+  Restore the spy through its scope finalizer. Retain existing coverage floors;
+  do not depend on incidental concurrent filesystem errors to reach the branch.
+- This test-only repair changes no filesystem implementation or cache policy.
+  Reversal removes only the new fixture; it grants no cache qualification or
+  production authority. Fresh component final and consumer proof remain required.
+
+
+### Owned graph upload join preparation
+
+- 2026-10-29: Extend the existing pure upload join with the complete independently
+  reviewed task-id closure, retaining the one-task default. Check exact graph
+  membership, duplicates, the 64-task bound, canonical hashes and successful
+  fresh execution for every node before selecting the upload task. This closes
+  the selected-task filtering gap without creating a new producer authority.
+  The supervisor must supply the reviewed closure and actual complete capture;
+  caller-supplied schema values alone remain untrusted. Reversal is to stop
+  multi-task producer publication and restore the single-task profile. No
+  signing, production configuration or qualification state changes here.

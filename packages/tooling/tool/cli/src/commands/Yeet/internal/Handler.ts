@@ -2211,7 +2211,10 @@ const makeYeetAttempt = Effect.fn("Yeet.makeAttempt")(function* (
 });
 
 const attachInnerLaneReportSideChannel = (step: RepoPlanStep, reportPath: string): RepoPlanStep =>
-  step.id === PRE_PUSH_PROOF_STEP_ID || step.id === CI_PARITY_STEP_ID
+  step.id === PRE_PUSH_PROOF_STEP_ID ||
+  step.id === CI_PARITY_STEP_ID ||
+  step.id === repoProofStepDefinition("cheap-gates").id ||
+  step.id === "feedback:00-cheap-gates"
     ? RepoPlanStep.make({
         ...step,
         env: {

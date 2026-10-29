@@ -529,6 +529,7 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
                       "run/runs/run.json",
                       yield* encodeJson({
                         id: `${label}-${number}`,
+                        turboVersion: pin.version,
                         tasks: fault === "missing-selected" ? dependency : [selected, ...dependency],
                       })
                     );
@@ -710,7 +711,7 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
 afterEach(() => vi.restoreAllMocks());
 
 it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process boundary", (it) => {
-  it.effect("runs signed capture controls and isolated comparisons through the process boundary", () =>
+  it.effect("runs signed controls and retains complete native summaries through the process boundary", () =>
     Effect.gen(function* () {
       const { runSigned } = yield* fixture("none", linker, true);
       const receipt = yield* runSigned();
@@ -719,6 +720,16 @@ it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process bound
       expect(receipt.pairs).toHaveLength(3);
       expect(receipt.shadows).toHaveLength(10);
       expect(receipt.mutations).toHaveLength(7);
+      for (const pair of receipt.pairs) {
+        const summary = O.getOrThrow(pair.producer.nativeSummary);
+        expect(summary.turboVersion).toBe(pin.version);
+        const taskIds = A.map(summary.tasks, (task) => task.taskId);
+        expect(taskIds).toHaveLength(pair.producer.dependencies.length + 1);
+        expect(taskIds).toContain(pair.producer.outcome.selected.computation);
+        expect(taskIds).toEqual(
+          expect.arrayContaining(A.map(pair.producer.dependencies, (dependency) => dependency.computation))
+        );
+      }
     })
   );
   it.effect("rejects issuer material under either mounted source before native execution", () =>
