@@ -88,7 +88,7 @@ opt-in. See [memory investigation](./research/MEMORY-NOTIFICATION-INVESTIGATION.
 Preserve resource admission limits and unrelated applications. A declined or stopped
 check is not a pass and must not be retried as if an uncertain mutation never ran.
 
-Bring the landed corrective fix into the foundation branch. Close AC12 with
+The landed corrective fix is integrated into the foundation branch. Close AC12 with
 predeclared synthetic Git-root/route/event evidence in both disposable and live
 proofs, then perform foundation publication, required current-source policy/catalog
 and panel checks, hosted readiness, merge and reflection. Reconcile every SPEC
