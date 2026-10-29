@@ -209,8 +209,9 @@
   },
   "privateSocketCheckpoint": {
     "path": "goals/turborepo-cache-trust-observability/research/private-socket-checkpoint.json",
-    "sha256": "a25822f0ef271dedb2b7ea045af6bf4db263535c5737e17c84e4234f43abbd54",
-    "authority": "Transport component only; no production or qualification authority."
+    "sha256": "7bbaf5cbadc0541e129d7982811c4c1e4ae3f0a3a06e4fedaca421d80c37307f",
+    "authority": "Transport component only; no production or qualification authority.",
+    "scope": "Original production and native-test bytes unchanged; new test-only in-process coverage/control file passes51 cases per provider and quick verification. Prior complete package scope retained; fresh combined-source final still required. No full-goal acceptance."
   },
   "priorSpecSha256AtMutatingFixerReview": "7e7bd28c21dc6ddb46b29e62aefcc0f0f8d49c99da7bab4f1fa6d4a372b64ed3"
 }

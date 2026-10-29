@@ -751,3 +751,27 @@ the policy check; do not add a baseline finding or waive the detector.
   error. Preserve the original formatting, change only the cache literal and
   refresh the exact activation reference. Failed observations remain retained;
   the corrected proposed-launch diagnostic is running and grants no qualification.
+
+
+### Native transport proof and in-process coverage
+
+The existing native socket lifecycle passes through a Bun child during Node
+coverage, leaving the new common listener function unexecuted in Node/V8.
+Actual focused V8 evidence showed 34/35 functions and 118/129 lines. Add explicit
+constructor-double controls for modes, wrong-address refusal, bind-cause
+preservation and cleanup; keep the physical Bun lifecycle as transport proof.
+The first controls tried to spy on an immutable ESM export and used a forbidden
+native HTTP import. Use the framework's module replacement and existing Effect
+server interface instead. Missing target options and the mock's filesystem
+error channel were corrected before both runtimes passed the three controls.
+Both runtime integration runs now pass 51 tests and package lint/check passes.
+Include json-summary with LCOV to judge the statement metric explicitly;
+function/branch/line counts alone are not the full committed ratchet. Preserve
+the original failures, unchanged implementation and unchanged coverage floor.
+
+Source-removal controls reject removal of the Unix-address guard and owner-only
+socket chmod for the intended assertions; exact original bytes are restored.
+Vitest truncates assertion strings in JSON failure messages, so the receipt
+wrapper verifies the unique test plus identifying assertion prefixes rather
+than requiring untruncated prose. Both providers now prove all four fixture
+metrics at 100%, and the proxy exceeds its existing floors.

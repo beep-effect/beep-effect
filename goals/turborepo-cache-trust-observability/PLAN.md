@@ -531,3 +531,15 @@ Node/Bun tests, package lint/check and the complete package audit plus Docgen
 pass; see [the component checkpoint](research/private-socket-checkpoint.json).
 Protected producer integration, actual adapter capture, immutable publication,
 current qualification, rollout and representative windows remain unfinished.
+
+
+### Current private socket coverage checkpoint
+
+After replaying only the owned unpublished commits onto landed PR #2359, all
+four original component files retain their exact hashes and current focused
+Node/Bun 48-test integration plus package lint/check pass. A new test-only
+constructor-control file closes the Node coverage gap: 51 cases pass per runtime,
+all four fixture metrics are 100% in V8/Istanbul, and proxy metrics exceed the
+committed floors. Two intended-failure source removals restore exactly. The
+earlier default full package replay retains its original four-file scope;
+fresh combined-source final and hosted acceptance remain required.

@@ -412,6 +412,19 @@ historical evidence; this pass grants neither live trust nor qualification.
   Effect NetAddress and platform Unix HTTP agent are reused.
 - Actual Node and Bun focused runs passed48 tests in3 files each. Additional
   real-socket controls prove request-budget refusal and invalid evidence after
-  exhaustion. The full package audit and documentation build passed in1244.41s.
+  exhaustion. The earlier source-bound package audit and documentation build passed in 1244.41s.
 - These are component observations. They neither prove real R2 producer traffic
   nor confer protected workflow, qualification or production signing authority.
+
+
+### Private socket coverage controls
+
+The private-socket checkpoint also retains current 51-test Node/V8 and
+Bun/Istanbul runs. Both providers report 100% lines, statements, functions and
+branches for the fixture; proxy metrics exceed the existing per-file floors.
+Three constructor-double cases prove modes, wrong-address refusal, bind-cause
+preservation and cleanup in-process, while the native lifecycle proves Bun
+transport. Two source-removal controls fail their intended assertions and restore
+the exact source. The production implementation and original test stay byte
+identical to the prior full package replay; current integrated final proof
+remains required for the new test file and combined source.
