@@ -1,0 +1,212 @@
+{
+  "schemaVersion": "cache-goal-completion-audit/v1",
+  "goal": "turborepo-cache-trust-observability",
+  "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
+  "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
+  "specSha256": "456a722a999a75f0b630a1d3b2fb7737c96bb858fa4c72eea391b86bdb1286a3",
+  "acceptance": [
+    {
+      "id": "AC-01",
+      "source": "SPEC.md:156",
+      "requirement": "Signed valid artifacts restore and missing/invalid/corrupt/wrong-team artifacts are rejected before output materialization.",
+      "status": "unproven",
+      "nextProof": "Refresh applicable deployed signed restore/nonmaterialization boundaries. Current synthetic signing controls and retained same-binary RC-021 wrong-team lab controls are referenced in current-native-checkpoint.json; these do not prove deployed tenant isolation.",
+      "partialEvidence": [
+        "research/current-native-stable.json",
+        "research/current-native-canary.json"
+      ]
+    },
+    {
+      "id": "AC-02",
+      "source": "SPEC.md:157",
+      "requirement": "Reader, fork, writer, backend and storage roles satisfy the independent capability matrix; tenant escape and direct invocation negatives pass.",
+      "status": "unproven",
+      "nextProof": "Prove current reader/fork/writer/backend/storage capabilities, selector validation and direct invocation denials against the applicable deployed topology."
+    },
+    {
+      "id": "AC-03",
+      "source": "SPEC.md:158",
+      "requirement": "Missing-key behavior, explicit epoch rotation, warm-process behavior and rollback are proven without unsigned fallback or backend possession of the artifact key.",
+      "status": "unproven",
+      "nextProof": "Prove required-key posture, explicit epochs, warm-process secret handling, old/new separation and rollback without unsigned fallback."
+    },
+    {
+      "id": "AC-04",
+      "source": "SPEC.md:159",
+      "requirement": "Protected producer receipts and direct result classes preserve provenance/fault causes despite Turbo recomputation.",
+      "status": "unproven",
+      "nextProof": "Bind real protected workflow producer evidence and typed fault causes to the actual consumer; current producer/protocol unit tests alone are insufficient."
+    },
+    {
+      "id": "AC-05",
+      "source": "SPEC.md:160",
+      "requirement": "Logs/metrics/receipts pass synthetic-secret and artifact-content safety tests with bounded labels, volume and retention.",
+      "status": "unproven",
+      "nextProof": "Exercise synthetic secrets, paths and artifact bytes against actual bounded backend/client receipts and labels; verify retention and volume caps."
+    },
+    {
+      "id": "AC-06",
+      "source": "SPEC.md:161",
+      "requirement": "Adoption receives current trust-readiness evidence; incumbent hardening or replacement handoff and applicable representative windows are completed and correctly attributed.",
+      "status": "unproven",
+      "nextProof": "Produce current deployment/trust-readiness receipt, coordinate adoption and complete applicable seven/seven/fourteen-day windows and fallback rehearsal."
+    },
+    {
+      "id": "AC-07",
+      "source": "SPEC.md:162",
+      "requirement": "Relevant package/protocol checks pass; failures are attributed and no introduced regression remains.",
+      "status": "unproven",
+      "nextProof": "Complete touched-package and protocol verification on the final implementation source; retain attribution of every failure."
+    },
+    {
+      "id": "AC-08",
+      "source": "SPEC.md:164",
+      "requirement": "The final implementation PR reaches Yeet `merge-ready: yes`, with required checks and reviews handled.",
+      "status": "unproven",
+      "nextProof": "Publish the final implementation and obtain exact-head Yeet merge-ready with review threads handled."
+    },
+    {
+      "id": "AC-09",
+      "source": "SPEC.md:166",
+      "requirement": "Final evidence, reflection and lifecycle closeout land in that same PR.",
+      "status": "unproven",
+      "nextProof": "Land final evidence, reflection and completed-retained lifecycle in that same final implementation PR."
+    }
+  ],
+  "implementationContract": [
+    {
+      "id": "IC-01",
+      "source": "SPEC.md:48",
+      "section": "Independent trust controls",
+      "requirement": "Implement native Turbo HMAC artifact verification and opaque `x-artifact-tag` carriage. Read/write bearer and storage capabilities are independent of the shared HMAC key. Bind callers to the allowed tenant/namespace and reject conflicting, encoded or escaping selectors. Test direct writer invocation and the gateway-to-writer authentication boundary; do not confuse that HMAC with Turbo's artifact HMAC.",
+      "status": "requires current evidence"
+    },
+    {
+      "id": "IC-02",
+      "source": "SPEC.md:55",
+      "section": "Independent trust controls",
+      "requirement": "Approved same-repo PRs and workstations can receive reader capability and the verification key. Forks remain local-only. Protected writers alone receive upload authority. The server preserves tags without possessing the artifact signing key. A reader missing its required key uses attributable local-only execution; protected writers and signing canaries missing it fail. Never permit unsigned remote fallback inside a signed epoch.",
+      "status": "requires current evidence"
+    },
+    {
+      "id": "IC-03",
+      "source": "SPEC.md:64",
+      "section": "Epochs and producer evidence",
+      "requirement": "Native verification uses one key, so rotate through explicit namespace epochs. Bind relevant client/backend/profile/tenant identity and bounded retention to the epoch. Prove old/new separation and restore the prior approved epoch during rollback without mixed writes. Verify relevant warm-process secret-cache behavior. Use approved secret references and redacted typed configuration; no raw item, environment, bearer, signature-key or artifact payload is retained in git.",
+      "status": "requires current evidence"
+    },
+    {
+      "id": "IC-04",
+      "source": "SPEC.md:71",
+      "section": "Epochs and producer evidence",
+      "requirement": "Issue protected producer receipts with bounded repository/workflow/source, resolved workflow SHA, task hash, version digests, epoch and upload result. The receipt must be tamper-evident through a demonstrated protected workflow or storage mechanism. A freely editable local JSON file is insufficient. Shared-key readers can forge tags offline, so a MAC alone cannot assert an exact protected producer. Add asymmetric attestation only for a demonstrated residual requirement and a new scoped decision.",
+      "status": "requires current evidence"
+    },
+    {
+      "id": "IC-05",
+      "source": "SPEC.md:81",
+      "section": "Attribution and observability",
+      "requirement": "Own cache-specific typed outcomes, including genuine miss, auth/write/tenant denial, missing/invalid signature, malformed metadata, corruption, rejected payload, throttle/unavailability, ambiguous write, invalid receipt, and profile/epoch mismatch. Translate technical failures at the consuming boundary. A result may still trigger recomputation, but its cause remains in the receipt.",
+      "status": "requires current evidence"
+    },
+    {
+      "id": "IC-06",
+      "source": "SPEC.md:87",
+      "section": "Attribution and observability",
+      "requirement": "Correlate bounded receipts across source/workflow, task, request, object and quality result. Use low-cardinality metric labels; exact SHAs/task hashes stay in bounded detailed records. Start with stable Turbo summaries and explicit backend events. Prove synthetic-secret/path/artifact-content redaction before publishing logs or enabling OTEL. OTEL needs separate credentials, payload capture, allowlist, sampling/queue/retention bounds, regression checks and a disable switch. Generic evidence types may be reused without moving cache policy into the foundation package.",
+      "status": "requires current evidence"
+    },
+    {
+      "id": "IC-07",
+      "source": "SPEC.md:98",
+      "section": "Production readiness",
+      "requirement": "Lab fixes precede production signing/tenant activation. Produce a concrete current deployment/credential receipt, resource diff, named source/workflow cohort, compatible client policy, numeric cost/retention controls and rollback plan before execution. Use already granted scope where it covers the action; resolve only material ungranted budget or external authority from this concrete plan. Coordinate task/CI edits with adoption; it owns broad consumer wiring.",
+      "status": "requires current evidence"
+    },
+    {
+      "id": "IC-08",
+      "source": "SPEC.md:105",
+      "section": "Production readiness",
+      "requirement": "If the incumbent is retained, this goal owns its scoped production hardening. Observe the agreed seven/seven/fourteen-day backend windows and rehearse the incumbent/prior-epoch fallback. If a replacement is selected, the conditional migration goal owns cutover; supply passing contracts and readiness evidence. Do not claim production trust from a lab pass or count absent observation as successful completion.",
+      "status": "requires current evidence"
+    }
+  ],
+  "currentEvidence": {
+    "population": "goals/turborepo-quality-cache-adoption/research/current-population.json",
+    "features": "goals/turborepo-quality-cache-adoption/research/current-feature-matrix.json",
+    "pins": "goals/turborepo-quality-cache-adoption/research/current-client-pins.json",
+    "focusedTests": {
+      "command": "bun run --cwd packages/tooling/tool/cli beep:test test/cache-signed-runner.test.ts test/cache-protocol-runner.test.ts test/cache-protocol.test.ts test/cache-producer.test.ts test/turbo-cache.test.ts test/cache-runtime.test.ts test/shared-internals.test.ts test/cache-conformance.test.ts test/cache-conformance-lab.test.ts",
+      "files": 9,
+      "passed": 240,
+      "seconds": 19.44,
+      "scope": "Posture/protocol integration on the merged tree. Native observations retain their original artifact bytes and protocol-source bindings."
+    },
+    "retainedQualification": "goals/turborepo-task-qualification/research/current-signed-qualification.json applies only to its recorded older private-loopback tuple",
+    "nativeProtocol": "goals/turborepo-cache-trust-observability/research/current-native-checkpoint.json",
+    "packageVerification": {
+      "fullAudit": {
+        "status": "passed",
+        "head": "23e69e94a4924002397ea5c78407458d128d9f76",
+        "auditSeconds": 1244.6,
+        "docgenSeconds": 40.2,
+        "conditions": "Controlled parent environment: host cache defaults disabled; inherited Turbo endpoint, token, team, cache mode and signing key empty. All package audit/docgen checks ran. Not default-path qualification."
+      },
+      "mainIntegration": {
+        "status": "passed",
+        "head": "3e10e69d103b12536fbd5dea053d2034d9e59976",
+        "launch": "Default enrolled root with main fixture isolation from PR2346.",
+        "selectedFiles": 8,
+        "selectedTestsPassed": 588,
+        "seconds": 26.68,
+        "packageQuick": {
+          "lintSeconds": 5.8,
+          "checkSeconds": 12.1,
+          "status": "passed"
+        },
+        "nativeCheckpointSourceHashesUnchanged": true
+      },
+      "postAdapterMainIntegration": {
+        "head": "f94269cdf1ba96a6269c18357c9b78a526a6184f",
+        "componentSourceBindingsUnchanged": true,
+        "lintSeconds": 11.9,
+        "checkSeconds": 22.3,
+        "status": "passed",
+        "census": "Rerun after adapter main integration;190workspaces/2571executable computations. All raw native evidence, retained conformance, source/test and merged SPEC bindings verified."
+      },
+      "postResponseSafetyMainIntegration": {
+        "head": "afaf686c5d334a8f0cdfa6ba82f33834555d09cb",
+        "status": "passed",
+        "protocolSourceAndVerificationBindingsUnchanged": true,
+        "packageQuick": {
+          "lintSeconds": 4.8,
+          "checkSeconds": 11.7,
+          "status": "passed"
+        },
+        "scope": "Main response media-type projection inherited from its independently audited component; no protocol or retained artifact bytes changed."
+      },
+      "postSigningPostureIntegration": {
+        "head": "e90ec4819e4d436f5e7a60f00a52b767e006e716",
+        "status": "passed",
+        "protocolSourceBindingsUnchanged": true,
+        "originalNativeArtifactsUnchanged": true,
+        "focusedTestsPassed": 240,
+        "packageQuick": {
+          "lintSeconds": 5.9,
+          "checkSeconds": 12.8,
+          "status": "passed"
+        },
+        "verificationSourceBindings": "Refreshed against the passing current suite; original 136-test proof and its six source bindings retained separately in the native checkpoint."
+      }
+    },
+    "adapterRuntimeComponent": "goals/turborepo-cache-trust-observability/research/adapter-runtime-checkpoint.json"
+  },
+  "remainingExplicitGates": [
+    "SPEC verification matrix commands on actual final changes",
+    "Runtime behavior and negative cases at the required scope",
+    "Current named deployment/cohort/numeric budget/rollback before execution",
+    "Representative observation cannot be replaced by synthetic samples",
+    "Final PR readiness, reflection and lifecycle"
+  ],
+  "referenceBase": "repository root"
+}

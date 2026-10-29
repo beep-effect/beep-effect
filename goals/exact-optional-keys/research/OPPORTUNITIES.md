@@ -131,3 +131,12 @@
   full lint-rules audit and docgen pass.
 - Prevention: scope-sensitive predicates must traverse direct child lists,
   with nested type/default-value counterexamples alongside true-shadow cases.
+
+## 2026-10-28: merge during an interrupted readiness monitor
+
+PR #2316 merged with all 15 required contexts green, but completion refresh
+reports `unknown`: the declared closeout verdict lacks `mergeReady.ready`.
+`yeet monitor` then refuses because the PR is already merged. The stopped job
+and original artifacts are retained in the owning clone. A final documentation
+closeout will capture canonical readiness before merge. A merge gate that
+checks declared goal evidence before allowing merge would prevent this gap.

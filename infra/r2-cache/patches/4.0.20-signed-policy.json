@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "r2-cache-source-patch/v1",
+  "upstreamRepository": "https://github.com/brunojppb/turbo-cache-server.git",
+  "upstreamRelease": "4.0.20",
+  "upstreamCommit": "0e893f63e1c7f1ac3c460d79e75fb63d4c9f7c85",
+  "patchSha256": "740ce934d3fb22a0244edd7dc3a9cc89a4fe043982defe28af485f10ebfd494e",
+  "activation": "Candidate not installed or deployed; signed-v1 policy remains explicit opt-in. Fixed worker caps apply whenever this candidate runs.",
+  "compilerTested": "rustc1.96.0",
+  "thirdPartyDependencyChanges": true,
+  "rootLockMetadataSync": "Root version0.0.0 to4.0.20 plus reviewed security dependency updates; see adapter-dependency-review.json",
+  "verification": {
+    "crateUnitTests": 45,
+    "middlewareTests": 2,
+    "dependencyScopeTests": 1,
+    "nativeClientTests": 12,
+    "wireProcessControls": 20,
+    "muslBuild": {
+      "status": "passed",
+      "sha256": "b6660b7a94fe517aba4a1395bdc5d287b7ecca53ea270ee54ebe4de266fcde20",
+      "bytes": 10036504,
+      "staticElf": true,
+      "target": "x86_64-unknown-linux-musl",
+      "buildSeconds": 32.21,
+      "trackedDriverVerified": true,
+      "compilerExecutablePinnedInChildPath": true
+    },
+    "fleetPortability": "pending",
+    "startupBoundaryControls": 1,
+    "runtimeBinaryTests": 1,
+    "totalCargoTests": 49,
+    "runtimeObservations": 4,
+    "pendingUnitCleanupControls": 1,
+    "cleanupFailureControls": 3
+  },
+  "productionReadiness": false
+}

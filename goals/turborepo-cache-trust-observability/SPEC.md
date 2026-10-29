@@ -207,3 +207,88 @@ fault receipts. Remote fallback must never mean unsigned restore.
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
 | None approved | This goal | Goal executor | Record real exceptions before using them. | Every temporary exception needs a bounded removal condition. |
+
+## Decision log
+
+### Signed-client component, 2026-10-28
+
+- Route optional artifact-key references through the existing cache secret-session
+  allowlist; keep backend and storage credentials separate. A reference cannot
+  reach a direct native child unresolved. Reverse by reverting this component
+  before any signed epoch is activated.
+- Resolve policy from the checkout root and reject alternate-root inputs before
+  selection. Use the same forced local arguments for selection and execution;
+  clear deprecated conflicting cache environment flags in inspection and fallback.
+  The isolated native controls justify this behavior; it grants no trust or task
+  qualification authority.
+- Preserve the current unsigned configuration until deployment readiness, explicit
+  epoch/role/tenant policy, bounded rollout and rollback evidence are complete.
+  This component prepares enforcement; it does not activate a signed cohort.
+
+### Resume and native execution, 2026-10-28
+
+| Date | Decision and reason | Reversal |
+| --- | --- | --- |
+| 2026-10-28 | Resume in the dedicated `codex/turborepo-goals-completion` lane. Refresh current source, client pins and population before promoting anything; older qualification remains bound to its original tuple. | Retain the previous approved configuration and remove only this lane's changes through a reviewed revert. |
+| 2026-10-28 | Treat the already approved R2 fleet as the current consumer path and retain AWS as its rollback. The user approved named trusted workstation writers; this grants upload capability, not protected-workflow producer identity. Refresh both boundaries before claiming production trust. | Disable affected remote reuse, stop mixed writes and restore the prior approved endpoint and epoch through a rehearsed path. |
+| 2026-10-28 | Pin native experiment execution with `--skip-infer --single-package`; a zero-task fixture is a failure. Keep supervisor failures bounded to exit code or capture truncation without attaching private worker streams. | Revert the runner change through Yeet; keep promotion closed when exact native execution is unproven. |
+
+### Receipt media-type safety
+
+- 2026-10-29: Project response Content-Type evidence through the existing
+  registered MimeType schema, discarding parameters and unknown subtypes at
+  both direct and proxy capture boundaries. Actual synthetic-secret regressions
+  demonstrated that truncation retained private material. Historical receipt
+  decoding remains compatible. Reversal: disable the affected collection path
+  while repairing its projection; raw header retention must not be re-enabled
+  without passing the synthetic-secret/path/artifact controls. This is a
+  receipt-safety repair and grants no deployment or task qualification.
+
+### Pinned loopback policy component
+
+2026-10-28: prepare a minimal patch against upstream adapter 4.0.20 commit
+`0e893f63e1c7f1ac3c460d79e75fb63d4c9f7c85`. Each explicitly enabled process
+binds one reader/writer role and one tenant/epoch namespace, independently of
+artifact HMAC possession. Keep the artifact key in native clients. This closes
+method and selector gaps in the disposable lab while retaining the existing
+loopback adapter and object-store topology. Use synthetic local storage, one
+canonical admitted job and two compiler workers; no new cloud spend or service.
+
+The patch is opt-in preparation. Existing production `adapter.sh` stays on its
+published binary pin. Rollback of this component is removal of the unused patch
+and test artifacts; a production activation needs its own numeric rollout,
+source-bound executable, cohort, grants, namespace/key and rollback evidence.
+The local process report does not satisfy those deployment or observation gates.
+
+### Startup isolation
+
+- 2026-10-29: The pinned adapter must decide signed startup from its inherited
+  process configuration. Reject policy introduced by dotenv before logging
+  begins; retain the legacy metadata-failure warning as static text only. The
+  previous executable failed the new startup control and the repaired exact
+  binary passes. Reversal: keep this candidate inactive and continue using the
+  incumbent while repairing the candidate; do not restore the mixed-mode path.
+  This component decision grants no deployment or broad qualification.
+
+### Bounded adapter runtime component
+
+- 2026-10-29: Pin the candidate adapter to two Tokio core workers, two HTTP
+  workers and two blocking threads per runtime. The upstream worker default
+  followed host parallelism; the read-only incumbent baseline observed 68 total
+  threads, which is an observation rather than a configured maximum. Add a
+  synthetic loopback lab envelope with a measured two-CPU quota, 256 MiB memory
+  cap and sixteen-task cap. Worker environment variables cannot widen these
+  source-pinned limits. This is preparation and grants no deployment readiness.
+  Reverse by stopping candidate admission and selecting the prior reviewed
+  artifact only after its applicable gates; the incumbent service and objects
+  remain available. No live adapter, credentials or cloud resource changes.
+
+### Owned lab cleanup review repair
+
+- 2026-10-29: Attempt every owned unit and child before reporting a bounded
+  aggregate cleanup failure. An ExitStack closes every log, temporary directory
+  and storage fixture even if stopping or another closure fails. Publish success
+  evidence only after teardown completes. Real-unit stop/status failure controls
+  and a combined stop/log failure control precede the full synthetic replay.
+  The reviewed Rust patch and binary are unchanged; production stays inactive.
+  Reversal is to halt candidate experiments while retaining the incumbent.

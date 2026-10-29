@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Opus 5.5 (effected-promotion roadmap R9, refactor/drivers-run-collect)",
-      "reason": "Record the R9 manifest edits that add the @beep/commands workspace dependency to @beep/exiftool, @beep/obs, @beep/pdf-tools and @beep/tailscale (Run.collect and Run.detach) and the root policy-fingerprint input that follows from repo-cli reaching @beep/commands; the turbo coupling is measured in the review; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (effected-promotion adoption 4-A4, effected-4a4)",
+      "reason": "Record the @beep/repo-cli manifest edit that adds the @beep/repo-workspaces workspace dependency for the 4-A4 EcosystemPolarity adoption of SourceBoundary.scan; the task graphs gain only repo-workspaces build/transit, and the policy-tool fingerprint closure gains that one package, as measured in the review; no qualification is granted.",
       "basis": {
-        "path": "goals/effected-promotion/research/cache-baseline-review-r9.md",
-        "sha256": "ffe6422230b602e4868f45ceb9a5ed0e384a9fe75b195f8d7d560d047eea20ec"
+        "path": "goals/effected-promotion/research/cache-baseline-review-4-a4.md",
+        "sha256": "5cbdd44e9e9763da57998829e196fc1313b97d97a89852584f867b76afc768e2"
       }
     },
     "@beep/acp": {
@@ -1130,11 +1130,11 @@
       }
     },
     "@beep/repo-cli": {
-      "reviewer": "Claude Opus 5.5 (effected-promotion wave 3-A7, refactor/tsconfig-sync-schemas-onto-tsconfig)",
-      "reason": "Record the @beep/repo-cli manifest edit that adds the @beep/tsconfig workspace dependency for the TsconfigSync.schemas adoption; the task graphs gain only direct edges to tsconfig build/transit, which were already in the graph through @beep/repo-tsconfig, as measured in the review; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (effected-promotion adoption 4-A4, effected-4a4)",
+      "reason": "Record the @beep/repo-cli manifest edit that adds the @beep/repo-workspaces workspace dependency for the 4-A4 EcosystemPolarity adoption of SourceBoundary.scan; the task graphs gain only repo-workspaces build/transit, and the policy-tool fingerprint closure gains that one package, as measured in the review; no qualification is granted.",
       "basis": {
-        "path": "goals/effected-promotion/research/cache-baseline-review-3-a7.md",
-        "sha256": "fe6b7c9824488855e892925e2027e7537d43cca7d8709c137925e64387102e8c"
+        "path": "goals/effected-promotion/research/cache-baseline-review-4-a4.md",
+        "sha256": "5cbdd44e9e9763da57998829e196fc1313b97d97a89852584f867b76afc768e2"
       }
     },
     "@beep/repo-configs": {
@@ -3064,6 +3064,8 @@
             "packages/tooling/library/repo-tsconfig/src/**",
             "packages/tooling/library/repo-utils/package.json",
             "packages/tooling/library/repo-utils/src/**",
+            "packages/tooling/library/repo-workspaces/package.json",
+            "packages/tooling/library/repo-workspaces/src/**",
             "packages/tooling/policy-pack/repo-configs/package.json",
             "packages/tooling/policy-pack/repo-configs/src/**",
             "packages/tooling/test-kit/fc-runs/package.json",
@@ -97890,6 +97892,7 @@
           "@beep/repo-docgen#audit",
           "@beep/repo-tsconfig#audit",
           "@beep/repo-utils#audit",
+          "@beep/repo-workspaces#audit",
           "@beep/runpod#audit",
           "@beep/runtime-env#audit",
           "@beep/schema#audit",
@@ -97906,7 +97909,8 @@
           "@beep/uspto#audit",
           "@beep/utils#audit",
           "@beep/walker#audit",
-          "@beep/xdg#audit"
+          "@beep/xdg#audit",
+          "@beep/yaml#audit"
         ],
         "configuration": {
           "cache": false,
@@ -98008,6 +98012,7 @@
           "@beep/repo-docgen#build",
           "@beep/repo-tsconfig#build",
           "@beep/repo-utils#build",
+          "@beep/repo-workspaces#build",
           "@beep/runpod#build",
           "@beep/runtime-env#build",
           "@beep/schema#build",
@@ -98024,7 +98029,8 @@
           "@beep/uspto#build",
           "@beep/utils#build",
           "@beep/walker#build",
-          "@beep/xdg#build"
+          "@beep/xdg#build",
+          "@beep/yaml#build"
         ],
         "configuration": {
           "cache": true,
@@ -98115,6 +98121,7 @@
           "@beep/repo-docgen#build",
           "@beep/repo-tsconfig#build",
           "@beep/repo-utils#build",
+          "@beep/repo-workspaces#build",
           "@beep/runpod#build",
           "@beep/runtime-env#build",
           "@beep/schema#build",
@@ -98131,7 +98138,8 @@
           "@beep/uspto#build",
           "@beep/utils#build",
           "@beep/walker#build",
-          "@beep/xdg#build"
+          "@beep/xdg#build",
+          "@beep/yaml#build"
         ],
         "configuration": {
           "cache": true,
@@ -98209,6 +98217,7 @@
           "@beep/repo-docgen#build",
           "@beep/repo-tsconfig#build",
           "@beep/repo-utils#build",
+          "@beep/repo-workspaces#build",
           "@beep/runpod#build",
           "@beep/runtime-env#build",
           "@beep/schema#build",
@@ -98225,7 +98234,8 @@
           "@beep/uspto#build",
           "@beep/utils#build",
           "@beep/walker#build",
-          "@beep/xdg#build"
+          "@beep/xdg#build",
+          "@beep/yaml#build"
         ],
         "configuration": {
           "cache": false,
@@ -98352,6 +98362,7 @@
           "@beep/repo-docgen#transit",
           "@beep/repo-tsconfig#transit",
           "@beep/repo-utils#transit",
+          "@beep/repo-workspaces#transit",
           "@beep/runpod#transit",
           "@beep/runtime-env#transit",
           "@beep/schema#transit",
@@ -98369,7 +98380,8 @@
           "@beep/utils#transit",
           "@beep/utils#transit",
           "@beep/walker#transit",
-          "@beep/xdg#transit"
+          "@beep/xdg#transit",
+          "@beep/yaml#transit"
         ],
         "configuration": {
           "cache": true,
@@ -98491,6 +98503,7 @@
           "@beep/repo-docgen#transit",
           "@beep/repo-tsconfig#transit",
           "@beep/repo-utils#transit",
+          "@beep/repo-workspaces#transit",
           "@beep/runpod#transit",
           "@beep/runtime-env#transit",
           "@beep/schema#transit",
@@ -98507,7 +98520,8 @@
           "@beep/uspto#transit",
           "@beep/utils#transit",
           "@beep/walker#transit",
-          "@beep/xdg#transit"
+          "@beep/xdg#transit",
+          "@beep/yaml#transit"
         ],
         "configuration": {
           "cache": true,
@@ -98748,6 +98762,7 @@
           "@beep/repo-docgen#transit",
           "@beep/repo-tsconfig#transit",
           "@beep/repo-utils#transit",
+          "@beep/repo-workspaces#transit",
           "@beep/runpod#transit",
           "@beep/runtime-env#transit",
           "@beep/schema#transit",
@@ -98764,7 +98779,8 @@
           "@beep/uspto#transit",
           "@beep/utils#transit",
           "@beep/walker#transit",
-          "@beep/xdg#transit"
+          "@beep/xdg#transit",
+          "@beep/yaml#transit"
         ],
         "configuration": {
           "cache": false,
@@ -98845,6 +98861,7 @@
           "@beep/repo-docgen#transit",
           "@beep/repo-tsconfig#transit",
           "@beep/repo-utils#transit",
+          "@beep/repo-workspaces#transit",
           "@beep/runpod#transit",
           "@beep/runtime-env#transit",
           "@beep/schema#transit",
@@ -98862,7 +98879,8 @@
           "@beep/utils#transit",
           "@beep/utils#transit",
           "@beep/walker#transit",
-          "@beep/xdg#transit"
+          "@beep/xdg#transit",
+          "@beep/yaml#transit"
         ],
         "configuration": {
           "cache": true,
@@ -98966,6 +98984,7 @@
           "@beep/repo-docgen#transit",
           "@beep/repo-tsconfig#transit",
           "@beep/repo-utils#transit",
+          "@beep/repo-workspaces#transit",
           "@beep/runpod#transit",
           "@beep/runtime-env#transit",
           "@beep/schema#transit",
@@ -98983,7 +99002,8 @@
           "@beep/utils#transit",
           "@beep/utils#transit",
           "@beep/walker#transit",
-          "@beep/xdg#transit"
+          "@beep/xdg#transit",
+          "@beep/yaml#transit"
         ],
         "configuration": {
           "cache": true,
@@ -129933,7 +129953,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "ed1b5b765ba479a578f19c0c1175b5248ecd14b2024c56d93c99f9546839e180"
+        "sha256": "e1fdc840e70992359d20318b3841fb0c0bcbd18802ad76bf5879c45ebcfcb8cf"
       }
     ]
   }

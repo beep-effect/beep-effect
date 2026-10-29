@@ -67,6 +67,14 @@
       "purpose": "Wave 3-3 differential: @beep/config-file JSONC, YAML and TOML codecs against the npm parser oracles over every tracked config file."
     },
     {
+      "path": "ops/frontmatter-adoption-parity.ts",
+      "purpose": "R5a parity: reflection, SKILL.md, KnowledgeDoctor beep-historical and delete-package changeset-prune verdicts over the live corpus and git history, before and after the @beep/markdown switch, plus classified probe shifts."
+    },
+    {
+      "path": "ops/ecosystem-polarity-differential.ts",
+      "purpose": "4-A4 differential: runEcosystemPolarityCheck over the live repo and a synthetic ecosystem of import forms, recorded before the SourceBoundary.scan switch and compared at the head with every difference classified into an intended shift class."
+    },
+    {
       "path": "ops/github-reporting-gfm-differential.ts",
       "purpose": "Wave 3-1 oracle: GitHubMarkdown writer output rendered through micromark GFM and checked for the promised table and inline structure."
     },

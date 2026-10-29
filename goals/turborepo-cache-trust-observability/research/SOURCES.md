@@ -203,3 +203,51 @@ records each important reconciliation.
 
 These are graduated-goal deliverables, not omissions to conceal with static
 confidence.
+
+## 2026-10-28 signed-client posture source refresh
+
+Installed Turbo documentation and exact native experiments informed the client
+component. The stable package is 2.11.10; canary behavior is checked separately
+with the pinned 2.11.9-canary.1 binary. These sources do not establish production
+trust readiness or qualify a computation.
+
+- Installed `turbo/docs/reference/configuration.mdx`: SHA-256 `f8777a3f7e60730da8cff4ea6950c71deb8643cc3200f627db876698ff454074`.
+- Installed `turbo/docs/reference/run.mdx`: SHA-256 `31447baa8071390c403b47c41885eb3579a1f8a695cf61e57befd838aba67731`.
+- Installed `turbo/docs/reference/system-environment-variables.mdx`: SHA-256 `068c31df0ce0ca1acbb6e36d5c7616ee753e617285543f092c11b7bce63ce21e`.
+- Installed `turbo/docs/core-concepts/remote-caching.mdx`: SHA-256 `96dd2390be45fd2dbc312b1175d9836b0b39e114dd470d9fa050ce9e046b6052`.
+
+The two signing-posture native receipts bind the observed controls to client
+checksums and implementation source checksums. The positive control makes remote
+HTTP requests; missing-key local controls do not. Native census accepts the
+monorepo fixture shape. A single-package dry plan omits workspace identity and
+is deliberately not substituted for the normal runtime selection contract.
+
+## 2026-10-28 implementation refresh
+
+The current source baseline is `2c59e073c8`; the native checkpoint separately
+binds changed runner source bytes. Historical claims above keep their dates.
+
+- [Current client pins](../../turborepo-quality-cache-adoption/research/current-client-pins.json):
+  installed stable 2.11.10 and published canary 2.11.9-canary.1, executable
+  hashes, registry package integrity and native delegation controls.
+- [Current population](../../turborepo-quality-cache-adoption/research/current-population.json):
+  Cache census source hashes and the retained qualification owner's handoff;
+  inventory only, with current semantic review and disposition still pending.
+- [Current feature inventory](../../turborepo-quality-cache-adoption/research/current-feature-matrix.json):
+  exact bundled-document hashes and installed-schema flags; applicability and
+  runtime correctness remain separate proof obligations.
+- [Current native protocol checkpoint](../../turborepo-cache-trust-observability/research/current-native-checkpoint.json):
+  real stable/canary synthetic runs with signing and transport controls; no
+  deployed role, tenant or observation-window authority.
+- [Retained qualification](../../turborepo-task-qualification/research/current-signed-qualification.json):
+  applies to its original identity-lint computation, reuse layer, profile and
+  epoch; it cannot promote the refreshed population.
+
+- `adapter-runtime-checkpoint.json` and `adapter-runtime-lab.json`: exact candidate
+  source/build bindings, 49 Cargo tests, synthetic wire/native controls and
+  actual fixture worker/cgroup/environment observations. Local component proof
+  only; historical adapter-policy evidence retains its original binary.
+
+- `adapter-runtime-lab-before-cleanup-review.json` retains the original runtime
+  observation bytes. The current runtime report and checkpoint separately bind
+  the cleanup review repair, three failure controls and fresh synthetic replay.

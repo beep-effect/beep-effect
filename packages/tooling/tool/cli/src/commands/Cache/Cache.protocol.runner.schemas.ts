@@ -16,6 +16,11 @@ const $I = $RepoCliId.create("commands/Cache/Cache.protocol.runner.schemas");
 /**
  * Select an exact native binary for an isolated synthetic signed-cache run.
  *
+ * **Details**
+ * Use a concrete `team_` identifier for the client's namespace when comparing
+ * native versions. The private fixture accepts the `teamId` selector, while
+ * newer clients may interpret other namespace strings as team slugs.
+ *
  * **Example** (Inspect required pin fields)
  * ```ts
  * import { CacheProtocolRequest } from "@beep/repo-cli/commands/Cache"

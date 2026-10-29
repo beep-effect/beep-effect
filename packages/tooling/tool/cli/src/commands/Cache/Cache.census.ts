@@ -130,6 +130,9 @@ const capture = Effect.fn("CacheCensus.capture")(function* (
       TURBO_TEAM: "",
       TURBO_API: "",
       TURBO_REMOTE_CACHE_SIGNATURE_KEY: "",
+      // Inspection uses explicit cache flags; inherited legacy flags conflict even on a dry run.
+      TURBO_REMOTE_ONLY: undefined,
+      TURBO_REMOTE_CACHE_READ_ONLY: undefined,
       TURBO_TELEMETRY_DISABLED: "1",
       TURBO_BINARY_PATH: "",
     },

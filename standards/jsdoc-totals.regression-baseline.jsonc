@@ -8,16 +8,16 @@
   "regeneration_command": "bun run beep quality jsdoc-inventory",
   "snapshot_command": "bun run beep quality jsdoc-ratchet --write-baseline",
   "comparison": "fail-on-growth: generated inventory totals must not exceed this committed baseline",
-  "generated_at": "2026-10-25T11:13:16.819Z",
+  "generated_at": "2026-10-28T05:43:39.295Z",
   "tracked_totals": {
-    "packagesNeedingRemediation": 79,
+    "packagesNeedingRemediation": 54,
     "missingExportExamples": 7,
     "missingExportCategories": 0,
     "missingExportSince": 0,
     "unsafeExampleFindings": 0,
     "schemaAnnotationFindings": 0,
-    "undescribed-see": 11,
-    "multiple-description-paragraphs": 424,
+    "undescribed-see": 8,
+    "multiple-description-paragraphs": 322,
     "leading-blank": 0,
     "trailing-blank": 0,
     "invalid-heading": 1,
@@ -25,11 +25,11 @@
     "duplicate-section": 0,
     "empty-section": 0,
     "section-after-example": 0,
-    "invalid-when-to-use-prefix": 4,
+    "invalid-when-to-use-prefix": 0,
     "malformed-example": 0,
     "duplicate-example": 0,
     "loose-ts-fence": 0,
     "forbidden-remarks": 0,
-    "no-root-package-import": 1330
+    "no-root-package-import": 91
   }
 }

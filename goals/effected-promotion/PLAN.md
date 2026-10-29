@@ -101,14 +101,14 @@ subpath", because the knowledge doctor reads a dot-slash span as a packet-relati
 | 3-A4 (merged, #2246) | package.json readers in repo-cli and docgen | 3-A1, 3-A2, 3-3, R1, 4-CI |
 | 4-W-b (merged, #2241) | `@beep/repo-workspaces/testing` + PackedInstall fix + `LayerPolicy` re-key + lab cli/engine boundary retargets | 4-W-a |
 | 4-X-A (merged, #2242) | XDG adoption: ai-metrics forwarder/data-root, `BeepCacheRoot`, `Fleet`, `HarnessLedger`, `AIMetrics/Programs`, `MatchPerson`, apps docket-intake and practice-m365-contacts (#183 excluded) | 4-X |
-| 4-C-A (in review, this PR) | `CliRuntime.main` in `bin-main.ts`/`FailureRendering.ts` (EPIPE latching kept); `CliPrompt.gateTerminal` in SkillsReview; one `TestTerminal` swap | 4-C |
-| R5a | DeletePackage key removal, typed frontmatter (`ReflectionArtifact`, `SkillFrontmatterCheck`), KnowledgeDoctor `beep-historical` | #2143, 4-CI |
+| 4-C-A (merged, #2309) | `CliRuntime.main` in `bin-main.ts`/`FailureRendering.ts` (EPIPE latching kept); `CliPrompt.gateTerminal` in SkillsReview; one `TestTerminal` swap | 4-C |
+| R5a (in review, this PR) | DeletePackage key removal, typed frontmatter (`ReflectionArtifact`, `SkillFrontmatterCheck`), KnowledgeDoctor `beep-historical` | #2143, 4-CI |
 | R8 (merged, #2298) | managed-section templates: Observability render, Explore Atlas, Models.render (LabIdentitySegment excluded; GhOps to the follow-up goal) | main |
 | 3-A6 | `TsconfigValidator` + docgen `readTSConfig`; delete repo-utils `schemas/TSConfig.ts`; `@beep/tsconfig` closed view | 3-2, 3-3, 3-A3, 3-A4 |
 | 4-A1 | repo-cli QAS discovery onto `WorkspaceDiscovery` (#143), discovery only, `resolvePathWithinRoot` post-filter | 3-A4, 4-W-a |
 | 4-A2 | public `WorkspacePatterns` leaf; CreatePackage, TsconfigSync.plan, ConfigUpdater, ChangesetGraph, Tasks pattern readers (3 fallow suppressions out) | 3-A4, 4-W-a, R2b |
 | 4-A3 | repo-utils Workspaces/Dependencies/DependencyIndex onto the kit; `beep topo-sort` onto `DependencyGraph.sort()` with the jsdoc-inventory reorder in the same PR | 3-A3, 4-W-a, 4-A1 |
-| 4-A4 | `Lint/EcosystemPolarity.ts` onto `SourceBoundary.scan` | 4-W-b |
+| 4-A4 (in review, this PR) | `Lint/EcosystemPolarity.ts` onto `SourceBoundary.scan` | 4-W-b |
 | R4 | `yaml` out of repo-cli and ai-metrics runtime deps (Runners to `effect/encoding/Yaml`; Models.locator kept with a reason if the kit lacks a visitor) | 3-3, 3-A4, 4-A2 |
 | R6 | one fence extractor (docgen `Core.ts`, `EffectImports.ts`, `TypeScriptFences.ts`, `Doctest.ts`) or deferred per W4-q | R2b, R5b, #2144 |
 | W5 (merged, #2245) | `@beep/github-actions` (drivers); runner-file adopters (`CiOperational`, `Ci.command`, `CiAdmission`, `CiRerunRunnerLoss`, github-commands #87); `@azure/storage-blob` exact pin; `ActionCache.resolvePaths` split first | 4-S, 3-A8, W4-j resolved |

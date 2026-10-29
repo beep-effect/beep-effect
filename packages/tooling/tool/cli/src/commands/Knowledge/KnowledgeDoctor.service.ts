@@ -8,6 +8,8 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { FrontmatterSource } from "@beep/markdown/FrontmatterSource";
+import { FrontmatterFormat } from "@beep/markdown/MarkdownNode";
 import { findRepoRoot } from "@beep/repo-utils";
 import { Str } from "@beep/utils";
 import * as A from "effect/Array";
@@ -317,24 +319,28 @@ export const KNOWLEDGE_PRODUCER_OUTPUTS: ReadonlyArray<KnowledgeProducerOutput> 
 const HISTORICAL_BLOCK_PATTERN = /^\s*<!-- beep:historical commit=([0-9a-f]{40}) -->\s*$/u;
 const HISTORICAL_FRONTMATTER_PATTERN = /^beep-historical:\s*["']?([0-9a-f]{40})["']?\s*$/u;
 const GENERATED_INFO_PATTERN = /(?:^|\s)beep:generated=(\S+)/u;
-const FRONTMATTER_DELIMITER = "---";
+const FRONTMATTER_VALUE_FIRST_LINE = 2;
 
 const isBlank = (line: KnowledgeDocumentFenceLine): boolean => Str.isEmpty(Str.trim(line.text));
 
-const documentCitation = (lines: ReadonlyArray<KnowledgeDocumentFenceLine>): O.Option<KnowledgeHistoricalCitation> => {
-  if (!O.exists(A.head(lines), (line) => Str.equivalence(Str.trimEnd(line.text), FRONTMATTER_DELIMITER))) {
-    return O.none();
-  }
-  const body = A.takeWhile(A.drop(lines, 1), (line) => !Str.equivalence(Str.trimEnd(line.text), FRONTMATTER_DELIMITER));
-  return A.findFirst(body, (line) =>
-    pipe(
-      O.fromNullishOr(HISTORICAL_FRONTMATTER_PATTERN.exec(line.text)?.[1]),
-      O.map((commit) =>
-        KnowledgeHistoricalCitation.make({ form: "document", commit, line: S.Natural.make(line.number) })
+// The `beep-historical:` key of a closed YAML frontmatter block, numbered as a document line: the
+// block's first value line is line 2, after the opening fence.
+const documentCitation = (text: string): O.Option<KnowledgeHistoricalCitation> =>
+  pipe(
+    O.fromUndefinedOr(FrontmatterSource.split(text).frontmatter),
+    O.filter((block) => FrontmatterFormat.is.yaml(block.format)),
+    O.flatMap((block) =>
+      A.findFirst(Str.split(/\r?\n/u)(block.value), (line, index) =>
+        O.map(O.fromNullishOr(HISTORICAL_FRONTMATTER_PATTERN.exec(line)?.[1]), (commit) =>
+          KnowledgeHistoricalCitation.make({
+            form: "document",
+            commit,
+            line: S.Natural.make(index + FRONTMATTER_VALUE_FIRST_LINE),
+          })
+        )
       )
     )
   );
-};
 
 // The 0-based [start, end] line range of the Markdown block that follows a block marker: a fence
 // through its closing delimiter, or a run of non-blank prose lines up to the next blank line.
@@ -467,7 +473,7 @@ export const extractKnowledgeDocumentSpans: {
   const surface = isKnowledgeArchivalPath(documentPath)
     ? KnowledgeRefSurface.Enum.archival
     : KnowledgeRefSurface.Enum.live;
-  const documentMarker = documentCitation(lines);
+  const documentMarker = documentCitation(text);
   const blocks = blockCitations(lines);
   const citationAt = (lineNumber: number): O.Option<KnowledgeHistoricalCitation> =>
     O.orElse(HashMap.get(blocks.byLine, lineNumber), () => documentMarker);
