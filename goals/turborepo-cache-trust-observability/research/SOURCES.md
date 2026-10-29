@@ -224,3 +224,8 @@ binds changed runner source bytes. Historical claims above keep their dates.
 - [Retained qualification](../../turborepo-task-qualification/research/current-signed-qualification.json):
   applies to its original identity-lint computation, reuse layer, profile and
   epoch; it cannot promote the refreshed population.
+
+- `adapter-runtime-checkpoint.json` and `adapter-runtime-lab.json`: exact candidate
+  source/build bindings, 49 Cargo tests, synthetic wire/native controls and
+  actual fixture worker/cgroup/environment observations. Local component proof
+  only; historical adapter-policy evidence retains its original binary.

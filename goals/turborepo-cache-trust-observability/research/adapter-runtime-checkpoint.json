@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "r2-cache-runtime-checkpoint/v1",
+  "authority": "isolated-process-component-only",
+  "recordedAt": "2026-10-29T02:51:28.675147+00:00",
+  "sourceBaseRevision": "6893291966e4bd0485477c7556f6ef2eed5988aa",
+  "sourceSha256": {
+    "infra/r2-cache/patches/4.0.20-signed-policy.patch": "740ce934d3fb22a0244edd7dc3a9cc89a4fe043982defe28af485f10ebfd494e",
+    "infra/r2-cache/patches/4.0.20-signed-policy.json": "a8cd009a00637b019a04072adae7bcd756badabbe23ee5bbc0eb94857bc2ff88",
+    "infra/r2-cache/policy.sh": "b57a1dc52066ca0d334e40326295fd3e53dddaaa5c5b2d9fcc16a91ad04513d0",
+    "infra/r2-cache/policy-lab.py": "e5e27197ce8174c5c655d5b3a7a307185ec8340f8091c23b56777e6bb83244c4"
+  },
+  "evidence": {
+    "path": "goals/turborepo-cache-trust-observability/research/adapter-runtime-lab.json",
+    "sha256": "956b1d440cc35f704c38c816c59b6cb895009f58801128ca3bb5fb020f078d42"
+  },
+  "workerLimits": {
+    "tokioCoreWorkers": 2,
+    "httpWorkers": 2,
+    "perRuntimeBlockingThreads": 2
+  },
+  "build": {
+    "target": "x86_64-unknown-linux-musl",
+    "profile": "release",
+    "rustc": "1.96.0",
+    "cargoZigbuild": "0.20.1",
+    "zig": "0.14.1",
+    "sha256": "b6660b7a94fe517aba4a1395bdc5d287b7ecca53ea270ee54ebe4de266fcde20",
+    "bytes": 10036504,
+    "seconds": 32.21
+  },
+  "cargoTests": {
+    "passed": 49,
+    "library": 45,
+    "binaryRuntime": 1,
+    "dependencyScope": 1,
+    "middleware": 2
+  },
+  "redFirst": {
+    "exitCode": 101,
+    "outputBytes": 321,
+    "outputSha256": "14dfedccab01c0a4d70bbbe71535b10ed895d65b81bbf097979c2371deae59b6",
+    "runtimeOverrideDiagnostic": true
+  },
+  "processControls": {
+    "wire": 20,
+    "startup": 1,
+    "native": 12,
+    "runtimeObservations": 4,
+    "pendingServiceCleanup": 1,
+    "adapterOutputBytes": 0,
+    "passed": true
+  },
+  "dependencyScan": {
+    "status": "passed",
+    "exitCode": 0,
+    "resultSha256": "54345d5194d238b6017d0f3181f392109ce35023cc6b4bdfa8c134943dcb578e",
+    "lockDeltaFromPriorReviewedPatch": false,
+    "exception": "Unchanged exact source/archive block-buffer0.10.4 exception; date/version/checksum guard remains required. See adapter-dependency-review.json.",
+    "lockedPackagesIncludingRoot": 371,
+    "lockSha256": "a10e81315775225224b1e2d0d396ebf96aa3141086bec64c6b488738105c5a41"
+  },
+  "infraCheck": "passed",
+  "packageVerification": {
+    "status": "passed",
+    "auditSeconds": 13.9,
+    "docgenSeconds": 16.2,
+    "scope": "Final harness including activating-unit cleanup; metadata-only activation wording clarified afterward."
+  },
+  "productionChanges": false,
+  "limits": [
+    "Only the patched candidate is changed; incumbent executable and service selection are untouched.",
+    "Fixed core/HTTP/blocking configuration and observed fixture cgroup caps do not qualify the actual deployed launcher chain.",
+    "No R2 IAM, production producer binding, artifact-key distribution, epoch transition or warm rollback proof.",
+    "No fleet portability, task qualification, performance benefit or representative observation acceptance."
+  ]
+}

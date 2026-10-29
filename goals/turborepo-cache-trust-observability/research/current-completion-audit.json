@@ -3,7 +3,7 @@
   "goal": "turborepo-cache-trust-observability",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "445dc9357d89db4f7a68d8e727f5ddc649fb7550d7071c9c6c5fb03277580c68",
+  "specSha256": "6252be77938df64b67d9ce1ca9b8892fc77cd66a71bb1b3a18e007ea0b1a0982",
   "acceptance": [
     {
       "id": "AC-01",
@@ -185,7 +185,8 @@
         },
         "scope": "Main response media-type projection inherited from its independently audited component; no protocol or retained artifact bytes changed."
       }
-    }
+    },
+    "adapterRuntimeComponent": "goals/turborepo-cache-trust-observability/research/adapter-runtime-checkpoint.json"
   },
   "remainingExplicitGates": [
     "SPEC verification matrix commands on actual final changes",

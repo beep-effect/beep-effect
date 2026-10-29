@@ -252,3 +252,16 @@ The local process report does not satisfy those deployment or observation gates.
   binary passes. Reversal: keep this candidate inactive and continue using the
   incumbent while repairing the candidate; do not restore the mixed-mode path.
   This component decision grants no deployment or broad qualification.
+
+### Bounded adapter runtime component
+
+- 2026-10-29: Pin the candidate adapter to two Tokio core workers, two HTTP
+  workers and two blocking threads per runtime. The upstream worker default
+  followed host parallelism; the read-only incumbent baseline observed 68 total
+  threads, which is an observation rather than a configured maximum. Add a
+  synthetic loopback lab envelope with a measured two-CPU quota, 256 MiB memory
+  cap and sixteen-task cap. Worker environment variables cannot widen these
+  source-pinned limits. This is preparation and grants no deployment readiness.
+  Reverse by stopping candidate admission and selecting the prior reviewed
+  artifact only after its applicable gates; the incumbent service and objects
+  remain available. No live adapter, credentials or cloud resource changes.

@@ -5,7 +5,7 @@
     "title": "Turborepo cache trust and observability",
     "status": "active",
     "created": "2026-09-08",
-    "updated": "2026-10-28",
+    "updated": "2026-10-29",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/turborepo-cache-trust-observability",
@@ -60,7 +60,9 @@
     "research/current-native-checkpoint.json",
     "research/receipt-media-type-checkpoint.json",
     "research/adapter-policy-lab.json",
-    "research/adapter-dependency-review.json"
+    "research/adapter-dependency-review.json",
+    "research/adapter-runtime-checkpoint.json",
+    "research/adapter-runtime-lab.json"
   ],
   "agentLaunchers": [
     {

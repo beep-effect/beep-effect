@@ -249,3 +249,17 @@ cases materialized no outputs. The focused runner/protocol/producer/posture
 suite passed 136 tests. Wrong-team native proof, deployed R2/AWS capabilities,
 epoch rotation, production provenance and representative observation remain
 open. No whole acceptance criterion is closed by this checkpoint.
+
+## 2026-10-29: bounded candidate adapter runtime
+
+The patched candidate now fixes Tokio core workers, HTTP workers and per-runtime
+blocking threads at two. Its portable build passes 49 Cargo tests and the real
+20-wire/one-startup/twelve-native control matrix under a synthetic service
+envelope. Reader and writer observations each show six threads, enforced
+two-CPU/256-MiB/sixteen-task caps and an explicit backend environment. The
+previous candidate fails the ambient-worker negative control for the intended
+Tokio startup reason. Cleanup also stops an actually activating fixture unit.
+The candidate remains inactive; deployed launcher/grant proof and all production
+acceptance gates remain open. See the source-bound
+[checkpoint](research/adapter-runtime-checkpoint.json) and
+[actual process observations](research/adapter-runtime-lab.json).

@@ -172,3 +172,13 @@ package replay remain independently recorded. Use the existing constrained-
 compute direct-push route after its ten-minute root-replay threshold, with exact
 final-check skips and hosted proof retained; never manufacture a reusable state
 file or copy an unrelated verdict into the new context.
+
+- 2026-10-29 — The candidate runtime inherited host-dependent HTTP worker
+  defaults, and an invalid ambient Tokio worker setting prevented startup.
+  Source-pinned worker counts, an actual startup negative control, executable
+  identity and measured cgroup caps now bind the synthetic fixture. The old
+  candidate fails for the intended reason; the new one passes. The lab cleanup
+  also skipped activating units when it only tested active state. It now stops
+  every fresh owned unit and proves cleanup against an activating oneshot.
+  These controls prevent fixture success from being mistaken for deployed
+  launcher or R2 grant proof; no live service was changed.
