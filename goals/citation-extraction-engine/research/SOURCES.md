@@ -144,6 +144,14 @@ Receipt v3 preserves multiple entries for one authority with independent cg1
 identities; trusted binding expectations verify exact entry positions and list
 nodes through source restoration. Automatic session projection remains open.
 
+The [dispatch decision evidence](
+../history/evidence/2026-10-29-dispatch-decision-capture.md) records eight actual
+source histories and nineteen return/append decisions with exact host hook
+traces. Its observational list subclass performs no additional key operations;
+unique-list scenes normalize allocation slots without asserting general shared
+list selection. Source metadata, fresh replay and eight corruption controls
+remain separate from target execution. Attribution remains BSD-2-Clause.
+
 ## Incorporated-source discipline
 
 - A local clone is research state, not an incorporated dependency.

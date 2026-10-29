@@ -234,3 +234,10 @@ cg1 entry IDs and receipt v3. Multiple entries may reference the same authority
 without collapsing their lists. All three actual mutable-key callback scenes
 now roundtrip their final group/list graphs through trusted bindings and source
 restoration. Automatic final session identity/binding production remains open.
+
+The [dispatch-history capture](
+./history/evidence/2026-10-29-dispatch-decision-capture.md) preserves actual
+callback returns and selected append destinations independently of surviving
+groups. Eight source histories and nineteen decisions match exact hook traces,
+including falsy results, removed entries and equal-but-distinct returned keys.
+Final identity/binding production and public resolution translation remain open.

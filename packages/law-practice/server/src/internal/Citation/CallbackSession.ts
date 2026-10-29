@@ -12,6 +12,7 @@ import {
   CitationDetachedId,
   CitationGroupMember,
   CitationMention,
+  CitationMentionId,
   FullCitation,
 } from "@beep/law-practice-domain/values";
 import { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
@@ -22,6 +23,7 @@ import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
@@ -34,7 +36,6 @@ import { CitationAuthorityIdentityInput } from "./AuthorityIdentity.ts";
 import { CitationCallbackRuntimeIndexFactory } from "./CallbackRuntimeIndex.ts";
 import { PreparedCitationResolution, prepareCitationResolution } from "./ResolutionInput.ts";
 import { CitationResourceIdentity, makeCitationResourceAuthorityId } from "./ResourceIdentity.ts";
-import type { CitationMentionId } from "@beep/law-practice-domain/values";
 import type { CitationCallbackRuntimeIndex } from "./CallbackRuntimeIndex.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/CallbackSession");
@@ -85,6 +86,71 @@ export const CitationCallbackGroup = S.Struct({
  * @since 0.0.0
  */
 export type CitationCallbackGroup = typeof CitationCallbackGroup.Type;
+/**
+ * Exact insertion entry selected by a dispatcher append. The stored key may
+ * differ from the callback result; later mutations may remove this entry.
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
+export const CitationCallbackAssignment = S.Struct({
+  entrySlot: S.Natural,
+  resource: CitationCallbackResource,
+  listSlot: S.Natural,
+}).pipe(
+  $I.annoteSchema("CitationCallbackAssignment", {
+    description: "Captured append destination; no repeated lookup or claim of final membership.",
+  })
+);
+/**
+ * Schema-derived append destination.
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
+export type CitationCallbackAssignment = typeof CitationCallbackAssignment.Type;
+/**
+ * One actual dispatcher result and optional successful append destination.
+ * An unlisted falsy resource remains a result; decisions are not memberships.
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
+export const CitationCallbackDecision = S.Struct({
+  mentionId: CitationMentionId,
+  callback: S.Literals(["full", "shortCase", "supra", "reference", "id", "unknown"]),
+  resource: CitationCallbackResource,
+  assignment: S.OptionFromNullOr(CitationCallbackAssignment),
+}).pipe(
+  $I.annoteSchema("CitationCallbackDecision", {
+    description: "Source-order callback result and actual append history, independent of final dictionary contents.",
+  })
+);
+/**
+ * Schema-derived dispatch decision.
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
+export type CitationCallbackDecision = typeof CitationCallbackDecision.Type;
+/**
+ * Final dictionary entry with identity separate from its key and list.
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
+export const CitationCallbackEntry = S.Struct({ ...CitationCallbackGroup.fields, entrySlot: S.Natural }).pipe(
+  $I.annoteSchema("CitationCallbackEntry", {
+    description: "Identity-bearing final insertion entry, including repeated resource-object keys.",
+  })
+);
+/**
+ * Schema-derived final insertion entry.
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
+export type CitationCallbackEntry = typeof CitationCallbackEntry.Type;
 /**
  * Prior-full callback input; schema views come from the shared operation owner.
  * @internal
@@ -232,14 +298,32 @@ export class CitationResolutionCallbacks extends Context.Service<
 const SessionState = S.Struct({
   ...PreparedCitationResolution.fields,
   fulls: S.Array(CitationCallbackFull),
-  groups: S.Array(CitationCallbackGroup),
+  groups: S.Array(CitationCallbackEntry),
+  decisions: S.Array(CitationCallbackDecision),
   last: CitationCallbackResource,
   detachedCitations: S.Array(CitationDetached),
-}).pipe(
-  $I.annoteSchema("SessionState", {
-    description: "Private post-dispatch state; not a final document or grouping correctness proof.",
-  })
-);
+})
+  .check(
+    S.makeFilter(
+      (state) =>
+        A.length(state.decisions) === A.length(state.mentions) &&
+        A.every(
+          A.zip(state.decisions, state.mentions),
+          ([decision, mention]) =>
+            decision.mentionId === mention.id && (decision.resource._tag !== "None" || O.isNone(decision.assignment))
+        ) &&
+        HashSet.size(HashSet.fromIterable(A.map(state.groups, (group) => group.entrySlot))) === A.length(state.groups),
+      $I.annote("SessionDecisionCoherence", {
+        description:
+          "Exactly one ordered decision per verified occurrence; None has no append, final insertion identities are unique, and removed historical destinations need not survive.",
+      })
+    )
+  )
+  .pipe(
+    $I.annoteSchema("SessionState", {
+      description: "Private post-dispatch state; not a final document or grouping correctness proof.",
+    })
+  );
 const ResourceJson = S.fromJsonString(CitationCallbackResource);
 const FullsJson = S.fromJsonString(CitationFullsCallbackOutput);
 const IdJson = S.fromJsonString(CitationIdCallbackOutput);
@@ -313,6 +397,7 @@ export class CitationCallbackDictionary extends Context.Service<
     readonly start: Effect.Effect<void, CitationCallbackFailure>;
     readonly close: Effect.Effect<void>;
     readonly read: Effect.Effect<ReadonlyArray<CitationCallbackGroup>, CitationCallbackFailure>;
+    readonly readEntries: Effect.Effect<ReadonlyArray<CitationCallbackEntry>, CitationCallbackFailure>;
     readonly clear: Effect.Effect<void, CitationCallbackFailure>;
     readonly get: (resource: CitationCallbackResource) => Effect.Effect<CitationCallbackList, CitationCallbackFailure>;
     readonly allocate: (
@@ -332,10 +417,15 @@ export class CitationCallbackDictionary extends Context.Service<
     readonly appendCurrent: (
       resource: CitationCallbackResource,
       id: CitationMentionId
-    ) => Effect.Effect<void, CitationCallbackFailure>;
+    ) => Effect.Effect<CitationCallbackAssignment, CitationCallbackFailure>;
   }
 >()($I`CitationCallbackDictionary`) {}
-const DictionaryEntry = S.Struct({ key: S.String, resource: CitationCallbackResource, slot: S.Natural }).pipe(
+const DictionaryEntry = S.Struct({
+  entrySlot: S.Natural,
+  key: S.String,
+  resource: CitationCallbackResource,
+  slot: S.Natural,
+}).pipe(
   $I.annoteSchema("DictionaryEntry", { description: "Private ordered key entry referencing an owned list node." })
 );
 const PairsJson = CitationCallbackFull.pipe(S.Array, S.fromJsonString);
@@ -413,6 +503,7 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
   let entries = A.empty<typeof DictionaryEntry.Type>();
   let lists = HashMap.empty<number, ReadonlyArray<CitationGroupMember>>();
   let nextSlot = 0;
+  let nextEntrySlot = 0;
   let nextPairSlot = 0;
   let pairs = HashMap.empty<number, CitationCallbackFull>();
   let fulls = A.empty<CitationCallbackFull>();
@@ -471,6 +562,7 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
       : runtime.value.read.pipe(
           Effect.map((values) => {
             entries = A.map(values, (entry) => ({
+              entrySlot: entry.entryId,
               key: `entry:${entry.entryId}`,
               resource: entry.resource,
               slot: entry.slot,
@@ -529,24 +621,42 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
       return yield* limit();
     lists = HashMap.set(lists, slot, snapshot);
   });
-  const get = Effect.fn("Citation.dictionaryGet")(function* (input: CitationCallbackResource) {
+  const reserveEntrySlot = Effect.suspend(() =>
+    nextEntrySlot >= limits.resolutionIterations ? Effect.fail(limit()) : Effect.succeed(nextEntrySlot++)
+  );
+  const getLocated = Effect.fn("Citation.dictionaryGetLocated")(function* (input: CitationCallbackResource) {
     if (O.isSome(runtime)) {
-      const existing = yield* runtime.value.get(input);
-      if (O.isSome(existing)) return yield* Effect.fromOption(HashMap.get(bySlot, existing.value.slot), invalid);
-      if (A.length(entries) >= limits.authorities) return yield* limit();
-      const handle = yield* allocate([]);
-      yield* runtime.value.set(input, yield* slotOf(handle));
-      yield* refreshRuntime;
-      return handle;
+      let selected = yield* runtime.value.get(input);
+      let handle: CitationCallbackList;
+      if (O.isSome(selected)) handle = yield* Effect.fromOption(HashMap.get(bySlot, selected.value.slot), invalid);
+      else {
+        if (A.length(entries) >= limits.authorities) return yield* limit();
+        handle = yield* allocate([]);
+        selected = O.some(yield* runtime.value.set(input, yield* slotOf(handle)));
+        yield* refreshRuntime;
+      }
+      const entry = yield* Effect.fromOption(selected, invalid);
+      return {
+        handle,
+        entry: { entrySlot: entry.entryId, key: `entry:${entry.entryId}`, resource: entry.resource, slot: entry.slot },
+      };
     }
     const value = yield* fingerprint(input);
     const existing = yield* find(value.key);
-    if (O.isSome(existing)) return yield* Effect.fromOption(HashMap.get(bySlot, existing.value.slot), invalid);
+    if (O.isSome(existing))
+      return {
+        handle: yield* Effect.fromOption(HashMap.get(bySlot, existing.value.slot), invalid),
+        entry: existing.value,
+      };
     if (A.length(entries) >= limits.authorities) return yield* limit();
     const handle = yield* allocate([]);
-    entries = A.append(entries, { ...value, slot: yield* slotOf(handle) });
-    return handle;
+    const entry = { ...value, entrySlot: yield* reserveEntrySlot, slot: yield* slotOf(handle) };
+    entries = A.append(entries, entry);
+    return { handle, entry };
   });
+  const get = Effect.fn("Citation.dictionaryGet")((input: CitationCallbackResource) =>
+    getLocated(input).pipe(Effect.map((located) => located.handle))
+  );
   const set = Effect.fn("Citation.dictionarySet")(function* (
     input: CitationCallbackResource,
     handle: CitationCallbackList
@@ -561,7 +671,7 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
     const existing = yield* find(value.key);
     if (O.isNone(existing) && A.length(entries) >= limits.authorities) return yield* limit();
     const updated = O.isNone(existing)
-      ? A.append(entries, { ...value, slot })
+      ? A.append(entries, { ...value, entrySlot: nextEntrySlot, slot })
       : A.map(entries, (entry) => (entry.key === value.key ? { ...entry, slot } : entry));
     if (
       A.reduce(
@@ -571,6 +681,7 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
       ) > limits.resolutionEdges
     )
       return yield* limit();
+    if (O.isNone(existing)) yield* reserveEntrySlot;
     entries = updated;
   });
   const citationOf = Effect.fn("Citation.callbackCitationOf")(function* (reference: CitationGroupMember) {
@@ -876,7 +987,11 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
               entries,
               (entry) =>
                 listOf(entry.slot).pipe(
-                  Effect.map((members) => ({ resource: entry.resource, listSlot: entry.slot, members }))
+                  Effect.flatMap((members) =>
+                    currentResource(entry.resource).pipe(
+                      Effect.map((resource) => ({ resource, listSlot: entry.slot, members }))
+                    )
+                  )
                 ),
               { concurrency: 1 }
             );
@@ -885,6 +1000,15 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
               yield* S.encodeEffect(codec)(snapshot).pipe(Effect.mapError(invalid))
             ).pipe(Effect.mapError(invalid));
           })
+        )
+      )
+    ),
+    readEntries: Effect.suspend(() =>
+      api.read.pipe(
+        Effect.flatMap((groups) =>
+          S.decodeEffect(S.toType(CitationCallbackEntry).pipe(S.Array))(
+            A.map(groups, (group, index) => ({ ...group, entrySlot: A.getUnsafe(entries, index).entrySlot }))
+          ).pipe(Effect.mapError(invalid))
         )
       )
     ),
@@ -928,13 +1052,19 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
       id: CitationMentionId
     ) {
       yield* alive;
-      const handle = yield* get(resource);
-      const members = yield* listOf(yield* slotOf(handle));
-      yield* write(handle, A.append(members, CitationGroupMember.cases.Mention.make({ mentionId: id })));
+      const located = yield* getLocated(resource);
+      const members = yield* listOf(yield* slotOf(located.handle));
+      yield* write(located.handle, A.append(members, CitationGroupMember.cases.Mention.make({ mentionId: id })));
+      return {
+        entrySlot: located.entry.entrySlot,
+        resource: yield* currentResource(located.entry.resource),
+        listSlot: located.entry.slot,
+      };
     }),
   });
   return CitationCallbackDictionary.of({
     ...api,
+    readEntries: mutex.withPermit(api.readEntries),
     currentResource: Effect.fn("Citation.serialCurrentResource")((resource: CitationCallbackResource) =>
       mutex.withPermit(api.currentResource(resource))
     ),
@@ -1021,6 +1151,7 @@ export const runPreparedCitationCallbackSession = Effect.fn("Citation.runPrepare
 ): Effect.fn.Return<typeof SessionState.Type, CitationCallbackFailure, Crypto.Crypto | CitationResolutionCallbacks> {
   const callbacks = yield* CitationResolutionCallbacks;
 
+  let decisions = A.empty<CitationCallbackDecision>();
   let last: CitationCallbackResource = CitationCallbackResource.cases.None.make({});
   const shared = yield* Effect.serviceOption(CitationResolutionWork);
   const work = O.isSome(shared) ? shared.value : yield* makeCitationResolutionWork(prepared.limits);
@@ -1080,7 +1211,19 @@ export const runPreparedCitationCallbackSession = Effect.fn("Citation.runPrepare
 
           last = yield* dictionary.currentResource(last);
           yield* dictionary.validateResource(last);
-          if (yield* dictionary.isTruthy(last)) yield* dictionary.appendCurrent(last, mention.id);
+          const assignment = (yield* dictionary.isTruthy(last))
+            ? O.some(yield* dictionary.appendCurrent(last, mention.id))
+            : O.none<CitationCallbackAssignment>();
+          decisions = A.append(decisions, {
+            mentionId: mention.id,
+            callback: isFull(mention.citation)
+              ? "full"
+              : mention.citation.type === "shortFormCase"
+                ? "shortCase"
+                : mention.citation.type,
+            resource: last,
+            assignment,
+          });
           const finalGroups = yield* dictionary.read;
           if (
             A.reduce(finalGroups, 0, (count, group) => count + A.length(group.members)) >
@@ -1088,13 +1231,29 @@ export const runPreparedCitationCallbackSession = Effect.fn("Citation.runPrepare
           )
             return yield* limit();
         }
-        const groups = yield* dictionary.read;
+        const groups = yield* dictionary.readEntries;
+        decisions = yield* Effect.forEach(
+          decisions,
+          (decision) =>
+            Effect.gen(function* () {
+              const resource = yield* dictionary.currentResource(decision.resource);
+              const assignment = O.isNone(decision.assignment)
+                ? O.none<CitationCallbackAssignment>()
+                : O.some({
+                    ...decision.assignment.value,
+                    resource: yield* dictionary.currentResource(decision.assignment.value.resource),
+                  });
+              return { ...decision, resource, assignment };
+            }),
+          { concurrency: 1 }
+        );
 
         return yield* S.decodeEffect(S.toType(SessionState))({
           ...prepared,
           mentions: yield* dictionary.readMentions,
           fulls: yield* dictionary.readFulls,
           groups,
+          decisions,
           last: yield* dictionary.currentResource(last),
           detachedCitations: yield* dictionary.detachedCitations,
         }).pipe(Effect.mapError(invalid));

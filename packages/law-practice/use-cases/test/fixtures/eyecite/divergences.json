@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "e1a6527f3ea419808280f9e4e62ab96cfe2121300ad1a6fd71fb5dec3dad2ee1",
+  "planSha256": "d5af4c15076424ee83a2094f7f79abcd4bdce9ba10f6262df4314e0993f3e6e5",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -149,7 +149,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationCallbackRuntimeIndex.test.ts",
-          "sha256": "8618dd51cb3b5a66b9161f1e08262e10915edaf48e22bedf97f506ea92203a00"
+          "sha256": "b03088c3be6d3832d4890ee16d7b28116c06f3e6d4dd38d870446cc215b1106d"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-10-29-host-resource-protocol.md",
@@ -157,7 +157,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationHostResources.test.ts",
-          "sha256": "b345539c78d467bc9778a3adf5c2164fc337f2dd893a710cb91c281cd99c8b85"
+          "sha256": "a646f9cd5bff4b2ffe3c5d1362e22a9ab3669f2f97c5735c95d9034cc2d19ab8"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-10-29-insertion-entry-receipts.md",
@@ -170,6 +170,18 @@
         {
           "path": "packages/law-practice/domain/test/CitationDocument.test.ts",
           "sha256": "12b4fa946246ac473426569e06dd3ae217bffd35b9e5dce4c16ac0515c40ee87"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-10-29-dispatch-decision-capture.md",
+          "sha256": "c2dee7ad3edd3e43f607b032e4591923a6f17294bc4aea43d2a0851bcad4f3bd"
+        },
+        {
+          "path": "packages/law-practice/use-cases/test/fixtures/eyecite/dispatch-decisions.json",
+          "sha256": "88efa991758699d739ddac709f20efce4ba086da9eb17bca5bb9170e03a79c36"
+        },
+        {
+          "path": "goals/citation-extraction-engine/ops/probe-dispatch-decisions.py",
+          "sha256": "a0a88acf2b9b0a4e33f29ecac84af6b848a3dcc6559eaccb18428346a7c33fb0"
         }
       ],
       "workflowState": "audit",
@@ -257,7 +269,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationCallbackRuntimeIndex.test.ts",
-          "sha256": "8618dd51cb3b5a66b9161f1e08262e10915edaf48e22bedf97f506ea92203a00"
+          "sha256": "b03088c3be6d3832d4890ee16d7b28116c06f3e6d4dd38d870446cc215b1106d"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-10-29-host-resource-protocol.md",
@@ -265,7 +277,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationHostResources.test.ts",
-          "sha256": "b345539c78d467bc9778a3adf5c2164fc337f2dd893a710cb91c281cd99c8b85"
+          "sha256": "a646f9cd5bff4b2ffe3c5d1362e22a9ab3669f2f97c5735c95d9034cc2d19ab8"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-10-29-candidate-runtime-set.md",
@@ -286,6 +298,18 @@
         {
           "path": "packages/law-practice/domain/test/CitationDocument.test.ts",
           "sha256": "12b4fa946246ac473426569e06dd3ae217bffd35b9e5dce4c16ac0515c40ee87"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-10-29-dispatch-decision-capture.md",
+          "sha256": "c2dee7ad3edd3e43f607b032e4591923a6f17294bc4aea43d2a0851bcad4f3bd"
+        },
+        {
+          "path": "packages/law-practice/use-cases/test/fixtures/eyecite/dispatch-decisions.json",
+          "sha256": "88efa991758699d739ddac709f20efce4ba086da9eb17bca5bb9170e03a79c36"
+        },
+        {
+          "path": "goals/citation-extraction-engine/ops/probe-dispatch-decisions.py",
+          "sha256": "a0a88acf2b9b0a4e33f29ecac84af6b848a3dcc6559eaccb18428346a7c33fb0"
         }
       ],
       "workflowState": "audit",

@@ -1044,6 +1044,16 @@ instead of silently splitting delivery or weakening scope.
   expectations. Automatic session identity/decision/binding production remains
   open; no parity or representation-law completion follows from this contract.
 
+- **2026-10-29 dispatch decision capture:** record each actual callback result
+  separately from the selected append destination and final membership. Final
+  session entries retain insertion slots; capture the stored key/list during
+  the original lookup rather than repeating native operations. Retain falsy,
+  None and removed-entry history, and refresh current presentations through
+  the owner before close. Eight pinned source histories and nineteen decisions
+  match exact hook traces and final groups. Unique-list observational evidence
+  does not prove shared-list selection. Public resolution translation and final
+  trusted identity/binding production remain open; no completion row advances.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from

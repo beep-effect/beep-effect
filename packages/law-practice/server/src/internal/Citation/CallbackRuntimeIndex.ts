@@ -84,7 +84,7 @@ export class CitationCallbackRuntimeIndexFactory extends Context.Service<
         readonly set: (
           resource: CitationCallbackResource,
           slot: number
-        ) => Effect.Effect<void, CitationCallbackFailure>;
+        ) => Effect.Effect<typeof Entry.Type, CitationCallbackFailure>;
         readonly remove: (
           resource: CitationCallbackResource
         ) => Effect.Effect<O.Option<typeof Entry.Type>, CitationCallbackFailure>;
@@ -326,7 +326,7 @@ export const makeCitationCallbackRuntimeIndexFactory = Effect.fn("Citation.makeC
             return O.isSome(hit) ? O.some(yield* entry(hit.value)) : O.none();
           }),
           set: Effect.fn("Citation.callbackRuntimeSet")(function* (resource: CitationCallbackResource, slot: number) {
-            yield* table.set(yield* key(resource), slot).pipe(Effect.mapError(mapped));
+            return yield* entry(yield* table.set(yield* key(resource), slot).pipe(Effect.mapError(mapped)));
           }),
           remove: Effect.fn("Citation.callbackRuntimeRemove")(function* (resource: CitationCallbackResource) {
             const hit = yield* table.remove(yield* key(resource)).pipe(Effect.mapError(mapped));

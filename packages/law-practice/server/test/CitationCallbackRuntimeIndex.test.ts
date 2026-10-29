@@ -288,7 +288,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered callback
           Effect.gen(function* () {
             expect(group.resource._tag === "Registered" && group.resource.slot === 0).toBe(true);
             const groupDigest = yield* S.decodeEffect(Sha256HexFromBytes)(
-              new TextEncoder().encode(`${row.name}:entry:${index}`)
+              new TextEncoder().encode(`${row.name}:entry:${group.entrySlot}`)
             );
             const listDigest = yield* S.decodeEffect(Sha256HexFromBytes)(
               new TextEncoder().encode(`${row.name}:list:${group.listSlot}`)
@@ -305,7 +305,19 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered callback
             return { entry, list, expected: { position: index, id: entry.id, list } };
           })
         );
-        const decisions = A.map(result.mentions, (mention) => mention.id);
+        expect(A.map(result.decisions, (decision) => decision.mentionId)).toEqual(
+          A.map(result.mentions, (mention) => mention.id)
+        );
+        expect(
+          A.map(result.decisions, (decision) =>
+            O.getOrElse(
+              O.map(decision.assignment, (assignment) => assignment.entrySlot),
+              () => -1
+            )
+          ),
+          row.name
+        ).toEqual(row.name === "default-page-after-insertion" ? [0, 1, 1] : A.map(result.mentions, () => 0));
+        const decisions = A.map(result.decisions, (decision) => decision.mentionId);
         const binding = CitationResourceBinding.make({
           identity,
           decisions,

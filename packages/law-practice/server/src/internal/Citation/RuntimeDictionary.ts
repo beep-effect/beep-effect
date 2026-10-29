@@ -143,7 +143,7 @@ export class CitationRuntimeDictionary extends Context.Service<
     readonly set: (
       key: CitationRuntimeDictionaryKey,
       value: number
-    ) => Effect.Effect<void, CitationRuntimeDictionaryFailure>;
+    ) => Effect.Effect<CitationRuntimeDictionaryEntry, CitationRuntimeDictionaryFailure>;
     readonly remove: (
       key: CitationRuntimeDictionaryKey
     ) => Effect.Effect<O.Option<CitationRuntimeDictionaryEntry>, CitationRuntimeDictionaryFailure>;
@@ -291,7 +291,7 @@ export const makeCitationRuntimeDictionary = Effect.fn("Citation.makeRuntimeDict
         entry.entryId,
         CitationRuntimeDictionaryEntry.make({ ...entry, value: decodedValue })
       );
-      return;
+      return copyEntry(yield* Effect.fromOption(HashMap.get(entries, entry.entryId), invalid));
     }
     if (HashMap.size(entries) >= maximumEntries || nextEntry >= maximumSteps) return yield* exceeded();
     const next = yield* prepareInsertion();
@@ -308,6 +308,7 @@ export const makeCitationRuntimeDictionary = Effect.fn("Citation.makeRuntimeDict
     order = Chunk.append(next.order, entry.entryId);
     entries = HashMap.set(entries, entry.entryId, entry);
     nextEntry += 1;
+    return copyEntry(entry);
   });
   const remove = Effect.fn("Citation.runtimeDictionaryRemove")(function* (inputKey: CitationRuntimeDictionaryKey) {
     const key = yield* keySnapshot(inputKey);
