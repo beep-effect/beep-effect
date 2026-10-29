@@ -39,3 +39,14 @@ Hoisted named literal domains and their schema-derived guards to module scope.
 Targeted Oxlint, 147 focused tests, package lint/type checks, and both seven-case
 real native controls passed again on the corrected source. The unpublished
 commit is corrected before pushing. No rule is waived. Owner: this goal.
+
+### Effective cache mode must drive inferred signing role
+
+Review found that role inference combined an explicit cache directive with an
+inherited upload mode, even though the native directive outranks that mode. A
+keyless local/read-only request was misclassified as a writer. The new boundary
+test failed first; extraction of pre-task cache directives now follows that
+precedence. Forwarded task arguments do not participate.148focused tests and
+ten real native controls per channel pass; explicit writer/canary declarations
+still require their signing key. The full default-root package audit/docgen
+passed1125.9s/37.3s on the corrected source.

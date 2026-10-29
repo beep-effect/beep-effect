@@ -1,36 +1,49 @@
 {
   "schemaVersion": "cache-signing-posture-checkpoint/v1",
-  "recordedAt": "2026-10-28T23:49:14.072356+00:00",
+  "recordedAt": "2026-10-29T00:28:56.399152+00:00",
   "authority": "component-preparation-only",
   "sourceSha256": {
     "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts": "d443672935b5ae9c4bfacb9672180d3c70dfd2faa6b885e0bae06d91a67c2573",
     "packages/tooling/tool/cli/src/commands/Cache/Cache.fingerprint.ts": "36c69fa69e539bcacd74cd2bc72b6f601e821ff5c4567eecc0b7ff7c90f5a955",
-    "packages/tooling/tool/cli/src/commands/Cache/Cache.runtime.ts": "603ec2708e0522155a55d026f48cfe313d50c6320e90fafdfeb91a350e773409",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.runtime.ts": "169305ddc0277f3b330d7a33987111bf8cb4426dd5976cd029aa91865356887b",
     "packages/tooling/tool/cli/src/commands/Cache/Cache.schemas.ts": "0eae36411ca41a1efcff68d1496a64cc994f333aa47252a7150056a52a743a53",
     "packages/tooling/tool/cli/src/commands/Cache/index.ts": "b13417b7f7c7e0310f3742572dad5d5d031a48f88a15df6ddef8cb215ceba593",
     "packages/tooling/tool/cli/src/internal/cli/EnvConfig.ts": "1bc317fd8bf390eff0d784d386cff6a8c31b198c1e6be402dd5cff63e1f108bc",
     "packages/tooling/tool/cli/src/internal/cli/TurboCache.ts": "aa92ddde38c13cb296232176fc3244410d3f7dddd6a2025f5d6053b05165776e",
     "packages/tooling/tool/cli/src/test/Cache.test-kit.ts": "fb627283d37048b3d4ccdae4feb9c5b61c6f71c5368e923d828856eddd5f8e01",
-    "packages/tooling/tool/cli/test/cache-runtime.test.ts": "d0fcf070d6ad211b007b144ca12aa36f21565fc4e45b3c641fa0da9548fa8869",
+    "packages/tooling/tool/cli/test/cache-runtime.test.ts": "51ed48a9451bdbe8b9c7b93db514e375af1eb8dc1a91dff3d2f8c91c07ed4b25",
     "packages/tooling/tool/cli/test/shared-internals.test.ts": "46d73e193c0fbbd16ce01dcb784552d0f0b5e92df41b051a98877a8038f7e2c5",
     "packages/tooling/tool/cli/test/turbo-cache.test.ts": "595b11dde0faf0261841f2168d169d6af80d7f1413bf9eeee0944cc7ea10b52e"
   },
   "focusedTests": {
     "files": 4,
-    "passed": 147,
-    "durationSeconds": 7.65
+    "passed": 148,
+    "durationSeconds": 6.31
   },
   "nativeControls": {
     "stable": "signing-posture-native-stable.json",
     "canary": "signing-posture-native-canary.json",
-    "casesPerChannel": 7
+    "casesPerChannel": 10
   },
   "fullPackageAudit": {
     "status": "passed",
-    "head": "4d9da2f6da5acfae22cccbf4e542e0f6a50c0d02",
-    "auditSeconds": 1426.7,
-    "docgenSeconds": 46.3,
-    "environment": "Controlled parent environment: host cache defaults disabled and inherited Turbo endpoint, token, team, cache mode and signing key empty. All audit/docgen checks ran. Not default-path qualification."
+    "headAtStart": "502ceeae7a5ae008904f92ba5f1f965f238a8334",
+    "workingTreeComponentSourceSha256": {
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts": "d443672935b5ae9c4bfacb9672180d3c70dfd2faa6b885e0bae06d91a67c2573",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.fingerprint.ts": "36c69fa69e539bcacd74cd2bc72b6f601e821ff5c4567eecc0b7ff7c90f5a955",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.runtime.ts": "169305ddc0277f3b330d7a33987111bf8cb4426dd5976cd029aa91865356887b",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.schemas.ts": "0eae36411ca41a1efcff68d1496a64cc994f333aa47252a7150056a52a743a53",
+      "packages/tooling/tool/cli/src/commands/Cache/index.ts": "b13417b7f7c7e0310f3742572dad5d5d031a48f88a15df6ddef8cb215ceba593",
+      "packages/tooling/tool/cli/src/internal/cli/EnvConfig.ts": "1bc317fd8bf390eff0d784d386cff6a8c31b198c1e6be402dd5cff63e1f108bc",
+      "packages/tooling/tool/cli/src/internal/cli/TurboCache.ts": "aa92ddde38c13cb296232176fc3244410d3f7dddd6a2025f5d6053b05165776e",
+      "packages/tooling/tool/cli/src/test/Cache.test-kit.ts": "fb627283d37048b3d4ccdae4feb9c5b61c6f71c5368e923d828856eddd5f8e01",
+      "packages/tooling/tool/cli/test/cache-runtime.test.ts": "51ed48a9451bdbe8b9c7b93db514e375af1eb8dc1a91dff3d2f8c91c07ed4b25",
+      "packages/tooling/tool/cli/test/shared-internals.test.ts": "46d73e193c0fbbd16ce01dcb784552d0f0b5e92df41b051a98877a8038f7e2c5",
+      "packages/tooling/tool/cli/test/turbo-cache.test.ts": "595b11dde0faf0261841f2168d169d6af80d7f1413bf9eeee0944cc7ea10b52e"
+    },
+    "auditSeconds": 1125.9,
+    "docgenSeconds": 37.3,
+    "environment": "Default enrolled-root launch with main test-worker environment isolation. Source bytes and HEAD held stable through the audit; two owned runtime/test review edits were uncommitted. All package audit/docgen gates ran."
   },
   "productionChanges": false,
   "notProven": [
@@ -43,8 +56,8 @@
     "broad task qualification or adoption"
   ],
   "packageQuick": {
-    "lintSeconds": 7.6,
-    "checkSeconds": 14.9,
+    "lintSeconds": 5.4,
+    "checkSeconds": 11.5,
     "status": "passed"
   },
   "targetedOxlint": "passed after hoisting schema guards",
@@ -60,6 +73,31 @@
       "checkSeconds": 14.7,
       "status": "passed"
     },
-    "componentSourceHashesUnchanged": true
+    "componentSourceHashesUnchangedAtRecordedHead": true
+  },
+  "priorFullPackageAudit": {
+    "status": "passed",
+    "head": "4d9da2f6da5acfae22cccbf4e542e0f6a50c0d02",
+    "auditSeconds": 1426.7,
+    "docgenSeconds": 46.3,
+    "environment": "Controlled parent environment: host cache defaults disabled and inherited Turbo endpoint, token, team, cache mode and signing key empty. All audit/docgen checks ran. Not default-path qualification.",
+    "componentSourceSha256": {
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts": "d443672935b5ae9c4bfacb9672180d3c70dfd2faa6b885e0bae06d91a67c2573",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.fingerprint.ts": "36c69fa69e539bcacd74cd2bc72b6f601e821ff5c4567eecc0b7ff7c90f5a955",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.runtime.ts": "603ec2708e0522155a55d026f48cfe313d50c6320e90fafdfeb91a350e773409",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.schemas.ts": "0eae36411ca41a1efcff68d1496a64cc994f333aa47252a7150056a52a743a53",
+      "packages/tooling/tool/cli/src/commands/Cache/index.ts": "b13417b7f7c7e0310f3742572dad5d5d031a48f88a15df6ddef8cb215ceba593",
+      "packages/tooling/tool/cli/src/internal/cli/EnvConfig.ts": "1bc317fd8bf390eff0d784d386cff6a8c31b198c1e6be402dd5cff63e1f108bc",
+      "packages/tooling/tool/cli/src/internal/cli/TurboCache.ts": "aa92ddde38c13cb296232176fc3244410d3f7dddd6a2025f5d6053b05165776e",
+      "packages/tooling/tool/cli/src/test/Cache.test-kit.ts": "fb627283d37048b3d4ccdae4feb9c5b61c6f71c5368e923d828856eddd5f8e01",
+      "packages/tooling/tool/cli/test/cache-runtime.test.ts": "d0fcf070d6ad211b007b144ca12aa36f21565fc4e45b3c641fa0da9548fa8869",
+      "packages/tooling/tool/cli/test/shared-internals.test.ts": "46d73e193c0fbbd16ce01dcb784552d0f0b5e92df41b051a98877a8038f7e2c5",
+      "packages/tooling/tool/cli/test/turbo-cache.test.ts": "595b11dde0faf0261841f2168d169d6af80d7f1413bf9eeee0944cc7ea10b52e"
+    }
+  },
+  "reviewRepair": {
+    "finding": "CLI cache directives outrank the inherited cache mode when inferring signing role.",
+    "regression": "Red first; local equals-form, local split-form and read-only directives over an ambient upload mode now run locally without a key. Task arguments after -- do not change inference. Explicit writer/canary declarations retain their key requirement.",
+    "nativeControlsPerChannel": 10
   }
 }

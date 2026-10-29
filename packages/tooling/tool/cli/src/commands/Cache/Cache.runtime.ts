@@ -120,8 +120,18 @@ const runtimeToolchainDigest = Effect.fn("Cache.runtimeToolchainDigest")(functio
 
 const runtimeSigningRole = (args: ReadonlyArray<string>, ambient: Readonly<Record<string, string | undefined>>) => {
   const selection = A.takeWhile(args, (arg) => arg !== "--");
-  const modes = A.flatMap([...selection, ...O.toArray(O.fromUndefinedOr(ambient.TURBO_CACHE))], (value) =>
-    Str.split(",")(Str.replace("--cache=", "")(value))
+  const directives = A.getSomes(
+    A.map(selection, (value, index) =>
+      value === "--cache"
+        ? A.get(selection, index + 1)
+        : Str.startsWith("--cache=")(value)
+          ? O.some(Str.slice("--cache=".length)(value))
+          : O.none()
+    )
+  );
+  const modes = A.flatMap(
+    A.isReadonlyArrayNonEmpty(directives) ? directives : O.toArray(O.fromUndefinedOr(ambient.TURBO_CACHE)),
+    Str.split(",")
   );
   const writeRequested = A.some(modes, isRemoteWriteMode);
   const readRequested = A.some(modes, isReadOrLocalMode);

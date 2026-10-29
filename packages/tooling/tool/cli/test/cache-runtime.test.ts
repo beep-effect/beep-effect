@@ -341,6 +341,32 @@ it.layer(runtimeLayer, { timeout: "10 seconds" })("runtime native spawn", (it) =
     })
   );
 
+  it.effect("uses a selection cache directive before an ambient upload mode", () =>
+    Effect.gen(function* () {
+      vi.spyOn(Fingerprint, "readCacheSignatureRequired").mockReturnValue(Effect.succeed(true));
+      const select = vi.spyOn(Census, "collectCacheTaskSelection").mockReturnValue(Effect.succeed([]));
+      vi.spyOn(Census, "resolveCacheTurboBinary").mockReturnValue(Effect.succeed("/fixture/turbo"));
+      vi.stubEnv("TURBO_CACHE", "local:rw,remote:rw");
+      vi.stubEnv("TURBO_REMOTE_CACHE_SIGNATURE_KEY", undefined);
+      vi.stubEnv("BEEP_TURBO_TRUSTED_WRITER", "false");
+      vi.stubEnv("BEEP_TURBO_SIGNING_CANARY", "false");
+      const spawn = vi.spyOn(StepExec, "runToExit").mockReturnValue(Effect.succeed(0));
+      for (const mode of [["--cache=local:rw"], ["--cache", "local:rw"], ["--cache=remote:r"]]) {
+        yield* runCacheRuntimeTasks("/fixture", ["run", "lint", ...mode, "--", "--cache=remote:rw"]);
+        expect(select).toHaveBeenLastCalledWith("/fixture", [
+          "run",
+          "lint",
+          "--cache=local:rw",
+          "--",
+          "--cache=remote:rw",
+        ]);
+        expect(spawn).toHaveBeenLastCalledWith(
+          expect.objectContaining({ args: ["run", "lint", "--cache=local:rw", "--", "--cache=remote:rw"] })
+        );
+      }
+    })
+  );
+
   it.effect("preserves native execution when an upload-capable caller has its resolved key", () =>
     Effect.gen(function* () {
       vi.spyOn(Fingerprint, "readCacheSignatureRequired").mockReturnValue(Effect.succeed(true));
