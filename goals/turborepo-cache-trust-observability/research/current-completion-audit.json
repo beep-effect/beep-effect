@@ -3,7 +3,7 @@
   "goal": "turborepo-cache-trust-observability",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "511be224c49a558752eb531a086e571a1838bd38514359d049b59b621106fcdb",
+  "specSha256": "d3ff4ba7b49d2df9daa0329532ca9e2d3df9b212eafc4ad7e79d90eb5a158762",
   "acceptance": [
     {
       "id": "AC-01",
@@ -285,5 +285,10 @@
     "path": "goals/turborepo-cache-trust-observability/research/producer-packet-review-checkpoint.json",
     "sha256": "7974b7a10bb72a491e571b3aa1c01b431f9227a2d5f6bd9206e6d77411a264c5",
     "scope": "Goal-packet control/historical-claim repair only; runtime CLI proof remains bound to c8c434026f."
+  },
+  "priorSpecSha256AtDocgenLaunchRepair": "511be224c49a558752eb531a086e571a1838bd38514359d049b59b621106fcdb",
+  "docgenLaunchRepairCheckpoint": {
+    "path": "goals/turborepo-cache-trust-observability/research/docgen-launch-repair-checkpoint.json",
+    "sha256": "5b867b6ef9f64292d4dc80d77d5648230e7b5cd0eb31dd0ed6dc4fd97c430846"
   }
 }

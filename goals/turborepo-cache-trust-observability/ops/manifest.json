@@ -82,7 +82,10 @@
     "research/producer-publication-gate-repair-checkpoint.json",
     "research/producer-coverage-repair-checkpoint.json",
     "research/producer-review-repair-checkpoint.json",
-    "research/producer-packet-review-checkpoint.json"
+    "research/producer-packet-review-checkpoint.json",
+    "research/docgen-launch-repair-checkpoint.json",
+    "research/docgen-launch-baseline-review-2026-10-29.md",
+    "research/docgen-launch-baseline-request-2026-10-29.json"
   ],
   "agentLaunchers": [
     {

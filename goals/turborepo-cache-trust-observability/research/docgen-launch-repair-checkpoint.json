@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "cache-docgen-launch-repair/v1",
+  "observedAt": "2026-10-29T19:09:20.479637+00:00",
+  "scope": "CLI implementation script interpreter selection; no task qualification or deployed trust change",
+  "sourceFiles": [
+    {
+      "path": "packages/tooling/tool/cli/package.json",
+      "sha256": "9f43e6fa5edfd4bea8663b41fb285fbeaac729ec6980b951d416039452bcd42e"
+    }
+  ],
+  "scriptGenerator": "write/check passed; generated task wrapper retained",
+  "defaultFullDocgen": {
+    "before": {
+      "exit": 0,
+      "elapsedSeconds": 35.214
+    },
+    "after": {
+      "exit": 0,
+      "elapsedSeconds": 34.818
+    },
+    "modules": 478,
+    "examples": 3560
+  },
+  "interpreterObservation": {
+    "transparentWrapperExecutesSameTsc": true,
+    "forcedNodeResolvesTo": "Bun1.4.4",
+    "unforcedNodeResolvesTo": "Node24.22.1",
+    "fullDocgenExit": 0,
+    "elapsedSeconds": 36.338
+  },
+  "retainedEarlierFailures": {
+    "defaultFullDocgenExits": [130, 130],
+    "attribution": "Intermittent launch compatibility; deterministic upstream failure not established"
+  },
+  "packageQuick": {
+    "exit": 0,
+    "elapsedSeconds": 14.531
+  },
+  "cachePolicy": {
+    "blockingDriftTasks": 10,
+    "changedCommandDigestRecords": 14,
+    "changedSubject": "@beep/repo-cli",
+    "reviewBasis": {
+      "path": "goals/turborepo-cache-trust-observability/research/docgen-launch-baseline-review-2026-10-29.md",
+      "sha256": "8f3187c95bdd5b4fb8b17904c5738578211f5f881f1dad8d6655c098a48d1cba"
+    },
+    "request": {
+      "path": "goals/turborepo-cache-trust-observability/research/docgen-launch-baseline-request-2026-10-29.json",
+      "sha256": "81ed259f4bb850823155a32ac53ae797e7d69f422c921c44885a7e6d65de6b29"
+    },
+    "reviewedAuditBlockingFindings": 0,
+    "unchanged": [
+      "taskGraph",
+      "inputs",
+      "outputs",
+      "flags",
+      "scope",
+      "profile",
+      "epoch",
+      "qualificationLedger"
+    ],
+    "qualificationLedgerSha256": "13067bf343f413b4cc99b4cefca3ce7d094a1f09247a54ffc20114e766d4d2bb"
+  },
+  "trustAuthority": "Preparatory launch repair only. No signed activation, current computation qualification, hosted producer attestation or observation window is complete."
+}

@@ -443,8 +443,8 @@ The local process report does not satisfy those deployment or observation gates.
   implementation script. Docgen's executable already selects Bun by its
   shebang; forcing every child named `node` through Bun is unnecessary. Keep
   the canonical generated task wrapper, compiler argv, examples and checks.
-- Two full default Docgen attempts in the producer lane ended130 during
-  example typechecking, while all3560 generated examples compiled under the
+- Two full default Docgen attempts in the producer lane ended with exit 130 during
+  example typechecking, while all 3,560 generated examples compiled under the
   direct Node and Bun compilers and both Effect process backends. The complete
   launch without the force flag passed. A fresh repair-lane before/after pair
   also passed with both commands, so this is an intermittent compatibility

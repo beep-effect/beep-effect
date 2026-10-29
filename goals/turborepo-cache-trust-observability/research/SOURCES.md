@@ -384,3 +384,14 @@ artifact, signing activation, deployed grant or observation window changes.
   excerpts stay distinct from eighteen real synthetic native replay processes.
   Earlier observations keep their original driver identities and full goal
   acceptance remains open.
+
+
+## Docgen launch repair, 2026-10-29
+
+`docgen-launch-repair-checkpoint.json` records the actual full before/after
+commands, the retained intermittent exit 130 attempts, interpreter observation
+and package/script checks. The baseline review names the ten blocking cached
+tasks and the one reviewed package subject; fourteen executable command-digest
+records change with those manifest bytes. Scope/profile/epoch and the
+qualification ledger remain unchanged. This grants no cache qualification or
+signed trust readiness.
