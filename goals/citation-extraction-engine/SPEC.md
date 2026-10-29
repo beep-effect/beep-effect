@@ -814,6 +814,17 @@ instead of silently splitting delivery or weakening scope.
   Custom resource ports/key policy and final boundary mapping remain open.
   Reverse only through equivalent source/state/identity/budget evidence.
 
+- **2026-10-28 operation-bound resolution proof:** project every committed
+  default resolution observation through its source payload and immutable
+  edition hashes. Require the exact corpus digest, 30 unique observation IDs,
+  two sites, 94 mentions, all five default callbacks and all eight canonical
+  families. Compare source membership indices directly rather than copying
+  expected groups. Overlapping offsets from separately extracted fragments
+  require explicit constructed witness text for semantic-only evaluation;
+  original source coordinates remain unchanged and unproved by this lane.
+  Custom callback, helper/assertion, extraction and complete parity proof stay
+  open. Reverse only with equivalent provenance/no-drop/source-group checks.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from

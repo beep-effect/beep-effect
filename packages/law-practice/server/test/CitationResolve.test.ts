@@ -1,18 +1,6 @@
 import { fileURLToPath } from "node:url";
 import { Citation, CitationMention, citationAuthorityMembers } from "@beep/law-practice-domain/values";
-import { CitationAuthorityEdition } from "@beep/law-practice-server/_test/Citation/AuthorityIdentity";
-import { makeCitationMention } from "@beep/law-practice-server/_test/Citation/Mention";
 import { resolveCitationMentions } from "@beep/law-practice-server/_test/Citation/Resolve";
-import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
-import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { TextAnchor } from "@beep/provenance/TextAnchor";
-import {
-  VerifySourceTextIdentityInput,
-  VerifyTextAnchorAgainstVerifiedSourceInput,
-  verifySourceTextIdentity,
-  verifyTextAnchorAgainstVerifiedSource,
-} from "@beep/provenance/VerifiedTextAnchor";
-import { PosixPath, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
@@ -27,21 +15,13 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
+import { CitationResolutionContext, prepareCitationResolutionContext as prepare } from "./CitationResolve.fixtures.ts";
+import { loadResolutionOperationContexts } from "./CitationResolve.operations.ts";
 
-const Row = S.Struct({
-  name: S.NonEmptyString,
-  text: S.String,
-  editions: S.Array(CitationAuthorityEdition),
-  mentions: S.Array(S.Struct({ citation: Citation, start: S.Natural, end: S.Natural, quote: S.NonEmptyString })),
-  outcome: S.Union([
-    S.Struct({ status: S.tag("value"), groups: S.Natural.pipe(S.Array, S.Array) }),
-    S.Struct({ status: S.tag("error"), kind: S.NonEmptyString }),
-  ]).pipe(S.toTaggedUnion("status")),
-});
 const Cases = S.Struct({
   schemaVersion: S.Literal("citation-default-resolution-cases/v1"),
   oracleCommit: S.Literal("04d82c032ad5fd0f9ab72a61c87110c46ee8f52e"),
-  cases: S.Array(Row),
+  cases: S.Array(CitationResolutionContext),
 });
 const cases = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
@@ -49,46 +29,6 @@ const cases = Effect.gen(function* () {
     fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/default-resolution-cases.json", import.meta.url))
   );
   return yield* S.decodeEffect(S.fromJsonString(Cases))(text);
-});
-const artifact = Sha256Hex.make(Str.repeat(64)("a"));
-const prepare = Effect.fn("ResolveTest.prepare")(function* (row: typeof Row.Type) {
-  const digest = SourceTextDigest.make(
-    `sha256:${yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(row.text))}`
-  );
-  const source = SourceTextIdentity.make({
-    scopeRef: "matter:resolve-fixture",
-    sourceRef: row.name,
-    locator: PosixPath.make("resolve/source.txt"),
-    sourceDigest: digest,
-    textDigest: digest,
-    extractor: SourceTextExtractor.make({ name: "utf8", version: "1" }),
-    normalizationVersion: "1",
-  });
-  const verifiedSource = yield* verifySourceTextIdentity(
-    VerifySourceTextIdentityInput.make({ source, expectedSource: source, sourceText: row.text })
-  );
-  const mentions = yield* Effect.forEach(row.mentions, (mention) =>
-    Effect.gen(function* () {
-      const anchor = yield* verifyTextAnchorAgainstVerifiedSource(
-        VerifyTextAnchorAgainstVerifiedSourceInput.make({
-          verifiedSource,
-          anchor: TextAnchor.make({ startChar: mention.start, endChar: mention.end, quote: mention.quote }),
-        })
-      );
-      return yield* makeCitationMention({
-        citation: mention.citation,
-        anchor,
-        engineArtifact: artifact,
-        components: [],
-        footnote: O.none(),
-        signal: O.none(),
-        warnings: [],
-        evidenceConfidence: O.none(),
-      });
-    })
-  );
-  const policy = yield* defaultCitationEnginePolicy;
-  return { verifiedSource, mentions, editions: row.editions, engineArtifact: artifact, limits: policy.limits };
 });
 
 it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("canonical default resolution", (it) => {
@@ -116,6 +56,38 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("canonical defaul
         }
       }
     })
+  );
+
+  it.effect(
+    "matches all 30 existing default operation observations without dropping a source site",
+    () =>
+      Effect.gen(function* () {
+        const data = yield* loadResolutionOperationContexts;
+        expect(data.corpusSha256).toBe("ae441000ddc90537864e3fdd4a9dfc4aa81af37a65818b48ce9bf37d95d1eeb1");
+        expect(A.length(data.contexts)).toBe(30);
+        expect(
+          A.length(
+            A.dedupe(A.flatMap(data.contexts, (row) => A.map(row.context.mentions, (mention) => mention.citation.type)))
+          )
+        ).toBe(8);
+        expect(A.length(data.sourceSiteIds)).toBe(2);
+        expect(A.length(A.dedupe(A.map(data.contexts, (row) => row.context.name)))).toBe(30);
+        expect(A.reduce(data.contexts, 0, (total, row) => total + A.length(row.context.mentions))).toBe(94);
+        for (const row of data.contexts) {
+          const document = yield* resolveCitationMentions(yield* prepare(row.context));
+          const indices = HashMap.fromIterable(
+            A.map(document.mentions, (mention, index) => Tuple.make(mention.id, index))
+          );
+          const groups = A.map(document.authorities, (authority) =>
+            A.map(citationAuthorityMembers(document, authority.id), (id) =>
+              O.getOrElse(HashMap.get(indices, id), () => -1)
+            )
+          );
+          if (row.context.outcome.status !== "value") return yield* Effect.die("Expected operation groups");
+          expect(groups, row.context.name).toEqual(row.context.outcome.groups);
+        }
+      }),
+    { timeout: 30_000 }
   );
 
   it.effect("retains ambiguity as data and resets the next Id. after an ambiguous result", () =>
