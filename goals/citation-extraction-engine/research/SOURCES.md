@@ -95,6 +95,13 @@ and exact datetime strings are consumed through private trusted-adapter data.
 Stable abbreviation ties qualify candidate-bag normalization. Attribution is
 BSD-2-Clause; live artifact authentication and callback integration remain open.
 
+The [authenticated frozen edition adapter](
+../history/evidence/2026-10-29-frozen-edition-adapter.md) binds all 2,430 reporter
+and 2,533 edition artifacts to actual pinned source dataclasses. It verifies a
+reviewed manifest and each original content digest before lookup. All source
+runtime payloads are independently compared; order and duplicates are retained
+at lookup. Attribution is BSD-2-Clause; final asset loading remains open.
+
 ## Incorporated-source discipline
 
 - A local clone is research state, not an incorporated dependency.

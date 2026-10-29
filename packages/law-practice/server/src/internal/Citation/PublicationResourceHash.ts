@@ -97,7 +97,15 @@ const quote = Effect.fn("Citation.publicationHashString")((value: string) =>
   encodeCitationRuntimeString(value).pipe(Effect.mapError((error) => failure(error.reason)))
 );
 const nullable = (value: string | null) => (value === null ? Effect.succeed("null") : quote(value));
-const editionJson = Effect.fn("Citation.runtimeEditionJson")(function* (value: typeof Edition.Type) {
+/**
+ * Exact source sorted-key JSON for one complete edition/reporter payload.
+ * @internal
+ * @category encoding
+ * @since 0.0.0
+ */
+export const encodeCitationRuntimeEdition = Effect.fn("Citation.runtimeEditionJson")(function* (
+  value: typeof Edition.Type
+) {
   const reporter = value.reporter;
   return `{"end": ${yield* nullable(value.end)}, "reporter": {"cite_type": ${yield* quote(reporter.cite_type)}, "is_scotus": ${reporter.is_scotus ? "true" : "false"}, "name": ${yield* quote(reporter.name)}, "short_name": ${yield* quote(reporter.short_name)}, "source": ${yield* quote(reporter.source)}}, "short_name": ${yield* quote(value.short_name)}, "start": ${yield* nullable(value.start)}}`;
 });
@@ -133,7 +141,7 @@ export const makeCitationPublicationResourceHash = Effect.fn("Citation.makePubli
       A.map(decoded.editions, (row) => row.value),
       editionOrder
     ),
-    editionJson,
+    encodeCitationRuntimeEdition,
     { concurrency: 1 }
   );
   let fields = yield* Effect.forEach(

@@ -189,3 +189,9 @@ The [law/journal hash evidence](
 source observations and qualifies candidate-bag normalization: tied edition
 abbreviations can make relative order observable through resource hashes.
 The frozen edition adapter and unified callback-owner table remain open.
+
+The [frozen edition adapter](
+./history/evidence/2026-10-29-frozen-edition-adapter.md) validates all 2,430
+reporter and 2,533 edition content identities and complete runtime payloads.
+Its lookups preserve order/multiplicity and reject modified artifacts. Final
+production asset loading and callback-owner integration remain open.
