@@ -841,3 +841,15 @@ artifact is retired.
 | Exception | Scope | Owner | Removal condition |
 | --- | --- | --- | --- |
 | Python 3.12 baseline bootstrap | The pinned `pyahocorasick==2.0.0` fails to compile under this host's Python 3.12/C23 toolchain before tests run; Python 3.11 passes all official tests. | P0 source baseline | Record as environment evidence; oracle generation uses pinned Python 3.11 unless upstream dependencies are deliberately re-pinned in a separate baseline decision. |
+
+- **2026-10-28 custom resolver contract gap:** pinned callback probes show that
+  short/supra/reference/Id. callbacks can introduce resources without any full
+  mention. The current full-representative authority schema is therefore only
+  sufficient for the default path; do not force custom results into it or
+  claim custom-resource parity. Preserve the source observations and adapt
+  authority representation, key production, persistence checks and port state
+  together before enabling custom resolution. Callable mutation, falsy keys
+  and resource equality require explicit source-bound treatment; no divergence
+  or immutable-state substitution is approved by this observation. Reversal
+  is removal of the focused probe/evidence checkpoint; existing target behavior
+  and the canonical accounting rows remain unchanged.

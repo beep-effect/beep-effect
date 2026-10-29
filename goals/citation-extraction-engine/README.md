@@ -41,6 +41,8 @@ unfinished.
 
 Current evidence:
 
+- [Custom resolver contract gap](./history/evidence/2026-10-28-custom-resolution-contract.md)
+
 - [Prerequisite compatibility](./history/evidence/prerequisite-compatibility.md)
 - [Source baselines/discovery](./history/evidence/2026-10-28-source-baselines.md)
 - [Operation corpus](./history/evidence/2026-10-28-operation-corpus.md)

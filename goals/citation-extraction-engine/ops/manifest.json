@@ -70,7 +70,8 @@
     "goals/citation-extraction-engine/history/evidence/2026-10-28-document-persistence.md",
     "goals/citation-extraction-engine/history/evidence/2026-10-28-resolver-text.md",
     "goals/citation-extraction-engine/history/evidence/2026-10-28-default-resolution.md",
-    "goals/citation-extraction-engine/history/evidence/2026-10-28-resolution-operation-contexts.md"
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-resolution-operation-contexts.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-custom-resolution-contract.md"
   ],
   "researchReports": [
     "research/EYECITE_BASELINE.md",
@@ -274,6 +275,14 @@
     {
       "path": "ops/probe-default-resolution.py",
       "purpose": "Capture default resource groups and exceptions for extracted and synthetic semantic contexts; not target extraction or exhaustive resolver proof."
+    },
+    {
+      "path": "ops/probe-custom-resolution.py",
+      "purpose": "Capture pinned custom callback dispatch, resource truthiness/equality and mutable-state observations; not target parity."
+    },
+    {
+      "path": "ops/verify-custom-resolution-controls.py",
+      "purpose": "Validate focused custom-resolution observations and optionally replay their exact bytes with the pinned oracle; not target proof."
     }
   ]
 }

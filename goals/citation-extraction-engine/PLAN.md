@@ -49,6 +49,11 @@ resolution calls, preserving 94 source-operation mention memberships. The
 combined semantic-context proof covers 76 contexts and 210 mentions. This
 supports P1 integration while exhaustive P2 extraction/coordinate/corpus work
 stays pending.
+Eighteen focused custom-callback source probes now expose a required graph
+adaptation: valid resources can originate without a full mention. Falsy keys,
+key equality, callback order and mutable callback state also need explicit
+service-port treatment before custom resolution can be implemented. These
+source observations do not increase the 76 target-tested contexts.
 Exhaustive resolver/custom-resource proof, live artifact integration,
 Bluebook codecs and extension adoption/schema proof stay open.
 The remaining 37 provisional contract directories are retired; their donor obligations
