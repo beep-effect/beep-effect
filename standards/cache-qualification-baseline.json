@@ -1146,11 +1146,11 @@
       }
     },
     "@beep/repo-docgen": {
-      "reviewer": "Claude Fable 5.1 (tsrs-gates, feat/tsrs-gates)",
-      "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
+      "reviewer": "Claude Fable 5.1 (effected-promotion 3-A6, effected-3a6)",
+      "reason": "Record the dependency-only drift of @beep/repo-docgen from its new @beep/repo-tsconfig and @beep/tsconfig edges and the @beep/memfs devDependency (docgen readTSConfig through TsconfigValidator, map sites #160, #161, #242, #266); no other workspace gains a closure member, as measured in the review; no qualification is granted.",
       "basis": {
-        "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
+        "path": "goals/effected-promotion/research/cache-baseline-review-3-a6.md",
+        "sha256": "c46f603fa15141acc23197ab84c8169013e29896a60c4919b40a728c09a6d835"
       }
     },
     "@beep/repo-tsconfig": {
@@ -99733,11 +99733,14 @@
           "@beep/config-file#audit",
           "@beep/identity#audit",
           "@beep/md#audit",
+          "@beep/memfs#audit",
           "@beep/package-json#audit",
+          "@beep/repo-tsconfig#audit",
           "@beep/repo-utils#audit",
           "@beep/schema#audit",
           "@beep/test-runner#audit",
           "@beep/test-utils#audit",
+          "@beep/tsconfig#audit",
           "@beep/utils#audit"
         ],
         "configuration": {
@@ -99804,11 +99807,14 @@
           "@beep/config-file#build",
           "@beep/identity#build",
           "@beep/md#build",
+          "@beep/memfs#build",
           "@beep/package-json#build",
+          "@beep/repo-tsconfig#build",
           "@beep/repo-utils#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
+          "@beep/tsconfig#build",
           "@beep/utils#build"
         ],
         "configuration": {
@@ -99864,11 +99870,14 @@
           "@beep/config-file#build",
           "@beep/identity#build",
           "@beep/md#build",
+          "@beep/memfs#build",
           "@beep/package-json#build",
+          "@beep/repo-tsconfig#build",
           "@beep/repo-utils#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
+          "@beep/tsconfig#build",
           "@beep/utils#build"
         ],
         "configuration": {
@@ -99911,11 +99920,14 @@
           "@beep/config-file#build",
           "@beep/identity#build",
           "@beep/md#build",
+          "@beep/memfs#build",
           "@beep/package-json#build",
+          "@beep/repo-tsconfig#build",
           "@beep/repo-utils#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
+          "@beep/tsconfig#build",
           "@beep/utils#build"
         ],
         "configuration": {
@@ -100043,11 +100055,14 @@
           "@beep/config-file#transit",
           "@beep/identity#transit",
           "@beep/md#transit",
+          "@beep/memfs#transit",
           "@beep/package-json#transit",
+          "@beep/repo-tsconfig#transit",
           "@beep/repo-utils#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
+          "@beep/tsconfig#transit",
           "@beep/utils#transit"
         ],
         "configuration": {
@@ -100253,11 +100268,14 @@
           "@beep/config-file#transit",
           "@beep/identity#transit",
           "@beep/md#transit",
+          "@beep/memfs#transit",
           "@beep/package-json#transit",
+          "@beep/repo-tsconfig#transit",
           "@beep/repo-utils#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
+          "@beep/tsconfig#transit",
           "@beep/utils#transit"
         ],
         "configuration": {
@@ -100303,11 +100321,14 @@
           "@beep/config-file#transit",
           "@beep/identity#transit",
           "@beep/md#transit",
+          "@beep/memfs#transit",
           "@beep/package-json#transit",
+          "@beep/repo-tsconfig#transit",
           "@beep/repo-utils#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
+          "@beep/tsconfig#transit",
           "@beep/utils#transit",
           "@beep/utils#transit"
         ],
@@ -100359,11 +100380,14 @@
           "@beep/config-file#transit",
           "@beep/identity#transit",
           "@beep/md#transit",
+          "@beep/memfs#transit",
           "@beep/package-json#transit",
+          "@beep/repo-tsconfig#transit",
           "@beep/repo-utils#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
+          "@beep/tsconfig#transit",
           "@beep/utils#transit",
           "@beep/utils#transit"
         ],
