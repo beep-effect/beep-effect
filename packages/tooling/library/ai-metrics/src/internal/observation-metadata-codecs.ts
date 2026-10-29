@@ -3,9 +3,14 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { NativeTraceMetadata } from "../native-trace.ts";
 import { TranscriptFrame, TranscriptPage } from "../transcript-page.ts";
+
+const encodeNativeMetadata = S.encodeEffect(S.fromJsonString(NativeTraceMetadata));
+const decodePage = S.decodeEffect(S.fromJsonString(TranscriptPage), { onExcessProperty: "error" });
+const encodeFrame = S.encodeEffect(S.fromJsonString(TranscriptFrame));
 
 /**
  * Encode the native metadata used by delivery and reclamation identity hashes.
@@ -19,7 +24,11 @@ import { TranscriptFrame, TranscriptPage } from "../transcript-page.ts";
  * @category encoding
  * @since 0.0.0
  */
-export const encodeNativeTraceMetadataJson = S.encodeEffect(S.fromJsonString(NativeTraceMetadata));
+export const encodeNativeTraceMetadataJson = Effect.fnUntraced(function* (
+  ...args: Parameters<typeof encodeNativeMetadata>
+) {
+  return yield* encodeNativeMetadata(...args);
+});
 
 /**
  * Decode stored transcript metadata with the shared strict page boundary.
@@ -33,7 +42,9 @@ export const encodeNativeTraceMetadataJson = S.encodeEffect(S.fromJsonString(Nat
  * @category decoding
  * @since 0.0.0
  */
-export const decodeTranscriptPageJson = S.decodeEffect(S.fromJsonString(TranscriptPage), { onExcessProperty: "error" });
+export const decodeTranscriptPageJson = Effect.fnUntraced(function* (...args: Parameters<typeof decodePage>) {
+  return yield* decodePage(...args);
+});
 
 /**
  * Encode transcript occurrence metadata consistently for identity verification.
@@ -47,4 +58,6 @@ export const decodeTranscriptPageJson = S.decodeEffect(S.fromJsonString(Transcri
  * @category encoding
  * @since 0.0.0
  */
-export const encodeTranscriptFrameJson = S.encodeEffect(S.fromJsonString(TranscriptFrame));
+export const encodeTranscriptFrameJson = Effect.fnUntraced(function* (...args: Parameters<typeof encodeFrame>) {
+  return yield* encodeFrame(...args);
+});

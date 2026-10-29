@@ -2,6 +2,7 @@ import { Sha256Hex } from "@beep/schema";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import * as Protobuf from "protobufjs";
 
@@ -21,14 +22,27 @@ message ExportTraceServiceRequest { repeated ResourceSpans resource_spans = 1; }
 
 export const nativeTraceWire = Protobuf.parse(wireSchema).root.lookupType("ExportTraceServiceRequest");
 
+const stringAttribute = (key: string, stringValue: string) => ({ key, value: { stringValue } });
+const integerAttribute = (key: string, value: number) => ({ key, value: { intValue: `${value}` } });
+const booleanAttribute = (key: string, boolValue: boolean) => ({ key, value: { boolValue } });
+
 /** Encode an already allowlisted string as the OTLP string-value wire field. */
-export const otlpStringAttribute = (key: string, stringValue: string) => ({ key, value: { stringValue } });
+export const otlpStringAttribute: {
+  (stringValue: string): (key: string) => ReturnType<typeof stringAttribute>;
+  (key: string, stringValue: string): ReturnType<typeof stringAttribute>;
+} = dual(2, stringAttribute);
 
 /** Encode an already validated integer as decimal text for the protobuf int64 field. */
-export const otlpIntegerAttribute = (key: string, value: number) => ({ key, value: { intValue: `${value}` } });
+export const otlpIntegerAttribute: {
+  (value: number): (key: string) => ReturnType<typeof integerAttribute>;
+  (key: string, value: number): ReturnType<typeof integerAttribute>;
+} = dual(2, integerAttribute);
 
 /** Encode an already allowlisted boolean as the OTLP boolean-value wire field. */
-export const otlpBooleanAttribute = (key: string, boolValue: boolean) => ({ key, value: { boolValue } });
+export const otlpBooleanAttribute: {
+  (boolValue: boolean): (key: string) => ReturnType<typeof booleanAttribute>;
+  (key: string, boolValue: boolean): ReturnType<typeof booleanAttribute>;
+} = dual(2, booleanAttribute);
 
 /** Wrap positively projected spans in the shared observation resource envelope. */
 export const encodeObservationTraceWire = Effect.fnUntraced(function* (

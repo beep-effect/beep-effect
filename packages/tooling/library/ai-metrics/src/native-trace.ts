@@ -374,7 +374,7 @@ const hashTextOption = Effect.fnUntraced(function* (value: O.Option<string>, has
 const projectSpan = Effect.fnUntraced(function* (
   entry: { readonly span: unknown; readonly resource: typeof Attributes.Type },
   input: NativeTraceRequest,
-  namespaceId: typeof Sha256Hex.Type,
+  namespaceId: Sha256Hex,
   hash: ReturnType<typeof privateHash>,
   protobuf: boolean
 ) {

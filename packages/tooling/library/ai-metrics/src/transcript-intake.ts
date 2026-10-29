@@ -429,7 +429,7 @@ export const makeTranscriptIntakeJournal = Effect.fn("AiMetrics.makeTranscriptIn
                 yield* sql`SELECT substr(payload,1,4097) AS payload,digest FROM observation_page_dispositions WHERE receipt_id=${receiptId}`.pipe(
                   Effect.flatMap(decodePayloadDigestRecordRows)
                 );
-              if (rows[0] === undefined) return O.none<typeof PageDisposition.Type>();
+              if (rows[0] === undefined) return O.none<PageDisposition>();
               if ((yield* hashPublicTextSha256(rows[0].payload)) !== rows[0].digest) return yield* failure("storage");
               const value = yield* decodePageDispositionJson(rows[0].payload);
               if (value.page.receiptId !== receiptId) return yield* failure("storage");

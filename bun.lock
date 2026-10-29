@@ -4335,7 +4335,7 @@
     "launch-editor": "2.14.2",
     "next": "catalog:",
     "postcss-selector-parser": "^7.1.6",
-    "protobufjs": "^7.6.6",
+    "protobufjs": "catalog:",
     "sharp": "catalog:",
     "zod": "4.6.6",
   },

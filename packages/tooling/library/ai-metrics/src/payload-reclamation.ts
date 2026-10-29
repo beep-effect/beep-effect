@@ -409,7 +409,7 @@ export const makePayloadReclaimer = Effect.fn("AiMetrics.makePayloadReclaimer")(
                   mode === "expiry"
                     ? O.getOrElse(policy.expireAfterMillis, () => policy.minAgeMillis)
                     : policy.minAgeMillis;
-                if (now - row.acceptedAt < minAge) return O.none<typeof PageDisposition.Type>();
+                if (now - row.acceptedAt < minAge) return O.none<PageDisposition>();
                 yield* enroll(receiptId, mode === "expiry");
                 const registeredPages =
                   yield* sql`SELECT events FROM observation_delivery_pages WHERE receipt_id=${receiptId}`.pipe(
@@ -426,7 +426,7 @@ export const makePayloadReclaimer = Effect.fn("AiMetrics.makePayloadReclaimer")(
                   registeredPages.length > 0,
                   now
                 );
-                if (O.isNone(population)) return O.none<typeof PageDisposition.Type>();
+                if (O.isNone(population)) return O.none<PageDisposition>();
                 return yield* commitDisposition(row, mode, now, registeredPages.length > 0, population.value);
               })
             )

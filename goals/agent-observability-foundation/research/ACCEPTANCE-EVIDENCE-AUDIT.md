@@ -88,3 +88,18 @@ The reviewer made no mutations, test runs or service actions. It expressly accep
 AC12's synthetic association and delivery scope without inferring real enrollment,
 exhaustive capture or known launch populations. All thirteen criteria now have
 scoped support; required repository gates, publication, merge and reflection remain.
+
+## Current-source refresh after hosted build diagnostics
+
+The source repair and dependency-catalog correction are documented in
+`HOSTED-BUILD-REPAIR.md` and `../ops/hosted-build-repair-verification.json`. After
+full package audit/docgen and 37 focused tests passed, an explicitly new v3 root
+was prepared with the current 82 source hashes; v2 was preserved. Independent
+Astra accepted both final v3 routes after checking all 87/86 current source hashes,
+pre-send plan/input/configuration digests, the same positive root declaration,
+independently derived IDs against backend/native/local/visibility sets, checksum-valid
+visibility receipts, exact source nanoseconds and rollback evidence. Both guards
+exited zero without protective stops or PID-limit events. The current-source AC12
+support remains scoped to two synthetic records per stage. No earlier receipt was
+relabeled, and real enrollment/populations remain unqualified. Repository delivery
+and the remaining final panel/hosted checks still govern overall completion.

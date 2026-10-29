@@ -30,7 +30,10 @@ Only on an explicit implementation launch, use:
 
 Implementation and synthetic/runtime verification have reached a reviewed checkpoint;
 repository delivery remains open. The runtime source checkpoint is
-`d3a33a8bc128b685e644b80f69e801ec82b3110a`, with corrective main integrated.
+`d3a33a8bc128b685e644b80f69e801ec82b3110a`, followed by the source-bound
+[hosted build repair](./research/HOSTED-BUILD-REPAIR.md) and fresh v3 route proofs.
+The foundation is published as [PR2364](https://github.com/beep-effect/beep-effect/pull/2364);
+its exact-fingerprint scanner dependency is [PR2366](https://github.com/beep-effect/beep-effect/pull/2366).
 The [independent acceptance audit](./research/ACCEPTANCE-EVIDENCE-AUDIT.md) now
 supports all thirteen criteria at their specified scope. The final
 [declared repository proof](./research/DECLARED-ROUTE-PROOF.md) closes the missing
@@ -40,7 +43,7 @@ identified root and independently declared event IDs before send.
 as PR3 at `f6e2bae77d205f228c4ebf9e3e8adcebb4b94d45`, without production rollout.
 The corrective Beep PR2362 is merged at
 `70492533f20378d5cd9747f3fba62d13590ccf9f` after current-head final-check and hosted
-code gates passed. Foundation publication still requires its own repository gates.
+code gates passed. Foundation delivery still requires its own current-head repository gates.
 Lifecycle remains active; this page is not completion signoff.
 
 The old forwarder service/timer remain masked and inactive. Metadata plus curated,
@@ -90,7 +93,8 @@ Preserve resource admission limits and unrelated applications. A declined or sto
 check is not a pass and must not be retried as if an uncertain mutation never ran.
 
 The landed corrective fix is integrated and AC12 is independently accepted.
-Perform foundation publication, required current-source policy/catalog and panel
-checks, hosted readiness, merge and reflection. Reconcile every SPEC
+Land the exact-fingerprint correction, publish the consolidated hosted repair,
+and finish current-source policy/catalog and panel checks, hosted readiness, merge
+and reflection. Reconcile every SPEC
 criterion against current evidence before the canonical lifecycle transition.
 Source delivery and production enrollment remain separate decisions.
