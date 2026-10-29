@@ -195,3 +195,9 @@ The [frozen edition adapter](
 reporter and 2,533 edition content identities and complete runtime payloads.
 Its lookups preserve order/multiplicity and reject modified artifacts. Final
 production asset loading and callback-owner integration remain open.
+
+The [generalized live-resource composition](
+./history/evidence/2026-10-29-mixed-resource-objects.md) matches six mixed
+case/law/journal histories and eighty-nine events in one table. Actual frozen
+law/journal abbreviation ties and independently retained edition selections
+are preserved. Final callback-owner dictionary integration remains open.

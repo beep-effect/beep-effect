@@ -102,6 +102,14 @@ reviewed manifest and each original content digest before lookup. All source
 runtime payloads are independently compared; order and duplicates are retained
 at lookup. Attribution is BSD-2-Clause; final asset loading remains open.
 
+The [mixed live-resource evidence](
+../history/evidence/2026-10-29-mixed-resource-objects.md) records six histories,
+eighty-nine events and independent candidate/selection snapshots across all
+full-citation families. Actual frozen Georgia/Rutgers abbreviation ties prove
+order-sensitive hashes; empty candidate lists retain source selections. The
+semantic membership filters were corrected accordingly. Attribution remains
+BSD-2-Clause; final callback-owner integration remains open.
+
 ## Incorporated-source discipline
 
 - A local clone is research state, not an incorporated dependency.

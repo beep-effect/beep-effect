@@ -11,14 +11,18 @@ import {
   makeCitationCallbackDictionary,
   makeCitationResolutionWork,
 } from "@beep/law-practice-server/_test/Citation/CallbackSession";
-import { CitationCaseResourceHashInput } from "@beep/law-practice-server/_test/Citation/CaseResourceHash";
 import {
-  CitationCaseResourceModels,
-  CitationCaseResourceObject,
-  CitationCaseResourceObjectFailure,
-  makeCitationCaseResourceObjects,
-} from "@beep/law-practice-server/_test/Citation/CaseResourceObjects";
+  CitationFrozenEditionFailure,
+  CitationFrozenEditions,
+} from "@beep/law-practice-server/_test/Citation/FrozenEditions";
 import { prepareCitationResolution } from "@beep/law-practice-server/_test/Citation/ResolutionInput";
+import {
+  CitationResourceModelInput,
+  CitationResourceModels,
+  CitationResourceObject,
+  CitationResourceObjectFailure,
+  makeCitationResourceObjects,
+} from "@beep/law-practice-server/_test/Citation/ResourceObjects";
 import {
   CitationRuntimeDictionaryComparison,
   makeCitationRuntimeDictionary,
@@ -40,6 +44,15 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CitationCallbackObservation, prepareCallbackObservation } from "./CitationCallbackSession.fixtures.ts";
 
+// These histories have no selected edition; any artifact lookup is a regression.
+const unusedEditions = CitationFrozenEditions.of({
+  lookup: Effect.fn("CaseOnlyTest.unusedEdition")(() =>
+    Effect.fail(CitationFrozenEditionFailure.make({ reason: "missing-edition" }))
+  ),
+  lookupMany: Effect.fn("CaseOnlyTest.unusedEditions")(() =>
+    Effect.fail(CitationFrozenEditionFailure.make({ reason: "missing-edition" }))
+  ),
+});
 const Operation = S.Union([
   S.Struct({ kind: S.tag("create"), reference: S.Natural }),
   S.Struct({ kind: S.tag("change"), reference: S.Natural, field: S.Literals(["page", "reporter"]), value: S.String }),
@@ -65,7 +78,7 @@ const Corpus = S.Struct({
     })
   ),
 });
-const modelFailure = () => CitationCaseResourceObjectFailure.make({ reason: "model-failed" });
+const modelFailure = () => CitationResourceObjectFailure.make({ reason: "model-failed" });
 
 it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("live case-resource objects", (it) => {
   it.effect("composes current semantic owner fields and exact hashes with the source table in all 38 events", () =>
@@ -110,22 +123,20 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("live case-resource 
         );
         const reference = (index: number) =>
           CitationGroupMember.cases.Mention.make({ mentionId: A.getUnsafe(prepared.mentions, index).id });
-        const models = CitationCaseResourceModels.of({
+        const models = CitationResourceModels.of({
           read: Effect.fn("LiveCaseTest.read")(function* (ref: CitationGroupMember) {
             const citation = yield* owner.citationOf(ref).pipe(Effect.mapError(modelFailure));
             if (citation.type !== "case") return yield* modelFailure();
-            return CitationCaseResourceHashInput.make({
+            return CitationResourceModelInput.make({
               citation,
-              selectedEdition: O.none(),
               missingPageIdentityHash: O.none(),
             });
           }),
-          step: work.step.pipe(
-            Effect.mapError(() => CitationCaseResourceObjectFailure.make({ reason: "limit-exceeded" }))
-          ),
+          step: work.step.pipe(Effect.mapError(() => CitationResourceObjectFailure.make({ reason: "limit-exceeded" }))),
         });
-        const objects = yield* makeCitationCaseResourceObjects(prepared.limits).pipe(
-          Effect.provideService(CitationCaseResourceModels, models)
+        const objects = yield* makeCitationResourceObjects(prepared.limits).pipe(
+          Effect.provideService(CitationResourceModels, models),
+          Effect.provideService(CitationFrozenEditions, unusedEditions)
         );
         let comparisons = A.empty<readonly [number, number]>();
         const comparison = CitationRuntimeDictionaryComparison.of({
@@ -140,7 +151,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("live case-resource 
           entries: prepared.limits.authorities,
           iterations: prepared.limits.resolutionIterations,
         }).pipe(Effect.provideService(CitationRuntimeDictionaryComparison, comparison));
-        let resources = A.empty<CitationCaseResourceObject>();
+        let resources = A.empty<CitationResourceObject>();
         yield* Effect.acquireUseRelease(
           owner.start,
           () =>
@@ -200,7 +211,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("live case-resource 
                 expect(comparisons, row.name).toEqual(event.comparisons);
                 events += 1;
               }
-              expect((yield* Effect.flip(objects.key(CitationCaseResourceObject.make({ slot: 0 })))).reason).toBe(
+              expect((yield* Effect.flip(objects.key(CitationResourceObject.make({ slot: 0 })))).reason).toBe(
                 "unknown-object"
               );
             }),
@@ -222,21 +233,23 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("live case-resource 
         });
         let reads = 0;
         let denied = false;
-        const models = CitationCaseResourceModels.of({
+        const models = CitationResourceModels.of({
           read: Effect.fn("LiveCaseControls.read")(() =>
             Effect.sync(() => {
               reads += 1;
             }).pipe(Effect.andThen(Effect.fail(modelFailure())))
           ),
           step: Effect.suspend(() =>
-            denied ? Effect.fail(CitationCaseResourceObjectFailure.make({ reason: "limit-exceeded" })) : Effect.void
+            denied ? Effect.fail(CitationResourceObjectFailure.make({ reason: "limit-exceeded" })) : Effect.void
           ),
         });
-        const objects = yield* makeCitationCaseResourceObjects(limits).pipe(
-          Effect.provideService(CitationCaseResourceModels, models)
+        const objects = yield* makeCitationResourceObjects(limits).pipe(
+          Effect.provideService(CitationResourceModels, models),
+          Effect.provideService(CitationFrozenEditions, unusedEditions)
         );
-        const foreign = yield* makeCitationCaseResourceObjects(limits).pipe(
-          Effect.provideService(CitationCaseResourceModels, models)
+        const foreign = yield* makeCitationResourceObjects(limits).pipe(
+          Effect.provideService(CitationResourceModels, models),
+          Effect.provideService(CitationFrozenEditions, unusedEditions)
         );
         const first = yield* objects.create(ref);
         expect(first.slot).toBe(0);
@@ -249,7 +262,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("live case-resource 
         expect((yield* Effect.flip(objects.create(ref))).reason).toBe("limit-exceeded");
         expect(yield* objects.referenceOf(first)).toEqual(ref);
         expect((yield* Effect.flip(objects.key(yield* foreign.create(ref)))).reason).toBe("unknown-object");
-        expect((yield* Effect.flip(objects.key(CitationCaseResourceObject.make({ slot: first.slot })))).reason).toBe(
+        expect((yield* Effect.flip(objects.key(CitationResourceObject.make({ slot: first.slot })))).reason).toBe(
           "unknown-object"
         );
         expect((yield* Effect.flip(objects.key(first))).reason).toBe("model-failed");
@@ -260,7 +273,10 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("live case-resource 
         yield* foreign.close;
         expect(
           (yield* Effect.flip(
-            makeCitationCaseResourceObjects({}).pipe(Effect.provideService(CitationCaseResourceModels, models))
+            makeCitationResourceObjects({}).pipe(
+              Effect.provideService(CitationResourceModels, models),
+              Effect.provideService(CitationFrozenEditions, unusedEditions)
+            )
           )).reason
         ).toBe("invalid-input");
       })
@@ -273,12 +289,13 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("live case-resource 
       const ref = CitationGroupMember.cases.Mention.make({
         mentionId: CitationMentionId.make(`cm1:${Str.repeat(64)("0")}`),
       });
-      const models = CitationCaseResourceModels.of({
+      const models = CitationResourceModels.of({
         read: Effect.fn("LiveCaseConcurrentControls.read")(() => Effect.fail(modelFailure())),
         step: Effect.void,
       });
-      const objects = yield* makeCitationCaseResourceObjects(limits).pipe(
-        Effect.provideService(CitationCaseResourceModels, models)
+      const objects = yield* makeCitationResourceObjects(limits).pipe(
+        Effect.provideService(CitationResourceModels, models),
+        Effect.provideService(CitationFrozenEditions, unusedEditions)
       );
       const results = yield* Effect.all([Effect.result(objects.create(ref)), Effect.result(objects.create(ref))], {
         concurrency: "unbounded",

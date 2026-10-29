@@ -5,8 +5,6 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import * as A from "effect/Array";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { CourtId, CourtReporterArtifactVersion, ReporterId } from "../CourtReporterVocabulary/index.ts";
 import {
@@ -122,22 +120,10 @@ const CasePublicationFields = S.Struct({
  * @since 0.0.0
  */
 export class CitationCasePublication extends S.Opaque<CitationCasePublication, { readonly brand: unique symbol }>()(
-  CasePublicationFields.check(
-    S.makeFilter(
-      (publication) => {
-        const selected = publication.selectedEdition;
-        return O.isNone(selected) || A.some(publication.editions, (candidate) => candidate.edition === selected.value);
-      },
-      $I.annote("CaseEditionMembership", {
-        title: "Case Edition Membership",
-        description: "A selected edition must occur in the versioned case publication candidates.",
-        message: "Selected edition is absent from case publication candidates.",
-      })
-    )
-  ).pipe(
+  CasePublicationFields.pipe(
     $I.annoteSchema("CitationCasePublication", {
       description:
-        "Case publication candidates, historical edition identity and selected member; vocabulary resolution stays at the engine boundary.",
+        "Case candidates and independent selected edition retained across source mutations; vocabulary resolution stays at the engine boundary.",
     })
   )
 ) {}

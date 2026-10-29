@@ -6,8 +6,6 @@
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
 import { Sha256Hex } from "@beep/schema";
-import * as A from "effect/Array";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const $I = $LawPracticeDomainId.create("values/Citation/Citation.resource");
@@ -103,20 +101,10 @@ const PublicationFields = S.Struct({
  * @since 0.0.0
  */
 export class CitationPublication extends S.Opaque<CitationPublication, { readonly brand: unique symbol }>()(
-  PublicationFields.check(
-    S.makeFilter(
-      (publication) =>
-        O.isNone(publication.selectedEdition) || A.contains(publication.editions, publication.selectedEdition.value),
-      $I.annote("SelectedEditionMembership", {
-        title: "Selected Edition Membership",
-        description: "A selected edition must occur among the publication's candidate identities.",
-        message: "Selected edition is absent from publication candidates.",
-      })
-    )
-  ).pipe(
+  PublicationFields.pipe(
     $I.annoteSchema("CitationPublication", {
       description:
-        "Publication candidate identities and optional selected member, separate from case-reporter vocabulary IDs.",
+        "Publication candidates and an independent selected identity retained across source candidate mutations; no case-reporter IDs.",
     })
   )
 ) {}

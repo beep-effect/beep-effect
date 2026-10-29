@@ -1,8 +1,7 @@
-import { fileURLToPath } from "node:url";
 import { CitationEditionRef } from "@beep/law-practice-domain/values";
 import { makeCitationFrozenEditions } from "@beep/law-practice-server/_test/Citation/FrozenEditions";
 import { encodeCitationRuntimeEdition } from "@beep/law-practice-server/_test/Citation/PublicationResourceHash";
-import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
+import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
@@ -10,62 +9,17 @@ import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-
-const SourceType = S.fromJsonString(S.Struct({ pythonType: S.String }));
-const Corpus = S.fromJsonString(
-  S.Struct({ artifacts: S.Record(Sha256Hex, S.Struct({ kind: S.String, payload: S.String })) })
-);
-const Expected = S.fromJsonString(
-  S.Struct({
-    schemaVersion: S.Literal("citation-frozen-editions/v1"),
-    manifestSha256: S.Literal("b6d3fdd9b6fb4e006c3ede86639c46e7579ff03d39091bdd74ca60919dfe648e"),
-    editions: S.Array(
-      S.Struct({
-        edition: CitationEditionRef,
-        family: S.Literals(["case", "law", "journal"]),
-        shortName: S.String,
-        runtimePayloadSha256: Sha256Hex,
-      })
-    ),
-  })
-);
-const fixtures = Effect.gen(function* () {
-  const fs = yield* FileSystem.FileSystem;
-  const raw = yield* fs.readFileString(
-    fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/operation-cases.json", import.meta.url))
-  );
-  expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
-    "ae441000ddc90537864e3fdd4a9dfc4aa81af37a65818b48ce9bf37d95d1eeb1"
-  );
-  const corpus = yield* S.decodeEffect(Corpus)(raw);
-  let reporters = A.empty<{ ref: Sha256Hex; payload: string }>();
-  let editions = A.empty<{ ref: Sha256Hex; payload: string }>();
-  for (const [ref, row] of R.toEntries(corpus.artifacts)) {
-    if (row.kind !== "model-value") continue;
-    const tag = yield* S.decodeEffect(SourceType)(row.payload);
-    if (tag.pythonType === "eyecite.models.Reporter") reporters = A.append(reporters, { ref, payload: row.payload });
-    if (tag.pythonType === "eyecite.models.Edition") editions = A.append(editions, { ref, payload: row.payload });
-  }
-  const expectedRaw = yield* fs.readFileString(
-    fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/frozen-editions.json", import.meta.url))
-  );
-  expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(expectedRaw))).toBe(
-    "0c23ff189ec5c381303af14c79f630a4d7910a11374308f9c7400ca3f79faf0d"
-  );
-  return { bundle: { reporters, editions }, expected: yield* S.decodeEffect(Expected)(expectedRaw) };
-});
+import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
 
 it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("authenticated frozen editions", (it) => {
   it.effect("authenticates all 2430 reporters / 2533 editions and matches every actual source runtime payload", () =>
     Effect.gen(function* () {
-      const { bundle, expected } = yield* fixtures;
+      const { bundle, expected } = yield* loadCitationFrozenEditionFixtures();
       const adapter = yield* makeCitationFrozenEditions(bundle);
       expect(bundle.reporters).toHaveLength(2430);
       expect(expected.editions).toHaveLength(2533);
@@ -102,7 +56,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("authenticated froze
     "rejects missing/duplicate identities, edited reporter/edition payloads and self-consistent replacement identities",
     () =>
       Effect.gen(function* () {
-        const { bundle } = yield* fixtures;
+        const { bundle } = yield* loadCitationFrozenEditionFixtures();
         expect(
           (yield* Effect.flip(makeCitationFrozenEditions({ ...bundle, reporters: A.drop(bundle.reporters, 1) }))).reason
         ).toBe("invalid-input");
@@ -145,7 +99,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("authenticated froze
 
   it.effect("drops failing digest service causes before exposing a partial adapter", () =>
     Effect.gen(function* () {
-      const { bundle } = yield* fixtures;
+      const { bundle } = yield* loadCitationFrozenEditionFixtures();
       const failure = yield* Effect.flip(
         makeCitationFrozenEditions(bundle).pipe(
           Effect.provideService(

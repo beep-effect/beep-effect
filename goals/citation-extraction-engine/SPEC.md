@@ -612,6 +612,15 @@ instead of silently splitting delivery or weakening scope.
   discarded raw order. Exact runtime equality supersedes the older bag-based
   authority fallback for these cases; adapter/corpus integration remains open.
 
+- **2026-10-29 independent edition state:** source all_editions mutations
+  retain edition_guess, including after clearing the candidate list. The
+  provisional semantic codecs therefore retain selectedEdition independently
+  of candidate membership. Actual case/law/journal publication snapshots and
+  mixed dictionary behavior are recorded in
+  `history/evidence/2026-10-29-mixed-resource-objects.md`. Artifact-kind/content
+  validation remains at the engine boundary; structural semantics do not
+  attest parser output. This correction grants no semantic parity waiver.
+
 - **2026-10-28 vocabulary vintage separation:** consume current public stable
   court/case-reporter IDs while preserving reporters-db 3.2.53/courts-db 0.10.22
   parser metadata, edition dates and court selection order. Three exact legacy

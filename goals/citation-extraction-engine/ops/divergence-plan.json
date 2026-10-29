@@ -21,7 +21,10 @@
         "goals/citation-extraction-engine/ops/export-operations.py",
         "goals/citation-extraction-engine/history/evidence/2026-10-29-publication-resource-hashes.md",
         "packages/law-practice/use-cases/test/fixtures/eyecite/publication-resource-hashes.json",
-        "goals/citation-extraction-engine/ops/probe-publication-resource-hashes.py"
+        "goals/citation-extraction-engine/ops/probe-publication-resource-hashes.py",
+        "goals/citation-extraction-engine/history/evidence/2026-10-29-mixed-resource-objects.md",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/live-resources.json",
+        "goals/citation-extraction-engine/ops/probe-live-resources.py"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
@@ -87,7 +90,10 @@
       "id": "python-class-to-semantic-tag",
       "statement": "Map canonical Python citation classes to semantic union discriminants without requiring inheritance or losing observable legal fields/method behavior.",
       "referencePaths": [
-        "goals/citation-extraction-engine/ops/export-operations.py"
+        "goals/citation-extraction-engine/ops/export-operations.py",
+        "goals/citation-extraction-engine/history/evidence/2026-10-29-mixed-resource-objects.md",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/live-resources.json",
+        "goals/citation-extraction-engine/ops/probe-live-resources.py"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

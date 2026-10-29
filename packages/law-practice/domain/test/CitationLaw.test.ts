@@ -75,7 +75,7 @@ describe("canonical full law semantic schema", () => {
     })
   );
 
-  it.effect("keeps unknown and ambiguous publication identities as data and checks selected membership", () =>
+  it.effect("preserves unknown, ambiguous and independently retained selected publication identities", () =>
     Effect.gen(function* () {
       const unknown = yield* S.decodeEffect(CitationPublication)({ editions: [], selectedEdition: null });
       const ambiguous = yield* S.decodeEffect(CitationPublication)({
@@ -84,10 +84,10 @@ describe("canonical full law semantic schema", () => {
       });
       expect(unknown.selectedEdition).toEqual(O.none());
       expect(ambiguous.editions).toEqual([cfr, usc, cfr]);
-      expect(Result.isFailure(S.decodeResult(CitationPublication)({ editions: [cfr], selectedEdition: usc }))).toBe(
-        true
-      );
-      expect(Result.isFailure(S.decodeResult(CitationPublication)({ editions: [], selectedEdition: cfr }))).toBe(true);
+      const retained = yield* S.decodeEffect(CitationPublication)({ editions: [cfr], selectedEdition: usc });
+      expect(yield* S.encodeEffect(CitationPublication)(retained)).toEqual({ editions: [cfr], selectedEdition: usc });
+      const cleared = yield* S.decodeEffect(CitationPublication)({ editions: [], selectedEdition: cfr });
+      expect(yield* S.encodeEffect(CitationPublication)(cleared)).toEqual({ editions: [], selectedEdition: cfr });
     })
   );
 

@@ -82,7 +82,7 @@ describe("canonical semantic citation models", () => {
 
   it.effect("retains historical edition distinctions when public reporter identities coincide", () =>
     Effect.gen(function* () {
-      // Format-only candidate identities exercise the membership contract.
+      // Format-only identities exercise independent candidate/selection state.
       // Engine artifact resolution and the exact CIT mapping remain separate.
       const first = "0000000000000000000000000000000000000000000000000000000000000000";
       const second = "1111111111111111111111111111111111111111111111111111111111111111";
@@ -97,7 +97,8 @@ describe("canonical semantic citation models", () => {
       const value = yield* S.decodeEffect(CitationCasePublication)(candidates);
       expect(value.editions).toHaveLength(2);
       expect(yield* S.encodeEffect(CitationCasePublication)(value)).toEqual(candidates);
-      expect(Result.isFailure(S.decodeResult(CitationCasePublication)({ ...candidates, editions: [] }))).toBe(true);
+      const retained = yield* S.decodeEffect(CitationCasePublication)({ ...candidates, editions: [] });
+      expect(yield* S.encodeEffect(CitationCasePublication)(retained)).toEqual({ ...candidates, editions: [] });
     })
   );
 
@@ -176,9 +177,8 @@ describe("canonical semantic citation models", () => {
     })
   );
 
-  // Generate each family independently: combining seven checked schemas in a
-  // single root multiplies discard rates for dependent edition membership.
-  // Positive selected-member states are covered by the focused test above.
+  // Generate each family independently so codec failures identify the family.
+  // Candidate/selection independence is also covered by the focused test above.
   for (const [name, schema] of [
     ["full case", FullCaseCitation],
     ["short case", ShortFormCaseCitation],
