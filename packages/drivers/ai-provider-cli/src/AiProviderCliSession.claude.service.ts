@@ -23,6 +23,7 @@ import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+import { observeManagedSession } from "./AiProviderCliSession.lifecycle.ts";
 import {
   ManagedSessionEvent,
   ManagedSessionIdentity,
@@ -45,6 +46,7 @@ import {
   MessagingToolName,
 } from "./AiProviderCliSession.wire.models.ts";
 import type { ManagedSessionError } from "./AiProviderCliSession.errors.ts";
+import type { ManagedSessionObserver } from "./AiProviderCliSession.lifecycle.ts";
 import type { ManagedLaunchProfile, ManagedSessionMessage } from "./AiProviderCliSession.models.ts";
 import type { ManagedSession } from "./AiProviderCliSession.service.ts";
 
@@ -76,7 +78,10 @@ const isInitializationNotice = S.is(InitializationNotice);
  * @category resource-management
  * @since 0.0.0
  */
-export const openClaude = Effect.fn("AiProviderCliSession.openClaude")(function* (profile: ManagedLaunchProfile) {
+export const openClaude = Effect.fn("AiProviderCliSession.openClaude")(function* (
+  profile: ManagedLaunchProfile,
+  observer?: ManagedSessionObserver
+) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const crypto = yield* Crypto.Crypto;
@@ -156,6 +161,12 @@ export const openClaude = Effect.fn("AiProviderCliSession.openClaude")(function*
       forceKillAfter: Duration.seconds(3),
     }
   ).pipe(transportFailure("spawn"));
+  const process = { pid: handle.pid, exitCode: handle.exitCode, isRunning: handle.isRunning };
+  if (observer !== undefined)
+    yield* observeManagedSession(
+      "observe-started",
+      Effect.suspend(() => observer.started(process))
+    );
   const outbound = yield* Queue.bounded<string>(16);
   const events = yield* PubSub.sliding<ManagedSessionEvent>(128);
   const ready = yield* Deferred.make<void, ManagedSessionError>();
@@ -306,6 +317,7 @@ export const openClaude = Effect.fn("AiProviderCliSession.openClaude")(function*
     );
   });
   return {
+    process,
     identity: ManagedSessionIdentity.make({
       provider: "claude",
       sessionId,

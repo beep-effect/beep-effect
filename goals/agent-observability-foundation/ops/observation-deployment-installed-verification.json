@@ -1,0 +1,72 @@
+{
+  "recordedAt": "2026-10-29T04:33:04.377303+00:00",
+  "result": "passed",
+  "syntheticOnly": true,
+  "productionRollout": false,
+  "goalComplete": false,
+  "artifactRoot": "/tmp/obs-deploy-404jpp17",
+  "deliberateMemoryExhaustion": false,
+  "registeredPlanCommand": true,
+  "bundledEntrypoint": true,
+  "actualInstalledUserUnits": true,
+  "sharedCaddyAutosaveUnchanged": true,
+  "frontendAutosaveDisabled": true,
+  "caddyConfigurationValidated": true,
+  "systemdUnitsVerified": true,
+  "startsPaused": true,
+  "privateRoutesDenied": {
+    "GET /health": 404,
+    "GET /metrics": 404,
+    "POST /control/resume": 404,
+    "POST /control/pause": 404,
+    "GET /v1/traces": 404,
+    "POST /v1/traces/": 404,
+    "POST /v1/launches": 404
+  },
+  "pausedIntakeStatus": 503,
+  "oversizedStatus": 413,
+  "incompleteHeaderSeconds": 2.001,
+  "unrelatedSecretsAbsent": true,
+  "limits": {
+    "worker": {
+      "memory.max": "536870912",
+      "memory.swap.max": "0",
+      "cpu.max": "50000 100000",
+      "pids.max": "64"
+    },
+    "intake": {
+      "memory.max": "134217728",
+      "memory.swap.max": "0",
+      "cpu.max": "25000 100000",
+      "pids.max": "64"
+    }
+  },
+  "dependentIntakeStopped": true,
+  "changedBundleRefused": true,
+  "journalPreservedOnRefusal": true,
+  "verifiedBundleSha256": "d80c878eee0486e6f7c27ca816bd7d7417d68432d975cf445274b8b3c6f996c3",
+  "artifactSha256": {
+    "worker.sha256": "aecaa950f1e30d41d5d08096f2b049bc816ae61b46bec1e8e357f379e8a2f0dd",
+    "caddy": "678ade3bfc088749c81a681adc603333ee0bb023b6a6cfe3c0f58bef8ff854e9",
+    "intake.json": "2a326fe98c3ac1a904ac03887bd627b2ba2f4046cd8e844557c7b31014c636f7",
+    "intake.sha256": "d7868ec53845cdb044173bfc8d7806ebc154190c1183a96affec6542f1515839"
+  },
+  "cleanup": [
+    {
+      "unit": "beep-observation-deploy-1a9f36efc1a5.service",
+      "mainPid": 0,
+      "ownedUnitFileRemoved": true
+    },
+    {
+      "unit": "beep-observation-deploy-1a9f36efc1a5-intake.service",
+      "mainPid": 0,
+      "ownedUnitFileRemoved": true
+    }
+  ],
+  "sourceSha256": {
+    "packages/tooling/tool/cli/src/commands/AIMetrics/ObservationWorker.entry.ts": "c91549ab1020bea7eab50f2751a9470bef43b43a32bd4b205fbfbd8b2263ee5e",
+    "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationDeployment.ts": "b4220e80d0dbe2b41982228d2a6379dc0343acf0bc52e351130fb41bbea72762",
+    "packages/tooling/tool/cli/src/commands/AIMetrics/AIMetrics.command.ts": "bddd3e906afe6cf7a49a2526af5990c76e40b22ec8c05bd4a935803bd7cfce1c",
+    "goals/agent-observability-foundation/ops/verify-observation-deployment.py": "faa491d415a40dd06ef99bbda68ab1ff16c35367156061e23072ab4c14f5eaef"
+  }
+}

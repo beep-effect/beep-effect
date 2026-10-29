@@ -1,0 +1,1129 @@
+{
+  "scope": "Direct sourceSha256 fields in packet verification receipts only; freshness is not behavioral proof and historical snapshots are not rewritten",
+  "receipts": [
+    {
+      "receipt": "atomic-pause-package-verification.json",
+      "recordedSources": 164,
+      "mismatches": []
+    },
+    {
+      "receipt": "claim-population-verification.json",
+      "recordedSources": 11,
+      "mismatches": [
+        {
+          "path": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Inventory.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/tool/cli/test/ai-metrics-inventory.test.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/tool/cli/test/fixtures/managed-observation-command.ts",
+          "status": "changed"
+        },
+        {
+          "path": "goals/agent-observability-foundation/ops/verify-worker-entrypoint.py",
+          "status": "changed"
+        },
+        {
+          "path": "goals/agent-observability-foundation/ops/managed-owner-typecheck.json",
+          "status": "changed"
+        }
+      ]
+    },
+    {
+      "receipt": "claim-population-worker-verification.json",
+      "recordedSources": 28,
+      "mismatches": [
+        {
+          "path": "packages/tooling/tool/cli/test/fixtures/managed-observation-command.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-worker.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-runtime.ts",
+          "status": "changed"
+        },
+        {
+          "path": "goals/agent-observability-foundation/ops/verify-worker-entrypoint.py",
+          "status": "changed"
+        }
+      ]
+    },
+    {
+      "receipt": "claim-store-disaster-verification.json",
+      "recordedSources": 4,
+      "mismatches": []
+    },
+    {
+      "receipt": "claim-store-disaster-worker-verification.json",
+      "recordedSources": 28,
+      "mismatches": [
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-worker.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-runtime.ts",
+          "status": "changed"
+        }
+      ]
+    },
+    {
+      "receipt": "coverage-reconciliation-verification.json",
+      "recordedSources": 7,
+      "mismatches": [
+        {
+          "path": "packages/tooling/library/ai-metrics/src/index.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Inventory.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/AIMetrics/AIMetrics.command.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/tool/cli/test/ai-metrics-inventory.test.ts",
+          "status": "changed"
+        }
+      ]
+    },
+    {
+      "receipt": "credential-cli-verification.json",
+      "recordedSources": 4,
+      "mismatches": []
+    },
+    {
+      "receipt": "credential-health-installed-verification.json",
+      "recordedSources": 6,
+      "mismatches": []
+    },
+    {
+      "receipt": "dankserver-pre-metadata-route-verification.json",
+      "recordedSources": 18,
+      "mismatches": [
+        {
+          "path": "ansible/roles/monitoring/templates/otel-config.yaml.j2",
+          "status": "changed"
+        },
+        {
+          "path": "ansible/roles/monitoring/tests/test_otel_config.py",
+          "status": "changed"
+        },
+        {
+          "path": "ansible/roles/monitoring/tests/README.md",
+          "status": "changed"
+        },
+        {
+          "path": "ansible/group_vars/all.yml",
+          "status": "changed"
+        },
+        {
+          "path": "ansible/roles/phoenix/tasks/main.yml",
+          "status": "changed"
+        },
+        {
+          "path": "ansible/roles/monitoring/tasks/main.yml",
+          "status": "changed"
+        },
+        {
+          "path": "ansible/roles/monitoring/templates/prometheus-alerts.yml.j2",
+          "status": "changed"
+        },
+        {
+          "path": "ansible/roles/monitoring/tests/test_otel_queue.py",
+          "status": "changed"
+        },
+        {
+          "path": "ansible/roles/monitoring/tests/test_otel_alerts.py",
+          "status": "changed"
+        }
+      ]
+    },
+    {
+      "receipt": "dankserver-verification.json",
+      "recordedSources": 18,
+      "mismatches": [
+        {
+          "path": "ansible/group_vars/all.yml",
+          "status": "changed"
+        },
+        {
+          "path": "ansible/roles/phoenix/tasks/main.yml",
+          "status": "changed"
+        },
+        {
+          "path": "ansible/roles/monitoring/tasks/main.yml",
+          "status": "changed"
+        },
+        {
+          "path": "ansible/roles/monitoring/templates/prometheus-alerts.yml.j2",
+          "status": "changed"
+        }
+      ]
+    },
+    {
+      "receipt": "implementation-verification.json",
+      "recordedSources": 144,
+      "mismatches": [
+        {
+          "path": "packages/tooling/library/ai-metrics/src/native-http.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-control.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-worker.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/test/fixtures/native-delivery-process.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/test/fixtures/native-phoenix-proof.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/test/native-delivery-crash.test.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/test/native-http.test.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/test/observation-control.test.ts",
+          "status": "changed"
+        },
+        {
+          "path": "goals/agent-observability-foundation/ops/verify-native-collector-route.py",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/test/native-schedule.test.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/native-schedule.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/test/observation-runtime.test.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-runtime.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/internal/observation-export-reader.ts",
+          "status": "changed"
+        },
+        {
+          "path": "goals/agent-observability-foundation/ops/managed-owner-typecheck.json",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationDeployment.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/tool/cli/test/ai-metrics-observation-deployment.test.ts",
+          "status": "changed"
+        },
+        {
+          "path": "goals/agent-observability-foundation/ops/verify-observation-deployment.py",
+          "status": "changed"
+        }
+      ]
+    },
+    {
+      "receipt": "independent-health-verification.json",
+      "recordedSources": 5,
+      "mismatches": [
+        {
+          "path": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationDeployment.ts",
+          "status": "changed"
+        },
+        {
+          "path": "goals/agent-observability-foundation/ops/verify-observation-deployment.py",
+          "status": "changed"
+        }
+      ]
+    },
+    {
+      "receipt": "journal-ownership-verification.json",
+      "recordedSources": 4,
+      "mismatches": [
+        {
+          "path": "packages/tooling/library/ai-metrics/src/transcript-intake.ts",
+          "status": "changed"
+        }
+      ]
+    },
+    {
+      "receipt": "journal-sizing-cli-verification.json",
+      "recordedSources": 3,
+      "mismatches": [
+        {
+          "path": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationDeployment.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/tool/cli/test/ai-metrics-observation-deployment.test.ts",
+          "status": "changed"
+        },
+        {
+          "path": "goals/agent-observability-foundation/ops/verify-observation-deployment.py",
+          "status": "changed"
+        }
+      ]
+    },
+    {
+      "receipt": "journal-sizing-installed-verification.json",
+      "recordedSources": 4,
+      "mismatches": [
+        {
+          "path": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationDeployment.ts",
+          "status": "changed"
+        },
+        {
+          "path": "goals/agent-observability-foundation/ops/verify-observation-deployment.py",
+          "status": "changed"
+        }
+      ]
+    },
+    {
+      "receipt": "launch-claims-entrypoint-verification.json",
+      "recordedSources": 22,
+      "mismatches": [
+        {
+          "path": "packages/tooling/library/ai-metrics/test/fixtures/managed-observation-process.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-launch-claims.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-launch-client.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-worker.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-launch.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-runtime.ts",
+          "status": "changed"
+        },
+        {
+          "path": "goals/agent-observability-foundation/ops/verify-worker-entrypoint.py",
+          "status": "changed"
+        }
+      ]
+    },
+    {
+      "receipt": "launch-claims-verification.json",
+      "recordedSources": 10,
+      "mismatches": [
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-launch-claims.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/index.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/test/fixtures/managed-observation-process.ts",
+          "status": "changed"
+        },
+        {
+          "path": "goals/agent-observability-foundation/ops/verify-worker-entrypoint.py",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/test/observation-launch-claims-crash.test.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/test/observation-launch-claims-restore.test.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/test/fixtures/observation-claim-process.ts",
+          "status": "changed"
+        }
+      ]
+    },
+    {
+      "receipt": "launch-client-entrypoint-verification.json",
+      "recordedSources": 15,
+      "mismatches": [
+        {
+          "path": "packages/tooling/library/ai-metrics/test/fixtures/observation-launch-client-process.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-launch-client.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-worker.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-launch.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-runtime.ts",
+          "status": "changed"
+        },
+        {
+          "path": "goals/agent-observability-foundation/ops/verify-worker-entrypoint.py",
+          "status": "changed"
+        }
+      ]
+    },
+    {
+      "receipt": "launch-client-verification.json",
+      "recordedSources": 10,
+      "mismatches": [
+        {
+          "path": "bun.lock",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/package.json",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-launch-client.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-worker.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/index.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/test/observation-launch-client.test.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/test/fixtures/observation-launch-client-process.ts",
+          "status": "changed"
+        },
+        {
+          "path": "goals/agent-observability-foundation/ops/verify-worker-entrypoint.py",
+          "status": "changed"
+        }
+      ]
+    },
+    {
+      "receipt": "launch-facts-verification.json",
+      "recordedSources": 10,
+      "mismatches": [
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-launch-facts.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-worker.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/index.ts",
+          "status": "changed"
+        }
+      ]
+    },
+    {
+      "receipt": "launch-http-entrypoint-verification.json",
+      "recordedSources": 13,
+      "mismatches": [
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-launch-http.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-launch-facts.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-worker.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-launch.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-runtime.ts",
+          "status": "changed"
+        },
+        {
+          "path": "goals/agent-observability-foundation/ops/verify-worker-entrypoint.py",
+          "status": "changed"
+        }
+      ]
+    },
+    {
+      "receipt": "launch-http-verification.json",
+      "recordedSources": 9,
+      "mismatches": [
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-launch-http.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/native-http.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-worker.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-launch.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/index.ts",
+          "status": "changed"
+        },
+        {
+          "path": "goals/agent-observability-foundation/ops/verify-worker-entrypoint.py",
+          "status": "changed"
+        }
+      ]
+    },
+    {
+      "receipt": "launch-outbox-entrypoint-verification.json",
+      "recordedSources": 22,
+      "mismatches": [
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-launch-claims.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-launch-client.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-worker.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-launch.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-runtime.ts",
+          "status": "changed"
+        },
+        {
+          "path": "goals/agent-observability-foundation/ops/verify-worker-entrypoint.py",
+          "status": "changed"
+        }
+      ]
+    },
+    {
+      "receipt": "launch-outbox-verification.json",
+      "recordedSources": 11,
+      "mismatches": [
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-launch-claims.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/index.ts",
+          "status": "changed"
+        },
+        {
+          "path": "goals/agent-observability-foundation/ops/verify-worker-entrypoint.py",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/test/observation-launch-outbox.test.ts",
+          "status": "changed"
+        }
+      ]
+    },
+    {
+      "receipt": "live-canary-installed-verification.json",
+      "recordedSources": 5,
+      "mismatches": [
+        {
+          "path": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationDeployment.ts",
+          "status": "changed"
+        },
+        {
+          "path": "goals/agent-observability-foundation/ops/verify-observation-deployment.py",
+          "status": "changed"
+        }
+      ]
+    },
+    {
+      "receipt": "managed-observer-entrypoint-verification.json",
+      "recordedSources": 21,
+      "mismatches": [
+        {
+          "path": "packages/tooling/library/ai-metrics/test/fixtures/managed-observation-process.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-launch-client.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-worker.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-launch.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-runtime.ts",
+          "status": "changed"
+        },
+        {
+          "path": "goals/agent-observability-foundation/ops/verify-worker-entrypoint.py",
+          "status": "changed"
+        }
+      ]
+    },
+    {
+      "receipt": "managed-observer-verification.json",
+      "recordedSources": 12,
+      "mismatches": [
+        {
+          "path": "packages/tooling/library/ai-metrics/test/fixtures/managed-observation-process.ts",
+          "status": "changed"
+        },
+        {
+          "path": "goals/agent-observability-foundation/ops/verify-worker-entrypoint.py",
+          "status": "changed"
+        }
+      ]
+    },
+    {
+      "receipt": "managed-owner-command-worker-verification.json",
+      "recordedSources": 27,
+      "mismatches": [
+        {
+          "path": "packages/tooling/tool/cli/test/fixtures/managed-observation-command.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.observation.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.observation.command.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-launch-claims.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-worker.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-runtime.ts",
+          "status": "changed"
+        },
+        {
+          "path": "goals/agent-observability-foundation/ops/verify-worker-entrypoint.py",
+          "status": "changed"
+        }
+      ]
+    },
+    {
+      "receipt": "managed-owner-provisioning-verification.json",
+      "recordedSources": 6,
+      "mismatches": [
+        {
+          "path": "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.observation.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.observation.command.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/tool/cli/test/fixtures/managed-observation-command.ts",
+          "status": "changed"
+        },
+        {
+          "path": "goals/agent-observability-foundation/ops/verify-worker-entrypoint.py",
+          "status": "changed"
+        },
+        {
+          "path": "goals/agent-observability-foundation/ops/managed-owner-typecheck.json",
+          "status": "changed"
+        }
+      ]
+    },
+    {
+      "receipt": "managed-owner-provisioning-worker-verification.json",
+      "recordedSources": 27,
+      "mismatches": [
+        {
+          "path": "packages/tooling/tool/cli/test/fixtures/managed-observation-command.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.observation.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.observation.command.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-launch-claims.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-worker.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-runtime.ts",
+          "status": "changed"
+        },
+        {
+          "path": "goals/agent-observability-foundation/ops/verify-worker-entrypoint.py",
+          "status": "changed"
+        }
+      ]
+    },
+    {
+      "receipt": "managed-owner-recovery-verification.json",
+      "recordedSources": 11,
+      "mismatches": [
+        {
+          "path": "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.observation.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.observation.command.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/tool/cli/test/AgentMessage.observation.test.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/tool/cli/test/fixtures/managed-observation-command.ts",
+          "status": "changed"
+        },
+        {
+          "path": "goals/agent-observability-foundation/ops/managed-owner-typecheck.json",
+          "status": "changed"
+        },
+        {
+          "path": "goals/agent-observability-foundation/ops/verify-worker-entrypoint.py",
+          "status": "changed"
+        }
+      ]
+    },
+    {
+      "receipt": "managed-owner-verification.json",
+      "recordedSources": 9,
+      "mismatches": [
+        {
+          "path": "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.observation.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/tool/cli/test/AgentMessage.observation.test.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-launch-claims.ts",
+          "status": "changed"
+        },
+        {
+          "path": "goals/agent-observability-foundation/ops/managed-owner-typecheck.json",
+          "status": "changed"
+        }
+      ]
+    },
+    {
+      "receipt": "managed-owner-worker-verification.json",
+      "recordedSources": 22,
+      "mismatches": [
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-launch-claims.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-launch-client.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-worker.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-runtime.ts",
+          "status": "changed"
+        },
+        {
+          "path": "goals/agent-observability-foundation/ops/verify-worker-entrypoint.py",
+          "status": "changed"
+        }
+      ]
+    },
+    {
+      "receipt": "native-scheduling-verification.json",
+      "recordedSources": 11,
+      "mismatches": [
+        {
+          "path": "packages/tooling/library/ai-metrics/src/native-schedule.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-worker.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/internal/observation-journal-tables.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/index.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/test/native-schedule.test.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/test/observation-worker.test.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/test/native-delivery-crash.test.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/test/fixtures/native-delivery-process.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/test/fixtures/native-phoenix-proof.ts",
+          "status": "changed"
+        },
+        {
+          "path": "goals/agent-observability-foundation/ops/verify-native-collector-route.py",
+          "status": "changed"
+        }
+      ]
+    },
+    {
+      "receipt": "observation-deployment-installed-verification.json",
+      "recordedSources": 4,
+      "mismatches": [
+        {
+          "path": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationDeployment.ts",
+          "status": "changed"
+        },
+        {
+          "path": "goals/agent-observability-foundation/ops/verify-observation-deployment.py",
+          "status": "changed"
+        }
+      ]
+    },
+    {
+      "receipt": "observation-deployment-verification.json",
+      "recordedSources": 5,
+      "mismatches": [
+        {
+          "path": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationDeployment.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/tool/cli/test/ai-metrics-observation-deployment.test.ts",
+          "status": "changed"
+        },
+        {
+          "path": "goals/agent-observability-foundation/ops/managed-owner-typecheck.json",
+          "status": "changed"
+        },
+        {
+          "path": "goals/agent-observability-foundation/ops/verify-observation-deployment.py",
+          "status": "changed"
+        }
+      ]
+    },
+    {
+      "receipt": "reconstructed-collector-route-verification.json",
+      "recordedSources": 3,
+      "mismatches": [
+        {
+          "path": "packages/tooling/library/ai-metrics/test/fixtures/native-phoenix-proof.ts",
+          "status": "changed"
+        },
+        {
+          "path": "goals/agent-observability-foundation/ops/verify-native-collector-route.py",
+          "status": "changed"
+        }
+      ]
+    },
+    {
+      "receipt": "reconstructed-delivery-verification.json",
+      "recordedSources": 12,
+      "mismatches": [
+        {
+          "path": "packages/tooling/library/ai-metrics/src/internal/observation-export-reader.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/native-schedule.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-runtime.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-worker.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/index.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/test/native-schedule.test.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/test/observation-runtime.test.ts",
+          "status": "changed"
+        },
+        {
+          "path": "goals/agent-observability-foundation/ops/verify-worker-entrypoint.py",
+          "status": "changed"
+        }
+      ]
+    },
+    {
+      "receipt": "replay-package-verification.json",
+      "recordedSources": 164,
+      "mismatches": [
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-control.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-worker.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/test/observation-control.test.ts",
+          "status": "changed"
+        }
+      ]
+    },
+    {
+      "receipt": "review-health-package-verification.json",
+      "recordedSources": 164,
+      "mismatches": [
+        {
+          "path": "packages/tooling/library/ai-metrics/src/native-schedule.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-control.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-worker.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/test/fixtures/native-phoenix-proof.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/test/native-schedule.test.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/test/observation-control.test.ts",
+          "status": "changed"
+        }
+      ]
+    },
+    {
+      "receipt": "runtime-health-verification.json",
+      "recordedSources": 4,
+      "mismatches": [
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-runtime.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/index.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/test/observation-runtime.test.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/test/observation-worker.test.ts",
+          "status": "changed"
+        }
+      ]
+    },
+    {
+      "receipt": "source-cadence-verification.json",
+      "recordedSources": 14,
+      "mismatches": [
+        {
+          "path": "packages/tooling/library/ai-metrics/test/fixtures/write-observation-launch.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-launch.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-runtime.ts",
+          "status": "changed"
+        },
+        {
+          "path": "goals/agent-observability-foundation/ops/verify-worker-entrypoint.py",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/index.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/test/observation-runtime.test.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/test/observation-launch.test.ts",
+          "status": "changed"
+        }
+      ]
+    },
+    {
+      "receipt": "worker-entrypoint-verification.json",
+      "recordedSources": 8,
+      "mismatches": [
+        {
+          "path": "packages/tooling/library/ai-metrics/test/fixtures/write-observation-launch.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-launch.ts",
+          "status": "changed"
+        },
+        {
+          "path": "goals/agent-observability-foundation/ops/verify-worker-entrypoint.py",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/test/fixtures/observation-launch-config.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/test/observation-launch.test.ts",
+          "status": "changed"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/index.ts",
+          "status": "changed"
+        }
+      ]
+    },
+    {
+      "receipt": "workstation-root-verification.json",
+      "recordedSources": 6,
+      "mismatches": []
+    }
+  ],
+  "pathResolution": "ansible/ paths resolve against the dedicated dankserver foundation worktree; other relative paths resolve against this Beep worktree"
+}

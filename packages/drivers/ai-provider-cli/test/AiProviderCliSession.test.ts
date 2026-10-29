@@ -1,6 +1,7 @@
 import {
   AiProviderCliSession,
   ManagedLaunchProfile,
+  ManagedSessionError,
   ManagedSessionMessage,
   ManagedSessionSteering,
 } from "@beep/ai-provider-cli";
@@ -25,6 +26,7 @@ import * as References from "effect/References";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as TestClock from "effect/testing/TestClock";
+import type { ManagedSessionIdentity, ManagedSessionProcess } from "@beep/ai-provider-cli";
 
 const TestLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, AiProviderCliSession.layer);
 const decodeReceivedParams = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
@@ -58,6 +60,114 @@ const syntheticProfile = Effect.fn("SessionTest.profile")(function* (
   });
 });
 it.layer(TestLayer, { timeout: "20 seconds", concurrent: false })("managed native sessions", (it) => {
+  it.effect("observes actual child handles and validated identities exactly once on all managed adapters", () =>
+    Effect.gen(function* () {
+      const sessions = yield* AiProviderCliSession;
+      for (const provider of ["codex", "claude", "grok", "cursor"] as const) {
+        const order = yield* Ref.make<ReadonlyArray<string>>([]);
+        const spawned = yield* Deferred.make<ManagedSessionProcess>();
+        const profile = yield* syntheticProfile(provider);
+        const session = yield* sessions.open(profile, {
+          started: Effect.fn("SessionObserverTest.started")(function* (process: ManagedSessionProcess) {
+            assert.isAbove(process.pid, 0);
+            assert.isTrue(yield* process.isRunning.pipe(Effect.orDie));
+            yield* Deferred.succeed(spawned, process);
+            yield* Ref.update(order, (events) => [...events, "started"]);
+          }),
+          bound: Effect.fn("SessionObserverTest.bound")(function* (identity: ManagedSessionIdentity) {
+            assert.equal(identity.provider, provider);
+            assert.isNotEmpty(identity.sessionId);
+            yield* Ref.update(order, (events) => [...events, "bound"]);
+          }),
+        });
+        assert.deepEqual(yield* Ref.get(order), ["started", "bound"]);
+        assert.equal(session.process.pid, (yield* Deferred.await(spawned)).pid);
+        yield* session.close;
+        assert.isFalse(yield* session.process.isRunning);
+      }
+    })
+  );
+
+  for (const phase of ["started", "bound"] as const) {
+    it.effect(`closes the real child before returning an uncertain ${phase} observation failure`, () =>
+      Effect.gen(function* () {
+        const sessions = yield* AiProviderCliSession;
+        for (const provider of ["codex", "claude", "grok", "cursor"] as const) {
+          const spawned = yield* Deferred.make<ManagedSessionProcess>();
+          const counts = yield* Ref.make({ started: 0, bound: 0 });
+          const rejected = ManagedSessionError.make({
+            reason: "transport",
+            operation: "synthetic-observer",
+            message: "PRIVATE-OBSERVER-CANARY",
+          });
+          const result = yield* sessions
+            .open(yield* syntheticProfile(provider), {
+              started: Effect.fn("SessionObserverTest.started")(function* (process: ManagedSessionProcess) {
+                yield* Deferred.succeed(spawned, process);
+                yield* Ref.update(counts, (value) => ({ ...value, started: value.started + 1 }));
+                if (phase === "started") return yield* rejected;
+              }),
+              bound: () =>
+                Ref.update(counts, (value) => ({ ...value, bound: value.bound + 1 })).pipe(
+                  Effect.andThen(Effect.fail(rejected))
+                ),
+            })
+            .pipe(Effect.flip);
+          assert.equal(result.operation, `observe-${phase}`);
+          assert.notInclude(result.message, "PRIVATE-OBSERVER-CANARY");
+          assert.deepEqual(yield* Ref.get(counts), { started: 1, bound: phase === "started" ? 0 : 1 });
+          // This assertion runs while the caller scope is still alive.
+          assert.isFalse(yield* (yield* Deferred.await(spawned)).isRunning);
+        }
+      })
+    );
+  }
+
+  it.effect("does not bind an identity rejected by runtime validation", () =>
+    Effect.gen(function* () {
+      const spawned = yield* Deferred.make<ManagedSessionProcess>();
+      const bound = yield* Ref.make(0);
+      const result = yield* (yield* AiProviderCliSession)
+        .open(yield* syntheticProfile("codex", "wrong-policy"), {
+          started: (process) => Deferred.succeed(spawned, process).pipe(Effect.asVoid),
+          bound: () => Ref.update(bound, (count) => count + 1),
+        })
+        .pipe(Effect.flip);
+      assert.equal(result.reason, "policy-mismatch");
+      assert.equal(yield* Ref.get(bound), 0);
+      assert.isFalse(yield* (yield* Deferred.await(spawned)).isRunning);
+    })
+  );
+
+  for (const stop of ["timeout", "interrupt"] as const) {
+    it.effect(`cleans up an acquired child on observer ${stop} without a second launch`, () =>
+      Effect.gen(function* () {
+        const sessions = yield* AiProviderCliSession;
+        const spawned = yield* Deferred.make<ManagedSessionProcess>();
+        const count = yield* Ref.make(0);
+        const opening = yield* sessions
+          .open(yield* syntheticProfile("codex"), {
+            started: (process) =>
+              Deferred.succeed(spawned, process).pipe(
+                Effect.andThen(Ref.update(count, (n) => n + 1)),
+                Effect.andThen(Effect.never)
+              ),
+            bound: () => Effect.die("Unexpected bound observation"),
+          })
+          .pipe(Effect.flip, Effect.forkChild);
+        const process = yield* Deferred.await(spawned);
+        if (stop === "timeout") {
+          yield* TestClock.adjust("5 seconds");
+          const error = yield* Fiber.join(opening);
+          assert.equal(error.reason, "timeout");
+          assert.equal(error.operation, "observe-started");
+        } else yield* Fiber.interrupt(opening);
+        assert.equal(yield* Ref.get(count), 1);
+        assert.isFalse(yield* process.isRunning);
+      })
+    );
+  }
+
   it.effect("rejects unreviewed environment keys before creating a process or provider home", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

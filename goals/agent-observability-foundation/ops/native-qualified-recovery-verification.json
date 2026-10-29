@@ -1,0 +1,189 @@
+{
+  "syntheticOnly": true,
+  "productionDeployment": false,
+  "result": "passed",
+  "images": {
+    "phoenix": "arizephoenix/phoenix@sha256:c542e7de1dc1fdd0f938de337d44ebefa7266e91391eed6e7978523d7f6e1f2f",
+    "collector": "otel/opentelemetry-collector-contrib@sha256:1175b03003053962012f5a231f5567f66a3e8fdb960c7835c0e48f7aa1555806"
+  },
+  "fullGoalComplete": false,
+  "deliberateOomExercise": false,
+  "containerResourceLimitsVerified": true,
+  "unprojectedMetadataRouteSpanFilteredAndCounted": true,
+  "invalidProjectionCombinationsFiltered": 5,
+  "boundedProjectionProcessCompleted": true,
+  "automaticSchedulingVerified": true,
+  "qualifiedRecovery": {
+    "result": "passed",
+    "initialState": "unresolved",
+    "finalState": "visible",
+    "oneRequestDroppedBeforeUpstream": true,
+    "schedulerReconstructed": true,
+    "freshAttemptWithIdenticalPayload": true,
+    "qualificationDigest": "8b5cef45144ab0f7d23c937279353b51f94c1f0af04342aeaef39f81be0325f2",
+    "notProcessCrashProof": true,
+    "notRealHarnessCoverage": true
+  },
+  "readback": {
+    "project": "foundation-synthetic-proof",
+    "syntheticOnly": true,
+    "loopbackOnly": true,
+    "responseSha256": "e835b6ecee26217d03af6a15cb43b78e964019d37bf5c65157a52c132fe6e27c",
+    "storedSpans": 9,
+    "nativeSpans": 3,
+    "reconstructedSpans": 6,
+    "reconstructionChecks": [
+      {
+        "scenario": "claude-repeat",
+        "eventId": "5e6a640868b8aea261c699b3c6f8fff5516a60755907af58432470efc96aae5d",
+        "identityAndSessionMatch": true,
+        "nonAdditiveUsage": true,
+        "exactSourceNanosecondsRetained": true,
+        "localDeliveryState": "visible"
+      },
+      {
+        "scenario": "claude-repeat",
+        "eventId": "189cb3d13f4676719d5ffcee9573b9420de272407935133d7d4c66fa5c6d78c2",
+        "identityAndSessionMatch": true,
+        "nonAdditiveUsage": true,
+        "exactSourceNanosecondsRetained": true,
+        "localDeliveryState": "visible"
+      },
+      {
+        "scenario": "codex-last",
+        "eventId": "a79cc12f07528ad3585d56f2c7b313a1886c16b62ba8c6022563eb79a415fb3c",
+        "identityAndSessionMatch": true,
+        "nonAdditiveUsage": true,
+        "exactSourceNanosecondsRetained": true,
+        "localDeliveryState": "visible"
+      },
+      {
+        "scenario": "codex-last",
+        "eventId": "a378c7a29badeeee9da93d0ae4459e054df98015f31fc61e61322a87f67fc61e",
+        "identityAndSessionMatch": true,
+        "nonAdditiveUsage": true,
+        "exactSourceNanosecondsRetained": true,
+        "localDeliveryState": "visible"
+      },
+      {
+        "scenario": "codex-cumulative",
+        "eventId": "5625addd4300944f5b3b45186064c166a949802a9a1b89fcd37d913d824efd71",
+        "identityAndSessionMatch": true,
+        "nonAdditiveUsage": true,
+        "exactSourceNanosecondsRetained": true,
+        "localDeliveryState": "visible"
+      },
+      {
+        "scenario": "codex-cumulative",
+        "eventId": "91a33cc3d7ab83a4eeeb1d7cb94637fa6371e4ff7c4aa75f7a4a8aaa4d337292",
+        "identityAndSessionMatch": true,
+        "nonAdditiveUsage": true,
+        "exactSourceNanosecondsRetained": true,
+        "localDeliveryState": "visible"
+      }
+    ],
+    "nativeAttributeTotals": {
+      "knownTotal": 270,
+      "knownPrompt": 260,
+      "knownCompletion": 15,
+      "nativeSpansMissingTotal": 1
+    },
+    "checks": [
+      {
+        "scenario": "claude-complete",
+        "traceId": "11111111111111111111111111111111",
+        "spanId": "1111111111111111",
+        "eventId": "df0eedea2c0e84fcfd0ced95633801bfb83d819aa50735e2a99c35e1f6980340",
+        "prompt": 130,
+        "completion": 5,
+        "total": 135,
+        "usageComplete": true,
+        "identityAndSessionMatch": true,
+        "privateCanariesAbsent": true,
+        "exactSourceNanosecondsRetained": true,
+        "localDeliveryState": "visible",
+        "priorAcceptanceState": "accepted-unverified"
+      },
+      {
+        "scenario": "openinference-complete",
+        "traceId": "22222222222222222222222222222222",
+        "spanId": "2222222222222222",
+        "eventId": "fcaaa84fb9061fd6397f0b71821b559a72132f4a79bf13f5c89745434605ada5",
+        "prompt": 130,
+        "completion": 5,
+        "total": 135,
+        "usageComplete": true,
+        "identityAndSessionMatch": true,
+        "privateCanariesAbsent": true,
+        "exactSourceNanosecondsRetained": true,
+        "localDeliveryState": "visible",
+        "priorAcceptanceState": "accepted-unverified"
+      },
+      {
+        "scenario": "claude-incomplete",
+        "traceId": "33333333333333333333333333333333",
+        "spanId": "3333333333333333",
+        "eventId": "64e2557e0ae7be7c316e3f8beaa29eb6981dd878a33f29e8ee649918bda9be10",
+        "prompt": null,
+        "completion": 5,
+        "total": null,
+        "usageComplete": false,
+        "identityAndSessionMatch": true,
+        "privateCanariesAbsent": true,
+        "exactSourceNanosecondsRetained": true,
+        "localDeliveryState": "visible",
+        "priorAcceptanceState": "accepted-unverified"
+      }
+    ],
+    "phoenixGraphqlAggregates": {
+      "name": "foundation-synthetic-proof",
+      "recordCount": 9,
+      "traceCount": 9,
+      "sessionCount": 3,
+      "flatNativeRecords": 0,
+      "tokenCountTotal": 275.0,
+      "tokenCountPrompt": 260.0,
+      "tokenCountCompletion": 15.0,
+      "nativeRecords": 3,
+      "reconstructedRecords": 6,
+      "nativeTraces": 3,
+      "reconstructedTraces": 6,
+      "nativeTokens": 275.0,
+      "reconstructedTokens": 0.0,
+      "completeNativeTokens": 270.0,
+      "allLatencyP50": 0.0,
+      "nativeLatencyP50": 100.0
+    },
+    "aggregateFilters": {
+      "native": "attributes[\"ai_metrics\"][\"stream\"] == \"native\"",
+      "flatNative": "attributes[\"ai_metrics.stream\"] == \"native\"",
+      "reconstructed": "attributes[\"ai_metrics\"][\"stream\"] == \"reconstructed\"",
+      "complete": "attributes[\"ai_metrics\"][\"stream\"] == \"native\" and attributes[\"ai_metrics\"][\"usage\"][\"complete\"] == True"
+    },
+    "aggregateInterpretation": "275 is known native prompt plus completion, including a five-token incomplete subtotal; 270 belongs to complete native usage. Reconstructed zero contribution is not evidence of zero actual usage. Mixed zero-duration points reduce unfiltered P50 to zero; native-only P50 remains 100 ms.",
+    "backendReadbackPrecision": "standard timestamps: microseconds; explicit source metadata: exact nanoseconds",
+    "backendVisibilityAdapterImplemented": true,
+    "liveDeployment": false,
+    "goalComplete": false
+  },
+  "explicitDuplicateReplay": {
+    "nativeNetworkSubmissions": 6,
+    "uniqueNativeSpansAfterReplay": 3,
+    "identicalPayloadDigests": true,
+    "collectorExportCounterVerified": true,
+    "backendScope": "exact pinned Phoenix image, immutable project and byte-identical span identities"
+  },
+  "storedSpans": 9,
+  "nativeSpans": 3,
+  "reconstructedSpans": 6,
+  "rawTraceEndpointRefused": true,
+  "distinctExportAndReadbackOrigins": true,
+  "privateCanariesAbsentFromJournalQueueAndBackend": true,
+  "metadataReceiverHostPublishedInProduction": false,
+  "collectorGuardIsAuthentication": false,
+  "collectorGuardIsSanitizer": false,
+  "actualHarnessEnrollment": false,
+  "templateSha256": "7546a1b24bb01a8d0c061054264e71d462f6f7643add2ed1c70151c20c0e51d6",
+  "fixtureSha256": "575d0cfb0f4571ed7e5c7b56728e66a2dc323b86ce4e0b5f9e0c1004f1042571",
+  "ownedResourcesRemoved": true
+}

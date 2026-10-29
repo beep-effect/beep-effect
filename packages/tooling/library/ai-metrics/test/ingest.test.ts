@@ -826,6 +826,54 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/repo-ai-metrics",
     })
   );
 
+  it.effect("orders transcript bounds by instant across timezone offsets", () =>
+    Effect.gen(function* () {
+      const summary = yield* summarizeTranscriptText(
+        AiMetricsTranscriptTextSummaryInput.make({
+          content: A.join(
+            [
+              '{"type":"event_msg","timestamp":"2026-05-05T10:00:00+02:00"}',
+              '{"type":"event_msg","timestamp":"2026-05-05T09:00:00Z"}',
+              '{"type":"event_msg","timestamp":"not-a-time"}',
+            ],
+            "\n"
+          ),
+          hashSalt: O.none(),
+          sourceKind: AiMetricsTranscriptSource.Enum.codex,
+          sourcePath: "synthetic-offsets.jsonl",
+        })
+      );
+      assertSome(summary.firstTimestamp, "2026-05-05T10:00:00+02:00");
+      assertSome(summary.lastTimestamp, "2026-05-05T09:00:00Z");
+      expect(summary.acceptedEvents).toBe(3);
+    })
+  );
+
+  it.effect("rejects normalized invalid dates and orders nanosecond transcript bounds", () =>
+    Effect.gen(function* () {
+      const summary = yield* summarizeTranscriptText(
+        AiMetricsTranscriptTextSummaryInput.make({
+          content: A.join(
+            [
+              '{"type":"event_msg","timestamp":"2026-05-05T10:00:00.123456789Z"}',
+              '{"type":"event_msg","timestamp":"2026-05-05T12:00:00.123456788+02:00"}',
+              '{"type":"event_msg","timestamp":"2026-02-30T00:00:00Z"}',
+              '{"type":"event_msg","timestamp":"2026-05-05T24:00:00Z"}',
+              '{"type":"event_msg","timestamp":"2026-05-05T00:00:00"}',
+            ],
+            "\n"
+          ),
+          hashSalt: O.none(),
+          sourceKind: AiMetricsTranscriptSource.Enum.codex,
+          sourcePath: "synthetic-date-edges.jsonl",
+        })
+      );
+      assertSome(summary.firstTimestamp, "2026-05-05T12:00:00.123456788+02:00");
+      assertSome(summary.lastTimestamp, "2026-05-05T10:00:00.123456789Z");
+      expect(summary.acceptedEvents).toBe(5);
+    })
+  );
+
   it.effect(
     "summarizes Claude JSONL with missing type",
     Effect.fn(function* () {
@@ -1164,6 +1212,62 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/repo-ai-metrics",
     })
   );
 
+  it.effect("advances discovery past a failed read without acknowledging that source", () =>
+    withTempDirectory((tmpDir) =>
+      Effect.gen(function* () {
+        const path = yield* Path.Path;
+        const fs = yield* FileSystem.FileSystem;
+        const homeDir = path.join(tmpDir, "home");
+        const repoRoot = path.join(tmpDir, "repo");
+        const dataRoot = path.join(tmpDir, "metrics");
+        const codexRoot = path.join(homeDir, ".codex/sessions");
+        const firstPath = path.join(codexRoot, "one.jsonl");
+        const secondPath = path.join(codexRoot, "two.jsonl");
+        yield* makeGitRoot(repoRoot);
+        yield* writeText(firstPath, '{"type":"event_msg","timestamp":"2026-05-05T10:00:00Z"}');
+        yield* writeText(secondPath, '{"type":"event_msg","timestamp":"2026-05-05T10:01:00Z"}');
+        const firstHash = yield* hashPrivateIdentifier(firstPath, O.some("test-salt"));
+        const secondHash = yield* hashPrivateIdentifier(secondPath, O.some("test-salt"));
+        const unreadablePath = firstHash < secondHash ? firstPath : secondPath;
+        yield* fs.chmod(unreadablePath, 0);
+        const input = AiMetricsForwarderInput.make({
+          codexSessionsRoot: O.some(codexRoot),
+          dataRoot: O.some(dataRoot),
+          hashSalt: O.some("test-salt"),
+          homeDir,
+          includeAll: true,
+          maxFiles: 1,
+          parquetExportMode: "none",
+          rawArchiveKey: Redacted.make(Base64.encode(new Uint8Array(32).fill(9))),
+          repoRoot,
+          target: "local",
+        });
+        const databaseLayer = DuckDb.makeNodeLayer(
+          DuckDbConnectionOptions.make({
+            databasePath: path.join(dataRoot, "derived/ai-metrics.duckdb"),
+          })
+        );
+        // Close/reopen the driver between runs: scheduler progress must survive
+        // even though the failed run never committed any derived source rows.
+        const failed = yield* runAiMetricsForwarder(input).pipe(provideScopedLayer(databaseLayer), Effect.flip);
+        expect(failed.message).toContain("Failed to read AI metrics codex source file");
+        const successful = yield* runAiMetricsForwarder(input).pipe(provideScopedLayer(databaseLayer));
+        expect(successful.sourceFileCount).toBe(1);
+        yield* Effect.gen(function* () {
+          const database = yield* DuckDb;
+          expect(
+            yield* database.query('SELECT CAST(COUNT(*) AS INTEGER) AS "count" FROM ai_metrics_source_files')
+          ).toEqual([{ count: 1 }]);
+        }).pipe(provideScopedLayer(databaseLayer));
+        // The unreadable source comes back next round; no failure was promoted to
+        // an ingestion watermark simply because its scheduling cursor advanced.
+        const retried = yield* runAiMetricsForwarder(input).pipe(provideScopedLayer(databaseLayer), Effect.flip);
+        expect(retried.message).toContain("Failed to read AI metrics codex source file");
+        yield* fs.chmod(unreadablePath, 0o600);
+      })
+    )
+  );
+
   it.effect(
     "applies maxFiles per source instead of starving lower-recency sources globally",
     Effect.fn(function* () {
@@ -1198,20 +1302,19 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/repo-ai-metrics",
           yield* writeText(path.join(repoRoot, "AGENTS.md"), "# Test agent guide\n");
 
           yield* Effect.gen(function* () {
-            const result = yield* runAiMetricsForwarder(
-              AiMetricsForwarderInput.make({
-                claudeProjectsRoot: O.some(claudeRoot),
-                codexSessionsRoot: O.some(codexRoot),
-                dataRoot: O.some(dataRoot),
-                hashSalt: O.some("test-salt"),
-                homeDir,
-                includeAll: true,
-                maxFiles: 1,
-                rawArchiveKey,
-                repoRoot,
-                target: AiMetricsDeployTarget.Enum.local,
-              })
-            );
+            const input = AiMetricsForwarderInput.make({
+              claudeProjectsRoot: O.some(claudeRoot),
+              codexSessionsRoot: O.some(codexRoot),
+              dataRoot: O.some(dataRoot),
+              hashSalt: O.some("test-salt"),
+              homeDir,
+              includeAll: true,
+              maxFiles: 1,
+              rawArchiveKey,
+              repoRoot,
+              target: AiMetricsDeployTarget.Enum.local,
+            });
+            const result = yield* runAiMetricsForwarder(input);
 
             expect(result.sourceFileCount).toBe(2);
             expect(result.sourceCoverage).toEqual(
@@ -1230,6 +1333,21 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/repo-ai-metrics",
                 }),
               ])
             );
+            // A bounded scan must advance between runs, not repeatedly select
+            // the same newest file while older sessions remain invisible.
+            yield* runAiMetricsForwarder(input);
+            const database = yield* DuckDb;
+            const coverage = yield* database.query(
+              'SELECT CAST(COUNT(DISTINCT source_path_hash) AS INTEGER) AS "count" FROM ai_metrics_source_files'
+            );
+            expect(coverage).toEqual([{ count: 4 }]);
+            // These global transcripts carry no verified repository identity.
+            // The checkout running collection must not become their source.
+            expect(
+              yield* database.query(
+                'SELECT CAST(COUNT(*) AS INTEGER) AS "count" FROM ai_metrics_agent_tasks WHERE repo_root_hash IS NULL'
+              )
+            ).toEqual([{ count: 4 }]);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
       );
@@ -2338,6 +2456,47 @@ volumes:
     })
   );
 
+  it.effect("preserves legacy collector roots while withdrawing unproven source attribution", () =>
+    withTempDirectory((tmpDir) =>
+      Effect.gen(function* () {
+        const path = yield* Path.Path;
+        yield* Effect.gen(function* () {
+          const database = yield* DuckDb;
+          yield* ensureAiMetricsDerivedStorage;
+          yield* database.run("ALTER TABLE ai_metrics_agent_tasks ALTER COLUMN repo_root_hash SET NOT NULL");
+          yield* database.run(
+            "DELETE FROM ai_metrics_schema_migrations WHERE migration_id = 'ai-metrics-source-root-evidence-v1'"
+          );
+          yield* database.run(`INSERT INTO ai_metrics_agent_tasks (
+          agent_task_id, title, source_kind, source_path_hash, source_role,
+          repo_root_hash, config_snapshot_id, created_at_epoch_ms
+        ) VALUES ('legacy-task', 'Synthetic legacy task', 'codex', 'source-hash', 'primary',
+          'collector-checkout-hash', 'snapshot-1', 1)`);
+          yield* ensureAiMetricsDerivedStorage;
+          expect(
+            yield* database.query(`SELECT agent_task_id AS "id", repo_root_hash AS "sourceRoot",
+          collector_root_hash AS "collectorRoot" FROM ai_metrics_agent_tasks`)
+          ).toEqual([{ id: "legacy-task", sourceRoot: null, collectorRoot: "collector-checkout-hash" }]);
+          // A later evidence-based attribution must survive repeated schema ensure.
+          yield* database.run("UPDATE ai_metrics_agent_tasks SET repo_root_hash = 'verified-source-root'");
+          yield* ensureAiMetricsDerivedStorage;
+          expect(
+            yield* database.query(`SELECT repo_root_hash AS "sourceRoot",
+          collector_root_hash AS "collectorRoot" FROM ai_metrics_agent_tasks`)
+          ).toEqual([{ sourceRoot: "verified-source-root", collectorRoot: "collector-checkout-hash" }]);
+        }).pipe(
+          provideScopedLayer(
+            DuckDb.makeNodeLayer(
+              DuckDbConnectionOptions.make({
+                databasePath: path.join(tmpDir, "legacy-attribution.duckdb"),
+              })
+            )
+          )
+        );
+      })
+    )
+  );
+
   it.effect(
     "deduplicates legacy agent task ids during derived storage migration",
     Effect.fn(function* () {
@@ -2702,6 +2861,7 @@ volumes:
               AiMetricsOtlpSpanProjection.make({
                 attributes: {
                   "ai_metrics.line_number": index + 1,
+                  "ai_metrics.timestamp": index % 2 === 0 ? "2020-01-01T00:00:00Z" : "2019-12-31T18:00:00-06:00",
                   "openinference.span.kind": "CHAIN",
                 },
                 parentSpanId: O.some("aabbccddeeff0011"),
@@ -2726,6 +2886,19 @@ volumes:
 
             expect(exported.spanCount).toBe(1200);
             expect(requests.length).toBe(3);
+            // OTLP Span fields 7/8 are fixed64 nanoseconds, not attribute strings.
+            // This catches a sender that preserves the timestamp only as metadata
+            // but silently replaces actual event time with its export clock.
+            const eventStart = Buffer.alloc(9);
+            eventStart[0] = 0x39;
+            eventStart.writeBigUInt64LE(1_577_836_800_000_000_000n, 1);
+            const eventEnd = Buffer.from(eventStart);
+            eventEnd[0] = 0x41;
+            const countWireField = (field: Buffer) =>
+              A.map(requests, (request) => Str.split(request.body, field.toString("latin1")).length - 1);
+            expect(countWireField(eventStart)).toEqual([512, 512, 176]);
+            expect(countWireField(eventEnd)).toEqual([512, 512, 176]);
+            expect(A.every(requests, (request) => Str.includes("ai_metrics.duration_known")(request.body))).toBe(true);
             pipe(
               A.every(requests, (request) => request.contentType === "application/x-protobuf"),
               assertTrue
@@ -2745,6 +2918,48 @@ volumes:
               ),
               assertTrue
             );
+
+            const timestampCases = [
+              { "ai_metrics.timestamp": "2020-01-01T00:00:00.123456789Z" },
+              { "ai_metrics.timestamp": "synthetic-not-a-timestamp" },
+              {},
+              { "ai_metrics.timestamp": "2020-01-01T00:00:00" },
+              { "ai_metrics.timestamp": "2026-02-30T00:00:00Z" },
+              { "ai_metrics.timestamp": "2026-05-05T24:00:00Z" },
+              { "ai_metrics.timestamp": "2026-05-05T23:59:60Z" },
+              { "ai_metrics.timestamp": "1969-12-31T23:59:59Z" },
+              { "ai_metrics.timestamp": "2554-07-21T23:34:33.709551616Z" },
+              { "ai_metrics.timestamp": "2024-02-29T01:00:00+01:00" },
+              { "ai_metrics.timestamp": "2554-07-21T23:34:33.709551615Z" },
+            ];
+            yield* runAiMetricsOtlpProjectionBatchExport(
+              inputFor("/v1/traces"),
+              AiMetricsOtlpSpanProjectionBatch.make({
+                projections: A.map(timestampCases, (attributes, index) =>
+                  AiMetricsOtlpSpanProjection.make({
+                    attributes,
+                    spanId: Str.padStart(16, "0")(globalThis.String(index + 1201)),
+                    spanName: "ai_metrics.agent.turn",
+                    traceId: "0123456789abcdef0123456789abcdef",
+                  })
+                ),
+                sessionSpanCount: 0,
+                turnIds: [],
+                turnSpanCount: timestampCases.length,
+              })
+            ).pipe(provideScopedLayer(AiMetricsOtlpSpanSender.layer));
+            const edgeRequest = O.getOrElse(A.last(requests), () => ({ body: "", contentType: "" }));
+            const preciseStart = Buffer.from(eventStart);
+            preciseStart.writeBigUInt64LE(1_577_836_800_123_456_789n, 1);
+            expect(Buffer.from(edgeRequest.body, "latin1").includes(preciseStart)).toBe(true);
+            expect(edgeRequest.body).not.toContain("synthetic-not-a-timestamp");
+            expect(Str.split(edgeRequest.body, "export_observation").length - 1).toBe(8);
+            expect(Str.split(edgeRequest.body, "source_event").length - 1).toBe(3);
+            const maximumStart = Buffer.from(eventStart);
+            maximumStart.writeBigUInt64LE(18_446_744_073_709_551_615n, 1);
+            expect(Buffer.from(edgeRequest.body, "latin1").includes(maximumStart)).toBe(true);
+            expect(edgeRequest.body).not.toContain("2026-02-30");
+            expect(edgeRequest.body).not.toContain("2554-07-21T23:34:33.709551616Z");
 
             const retryCalls = yield* Ref.make(0);
             const retryFiber = yield* runAiMetricsOtlpProjectionBatchExport(

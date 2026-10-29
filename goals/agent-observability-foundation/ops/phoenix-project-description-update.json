@@ -1,0 +1,50 @@
+{
+  "recordedAt": "2026-10-29T04:10:50.939884+00:00",
+  "operation": "project descriptions only",
+  "endpoint": "https://dankserver.tailc7c348.ts.net:8447",
+  "before": {
+    "beep-agent-effectiveness": {
+      "id": "UHJvamVjdDoz",
+      "description": null
+    },
+    "harness-otel": {
+      "id": "UHJvamVjdDoy",
+      "description": null
+    },
+    "default": {
+      "id": "UHJvamVjdDox",
+      "description": "Default project"
+    }
+  },
+  "desiredDescriptions": {
+    "harness-otel": "Native harness telemetry from the dankserver OpenTelemetry collector. Counts describe retained observed spans, traces and sessions, not total agent activity. Harness coverage and source attribution are being qualified in agent-observability-foundation.",
+    "default": "Deployment health-check destination used by the dankserver Phoenix Ansible role (ansible-phoenix-health). These traces are not agent activity. Review history and migrate the producer before retiring this default destination.",
+    "beep-agent-effectiveness": "Derived agent-effectiveness destination named by the Beep OTLP exporter and effectiveness bundle. The historical scheduled forwarder is intentionally held during the observability-foundation rebuild. Empty does not mean zero agent activity; preserve recovery evidence and migrate producers before retirement."
+  },
+  "attempted": ["harness-otel", "default", "beep-agent-effectiveness"],
+  "verified": ["harness-otel", "default", "beep-agent-effectiveness"],
+  "result": "all three project descriptions verified by fresh GET",
+  "collectionChanged": false,
+  "retentionChanged": false,
+  "projectDeletion": false,
+  "serviceDeployment": false,
+  "sourceManagement": {
+    "repository": "dankserver",
+    "sourceSha256": {
+      "ansible/group_vars/all.yml": "70d8b5693b0083ff0ec132815ff8d16303a845ddc414572d5612b28b6d2805c4",
+      "ansible/roles/phoenix/tasks/main.yml": "60046e4667d0b40e6b765f50b143650a9bea3aa2021d7760ba1de00bbd6e1878",
+      "ansible/roles/phoenix/tasks/project-descriptions.yml": "01364e72fc9cb6af8f1172afb157f2a9cb0e1119846357c203acb919b19dd23c"
+    },
+    "syntaxCheck": "ANSIBLE_CONFIG=ansible/ansible.cfg ansible-playbook --syntax-check -i ansible/inventory/hosts.yml ansible/playbooks/phoenix-host.yml",
+    "syntaxResult": "passed",
+    "liveDescriptionTasks": {
+      "ok": 5,
+      "changed": 0,
+      "unreachable": 0,
+      "failed": 0,
+      "skipped": 1
+    },
+    "log": "/tmp/foundation-project-description-ansible-qualified.log",
+    "fullPhoenixRoleApplied": false
+  }
+}

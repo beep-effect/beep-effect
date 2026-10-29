@@ -1,0 +1,92 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "agent-observability-foundation",
+    "title": "Trustworthy agent observability foundation",
+    "status": "active",
+    "created": "2026-10-27",
+    "updated": "2026-10-28",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/agent-observability-foundation",
+  "lifecycle": "active",
+  "mission": "Prove metadata identity, coverage and bounded durable delivery across roots and surfaces before live enrollment.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/agent-observability-rebuild",
+    "graduated": "2026-10-27"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/agent-observability-foundation/README.md",
+    "goals/agent-observability-foundation/SPEC.md",
+    "goals/agent-observability-foundation/PLAN.md",
+    "goals/agent-observability-foundation/GOAL.md",
+    "goals/agent-observability-foundation/research/SOURCES.md",
+    "explorations/agent-observability-rebuild/BRIEF.md",
+    "explorations/agent-observability-rebuild/DECISIONS.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/agent-observability-foundation/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "in-progress"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "in-progress"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/agent-observability-foundation/GOAL.md)\" -le 4000",
+    "jq . goals/agent-observability-foundation/ops/manifest.json",
+    "rg -n \"agent-observability-foundation|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/agent-observability-foundation",
+    "git diff --check -- goals/agent-observability-foundation",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ],
+  "statusNote": "Explicitly launched 2026-10-27. Synthetic proof and implementation active; recovery hold preserved. See research/IMPLEMENTATION.md.",
+  "resumeConditions": [
+    "Explicit launch of this packet after dependency proof; refresh live state before changes."
+  ],
+  "dependencies": []
+}

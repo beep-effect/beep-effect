@@ -69,3 +69,10 @@ export * from "./Phoenix.models.ts";
  * @since 0.0.0
  */
 export * from "./Phoenix.service.ts";
+/**
+ * Bounded exact-identity span read-back and scalar metadata evidence.
+ * **Example** Examples live in `./Phoenix.span-readback.ts`.
+ * @category utilities
+ * @since 0.0.0
+ */
+export * from "./Phoenix.span-readback.ts";

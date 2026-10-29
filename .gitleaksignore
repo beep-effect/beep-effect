@@ -134,3 +134,19 @@ scratchpad/effected/github/GitHubApp.ts:private-key:56
 # Documentation-only PEM header in imported effected-port JSDoc; no key body.
 # Scoped to the exact staged finding produced when integrating main.
 scratchpad/effected/github/GitHubApp.ts:private-key:120
+
+# Agent-observability evidence: SHA-256 file fingerprints, not API credentials.
+goals/agent-observability-foundation/ops/atomic-pause-package-verification.json:generic-api-key:90
+goals/agent-observability-foundation/ops/maintenance-package-verification.json:generic-api-key:93
+goals/agent-observability-foundation/ops/query-backoff-package-verification.json:generic-api-key:93
+goals/agent-observability-foundation/ops/retirement-package-verification.json:generic-api-key:85
+goals/agent-observability-foundation/ops/replay-package-verification.json:generic-api-key:90
+goals/agent-observability-foundation/ops/surface-label-package-verification.json:generic-api-key:93
+goals/agent-observability-foundation/ops/review-health-package-verification.json:generic-api-key:90
+goals/agent-observability-foundation/ops/whole-cli-runtime-abort-verification.json:generic-api-key:66
+goals/agent-observability-foundation/ops/whole-cli-runtime-abort-verification.json:generic-api-key:67
+goals/agent-observability-foundation/ops/whole-cli-runtime-abort-verification.json:generic-api-key:468
+goals/agent-observability-foundation/ops/whole-cli-runtime-abort-verification.json:generic-api-key:620
+goals/agent-observability-foundation/ops/whole-cli-runtime-abort-verification.json:generic-api-key:831
+goals/agent-observability-foundation/ops/whole-cli-runtime-abort-verification.json:generic-api-key:972
+goals/agent-observability-foundation/ops/whole-cli-runtime-abort-verification.json:generic-api-key:1333
