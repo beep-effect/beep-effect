@@ -203,28 +203,31 @@ const writeFixture = Effect.fnUntraced(function* () {
   return root;
 });
 
-/** An empty directory outside any project, where a manager reports the version it really is. */
+/** An empty directory outside any project, for spawns that must not pick up a project's pins. */
 const OUTSIDE = await fixture.runtime.runPromise(scratchDirectory("packed-install-outside-"));
 
 /**
- * The version a manager reports from outside any project, or undefined when it is absent. Bounded
- * like PackedInstall's own probe (30 seconds): a Yarn shim that tries to fetch itself would
- * otherwise hang collection.
+ * Whether a manager answers `--version` from outside any project. Bounded like PackedInstall's own
+ * probe (30 seconds): a Yarn shim that tries to fetch itself would otherwise hang collection.
+ *
+ * Availability only, never the version: a host shim can answer differently here than in the run's
+ * scratch root (the vite-plus `pnpm` shim answered 12.15.0 here while the consumer resolved
+ * 12.16.1), so the version a consumer is pinned to is read from the consumer itself.
  */
-const probe = (pm: PackageManagerName) =>
+const answers = (pm: PackageManagerName) =>
   spawn(pm, ["--version"], OUTSIDE).pipe(
-    Effect.map((out) => (out.succeeded ? Str.replace(/^v/, "")(Str.trim(out.stdout)) : undefined)),
-    Effect.orElseSucceed(() => undefined)
+    Effect.map((out) => out.succeeded),
+    Effect.orElseSucceed(() => false)
   );
-const VERSIONS: Readonly<Record<PackageManagerName, string | undefined>> = await fixture.runtime.runPromise(
-  Effect.all({ npm: probe("npm"), pnpm: probe("pnpm"), yarn: probe("yarn"), bun: probe("bun") })
+const ON_PATH: Readonly<Record<PackageManagerName, boolean>> = await fixture.runtime.runPromise(
+  Effect.all({ npm: answers("npm"), pnpm: answers("pnpm"), yarn: answers("yarn"), bun: answers("bun") })
 );
-const HAS_NPM = VERSIONS.npm !== undefined;
-const HAS_PNPM = VERSIONS.pnpm !== undefined;
-const HAS_YARN = VERSIONS.yarn !== undefined;
+const HAS_NPM = ON_PATH.npm;
+const HAS_PNPM = ON_PATH.pnpm;
+const HAS_YARN = ON_PATH.yarn;
 /** The managers of `managers` this machine has, in order. */
 const available = (managers: ReadonlyArray<PackageManagerName>): ReadonlyArray<PackageManagerName> =>
-  A.filter(managers, (pm) => VERSIONS[pm] !== undefined);
+  A.filter(managers, (pm) => ON_PATH[pm]);
 
 /** The first bun release observed to link a shared bin name to the consumer's direct dependency. */
 const BUN_CARRIER_SLOT_SINCE = SemVer.of(1, 4, 4);
@@ -374,19 +377,23 @@ const assertConsumer = Effect.fn("assertConsumer")(function* (
   // The host platform comes from the HostProcessPlatform reference, which defaults to this runner's.
   if ((yield* HostProcessPlatform) === "darwin") assert.match(consumer.directory, /^\/private\//, consumer.manager);
   for (const tarball of R.values(tarballs)) assert.isTrue(Str.startsWith(`${scratch}/`)(tarball), tarball);
+  // The version the consumer resolves: its manager, run inside it under its own pin. The expected
+  // pin comes from here, never from a probe of the host PATH, which a shim can answer differently.
+  const inside = yield* spawn(consumer.manager, ["--version"], consumer.directory);
+  assert.strictEqual(inside.exitCode, 0, `${consumer.manager}: ${inside.stderr}`);
+  const resolved = Str.replace(/^v/, "")(Str.trim(inside.stdout));
+  assert.isTrue(Result.isSuccess(SemVer.parseResult(resolved)), `${consumer.manager} --version: ${resolved}`);
+  // The same manager, run inside the consumer, does not switch away from the version the run pinned.
+  assert.strictEqual(consumer.managerVersion, resolved, consumer.manager);
   const manifest = yield* readJson(path.join(consumer.directory, "package.json"));
   if (consumer.manager === "pnpm") {
     assert.deepInclude(manifest, {
-      devEngines: { packageManager: { name: "pnpm", version: VERSIONS.pnpm, onFail: "ignore" } },
+      devEngines: { packageManager: { name: "pnpm", version: resolved, onFail: "ignore" } },
     });
     assert.notProperty(manifest, "packageManager");
   } else {
-    assert.deepInclude(manifest, { packageManager: `${consumer.manager}@${VERSIONS[consumer.manager]}` });
+    assert.deepInclude(manifest, { packageManager: `${consumer.manager}@${resolved}` });
   }
-  assert.strictEqual(consumer.managerVersion, VERSIONS[consumer.manager]);
-  // The same manager, run inside the consumer, does not switch versions.
-  const inside = yield* spawn(consumer.manager, ["--version"], consumer.directory);
-  assert.strictEqual(Str.replace(/^v/, "")(Str.trim(inside.stdout)), consumer.managerVersion, consumer.manager);
   // The bin, run through binPath while the scope is open, reaches the packed lib.
   const out = yield* spawn(consumer.binPath(BIN_NAME), [], OUTSIDE);
   assert.strictEqual(Str.trim(out.stdout), GREETING, `${consumer.manager}: ${out.stderr}`);
@@ -671,12 +678,17 @@ describe("PackedInstall against a real fixture workspace", () => {
           // takes the slot, so shared-cli (the front end) beats shared-plugin (the carrier), as
           // @vitest-agent/cli beats @vitest-agent/plugin; named the other way round, the carrier won
           // both. Bun 1.4.4 gives the slot to the carrier, the consumer's direct dependency, so bun's
-          // row is keyed by the probed version. Yarn 1.22 and 4.18 (node-modules linker) gave the slot
-          // to the carrier. pnpm links only the direct dependency. Every manager on PATH is asserted,
-          // yarn included.
+          // row is keyed by the bun consumer's pinned version. Yarn 1.22 and 4.18 (node-modules linker)
+          // gave the slot to the carrier. pnpm links only the direct dependency. Every manager on
+          // PATH is asserted, yarn included.
+          const bunVersion = pipe(
+            A.findFirst(result.consumers, (consumer) => consumer.manager === "bun"),
+            O.map((consumer) => consumer.managerVersion),
+            O.getOrUndefined
+          );
           const winner: Record<PackageManagerName, string> = {
             npm: "front",
-            bun: bunGivesTheCarrierTheSlot(VERSIONS.bun) ? "carrier" : "front",
+            bun: bunGivesTheCarrierTheSlot(bunVersion) ? "carrier" : "front",
             yarn: "carrier",
             pnpm: "carrier",
           };
@@ -770,7 +782,7 @@ describe("PackedInstall overrides: a dependency no registry has, supplied from o
   });
 
   // bun gives up on the dead proxy at once; npm and pnpm retry until installTimeout fires (about 90 seconds).
-  const CONTROL: PackageManagerName = VERSIONS.bun === undefined ? "npm" : "bun";
+  const CONTROL: PackageManagerName = ON_PATH.bun ? "bun" : "npm";
   // The probe, both packs, the install to its ceiling, and the kill of the child it interrupts.
   const CONTROL_GUARDS = guards({
     managers: [CONTROL],
