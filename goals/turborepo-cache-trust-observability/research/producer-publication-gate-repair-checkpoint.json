@@ -73,7 +73,7 @@
   },
   "population": {
     "path": "goals/turborepo-quality-cache-adoption/research/current-population.json",
-    "sha256": "0ea49f7b903162d1ee7cdfa985d9caff0ab4573657e27b5156dc14a9f724b46f",
+    "sha256": "bd81cef5053d4329d1547391b0387c45a32d90157f31809eb45812c23eb09d9e",
     "sourcesVerified": 431,
     "counts": {
       "workspaces": 190,
@@ -87,12 +87,34 @@
       "retainedQualificationRecordStates": {
         "excluded": 5
       }
-    }
+    },
+    "priorPopulationBeforeMainSync": "0ea49f7b903162d1ee7cdfa985d9caff0ab4573657e27b5156dc14a9f724b46f"
   },
   "qualificationLedgerSha256": "13067bf343f413b4cc99b4cefca3ce7d094a1f09247a54ffc20114e766d4d2bb",
   "runtimeImplementationChanged": false,
   "historicalWholePackageScope": "Frozen2b295197c1 audit1118.9s/docgen36.4s retains its original test source. This test-only repair has current focused integration and quick package checks; no new whole-audit result is invented.",
   "protectedProducerPublished": false,
   "signedTrialActivated": false,
-  "qualified": false
+  "qualified": false,
+  "postMainSync": {
+    "recordedAt": "2026-10-29T11:55:03.063127+00:00",
+    "mainCommit": "cb0a51ef298c62f06da66a53eee89ffae79978aa",
+    "mergeCommit": "95d8048422e721b78caa8e95025128422586b9da",
+    "mainChange": "Kimi account usage; no cache implementation or test byte changed.",
+    "ownFrozenFilesUnchanged": true,
+    "schemaCatalog": {
+      "path": "standards/schema-catalog/@beep/repo-cli.generated.jsonc",
+      "sha256": "ab216dbad43c4598aa22239f61c01621eb475fb074187d1df7e52087b410059d",
+      "entries": 9339,
+      "canonicalWriterAndCheckPassed": true
+    },
+    "instrumentationCatalogPassed": true,
+    "cacheAuditBlocking": 0,
+    "quickPackage": {
+      "lintSeconds": 6.7,
+      "checkSeconds": 12.8,
+      "logSha256": "ec74a966c39a2f7bf893181e35075bf58f20b5818ba622f77c5df96b69fcb43e"
+    },
+    "scope": "Base integration and package type/lint/catalog checks. The 361-test runtime observations retain their byte-identical cache implementation/test bindings; no new whole CLI audit is claimed."
+  }
 }

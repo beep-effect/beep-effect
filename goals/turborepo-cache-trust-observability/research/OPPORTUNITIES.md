@@ -531,3 +531,12 @@ the agent. The already created Alchemy roles remain unassigned.
 - Read red lines as the collected run emits them; a tail showing later green
   steps is not evidence that earlier lanes passed. Retain all completed checks
   and attribute each red before repeating the publish wave.
+
+
+### Base advancement during publication
+
+- Publication correctly refused a stale base after PR2356 changed the shared
+  CLI schema catalog. Merged current main, kept its Kimi account changes, and
+  regenerated/checked the catalog from combined source. No own cache source
+  or test byte changed. Package quick checks, instrumentation and cache audit
+  pass; the current census is refreshed. No stale-base bypass was used.
