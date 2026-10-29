@@ -410,7 +410,7 @@ historical evidence; this pass grants neither live trust nor qualification.
 - [Source-bound checkpoint](private-socket-checkpoint.json): original TCP wrapper
   shares the observer handler with a scoped owner-only Unix endpoint. Existing
   Effect NetAddress and platform Unix HTTP agent are reused.
-- Actual Node and Bun focused runs passed48 tests in3 files each. Additional
+- Actual Node and Bun focused runs passed 48 tests in 3 files each. Additional
   real-socket controls prove request-budget refusal and invalid evidence after
   exhaustion. The earlier source-bound package audit and documentation build passed in 1244.41s.
 - These are component observations. They neither prove real R2 producer traffic

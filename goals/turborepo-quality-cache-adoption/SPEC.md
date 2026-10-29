@@ -273,3 +273,17 @@ review is `research/current-runtime-baseline-review.md`.
 - Bind this source-only exclusion to current manifests, complete script maps,
   configuration and runtime declarations. Reversal removes only the review
   records; no service, script, flag, ledger entry or hosted status changes.
+
+
+### Remaining source-rewriting lint commands, 2026-10-29
+
+- Review all 50 remaining `lint:fix` commands from exact current manifest, full
+  script-map and effective-configuration bindings. Forty-nine delegate to the
+  same `biome check . --write` implementation. Storybook's existing shell
+  wrapper also writes cross-workspace story sources. Keep each whole command
+  fresh; all 50 already disable caching and archive no outputs.
+- The population now has 186 reviewed source-rewriting fixers and two reviewed
+  persistent services. Their separate read-only lint/build computations keep
+  their own qualification obligations; 2,383 population dispositions remain
+  unfinished. This source review changes no script, task flag or qualification
+  ledger. Reversal removes only these additional review/disposition records.

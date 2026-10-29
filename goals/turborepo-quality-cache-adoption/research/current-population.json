@@ -15,8 +15,8 @@
     "retainedQualificationRecordStates": {
       "excluded": 5
     },
-    "sourceReviewedWholeTaskFreshDispositions": 138,
-    "remainingFinalDispositionGaps": 2433
+    "sourceReviewedWholeTaskFreshDispositions": 188,
+    "remainingFinalDispositionGaps": 2383
   },
   "provenance": {
     "censusSha256": "3b7c597abae8339da6516258e94abd746251318fac8e2633b65d722cdc48fe9c",
@@ -1755,7 +1755,8 @@
   "unresolvedCensusObligations": [
     "Classify nested workspace and root command semantics.",
     "Review dynamic Cache/CI/Quality/Yeet entrypoint branches and their external verdicts.",
-    "Complete every remaining computation disposition and qualify/adopt the136 separate read-only lint counterparts."
+    "Complete every remaining computation disposition and qualify/adopt the136 separate read-only lint counterparts.",
+    "All 186 reviewed lint fixers remain fresh; complete the separate read-only lint qualifications and every other unfinished computation disposition."
   ],
   "configurations": {
     "d5ba35a8c886232a7719684bd2edb0bce50b1766662181562224ff640bf90e3b": {
@@ -14505,9 +14506,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/cli-kit#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/cli-kit#lint:jsdoc",
@@ -15348,9 +15356,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/commands#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/commands#lint:jsdoc",
@@ -15626,9 +15641,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/config-file#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/config-file#lint:jsdoc",
@@ -17961,9 +17983,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/docket-intake#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/docket-intake#lint:jsdoc",
@@ -23324,9 +23353,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/epistemics#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/epistemics#lint:jsdoc",
@@ -25055,9 +25091,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/git#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/git#lint:jsdoc",
@@ -25310,9 +25353,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/github#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/github#lint:jsdoc",
@@ -25606,9 +25656,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/github-actions#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/github-actions#lint:jsdoc",
@@ -25861,9 +25918,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/github-commands#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/github-commands#lint:jsdoc",
@@ -26097,9 +26161,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/github-references#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/github-references#lint:jsdoc",
@@ -26367,9 +26438,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/github-reporting#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/github-reporting#lint:jsdoc",
@@ -26629,9 +26707,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/glob#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/glob#lint:jsdoc",
@@ -28981,9 +29066,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/jsonc#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/jsonc#lint:jsdoc",
@@ -29259,9 +29351,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/jsonl#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/jsonl#lint:jsdoc",
@@ -32484,9 +32583,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/lockfiles#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/lockfiles#lint:jsdoc",
@@ -33415,9 +33521,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/managed-section#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/managed-section#lint:jsdoc",
@@ -33714,9 +33827,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/markdown#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/markdown#lint:jsdoc",
@@ -34286,9 +34406,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/mcpb-kit#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/mcpb-kit#lint:jsdoc",
@@ -34852,9 +34979,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/memfs#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/memfs#lint:jsdoc",
@@ -36332,9 +36466,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/npm-spec#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/npm-spec#lint:jsdoc",
@@ -37213,9 +37354,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/occt#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/occt#lint:jsdoc",
@@ -41771,9 +41919,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/package-json#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/package-json#lint:jsdoc",
@@ -42038,9 +42193,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/palantiri#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/palantiri#lint:jsdoc",
@@ -42654,9 +42816,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/pdf-tools#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/pdf-tools#lint:jsdoc",
@@ -43554,9 +43723,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/poppler#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/poppler#lint:jsdoc",
@@ -44120,9 +44296,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/practice-claude-mod#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/practice-claude-mod#lint:jsdoc",
@@ -44417,9 +44600,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/practice-gateway#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/practice-gateway#lint:jsdoc",
@@ -44666,9 +44856,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/practice-identify#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/practice-identify#lint:jsdoc",
@@ -45224,9 +45421,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/practice-m365-contacts#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/practice-m365-contacts#lint:jsdoc",
@@ -45478,9 +45682,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/practice-mail-tagging#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/practice-mail-tagging#lint:jsdoc",
@@ -45756,9 +45967,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/practice-review-hub#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/practice-review-hub#lint:jsdoc",
@@ -45984,9 +46202,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/practice-setup#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/practice-setup#lint:jsdoc",
@@ -47673,9 +47898,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/public-site#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/public-site#lint:jsdoc",
@@ -50601,9 +50833,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/repo-tsconfig#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/repo-tsconfig#lint:jsdoc",
@@ -51219,9 +51458,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/repo-workspaces#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/repo-workspaces#lint:jsdoc",
@@ -51839,9 +52085,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/runtime-env#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/runtime-env#lint:jsdoc",
@@ -52393,9 +52646,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/sbom#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/sbom#lint:jsdoc",
@@ -52962,9 +53222,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/schema-org#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/schema-org#lint:jsdoc",
@@ -53888,9 +54155,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/semver#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/semver#lint:jsdoc",
@@ -55493,9 +55767,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/spdx#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/spdx#lint:jsdoc",
@@ -55701,9 +55982,16 @@
       "priorCommandTextUnchanged": true,
       "priorSemanticProfileIdsForReview": ["shell-expression"],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/storybook#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/storybook#lint:jsdoc",
@@ -56004,9 +56292,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/t3-code#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/t3-code#lint:jsdoc",
@@ -56531,9 +56826,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/technical-drawing#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/technical-drawing#lint:jsdoc",
@@ -56786,9 +57088,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/tesseract#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/tesseract#lint:jsdoc",
@@ -58145,9 +58454,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/toml#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/toml#lint:jsdoc",
@@ -58622,9 +58938,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/tsconfig#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/tsconfig#lint:jsdoc",
@@ -60293,9 +60616,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/walker#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/walker#lint:jsdoc",
@@ -60527,9 +60857,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/windows-secrets#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/windows-secrets#lint:jsdoc",
@@ -62420,9 +62757,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/xdg#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/xdg#lint:jsdoc",
@@ -62939,9 +63283,16 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "source-mutating-fixer",
+        "pureCounterpart": "@beep/yaml#lint",
+        "review": "research/remaining-mutating-fixer-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/remaining-mutating-fixer-disposition-review.json"
     },
     {
       "computation": "@beep/yaml#lint:jsdoc",
@@ -63059,6 +63410,13 @@
       "sha256": "911f9f89c8e57f7148e627d513612c476e4722458f62bf6edad6fd0a6ca3d9ff",
       "sourceRevision": "72badf688b2f96bb489e944b0bd581909114a19f",
       "reviewedComputations": 2,
+      "authority": "source-review-only whole-command keep-fresh dispositions"
+    },
+    {
+      "path": "research/remaining-mutating-fixer-disposition-review.json",
+      "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17",
+      "sourceRevision": "7b8ff631ae546b284e63a4a52417b1128871e544",
+      "reviewedComputations": 50,
       "authority": "source-review-only whole-command keep-fresh dispositions"
     }
   ]

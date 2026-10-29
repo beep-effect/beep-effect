@@ -54,7 +54,8 @@
     "research/current-runtime-baseline-checkpoint.json",
     "research/mutating-fixer-disposition-review.json",
     "research/mutating-fixer-replay-control.json",
-    "research/persistent-service-disposition-review.json"
+    "research/persistent-service-disposition-review.json",
+    "research/remaining-mutating-fixer-disposition-review.json"
   ],
   "agentLaunchers": [
     {
@@ -116,5 +117,5 @@
     "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
     "Do not overwrite another owner's artifacts or weaken hosted proof."
   ],
-  "statusNote": "Launched 2026-10-28. Current P0 inventory: 190 workspaces, 4586 configured nodes and 2571 executable computations; all final dispositions remain open. Stable 2.11.10 and published canary 2.11.9-canary.1 are pinned with native inference disabled. No new qualification, production signing or whole-program completion is claimed."
+  "statusNote": "Active. Current source review gives 188 keep-fresh whole-command dispositions: all 186 lint fixers plus two persistent services. The other 2383 computation dispositions and all qualification, adoption, observation and whole-goal acceptance remain unfinished."
 }

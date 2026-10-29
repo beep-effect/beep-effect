@@ -198,3 +198,14 @@ builds remain separate unfinished computations. There are now 138 source-reviewe
 whole-command keep-fresh dispositions and 2,433 remaining disposition gaps. No
 service was launched; all feature/runtime qualification and full-goal acceptance
 requirements remain open.
+
+
+### Complete current lint-fixer source classification: 2026-10-29
+
+The additional source-bound review in
+`research/remaining-mutating-fixer-disposition-review.json` covers the 50
+remaining `lint:fix` rows, including Storybook's cross-workspace source writes.
+All 186 current lint-fixer commands remain fresh, as do the two already
+reviewed persistent services. There are 2,383 final-disposition gaps; the 186
+separate read-only lint computations remain unqualified. This is source
+classification with unchanged configuration, not runtime or adoption proof.

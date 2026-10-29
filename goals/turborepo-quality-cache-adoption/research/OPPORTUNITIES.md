@@ -146,3 +146,13 @@ Keep source-review dispositions separate from qualification and runtime proof.
 The population file exceeds Biome's default one-MiB read limit. Format this
 existing large evidence file with a one-command five-million-byte limit and
 verify structural diffs; do not change the repository's shared limit.
+
+
+### Historical profile leads are not the current semantic population
+
+The first source-fixer review selected 136 historical source-fix profile leads.
+The current population also contains 50 unreviewed `lint:fix` commands. Exact
+current source shows 49 use the same write implementation and Storybook writes
+shared story sources. Review current executable rows directly; a historical
+profile label cannot establish complete classification. All 186 whole-command
+fixers stay fresh, with separate read-only lint qualification still unfinished.

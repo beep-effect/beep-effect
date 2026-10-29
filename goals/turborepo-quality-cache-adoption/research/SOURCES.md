@@ -285,3 +285,10 @@ binds changed runner source bytes. Historical claims above keep their dates.
   two exact Portless Next development commands remain fresh, with independently
   bound script maps/configuration and existing unfinished build counterparts.
   This is source review only; no service or runtime experiment was launched.
+
+
+- [Remaining mutating-fixer source review](remaining-mutating-fixer-disposition-review.json):
+  exact current script maps, manifests and effective configuration for 50
+  additional whole-command keep-fresh dispositions. This completes source
+  classification of all 186 `lint:fix` rows; their read-only counterparts and
+  every other unfinished computation retain qualification obligations.
