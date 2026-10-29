@@ -22,8 +22,12 @@ parser.add_argument('--workspace', required=True, type=Path)
 parser.add_argument('--caddy', required=True, type=Path)
 parser.add_argument('--live-canary', action='store_true', help='Explicitly send two synthetic metadata records to the tailnet Phoenix through an isolated collector')
 parser.add_argument('--dankserver', type=Path)
+parser.add_argument('--disposable-canary', action='store_true', help='Run the same synthetic route against owned disposable Phoenix')
+parser.add_argument('--declared-root', type=Path, help='Exact retained reviewed synthetic root for both canary stages')
 parser.add_argument('--health-proof', action='store_true', help='Independently scrape actual worker metrics and receive its stopped-worker alert locally')
 args = parser.parse_args()
+assert not (args.live_canary and args.disposable_canary), 'Choose one backend per bounded proof'
+assert not args.declared_root or args.live_canary or args.disposable_canary
 workspace = args.workspace.resolve(strict=True)
 caddy = args.caddy.resolve(strict=True)
 assert hashlib.sha256(caddy.read_bytes()).hexdigest() == '678ade3bfc088749c81a681adc603333ee0bb023b6a6cfe3c0f58bef8ff854e9'
@@ -37,6 +41,8 @@ for name in ['BEEP_AI_METRICS_HASH_SALT', 'BEEP_AI_METRICS_RAW_ARCHIVE_KEY', 'BE
 unit_base = 'beep-observation-deploy-' + uuid.uuid4().hex[:12]
 installed = {}
 live = None
+disposable = None
+declared = None
 health_proof = None
 evidence = {'recordedAt': datetime.now(timezone.utc).isoformat(), 'result': 'incomplete', 'syntheticOnly': True,
             'productionRollout': False, 'goalComplete': False, 'artifactRoot': str(root), 'deliberateMemoryExhaustion': False}
@@ -83,7 +89,9 @@ def source_hashes():
                     workspace/'packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationDeployment.ts',
                     workspace/'packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts',
                     workspace/'packages/tooling/tool/cli/src/commands/AIMetrics/AIMetrics.command.ts', Path(__file__).resolve()]
-    if args.live_canary: source_files.append(Path(__file__).with_name('live_canary_support.py').resolve())
+    if args.declared_root: source_files.append(Path(__file__).with_name('declared_canary_support.py').resolve())
+    if args.disposable_canary: source_files.append(Path(__file__).with_name('disposable_canary_support.py').resolve())
+    if args.live_canary or args.disposable_canary: source_files.append(Path(__file__).with_name('live_canary_support.py').resolve())
     if args.health_proof: source_files.append(Path(__file__).with_name('observation_health_support.py').resolve())
     source_files.extend(sorted((workspace/'packages/tooling/library/ai-metrics/src').rglob('*.ts')))
     return {str(p.relative_to(workspace)): sha(p) for p in source_files}
@@ -91,10 +99,17 @@ def source_hashes():
 initial_source_hashes = source_hashes()
 
 try:
-    if args.live_canary:
+    if args.declared_root:
+        from declared_canary_support import DeclaredCanary
+        declared = DeclaredCanary(args.declared_root, workspace)
+    if args.live_canary or args.disposable_canary:
         assert args.dankserver is not None
-        from live_canary_support import LiveCanary
-        live = LiveCanary(root, args.dankserver.resolve(strict=True), command)
+        from live_canary_support import LiveCanary, request as canary_request
+        if args.disposable_canary:
+            from disposable_canary_support import DisposableBackend
+            disposable = DisposableBackend(command, canary_request)
+            disposable.start()
+        live = LiveCanary(root, args.dankserver.resolve(strict=True), command, declared, disposable)
         live.start()
         evidence['liveCanary'] = live.evidence
     bun = Path(command([shutil.which('bun'), '--no-env-file', '-p', 'process.execPath']).stdout.strip()).resolve(strict=True)
@@ -342,9 +357,14 @@ finally:
         assert target.read_text() == content, 'Owned unit changed externally; preserve it'
         target.unlink(); cleanup.append({'unit': name, 'mainPid': 0, 'ownedUnitFileRemoved': True})
     if installed: command(['systemctl', '--user', 'daemon-reload'])
-    if live:
-        live.close()
-        evidence['liveCanary'] = live.evidence
+    try:
+        if live:
+            live.close()
+            evidence['liveCanary'] = live.evidence
+    finally:
+        if disposable:
+            disposable.close()
+            evidence['disposableBackend'] = disposable.evidence
     evidence['cleanup'] = cleanup
     final_source_hashes = source_hashes()
     evidence['sourceSha256'] = initial_source_hashes

@@ -29,12 +29,13 @@ Only on an explicit implementation launch, use:
 ## Current phase
 
 Implementation and synthetic/runtime verification have reached a reviewed checkpoint;
-repository delivery and requirement-by-requirement acceptance remain open. The
-latest source checkpoint is `d3a33a8bc128b685e644b80f69e801ec82b3110a`.
-The [independent acceptance audit](./research/ACCEPTANCE-EVIDENCE-AUDIT.md) supports
-twelve criteria at their specified scope and leaves AC12 partial: the disposable
-and live synthetic routes need an explicit association with the same declared,
-positively identified source repository. Build-checkout provenance is insufficient.
+repository delivery remains open. The runtime source checkpoint is
+`d3a33a8bc128b685e644b80f69e801ec82b3110a`, with corrective main integrated.
+The [independent acceptance audit](./research/ACCEPTANCE-EVIDENCE-AUDIT.md) now
+supports all thirteen criteria at their specified scope. The final
+[declared repository proof](./research/DECLARED-ROUTE-PROOF.md) closes the missing
+association in both disposable and live synthetic routes, using the same positively
+identified root and independently declared event IDs before send.
 [Dankserver source delivery](./ops/dankserver-merge-verification.json) is merged
 as PR3 at `f6e2bae77d205f228c4ebf9e3e8adcebb4b94d45`, without production rollout.
 The corrective Beep PR2362 is merged at
@@ -88,9 +89,8 @@ opt-in. See [memory investigation](./research/MEMORY-NOTIFICATION-INVESTIGATION.
 Preserve resource admission limits and unrelated applications. A declined or stopped
 check is not a pass and must not be retried as if an uncertain mutation never ran.
 
-The landed corrective fix is integrated into the foundation branch. Close AC12 with
-predeclared synthetic Git-root/route/event evidence in both disposable and live
-proofs, then perform foundation publication, required current-source policy/catalog
-and panel checks, hosted readiness, merge and reflection. Reconcile every SPEC
+The landed corrective fix is integrated and AC12 is independently accepted.
+Perform foundation publication, required current-source policy/catalog and panel
+checks, hosted readiness, merge and reflection. Reconcile every SPEC
 criterion against current evidence before the canonical lifecycle transition.
 Source delivery and production enrollment remain separate decisions.

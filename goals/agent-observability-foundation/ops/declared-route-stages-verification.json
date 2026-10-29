@@ -1,0 +1,130 @@
+{
+  "recordedAt": "2026-10-29T21:36:57.000999+00:00",
+  "result": "passed",
+  "scope": "AC12 declared synthetic host/repository and CLI/desktop fixture routes; no real harness enrollment",
+  "sourceHead": "90c43c904f7f70d39bdd936125a1e61fda26fc5a",
+  "sourceDirtyProofFiles": true,
+  "finalArchive": "/home/elpresidank/.local/state/beep/observation-proof-archive/declared-stage-final-2spcocay",
+  "initialRunsArchive": "/home/elpresidank/.local/state/beep/observation-proof-archive/declared-stage-initial-3ahnp2v7",
+  "refusalChecksArchive": "/home/elpresidank/.local/state/beep/observation-proof-archive/declared-plan-refusal-r3wfvkdc",
+  "stages": {
+    "disposable": {
+      "evidencePath": "/home/elpresidank/.local/state/beep/observation-proof-archive/declared-stage-final-2spcocay/disposable/evidence.json",
+      "evidenceSha256": "66e197a2c502770cb3a254c81b2a7c867f3b79a62f5b47422279f6783543b9af",
+      "sourceFiles": 87,
+      "project": "foundation-canary-8efbfb74599f",
+      "planSha256": "ea7bee6483553559ed04f05986653612b388f0e89f2de4cf354da88855ceea97",
+      "eventIds": [
+        "54fb069c071c6d78ea3022b6ad9aabcad6047a5cbc76efc206ea7b4c9a5eb5c4",
+        "c40b822a05d62e6446e5cf0326ffd79065c0f7e72fdb7ba8123fc942e889f6c9"
+      ],
+      "root": {
+        "rootId": "root-5b8de106598cc75e4241390b56b3a4d8f8d8bb02415b46f8d3b67965d2330b4d",
+        "hostId": "06ed7e6e830e5087e751a3f23c66701c1a17c96cbee2d6ab6c48a6bc22c21f5d",
+        "repositoryId": {
+          "_tag": "Verified",
+          "id": "fe601aa7f7103aa19c73a1de186e282d632fa8d3ce2972110888e0615e7c7ac5",
+          "evidenceId": "5941492806076fa8861bf6409c929bf5ff9d36fb19ec4c81b0400c977ccd8b8e"
+        },
+        "cloneId": {
+          "_tag": "Verified",
+          "id": "dd4b5330de1ea850a0bf2b11803e919a7524e6f121362aee116a483cbeb6f276",
+          "evidenceId": "5941492806076fa8861bf6409c929bf5ff9d36fb19ec4c81b0400c977ccd8b8e"
+        },
+        "worktreeId": {
+          "_tag": "Verified",
+          "id": "8906023bfb858cc08cd3dce2978c6202c2498f6ba23aad67c81077c55bcda51c",
+          "evidenceId": "5941492806076fa8861bf6409c929bf5ff9d36fb19ec4c81b0400c977ccd8b8e"
+        },
+        "availability": "present",
+        "evidenceId": "5941492806076fa8861bf6409c929bf5ff9d36fb19ec4c81b0400c977ccd8b8e"
+      },
+      "host": {
+        "hostId": "06ed7e6e830e5087e751a3f23c66701c1a17c96cbee2d6ab6c48a6bc22c21f5d",
+        "identityNamespaceId": "115c12ef0db1d87026ae48567e458aba200b0f948feadceb44b0c8704ecb33ed"
+      },
+      "qualificationSha256": "5ba97f27866de55bbeb2b70e64892cc4e7d0068802b313044d41a50020c390b3",
+      "guard": {
+        "ownedScopes": {},
+        "unit": "foundation-declared-disposable-v3.service",
+        "profile": "focused",
+        "memoryStopBytes": 2147483648,
+        "hostAvailableFloorBytes": 17179869184,
+        "initialAvailableBytes": 49398657024,
+        "peakObservedBytes": 564531200,
+        "minimumAvailableBytes": 46659883008,
+        "stoppedFor": null,
+        "tasksMax": 1024,
+        "peakObservedTasks": 59,
+        "pidsLimitEvents": 0,
+        "observedPhases": [],
+        "exitCode": 0,
+        "orphanCleanup": []
+      },
+      "rollback": "owned collector stopped and removed; private queue retained",
+      "backendReadbackAfterRouteRollback": true
+    },
+    "live": {
+      "evidencePath": "/home/elpresidank/.local/state/beep/observation-proof-archive/declared-stage-final-2spcocay/live/evidence.json",
+      "evidenceSha256": "9d52b45834e0578e156e701057a4fa51ed9af45de65b2d0789b737ed45c911f4",
+      "sourceFiles": 86,
+      "project": "foundation-canary-1012da598ef4",
+      "planSha256": "75130c4e78efbdc00b7669ccb33450ab3f444c18a570f3855fed84dc058aa443",
+      "eventIds": [
+        "6ab88073374a3d37de3f44c8b786ad41c107a39f6a284d63db3ea1ceb317bb54",
+        "cc23c8e69ebaa3864e553fb3cc054f5b7370c0e9c475ee209b42fd30de4a7533"
+      ],
+      "root": {
+        "rootId": "root-5b8de106598cc75e4241390b56b3a4d8f8d8bb02415b46f8d3b67965d2330b4d",
+        "hostId": "06ed7e6e830e5087e751a3f23c66701c1a17c96cbee2d6ab6c48a6bc22c21f5d",
+        "repositoryId": {
+          "_tag": "Verified",
+          "id": "fe601aa7f7103aa19c73a1de186e282d632fa8d3ce2972110888e0615e7c7ac5",
+          "evidenceId": "5941492806076fa8861bf6409c929bf5ff9d36fb19ec4c81b0400c977ccd8b8e"
+        },
+        "cloneId": {
+          "_tag": "Verified",
+          "id": "dd4b5330de1ea850a0bf2b11803e919a7524e6f121362aee116a483cbeb6f276",
+          "evidenceId": "5941492806076fa8861bf6409c929bf5ff9d36fb19ec4c81b0400c977ccd8b8e"
+        },
+        "worktreeId": {
+          "_tag": "Verified",
+          "id": "8906023bfb858cc08cd3dce2978c6202c2498f6ba23aad67c81077c55bcda51c",
+          "evidenceId": "5941492806076fa8861bf6409c929bf5ff9d36fb19ec4c81b0400c977ccd8b8e"
+        },
+        "availability": "present",
+        "evidenceId": "5941492806076fa8861bf6409c929bf5ff9d36fb19ec4c81b0400c977ccd8b8e"
+      },
+      "host": {
+        "hostId": "06ed7e6e830e5087e751a3f23c66701c1a17c96cbee2d6ab6c48a6bc22c21f5d",
+        "identityNamespaceId": "115c12ef0db1d87026ae48567e458aba200b0f948feadceb44b0c8704ecb33ed"
+      },
+      "qualificationSha256": "5ba97f27866de55bbeb2b70e64892cc4e7d0068802b313044d41a50020c390b3",
+      "guard": {
+        "ownedScopes": {},
+        "unit": "foundation-declared-live-v2.service",
+        "profile": "focused",
+        "memoryStopBytes": 2147483648,
+        "hostAvailableFloorBytes": 17179869184,
+        "initialAvailableBytes": 48352731136,
+        "peakObservedBytes": 558219264,
+        "minimumAvailableBytes": 47602561024,
+        "stoppedFor": null,
+        "tasksMax": 1024,
+        "peakObservedTasks": 59,
+        "pidsLimitEvents": 0,
+        "observedPhases": [],
+        "exitCode": 0,
+        "orphanCleanup": []
+      },
+      "rollback": "owned collector stopped and removed; private queue retained",
+      "backendReadbackAfterRouteRollback": true
+    }
+  },
+  "review": "Independent Astra final artifact check: AC12 supported; no actionable finding. All 87 disposable and 86 live source hashes, expected/backend/local/visibility IDs and journal identities verified.",
+  "hold": "Historical forwarder masked and inactive; raw archives preserved",
+  "notProven": [
+    "Real harness populations remain Unknown",
+    "Production enrollment, repository delivery and overall goal completion"
+  ]
+}

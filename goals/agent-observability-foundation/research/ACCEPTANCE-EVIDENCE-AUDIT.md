@@ -3,8 +3,9 @@
 Independent Astra reviewed SPEC's thirteen acceptance criteria at source checkpoint
 `d3a33a8bc128b685e644b80f69e801ec82b3110a`. It verified all 86 current installed-proof
 source hashes, all 29 entrypoint source hashes and all 25 reviewed Dankserver hashes.
-The assessment is twelve supported at the stated source/synthetic/canary scope and
-one partial. Repository publication, required current-head gates and closeout remain
+The initial assessment was twelve supported and AC12 partial. The final declared
+route proof below closes AC12: all thirteen are now supported at their stated
+source/synthetic/canary scope. Repository publication, required current-head gates and closeout remain
 separate requirements. No completion or historical-hold release is certified.
 
 | AC | Assessment | Evidence and scope |
@@ -20,7 +21,7 @@ separate requirements. No completion or historical-hold release is certified.
 | 9 Queue/health bounds | Supported for qualified arrangement | COLLECTOR-QUEUE-HEALTH.md, runtime/source tests, current Prometheus rules and terminal-classification-verification.json. Queue exhaustion/crash/restart, stopped/stale/idle/paused distinctions, source expectations, refusal and disk pressure are covered. Lag is sampled acceptance age; the actual stopped-worker alert receiver is local, not a human notification channel. |
 | 10 Health/backup/retention reporting | Supported | Configured Phoenix health URL, exact-ID retention reconciliation and dankserver-current-verification.json: ten retention tests, five backup-reporting tests and syntax checks. Actual-image retention mutation/reversal is separate evidence. No production retention change or operational backup readiness is inferred. |
 | 11 Recovery hold | Supported and freshly rechecked by orchestrator | FORWARDER-RECOVERY-HOLD.md and current user-systemd state: both historical units masked/inactive, service MainPID zero. Replacement proof owns different units. It does not authorize blind restoration or release of the historical hold. |
-| 12 Declared host/repo + CLI/desktop + disposable/live | **Partial: root association missing** | Existing proofs qualify synthetic labels, exact event IDs, read-back, visibility and owned rollback. Their synthetic host/route configuration has no declared source-root binding; native-coverage-input.json has roots=[] and unknown route roots, while managed fixtures retain unknown repository/clone/worktree identities. The verifier checkout is build provenance, not source-repository evidence. |
+| 12 Declared host/repo + CLI/desktop + disposable/live | **Supported at explicit synthetic scope** | declared-route-stages-verification.json and DECLARED-ROUTE-PROOF.md bind the same positively probed root to pre-send independently expected CLI/desktop IDs in both stages. Final source, backend/local/visibility event sets, journal identity and rollback were independently verified. Real harness populations remain Unknown. |
 | 13 Ownership/compatibility/rollback | Supported for held/canary operation | STORAGE-OWNERSHIP.md, backup-crash tests, claim-store disaster rehearsal, current canary and collector-mode rollback. Custodians, bounds, uncertainty, legacy IDs/project producers and recovery boundaries are explicit. Historical archives stay preserved. Off-device replication, production generation management and historical-store recovery remain deployment holds. |
 
 Source paths in the table are under `packages/tooling/library/ai-metrics`, unless
@@ -30,7 +31,7 @@ under this packet's `research/` and `ops/`. Current source-bound receipts are
 `ops/boundary-predicates-verification.json`. Earlier documents retain historical
 scope; their obsolete remaining-work paragraphs are not authoritative current status.
 
-## Required correction for AC12
+## Original correction required for AC12 (now completed)
 
 Create one owned synthetic Git repository with a synthetic remote and explicit
 private host/root declaration. Obtain positive repository, clone and worktree
@@ -47,8 +48,8 @@ new universal-coverage or production-enrollment requirement.
 
 The reviewer made no edits, ran no tests/services and changed no external state.
 Its earlier acceptance of route behavior is narrowed by this explicit check of
-the repository qualifier. AC12 and overall completion remain open until corrected
-proof and the remaining repository-delivery gates pass.
+the repository qualifier. This was the initial audit boundary. The final evidence below closes AC12; overall
+completion still requires the remaining repository-delivery gates.
 
 ## Preparation checkpoint
 
@@ -64,7 +65,26 @@ The accepted preparation script hash is
 the v2 qualification hash is
 `5ba97f27866de55bbeb2b70e64892cc4e7d0068802b313044d41a50020c390b3`.
 See `ops/declared-canary-root-preparation-verification.json` for its private archive
-reference and hash-bound source snapshots. Both route stages remain not-run, and
+reference and hash-bound source snapshots. At this preparation checkpoint both route stages were not-run, and
 all seven real-harness launch/event populations remain Unknown. Reuse this exact
 v2 root after verifying its qualification; do not substitute the retained initial
 v1 preparation or infer identity from the verifier checkout.
+
+## Final AC12 artifact acceptance
+
+Independent Astra accepted the final disposable and live pair after separately
+checking all 87 and 86 source hashes, plan/input/configuration digests, independently
+derived event IDs, matching backend surface/route IDs, and read-only SQLite local
+ledger/visibility sets and host/namespace. Both use the exact v2 qualification and
+root above. All four final helper hashes match the reviewed bytes. Both guards
+exited zero, without a controlled stop or PID-limit event. Owned unit removal,
+collector rollback, retained queues, post-rollback backend readback and disposable
+backend/network cleanup are recorded. See `DECLARED-ROUTE-PROOF.md` and
+`../ops/declared-route-stages-verification.json` for durable archive paths/digests.
+
+The final refusal check is bound to helper `bacdf231e46c75a6588948667ee8279d62ae5003d39e10c151f44924cd737f79`
+and qualifies changed Git-directory/common-directory and occupied-plan refusal.
+The reviewer made no mutations, test runs or service actions. It expressly accepted
+AC12's synthetic association and delivery scope without inferring real enrollment,
+exhaustive capture or known launch populations. All thirteen criteria now have
+scoped support; required repository gates, publication, merge and reflection remain.

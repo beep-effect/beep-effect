@@ -33,15 +33,18 @@ def request(url, data=None, method=None):
 
 
 class LiveCanary:
-    def __init__(self, root, dankserver, command):
+    def __init__(self, root, dankserver, command, declared=None, disposable=None):
         self.root, self.dankserver, self.command = root, dankserver, command
+        self.declared, self.disposable = declared, disposable
+        self.origin = disposable.origin if disposable else ORIGIN
+        self.stage = "disposable" if disposable else "live"
         self.token = uuid.uuid4().hex[:12]
         self.name = 'foundation-live-canary-' + self.token
         self.project = 'foundation-canary-' + self.token
         self.created = False
         self.guard = None
         self.evidence = {'result': 'incomplete', 'syntheticRecordsOnly': True, 'actualHarnessCoverage': False,
-                         'productionCollectorChanged': False, 'backend': ORIGIN, 'project': self.project,
+                         'productionCollectorChanged': False, 'backend': self.origin, 'stage': self.stage, 'project': self.project,
                          'collectorImage': COLLECTOR, 'recordBudget': 2, 'producerAutomaticRetries': 0}
 
     def start(self):
@@ -49,13 +52,19 @@ class LiveCanary:
                          if line.startswith('MemAvailable:'))
         assert available >= 16*1024**3, 'Insufficient host headroom for bounded canary'
         self.evidence['initialHostAvailableBytes'] = available
-        assert request(ORIGIN+'/healthz') == b'OK'
-        tailnet_address = socket.gethostbyname('dankserver.tailc7c348.ts.net')
-        assert ipaddress.ip_address(tailnet_address) in ipaddress.ip_network('100.64.0.0/10')
-        self.evidence['containerDns'] = 'explicit host-resolved tailnet address; TLS hostname verification retained'
+        assert request(self.origin+'/healthz') == b'OK'
+        if self.disposable:
+            network_args = ['--network', self.disposable.network]
+            collector_origin = self.disposable.collector_origin
+        else:
+            tailnet_address = socket.gethostbyname('dankserver.tailc7c348.ts.net')
+            assert ipaddress.ip_address(tailnet_address) in ipaddress.ip_network('100.64.0.0/10')
+            network_args = ['--add-host', 'dankserver.tailc7c348.ts.net:'+tailnet_address]
+            collector_origin = self.origin
+            self.evidence['containerDns'] = 'explicit host-resolved tailnet address; TLS hostname verification retained'
         # A new project avoids mixed populations and makes the entire response bounded.
         try:
-            request(ORIGIN+'/v1/projects/'+self.project)
+            request(self.origin+'/v1/projects/'+self.project)
         except urllib.error.HTTPError as error:
             assert error.code == 404
             error.close()
@@ -67,7 +76,7 @@ class LiveCanary:
             monitoring_otel_metadata_route_enabled=True,
             monitoring_otel_phoenix_project=self.project, monitoring_otel_prometheus_exporter_port=9464)
         config = yaml.safe_load(rendered)
-        config['exporters']['otlphttp/phoenix']['traces_endpoint'] = ORIGIN+'/v1/traces'
+        config['exporters']['otlphttp/phoenix']['traces_endpoint'] = collector_origin+'/v1/traces'
         # Bound retries to this canary window. Preserve the queue on shutdown.
         config['exporters']['otlphttp/phoenix']['retry_on_failure']['max_elapsed_time'] = '30s'
         self.path = self.root/'collector.yaml'
@@ -85,7 +94,7 @@ class LiveCanary:
         self.created = True
         self.command(['docker', 'run', '-d', '--pull=never', '--name', self.name,
                       '--label', 'beep.observation.canary='+self.token,
-                      '--add-host', 'dankserver.tailc7c348.ts.net:'+tailnet_address,
+                      *network_args,
                       '--user', f'{os.getuid()}:{os.getgid()}', '--memory=512m', '--memory-swap=512m',
                       '--cpus=1', '--pids-limit=128', '--read-only', '--cap-drop=ALL',
                       '--security-opt=no-new-privileges', '--log-driver=none',
@@ -117,13 +126,16 @@ class LiveCanary:
 
     def configure(self, path):
         config = json.loads(path.read_text())
-        config['destination'] = {'endpoint': self.export, 'backendOrigin': ORIGIN,
+        config['destination'] = {'endpoint': self.export, 'backendOrigin': self.origin,
                                  'project': self.project, 'timeoutMillis': 5000}
         config['route']['syntheticFixtureMetadata'] = True
         config['runtime'].update(intervalMillis=1000, cycleTimeoutMillis=10000, staleAfterMillis=15000)
         config['scheduling'].update(tickTimeoutMillis=5000, reconcileDelayMillis=1000)
         # No transcript roots and no producer lifecycle enrollment in a synthetic route canary.
         config.pop('launchHttp', None)
+        if self.declared:
+            self.declared.configure(config, self.token)
+        self.config_path = path
         path.write_text(json.dumps(config))
 
     def exercise(self, state, private_request, public_request):
@@ -141,6 +153,16 @@ class LiveCanary:
             for i, surface in enumerate(['cli', 'desktop'])]}]}]}
         body = json.dumps(payload).encode()
         (self.root/'synthetic-input.json').write_bytes(body); (self.root/'synthetic-input.json').chmod(0o600)
+        config = json.loads(self.config_path.read_text())
+        spans = payload['resourceSpans'][0]['scopeSpans'][0]['spans']
+        # Derive expectations from the request, never from returned rows.
+        expected_ids = {hashlib.sha256(('synthetic-launch-proof-salt'+'\0'+'native-span/v1:'+
+                         config['route']['routeId']+':'+s['traceId']+':'+s['spanId']).encode()).hexdigest() for s in spans}
+        if self.declared:
+            declaration, digest = self.declared.plan(self.root, self.config_path, payload, self.project, self.stage)
+            assert {e['eventId'] for e in declaration['expectedEvents']} == expected_ids
+            self.evidence['declaredRoute'] = declaration
+            self.evidence['declaredRoutePlanSha256'] = digest
         # One producer submission only; ambiguous results end the proof without resend.
         status, receipt = public_request('POST', '/v1/traces', body, {'Content-Type': 'application/json'})
         assert status == 200, f'Canary intake refused: {status}'
@@ -149,7 +171,7 @@ class LiveCanary:
         response = None
         while time.monotonic() < deadline:
             try:
-                response = request(ORIGIN+'/v1/projects/'+self.project+'/spans?limit=3')
+                response = request(self.origin+'/v1/projects/'+self.project+'/spans?limit=3')
                 rows = json.loads(response)
                 if len(rows['data']) == 2:
                     assert rows['next_cursor'] is None
@@ -163,7 +185,12 @@ class LiveCanary:
         assert ('synthetic-cli-'+self.token).encode() not in response
         assert ('synthetic-desktop-'+self.token).encode() not in response
         event_ids = {row['attributes']['ai_metrics.event_id'] for row in rows['data']}
-        assert len(event_ids) == 2
+        assert event_ids == expected_ids and len(event_ids) == 2
+        assert all(row['attributes']['ai_metrics.route_id'] == config['route']['routeId'] for row in rows['data'])
+        if self.declared:
+            expected_surfaces = {e['eventId']: e['surface'] for e in declaration['expectedEvents']}
+            assert all(expected_surfaces[row['attributes']['ai_metrics.event_id']] ==
+                       row['attributes']['ai_metrics.fixture.surface'] for row in rows['data'])
         assert len({row['attributes']['session.id'] for row in rows['data']}) == 2
         assert {row['attributes']['ai_metrics.fixture.surface'] for row in rows['data']} == {'cli', 'desktop'}
         assert all(row['name'] == 'fixture.'+row['attributes']['ai_metrics.fixture.surface']+'.agent'
@@ -177,19 +204,26 @@ class LiveCanary:
         deadline = time.monotonic()+20
         while True:
             with sqlite3.connect(f'file:{state}/journal.sqlite?mode=ro', uri=True) as db:
+                intake = json.loads(db.execute('SELECT payload FROM observation_intake_config WHERE singleton=1').fetchone()[0])
+                assert intake['hostId'] == config['intake']['hostId']
+                assert intake['namespaceId'] == config['intake']['namespaceId']
                 local = {r[0] for r in db.execute('SELECT event_id FROM observation_delivery_events')}
                 visible = {r[0] for r in db.execute('SELECT event_id FROM observation_delivery_visibility')}
             assert local == event_ids
             if visible == event_ids: break
             assert time.monotonic() < deadline, 'Backend visible but worker reconciliation unproven'
             time.sleep(1)
+        if self.declared:
+            self.declared.verify()
+            assert hashlib.sha256((self.root/'declared-route-plan.json').read_bytes()).hexdigest() == digest
+            self.evidence['declaredRootJournalAndBackendAssociationVerified'] = True
         assert private_request('POST', '/control/pause')[0] == 200
         assert public_request('POST', '/v1/traces', b'{}', {'Content-Type': 'application/json'})[0] == 503
         description = ('Bounded synthetic foundation route canary. Two synthetic CLI/desktop-marked records; '
                        'no real harness coverage. Finite temporary route; lifecycle recorded in the foundation packet. '
                        'Retained as verification evidence.')
-        request(ORIGIN+'/v1/projects/'+self.project, {'description': description}, 'PUT')
-        assert json.loads(request(ORIGIN+'/v1/projects/'+self.project))['data']['description'] == description
+        request(self.origin+'/v1/projects/'+self.project, {'description': description}, 'PUT')
+        assert json.loads(request(self.origin+'/v1/projects/'+self.project))['data']['description'] == description
         self.evidence.update(result='passed', eventIds=sorted(event_ids), storedRecords=rows['data'],
                              exactLocalAndBackendEventSets=True, workerVisibilityReceipts=2,
                              privateContentAbsentFromBackend=True, pausedBeforeStop=True,
@@ -217,7 +251,7 @@ class LiveCanary:
             self.evidence['independentStopGuardReleased'] = True
         self.evidence['cleanup'] = 'owned collector stopped and removed; private queue retained'
         if self.evidence['result'] == 'passed':
-            rows = json.loads(request(ORIGIN+'/v1/projects/'+self.project+'/spans?limit=3'))
+            rows = json.loads(request(self.origin+'/v1/projects/'+self.project+'/spans?limit=3'))
             assert rows['next_cursor'] is None
             assert {r['attributes']['ai_metrics.event_id'] for r in rows['data']} == set(self.evidence['eventIds'])
             self.evidence['backendEvidencePreservedAfterRollback'] = True

@@ -591,3 +591,15 @@ compare exact read-back. Reversal restores the captured legacy destinations and
 mode after pausing new producers, preserving metadata queue/journal bytes. The
 synthetic legacy/metadata/legacy test proves that bounded reversal; cross-host
 transport and mass producer enrollment remain outside this source qualification.
+
+### Declared synthetic repository association (2026-10-29)
+
+AC12 uses one retained, positively probed synthetic Git root for both disposable and
+live canaries. A create-only durable pre-send plan joins its host, namespace,
+repository/clone/worktree receipt to the explicit synthetic route and independently
+derived event IDs. Actual installed worker configuration and journal identity are
+checked against this plan; backend event/route/surface IDs must match exactly. This
+is proof-side producer association, not a new real-harness capability or population
+claim. Both stages retain raw proof evidence and private queues while removing only
+owned temporary units/containers. Reversal is the tested pause/stop/removal path;
+historical forwarders, archives and production collector configuration remain held.
