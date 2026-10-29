@@ -21,6 +21,11 @@ import { parseSourceEventTime } from "./source-event-time.ts";
 import type { TranscriptIntakeConfig } from "../transcript-intake.ts";
 
 const $I = $RepoAiMetricsId.create("internal/observation-export-reader");
+const ExportPageSlice = S.Struct({
+  offset: S.Int.check(S.isBetween({ minimum: 0, maximum: 4095 })),
+  limit: S.Int.check(S.isBetween({ minimum: 1, maximum: 512 })),
+}).pipe($I.annoteSchema("ExportPageSlice", { description: "Bounded canonical event selection before page lookup." }));
+const isExportPageSlice = S.is(ExportPageSlice);
 const AcceptedPage = S.TaggedUnion({
   Native: { receipt: TranscriptAcceptance, spans: S.Array(NativeTraceMetadata) },
   Reconstructed: { receipt: TranscriptAcceptance, page: TranscriptPage },
@@ -110,15 +115,7 @@ export const makeObservationExportReader = Effect.fn("AiMetrics.makeObservationE
     limit: number,
     project: NativeExportInput["project"]
   ) {
-    if (
-      !Number.isInteger(offset) ||
-      offset < 0 ||
-      offset > 4095 ||
-      !Number.isInteger(limit) ||
-      limit < 1 ||
-      limit > 512
-    )
-      return yield* SelectionError.make({ reason: "invalid-selection" });
+    if (!isExportPageSlice({ offset, limit })) return yield* SelectionError.make({ reason: "invalid-selection" });
     const selected = yield* read(receiptId);
     if (O.isNone(selected)) return yield* SelectionError.make({ reason: "unknown-page" });
     const page = selected.value;

@@ -1,5 +1,14 @@
 # Memory notification investigation — 2026-10-28
 
+## Follow-up — October 29, 15:52 CDT
+
+The fresh cross-boot query still has nine distinct OOM decisions, latest at
+10:56:06 CDT. Boot separator lines are excluded from the event count. The host
+has 37.2 GiB available RAM and only 0.05 GiB free swap at this snapshot. ComfyUI
+PID 537468 holds about 34.8 GiB resident and 14.1 GiB swapped. No unrelated
+application or swap setting changed. The held forwarder service and timer remain
+masked/inactive. Evidence: `../ops/memory-notification-followup-20261029-1552.json`.
+
 ## Process-limit follow-up — October 29, 14:35 CDT
 
 Cross-boot kernel records still contain nine OOM decisions: eight service-limit

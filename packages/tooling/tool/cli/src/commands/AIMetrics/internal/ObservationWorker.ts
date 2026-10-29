@@ -217,23 +217,23 @@ const resolveObservationCredentials = Effect.fnUntraced(function* (uid: number) 
   }).pipe(Effect.mapError(() => failure("secret-environment")));
   return secrets;
 });
+const isOwnedPrivateSocket = (info: FileSystem.File.Info, uid: number) =>
+  info.type === "Socket" && O.contains(info.uid, uid) && (info.mode & 0o777) === 0o600;
 const prepareObservationStorage = Effect.fnUntraced(function* (directory: string, uid: number) {
   const fs = yield* FileSystem.FileSystem;
   const names = yield* fs.readDirectory(directory);
-  for (const name of ["journal.sqlite", "journal.sqlite-journal", "journal.sqlite-wal", "journal.sqlite-shm"]) {
-    if (A.contains(names, name)) yield* privateFile(`${directory}/${name}`, uid);
-  }
+  yield* Effect.forEach(
+    ["journal.sqlite", "journal.sqlite-journal", "journal.sqlite-wal", "journal.sqlite-shm"],
+    (name) => (A.contains(names, name) ? privateFile(`${directory}/${name}`, uid) : Effect.void),
+    { concurrency: 1, discard: true }
+  );
   const socket = `${directory}/worker.sock`;
-  if (A.contains(names, "worker.sock")) {
-    const info = yield* fs.lstat(socket);
-    if (info.type !== "Socket" || O.isNone(info.uid) || info.uid.value !== uid || (info.mode & 0o777) !== 0o600)
-      return yield* failure("socket");
-    if (
-      A.some(Str.split("\n")(yield* readKernel("/proc/net/unix", 1048576)), (line) => Str.endsWith(` ${socket}`)(line))
-    )
-      return yield* failure("socket");
-    yield* fs.remove(socket);
-  }
+  if (!A.contains(names, "worker.sock")) return socket;
+  const info = yield* fs.lstat(socket);
+  if (!isOwnedPrivateSocket(info, uid)) return yield* failure("socket");
+  if (A.some(Str.split("\n")(yield* readKernel("/proc/net/unix", 1048576)), (line) => Str.endsWith(` ${socket}`)(line)))
+    return yield* failure("socket");
+  yield* fs.remove(socket);
   return socket;
 });
 /**
@@ -283,8 +283,9 @@ export const runObservationWorkerProcess = Effect.fn("AIMetrics.runObservationWo
     yield* Effect.addFinalizer(() =>
       Effect.gen(function* () {
         if (O.isNone(ownedSocket)) return;
+        const owner = ownedSocket.value;
         const current = yield* fs.lstat(socket).pipe(Effect.option);
-        if (O.isSome(current) && current.value.type === "Socket" && sameFileIdentity(current.value, ownedSocket.value))
+        if (O.exists(current, (info) => info.type === "Socket" && sameFileIdentity(info, owner)))
           yield* fs.remove(socket);
       }).pipe(Effect.orDie)
     );

@@ -23,7 +23,7 @@ import { transcriptDirectoryHelper } from "./internal/transcript-directory-helpe
 import { hashPrivateIdentifier } from "./privacy.ts";
 import { TranscriptIntakeError } from "./transcript-intake.ts";
 import { TranscriptPageInput } from "./transcript-page.ts";
-import { runTranscriptSweep, TranscriptSweepInput } from "./transcript-sweep.ts";
+import { runTranscriptSweep, TranscriptSweepInput, TranscriptSweepOutcome } from "./transcript-sweep.ts";
 import type { TranscriptIntakeConfig } from "./transcript-intake.ts";
 import type { TranscriptSweepReport } from "./transcript-sweep.ts";
 
@@ -189,6 +189,23 @@ const closeRoot = Effect.fn("AiMetrics.discovery.closeRoot")(function* (root: Ro
   if (O.isSome(root.handle)) yield* Scope.close(root.handle.value.scope, Exit.void);
   root.handle = O.none();
 });
+const recordReadOutcome = (read: RootRuntime["read"], outcome: TranscriptSweepReport["outcomes"][number]) => {
+  read.assessed += 1;
+  TranscriptSweepOutcome.match({
+    Accepted: (accepted) => {
+      read.accepted += 1;
+      if (accepted.waitingForPartialLine) read.partial += 1;
+      else if (accepted.remainingBytes > 0) read.backlogged += 1;
+    },
+    Failed: () => {
+      read.failed += 1;
+    },
+    Idle: (idle) => {
+      if (idle.waitingForPartialLine) read.partial += 1;
+      else read.idle += 1;
+    },
+  })(outcome);
+};
 /**
  * Create a scoped, single-owner directory scanner.
  * **Example** (Inspecting the factory)
@@ -293,6 +310,36 @@ export const makeTranscriptDiscovery = Effect.fn("AiMetrics.makeTranscriptDiscov
     };
     return O.some({ observation, source: { path: candidate, source: root.source, retired: false } });
   });
+  const startCycle = Effect.fnUntraced(function* (root: RootRuntime) {
+    root.cycle += 1;
+    root.entries = 0;
+    root.candidates = 0;
+    root.read = { assessed: 0, accepted: 0, idle: 0, partial: 0, backlogged: 0, failed: 0 };
+    root.excludedLinks = 0;
+    root.handle = O.some(yield* openRoot(root.path, input));
+    root.state = "scanning";
+  }, Effect.uninterruptible);
+  const advanceRoot = Effect.fnUntraced(function* (root: RootRuntime) {
+    if (root.state !== "scanning") {
+      yield* startCycle(root);
+      return O.none();
+    }
+    if (O.isNone(root.handle)) return yield* failure("changed");
+    const event = yield* root.handle.value.next;
+    if (
+      event.kind === "complete" ||
+      event.kind === "overflow" ||
+      event.kind === "unavailable" ||
+      event.kind === "changed"
+    ) {
+      root.state = event.kind;
+      yield* closeRoot(root);
+      return O.none();
+    }
+    if (event.kind !== "directory-end") root.entries += 1;
+    if (event.kind === "link") root.excludedLinks += 1;
+    return event.kind === "file" ? yield* candidateFromFile(root, event.relative) : O.none();
+  });
   const next = Effect.gen(function* () {
     if (closed) return yield* failure("closed");
     const eligible = A.filter(roots, (root) => root.state !== "retired");
@@ -304,52 +351,26 @@ export const makeTranscriptDiscovery = Effect.fn("AiMetrics.makeTranscriptDiscov
       readonly sourceId: Sha256Hex;
     }> = [];
     let operations = 0;
+    const visitRoot = Effect.fnUntraced(function* (root: RootRuntime) {
+      const result = yield* Effect.result(advanceRoot(root));
+      if (Result.isFailure(result)) {
+        root.state = result.failure.reason === "changed" ? "changed" : "unavailable";
+        yield* closeRoot(root);
+        finished = A.append(finished, root.rootId);
+        return;
+      }
+      if (root.state !== "scanning") finished = A.append(finished, root.rootId);
+      if (O.isSome(result.success)) {
+        observations = A.append(observations, result.success.value.observation);
+        sources = A.append(sources, result.success.value.source);
+      }
+    });
     while (operations < input.maxEntries && sources.length < input.maxFiles && finished.length < eligible.length) {
       const root = eligible[cursor % eligible.length];
       cursor = (cursor + 1) % eligible.length;
       if (root === undefined || A.contains(finished, root.rootId)) continue;
       operations += 1;
-      const operation = Effect.gen(function* () {
-        if (root.state !== "scanning") {
-          return yield* Effect.gen(function* () {
-            root.cycle += 1;
-            root.entries = 0;
-            root.candidates = 0;
-            root.read = { assessed: 0, accepted: 0, idle: 0, partial: 0, backlogged: 0, failed: 0 };
-            root.excludedLinks = 0;
-            root.handle = O.some(yield* openRoot(root.path, input));
-            root.state = "scanning";
-          }).pipe(Effect.uninterruptible);
-        }
-        if (O.isNone(root.handle)) return yield* failure("changed");
-        const event = yield* root.handle.value.next;
-        if (
-          event.kind === "complete" ||
-          event.kind === "overflow" ||
-          event.kind === "unavailable" ||
-          event.kind === "changed"
-        ) {
-          root.state = event.kind;
-          yield* closeRoot(root);
-          finished = A.append(finished, root.rootId);
-          return;
-        }
-        if (event.kind !== "directory-end") root.entries += 1;
-        if (event.kind === "link") root.excludedLinks += 1;
-        if (event.kind === "file") {
-          const candidate = yield* candidateFromFile(root, event.relative);
-          if (O.isSome(candidate)) {
-            observations = A.append(observations, candidate.value.observation);
-            sources = A.append(sources, candidate.value.source);
-          }
-        }
-      });
-      const result = yield* Effect.result(operation);
-      if (Result.isFailure(result)) {
-        root.state = result.failure.reason === "changed" ? "changed" : "unavailable";
-        yield* closeRoot(root);
-        finished = A.append(finished, root.rootId);
-      }
+      yield* visitRoot(root);
     }
     let recorded = false;
     const recordReads = Effect.fn("AiMetrics.discovery.recordReads")(
@@ -369,15 +390,7 @@ export const makeTranscriptDiscovery = Effect.fn("AiMetrics.makeTranscriptDiscov
         for (const observation of observations) {
           const outcome = A.findFirst(sweep.outcomes, (r) => r.sourceId === observation.sourceId);
           if (O.isNone(outcome)) return yield* failure("changed");
-          const read = observation.root.read;
-          read.assessed += 1;
-          if (outcome.value._tag === "Accepted") {
-            read.accepted += 1;
-            if (outcome.value.waitingForPartialLine) read.partial += 1;
-            else if (outcome.value.remainingBytes > 0) read.backlogged += 1;
-          } else if (outcome.value._tag === "Failed") read.failed += 1;
-          else if (outcome.value.waitingForPartialLine) read.partial += 1;
-          else read.idle += 1;
+          recordReadOutcome(observation.root.read, outcome.value);
         }
         recorded = true;
         return report(operations, sources.length);

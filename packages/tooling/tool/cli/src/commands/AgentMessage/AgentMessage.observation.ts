@@ -137,6 +137,7 @@ export class AgentObservationError extends S.TaggedError<AgentObservationError, 
   $I.annote("AgentObservationError", { description: "Safe failure without profile, path, secret or source content." })
 ) {}
 const failure = (reason: AgentObservationError["reason"]) => AgentObservationError.make({ reason });
+const currentOwnerUid = () => process.geteuid?.() ?? -1;
 const readPrivateDocument = Effect.fn("AgentObservation.readPrivateDocument")(
   function* <T, I>(
     directory: string,
@@ -145,7 +146,7 @@ const readPrivateDocument = Effect.fn("AgentObservation.readPrivateDocument")(
   ) {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const uid = process.geteuid?.() ?? -1;
+    const uid = currentOwnerUid();
     if (!path.isAbsolute(directory) || path.normalize(directory) !== directory || directory === "/")
       return yield* failure("configuration");
     const root = yield* fs.lstat(directory);
@@ -166,9 +167,7 @@ const readPrivateDocument = Effect.fn("AgentObservation.readPrivateDocument")(
         if (
           !isPrivateObservationFile(info, uid) ||
           info.dev !== before.dev ||
-          !O.isSome(info.ino) ||
-          !O.isSome(before.ino) ||
-          info.ino.value !== before.ino.value
+          !O.exists(info.ino, (inode) => O.contains(before.ino, inode))
         )
           return yield* failure("configuration");
         const bytes = new Uint8Array(32769);
@@ -329,7 +328,7 @@ export const initializeAgentObservationClaims = Effect.fn("AgentObservation.init
   requestDirectory: string
 ) {
   const enrollment = yield* prepareEnrollment(requestDirectory);
-  yield* initializeObservationClaims(enrollment.claims, process.geteuid?.() ?? -1).pipe(
+  yield* initializeObservationClaims(enrollment.claims, currentOwnerUid()).pipe(
     Effect.mapError(() => failure("claim"))
   );
   return provisioned(enrollment, "initialize-claims");
@@ -390,7 +389,7 @@ export const enrollAgentObservation = Effect.fn("AgentObservation.enroll")(funct
   directory: string
 ) {
   const enrollment = yield* prepareEnrollment(requestDirectory);
-  const uid = process.geteuid?.() ?? -1;
+  const uid = currentOwnerUid();
   const claims = yield* makeObservationClaims(enrollment.claims, uid).pipe(Effect.mapError(() => failure("claim")));
   if (A.some(yield* claims.snapshot, (claim) => claim.submission.fact.launchId === enrollment.submission.fact.launchId))
     return yield* failure("claim");
@@ -455,7 +454,7 @@ export const readAgentObservationPopulation = Effect.fn("AgentObservation.popula
   return yield* readObservationClaimPopulation(
     enrollment.claims,
     ObservationClaimPopulationRequest.make(request),
-    process.geteuid?.() ?? -1
+    currentOwnerUid()
   );
 });
 
@@ -512,7 +511,7 @@ export const recoverAgentObservation = Effect.fn("AgentObservation.recover")(fun
     policy.journalDirectory !== destination.directory
   )
     return yield* failure("identity");
-  const uid = process.geteuid?.() ?? -1;
+  const uid = currentOwnerUid();
   const claims = yield* makeObservationClaims(policy, uid).pipe(Effect.mapError(() => failure("claim")));
   const before = yield* claims.readOutbox(submission.fact.launchId).pipe(Effect.mapError(() => failure("claim")));
   if (!S.toEquivalence(ObservationLaunchSubmission)(before.claim.submission, submission))
@@ -577,7 +576,7 @@ export const openAgentMessageSession = Effect.fn("AgentObservation.open")(functi
     enrollment.claims.journalDirectory !== enrollment.destination.directory
   )
     return yield* failure("identity");
-  const uid = process.geteuid?.() ?? -1;
+  const uid = currentOwnerUid();
   const claims = yield* makeObservationClaims(enrollment.claims, uid).pipe(Effect.mapError(() => failure("claim")));
   const append = (fact: ObservationLaunchFact) =>
     claims.appendObservation(ObservationLaunchSubmission.make({ ...submission, fact })).pipe(

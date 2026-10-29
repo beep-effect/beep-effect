@@ -1,5 +1,27 @@
 # Delivery checkpoint — 2026-10-29
 
+## Boundary predicate verification and Dankserver merge — October 29, 15:58 CDT
+
+The reviewed five-file boundary refactor passed 50 focused tests, full AI-metrics
+audit (832 tests), 658 documentation examples and CLI lint/type checks. Current
+entrypoint, installed synthetic live canary, stopped-worker health alert and
+optional query-credential proof all passed with source hashes verified and
+owned processes stopped. Artifacts and receipts are retained in
+`ops/boundary-predicates-verification.json`. This proves synthetic behavior,
+not actual harness population coverage. No deliberate OOM was run.
+
+Fallow introduced complexity fell from 16 to 6 with zero introduced duplication
+or dead code. Five previously adjudicated narrow candidates await exact-selector
+configuration and proof review; discovery advanceRoot retains one CRAP finding.
+No exception has been applied. The latest memory follow-up still has nine OOM
+decisions since October 27, latest at 10:56 CDT; the recovery hold is unchanged.
+
+Dankserver PR3 is merged at `f6e2bae77d205f228c4ebf9e3e8adcebb4b94d45`,
+without production deployment. See `ops/dankserver-merge-verification.json`.
+Corrective Beep PR2362 remains open with its existing monitor; current-head
+final-check and hosted gates remain required. Foundation publication and full
+goal closure remain open.
+
 ## Reviewed repair commit and upstream sync — 13:30 CDT
 
 The complete owned repair wave is saved at `4c93cd6d6d`. Pre-commit secret,

@@ -225,6 +225,22 @@ const writeExclusive = Effect.fn("ObservationClaims.writeExclusive")((file: stri
     })
   )
 );
+const readVerifiedClaimText = Effect.fnUntraced(function* (handle: FileSystem.File) {
+  const bytes = new Uint8Array(8193);
+  let offset = 0;
+  while (offset < bytes.length) {
+    const count = yield* handle.read(bytes.subarray(offset));
+    if (count === 0) break;
+    offset += count;
+  }
+  if (offset === 0 || offset > 8192) return yield* fail("integrity");
+  return O.some(
+    yield* Effect.try({
+      try: () => new TextDecoder("utf-8", { fatal: true }).decode(bytes.subarray(0, offset)),
+      catch: () => fail("integrity"),
+    })
+  );
+});
 // Read through the checked descriptor; the path-stream helper cannot request noFollow.
 const readSlot = Effect.fn("ObservationClaims.readSlot")((file: string, uid: number) =>
   Effect.scoped(
@@ -250,20 +266,7 @@ const readSlot = Effect.fn("ObservationClaims.readSlot")((file: string, uid: num
       const handle = opened.value;
       const info = yield* handle.stat;
       if (!isPrivateObservationFile(info, uid)) return yield* fail("integrity");
-      const bytes = new Uint8Array(8193);
-      let offset = 0;
-      while (offset < bytes.length) {
-        const count = yield* handle.read(bytes.subarray(offset));
-        if (count === 0) break;
-        offset += count;
-      }
-      if (offset === 0 || offset > 8192) return yield* fail("integrity");
-      return O.some(
-        yield* Effect.try({
-          try: () => new TextDecoder("utf-8", { fatal: true }).decode(bytes.subarray(0, offset)),
-          catch: () => fail("integrity"),
-        })
-      );
+      return yield* readVerifiedClaimText(handle);
     })
   )
 );
@@ -534,6 +537,30 @@ export const makeObservationClaims = Effect.fn("AiMetrics.makeObservationClaims"
     if (!S.toEquivalence(S.Array(ObservationLaunchOutbox))(first, second)) return yield* fail("contended");
     return second;
   }).pipe(Effect.timeoutOrElse({ duration: "10 seconds", orElse: () => Effect.fail(fail("ambiguous")) }));
+  const resyncSubmission = Effect.fnUntraced(function* (
+    existing: ObservationLaunchSubmission,
+    submission: ObservationLaunchSubmission
+  ) {
+    if (!equalSubmission(existing, submission)) return yield* fail("conflict");
+    // A previous caller may have lost the sync result. Resync before acknowledging the exact record.
+    const { index } = yield* locate(submission.fact.launchId);
+    const file = submission.fact._tag === "Prepared" ? slotPath(index) : factPath(index, factPhase(submission.fact));
+    yield* syncFile(file);
+    yield* syncDirectory(policy.directory);
+    yield* inspect;
+    return existing;
+  });
+  const conflictsWithSubmissionHistory = (
+    submission: ObservationLaunchSubmission,
+    submissions: ReadonlyArray<ObservationLaunchSubmission>
+  ) => {
+    const started = A.some(submissions, (entry) => entry.fact._tag === "Started");
+    return (
+      A.some(submissions, (entry) => entry.fact._tag === "Finished") ||
+      (submission.fact._tag === "SessionBound" && !started) ||
+      (submission.fact._tag === "Finished" && submission.fact.outcome === "succeeded" && !started)
+    );
+  };
   const appendObservation = Effect.fn("ObservationClaims.appendObservation")(
     (submission: ObservationLaunchSubmission) =>
       safe(
@@ -546,24 +573,8 @@ export const makeObservationClaims = Effect.fn("AiMetrics.makeObservationClaims"
                 state.submissions,
                 (entry) => factPhase(entry.fact) === factPhase(submission.fact)
               );
-              if (O.isSome(existing)) {
-                if (!equalSubmission(existing.value, submission)) return yield* fail("conflict");
-                // A previous caller may have lost the sync result. Resync before acknowledging the exact record.
-                const { index } = yield* locate(submission.fact.launchId);
-                const file =
-                  submission.fact._tag === "Prepared" ? slotPath(index) : factPath(index, factPhase(submission.fact));
-                yield* syncFile(file);
-                yield* syncDirectory(policy.directory);
-                yield* inspect;
-                return existing.value;
-              }
-              const started = A.some(state.submissions, (entry) => entry.fact._tag === "Started");
-              if (
-                A.some(state.submissions, (entry) => entry.fact._tag === "Finished") ||
-                (submission.fact._tag === "SessionBound" && !started) ||
-                (submission.fact._tag === "Finished" && submission.fact.outcome === "succeeded" && !started)
-              )
-                return yield* fail("conflict");
+              if (O.isSome(existing)) return yield* resyncSubmission(existing.value, submission);
+              if (conflictsWithSubmissionHistory(submission, state.submissions)) return yield* fail("conflict");
               const { index } = yield* locate(submission.fact.launchId);
               yield* writePayload(factPath(index, factPhase(submission.fact)), yield* encodeSubmission(submission));
               return submission;
@@ -573,6 +584,21 @@ export const makeObservationClaims = Effect.fn("AiMetrics.makeObservationClaims"
         })
       ).pipe(Effect.provideService(FileSystem.FileSystem, fs))
   );
+  const persistReconciledReceipt = Effect.fnUntraced(function* (
+    index: number,
+    submission: ObservationLaunchSubmission,
+    receipt: ObservationLaunchReceipt,
+    previous: O.Option<ObservationLaunchReceipt>
+  ) {
+    if (O.isSome(previous)) {
+      if (!equalReceipt(previous.value, receipt)) return yield* fail("conflict");
+      yield* safe(syncFile(receiptPath(index, factPhase(submission.fact))));
+      yield* safe(syncDirectory(policy.directory));
+      yield* inspect;
+    } else {
+      yield* safe(writePayload(receiptPath(index, factPhase(submission.fact)), yield* safe(encodeReceipt(receipt))));
+    }
+  });
   const reconcile = Effect.fn("ObservationClaims.reconcile")(function* <E, R>(
     launchId: Sha256Hex,
     deliver: (submission: ObservationLaunchSubmission) => Effect.Effect<ObservationLaunchReceipt, E, R>
@@ -588,16 +614,7 @@ export const makeObservationClaims = Effect.fn("AiMetrics.makeObservationClaims"
           const receipt = yield* deliver(submission);
           if (!(yield* safe(validReceipt(receipt, submission)))) return yield* fail("conflict");
           const previous = A.findFirst(state.receipts, (entry) => factPhase(entry.fact) === factPhase(submission.fact));
-          if (O.isSome(previous)) {
-            if (!equalReceipt(previous.value, receipt)) return yield* fail("conflict");
-            yield* safe(syncFile(receiptPath(index, factPhase(submission.fact))));
-            yield* safe(syncDirectory(policy.directory));
-            yield* inspect;
-          } else {
-            yield* safe(
-              writePayload(receiptPath(index, factPhase(submission.fact)), yield* safe(encodeReceipt(receipt)))
-            );
-          }
+          yield* persistReconciledReceipt(index, submission, receipt, previous);
           receipts = A.append(receipts, receipt);
         }
         return receipts;

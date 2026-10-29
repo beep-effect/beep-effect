@@ -1,20 +1,10 @@
 {
   "basis": {
-    "report": ".beep/fallow/audit.repair-v19.json",
-    "rawArchive": "~/.local/state/beep/observation-proof-archive/scenario-structure-_kfc5v3e/audit.repair-v19.combined.txt",
-    "observedAt": "2026-10-29T20:36:06.145815+00:00"
+    "report": ".beep/fallow/audit.repair-v20.json",
+    "rawArchive": "~/.local/state/beep/observation-proof-archive/boundary-predicates-o2cv8ikx/audit.repair-v20.combined.txt",
+    "observedAt": "2026-10-29T20:58:02.330890+00:00"
   },
   "complexity": [
-    {
-      "path": "packages/tooling/library/ai-metrics/src/transcript-discovery.ts",
-      "name": "recordReads",
-      "line": 356,
-      "cyclomatic": 12,
-      "cognitive": 14,
-      "line_count": 29,
-      "exceeded": "cognitive_crap",
-      "severity": "moderate"
-    },
     {
       "path": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts",
       "name": "read",
@@ -24,26 +14,6 @@
       "line_count": 19,
       "exceeded": "crap",
       "severity": "critical"
-    },
-    {
-      "path": "packages/tooling/library/ai-metrics/src/observation-launch-claims.ts",
-      "name": "accepted",
-      "line": 542,
-      "cyclomatic": 11,
-      "cognitive": 10,
-      "line_count": 29,
-      "exceeded": "cognitive_crap",
-      "severity": "moderate"
-    },
-    {
-      "path": "packages/tooling/library/ai-metrics/src/transcript-discovery.ts",
-      "name": "operation",
-      "line": 312,
-      "cyclomatic": 11,
-      "cognitive": 9,
-      "line_count": 35,
-      "exceeded": "cognitive_crap",
-      "severity": "moderate"
     },
     {
       "path": "packages/tooling/library/ai-metrics/test/observation-root-probe.test.ts",
@@ -66,16 +36,6 @@
       "severity": "critical"
     },
     {
-      "path": "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.observation.ts",
-      "name": "readPrivateDocument",
-      "line": 141,
-      "cyclomatic": 11,
-      "cognitive": 6,
-      "line_count": 49,
-      "exceeded": "crap",
-      "severity": "moderate"
-    },
-    {
       "path": "packages/drivers/ai-provider-cli/test/AiProviderCliSession.test.ts",
       "name": "<arrow>",
       "line": 62,
@@ -86,54 +46,14 @@
       "severity": "moderate"
     },
     {
-      "path": "packages/tooling/library/ai-metrics/src/internal/observation-export-reader.ts",
-      "name": "prepare",
-      "line": 107,
-      "cyclomatic": 10,
-      "cognitive": 5,
-      "line_count": 44,
-      "exceeded": "crap",
-      "severity": "moderate"
-    },
-    {
-      "path": "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.observation.ts",
-      "name": "body",
-      "line": 163,
+      "path": "packages/tooling/library/ai-metrics/src/transcript-discovery.ts",
+      "name": "advanceRoot",
+      "line": 322,
       "cyclomatic": 10,
       "cognitive": 7,
-      "line_count": 24,
+      "line_count": 21,
       "exceeded": "crap",
       "severity": "moderate"
-    },
-    {
-      "path": "packages/tooling/library/ai-metrics/src/observation-launch-claims.ts",
-      "name": "<anonymous>",
-      "line": 231,
-      "cyclomatic": 9,
-      "cognitive": 9,
-      "line_count": 37,
-      "exceeded": "cognitive",
-      "severity": "moderate"
-    },
-    {
-      "path": "packages/tooling/library/ai-metrics/src/transcript-discovery.ts",
-      "name": "next",
-      "line": 296,
-      "cyclomatic": 9,
-      "cognitive": 11,
-      "line_count": 94,
-      "exceeded": "cognitive",
-      "severity": "moderate"
-    },
-    {
-      "path": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts",
-      "name": "prepareObservationStorage",
-      "line": 220,
-      "cyclomatic": 9,
-      "cognitive": 9,
-      "line_count": 19,
-      "exceeded": "cognitive_crap",
-      "severity": "high"
     },
     {
       "path": "packages/tooling/library/ai-metrics/test/fixtures/managed-observation-process.ts",
@@ -144,27 +64,19 @@
       "line_count": 145,
       "exceeded": "crap",
       "severity": "high"
-    },
-    {
-      "path": "packages/tooling/library/ai-metrics/src/observation-launch-claims.ts",
-      "name": "result",
-      "line": 581,
-      "cyclomatic": 5,
-      "cognitive": 9,
-      "line_count": 24,
-      "exceeded": "cognitive",
-      "severity": "moderate"
-    },
-    {
-      "path": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts",
-      "name": "<anonymous>",
-      "line": 284,
-      "cyclomatic": 5,
-      "cognitive": 3,
-      "line_count": 6,
-      "exceeded": "crap",
-      "severity": "moderate"
     }
   ],
-  "introducedDuplication": []
+  "attribution": {
+    "gate": "new-only",
+    "dead_code_introduced": 0,
+    "dead_code_inherited": 0,
+    "complexity_introduced": 6,
+    "complexity_inherited": 0,
+    "duplication_introduced": 0,
+    "duplication_inherited": 4,
+    "styling_introduced": 0,
+    "styling_inherited": 0,
+    "duplication_demoted": 0,
+    "diff_risk_introduced": 0
+  }
 }
