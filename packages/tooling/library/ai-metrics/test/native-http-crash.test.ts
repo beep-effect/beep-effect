@@ -59,6 +59,41 @@ const scenario = Effect.fn("NativeHttpCrashTest.scenario")(function* () {
       },
     ],
   });
+  const qualifyProtocol = Effect.fnUntraced(function* (url: string) {
+    const post = (bytes: Uint8Array, contentType = "application/json", encoding = "identity") =>
+      client
+        .execute(
+          HttpClientRequest.post(url).pipe(
+            HttpClientRequest.bodyUint8Array(bytes),
+            HttpClientRequest.setHeaders({ "content-type": contentType, "content-encoding": encoding })
+          )
+        )
+        .pipe(Effect.flatMap((response) => response.arrayBuffer.pipe(Effect.as(response.status))));
+    expect(yield* post(new Uint8Array(), "application/x-protobuf")).toBe(200);
+    expect(yield* post(Zlib.gzipSync(body), "application/json", "gzip")).toBe(200);
+    expect(yield* post(Zlib.gzipSync(Str.repeat(1_048_576)(" ")), "application/json", "gzip")).toBe(413);
+    expect(yield* post(new Uint8Array([255]), "application/x-protobuf")).toBe(400);
+    const incomplete = yield* client
+      .execute(
+        HttpClientRequest.post(url).pipe(
+          HttpClientRequest.bodyStream(Stream.make(new TextEncoder().encode(" ")).pipe(Stream.concat(Stream.never)), {
+            contentType: "application/json",
+          })
+        )
+      )
+      .pipe(
+        Effect.flatMap((response) => response.arrayBuffer.pipe(Effect.as(response.status))),
+        Effect.forkChild
+      );
+    let busy = 0;
+    for (let attempt = 0; attempt < 20 && busy !== 503; attempt++) {
+      yield* Effect.sleep("5 millis");
+      busy = yield* post(new TextEncoder().encode("{}"));
+    }
+    expect(busy).toBe(503);
+    expect(yield* Fiber.join(incomplete)).toBe(503);
+    expect(yield* post(new TextEncoder().encode(body))).toBe(200);
+  });
   const start = Effect.fn("NativeHttpCrashTest.start")(function* (
     mode: "inspect" | "serve" | "protocol" | "before-commit" | "after-commit"
   ) {
@@ -96,39 +131,7 @@ const scenario = Effect.fn("NativeHttpCrashTest.scenario")(function* () {
     }
     const { url } = yield* fs.readFileString(ready).pipe(Effect.flatMap(decodeUrlRecordJson));
     if (mode === "protocol") {
-      const post = (bytes: Uint8Array, contentType = "application/json", encoding = "identity") =>
-        client
-          .execute(
-            HttpClientRequest.post(url).pipe(
-              HttpClientRequest.bodyUint8Array(bytes),
-              HttpClientRequest.setHeaders({ "content-type": contentType, "content-encoding": encoding })
-            )
-          )
-          .pipe(Effect.flatMap((response) => response.arrayBuffer.pipe(Effect.as(response.status))));
-      expect(yield* post(new Uint8Array(), "application/x-protobuf")).toBe(200);
-      expect(yield* post(Zlib.gzipSync(body), "application/json", "gzip")).toBe(200);
-      expect(yield* post(Zlib.gzipSync(Str.repeat(1_048_576)(" ")), "application/json", "gzip")).toBe(413);
-      expect(yield* post(new Uint8Array([255]), "application/x-protobuf")).toBe(400);
-      const incomplete = yield* client
-        .execute(
-          HttpClientRequest.post(url).pipe(
-            HttpClientRequest.bodyStream(Stream.make(new TextEncoder().encode(" ")).pipe(Stream.concat(Stream.never)), {
-              contentType: "application/json",
-            })
-          )
-        )
-        .pipe(
-          Effect.flatMap((response) => response.arrayBuffer.pipe(Effect.as(response.status))),
-          Effect.forkChild
-        );
-      let busy = 0;
-      for (let attempt = 0; attempt < 20 && busy !== 503; attempt++) {
-        yield* Effect.sleep("5 millis");
-        busy = yield* post(new TextEncoder().encode("{}"));
-      }
-      expect(busy).toBe(503);
-      expect(yield* Fiber.join(incomplete)).toBe(503);
-      expect(yield* post(new TextEncoder().encode(body))).toBe(200);
+      yield* qualifyProtocol(url);
       yield* child.kill({ killSignal: "SIGKILL" });
       expect(Exit.isFailure(yield* Effect.exit(child.exitCode))).toBe(true);
       return O.none();

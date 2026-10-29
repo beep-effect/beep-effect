@@ -1,8 +1,8 @@
 {
   "basis": {
-    "report": ".beep/fallow/audit.repair-v17.json",
-    "rawArchive": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-boundary-structure-c4jtwkoz/audit.repair-v17.combined.txt",
-    "observedAt": "2026-10-29T19:50:25.392469+00:00"
+    "report": ".beep/fallow/audit.repair-v19.json",
+    "rawArchive": "~/.local/state/beep/observation-proof-archive/scenario-structure-_kfc5v3e/audit.repair-v19.combined.txt",
+    "observedAt": "2026-10-29T20:36:06.145815+00:00"
   },
   "complexity": [
     {
@@ -17,18 +17,8 @@
     },
     {
       "path": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts",
-      "name": "runObservationWorkerProcess",
-      "line": 181,
-      "cyclomatic": 12,
-      "cognitive": 12,
-      "line_count": 145,
-      "exceeded": "cognitive_crap",
-      "severity": "critical"
-    },
-    {
-      "path": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts",
       "name": "read",
-      "line": 214,
+      "line": 194,
       "cyclomatic": 12,
       "cognitive": 4,
       "line_count": 19,
@@ -68,21 +58,11 @@
     {
       "path": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts",
       "name": "secrets",
-      "line": 192,
+      "line": 175,
       "cyclomatic": 11,
       "cognitive": 8,
-      "line_count": 46,
+      "line_count": 43,
       "exceeded": "crap",
-      "severity": "critical"
-    },
-    {
-      "path": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts",
-      "name": "handler",
-      "line": 298,
-      "cyclomatic": 11,
-      "cognitive": 11,
-      "line_count": 23,
-      "exceeded": "cognitive_crap",
       "severity": "critical"
     },
     {
@@ -116,16 +96,6 @@
       "severity": "moderate"
     },
     {
-      "path": "packages/tooling/library/ai-metrics/test/native-http-crash.test.ts",
-      "name": "start",
-      "line": 62,
-      "cyclomatic": 10,
-      "cognitive": 10,
-      "line_count": 109,
-      "exceeded": "cognitive_crap",
-      "severity": "moderate"
-    },
-    {
       "path": "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.observation.ts",
       "name": "body",
       "line": 163,
@@ -156,33 +126,13 @@
       "severity": "moderate"
     },
     {
-      "path": "packages/tooling/library/ai-metrics/test/evidence-retention.test.ts",
-      "name": "it.effect(\"retains all five retired state counts an...\")",
-      "line": 203,
-      "cyclomatic": 8,
-      "cognitive": 15,
-      "line_count": 51,
-      "exceeded": "cognitive",
-      "severity": "moderate"
-    },
-    {
-      "path": "packages/tooling/library/ai-metrics/test/transcript-export.test.ts",
-      "name": "<anonymous>",
-      "line": 170,
-      "cyclomatic": 8,
-      "cognitive": 9,
-      "line_count": 58,
-      "exceeded": "cognitive",
-      "severity": "moderate"
-    },
-    {
       "path": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts",
-      "name": "<anonymous>",
-      "line": 278,
-      "cyclomatic": 8,
-      "cognitive": 3,
-      "line_count": 13,
-      "exceeded": "crap",
+      "name": "prepareObservationStorage",
+      "line": 220,
+      "cyclomatic": 9,
+      "cognitive": 9,
+      "line_count": 19,
+      "exceeded": "cognitive_crap",
       "severity": "high"
     },
     {
@@ -196,16 +146,6 @@
       "severity": "high"
     },
     {
-      "path": "packages/tooling/library/ai-metrics/test/payload-reclamation.test.ts",
-      "name": "it.effect(\"expires mixed delivery states without ch...\")",
-      "line": 325,
-      "cyclomatic": 7,
-      "cognitive": 10,
-      "line_count": 53,
-      "exceeded": "cognitive",
-      "severity": "moderate"
-    },
-    {
       "path": "packages/tooling/library/ai-metrics/src/observation-launch-claims.ts",
       "name": "result",
       "line": 581,
@@ -213,6 +153,16 @@
       "cognitive": 9,
       "line_count": 24,
       "exceeded": "cognitive",
+      "severity": "moderate"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts",
+      "name": "<anonymous>",
+      "line": 284,
+      "cyclomatic": 5,
+      "cognitive": 3,
+      "line_count": 6,
+      "exceeded": "crap",
       "severity": "moderate"
     }
   ],

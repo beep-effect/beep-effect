@@ -166,64 +166,67 @@ const fixture = Effect.fn("TranscriptExportTest.fixture")(function* () {
   const stored = yield* Ref.make<ReadonlyArray<typeof Span.Type>>([]);
   const mode = yield* Ref.make("valid");
   const sql = yield* SqlClient.SqlClient;
+  const capturePost = Effect.gen(function* () {
+    const request = yield* HttpServerRequest.HttpServerRequest;
+    const bytes = new Uint8Array(yield* request.arrayBuffer);
+    const raw = new TextDecoder().decode(bytes);
+    for (const value of [
+      "private-prompt",
+      "private-session",
+      "private-message",
+      "private-model",
+      salt,
+      dir,
+      "invalid-private-json",
+    ])
+      expect(raw).not.toContain(value);
+    expect((yield* sql`SELECT attempt_id FROM observation_delivery_attempts`).length).toBeGreaterThan(0);
+    const decoded = yield* decode(bytes);
+    yield* Ref.update(stored, (rows) => [...rows, ...decoded.resourceSpans[0].scopeSpans[0].spans]);
+    yield* Ref.update(posts, (n) => n + 1);
+    return HttpServerResponse.uint8Array(new Uint8Array(), { contentType: "application/x-protobuf" });
+  });
+  const queryStored = Effect.fnUntraced(function* (url: string) {
+    const current = yield* Ref.get(mode);
+    const query = decodeURIComponent(url);
+    const span = A.findFirst(yield* Ref.get(stored), (row) => Str.includes(Hex.encode(row.spanId))(query));
+    if (O.isNone(span) || current === "missing") return yield* HttpServerResponse.json({ data: [], next_cursor: null });
+    const row = span.value;
+    const attributes = R.fromEntries(
+      A.map(
+        A.filter(row.attributes, (a) => a.key !== "openinference.span.kind"),
+        (a) =>
+          [a.key, a.value.stringValue ?? a.value.boolValue ?? Number(a.value.intValue)] satisfies readonly [
+            string,
+            string | boolean | number,
+          ]
+      )
+    );
+    return yield* HttpServerResponse.json({
+      data: [
+        {
+          context: { trace_id: Hex.encode(row.traceId), span_id: Hex.encode(row.spanId) },
+          name: row.name,
+          parent_id: current === "parent" ? Str.repeat(16)("1") : null,
+          span_kind: "CHAIN",
+          status_code: "UNSET",
+          start_time: "2020-01-02T08:00:00.123456+00:00",
+          end_time: "2020-01-02T08:00:00.123456+00:00",
+          attributes:
+            current === "invented-total"
+              ? { ...attributes, "llm.token_count.total": 16 }
+              : current === "invented-route"
+                ? { ...attributes, "ai_metrics.route_id": id("f") }
+                : attributes,
+        },
+      ],
+      next_cursor: null,
+    });
+  });
   yield* server.serve(
     Effect.gen(function* () {
       const request = yield* HttpServerRequest.HttpServerRequest;
-      if (request.method === "POST") {
-        const bytes = new Uint8Array(yield* request.arrayBuffer);
-        const raw = new TextDecoder().decode(bytes);
-        for (const value of [
-          "private-prompt",
-          "private-session",
-          "private-message",
-          "private-model",
-          salt,
-          dir,
-          "invalid-private-json",
-        ])
-          expect(raw).not.toContain(value);
-        expect((yield* sql`SELECT attempt_id FROM observation_delivery_attempts`).length).toBeGreaterThan(0);
-        const decoded = yield* decode(bytes);
-        yield* Ref.update(stored, (rows) => [...rows, ...decoded.resourceSpans[0].scopeSpans[0].spans]);
-        yield* Ref.update(posts, (n) => n + 1);
-        return HttpServerResponse.uint8Array(new Uint8Array(), { contentType: "application/x-protobuf" });
-      }
-      const current = yield* Ref.get(mode);
-      const query = decodeURIComponent(request.url);
-      const span = A.findFirst(yield* Ref.get(stored), (row) => Str.includes(Hex.encode(row.spanId))(query));
-      if (O.isNone(span) || current === "missing")
-        return yield* HttpServerResponse.json({ data: [], next_cursor: null });
-      const row = span.value;
-      const attributes = R.fromEntries(
-        A.map(
-          A.filter(row.attributes, (a) => a.key !== "openinference.span.kind"),
-          (a) =>
-            [a.key, a.value.stringValue ?? a.value.boolValue ?? Number(a.value.intValue)] satisfies readonly [
-              string,
-              string | boolean | number,
-            ]
-        )
-      );
-      return yield* HttpServerResponse.json({
-        data: [
-          {
-            context: { trace_id: Hex.encode(row.traceId), span_id: Hex.encode(row.spanId) },
-            name: row.name,
-            parent_id: current === "parent" ? Str.repeat(16)("1") : null,
-            span_kind: "CHAIN",
-            status_code: "UNSET",
-            start_time: "2020-01-02T08:00:00.123456+00:00",
-            end_time: "2020-01-02T08:00:00.123456+00:00",
-            attributes:
-              current === "invented-total"
-                ? { ...attributes, "llm.token_count.total": 16 }
-                : current === "invented-route"
-                  ? { ...attributes, "ai_metrics.route_id": id("f") }
-                  : attributes,
-          },
-        ],
-        next_cursor: null,
-      });
+      return yield* request.method === "POST" ? capturePost : queryStored(request.url);
     })
   );
   const selection = NativeDeliveryRequest.make({

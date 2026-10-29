@@ -202,26 +202,28 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("retains all five retired state counts and keeps current absence distinct from prior evidence", () =>
     Effect.gen(function* () {
       const f = yield* fixture(8, 8, true);
-      for (const { digit, index } of A.map(["1", "2", "3", "4", "5"], (digit, index) => ({ digit, index }))) {
+      const register = Effect.fnUntraced(function* (digit: string) {
         const batch = yield* f.batch(digit);
         const receipt = yield* f.native.acceptBatch(batch);
         yield* f.ledger.registerPage(receipt.page.receiptId);
-        const event = batch.spans[0];
-        if (event === undefined) return yield* Effect.die("Missing fixture");
-        if (index !== 0) {
-          const attemptId = id(digit);
-          yield* f.ledger.prepareAttempt(
-            DeliveryAttempt.make({ attemptId, eventIds: [event.eventId], payloadDigest: id("e") })
-          );
-          if (index === 1) yield* f.ledger.recordOutcome(attemptId, DeliveryOutcome.cases.Accepted.make({}));
-          if (index === 2)
-            yield* f.ledger.recordVisibility(
-              DeliveryVisibility.make({ eventId: event.eventId, attemptId, payloadDigest: id("e"), observedAt: 0 })
-            );
-          if (index === 3)
-            yield* f.ledger.recordOutcome(attemptId, DeliveryOutcome.cases.Rejected.make({ status: 400 }));
-        }
-      }
+        return O.getOrThrow(A.head(batch.spans)).eventId;
+      });
+      const prepare = Effect.fnUntraced(function* (digit: string) {
+        const eventId = yield* register(digit);
+        const attemptId = id(digit);
+        yield* f.ledger.prepareAttempt(
+          DeliveryAttempt.make({ attemptId, eventIds: [eventId], payloadDigest: id("e") })
+        );
+        return DeliveryVisibility.make({ eventId, attemptId, payloadDigest: id("e"), observedAt: 0 });
+      });
+      yield* register("1"); // Pending: admitted without a delivery attempt.
+      const accepted = yield* prepare("2");
+      yield* f.ledger.recordOutcome(accepted.attemptId, DeliveryOutcome.cases.Accepted.make({}));
+      const visible = yield* prepare("3");
+      yield* f.ledger.recordVisibility(visible);
+      const rejected = yield* prepare("4");
+      yield* f.ledger.recordOutcome(rejected.attemptId, DeliveryOutcome.cases.Rejected.make({ status: 400 }));
+      yield* prepare("5"); // Unresolved: prepared without a terminal outcome.
       yield* TestClock.adjust("24 hours");
       const sql = yield* SqlClient.SqlClient;
       const pages = yield* sql`SELECT receipt_id AS id FROM observation_intake_pages`.pipe(

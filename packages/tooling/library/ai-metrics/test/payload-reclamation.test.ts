@@ -330,20 +330,22 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
         const batch = NativeTraceBatch.make({ ...first, spans: A.flatMap(batches, (b) => b.spans) });
         const receipt = yield* f.native.acceptBatch(batch);
         yield* f.ledger.registerPage(receipt.page.receiptId);
-        for (const { span, index } of A.map(batch.spans, (span, index) => ({ span, index }))) {
-          if (index === 0) continue;
+        const prepare = Effect.fnUntraced(function* (index: number) {
+          const span = O.getOrThrow(A.get(batch.spans, index));
           const attemptId = id(`${index}`);
           yield* f.ledger.prepareAttempt(
             DeliveryAttempt.make({ attemptId, eventIds: [span.eventId], payloadDigest: id("e") })
           );
-          if (index === 1) yield* f.ledger.recordOutcome(attemptId, DeliveryOutcome.cases.Accepted.make({}));
-          if (index === 2)
-            yield* f.ledger.recordVisibility(
-              DeliveryVisibility.make({ eventId: span.eventId, attemptId, payloadDigest: id("e"), observedAt: 0 })
-            );
-          if (index === 3)
-            yield* f.ledger.recordOutcome(attemptId, DeliveryOutcome.cases.Rejected.make({ status: 400 }));
-        }
+          return DeliveryVisibility.make({ eventId: span.eventId, attemptId, payloadDigest: id("e"), observedAt: 0 });
+        });
+        // The first event stays pending; the remaining four share this same page.
+        const acceptedAttempt = yield* prepare(1);
+        yield* f.ledger.recordOutcome(acceptedAttempt.attemptId, DeliveryOutcome.cases.Accepted.make({}));
+        const visible = yield* prepare(2);
+        yield* f.ledger.recordVisibility(visible);
+        const rejected = yield* prepare(3);
+        yield* f.ledger.recordOutcome(rejected.attemptId, DeliveryOutcome.cases.Rejected.make({ status: 400 }));
+        yield* prepare(4); // Unresolved: prepared without a terminal outcome.
         const states = yield* Effect.forEach(batch.spans, (s) => f.ledger.state(s.eventId));
         assertNone(yield* f.reclaimer.expire(receipt.page.receiptId));
         yield* TestClock.adjust("24 hours");
