@@ -142,7 +142,7 @@
   },
   "currentPopulation": {
     "path": "goals/turborepo-quality-cache-adoption/research/current-population.json",
-    "sha256": "1f21cbd2ff7d0a539a02abfbae5ed74c60d679a20262b3b8a44a59a9ff9ec00b",
+    "sha256": "0f1823c9d647ef62f6412230ec4ed6b25d56c1f6d25d22cdaf328be80f27ff10",
     "base": "repository-root",
     "sourcesVerified": 431,
     "refreshedAt": "2026-10-29T10:05:33.391812+00:00",
@@ -151,7 +151,8 @@
     "integrationScope": "Canonical inventory metadata refresh after merged parent; original native upload observations and their source/proof scope are unchanged.",
     "priorInventoryBeforePropertyCoverageRefresh": "8e355c913f6b9faf61ce77f7fdc8d06cad6572539c6d172b9741ae7d19f7132c",
     "priorInventoryBeforeMainSync": "0ea49f7b903162d1ee7cdfa985d9caff0ab4573657e27b5156dc14a9f724b46f",
-    "priorInventoryBeforeScopeRepair": "bd81cef5053d4329d1547391b0387c45a32d90157f31809eb45812c23eb09d9e"
+    "priorInventoryBeforeScopeRepair": "bd81cef5053d4329d1547391b0387c45a32d90157f31809eb45812c23eb09d9e",
+    "priorInventoryBeforeCoverageRepair": "1f21cbd2ff7d0a539a02abfbae5ed74c60d679a20262b3b8a44a59a9ff9ec00b"
   },
   "productionChanges": false,
   "qualified": false,
@@ -172,7 +173,12 @@
   },
   "publicationGateRepair": {
     "path": "goals/turborepo-cache-trust-observability/research/producer-publication-gate-repair-checkpoint.json",
-    "sha256": "843c651c5a681bc8be0e39ba6af31713ce26706158f57e00b6d52499baaa3fb9",
+    "sha256": "e8d69fc28fdfc7c5c49c78c75c0fb1b704ec17903e6911eaa7c361d6fac12e82",
     "scope": "Later test-only properties and generated catalog; original component proof keeps its original source map."
+  },
+  "producerCoverageRepairCheckpoint": {
+    "path": "goals/turborepo-cache-trust-observability/research/producer-coverage-repair-checkpoint.json",
+    "sha256": "e14ab5295e178ff9834fc0bbfee7e80d07224a238080342d9e750d0d3e98d150",
+    "scope": "Later internal guard/test repair; earlier runtime/native execution proofs keep their original source bindings."
   }
 }

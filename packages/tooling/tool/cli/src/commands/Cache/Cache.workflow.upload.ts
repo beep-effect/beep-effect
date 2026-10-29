@@ -122,11 +122,9 @@ export const joinCacheProducerUpload = Effect.fn("CacheWorkflow.joinProducerUplo
   )
     return yield* CacheCommandError.new("Producer capture contains a failed, foreign or faulted exchange.");
   const uploads = A.filter(events, (event) => !isMetadataOperation(`${event.exchange.method} ${event.exchange.route}`));
-  if (uploads.length !== 1)
+  if (!S.is(S.Tuple([CacheConformanceProxyEvent]))(uploads))
     return yield* CacheCommandError.new("Producer capture has no unambiguous single artifact upload.");
-  const selected = yield* A.head(uploads).pipe(
-    Effect.fromOption(() => CacheCommandError.new("Producer artifact upload is absent."))
-  );
+  const [selected] = uploads;
   if (!isProducerUploadEvent(selected) || O.isNone(selected.exchange.requestTagSha256))
     return yield* CacheCommandError.new("Producer artifact upload lacks its route, hash or opaque tag evidence.");
   const exchange = selected.exchange;

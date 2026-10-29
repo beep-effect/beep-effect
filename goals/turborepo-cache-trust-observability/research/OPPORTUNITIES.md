@@ -555,3 +555,28 @@ The dependency snapshot waited 392 seconds behind the publication lease, then
 materialized and verified 213,133 files. Current code deliberately leases the
 cheap gates because the schema catalog can peak near 12.6 GiB; push-first prose
 does not justify deleting that memory guard. No admission bypass was added.
+
+
+### Fresh full coverage exposes boundary and unreachable-path gaps
+
+The final replay at `38415caaa5` passed every non-coverage gate and all
+coverage test producers, then the new-file ratchet found two local gaps:
+the hosted ZIP compressed-byte refusal was untested, and the upload join kept
+an unreachable Option fallback after an exact-one length check. Added empty/
+oversized archive refusals and use a tuple-schema guard to establish exactly
+one exchange before destructuring it. Preserve both original coverage maps
+and the complete failed receipt; do not add baseline rows to hide the gaps.
+
+
+### GitHub child environments must isolate their credential references
+
+The publication checks and push passed, then the private GitHub wrapper failed
+while creating the PR: Bun had loaded unrelated op:// references from the
+checkout, and op run attempted those references alongside the intended token.
+The agent diagnostic and exact minimal GitHub route both passed. Restricting
+the wrapper environment to the GitHub operation's required keys fixed the real
+Bun-parent invocation, including a synthetic unrelated-reference control.
+PR2358 was created through the already approved REST route and its canonical
+monitor is healthy. No repository environment file or global credential setup
+was changed. Preserve the original failure, doctor receipt and bounded child
+environment probe.

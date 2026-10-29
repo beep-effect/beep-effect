@@ -354,3 +354,13 @@ artifact, signing activation, deployed grant or observation window changes.
   introduced catalog/property findings, canonical regeneration, schema-derived
   binding properties, two intended-failure controls, exact restoration and
   current Node/Bun integration. Earlier full audits retain their exact scope.
+
+
+### Producer coverage repair
+
+- [Coverage repair checkpoint](producer-coverage-repair-checkpoint.json): the
+  original complete final-check receipt failed only the new-file coverage ratchet.
+  Both repaired files now have 100% coverage in Node/V8 and Bun/Istanbul,
+  five intended-failure guard controls and 362 integration tests per runtime.
+  Earlier frozen proofs remain separate; no coverage baseline, qualification
+  entry, deployed signing policy or whole-goal acceptance changes.

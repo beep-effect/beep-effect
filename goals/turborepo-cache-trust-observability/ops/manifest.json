@@ -79,7 +79,8 @@
     "research/workflow-git-fixture-checkpoint.json",
     "research/producer-package-replay-checkpoint.json",
     "research/signed-credential-deployment-checkpoint.json",
-    "research/producer-publication-gate-repair-checkpoint.json"
+    "research/producer-publication-gate-repair-checkpoint.json",
+    "research/producer-coverage-repair-checkpoint.json"
   ],
   "agentLaunchers": [
     {

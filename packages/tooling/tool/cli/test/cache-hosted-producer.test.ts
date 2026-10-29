@@ -263,6 +263,16 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("immutable hosted produc
     })
   );
 
+  it.effect("rejects empty and oversized transported archives at the compressed byte bound", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      for (const archive of [new Uint8Array(0), new Uint8Array(1024 * 1024 + 1)]) {
+        const error = yield* f.verify({}, archive).pipe(Effect.flip);
+        expect(error.message).toBe("Producer archive exceeded its compressed byte bound.");
+      }
+    })
+  );
+
   it.effect("rejects transported corruption and changed approved workflow bytes", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
