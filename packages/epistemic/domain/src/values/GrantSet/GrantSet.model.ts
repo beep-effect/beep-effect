@@ -6,7 +6,7 @@
  * The freeze is expressed as types, not as a runtime flag someone must
  * remember to check: {@link addGrant} accepts only a {@link DraftGrantSet},
  * and evaluation accepts only a {@link FrozenGrantSet}, so widening a frozen
- * set does not compile. Because `S.Class` always exposes `.make`, the frozen
+ * set does not compile. Because `S.Opaque` always exposes `.make`, the frozen
  * class is additionally sealed two ways: a digest computed at freeze time and
  * re-verifiable at any read ({@link verifyFrozenGrantSetDigest}), and a repo
  * law banning `FrozenGrantSet.make` outside this module — so
@@ -462,7 +462,7 @@ const principalsEqual = S.toEquivalence(Principal);
  *
  * **Details**
  *
- * It re-verifies the set's seal **first**, because `S.Class` and schema
+ * It re-verifies the set's seal **first**, because `S.Opaque` and schema
  * decoding can both produce a `FrozenGrantSet` whose `digest` does not match
  * its contents; without this check the freeze would depend on every caller
  * remembering to call {@link verifyFrozenGrantSetDigest}. A tampered set denies
