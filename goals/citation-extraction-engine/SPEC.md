@@ -965,6 +965,22 @@ instead of silently splitting delivery or weakening scope.
   and arbitrary model mutation need further source/target proof before final
   projection/public port publication. No exhaustive row is promoted here.
 
+- **2026-10-29 retained prior-full context:** eight further pinned scenes prove
+  one shared prior-full list across context callbacks, automatic full-pair
+  append through retained views, later full/Id. mutation of that same state,
+  and immutable pair identity independent of equal values. Move prior-full
+  state into the captured operation owner. Context outputs carry only their
+  resource result; mutations use owner methods, preserving a single live path.
+  Private pair slots distinguish nodes, preserve repeated references and
+  retain old pairs after replacement/clear. Snapshots expose data; adapters
+  retain the owner rather than mutable snapshot arrays. This is the same
+  Effect-service adaptation as the dictionary, not a request function or a
+  public Python-object hierarchy. All eight scenes match all thirty-one events
+  and final context/groups through production defaults. Fresh pinned replay
+  and eight portable corruption controls pass. General host/model mutation,
+  final diagnostics/document projection, public ports and full safety/parity
+  proof remain open; no exhaustive accounting row is promoted.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from

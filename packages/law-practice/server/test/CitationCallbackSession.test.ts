@@ -51,15 +51,9 @@ const staleId = () => CitationMentionId.make(`cm1:${Str.repeat(64)("f")}`);
 const fail = () => CitationCallbackFailure.make({ reason: "callback-failed" });
 const emptyCallbacks = CitationResolutionCallbacks.of({
   full: Effect.fn("CallbackTest.emptyFull")(() => Effect.succeed(none())),
-  shortCase: Effect.fn("CallbackTest.emptyShort")((arg: CitationFullsCallbackInput) =>
-    Effect.succeed({ resource: none(), fulls: arg.fulls })
-  ),
-  supra: Effect.fn("CallbackTest.emptySupra")((arg: CitationFullsCallbackInput) =>
-    Effect.succeed({ resource: none(), fulls: arg.fulls })
-  ),
-  reference: Effect.fn("CallbackTest.emptyReference")((arg: CitationFullsCallbackInput) =>
-    Effect.succeed({ resource: none(), fulls: arg.fulls })
-  ),
+  shortCase: Effect.fn("CallbackTest.emptyShort")(() => Effect.succeed({ resource: none() })),
+  supra: Effect.fn("CallbackTest.emptySupra")(() => Effect.succeed({ resource: none() })),
+  reference: Effect.fn("CallbackTest.emptyReference")(() => Effect.succeed({ resource: none() })),
   id: Effect.fn("CallbackTest.emptyId")(() => Effect.succeed({ resource: none() })),
 });
 const controls = () =>
@@ -437,8 +431,11 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
                 })),
               });
               if (action === "raise") return yield* fail();
-              if (action === "clear-fulls") return { resource: none(), fulls: [] };
-              if (action !== "default") return { resource: yield* resource(action), fulls: arg.fulls };
+              if (action === "clear-fulls") {
+                yield* dictionary.writeFulls([]);
+                return { resource: none() };
+              }
+              if (action !== "default") return { resource: yield* resource(action) };
               if (slot === "shortcase") return yield* defaults.shortCase(arg);
               if (slot === "supra") return yield* defaults.supra(arg);
               return yield* defaults.reference(arg);

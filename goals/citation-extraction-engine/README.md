@@ -160,5 +160,8 @@ all sixteen dictionary/list/detached scenes and their thirty-eight events; see
 [callback dictionary evidence](
 ./history/evidence/2026-10-29-callback-dictionary.md) and
 [detached execution evidence](
-./history/evidence/2026-10-29-detached-callback-objects.md). Prior-full-list alias
-identity, general host/model mutation and final session projection remain open.
+./history/evidence/2026-10-29-detached-callback-objects.md). Eight further
+[retained prior-full list/pair scenes](
+./history/evidence/2026-10-29-retained-prior-fulls.md) match all thirty-one events
+and final context/groups. General host/model mutation and final session
+projection remain open.

@@ -63,12 +63,13 @@ export type CitationCallbackResource = typeof CitationCallbackResource.Type;
  * @since 0.0.0
  */
 export const CitationCallbackFull = S.Struct({
+  pairSlot: S.Natural,
   citation: CitationGroupMember,
   resource: CitationCallbackResource,
 }).pipe(
   $I.annoteSchema("CitationCallbackFull", {
     description:
-      "Private semantic object/resource pair with explicit mention-versus-detached reference and falsy resource values.",
+      "Immutable registered pair node with operation-local identity, explicit semantic reference and falsy resource values.",
   })
 );
 /**
@@ -103,7 +104,7 @@ export const CitationCallbackGroup = S.Struct({
  */
 export type CitationCallbackGroup = typeof CitationCallbackGroup.Type;
 /**
- * Prior-full callback input; mutations return through the transition protocol.
+ * Prior-full callback input; schema views come from the shared operation owner.
  * @internal
  * @category models
  * @since 0.0.0
@@ -124,17 +125,16 @@ export const CitationFullsCallbackInput = S.Struct({
  */
 export type CitationFullsCallbackInput = typeof CitationFullsCallbackInput.Type;
 /**
- * Explicit replacement of the shared prior-full list and callback result.
+ * Context callback result; prior-full state lives in the captured owner.
  * @internal
  * @category models
  * @since 0.0.0
  */
 export const CitationFullsCallbackOutput = S.Struct({
   resource: CitationCallbackResource,
-  fulls: S.Array(CitationCallbackFull),
 }).pipe(
   $I.annoteSchema("CitationFullsCallbackOutput", {
-    description: "Callback result and replacement shared list, applied before the next dispatch.",
+    description: "Context callback result; prior-full mutations use the captured operation owner.",
   })
 );
 /**
@@ -248,7 +248,7 @@ export const makeCitationResolutionWork = Effect.fn("Citation.makeResolutionWork
 /**
  * Captured private callbacks; callable behavior is a service, never request
  * data. Every callback captures its dependencies and returns R = never.
- * Prior-full transitions remain explicit. The captured dictionary service
+ * Prior-full pairs and list state belong to the captured owner. Its service
  * preserves known-input list aliases and retained dictionary mutation.
  * Detached semantic objects use closed references without source capabilities.
  * General host/model mutation and public ports stay open.
@@ -316,6 +316,16 @@ export class CitationCallbackList extends S.Opaque<CitationCallbackList, { reado
 export class CitationCallbackDictionary extends Context.Service<
   CitationCallbackDictionary,
   {
+    readonly readFulls: Effect.Effect<ReadonlyArray<CitationCallbackFull>, CitationCallbackFailure>;
+    readonly createFullPair: (
+      citation: CitationGroupMember,
+      resource: CitationCallbackResource
+    ) => Effect.Effect<CitationCallbackFull, CitationCallbackFailure>;
+    readonly writeFulls: (pairs: ReadonlyArray<CitationCallbackFull>) => Effect.Effect<void, CitationCallbackFailure>;
+    readonly appendFullCurrent: (
+      citation: CitationGroupMember,
+      resource: CitationCallbackResource
+    ) => Effect.Effect<void, CitationCallbackFailure>;
     readonly registerDetached: (citation: Citation) => Effect.Effect<CitationGroupMember, CitationCallbackFailure>;
     readonly citationOf: (reference: CitationGroupMember) => Effect.Effect<Citation, CitationCallbackFailure>;
     readonly detachedCitations: Effect.Effect<ReadonlyArray<CitationDetached>, CitationCallbackFailure>;
@@ -349,6 +359,8 @@ export class CitationCallbackDictionary extends Context.Service<
 const DictionaryEntry = S.Struct({ key: S.String, resource: CitationCallbackResource, slot: S.Natural }).pipe(
   $I.annoteSchema("DictionaryEntry", { description: "Private ordered key entry referencing an owned list node." })
 );
+const PairsJson = CitationCallbackFull.pipe(S.Array, S.fromJsonString);
+const pairEquivalent = S.toEquivalence(CitationCallbackFull);
 const MembersJson = CitationGroupMember.pipe(S.Array, S.fromJsonString);
 const CitationJson = S.fromJsonString(Citation);
 const DetachedJson = CitationDetached.pipe(S.Array, S.fromJsonString);
@@ -403,6 +415,9 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
   let entries = A.empty<typeof DictionaryEntry.Type>();
   let lists = HashMap.empty<number, ReadonlyArray<CitationGroupMember>>();
   let nextSlot = 0;
+  let nextPairSlot = 0;
+  let pairs = HashMap.empty<number, CitationCallbackFull>();
+  let fulls = A.empty<CitationCallbackFull>();
   let started = false;
   let closed = false;
   const alive = Effect.suspend(() => (closed || !started ? Effect.fail(invalid()) : Effect.void));
@@ -461,7 +476,7 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
     const snapshot = yield* membersSnapshot(members);
     // Retained detached lists consume the same bounded edge/node budget.
     if (
-      nextSlot >= limits.resolutionIterations ||
+      nextSlot + nextPairSlot >= limits.resolutionIterations ||
       A.reduce(
         lists.pipe(HashMap.values, A.fromIterable),
         A.length(snapshot),
@@ -575,7 +590,63 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
     detachedObjects.set(input, id);
     return reference;
   });
+  const createFullPair = Effect.fn("Citation.createFullPair")(function* (
+    citation: CitationGroupMember,
+    resource: CitationCallbackResource
+  ) {
+    yield* alive;
+    const reference = yield* S.decodeEffect(S.fromJsonString(CitationGroupMember))(
+      yield* S.encodeEffect(S.fromJsonString(CitationGroupMember))(citation).pipe(Effect.mapError(invalid))
+    ).pipe(Effect.mapError(invalid));
+    yield* citationOf(reference);
+    if (nextPairSlot + nextSlot + nextPairSlot >= limits.resolutionIterations) return yield* limit();
+    const snapshot = yield* S.decodeEffect(ResourceJson)(
+      yield* S.encodeEffect(ResourceJson)(resource).pipe(Effect.mapError(invalid))
+    ).pipe(Effect.mapError(invalid));
+    const pair = CitationCallbackFull.make({ pairSlot: nextPairSlot, citation: reference, resource: snapshot });
+    nextPairSlot += 1;
+    pairs = HashMap.set(pairs, pair.pairSlot, pair);
+    // The returned data cannot mutate the registered immutable pair.
+    return yield* S.decodeEffect(S.fromJsonString(CitationCallbackFull))(
+      yield* S.encodeEffect(S.fromJsonString(CitationCallbackFull))(pair).pipe(Effect.mapError(invalid))
+    ).pipe(Effect.mapError(invalid));
+  });
+  const writeFulls = Effect.fn("Citation.writeFulls")(function* (input: ReadonlyArray<CitationCallbackFull>) {
+    yield* alive;
+    if (A.length(input) > limits.mentions) return yield* limit();
+    const snapshot = yield* S.decodeEffect(PairsJson)(
+      yield* S.encodeEffect(PairsJson)(input).pipe(Effect.mapError(invalid))
+    ).pipe(Effect.mapError(invalid));
+    if (
+      !A.every(snapshot, (pair) => O.exists(HashMap.get(pairs, pair.pairSlot), (owned) => pairEquivalent(owned, pair)))
+    )
+      return yield* invalid();
+    fulls = A.fromIterable(snapshot);
+  });
   const api = CitationCallbackDictionary.of({
+    readFulls: alive.pipe(
+      Effect.andThen(
+        Effect.suspend(() =>
+          Effect.gen(function* () {
+            return yield* S.decodeEffect(PairsJson)(yield* S.encodeEffect(PairsJson)(fulls));
+          }).pipe(Effect.mapError(invalid))
+        )
+      )
+    ),
+    createFullPair: Effect.fn("Citation.callbackCreateFullPair")(
+      (citation: CitationGroupMember, resource: CitationCallbackResource) =>
+        alive.pipe(Effect.andThen(work.step), Effect.andThen(createFullPair(citation, resource)))
+    ),
+    writeFulls: Effect.fn("Citation.callbackWriteFulls")((input: ReadonlyArray<CitationCallbackFull>) =>
+      alive.pipe(Effect.andThen(work.step), Effect.andThen(writeFulls(input)))
+    ),
+    appendFullCurrent: Effect.fn("Citation.appendFullCurrent")(function* (
+      citation: CitationGroupMember,
+      resource: CitationCallbackResource
+    ) {
+      const pair = yield* createFullPair(citation, resource);
+      yield* writeFulls(A.append(fulls, pair));
+    }),
     registerDetached,
     citationOf,
     detachedCitations: alive.pipe(
@@ -604,6 +675,8 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
       bySlot = HashMap.empty();
       detached = HashMap.empty();
       detachedOrder = [];
+      pairs = HashMap.empty();
+      fulls = [];
     }),
     read: alive.pipe(
       Effect.andThen(
@@ -666,6 +739,18 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
   });
   return CitationCallbackDictionary.of({
     ...api,
+    readFulls: mutex.withPermit(api.readFulls),
+    createFullPair: Effect.fn("Citation.serialCreateFullPair")(
+      (citation: CitationGroupMember, resource: CitationCallbackResource) =>
+        mutex.withPermit(api.createFullPair(citation, resource))
+    ),
+    writeFulls: Effect.fn("Citation.serialWriteFulls")((input: ReadonlyArray<CitationCallbackFull>) =>
+      mutex.withPermit(api.writeFulls(input))
+    ),
+    appendFullCurrent: Effect.fn("Citation.serialAppendFullCurrent")(
+      (citation: CitationGroupMember, resource: CitationCallbackResource) =>
+        mutex.withPermit(api.appendFullCurrent(citation, resource))
+    ),
     registerDetached: Effect.fn("Citation.serialRegisterDetached")((citation: Citation) =>
       mutex.withPermit(api.registerDetached(citation))
     ),
@@ -710,7 +795,6 @@ export const runPreparedCitationCallbackSession = Effect.fn("Citation.runPrepare
   prepared: PreparedCitationResolution
 ): Effect.fn.Return<typeof SessionState.Type, CitationCallbackFailure, Crypto.Crypto | CitationResolutionCallbacks> {
   const callbacks = yield* CitationResolutionCallbacks;
-  let fulls: ReadonlyArray<CitationCallbackFull> = [];
 
   let last: CitationCallbackResource = CitationCallbackResource.cases.None.make({});
   const shared = yield* Effect.serviceOption(CitationResolutionWork);
@@ -733,10 +817,10 @@ export const runPreparedCitationCallbackSession = Effect.fn("Citation.runPrepare
             last = yield* S.decodeEffect(ResourceJson)(
               yield* S.encodeEffect(ResourceJson)(result).pipe(Effect.mapError(invalid))
             ).pipe(Effect.mapError(invalid));
-            fulls = A.append(fulls, {
-              citation: CitationGroupMember.cases.Mention.make({ mentionId: mention.id }),
-              resource: last,
-            });
+            yield* dictionary.appendFullCurrent(
+              CitationGroupMember.cases.Mention.make({ mentionId: mention.id }),
+              last
+            );
           } else if (mention.citation.type === "id") {
             const groups = yield* dictionary.read;
             const result = yield* callbacks.id({ mention, last, groups }).pipe(Effect.mapError(callbackFailed));
@@ -752,19 +836,14 @@ export const runPreparedCitationCallbackSession = Effect.fn("Citation.runPrepare
                 : mention.citation.type === "supra"
                   ? callbacks.supra
                   : callbacks.reference;
-            const result = yield* callback({ mention, fulls }).pipe(Effect.mapError(callbackFailed));
-            if (A.length(result.fulls) > prepared.limits.mentions) return yield* limit();
+            const result = yield* callback({ mention, fulls: yield* dictionary.readFulls }).pipe(
+              Effect.mapError(callbackFailed)
+            );
             const snapshot = yield* S.decodeEffect(FullsJson)(
               yield* S.encodeEffect(FullsJson)(result).pipe(Effect.mapError(invalid))
             ).pipe(Effect.mapError(invalid));
-            fulls = snapshot.fulls;
             last = snapshot.resource;
           }
-          if (A.length(fulls) > prepared.limits.mentions) return yield* limit();
-          yield* Effect.forEach(fulls, (entry) => dictionary.citationOf(entry.citation), {
-            discard: true,
-            concurrency: 1,
-          });
           const groups = yield* dictionary.read;
           if (mention.citation.type === "id") yield* Effect.forEach(groups, () => step, { discard: true });
 
@@ -780,7 +859,7 @@ export const runPreparedCitationCallbackSession = Effect.fn("Citation.runPrepare
 
         return yield* S.decodeEffect(S.toType(SessionState))({
           ...prepared,
-          fulls,
+          fulls: yield* dictionary.readFulls,
           groups,
           last,
           detachedCitations: yield* dictionary.detachedCitations,

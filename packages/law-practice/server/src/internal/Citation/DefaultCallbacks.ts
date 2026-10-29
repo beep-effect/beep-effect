@@ -160,7 +160,7 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
             candidates,
             O.getOrElse(citation.metadata.antecedentGuess, () => "")
           );
-        return { resource: yield* choose(candidates), fulls: input.fulls };
+        return { resource: yield* choose(candidates) };
       },
       Effect.provideService(Crypto.Crypto, crypto)
     ),
@@ -174,7 +174,7 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
               O.getOrElse(guess, () => "")
             )
           : [];
-        return { resource: yield* choose(candidates), fulls: input.fulls };
+        return { resource: yield* choose(candidates) };
       },
       Effect.provideService(Crypto.Crypto, crypto)
     ),
@@ -197,7 +197,7 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
             const values = yield* metadataValues(prior);
             if (A.some(names, (name) => A.contains(values, name))) candidates = A.append(candidates, entry);
           }
-        return { resource: yield* choose(candidates), fulls: input.fulls };
+        return { resource: yield* choose(candidates) };
       },
       Effect.provideService(Crypto.Crypto, crypto)
     ),

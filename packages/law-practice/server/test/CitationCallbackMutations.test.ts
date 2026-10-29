@@ -258,16 +258,18 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback mutatio
               resource: presentation(entry.resource),
             }));
             const reference = yield* registerDetached();
-            const fulls =
-              action === "append-detached-full"
-                ? A.append(arg.fulls, { citation: reference, resource: foreignResource })
-                : [{ citation: reference, resource: baseResource }];
-            const output = yield* defaults.supra({ ...arg, fulls });
+            const pair = yield* dictionary.createFullPair(
+              reference,
+              action === "append-detached-full" ? foreignResource : baseResource
+            );
+            const fulls = action === "append-detached-full" ? A.append(arg.fulls, pair) : [pair];
+            yield* dictionary.writeFulls(fulls);
+            const output = yield* defaults.supra({ ...arg, fulls: yield* dictionary.readFulls });
             events = A.append(events, {
               slot: "supra",
               mention: { kind: "input", index: indexOf(arg.mention.id) },
               before,
-              after: A.map(output.fulls, (entry) => ({
+              after: A.map(yield* dictionary.readFulls, (entry) => ({
                 citation: memberView(entry.citation),
                 resource: presentation(entry.resource),
               })),
