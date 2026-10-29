@@ -201,7 +201,8 @@
     },
     "backendResultComponent": "goals/turborepo-cache-trust-observability/research/backend-result-checkpoint.json",
     "proxyCaptureBoundsComponent": "goals/turborepo-cache-trust-observability/research/proxy-capture-bounds-checkpoint.json",
-    "adapterRuntimeComponent": "goals/turborepo-cache-trust-observability/research/adapter-runtime-checkpoint.json"
+    "adapterRuntimeComponent": "goals/turborepo-cache-trust-observability/research/adapter-runtime-checkpoint.json",
+    "proxyRequestCompletionComponent": "goals/turborepo-cache-trust-observability/research/proxy-request-completion-checkpoint.json"
   },
   "remainingExplicitGates": [
     "SPEC verification matrix commands on actual final changes",
@@ -213,9 +214,9 @@
   "referenceBase": "repository root",
   "priorSpecSha256AtProtocolMain": "445dc9357d89db4f7a68d8e727f5ddc649fb7550d7071c9c6c5fb03277580c68",
   "currentIntegration": {
-    "component": "goals/turborepo-cache-trust-observability/research/proxy-capture-bounds-checkpoint.json",
+    "component": "goals/turborepo-cache-trust-observability/research/proxy-request-completion-checkpoint.json",
     "focusedTestsPassed": 271,
-    "scope": "Bounded lab capture repair only. Historical broad audits retain their original source maps; no deployed trust, qualification or representative observation acceptance.",
-    "sourceHeadAtVerification": "bde1beb3c8"
+    "sourceHeadAtVerification": "c3a816a2a1",
+    "scope": "Request-completion repair after merging reviewed main. Earlier full audits and native artifacts retain their recorded source scope; no deployment, qualification, adoption or representative-window acceptance."
   }
 }

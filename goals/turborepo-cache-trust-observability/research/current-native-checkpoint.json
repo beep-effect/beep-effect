@@ -38,7 +38,7 @@
     "command": "bun run --cwd packages/tooling/tool/cli beep:test test/cache-signed-runner.test.ts test/cache-protocol-runner.test.ts test/cache-protocol.test.ts test/cache-producer.test.ts test/turbo-cache.test.ts test/cache-runtime.test.ts test/shared-internals.test.ts test/cache-conformance.test.ts test/cache-conformance-lab.test.ts test/cache-conformance-command.test.ts test/ecosystem-polarity.test.ts",
     "files": 11,
     "passed": 271,
-    "seconds": 26.43,
+    "seconds": 28.54,
     "scope": "Current protocol/posture/capture suite after hosted assertion repair and request-completion settlement. Native artifact bytes and protocol source scope remain unchanged."
   },
   "limits": [
@@ -118,7 +118,7 @@
       "packages/tooling/tool/cli/test/turbo-cache.test.ts": "9c768c5dadd4968c6e278554f02867de0d99435677f06ab1942baa9ed0533a9d"
     }
   },
-  "verificationIntegrationRevision": "96d381096c501bf731929c3ab1a2b77b194bf01b",
+  "verificationIntegrationRevision": "c3a816a2a1",
   "priorPostureIntegration": {
     "focusedVerification": {
       "command": "bun run --cwd packages/tooling/tool/cli beep:test test/cache-signed-runner.test.ts test/cache-protocol-runner.test.ts test/cache-protocol.test.ts test/cache-producer.test.ts test/turbo-cache.test.ts test/cache-runtime.test.ts test/shared-internals.test.ts test/cache-conformance.test.ts test/cache-conformance-lab.test.ts",
@@ -212,9 +212,9 @@
     },
     "verificationIntegrationRevision": "bde1beb3c8"
   },
-  "verificationSourceState": "uncommitted-working-tree-with-exact-file-digests",
+  "verificationSourceState": "committed-integration-source-with-exact-file-digests",
   "currentCaptureCheckpoint": {
     "path": "goals/turborepo-cache-trust-observability/research/proxy-request-completion-checkpoint.json",
-    "sha256": "778db87a2b3b9066c5cc60da811bd1601612d260e03211c225927fe0ea2f4e01"
+    "sha256": "1ce40bd4d9ae3c5be6449081291d17f603f2323dc277f87d184abd18fb8d5abd"
   }
 }
