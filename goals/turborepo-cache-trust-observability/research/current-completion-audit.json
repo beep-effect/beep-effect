@@ -3,7 +3,7 @@
   "goal": "turborepo-cache-trust-observability",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "51aaf9fcbc3f1c861b8f800f4597302ee7f9223c2060fa8f6d0683accab9830d",
+  "specSha256": "fe2990a36afd1a640a44b1092d2c934abadfa1f2344e35d777b631a02e8f2a22",
   "acceptance": [
     {
       "id": "AC-01",
@@ -286,10 +286,20 @@
     "sha256": "7974b7a10bb72a491e571b3aa1c01b431f9227a2d5f6bd9206e6d77411a264c5",
     "scope": "Historical component proof at its recorded source; latest producer capture and graph changes are recorded separately."
   },
+  "priorSpecSha256AtDirectoryCoverage": "511be224c49a558752eb531a086e571a1838bd38514359d049b59b621106fcdb",
+  "fsGuardsDirectoryCoverageCheckpoint": {
+    "path": "goals/turborepo-cache-trust-observability/research/fs-guards-directory-coverage-checkpoint.json",
+    "scope": "Test-only deliberate error-path control; complete package verification passed; no full-goal acceptance claimed.",
+    "sha256": "50f427e3239211dfab2f8534dcae8698893a279f78749f0ab42b2394d2087886"
+  },
   "priorSpecSha256AtProducerCapture": "511be224c49a558752eb531a086e571a1838bd38514359d049b59b621106fcdb",
   "producerCaptureCheckpoint": {
     "path": "goals/turborepo-cache-trust-observability/research/producer-capture-checkpoint.json",
     "sha256": "80720e8a16af59057281fc433fd9d74a11b6c9a4aeb0349ef6d99d1086d60a25",
     "scope": "Latest native request capture and whole-graph component proof; previous evidence retains its recorded source."
+  },
+  "priorSpecSha256BeforeDirectoryCoverageMainIntegration": {
+    "directoryCoverage": "51c8055c5db3b0524e80a15e9c63d5e49cf83ff0dcac69e5ceacd6ed77a4aa92",
+    "mainProducerCapture": "51aaf9fcbc3f1c861b8f800f4597302ee7f9223c2060fa8f6d0683accab9830d"
   }
 }

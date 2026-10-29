@@ -386,6 +386,13 @@ artifact, signing activation, deployed grant or observation window changes.
   acceptance remains open.
 
 
+- [Deterministic contained-directory error coverage](fs-guards-directory-coverage-checkpoint.json):
+  real typed filesystem cause, refusal before writing, both 34-test runtime
+  suites, exact error adapter V8 hit and full package audit/documentation.
+  Existing floors and implementation remain unchanged; consumer final proof
+  and both full-goal contracts remain open.
+
+
 ### Owned native capture and complete graph, 2026-10-29
 
 [The source-bound checkpoint](producer-capture-checkpoint.json) records actual

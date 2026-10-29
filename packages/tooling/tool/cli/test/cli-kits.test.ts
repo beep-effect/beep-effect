@@ -28,12 +28,13 @@ import {
   validateDirectory,
   validatePathSegment,
   variadicStrings,
+  writeContainedFileString,
 } from "@beep/repo-cli/test/Cli";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
-import { describe, expect } from "@effect/vitest";
+import { describe, expect, vi } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
@@ -238,6 +239,28 @@ describe("internal/cli/Flags coercions", () => {
 
 describe("internal/cli/FsGuards", () => {
   it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "10 seconds" })((it) => {
+    it.effect("preserves a directory-creation failure and refuses the contained write", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped();
+        const cause = yield* fs.makeDirectory(root).pipe(Effect.flip);
+        const directory = path.join(root, "nested");
+        const target = path.join(directory, "value.txt");
+        const create = vi.spyOn(fs, "makeDirectory").mockReturnValueOnce(Effect.fail(cause));
+        yield* Effect.addFinalizer(() => Effect.sync(() => create.mockRestore()));
+
+        const error = yield* writeContainedFileString(root, "nested/value.txt", "fixture").pipe(Effect.flip);
+        expect(error.reason).toBe("filesystem-failure");
+        expect(error.root).toBe(root);
+        expect(error.path).toBe(directory);
+        expect(error.target).toBe(target);
+        assertSome(error.cause, cause);
+        expect(create).toHaveBeenCalledWith(directory);
+        expect(yield* fs.exists(target)).toBe(false);
+      })
+    );
+
     it.effect("reports missing directory and rename paths through their typed error adapters", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
