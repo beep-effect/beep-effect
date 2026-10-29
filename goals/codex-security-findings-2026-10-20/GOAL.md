@@ -57,3 +57,11 @@ The manifest proposes closeout for PR #1930. Resume its outstanding gates rather
 than treating that proposal as completion. After merge, merged proof and exact-ID
 closure, retain the genuine final-head merge-ready Yeet verdict and run
 `bun run beep goals completion refresh --slug codex-security-findings-2026-10-20`.
+
+## Supplemental scope — 2026-10-28
+
+The user added the current Cloud batch. Read
+`research/2026-10-28-cloud-refresh.md` and the linked
+`../codex-security-findings-2026-10-28/GOAL.md`. Complete both inventories.
+PR #1930 is already merged; retain its proof and deliver the supplemental
+fixes through a new Yeet PR with exact-ID post-merge closure.

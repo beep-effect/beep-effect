@@ -438,6 +438,43 @@ layer(
     })
   );
 
+  it.effect("refuses cleanup through a symlinked parent when target and stage are absent", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const { journals, root, target } = yield* fixture("directory", false);
+      const publisher = yield* publisherWith();
+      yield* publish(publisher, "directory", root, target);
+      const journal = O.getOrThrow(A.head(yield* journalsIn(journals)));
+      const outside = yield* fs.makeTempDirectoryScoped({ prefix: "skills-outside-" });
+      const escape = path.join(root, "escape");
+      yield* fs.symlink(outside, escape);
+      const staging = path.join(escape, ".missing.stage-probe");
+      const partial = `${staging}.partial`;
+      yield* fs.makeDirectory(partial);
+      yield* fs.writeFileString(path.join(partial, "unrelated.txt"), "keep external bytes");
+      const pending = SkillPublicationJournal.make({
+        id: journal.id,
+        publication: SkillTrackedPublication.make({
+          ...trackedOf(journal),
+          target: path.join(escape, "missing"),
+          staging,
+          partial: O.some(partial),
+          preimage: O.none(),
+          backup: O.none(),
+          owner: O.none(),
+          state: ModelsPublicationState.cases.staged.make({}),
+        }),
+      });
+      yield* fs.writeFileString(path.join(journals, `${journal.id}.json`), yield* encodeJournal(pending));
+      const reports = yield* publisher.recover(root, "pending");
+      expect(A.map(reports, (report) => report.result)).toEqual([
+        expect.objectContaining({ _tag: "refused", reason: "foreign-artifact" }),
+      ]);
+      expect(yield* fs.readFileString(path.join(partial, "unrelated.txt"))).toBe("keep external bytes");
+    })
+  );
+
   it.effect("a live owner's publication is left alone", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
