@@ -166,9 +166,11 @@ all sixteen dictionary/list/detached scenes and their thirty-eight events; see
 and final context/groups. Eight further stable-resource
 [semantic mutation scenes](
 ./history/evidence/2026-10-29-semantic-model-mutations.md) match complete events
-and semantic snapshots without changing verified anchors or mention IDs. Three
-mutable default-key scenes remain open, along with general host/model behavior
-and final session projection. The new
+and semantic snapshots without changing verified anchors or mention IDs. The
+[registered callback dictionary](
+./history/evidence/2026-10-29-registered-callback-dictionary.md) now executes all
+three mutable default-key scenes. General host/model behavior, unconditional
+Layer cutover and final session projection remain open. The new
 [runtime dictionary backend](
 ./history/evidence/2026-10-29-runtime-dictionary.md) matches eight frozen histories
 and sixty-two events. The private
@@ -201,3 +203,11 @@ The [generalized live-resource composition](
 case/law/journal histories and eighty-nine events in one table. Actual frozen
 law/journal abbreviation ties and independently retained edition selections
 are preserved. Final callback-owner dictionary integration remains open.
+
+The [registered callback-owner integration](
+./history/evidence/2026-10-29-registered-callback-dictionary.md) preserves live
+resource identity, table insertion entries and owned list handles through full
+callback dispatch. All three mutable default-key scenes match complete source
+events and final groups. The registered canonical port rejects unregistered
+host keys; the legacy adapter remains during migration. Complete host-key
+support, Layer cutover and final document projection are still required.

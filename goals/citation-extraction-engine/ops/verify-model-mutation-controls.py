@@ -82,7 +82,7 @@ def main():
             output=Path(directory)/"observations.json"
             subprocess.run([sys.executable,str(Path(__file__).with_name("probe-model-mutations.py")),"--oracle-root",str(args.oracle_root),"--output",str(output)],env={**os.environ,"PYTHONHASHSEED":"0"},check=True)
             assert json.loads(output.read_bytes())==data
-    print("PASS 11 model mutation source scenes and 8 corruption controls; three mutable-key target scenes remain open")
+    print("PASS 11 model mutation source scenes and 8 corruption controls; target callback execution is checked separately")
 
 
 if __name__=="__main__":main()

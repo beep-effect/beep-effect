@@ -110,6 +110,15 @@ order-sensitive hashes; empty candidate lists retain source selections. The
 semantic membership filters were corrected accordingly. Attribution remains
 BSD-2-Clause; final callback-owner integration remains open.
 
+The [registered callback dictionary evidence](
+../history/evidence/2026-10-29-registered-callback-dictionary.md) executes the
+three recorded mutable default-key scenes through the owner and default
+callbacks. Existing source fixtures are unchanged; complete events and final
+groups match. Registered references and list handles remain operation-owned.
+Attribution remains eyecite BSD-2-Clause and the previously recorded CPython
+implementation license. Host normalization and unconditional Layer cutover
+remain open.
+
 ## Incorporated-source discipline
 
 - A local clone is research state, not an incorporated dependency.

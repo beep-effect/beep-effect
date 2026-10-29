@@ -68,7 +68,9 @@
       "id": "immutable-artifact-reference",
       "statement": "Replace repeated deeply immutable values with content-hash references; retain full values and do not memoize mutable citation-bearing resources.",
       "referencePaths": [
-        "goals/citation-extraction-engine/ops/export-operations.py"
+        "goals/citation-extraction-engine/ops/export-operations.py",
+        "goals/citation-extraction-engine/history/evidence/2026-10-29-registered-callback-dictionary.md",
+        "packages/law-practice/server/test/CitationCallbackRuntimeIndex.test.ts"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
@@ -115,7 +117,9 @@
       "id": "test-local-object-identity",
       "statement": "Represent process memory identities as test-local slots; preserve identity relations and exact observed hash integers.",
       "referencePaths": [
-        "goals/citation-extraction-engine/ops/export-assertions.py"
+        "goals/citation-extraction-engine/ops/export-assertions.py",
+        "goals/citation-extraction-engine/history/evidence/2026-10-29-registered-callback-dictionary.md",
+        "packages/law-practice/server/test/CitationCallbackRuntimeIndex.test.ts"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

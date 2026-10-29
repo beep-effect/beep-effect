@@ -72,7 +72,8 @@ const Row = S.Struct({
   }),
 }).pipe(
   $I.annoteSchema("Row", {
-    description: "Frozen semantic/key mutation scene; the three mutable-key scenes remain source-only requirements.",
+    description:
+      "Frozen semantic/key mutation scene; registered mutable-key execution is covered in CitationCallbackRuntimeIndex.test.ts.",
   })
 );
 const Corpus = S.Struct({ schemaVersion: S.tag("citation-model-mutation-observations/v1"), cases: S.Array(Row) }).pipe(
@@ -83,7 +84,7 @@ const Corpus = S.Struct({ schemaVersion: S.tag("citation-model-mutation-observat
 const invalid = () => CitationCallbackFailure.make({ reason: "invalid-input" });
 
 it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback semantic mutations", (it) => {
-  it.effect("matches all eight stable-resource source scenes without claiming mutable default-key support", () =>
+  it.effect("matches eight stable-resource source scenes through the legacy adapter", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const raw = yield* fs.readFileString(

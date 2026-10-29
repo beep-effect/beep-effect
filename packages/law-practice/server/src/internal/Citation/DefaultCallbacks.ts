@@ -17,7 +17,6 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
 import * as Tuple from "effect/Tuple";
-import { CitationAuthorityIdentityInput } from "./AuthorityIdentity.ts";
 import {
   CitationCallbackDictionary,
   CitationCallbackFailure,
@@ -30,7 +29,6 @@ import {
 } from "./CallbackSession.ts";
 import { prepareCitationResolution } from "./ResolutionInput.ts";
 import { hasInvalidCitationPinCite, stripCitationAntecedentPunctuation } from "./ResolverText.ts";
-import { CitationResourceIdentity, makeCitationResourceAuthorityId } from "./ResourceIdentity.ts";
 import type { CitationMention } from "@beep/law-practice-domain/values";
 import type { CitationCallbackFull, CitationFullsCallbackInput, CitationIdCallbackInput } from "./CallbackSession.ts";
 import type { PreparedCitationResolution } from "./ResolutionInput.ts";
@@ -81,16 +79,7 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
       volume: O.getOrElse(R.get(groups, "volume"), () => null),
     });
   });
-  const key = Effect.fn("Citation.defaultResourceKey")(
-    function* (resource: CitationCallbackResource) {
-      if (resource._tag === "None") return "none";
-      if (resource._tag === "Unhashable") return yield* CitationCallbackFailure.make({ reason: "unhashable-resource" });
-      return yield* makeCitationResourceAuthorityId(resource.identity);
-    },
-    Effect.mapError((error) =>
-      S.is(CitationCallbackFailure)(error) ? error : CitationCallbackFailure.make({ reason: "identity-failed" })
-    )
-  );
+  const key = dictionary.resourceKey;
   const unique = Effect.fn("Citation.defaultUniqueResources")(function* (fulls: ReadonlyArray<CitationCallbackFull>) {
     const keys = yield* Effect.forEach(fulls, (entry) => work.step.pipe(Effect.andThen(key(entry.resource))), {
       concurrency: 1,
@@ -128,22 +117,9 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
     return values;
   }, Effect.mapError(invalid));
   return CitationResolutionCallbacks.of({
-    full: Effect.fn("Citation.defaultFullCallback")(function* (mention: CitationMention) {
-      const citation = yield* currentCitation(mention);
-      if (!isFull(citation)) return yield* invalid();
-      const edition = yield* selected(citation);
-      return CitationCallbackResource.cases.Hashable.make({
-        identity: CitationResourceIdentity.cases.Canonical.make({
-          authority: CitationAuthorityIdentityInput.make({
-            citation,
-            mentionId: mention.id,
-            selectedEdition: edition,
-          }),
-        }),
-        truthy: true,
-        value: { kind: "default", mentionId: mention.id },
-      });
-    }),
+    full: Effect.fn("Citation.defaultFullCallback")((mention: CitationMention) =>
+      dictionary.canonicalResource(CitationGroupMember.cases.Mention.make({ mentionId: mention.id }))
+    ),
     shortCase: Effect.fn("Citation.defaultShortCallback")(
       function* (input: CitationFullsCallbackInput) {
         const citation = yield* currentCitation(input.mention);
@@ -208,19 +184,13 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
         const citation = yield* currentCitation(input.mention);
         if (citation.type !== "id") return yield* invalid();
         if (input.last._tag === "None" || !input.last.truthy) return { resource: none() };
-        const id = yield* key(input.last);
-        for (const group of input.groups) {
-          yield* work.step;
-          if ((yield* key(group.resource)) !== id) continue;
-          const first = yield* Effect.fromOption(A.head(group.members), invalid);
-          const prior = yield* citationOf(first);
-          const bad = yield* hasInvalidCitationPinCite({
-            fullCitation: prior,
-            idCitation: citation,
-          }).pipe(Effect.mapError(() => CitationCallbackFailure.make({ reason: "callback-failed" })));
-          return { resource: bad ? none() : input.last };
-        }
-        return yield* invalid();
+        const list = yield* dictionary.get(input.last);
+        const first = yield* Effect.fromOption(A.head(yield* dictionary.readList(list)), invalid);
+        const prior = yield* citationOf(first);
+        const bad = yield* hasInvalidCitationPinCite({ fullCitation: prior, idCitation: citation }).pipe(
+          Effect.mapError(() => CitationCallbackFailure.make({ reason: "callback-failed" }))
+        );
+        return { resource: bad ? none() : input.last };
       },
       Effect.provideService(Crypto.Crypto, crypto)
     ),

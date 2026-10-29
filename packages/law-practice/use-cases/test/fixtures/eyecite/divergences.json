@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "201818f2db226370c1f46f94ca4a6088d502b7df27a5074bf65cd744eb148112",
+  "planSha256": "c1a415495daf6228edf7a9679b5d00c6c2707a0a0a0c37b8c2955960cd644d9c",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -134,6 +134,14 @@
         {
           "path": "goals/citation-extraction-engine/ops/export-operations.py",
           "sha256": "9a8176ca6d55de38ff94731a1c532b9d4788651bcdd497c8d308b8520bae15e8"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-10-29-registered-callback-dictionary.md",
+          "sha256": "6ad9e4026f61542efcf7960b58c7025982e88312ed3fd4e6520e72ebb47f008f"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationCallbackRuntimeIndex.test.ts",
+          "sha256": "236065c54f590fd4077523c549496c94d988a4fa667242342699105560ed04a6"
         }
       ],
       "workflowState": "audit",
@@ -214,6 +222,14 @@
         {
           "path": "goals/citation-extraction-engine/ops/export-assertions.py",
           "sha256": "1dd1d20a7566a7c97a086a3ba9589cd36316639e070ef176687e3f082572b9d6"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-10-29-registered-callback-dictionary.md",
+          "sha256": "6ad9e4026f61542efcf7960b58c7025982e88312ed3fd4e6520e72ebb47f008f"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationCallbackRuntimeIndex.test.ts",
+          "sha256": "236065c54f590fd4077523c549496c94d988a4fa667242342699105560ed04a6"
         }
       ],
       "workflowState": "audit",
