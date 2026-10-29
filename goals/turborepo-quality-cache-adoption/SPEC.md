@@ -235,3 +235,15 @@ profile; actual binary changes still alter the runtime digest. Leave task cache
 flags and the qualification ledger unchanged. Reversal removes this additional
 observation profile before any current-profile reuse is admitted; an activated
 profile would first need its own disable/rollback procedure.
+
+
+### Explicit current-runtime qualification baseline
+
+2026-10-29: Use the existing reviewed baseline writer to move observation scope
+from Bun1.4.2/qualification-v2 to Bun1.4.4/qualification-v3. The old public
+fingerprint refusal demonstrates its profile guard. Name only the root review
+subject and require unchanged effective configuration, cache flags, scope,
+carried package reviews and ledger. This creates no qualification or signed
+production epoch. Reversal uses the same compare-and-swap writer against the
+retained prior baseline after checking current-epoch state. The immutable
+review is `research/current-runtime-baseline-review.md`.

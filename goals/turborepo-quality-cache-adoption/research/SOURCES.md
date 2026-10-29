@@ -261,3 +261,9 @@ binds changed runner source bytes. Historical claims above keep their dates.
   replay at frozen head2b295197c1: audit1118.9seconds/docgen36.4seconds. Exact
   source bytes and both goal manifests remained unchanged through execution.
   Historical failed runs and their repairs remain in their original checkpoints.
+
+- [Current runtime baseline review](current-runtime-baseline-review.md) and
+  [checkpoint](current-runtime-baseline-checkpoint.json): explicit canonical
+  compare-and-swap recording, unchanged task projection/ledger, actual public
+  fingerprint, stale-update rejection and passing cache audit. No qualification
+  or signed activation is inferred.

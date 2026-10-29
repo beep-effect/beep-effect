@@ -184,5 +184,10 @@
       }
     },
     "scope": "Combined source regression and inventory only; the earlier frozen whole-package proof retains its original source head and source bytes."
+  },
+  "reviewedCurrentRuntimeBaseline": {
+    "path": "goals/turborepo-quality-cache-adoption/research/current-runtime-baseline-checkpoint.json",
+    "sha256": "747dce251c43af011311b34831831bac76d8d0de914086c180c2e66196ecfacd",
+    "scope": "Explicit current baseline review and public observation only; old frozen proofs retain their original source identity."
   }
 }

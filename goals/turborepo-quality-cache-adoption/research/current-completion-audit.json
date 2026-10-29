@@ -3,7 +3,7 @@
   "goal": "turborepo-quality-cache-adoption",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "bf920216aed78bfef9065e4129e12ac08356e88307cf7fcb03f0395d6c5a88a6",
+  "specSha256": "7e7bd28c21dc6ddb46b29e62aefcc0f0f8d49c99da7bab4f1fa6d4a372b64ed3",
   "acceptance": [
     {
       "id": "AC-01",
@@ -166,7 +166,13 @@
   "priorSpecSha256AtRuntimeObservation": "9c2c1c88a7f13efab9252774f154d1e1e31e8d395695b2ab37dabc212af27e5c",
   "currentRuntimeProfileCheckpoint": {
     "path": "goals/turborepo-quality-cache-adoption/research/current-runtime-profile-checkpoint.json",
-    "sha256": "1dc3c814c773d2461c1d74c886ba23e40202ab7da72e4285eb7ac3e7e1f0433c",
+    "sha256": "ef83cbd81804984c63391496e616b2f72dea879f3d68a9fb75e7281cdca599c2",
     "scope": "Runtime observation and passing frozen whole-package verification only; all qualification and rollout obligations remain open."
+  },
+  "priorSpecSha256AtCurrentRuntimeBaseline": "bf920216aed78bfef9065e4129e12ac08356e88307cf7fcb03f0395d6c5a88a6",
+  "currentRuntimeBaselineCheckpoint": {
+    "path": "goals/turborepo-quality-cache-adoption/research/current-runtime-baseline-checkpoint.json",
+    "sha256": "747dce251c43af011311b34831831bac76d8d0de914086c180c2e66196ecfacd",
+    "scope": "Explicit observation profile/epoch only; no qualification or signed deployment."
   }
 }

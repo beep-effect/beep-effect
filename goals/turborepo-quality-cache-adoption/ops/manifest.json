@@ -49,7 +49,9 @@
     "research/current-runtime-profile-observation.json",
     "research/current-runtime-profile-checkpoint.json",
     "research/actual-ignored-input-control.py",
-    "research/actual-ignored-input-observation.json"
+    "research/actual-ignored-input-observation.json",
+    "research/current-runtime-baseline-review.md",
+    "research/current-runtime-baseline-checkpoint.json"
   ],
   "agentLaunchers": [
     {

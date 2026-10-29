@@ -505,3 +505,15 @@ the agent. The already created Alchemy roles remain unassigned.
   every continuation. Both parent/own report sets and appended sections agree.
 - Prevention: every mutation sequence must stop when its preceding validation
   fails. This recovery changed no cloud resource, credential or published ref.
+
+
+### Reboot left the default GitHub credential route unavailable
+
+- Bounded `gh api` and saved-credential lookups timed out, while direct public
+  API reads succeeded. No credential value was emitted. An existing approved
+  reference-only agent token passed the exact secret wrapper and repository
+  push-permission query.
+- A private process-scoped `gh` wrapper applies that reference only to GitHub
+  children; raw credentials are not added to quality gates. The existing Yeet
+  identity selector receives the same reference. Persistent GitHub settings
+  remain unchanged. Remove the temporary PATH entry after its monitor ends.

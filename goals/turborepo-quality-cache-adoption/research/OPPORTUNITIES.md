@@ -106,3 +106,15 @@ current task remains cache:false. Keep that work in this active adoption goal.
   historical quarantine rows while inspecting live admission. Future status
   consumption should request a bounded projection where supported. No runtime
   or cache behavior was changed for this observation.
+
+
+### Runtime observation and reviewed baseline must advance together
+
+- The real public fingerprint command refuses the current runtime while the
+  reviewed baseline still names Bun1.4.2. Collector support alone does not
+  authorize a new observation tuple. The guard is working as designed.
+- Prepare an explicit canonical baseline review for Bun1.4.4 and a separate
+  qualification epoch; do not weaken the profile comparison. Require no task
+  configuration, cache flag, scope or ledger change before continuing.
+- Publication was stopped in cheap gates, before a push stage, to incorporate
+  the reviewed current-runtime observation path in one complete wave.

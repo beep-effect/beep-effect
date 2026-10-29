@@ -153,3 +153,16 @@ records. Historical source-bound checkpoints keep their original scope.
 The operator clarified that the human credential helper has not yet run;
 completion remains pending. Signing and all affected qualification/rollout
 gates stay closed.
+
+
+### Reviewed current-runtime baseline and public observation
+
+The historical Bun 1.4.2 baseline correctly refused a Bun 1.4.4 fingerprint.
+The canonical reviewed writer now records Bun 1.4.4 / qualification-v3, stamping
+only the root subject and carrying all 188 package reviews. The effective
+projection, four-computation scope, cache flags and qualification ledger are
+unchanged. The real public fingerprint succeeds under its distinct current
+tuple; a stale compare-and-swap request fails without changing baseline or
+ledger. Cache audit reports zero blocking findings and 1,621 unassessed cached
+computations. See the immutable review and current-runtime baseline checkpoint.
+This is observation readiness; qualification and signed rollout remain open.
