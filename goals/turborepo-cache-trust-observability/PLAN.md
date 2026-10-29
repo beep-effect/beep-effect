@@ -431,3 +431,25 @@ The original failed run remains explicit; a fresh whole-package result is pendin
 [the source-bound checkpoint](research/native-upload-join-checkpoint.json).
 This remains a local component: closed protected execution/publication, deployed
 trust readiness, current task qualification and observation windows remain open.
+
+
+### Alchemy credential and deployment preparation
+
+The authenticated ordinary bucket plan reports no changes. A separate credential
+stack previews exactly two bucket-scoped token resources and no bucket, Worker
+or compute resources. Five invalid bucket/expiry configurations fail before
+resource planning. The existing GitHub writer environment is restricted to main,
+and R2 remains enabled. No artifact-key assignment is present in the inspected
+workstation/client or CI secret metadata. See
+[the readiness checkpoint](research/signed-credential-readiness-checkpoint.json).
+This is a prepared plan, not deployed grants or an activated signed cohort.
+
+
+### Clean-run Git fixture repair
+
+The next whole-package run passes the prior Models and knowledge-doctor cases,
+then fails one negative workflow fixture before its assertion. The fixture now
+starts outside Git by construction and checks the actual Git-failure messages;
+twenty tests pass in each runtime, with an intended-failure guard control.
+[The repair checkpoint](research/workflow-git-fixture-checkpoint.json) preserves
+the original failed run. A new whole-package result remains pending.

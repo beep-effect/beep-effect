@@ -326,3 +326,13 @@ artifact, signing activation, deployed grant or observation window changes.
   failed full run remains explicit. Reproduce
   with the pinned Bun using the retained control. No live R2, producer approval,
   protected publication or real-computation qualification is inferred.
+
+- [Signed credential readiness checkpoint](signed-credential-readiness-checkpoint.json):
+  authenticated Alchemy previews, exact wrapper/template and pinned provider
+  provenance, five rejected configurations and current GitHub branch/secret
+  metadata. Two account-token resources are planned; none were created, no key
+  was handed off and no signed cache was activated.
+
+- [Git fixture repair checkpoint](workflow-git-fixture-checkpoint.json): original
+  clean whole-run failure, current Bun/Node tests and actual Git-guard removal.
+  Production workflow implementation bytes are unchanged.

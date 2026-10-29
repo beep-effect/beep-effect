@@ -3,7 +3,7 @@
   "goal": "turborepo-cache-trust-observability",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "639205887c0d7562eee13846657fd92083d866cb70f10be6718758373666894d",
+  "specSha256": "47d95a38ee3ccd92b66b2eaf1cb31180246ddee1d3c059bc76ffedcf567cd25e",
   "acceptance": [
     {
       "id": "AC-01",
@@ -234,5 +234,16 @@
     "path": "goals/turborepo-cache-trust-observability/research/native-upload-join-checkpoint.json",
     "sha256": "3caed76b81a86050607c752d8e167089ec16e9e280f253b746defc4329fcab68",
     "scope": "Current local component; whole-goal acceptance remains unproven."
-  }
+  },
+  "signedCredentialReadinessCheckpoint": {
+    "path": "goals/turborepo-cache-trust-observability/research/signed-credential-readiness-checkpoint.json",
+    "sha256": "a84904c3cd83ec311910778176fa31f4e386c78269cf28db44038a569bc9f6ce",
+    "scope": "Prepared plan/current metadata only; not deployed trust readiness."
+  },
+  "workflowGitFixtureCheckpoint": {
+    "path": "goals/turborepo-cache-trust-observability/research/workflow-git-fixture-checkpoint.json",
+    "sha256": "2d644f51d3c986807d5b2e0e80a69a32a75fb729a83eca79ce09bec0df0eb679",
+    "scope": "Current test setup/guard repair; original broad failures remain retained."
+  },
+  "priorSpecSha256AtRolePreparation": "639205887c0d7562eee13846657fd92083d866cb70f10be6718758373666894d"
 }

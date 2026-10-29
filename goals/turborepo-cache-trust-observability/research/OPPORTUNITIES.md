@@ -426,3 +426,34 @@ The clean-manifest replay passes all 35 tests in both affected files at the
 committed component head, with unchanged package source. The original full-run
 failure remains retained. The Models timeout did not recur in either isolated
 replay; its cause beyond the observed elapsed-time failure is not claimed.
+
+
+## 2026-10-29: Token ownership must not depend on an optional bucket-stack flag
+
+A first draft added optional token resources to the bucket stack. Omitting that
+flag on a later deployment could schedule their revocation. Before any deploy,
+separated the token stack/stage from the existing bucket owner. The normal
+plan still reports no changes; the explicit credential plan contains exactly
+two tokens. No Worker or replacement bucket is needed. Missing, malformed,
+past, excessive expiry and wildcard-bucket inputs fail before planning grants.
+The resumed shell also lacked user-bus variables: restoring them made the
+approved agent preflight pass without a desktop or human authentication path.
+
+
+## 2026-10-29: A negative Git case does not need to initialize then delete a repository
+
+The clean full CLI run passed 8,094 tests and docgen, including both earlier
+failures, but one workflow test failed before its assertion while removing a
+temporary `.git` directory that was already absent. Its disappearance is not
+attributed without evidence. Start directly in a fresh owned non-repository
+directory and require both real Git-backed checks to report the specific
+Git-inventory failure. All twenty file tests pass in Bun and Node; removing
+the production Git exit/truncation guard fails the intended assertion, and
+exact production bytes are restored. Preserve both original broad-run failures.
+
+
+The commit scanner treated public source/SPEC hashes as API keys when a JSON
+map key contained credential-related words. Retain the same independently
+computed hashes in explicit path/sha256 source records and name the prior SPEC
+snapshot for its role-preparation phase. No scanner suppression or security
+exception is added; post-hook verification still checks actual source bytes.

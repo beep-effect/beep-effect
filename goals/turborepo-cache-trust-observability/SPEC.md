@@ -394,3 +394,27 @@ The local process report does not satisfy those deployment or observation gates.
   HMAC verification, a qualification transition or protected producer issuance.
   The closed supervisor still owns source/command/capture and GitHub publication.
   Reversal leaves this preparatory component unwired; no live epoch changes.
+
+
+### Separate Alchemy credential lifecycle and bounded signed trial
+
+- 2026-10-29: Keep the existing private bucket in `BeepTurboR2Pilot` and place
+  two bucket-scoped account-token resources in the separate
+  `BeepTurboR2SignedCredentials` stack/stage. A normal bucket plan must neither
+  create nor revoke the trial grants. Use the pinned provider's typed permission
+  names and exact bucket resource shape; no Worker, bucket, VM or runner burst
+  is added. Reader gets object read; writer gets object read/write. Require an
+  explicit future expiry within thirty days, protect local state at mode0700,
+  and omit token values from stack outputs. The approved secret lane owns
+  consumer handoff; an artifact HMAC key is separate and never reaches storage.
+- The first signed trial remains this workstation plus one protected-main AWS
+  CI job, isolated writer19427/reader19428, namespace
+  `team_beep_signed_canary_v1`, at most50MiB aggregate synthetic artifacts,
+  200 Class A and2000 Class B operations, ten minutes of trial execution and
+  thirty-day artifact retention. These are execution ceilings, not evidence
+  the trial ran. Freeze current source/workflow and qualification approvals,
+  prove grants and key delivery, and prepare rollback before activation.
+  Existing ordinary cache services and prior-epoch recovery remain available.
+- Reversal removes only the separate trial token resources after stopping trial
+  consumers; it does not destroy the shared bucket or change ordinary grants.
+  Actual signed activation, rotation and representative windows remain pending.

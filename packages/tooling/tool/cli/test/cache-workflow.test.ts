@@ -307,10 +307,14 @@ it.layer(
   );
   it.effect("rejects an unreadable Git inventory instead of treating it as clean", () =>
     Effect.gen(function* () {
-      const { root, fs, path } = yield* fixture();
-      yield* fs.remove(path.join(root, ".git"), { recursive: true });
-      (yield* collectCacheProducerWorkflowFiles(root).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
-      (yield* assertCacheProducerWorkflowProfile(root).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "cache-workflow-no-git-" });
+      const files = yield* collectCacheProducerWorkflowFiles(root).pipe(Effect.result);
+      files.pipe(Result.isFailure, assertTrue);
+      if (Result.isFailure(files)) expect(files.failure.message).toContain("Git inventory");
+      const profile = yield* assertCacheProducerWorkflowProfile(root).pipe(Effect.result);
+      profile.pipe(Result.isFailure, assertTrue);
+      if (Result.isFailure(profile)) expect(profile.failure.message).toContain("Git inventory");
     })
   );
   it.effect("rejects inventories above the declared source bound before reading their files", () =>

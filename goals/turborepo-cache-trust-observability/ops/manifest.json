@@ -74,7 +74,9 @@
     "research/reply-error-coverage-checkpoint.json",
     "research/hosted-producer-verifier-checkpoint.json",
     "research/native-upload-join-checkpoint.json",
-    "research/native-upload-join-observations.json"
+    "research/native-upload-join-observations.json",
+    "research/signed-credential-readiness-checkpoint.json",
+    "research/workflow-git-fixture-checkpoint.json"
   ],
   "agentLaunchers": [
     {

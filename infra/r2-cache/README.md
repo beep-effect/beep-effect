@@ -242,6 +242,44 @@ action and exact-process cleanup at job exit. Protected main pushes write;
 same-repository PRs and main scheduled/manual jobs read. Forks stay local-only.
 The separate Cache Warm probe keeps its existing protected qualification path.
 
+## Signed-trial credentials with Alchemy
+
+The bucket remains owned by `BeepTurboR2Pilot` in stage `r2-pilot`. The separate
+`BeepTurboR2SignedCredentials` stack in stage `r2-signed-credentials` owns two
+bucket-scoped account tokens: object-read for the reader and object-read/write
+for the writer. It uses the pinned Cloudflare provider's typed permission names
+and bucket resource shape. The provider's `R2.S3Credentials` binding requires a
+Worker; these host/CI roles use its underlying `ApiToken.AccountApiToken`
+resource directly. Creating the tokens requires account `API Tokens > Write`.
+
+Preview the ordinary bucket, then the separate credentials with an explicit UTC
+expiry from the rollout receipt:
+
+```sh
+op run --env-file="$HOME/.config/beep/r2-cache/provisioning.env" -- infra/r2-cache/alchemy.sh plan
+R2_SIGNED_TRIAL_EXPIRES_ON="2026-11-28T00:00:00Z" \
+  op run --env-file="$HOME/.config/beep/r2-cache/provisioning.env" -- \
+  infra/r2-cache/alchemy.sh plan-signed-credentials
+```
+
+Refresh the example cutoff before execution. Expiry must be in the future and
+within thirty days; the bucket name must be one literal valid name. The current
+preview has two tokens to create, with no bucket, Worker or compute resources.
+`deploy-signed-credentials` applies that separate stack;
+`destroy-signed-credentials` revokes only its managed trial tokens after the
+trial consumers stop. Ordinary `plan|deploy|destroy` retains the bucket stack's
+existing ownership. Keep the deployment receipt, exact source and role handoff
+bound to the reviewed preview. A successful plan is not proof of token creation
+permissions or effective storage grants.
+
+Local Alchemy state can contain token values and is restricted to owner mode
+0700; backup archives are private under the wrapper's umask. Stack outputs
+contain only the bucket name and expiry. The approved secret lane owns value
+handoff. The artifact HMAC key remains separate from both storage tokens and
+reaches clients only. These credential actions prepare grants; signed adapter
+startup, current qualification, rotation/rollback and observation are separate
+rollout gates.
+
 ## Signed-policy component lab
 
 `patches/4.0.20-signed-policy.patch` is a reviewed source patch to the exact
