@@ -602,6 +602,15 @@ instead of silently splitting delivery or weakening scope.
   differs in two seeded runs; the retained receipt is
   `history/evidence/edition-candidate-order.json`. Restore raw bag order only
   with a new declared comparison rule and deterministic oracle proof.
+  **2026-10-29 qualification:** actual law/journal ResourceCitation hashing
+  stably sorts editions by abbreviation. Distinct editions with tied
+  abbreviations retain their relative order and can change the resource hash.
+  The deterministic counterexample and revised rule are recorded in
+  `history/evidence/2026-10-29-publication-resource-hashes.md`. Candidate-bag
+  normalization is representation-only; retain raw order separately wherever
+  observable hashing requires it. Sorted evidence bags cannot reconstruct
+  discarded raw order. Exact runtime equality supersedes the older bag-based
+  authority fallback for these cases; adapter/corpus integration remains open.
 
 - **2026-10-28 vocabulary vintage separation:** consume current public stable
   court/case-reporter IDs while preserving reporters-db 3.2.53/courts-db 0.10.22

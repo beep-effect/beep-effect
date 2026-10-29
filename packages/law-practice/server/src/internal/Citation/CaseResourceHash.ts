@@ -7,14 +7,13 @@
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationComponents, FullCaseCitation } from "@beep/law-practice-domain/values";
-import { LiteralKit, Sha256HexFromBytes } from "@beep/schema";
-import * as A from "effect/Array";
+import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
 import { CitationAuthorityEdition } from "./AuthorityIdentity.ts";
+import { encodeCitationRuntimeString, hashCitationRuntimePreimage } from "./RuntimeHashEncoding.ts";
 import type * as Crypto from "effect/Crypto";
 
 const $I = $LawPracticeServerId.create("internal/Citation/CaseResourceHash");
@@ -86,28 +85,13 @@ export class CitationCaseResourceHashFailure extends S.TaggedError<
   })
 ) {}
 const failure = (reason: typeof Reason.Type) => CitationCaseResourceHashFailure.make({ reason });
-const JsonString = S.fromJsonString(S.String);
-const encoder = new TextEncoder();
-const hex = Str.split("0123456789abcdef", "");
-const quote = Effect.fn("Citation.pythonJsonString")(function* (value: string) {
-  const encoded = yield* S.encodeEffect(JsonString)(value).pipe(Effect.mapError(() => failure("invalid-input")));
-  return A.join(
-    A.map(Str.split(encoded, ""), (unit) => {
-      const code = O.getOrElse(Str.charCodeAt(unit, 0), () => 0);
-      return code < 127
-        ? unit
-        : `\\u${A.getUnsafe(hex, (code >>> 12) & 15)}${A.getUnsafe(hex, (code >>> 8) & 15)}${A.getUnsafe(hex, (code >>> 4) & 15)}${A.getUnsafe(hex, code & 15)}`;
-    }),
-    ""
-  );
-});
+const quote = Effect.fn("Citation.caseHashString")((value: string) =>
+  encodeCitationRuntimeString(value).pipe(Effect.mapError((error) => failure(error.reason)))
+);
 const jsonValue = (value: string | null) => (value === null ? Effect.succeed("null") : quote(value));
-const numericHash = Effect.fn("Citation.pythonShaHash")(function* (preimage: string) {
-  const digest = yield* S.decodeEffect(Sha256HexFromBytes)(encoder.encode(preimage)).pipe(
-    Effect.mapError(() => failure("digest-failed"))
-  );
-  return BigInt(`0x${digest}`) % BigInt("2305843009213693951");
-});
+const numericHash = Effect.fn("Citation.caseHashPreimage")((preimage: string) =>
+  hashCitationRuntimePreimage(preimage).pipe(Effect.mapError((error) => failure(error.reason)))
+);
 /**
  * Hash the current case fields with source JSON spacing, ASCII escaping and
  * CPython integer reduction. No mutable citation-bearing input is memoized.

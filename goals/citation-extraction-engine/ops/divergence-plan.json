@@ -15,10 +15,13 @@
     },
     {
       "id": "edition-candidate-bag-order",
-      "statement": "Sort only exact/variation/all-edition candidate bags by artifact identity; preserve multiplicity, chosen editions, filtering and legal decisions.",
+      "statement": "Normalize exact/variation/all-edition candidate bags for representation only while preserving multiplicity, chosen editions, filtering, resource hashes and legal decisions. Retain raw relative order for source hash inputs when stable abbreviation ties distinguish it; never derive runtime hash order from an artifact-sorted bag.",
       "referencePaths": [
         "goals/citation-extraction-engine/history/evidence/edition-candidate-order.json",
-        "goals/citation-extraction-engine/ops/export-operations.py"
+        "goals/citation-extraction-engine/ops/export-operations.py",
+        "goals/citation-extraction-engine/history/evidence/2026-10-29-publication-resource-hashes.md",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/publication-resource-hashes.json",
+        "goals/citation-extraction-engine/ops/probe-publication-resource-hashes.py"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

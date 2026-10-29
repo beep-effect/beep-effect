@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "dcfd680213d6e3d47043cb866d8bb2a5f94d2b356e9245b69ae0b935220ab206",
+  "planSha256": "b6ff37d3e9e8230f9fd5eb0cb5022cbb892e494a8765e5fd40adfe5191fa28b3",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -29,7 +29,7 @@
     {
       "kind": "representation-law",
       "id": "edition-candidate-bag-order",
-      "statement": "Sort only exact/variation/all-edition candidate bags by artifact identity; preserve multiplicity, chosen editions, filtering and legal decisions.",
+      "statement": "Normalize exact/variation/all-edition candidate bags for representation only while preserving multiplicity, chosen editions, filtering, resource hashes and legal decisions. Retain raw relative order for source hash inputs when stable abbreviation ties distinguish it; never derive runtime hash order from an artifact-sorted bag.",
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
         "name": "edition-candidate-bag-order"
@@ -42,6 +42,18 @@
         {
           "path": "goals/citation-extraction-engine/ops/export-operations.py",
           "sha256": "9a8176ca6d55de38ff94731a1c532b9d4788651bcdd497c8d308b8520bae15e8"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-10-29-publication-resource-hashes.md",
+          "sha256": "e23357f6e7199618176ec4e7e90ef217f25d04213cbc1286769c4d45583e9a06"
+        },
+        {
+          "path": "packages/law-practice/use-cases/test/fixtures/eyecite/publication-resource-hashes.json",
+          "sha256": "57962d12465617aca8f4f483329ac1c0ef94b2f2c866e7f836edc0a29a7e8599"
+        },
+        {
+          "path": "goals/citation-extraction-engine/ops/probe-publication-resource-hashes.py",
+          "sha256": "6d645a7401609b55792f600b2b64d274a931b75fb51232416bfe2a6b18f07f25"
         }
       ],
       "workflowState": "audit",

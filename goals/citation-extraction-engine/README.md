@@ -183,3 +183,9 @@ The [live case-resource composition](
 owner reads/writes, resource object identity, exact hashes and the runtime
 table across five source histories and thirty-eight events. Default callback
 owner integration and the three mutable-key engine cases remain open.
+
+The [law/journal hash evidence](
+./history/evidence/2026-10-29-publication-resource-hashes.md) matches twenty-two
+source observations and qualifies candidate-bag normalization: tied edition
+abbreviations can make relative order observable through resource hashes.
+The frozen edition adapter and unified callback-owner table remain open.

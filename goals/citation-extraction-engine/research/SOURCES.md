@@ -88,6 +88,13 @@ adapts Resource.__hash__/__eq__ through the exact hash helper and captures the
 semantic owner through an injected service. Attribution remains BSD-2-Clause.
 This component proof does not establish final default callback integration.
 
+The [publication resource hash evidence](
+../history/evidence/2026-10-29-publication-resource-hashes.md) records twenty-two
+actual law/journal hash observations. Complete source edition/reporter payloads
+and exact datetime strings are consumed through private trusted-adapter data.
+Stable abbreviation ties qualify candidate-bag normalization. Attribution is
+BSD-2-Clause; live artifact authentication and callback integration remain open.
+
 ## Incorporated-source discipline
 
 - A local clone is research state, not an incorporated dependency.
