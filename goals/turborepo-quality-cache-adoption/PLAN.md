@@ -2,19 +2,20 @@
 
 ## Status
 
-Status: `pending`
-Lifecycle: `paused`
+Status: `active`
+Lifecycle: `active`
 
-Authored but not started. An explicit launch begins P0 and uses
-`bun run beep goals set-status turborepo-quality-cache-adoption active`.
-The user approved the program scope on 2026-09-08; no repeated shape approval
-is needed.
+Launched 2026-10-28 in the isolated `codex/turborepo-goals-completion` lane.
+The current population and feature inventories are review queues, not
+qualification grants. The retained signed pilot remains limited to its recorded
+older private-loopback tuple. No acceptance criterion or representative window
+is treated as complete by this launch.
 
 ## Phases
 
 | Phase | Status | Work | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Population, feature and value audit | pending | Refresh actual scripts/lanes/workflow definitions and relevant stable/canary features; consume lane-economics baseline. | Every population/feature has an owner and disposition; prioritized cohorts have explicit evidence gaps. |
+| P0 Population, feature and value audit | in-progress | Refresh actual scripts/lanes/workflow definitions and relevant stable/canary features; consume lane-economics baseline. | Every population/feature has an owner and disposition; prioritized cohorts have explicit evidence gaps. |
 | P1 Graph and pure boundaries | pending | Implement proof-backed task graph, input/output/env repairs and pure decomposition through qualification's contract. | Negative invalidation and output-ownership tests pass; no unreviewed enablement. |
 | P2 Local and worktree adoption | pending | Qualify high-value cohorts and adopt local reuse inside proven profiles. | Fresh/replay/shadow equivalence and worktree portability evidence pass. |
 | P3 Hosted cohorts and warming | pending | Consume production trust readiness; roll named hosted cohorts, archive transport fixes and demand-based warming. | Required jobs emit fresh statuses; resolved workflow identity, useful hits and bounded warm receipts are proven. |
@@ -25,6 +26,21 @@ is needed.
 ## First action
 
 Refresh actual task/lane/workflow population and create the stable/canary feature and computation-disposition matrices using the existing owners' baselines.
+
+### Current checkpoint: 2026-10-28
+
+- `research/current-population.json` records 190 workspaces, 4,586 graph nodes,
+  2,571 executable computations and 2,015 graph-only nodes. Its 1,621 configured
+  cache-enabled computations are not thereby qualified. Every row retains an
+  explicit current-review obligation and final-disposition gap.
+- `research/current-feature-matrix.json` records 21 feature families and all 14
+  future flags in the installed schema. Documented availability does not replace
+  each feature's applicability and runtime regression evidence.
+- `research/current-client-pins.json` pins installed stable 2.11.10 and published
+  canary 2.11.9-canary.1 by native bytes. Both probes use `--skip-infer`, matching
+  the existing pilot owner and preventing delegation to the installed stable.
+- `research/current-completion-audit.json` retains all nine acceptance criteria
+  and implementation-contract paragraphs as unfinished proof obligations.
 
 ## Dependency gates
 
