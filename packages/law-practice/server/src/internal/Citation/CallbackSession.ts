@@ -7,11 +7,13 @@
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationMention, CitationMentionId, FullCitation } from "@beep/law-practice-domain/values";
+import { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { PreparedCitationResolution, prepareCitationResolution } from "./ResolutionInput.ts";
 import { CitationResourceIdentity, makeCitationResourceAuthorityId } from "./ResourceIdentity.ts";
@@ -194,6 +196,40 @@ export class CitationCallbackFailure extends S.TaggedError<CitationCallbackFailu
   })
 ) {}
 /**
+ * Per-operation work accounting shared by dispatch and captured defaults.
+ * @internal
+ * @category services
+ * @since 0.0.0
+ */
+export class CitationResolutionWork extends Context.Service<
+  CitationResolutionWork,
+  {
+    readonly maximum: CitationEngineLimits["resolutionIterations"];
+    readonly step: Effect.Effect<void, CitationCallbackFailure>;
+  }
+>()($I`CitationResolutionWork`) {}
+/**
+ * Allocate fresh work state. Never reuse it across resolution operations.
+ * @internal
+ * @category operations
+ * @since 0.0.0
+ */
+export const makeCitationResolutionWork = Effect.fn("Citation.makeResolutionWork")(function* (input: unknown) {
+  const limits = yield* S.decodeUnknownEffect(S.toType(CitationEngineLimits))(input).pipe(
+    Effect.mapError(() => CitationCallbackFailure.make({ reason: "invalid-input" }))
+  );
+  const maximum = limits.resolutionIterations;
+  let iterations = 0;
+  return CitationResolutionWork.of({
+    maximum,
+    step: Effect.suspend(() => {
+      if (iterations >= maximum) return Effect.fail(CitationCallbackFailure.make({ reason: "limit-exceeded" }));
+      iterations += 1;
+      return Effect.void;
+    }),
+  });
+});
+/**
  * Captured private callbacks; callable behavior is a service, never request
  * data. Every callback captures its dependencies and returns R = never.
  * This protocol covers explicit list/dictionary transitions; arbitrary source
@@ -233,7 +269,7 @@ const FullsJson = S.fromJsonString(CitationFullsCallbackOutput);
 const IdJson = S.fromJsonString(CitationIdCallbackOutput);
 const isFull = S.is(FullCitation);
 const invalid = () => CitationCallbackFailure.make({ reason: "invalid-input" });
-const callbackFailed = () => CitationCallbackFailure.make({ reason: "callback-failed" });
+const callbackFailed = (error: CitationCallbackFailure) => CitationCallbackFailure.make({ reason: error.reason });
 const limit = () => CitationCallbackFailure.make({ reason: "limit-exceeded" });
 
 /**
@@ -245,12 +281,9 @@ const limit = () => CitationCallbackFailure.make({ reason: "limit-exceeded" });
  * @category operations
  * @since 0.0.0
  */
-export const runCitationCallbackSession = Effect.fn("Citation.runCallbackSession")(function* (
-  input: unknown
+export const runPreparedCitationCallbackSession = Effect.fn("Citation.runPreparedCallbackSession")(function* (
+  prepared: PreparedCitationResolution
 ): Effect.fn.Return<typeof SessionState.Type, CitationCallbackFailure, Crypto.Crypto | CitationResolutionCallbacks> {
-  const prepared = yield* prepareCitationResolution(input).pipe(
-    Effect.mapError((error) => CitationCallbackFailure.make({ reason: error.reason }))
-  );
   const callbacks = yield* CitationResolutionCallbacks;
   const known = HashSet.fromIterable(A.map(prepared.mentions, (mention) => mention.id));
   const fullIds = HashSet.fromIterable(
@@ -262,12 +295,10 @@ export const runCitationCallbackSession = Effect.fn("Citation.runCallbackSession
   let fulls: ReadonlyArray<CitationCallbackFull> = [];
   let groups: ReadonlyArray<CitationCallbackGroup> = [];
   let last: CitationCallbackResource = CitationCallbackResource.cases.None.make({});
-  let iterations = 0;
-  const step = Effect.suspend(() => {
-    if (iterations >= prepared.limits.resolutionIterations) return Effect.fail(limit());
-    iterations += 1;
-    return Effect.void;
-  });
+  const shared = yield* Effect.serviceOption(CitationResolutionWork);
+  const work = O.isSome(shared) ? shared.value : yield* makeCitationResolutionWork(prepared.limits);
+  if (work.maximum !== prepared.limits.resolutionIterations) return yield* invalid();
+  const step = work.step;
   const key = Effect.fn("Citation.callbackResourceKey")(function* (resource: CitationCallbackResource) {
     if (resource._tag === "Unhashable") return yield* CitationCallbackFailure.make({ reason: "unhashable-resource" });
     if (resource._tag === "None") return "none";
@@ -347,4 +378,17 @@ export const runCitationCallbackSession = Effect.fn("Citation.runCallbackSession
   return yield* S.decodeEffect(S.toType(SessionState))({ ...prepared, fulls, groups, last }).pipe(
     Effect.mapError(invalid)
   );
+});
+
+/**
+ * Verify raw server inputs once, then execute the captured callback session.
+ * @internal
+ * @category operations
+ * @since 0.0.0
+ */
+export const runCitationCallbackSession = Effect.fn("Citation.runCallbackSession")(function* (input: unknown) {
+  const prepared = yield* prepareCitationResolution(input).pipe(
+    Effect.mapError((error) => CitationCallbackFailure.make({ reason: error.reason }))
+  );
+  return yield* runPreparedCitationCallbackSession(prepared);
 });

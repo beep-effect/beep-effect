@@ -882,6 +882,19 @@ instead of silently splitting delivery or weakening scope.
   Reverse the session, shared preparation refactor and pin-input widening
   together, retaining equivalent default and source-trace regression proof.
 
+- **2026-10-28 production callback defaults:** construct all five defaults
+  from one prepared operation and capture Crypto/work services in methods with
+  R = never. Dispatch and matching share one operation-owned counter, whose
+  ceiling is captured and must match the prepared policy. Preserve precise
+  finite failure reasons while dropping extra callback payloads. Run the
+  prepared session after one verification rather than verifying twice. The
+  production callbacks match all 76 default contexts and replace test-only
+  default logic in the 18 custom trace contexts. Keep the existing document
+  resolver until unified projection retains its richer outcome diagnostics;
+  retire the duplicate matcher in that integration. No full custom/host/alias
+  or bounded-runtime claim follows. Reverse factory/work integration together
+  while retaining equivalent source, concurrency, ceiling and default proof.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from

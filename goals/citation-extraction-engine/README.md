@@ -38,13 +38,17 @@ and 210 mentions; original-source span/extraction proof stays separate.
 Authority representatives now refer to any resolved mention. Private
 persistence accepts exact expected membership from trusted canonical/external
 resource descriptors. A private callback session now matches 18 focused source
-contexts and all 53 callback events through test adapters. Production callback
-defaults, general host/alias/model mutation and final integration remain open.
+contexts and all 53 callback events through captured custom adapters and
+production defaults. Production default callbacks also pass all 76 default
+contexts with shared, operation-local work accounting. General host/alias/model
+mutation and final document/service integration remain open.
 Exhaustive resolver/custom-resource proof, live artifact integration, Bluebook codecs,
 extension adoption/schema proof, runtime enforcement and family safety remain
 unfinished.
 
 Current evidence:
+
+- [Production default callbacks](./history/evidence/2026-10-28-production-default-callbacks.md)
 
 - [Private callback session](./history/evidence/2026-10-28-callback-session.md)
 

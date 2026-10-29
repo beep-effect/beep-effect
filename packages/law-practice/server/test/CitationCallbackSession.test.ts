@@ -1,20 +1,17 @@
 import { fileURLToPath } from "node:url";
-import { Citation, CitationComponents, CitationMentionId } from "@beep/law-practice-domain/values";
-import { CitationAuthorityIdentityInput } from "@beep/law-practice-server/_test/Citation/AuthorityIdentity";
+import { Citation, CitationMentionId } from "@beep/law-practice-domain/values";
 import {
   CitationCallbackFailure,
   CitationCallbackResource,
   CitationResolutionCallbacks,
+  CitationResolutionWork,
+  makeCitationResolutionWork,
   runCitationCallbackSession,
+  runPreparedCitationCallbackSession,
 } from "@beep/law-practice-server/_test/Citation/CallbackSession";
-import {
-  hasInvalidCitationPinCite,
-  stripCitationAntecedentPunctuation,
-} from "@beep/law-practice-server/_test/Citation/ResolverText";
-import {
-  CitationResourceIdentity,
-  makeCitationResourceAuthorityId,
-} from "@beep/law-practice-server/_test/Citation/ResourceIdentity";
+import { makeDefaultCitationResolutionCallbacks } from "@beep/law-practice-server/_test/Citation/DefaultCallbacks";
+import { prepareCitationResolution } from "@beep/law-practice-server/_test/Citation/ResolutionInput";
+import { CitationResourceIdentity } from "@beep/law-practice-server/_test/Citation/ResourceIdentity";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -34,7 +31,6 @@ import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import { CitationResolutionContext, prepareCitationResolutionContext as prepare } from "./CitationResolve.fixtures.ts";
 import type {
-  CitationCallbackFull,
   CitationCallbackGroup,
   CitationFullsCallbackInput,
   CitationIdCallbackInput,
@@ -58,11 +54,6 @@ const none = () => CitationCallbackResource.cases.None.make({});
 const fail = () => CitationCallbackFailure.make({ reason: "callback-failed" });
 const presentation = (resource: CitationCallbackResource): S.Json =>
   resource._tag === "None" ? { kind: "NoneType", value: null } : resource.value;
-const key = Effect.fn("CallbackTest.key")(function* (resource: CitationCallbackResource) {
-  if (resource._tag === "None") return "none";
-  if (resource._tag === "Unhashable") return yield* fail();
-  return yield* makeCitationResourceAuthorityId(resource.identity);
-});
 // Focused fixture adapter, not a production Python hashable implementation.
 const resource = Effect.fn("CallbackTest.resource")(function* (
   raw: S.Json
@@ -245,7 +236,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
   );
 
   it.effect(
-    "matches all 18 source dispatch/state observations using explicit test adapters",
+    "matches all 18 source dispatch/state observations with production defaults and captured custom adapters",
     () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -264,6 +255,11 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
         expect(A.reduce(data.cases, 0, (count, row) => count + A.length(row.events))).toBe(53);
         for (const row of data.cases) {
           const input = yield* context(row);
+          const prepared = yield* prepareCitationResolution(input);
+          const work = yield* makeCitationResolutionWork(prepared.limits);
+          const defaults = yield* makeDefaultCitationResolutionCallbacks(prepared).pipe(
+            Effect.provideService(CitationResolutionWork, work)
+          );
           const crypto = yield* Crypto.Crypto;
           const byId = HashMap.fromIterable(
             A.map(input.mentions, (mention, index) => Tuple.make(mention.id, { mention, index }))
@@ -273,17 +269,11 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
               O.map(HashMap.get(byId, id), (entry) => entry.index),
               () => -1
             );
-          const mentionOf = (id: CitationMentionId) =>
-            Effect.fromOption(O.map(HashMap.get(byId, id), (entry) => entry.mention));
           const groupValue = (group: CitationCallbackGroup): S.Json => ({
             resource: presentation(group.resource),
             members: A.map(group.members, indexOf),
           });
           let events = A.empty<S.Json>();
-          const choose = Effect.fn("CallbackTest.choose")(function* (fulls: ReadonlyArray<CitationCallbackFull>) {
-            const keys = yield* Effect.forEach(fulls, (full) => key(full.resource), { concurrency: 1 });
-            return A.length(A.dedupe(keys)) === 1 ? A.getUnsafe(fulls, 0).resource : none();
-          });
           const behavior = Effect.fn("CallbackTest.behavior")(function* (
             slot: string,
             id: CitationMentionId,
@@ -312,32 +302,9 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
               if (action === "raise") return yield* fail();
               if (action === "clear-fulls") return { resource: none(), fulls: [] };
               if (action !== "default") return { resource: yield* resource(action), fulls: arg.fulls };
-              let candidates = A.empty<CitationCallbackFull>();
-              for (const full of arg.fulls) {
-                const prior = (yield* mentionOf(full.mentionId)).citation;
-                const current = arg.mention.citation;
-                if (prior.type !== "case") continue;
-                if (current.type === "shortFormCase") {
-                  const priorComponents = yield* S.encodeEffect(CitationComponents)(prior.components);
-                  const currentComponents = yield* S.encodeEffect(CitationComponents)(current.components);
-                  if (
-                    R.get(priorComponents, "volume").pipe(O.getOrNull) ===
-                      R.get(currentComponents, "volume").pipe(O.getOrNull) &&
-                    R.get(priorComponents, "reporter").pipe(O.getOrNull) ===
-                      R.get(currentComponents, "reporter").pipe(O.getOrNull)
-                  )
-                    candidates = A.append(candidates, full);
-                } else if (current.type === "supra") {
-                  const guess = O.map(current.metadata.antecedentGuess, stripCitationAntecedentPunctuation);
-                  if (
-                    O.isSome(guess) &&
-                    (O.exists(prior.metadata.plaintiff, Str.includes(guess.value)) ||
-                      O.exists(prior.metadata.defendant, Str.includes(guess.value)))
-                  )
-                    candidates = A.append(candidates, full);
-                }
-              }
-              return { resource: yield* choose(candidates), fulls: arg.fulls };
+              if (slot === "shortcase") return yield* defaults.shortCase(arg);
+              if (slot === "supra") return yield* defaults.supra(arg);
+              return yield* defaults.reference(arg);
             });
           const short = fullsCallback("shortcase");
           const supra = fullsCallback("supra");
@@ -347,16 +314,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
               function* (mention: (typeof input.mentions)[number]) {
                 const action = yield* behavior("full", mention.id, { slot: "full", mention: indexOf(mention.id) });
                 if (action !== "default") return yield* resource(action);
-                const authority = yield* S.decodeUnknownEffect(S.toType(CitationAuthorityIdentityInput))({
-                  citation: mention.citation,
-                  mentionId: mention.id,
-                  selectedEdition: O.none(),
-                });
-                return CitationCallbackResource.cases.Hashable.make({
-                  identity: CitationResourceIdentity.cases.Canonical.make({ authority }),
-                  truthy: true,
-                  value: { kind: "default", representative: indexOf(mention.id) },
-                });
+                return yield* defaults.full(mention);
               },
               Effect.provideService(Crypto.Crypto, crypto),
               Effect.mapError(fail)
@@ -379,24 +337,14 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
                   groups: A.map(arg.groups, groupValue),
                 });
                 if (action !== "default") return { resource: yield* resource(action), groups: arg.groups };
-                if (arg.last._tag === "None" || !arg.last.truthy) return { resource: none(), groups: arg.groups };
-                const id = yield* key(arg.last);
-                const matches = yield* Effect.filter(arg.groups, (group) =>
-                  Effect.map(key(group.resource), (value) => value === id)
-                );
-                const group = A.getUnsafe(matches, 0);
-                const first = yield* mentionOf(A.getUnsafe(group.members, 0));
-                const invalid = yield* hasInvalidCitationPinCite({
-                  fullCitation: first.citation,
-                  idCitation: arg.mention.citation,
-                });
-                return { resource: invalid ? none() : arg.last, groups: arg.groups };
+                return yield* defaults.id(arg);
               },
               Effect.provideService(Crypto.Crypto, crypto),
               Effect.mapError(fail)
             ),
           });
-          const result = yield* runCitationCallbackSession(input).pipe(
+          const result = yield* runPreparedCitationCallbackSession(prepared).pipe(
+            Effect.provideService(CitationResolutionWork, work),
             Effect.provideService(CitationResolutionCallbacks, callbacks),
             Effect.result
           );
