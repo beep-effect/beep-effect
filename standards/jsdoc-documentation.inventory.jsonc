@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-28T19:21:13.570Z",
+  "generatedAt": "2026-10-29T02:14:04.940Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -65,8 +65,8 @@
     "cleanPackages": 164,
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 17,
-    "publicModules": 3552,
-    "publicExports": 25272,
+    "publicModules": 3562,
+    "publicExports": 25309,
     "openModules": 167,
     "openExports": 99,
     "missingExportExamples": 3,
@@ -141743,9 +141743,9 @@
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 51,
-        "publicModuleCount": 51,
-        "publicExportCount": 241
+        "sourceFileCount": 54,
+        "publicModuleCount": 54,
+        "publicExportCount": 259
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -142882,6 +142882,72 @@
           "categoryViolations": [],
           "documentationShapeViolations": [],
           "exportCount": 1,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/values/Retention/Retention.behavior.ts",
+          "repoPath": "packages/epistemic/domain/src/values/Retention/Retention.behavior.ts",
+          "line": 1,
+          "anchor": "packages-epistemic-domain-src-values-retention-retention-behavior-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 2,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/values/Retention/Retention.model.ts",
+          "repoPath": "packages/epistemic/domain/src/values/Retention/Retention.model.ts",
+          "line": 1,
+          "anchor": "packages-epistemic-domain-src-values-retention-retention-model-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 14,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/values/Retention/index.ts",
+          "repoPath": "packages/epistemic/domain/src/values/Retention/index.ts",
+          "line": 1,
+          "anchor": "packages-epistemic-domain-src-values-retention-index-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 2,
           "remediationStatus": "resolved"
         },
         {
@@ -147916,6 +147982,399 @@
             "@category",
             "@since"
           ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "retentionPolicyDigest",
+          "exportKind": "const",
+          "filePath": "src/values/Retention/Retention.behavior.ts",
+          "repoPath": "packages/epistemic/domain/src/values/Retention/Retention.behavior.ts",
+          "line": 25,
+          "anchor": "packages-epistemic-domain-src-values-retention-retention-behavior-ts-25-retentionpolicydigest",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "retentionPayloadBytes",
+          "exportKind": "const",
+          "filePath": "src/values/Retention/Retention.behavior.ts",
+          "repoPath": "packages/epistemic/domain/src/values/Retention/Retention.behavior.ts",
+          "line": 41,
+          "anchor": "packages-epistemic-domain-src-values-retention-retention-behavior-ts-41-retentionpayloadbytes",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "RetentionDisposition",
+          "exportKind": "const",
+          "filePath": "src/values/Retention/Retention.model.ts",
+          "repoPath": "packages/epistemic/domain/src/values/Retention/Retention.model.ts",
+          "line": 33,
+          "anchor": "packages-epistemic-domain-src-values-retention-retention-model-ts-33-retentiondisposition",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "RetentionDisposition",
+          "exportKind": "type",
+          "filePath": "src/values/Retention/Retention.model.ts",
+          "repoPath": "packages/epistemic/domain/src/values/Retention/Retention.model.ts",
+          "line": 49,
+          "anchor": "packages-epistemic-domain-src-values-retention-retention-model-ts-49-retentiondisposition",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "RetentionTier",
+          "exportKind": "const",
+          "filePath": "src/values/Retention/Retention.model.ts",
+          "repoPath": "packages/epistemic/domain/src/values/Retention/Retention.model.ts",
+          "line": 63,
+          "anchor": "packages-epistemic-domain-src-values-retention-retention-model-ts-63-retentiontier",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "RetentionTier",
+          "exportKind": "type",
+          "filePath": "src/values/Retention/Retention.model.ts",
+          "repoPath": "packages/epistemic/domain/src/values/Retention/Retention.model.ts",
+          "line": 73,
+          "anchor": "packages-epistemic-domain-src-values-retention-retention-model-ts-73-retentiontier",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "RetentionQuery",
+          "exportKind": "class",
+          "filePath": "src/values/Retention/Retention.model.ts",
+          "repoPath": "packages/epistemic/domain/src/values/Retention/Retention.model.ts",
+          "line": 87,
+          "anchor": "packages-epistemic-domain-src-values-retention-retention-model-ts-87-retentionquery",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "RetentionPolicy",
+          "exportKind": "class",
+          "filePath": "src/values/Retention/Retention.model.ts",
+          "repoPath": "packages/epistemic/domain/src/values/Retention/Retention.model.ts",
+          "line": 113,
+          "anchor": "packages-epistemic-domain-src-values-retention-retention-model-ts-113-retentionpolicy",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "RetentionCalibration",
+          "exportKind": "class",
+          "filePath": "src/values/Retention/Retention.model.ts",
+          "repoPath": "packages/epistemic/domain/src/values/Retention/Retention.model.ts",
+          "line": 148,
+          "anchor": "packages-epistemic-domain-src-values-retention-retention-model-ts-148-retentioncalibration",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "RetentionPolicyAdmission",
+          "exportKind": "const",
+          "filePath": "src/values/Retention/Retention.model.ts",
+          "repoPath": "packages/epistemic/domain/src/values/Retention/Retention.model.ts",
+          "line": 180,
+          "anchor": "packages-epistemic-domain-src-values-retention-retention-model-ts-180-retentionpolicyadmission",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "RetentionPolicyAdmission",
+          "exportKind": "type",
+          "filePath": "src/values/Retention/Retention.model.ts",
+          "repoPath": "packages/epistemic/domain/src/values/Retention/Retention.model.ts",
+          "line": 196,
+          "anchor": "packages-epistemic-domain-src-values-retention-retention-model-ts-196-retentionpolicyadmission",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "RetentionSnapshot",
+          "exportKind": "class",
+          "filePath": "src/values/Retention/Retention.model.ts",
+          "repoPath": "packages/epistemic/domain/src/values/Retention/Retention.model.ts",
+          "line": 211,
+          "anchor": "packages-epistemic-domain-src-values-retention-retention-model-ts-211-retentionsnapshot",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "RetentionRow",
+          "exportKind": "class",
+          "filePath": "src/values/Retention/Retention.model.ts",
+          "repoPath": "packages/epistemic/domain/src/values/Retention/Retention.model.ts",
+          "line": 234,
+          "anchor": "packages-epistemic-domain-src-values-retention-retention-model-ts-234-retentionrow",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "RetentionGroup",
+          "exportKind": "class",
+          "filePath": "src/values/Retention/Retention.model.ts",
+          "repoPath": "packages/epistemic/domain/src/values/Retention/Retention.model.ts",
+          "line": 264,
+          "anchor": "packages-epistemic-domain-src-values-retention-retention-model-ts-264-retentiongroup",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "RetentionTierSummary",
+          "exportKind": "class",
+          "filePath": "src/values/Retention/Retention.model.ts",
+          "repoPath": "packages/epistemic/domain/src/values/Retention/Retention.model.ts",
+          "line": 288,
+          "anchor": "packages-epistemic-domain-src-values-retention-retention-model-ts-288-retentiontiersummary",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "RetentionReport",
+          "exportKind": "class",
+          "filePath": "src/values/Retention/Retention.model.ts",
+          "repoPath": "packages/epistemic/domain/src/values/Retention/Retention.model.ts",
+          "line": 312,
+          "anchor": "packages-epistemic-domain-src-values-retention-retention-model-ts-312-retentionreport",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Retention.behavior.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/values/Retention/index.ts",
+          "repoPath": "packages/epistemic/domain/src/values/Retention/index.ts",
+          "line": 7,
+          "anchor": "packages-epistemic-domain-src-values-retention-index-ts-7-export-from-retention-behavior-ts",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Retention.model.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/values/Retention/index.ts",
+          "repoPath": "packages/epistemic/domain/src/values/Retention/index.ts",
+          "line": 8,
+          "anchor": "packages-epistemic-domain-src-values-retention-index-ts-8-export-from-retention-model-ts",
+          "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
@@ -204899,9 +205358,9 @@
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 38,
-        "publicModuleCount": 38,
-        "publicExportCount": 148
+        "sourceFileCount": 41,
+        "publicModuleCount": 41,
+        "publicExportCount": 157
       },
       "docgenCoverage": {
         "hasDocgenConfig": false,
@@ -205668,6 +206127,72 @@
         },
         {
           "docKind": "packageDocumentation",
+          "filePath": "src/Retention/Retention.ports.ts",
+          "repoPath": "packages/epistemic/use-cases/src/Retention/Retention.ports.ts",
+          "line": 1,
+          "anchor": "packages-epistemic-use-cases-src-retention-retention-ports-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 3,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/Retention/Retention.service.ts",
+          "repoPath": "packages/epistemic/use-cases/src/Retention/Retention.service.ts",
+          "line": 1,
+          "anchor": "packages-epistemic-use-cases-src-retention-retention-service-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 3,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/Retention/index.ts",
+          "repoPath": "packages/epistemic/use-cases/src/Retention/index.ts",
+          "line": 1,
+          "anchor": "packages-epistemic-use-cases-src-retention-index-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 2,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
           "filePath": "src/index.ts",
           "repoPath": "packages/epistemic/use-cases/src/index.ts",
           "line": 1,
@@ -205778,7 +206303,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 10,
+          "exportCount": 11,
           "remediationStatus": "resolved"
         }
       ],
@@ -208642,6 +209167,179 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "RetentionUnavailable",
+          "exportKind": "class",
+          "filePath": "src/Retention/Retention.ports.ts",
+          "repoPath": "packages/epistemic/use-cases/src/Retention/Retention.ports.ts",
+          "line": 28,
+          "anchor": "packages-epistemic-use-cases-src-retention-retention-ports-ts-28-retentionunavailable",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "RetentionAuthorityReader",
+          "exportKind": "class",
+          "filePath": "src/Retention/Retention.ports.ts",
+          "repoPath": "packages/epistemic/use-cases/src/Retention/Retention.ports.ts",
+          "line": 45,
+          "anchor": "packages-epistemic-use-cases-src-retention-retention-ports-ts-45-retentionauthorityreader",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "RetentionCalibrationRegistry",
+          "exportKind": "class",
+          "filePath": "src/Retention/Retention.ports.ts",
+          "repoPath": "packages/epistemic/use-cases/src/Retention/Retention.ports.ts",
+          "line": 67,
+          "anchor": "packages-epistemic-use-cases-src-retention-retention-ports-ts-67-retentioncalibrationregistry",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "generateRetentionReport",
+          "exportKind": "const",
+          "filePath": "src/Retention/Retention.service.ts",
+          "repoPath": "packages/epistemic/use-cases/src/Retention/Retention.service.ts",
+          "line": 121,
+          "anchor": "packages-epistemic-use-cases-src-retention-retention-service-ts-121-generateretentionreport",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "encodeRetentionReport",
+          "exportKind": "const",
+          "filePath": "src/Retention/Retention.service.ts",
+          "repoPath": "packages/epistemic/use-cases/src/Retention/Retention.service.ts",
+          "line": 239,
+          "anchor": "packages-epistemic-use-cases-src-retention-retention-service-ts-239-encoderetentionreport",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "renderRetentionReport",
+          "exportKind": "const",
+          "filePath": "src/Retention/Retention.service.ts",
+          "repoPath": "packages/epistemic/use-cases/src/Retention/Retention.service.ts",
+          "line": 254,
+          "anchor": "packages-epistemic-use-cases-src-retention-retention-service-ts-254-renderretentionreport",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Retention.ports.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/Retention/index.ts",
+          "repoPath": "packages/epistemic/use-cases/src/Retention/index.ts",
+          "line": 6,
+          "anchor": "packages-epistemic-use-cases-src-retention-index-ts-6-export-from-retention-ports-ts",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Retention.service.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/Retention/index.ts",
+          "repoPath": "packages/epistemic/use-cases/src/Retention/index.ts",
+          "line": 7,
+          "anchor": "packages-epistemic-use-cases-src-retention-index-ts-7-export-from-retention-service-ts",
+          "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "export * from \"./public.ts\";",
           "exportKind": "re-export",
           "filePath": "src/index.ts",
@@ -209030,6 +209728,25 @@
             "@category",
             "@since"
           ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Retention/index.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/server.ts",
+          "repoPath": "packages/epistemic/use-cases/src/server.ts",
+          "line": 130,
+          "anchor": "packages-epistemic-use-cases-src-server-ts-130-export-from-retention-index-ts",
+          "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
@@ -324882,9 +325599,9 @@
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 24,
-        "publicModuleCount": 24,
-        "publicExportCount": 56
+        "sourceFileCount": 28,
+        "publicModuleCount": 28,
+        "publicExportCount": 62
       },
       "docgenCoverage": {
         "hasDocgenConfig": false,
@@ -325376,6 +326093,72 @@
         },
         {
           "docKind": "packageDocumentation",
+          "filePath": "src/Retention/Retention.reader.ts",
+          "repoPath": "packages/epistemic/server/src/Retention/Retention.reader.ts",
+          "line": 1,
+          "anchor": "packages-epistemic-server-src-retention-retention-reader-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 1,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/Retention/Retention.store.ts",
+          "repoPath": "packages/epistemic/server/src/Retention/Retention.store.ts",
+          "line": 1,
+          "anchor": "packages-epistemic-server-src-retention-retention-store-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 1,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/Retention/index.ts",
+          "repoPath": "packages/epistemic/server/src/Retention/index.ts",
+          "line": 1,
+          "anchor": "packages-epistemic-server-src-retention-index-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 2,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
           "filePath": "src/ShaclValidation/BoundedShaclValidator.layer.ts",
           "repoPath": "packages/epistemic/server/src/ShaclValidation/BoundedShaclValidator.layer.ts",
           "line": 1,
@@ -325438,7 +326221,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 8,
+          "exportCount": 9,
           "remediationStatus": "resolved"
         },
         {
@@ -325462,6 +326245,29 @@
           "categoryViolations": [],
           "documentationShapeViolations": [],
           "exportCount": 2,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/internal/retentionReadFailureKind.ts",
+          "repoPath": "packages/epistemic/server/src/internal/retentionReadFailureKind.ts",
+          "line": 1,
+          "anchor": "packages-epistemic-server-src-internal-retentionreadfailurekind-ts-1-module",
+          "currentTags": [
+            "@internal",
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 1,
           "remediationStatus": "resolved"
         }
       ],
@@ -326350,6 +327156,91 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "RetentionAuthorityReaderDrizzle",
+          "exportKind": "const",
+          "filePath": "src/Retention/Retention.reader.ts",
+          "repoPath": "packages/epistemic/server/src/Retention/Retention.reader.ts",
+          "line": 35,
+          "anchor": "packages-epistemic-server-src-retention-retention-reader-ts-35-retentionauthorityreaderdrizzle",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "rebuildRetentionStore",
+          "exportKind": "const",
+          "filePath": "src/Retention/Retention.store.ts",
+          "repoPath": "packages/epistemic/server/src/Retention/Retention.store.ts",
+          "line": 34,
+          "anchor": "packages-epistemic-server-src-retention-retention-store-ts-34-rebuildretentionstore",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Retention.reader.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/Retention/index.ts",
+          "repoPath": "packages/epistemic/server/src/Retention/index.ts",
+          "line": 6,
+          "anchor": "packages-epistemic-server-src-retention-index-ts-6-export-from-retention-reader-ts",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Retention.store.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/Retention/index.ts",
+          "repoPath": "packages/epistemic/server/src/Retention/index.ts",
+          "line": 7,
+          "anchor": "packages-epistemic-server-src-retention-index-ts-7-export-from-retention-store-ts",
+          "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "MakeBoundedShaclViolation",
           "exportKind": "type",
           "filePath": "src/ShaclValidation/BoundedShaclValidator.layer.ts",
@@ -326635,12 +327526,31 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "export * from \"./Retention/index.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/epistemic/server/src/index.ts",
+          "line": 58,
+          "anchor": "packages-epistemic-server-src-index-ts-58-export-from-retention-index-ts",
+          "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "export * from \"./ShaclValidation/index.ts\";",
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/epistemic/server/src/index.ts",
-          "line": 64,
-          "anchor": "packages-epistemic-server-src-index-ts-64-export-from-shaclvalidation-index-ts",
+          "line": 65,
+          "anchor": "packages-epistemic-server-src-index-ts-65-export-from-shaclvalidation-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -326686,6 +327596,29 @@
           "repoPath": "packages/epistemic/server/src/internal/PosInt.ts",
           "line": 57,
           "anchor": "packages-epistemic-server-src-internal-posint-ts-57-posint",
+          "currentTags": [
+            "@internal",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "retentionReadFailureKind",
+          "exportKind": "const",
+          "filePath": "src/internal/retentionReadFailureKind.ts",
+          "repoPath": "packages/epistemic/server/src/internal/retentionReadFailureKind.ts",
+          "line": 24,
+          "anchor": "packages-epistemic-server-src-internal-retentionreadfailurekind-ts-24-retentionreadfailurekind",
           "currentTags": [
             "@internal",
             "@category",
@@ -449996,7 +450929,7 @@
         "srcDir": "src",
         "sourceFileCount": 475,
         "publicModuleCount": 473,
-        "publicExportCount": 4450
+        "publicExportCount": 4454
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -451138,7 +452071,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 7,
+          "exportCount": 8,
           "remediationStatus": "resolved"
         },
         {
@@ -451248,7 +452181,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 5,
+          "exportCount": 6,
           "remediationStatus": "resolved"
         },
         {
@@ -456097,7 +457030,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 60,
+          "exportCount": 62,
           "remediationStatus": "resolved"
         },
         {
@@ -467568,8 +468501,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.conformance.native.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.native.ts",
-          "line": 662,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-conformance-native-ts-662-runcacheconformancenative",
+          "line": 664,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-conformance-native-ts-664-runcacheconformancenative",
           "currentTags": [
             "@category",
             "@since"
@@ -467590,8 +468523,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.conformance.proxy.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.proxy.ts",
-          "line": 62,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-conformance-proxy-ts-62-cacheconformanceproxyoptions",
+          "line": 66,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-conformance-proxy-ts-66-cacheconformanceproxyoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -467612,8 +468545,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.conformance.proxy.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.proxy.ts",
-          "line": 291,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-conformance-proxy-ts-291-makecacheconformancefaultproxy",
+          "line": 295,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-conformance-proxy-ts-295-makecacheconformancefaultproxy",
           "currentTags": [
             "@category",
             "@since"
@@ -469023,8 +469956,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.conformance.wire.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.wire.ts",
-          "line": 67,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-conformance-wire-ts-67-cacheconformancewirecheck",
+          "line": 68,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-conformance-wire-ts-68-cacheconformancewirecheck",
           "currentTags": [
             "@category",
             "@since"
@@ -469045,8 +469978,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.conformance.wire.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.wire.ts",
-          "line": 87,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-conformance-wire-ts-87-cacheconformancewireoutcome",
+          "line": 88,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-conformance-wire-ts-88-cacheconformancewireoutcome",
           "currentTags": [
             "@category",
             "@since"
@@ -469067,8 +470000,32 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.conformance.wire.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.wire.ts",
-          "line": 195,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-conformance-wire-ts-195-classifycacheconformancestatus",
+          "line": 196,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-conformance-wire-ts-196-classifycacheconformancestatus",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "classifyCacheConformanceMediaType",
+          "exportKind": "const",
+          "filePath": "src/commands/Cache/Cache.conformance.wire.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.wire.ts",
+          "line": 234,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-conformance-wire-ts-234-classifycacheconformancemediatype",
           "currentTags": [
             "@param",
             "@returns",
@@ -469091,8 +470048,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.conformance.wire.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.wire.ts",
-          "line": 277,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-conformance-wire-ts-277-readcacheconformancereply",
+          "line": 311,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-conformance-wire-ts-311-readcacheconformancereply",
           "currentTags": [
             "@internal",
             "@param",
@@ -469116,8 +470073,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.conformance.wire.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.wire.ts",
-          "line": 1069,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-conformance-wire-ts-1069-runcacheconformancewirecase",
+          "line": 1103,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-conformance-wire-ts-1103-runcacheconformancewirecase",
           "currentTags": [
             "@internal",
             "@category",
@@ -469139,8 +470096,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.conformance.wire.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.wire.ts",
-          "line": 1394,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-conformance-wire-ts-1394-cacheconformancelabcaseids",
+          "line": 1428,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-conformance-wire-ts-1428-cacheconformancelabcaseids",
           "currentTags": [
             "@category",
             "@since"
@@ -469161,8 +470118,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.conformance.wire.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.wire.ts",
-          "line": 1414,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-conformance-wire-ts-1414-runcacheconformancelabcase",
+          "line": 1448,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-conformance-wire-ts-1448-runcacheconformancelabcase",
           "currentTags": [
             "@internal",
             "@category",
@@ -469448,8 +470405,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.evidence.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts",
-          "line": 31,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-31-readcacheexperimentbytes",
+          "line": 34,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-34-readcacheexperimentbytes",
           "currentTags": [
             "@internal",
             "@category",
@@ -469471,8 +470428,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.evidence.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts",
-          "line": 59,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-59-decodecacheexperimenttext",
+          "line": 62,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-62-decodecacheexperimenttext",
           "currentTags": [
             "@internal",
             "@param",
@@ -469496,8 +470453,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.evidence.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts",
-          "line": 81,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-81-hashcacheexperimentexecutable",
+          "line": 84,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-84-hashcacheexperimentexecutable",
           "currentTags": [
             "@internal",
             "@category",
@@ -469519,8 +470476,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.evidence.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts",
-          "line": 110,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-110-readcacheevidencebytes",
+          "line": 113,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-113-readcacheevidencebytes",
           "currentTags": [
             "@category",
             "@since"
@@ -469541,8 +470498,33 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.evidence.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts",
-          "line": 140,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-140-requirecachelinuxx64",
+          "line": 143,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-143-requirecachelinuxx64",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@internal",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "requireCacheSupervisorCapture",
+          "exportKind": "const",
+          "filePath": "src/commands/Cache/Cache.evidence.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts",
+          "line": 167,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-167-requirecachesupervisorcapture",
           "currentTags": [
             "@param",
             "@returns",
@@ -470207,8 +471189,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.pilot.runner.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts",
-          "line": 60,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-runner-ts-60-runcachesignedpilotexperiment",
+          "line": 61,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-runner-ts-61-runcachesignedpilotexperiment",
           "currentTags": [
             "@category",
             "@since"
@@ -471672,8 +472654,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.protocol.runner.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.runner.schemas.ts",
-          "line": 28,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-protocol-runner-schemas-ts-28-cacheprotocolrequest",
+          "line": 33,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-protocol-runner-schemas-ts-33-cacheprotocolrequest",
           "currentTags": [
             "@category",
             "@since"
@@ -471694,8 +472676,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.protocol.runner.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.runner.schemas.ts",
-          "line": 48,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-protocol-runner-schemas-ts-48-cacheprotocolreadfailure",
+          "line": 53,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-protocol-runner-schemas-ts-53-cacheprotocolreadfailure",
           "currentTags": [
             "@category",
             "@since"
@@ -471716,8 +472698,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.protocol.runner.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.runner.schemas.ts",
-          "line": 74,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-protocol-runner-schemas-ts-74-cacheprotocolisolationroot",
+          "line": 79,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-protocol-runner-schemas-ts-79-cacheprotocolisolationroot",
           "currentTags": [
             "@category",
             "@since"
@@ -471738,8 +472720,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.protocol.runner.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.runner.schemas.ts",
-          "line": 111,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-protocol-runner-schemas-ts-111-cacheprotocolexecution",
+          "line": 116,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-protocol-runner-schemas-ts-116-cacheprotocolexecution",
           "currentTags": [
             "@category",
             "@since"
@@ -471760,8 +472742,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.protocol.runner.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.runner.ts",
-          "line": 66,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-protocol-runner-ts-66-cacheprotocolsandboxmounts",
+          "line": 67,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-protocol-runner-ts-67-cacheprotocolsandboxmounts",
           "currentTags": [
             "@internal",
             "@category",
@@ -471783,8 +472765,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.protocol.runner.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.runner.ts",
-          "line": 101,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-protocol-runner-ts-101-cacheprotocolnativesummary",
+          "line": 102,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-protocol-runner-ts-102-cacheprotocolnativesummary",
           "currentTags": [
             "@internal",
             "@category",
@@ -471806,8 +472788,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.protocol.runner.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.runner.ts",
-          "line": 192,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-protocol-runner-ts-192-runcacheprotocolworker",
+          "line": 193,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-protocol-runner-ts-193-runcacheprotocolworker",
           "currentTags": [
             "@internal",
             "@category",
@@ -471829,8 +472811,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.protocol.runner.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.runner.ts",
-          "line": 461,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-protocol-runner-ts-461-runcacheprotocolexperiment",
+          "line": 464,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-protocol-runner-ts-464-runcacheprotocolexperiment",
           "currentTags": [
             "@category",
             "@since"
@@ -471851,8 +472833,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.protocol.runner.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.runner.ts",
-          "line": 553,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-protocol-runner-ts-553-assertcacheprivatenetwork",
+          "line": 555,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-protocol-runner-ts-555-assertcacheprivatenetwork",
           "currentTags": [
             "@internal",
             "@category",
@@ -473206,12 +474188,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export {\n  CacheConformanceWireCheck,\n  CacheConformanceWireOutcome,\n  cacheConformanceLabCaseIds,\n  classifyCacheConformanceStatus,\n  readCacheConformanceReply,\n  runCacheConformanceLabCase,\n  runCacheConformanceWireCase,\n} from \"./Cache.conformance.wire.ts\";",
+          "symbolName": "export {\n  CacheConformanceWireCheck,\n  CacheConformanceWireOutcome,\n  cacheConformanceLabCaseIds,\n  classifyCacheConformanceMediaType,\n  classifyCacheConformanceStatus,\n  readCacheConformanceReply,\n  runCacheConformanceLabCase,\n  runCacheConformanceWireCase,\n} from \"./Cache.conformance.wire.ts\";",
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
           "line": 153,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-153-export-cacheconformancewirecheck-cacheconformancewireoutcome-cacheconformancelabcaseids-classifycacheconformancestatus-readcacheconformancereply-runcacheconformancelabcase-runcacheconformancewirecase-from-cache-conformance-wire-ts",
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-153-export-cacheconformancewirecheck-cacheconformancewireoutcome-cacheconformancelabcaseids-classifycacheconformancemediatype-classifycacheconformancestatus-readcacheconformancereply-runcacheconformancelabcase-runcacheconformancewirecase-from-cache-conformance-wire-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -473232,8 +474214,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 168,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-168-export-cachedependencylink-cachedependencymaterialization-cachedependencytree-from-cache-dependencies-schemas-ts",
+          "line": 169,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-169-export-cachedependencylink-cachedependencymaterialization-cachedependencytree-from-cache-dependencies-schemas-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -473254,8 +474236,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 179,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-179-export-materializecachedependencies-verifycachedependencies-from-cache-dependencies-ts",
+          "line": 180,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-180-export-materializecachedependencies-verifycachedependencies-from-cache-dependencies-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -473276,8 +474258,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 186,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-186-export-cachecensusentrypointreview-cacheentrypointartifact-cacheentrypointartifactformat-cacheentrypointartifactreference-cacheentrypointreviewrequest-from-cache-entrypoints-schemas-ts",
+          "line": 187,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-187-export-cachecensusentrypointreview-cacheentrypointartifact-cacheentrypointartifactformat-cacheentrypointartifactreference-cacheentrypointreviewrequest-from-cache-entrypoints-schemas-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -473298,8 +474280,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 199,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-199-export-attachcacheentrypointreview-from-cache-entrypoints-ts",
+          "line": 200,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-200-export-attachcacheentrypointreview-from-cache-entrypoints-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -473320,8 +474302,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 206,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-206-export-cachecaptureviolation-cachefixtureruntime-cachelocalorigin-cachesyntheticcheck-cachesyntheticnonexecution-cachesyntheticreceipt-cachesyntheticrequest-cachesyntheticrun-from-cache-experiment-schemas-ts",
+          "line": 207,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-207-export-cachecaptureviolation-cachefixtureruntime-cachelocalorigin-cachesyntheticcheck-cachesyntheticnonexecution-cachesyntheticreceipt-cachesyntheticrequest-cachesyntheticrun-from-cache-experiment-schemas-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -473342,8 +474324,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 222,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-222-export-runcachesyntheticexperiment-from-cache-experiment-ts",
+          "line": 223,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-223-export-runcachesyntheticexperiment-from-cache-experiment-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -473364,8 +474346,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 229,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-229-export-hashcachetoolchain-from-cache-fingerprint-ts",
+          "line": 230,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-230-export-hashcachetoolchain-from-cache-fingerprint-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -473386,8 +474368,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 236,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-236-export-runcachesignedpilotexperiment-from-cache-pilot-runner-ts",
+          "line": 237,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-237-export-runcachesignedpilotexperiment-from-cache-pilot-runner-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -473408,8 +474390,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 243,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-243-export-cachepilotexecutioninterval-cachepilotloginput-cachepilotmutation-cachepilotnonexecution-cachepilotoutcome-cachepilotreceipt-cachepilotrequest-cachepilotrun-cachepilotshadow-cachepilottask-cachesignedpilotloginput-from-cache-pilot-schemas-ts",
+          "line": 244,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-244-export-cachepilotexecutioninterval-cachepilotloginput-cachepilotmutation-cachepilotnonexecution-cachepilotoutcome-cachepilotreceipt-cachepilotrequest-cachepilotrun-cachepilotshadow-cachepilottask-cachesignedpilotloginput-from-cache-pilot-schemas-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -473430,8 +474412,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 256,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-256-export-cachesignedpilotarchive-cachesignedpilotcapturecontrol-cachesignedpilotfreshpair-cachesignedpilotmutation-cachesignedpilotnonexecution-cachesignedpilotpair-cachesignedpilotpolicyrefusal-cachesignedpilotprotection-cachesignedpilotreceipt-cachesignedpilotrequest-cachesignedpilotrun-cachesignedpilotshadow-cachesignedpilottask-from-cache-pilot-signed-schemas-ts",
+          "line": 257,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-257-export-cachesignedpilotarchive-cachesignedpilotcapturecontrol-cachesignedpilotfreshpair-cachesignedpilotmutation-cachesignedpilotnonexecution-cachesignedpilotpair-cachesignedpilotpolicyrefusal-cachesignedpilotprotection-cachesignedpilotreceipt-cachesignedpilotrequest-cachesignedpilotrun-cachesignedpilotshadow-cachesignedpilottask-from-cache-pilot-signed-schemas-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -473449,8 +474431,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 277,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-277-export-validatecachesignedpilotconcurrency-validatecachesignedpilotfreshpair-validatecachesignedpilotmutation-validatecachesignedpilotpair-validatecachesignedpilotreceipt-validatecachesignedpilotshadow-from-cache-pilot-signed-ts",
+          "line": 278,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-278-export-validatecachesignedpilotconcurrency-validatecachesignedpilotfreshpair-validatecachesignedpilotmutation-validatecachesignedpilotpair-validatecachesignedpilotreceipt-validatecachesignedpilotshadow-from-cache-pilot-signed-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -473471,8 +474453,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 291,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-291-export-runcachepilotexperiment-runcachesignedpilotworker-from-cache-pilot-ts",
+          "line": 292,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-292-export-runcachepilotexperiment-runcachesignedpilotworker-from-cache-pilot-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -473493,8 +474475,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 298,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-298-export-cacheproducerapproval-cacheproducerbinding-cacheproducerbody-cacheproducerbundle-cacheproducerenvelope-cacheproducerevidencefragment-from-cache-producer-schemas-ts",
+          "line": 299,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-299-export-cacheproducerapproval-cacheproducerbinding-cacheproducerbody-cacheproducerbundle-cacheproducerenvelope-cacheproducerevidencefragment-from-cache-producer-schemas-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -473515,8 +474497,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 306,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-306-export-cachefixtureartifactkey-cachefixturecredentials-cachefixtureevent-cachefixturefault-cachefixturescenario-from-cache-protocol-fixture-schemas-ts",
+          "line": 307,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-307-export-cachefixtureartifactkey-cachefixturecredentials-cachefixtureevent-cachefixturefault-cachefixturescenario-from-cache-protocol-fixture-schemas-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -473534,8 +474516,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 313,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-313-export-corruptcacheartifactbody-makecacheprotocolfixture-servecacheloopback-tampercacheartifacttag-from-cache-protocol-fixture-ts",
+          "line": 314,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-314-export-corruptcacheartifactbody-makecacheprotocolfixture-servecacheloopback-tampercacheartifacttag-from-cache-protocol-fixture-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -473553,8 +474535,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 319,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-319-export-cacheprotocolexecution-cacheprotocolisolationroot-cacheprotocolreadfailure-cacheprotocolrequest-from-cache-protocol-runner-schemas-ts",
+          "line": 320,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-320-export-cacheprotocolexecution-cacheprotocolisolationroot-cacheprotocolreadfailure-cacheprotocolrequest-from-cache-protocol-runner-schemas-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -473572,8 +474554,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 325,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-325-export-assertcacheprivatenetwork-cacheprotocolnativesummary-cacheprotocolsandboxmounts-runcacheprotocolexperiment-runcacheprotocolworker-from-cache-protocol-runner-ts",
+          "line": 326,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-326-export-assertcacheprivatenetwork-cacheprotocolnativesummary-cacheprotocolsandboxmounts-runcacheprotocolexperiment-runcacheprotocolworker-from-cache-protocol-runner-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -473591,8 +474573,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 332,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-332-export-cacheprotocolobservation-from-cache-protocol-schemas-ts",
+          "line": 333,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-333-export-cacheprotocolobservation-from-cache-protocol-schemas-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -473610,8 +474592,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 333,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-333-export-validatecacheprotocolexecution-validatecacheprotocolobservation-from-cache-protocol-ts",
+          "line": 334,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-334-export-validatecacheprotocolexecution-validatecacheprotocolobservation-from-cache-protocol-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -473629,8 +474611,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 340,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-340-export-assertcacheruntimekeyunspecified-cacheruntimestep-runcacheruntimetasks-from-cache-runtime-ts",
+          "line": 341,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-341-export-assertcacheruntimekeyunspecified-cacheruntimestep-runcacheruntimetasks-from-cache-runtime-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -473651,8 +474633,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 347,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-347-export-cacheactivationpreview-cacheactivationrequest-cachebaselinerequest-cachecensusdefinition-cachecensusnode-cachecensusreport-cachecensussource-cachecensusworkspace-cachecommanderror-cachecomputationconfiguration-cachedashboardreport-cachedashboardreportjson-cacheexecutablepin-cachelambdasummary-cachelinkedfile-cachelinkerresolution-cacheliveidentity-cacheremotereadsrequest-cacherunmode-cacheruntimeexecutable-cacheruntimelinkersnapshot-cachetoolchainsnapshot-cachetransitionrequest-cachewalltime-cachewarmlane-cachewarmreceipt-cachewarmreceiptjson-from-cache-schemas-ts",
+          "line": 348,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-348-export-cacheactivationpreview-cacheactivationrequest-cachebaselinerequest-cachecensusdefinition-cachecensusnode-cachecensusreport-cachecensussource-cachecensusworkspace-cachecommanderror-cachecomputationconfiguration-cachedashboardreport-cachedashboardreportjson-cacheexecutablepin-cachelambdasummary-cachelinkedfile-cachelinkerresolution-cacheliveidentity-cacheremotereadsrequest-cacherunmode-cacheruntimeexecutable-cacheruntimelinkersnapshot-cachetoolchainsnapshot-cachetransitionrequest-cachewalltime-cachewarmlane-cachewarmreceipt-cachewarmreceiptjson-from-cache-schemas-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -473673,8 +474655,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Cache/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
-          "line": 382,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-382-export-cachequalificationlive-cachequalificationservice-type-cachequalificationserviceshape-encodecachepolicybaselinetext-from-cache-service-ts",
+          "line": 383,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-383-export-cachequalificationlive-cachequalificationservice-type-cachequalificationserviceshape-encodecachepolicybaselinetext-from-cache-service-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -483913,8 +484895,8 @@
           "exportKind": "const",
           "filePath": "src/commands/DeletePackage/DeletePackage.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.command.ts",
-          "line": 343,
-          "anchor": "packages-tooling-tool-cli-src-commands-deletepackage-deletepackage-command-ts-343-removeshapetestrow",
+          "line": 345,
+          "anchor": "packages-tooling-tool-cli-src-commands-deletepackage-deletepackage-command-ts-345-removeshapetestrow",
           "currentTags": [
             "@category",
             "@since"
@@ -483935,8 +484917,8 @@
           "exportKind": "const",
           "filePath": "src/commands/DeletePackage/DeletePackage.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.command.ts",
-          "line": 439,
-          "anchor": "packages-tooling-tool-cli-src-commands-deletepackage-deletepackage-command-ts-439-rewritependingchangesets",
+          "line": 438,
+          "anchor": "packages-tooling-tool-cli-src-commands-deletepackage-deletepackage-command-ts-438-rewritependingchangesets",
           "currentTags": [
             "@category",
             "@since"
@@ -483957,8 +484939,8 @@
           "exportKind": "const",
           "filePath": "src/commands/DeletePackage/DeletePackage.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.command.ts",
-          "line": 622,
-          "anchor": "packages-tooling-tool-cli-src-commands-deletepackage-deletepackage-command-ts-622-deletepackagebaselinewriters",
+          "line": 621,
+          "anchor": "packages-tooling-tool-cli-src-commands-deletepackage-deletepackage-command-ts-621-deletepackagebaselinewriters",
           "currentTags": [
             "@category",
             "@since"
@@ -483979,8 +484961,8 @@
           "exportKind": "const",
           "filePath": "src/commands/DeletePackage/DeletePackage.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.command.ts",
-          "line": 863,
-          "anchor": "packages-tooling-tool-cli-src-commands-deletepackage-deletepackage-command-ts-863-deletepackagecommand",
+          "line": 862,
+          "anchor": "packages-tooling-tool-cli-src-commands-deletepackage-deletepackage-command-ts-862-deletepackagecommand",
           "currentTags": [
             "@category",
             "@since"
@@ -484354,8 +485336,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Docgen/Docgen.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Docgen/Docgen.command.ts",
-          "line": 1223,
-          "anchor": "packages-tooling-tool-cli-src-commands-docgen-docgen-command-ts-1223-docgencommand",
+          "line": 1232,
+          "anchor": "packages-tooling-tool-cli-src-commands-docgen-docgen-command-ts-1232-docgencommand",
           "currentTags": [
             "@category",
             "@since"
@@ -512288,8 +513270,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 187,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-187-knowledgedoctortree",
+          "line": 189,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-189-knowledgedoctortree",
           "currentTags": [
             "@see",
             "@category",
@@ -512311,8 +513293,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 214,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-214-knowledgeevaluator",
+          "line": 216,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-216-knowledgeevaluator",
           "currentTags": [
             "@see",
             "@category",
@@ -512334,8 +513316,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 249,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-249-makeknowledgetreeentryindex",
+          "line": 251,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-251-makeknowledgetreeentryindex",
           "currentTags": [
             "@param",
             "@returns",
@@ -512358,8 +513340,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 280,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-280-knowledge-cli-global-flags",
+          "line": 282,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-282-knowledge-cli-global-flags",
           "currentTags": [
             "@category",
             "@since"
@@ -512380,8 +513362,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 308,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-308-knowledge-producer-outputs",
+          "line": 310,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-310-knowledge-producer-outputs",
           "currentTags": [
             "@category",
             "@since"
@@ -512402,8 +513384,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 462,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-462-extractknowledgedocumentspans",
+          "line": 468,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-468-extractknowledgedocumentspans",
           "currentTags": [
             "@param",
             "@returns",
@@ -512426,8 +513408,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 535,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-535-knowledgespanclassificationrule",
+          "line": 541,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-541-knowledgespanclassificationrule",
           "currentTags": [
             "@category",
             "@since"
@@ -512448,8 +513430,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 564,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-564-knowledge-span-classification-rules",
+          "line": 570,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-570-knowledge-span-classification-rules",
           "currentTags": [
             "@category",
             "@since"
@@ -512470,8 +513452,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 617,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-617-classifyknowledgespan",
+          "line": 623,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-623-classifyknowledgespan",
           "currentTags": [
             "@param",
             "@returns",
@@ -512494,8 +513476,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 682,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-682-knowledgepathsevaluator",
+          "line": 688,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-688-knowledgepathsevaluator",
           "currentTags": [
             "@category",
             "@since"
@@ -512516,8 +513498,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 862,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-862-knowledgecommandsevaluator",
+          "line": 868,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-868-knowledgecommandsevaluator",
           "currentTags": [
             "@category",
             "@since"
@@ -512538,8 +513520,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 885,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-885-knowledge-doctor-evaluators",
+          "line": 891,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-891-knowledge-doctor-evaluators",
           "currentTags": [
             "@category",
             "@since"
@@ -512560,8 +513542,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 965,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-965-overlaywithout",
+          "line": 971,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-971-overlaywithout",
           "currentTags": [
             "@param",
             "@returns",
@@ -512584,8 +513566,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 1097,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1097-knowledgecounterfactualverdicts",
+          "line": 1103,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1103-knowledgecounterfactualverdicts",
           "currentTags": [
             "@param",
             "@returns",
@@ -512608,8 +513590,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 1341,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1341-scanknowledgedoctortree",
+          "line": 1347,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1347-scanknowledgedoctortree",
           "currentTags": [
             "@param",
             "@returns",
@@ -512632,8 +513614,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 1441,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1441-knowledgedoctormemorytreeinput",
+          "line": 1447,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1447-knowledgedoctormemorytreeinput",
           "currentTags": [
             "@category",
             "@since"
@@ -512654,8 +513636,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 1485,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1485-makeknowledgedoctormemorytree",
+          "line": 1491,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1491-makeknowledgedoctormemorytree",
           "currentTags": [
             "@param",
             "@returns",
@@ -512678,8 +513660,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 1662,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1662-makeknowledgedoctortree",
+          "line": 1668,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1668-makeknowledgedoctortree",
           "currentTags": [
             "@param",
             "@returns",
@@ -512702,8 +513684,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 1703,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1703-knowledgeshallowhistoryerror",
+          "line": 1709,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1709-knowledgeshallowhistoryerror",
           "currentTags": [
             "@param",
             "@returns",
@@ -512726,8 +513708,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 1775,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1775-knowledgedoctorcheckoptions",
+          "line": 1781,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1781-knowledgedoctorcheckoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -512748,8 +513730,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 1948,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1948-knowledgedoctormintoptions",
+          "line": 1954,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1954-knowledgedoctormintoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -512770,8 +513752,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 2057,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-2057-knowledgedoctorleasesoptions",
+          "line": 2063,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-2063-knowledgedoctorleasesoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -512792,8 +513774,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 2117,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-2117-knowledgedoctorshape",
+          "line": 2123,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-2123-knowledgedoctorshape",
           "currentTags": [
             "@see",
             "@category",
@@ -512815,8 +513797,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 2188,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-2188-knowledgedoctor",
+          "line": 2194,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-2194-knowledgedoctor",
           "currentTags": [
             "@see",
             "@category",
@@ -512838,8 +513820,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 2236,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-2236-knowledgedoctorlive",
+          "line": 2242,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-2242-knowledgedoctorlive",
           "currentTags": [
             "@category",
             "@since"
@@ -517936,8 +518918,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 37,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-37-schemafirstinventorypath",
+          "line": 38,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-38-schemafirstinventorypath",
           "currentTags": [
             "@category",
             "@since"
@@ -517958,8 +518940,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 53,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-53-schemacrispeningpolicypath",
+          "line": 54,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-54-schemacrispeningpolicypath",
           "currentTags": [
             "@category",
             "@since"
@@ -517980,8 +518962,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 73,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-73-schemafirstincludedglobs",
+          "line": 74,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-74-schemafirstincludedglobs",
           "currentTags": [
             "@category",
             "@since"
@@ -518002,8 +518984,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 89,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-89-schemafirstsourcefileglobs",
+          "line": 90,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-90-schemafirstsourcefileglobs",
           "currentTags": [
             "@category",
             "@since"
@@ -518024,8 +519006,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 106,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-106-schemafirstpolicyruleid",
+          "line": 107,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-107-schemafirstpolicyruleid",
           "currentTags": [
             "@internal",
             "@category",
@@ -518047,8 +519029,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 144,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-144-schemafirstpolicyruleid",
+          "line": 145,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-145-schemafirstpolicyruleid",
           "currentTags": [
             "@category",
             "@since"
@@ -518069,8 +519051,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 171,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-171-schemafirstparityruleid",
+          "line": 172,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-172-schemafirstparityruleid",
           "currentTags": [
             "@category",
             "@since"
@@ -518091,8 +519073,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 196,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-196-schemafirstparityruleid",
+          "line": 197,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-197-schemafirstparityruleid",
           "currentTags": [
             "@category",
             "@since"
@@ -518113,8 +519095,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 228,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-228-schemafirstoccurrenceanchor",
+          "line": 229,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-229-schemafirstoccurrenceanchor",
           "currentTags": [
             "@category",
             "@since"
@@ -518135,8 +519117,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 252,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-252-schemafirstoccurrenceanchor",
+          "line": 253,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-253-schemafirstoccurrenceanchor",
           "currentTags": [
             "@category",
             "@since"
@@ -518157,8 +519139,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 279,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-279-schemafirstbacklogrow",
+          "line": 280,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-280-schemafirstbacklogrow",
           "currentTags": [
             "@category",
             "@since"
@@ -518179,8 +519161,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 306,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-306-schemafirstentrykind",
+          "line": 307,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-307-schemafirstentrykind",
           "currentTags": [
             "@internal",
             "@category",
@@ -518202,8 +519184,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 334,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-334-schemafirstentrykind",
+          "line": 335,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-335-schemafirstentrykind",
           "currentTags": [
             "@category",
             "@since"
@@ -518224,8 +519206,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 351,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-351-schemafirstentrystatus",
+          "line": 352,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-352-schemafirstentrystatus",
           "currentTags": [
             "@internal",
             "@category",
@@ -518247,8 +519229,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 372,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-372-schemafirstentrystatus",
+          "line": 373,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-373-schemafirstentrystatus",
           "currentTags": [
             "@category",
             "@since"
@@ -518269,8 +519251,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 398,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-398-schemafirstinventoryentry",
+          "line": 399,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-399-schemafirstinventoryentry",
           "currentTags": [
             "@category",
             "@since"
@@ -518291,8 +519273,8 @@
           "exportKind": "namespace",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 428,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-428-schemafirstinventoryentry",
+          "line": 429,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-429-schemafirstinventoryentry",
           "currentTags": [
             "@category",
             "@since"
@@ -518313,8 +519295,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 460,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-460-schemafirstinventorydocument",
+          "line": 461,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-461-schemafirstinventorydocument",
           "currentTags": [
             "@category",
             "@since"
@@ -518335,8 +519317,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 503,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-503-schemafirstlintoptions",
+          "line": 504,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-504-schemafirstlintoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -518357,8 +519339,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 551,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-551-schemafirstparityrulesummary",
+          "line": 552,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-552-schemafirstparityrulesummary",
           "currentTags": [
             "@category",
             "@since"
@@ -518379,8 +519361,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 595,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-595-schemafirstparityfindings",
+          "line": 596,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-596-schemafirstparityfindings",
           "currentTags": [
             "@category",
             "@since"
@@ -518401,8 +519383,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 625,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-625-schemafirstlintsummary",
+          "line": 626,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-626-schemafirstlintsummary",
           "currentTags": [
             "@category",
             "@since"
@@ -518423,8 +519405,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 670,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-670-schemacrispeningfamily",
+          "line": 671,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-671-schemacrispeningfamily",
           "currentTags": [
             "@internal",
             "@category",
@@ -518446,8 +519428,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 691,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-691-schemacrispeningfamily",
+          "line": 692,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-692-schemacrispeningfamily",
           "currentTags": [
             "@category",
             "@since"
@@ -518468,8 +519450,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 709,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-709-schemacrispeningfamilypolicy",
+          "line": 710,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-710-schemacrispeningfamilypolicy",
           "currentTags": [
             "@category",
             "@since"
@@ -518490,8 +519472,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 740,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-740-schemacrispeningpolicydocument",
+          "line": 741,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-741-schemacrispeningpolicydocument",
           "currentTags": [
             "@category",
             "@since"
@@ -518512,8 +519494,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 778,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-778-literalkitconstassertionviolation",
+          "line": 779,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-779-literalkitconstassertionviolation",
           "currentTags": [
             "@category",
             "@since"
@@ -518534,8 +519516,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 809,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-809-encodeschemafirstinventorydocument",
+          "line": 810,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-810-encodeschemafirstinventorydocument",
           "currentTags": [
             "@category",
             "@since"
@@ -518556,8 +519538,54 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 856,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-856-makeschemafirstentrykey",
+          "line": 857,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-857-makeschemafirstentrykey",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SchemaFirstEntryIdentity",
+          "exportKind": "class",
+          "filePath": "src/commands/Lint/Lint.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
+          "line": 898,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-898-schemafirstentryidentity",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "makeSchemaFirstEntryIdentity",
+          "exportKind": "const",
+          "filePath": "src/commands/Lint/Lint.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
+          "line": 933,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-933-makeschemafirstentryidentity",
           "currentTags": [
             "@param",
             "@returns",
@@ -518580,8 +519608,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 891,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-891-schemafirstbacklogrowkeys",
+          "line": 964,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-964-schemafirstbacklogrowkeys",
           "currentTags": [
             "@param",
             "@returns",
@@ -518604,8 +519632,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 917,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-917-schemafirstentryorder",
+          "line": 990,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-990-schemafirstentryorder",
           "currentTags": [
             "@category",
             "@since"
@@ -518626,8 +519654,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 937,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-937-sortschemafirstentries",
+          "line": 1010,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1010-sortschemafirstentries",
           "currentTags": [
             "@category",
             "@since"
@@ -518648,8 +519676,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 958,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-958-isactiveschemafirstruleadvisory",
+          "line": 1031,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1031-isactiveschemafirstruleadvisory",
           "currentTags": [
             "@param",
             "@returns",
@@ -518672,8 +519700,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 980,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-980-effectvitestruleid",
+          "line": 1053,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1053-effectvitestruleid",
           "currentTags": [
             "@category",
             "@since"
@@ -518694,8 +519722,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 1003,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1003-effectvitestruleid",
+          "line": 1076,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1076-effectvitestruleid",
           "currentTags": [
             "@category",
             "@since"
@@ -518716,8 +519744,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 1018,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1018-effectvitestseverity",
+          "line": 1091,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1091-effectvitestseverity",
           "currentTags": [
             "@category",
             "@since"
@@ -518738,8 +519766,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 1052,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1052-effectvitestfindingruleid",
+          "line": 1125,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1125-effectvitestfindingruleid",
           "currentTags": [
             "@category",
             "@since"
@@ -518760,8 +519788,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 1063,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1063-effectvitestfindingruleid",
+          "line": 1136,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1136-effectvitestfindingruleid",
           "currentTags": [
             "@category",
             "@since"
@@ -518782,8 +519810,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 1103,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1103-effectvitestreplacement",
+          "line": 1176,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1176-effectvitestreplacement",
           "currentTags": [
             "@category",
             "@since"
@@ -518804,8 +519832,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 1210,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1210-effectvitestfinding",
+          "line": 1283,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1283-effectvitestfinding",
           "currentTags": [
             "@category",
             "@since"
@@ -518826,8 +519854,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 1295,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1295-effectvitestprimitive",
+          "line": 1368,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1368-effectvitestprimitive",
           "currentTags": [
             "@category",
             "@since"
@@ -518848,8 +519876,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 1323,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1323-effectvitestprimitivecoverage",
+          "line": 1396,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1396-effectvitestprimitivecoverage",
           "currentTags": [
             "@category",
             "@since"
@@ -518870,8 +519898,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 1384,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1384-effectvitestprimitivegraphdocument",
+          "line": 1457,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1457-effectvitestprimitivegraphdocument",
           "currentTags": [
             "@category",
             "@since"
@@ -518892,8 +519920,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 1410,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1410-effectvitestinventorydocument",
+          "line": 1483,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1483-effectvitestinventorydocument",
           "currentTags": [
             "@category",
             "@since"
@@ -518914,8 +519942,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 1444,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1444-effectvitestcensusrow",
+          "line": 1517,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1517-effectvitestcensusrow",
           "currentTags": [
             "@category",
             "@since"
@@ -518936,8 +519964,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 1473,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1473-effectvitestscantiming",
+          "line": 1546,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1546-effectvitestscantiming",
           "currentTags": [
             "@category",
             "@since"
@@ -518958,8 +519986,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 1526,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1526-effectvitestpackagetiming",
+          "line": 1599,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1599-effectvitestpackagetiming",
           "currentTags": [
             "@category",
             "@since"
@@ -518980,8 +520008,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 1558,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1558-effectvitestlintoptions",
+          "line": 1631,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1631-effectvitestlintoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -519002,8 +520030,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 1578,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1578-effectvitestinventorypath",
+          "line": 1651,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1651-effectvitestinventorypath",
           "currentTags": [
             "@category",
             "@since"
@@ -519024,8 +520052,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 1593,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1593-effectvitestprimitivegraphpath",
+          "line": 1666,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1666-effectvitestprimitivegraphpath",
           "currentTags": [
             "@category",
             "@since"
@@ -519046,8 +520074,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 1608,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1608-effectvitestcensuspath",
+          "line": 1681,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1681-effectvitestcensuspath",
           "currentTags": [
             "@category",
             "@since"
@@ -519068,8 +520096,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 1633,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1633-iseffectvitesttestfilepath",
+          "line": 1706,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1706-iseffectvitesttestfilepath",
           "currentTags": [
             "@category",
             "@since"
@@ -519090,8 +520118,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 1649,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1649-effectvitestsourcefileglobs",
+          "line": 1722,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1722-effectvitestsourcefileglobs",
           "currentTags": [
             "@category",
             "@since"
@@ -519112,8 +520140,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 1693,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1693-makeeffectvitestfindingkey",
+          "line": 1766,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1766-makeeffectvitestfindingkey",
           "currentTags": [
             "@param",
             "@returns",
@@ -519136,8 +520164,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 1723,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1723-decodeeffectvitestprimitivegraphdocument",
+          "line": 1796,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1796-decodeeffectvitestprimitivegraphdocument",
           "currentTags": [
             "@category",
             "@since"
@@ -519158,8 +520186,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 1743,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1743-encodeeffectvitestprimitivegraphdocument",
+          "line": 1816,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1816-encodeeffectvitestprimitivegraphdocument",
           "currentTags": [
             "@category",
             "@since"
@@ -519180,8 +520208,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 1774,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1774-decodeeffectvitestinventorydocument",
+          "line": 1847,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1847-decodeeffectvitestinventorydocument",
           "currentTags": [
             "@category",
             "@since"
@@ -519202,8 +520230,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 1799,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1799-encodeeffectvitestinventorydocument",
+          "line": 1872,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1872-encodeeffectvitestinventorydocument",
           "currentTags": [
             "@category",
             "@since"
@@ -519224,8 +520252,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 1835,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1835-encodeeffectvitestfindingjson",
+          "line": 1908,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1908-encodeeffectvitestfindingjson",
           "currentTags": [
             "@category",
             "@since"
@@ -519246,8 +520274,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/Lint.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
-          "line": 1854,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1854-decodeeffectvitestfindingjson",
+          "line": 1927,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-schemas-ts-1927-decodeeffectvitestfindingjson",
           "currentTags": [
             "@category",
             "@since"
@@ -519672,8 +520700,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/ReflectionArtifact.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/ReflectionArtifact.ts",
-          "line": 204,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-reflectionartifact-ts-204-reflectionfrontmatterisvalid",
+          "line": 199,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-reflectionartifact-ts-199-reflectionfrontmatterisvalid",
           "currentTags": [
             "@param",
             "@returns",
@@ -519696,8 +520724,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/ReflectionArtifact.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/ReflectionArtifact.ts",
-          "line": 224,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-reflectionartifact-ts-224-reflectionfilenameisartifact",
+          "line": 219,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-reflectionartifact-ts-219-reflectionfilenameisartifact",
           "currentTags": [
             "@param",
             "@returns",
@@ -519720,8 +520748,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/ReflectionArtifact.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/ReflectionArtifact.ts",
-          "line": 393,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-reflectionartifact-ts-393-runreflectionartifactlint",
+          "line": 388,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-reflectionartifact-ts-388-runreflectionartifactlint",
           "currentTags": [
             "@category",
             "@since"
@@ -519742,8 +520770,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/ReflectionArtifact.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/ReflectionArtifact.ts",
-          "line": 426,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-reflectionartifact-ts-426-lintreflectionartifactscommand",
+          "line": 421,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-reflectionartifact-ts-421-lintreflectionartifactscommand",
           "currentTags": [
             "@category",
             "@since"
@@ -521095,12 +522123,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export {\n  decodeEffectVitestFindingJson,\n  decodeEffectVitestInventoryDocument,\n  decodeEffectVitestPrimitiveGraphDocument,\n  EffectVitestCensusPath,\n  EffectVitestCensusRow,\n  EffectVitestFinding,\n  EffectVitestFindingRuleId,\n  EffectVitestInventoryDocument,\n  EffectVitestInventoryPath,\n  EffectVitestLintOptions,\n  EffectVitestPackageTiming,\n  EffectVitestPrimitive,\n  EffectVitestPrimitiveCoverage,\n  EffectVitestPrimitiveGraphDocument,\n  EffectVitestPrimitiveGraphPath,\n  EffectVitestReplacement,\n  EffectVitestRuleId,\n  EffectVitestScanTiming,\n  EffectVitestSourceFileGlobs,\n  encodeEffectVitestFindingJson,\n  encodeEffectVitestInventoryDocument,\n  encodeEffectVitestPrimitiveGraphDocument,\n  encodeSchemaFirstInventoryDocument,\n  isActiveSchemaFirstRuleAdvisory,\n  isEffectVitestTestFilePath,\n  LiteralKitConstAssertionViolation,\n  makeEffectVitestFindingKey,\n  makeSchemaFirstEntryKey,\n  SchemaCrispeningPolicyPath,\n  SchemaFirstBacklogRow,\n  SchemaFirstInventoryDocument,\n  SchemaFirstInventoryPath,\n  SchemaFirstLintOptions,\n  SchemaFirstLintSummary,\n  SchemaFirstOccurrenceAnchor,\n  SchemaFirstParityFindings,\n  SchemaFirstParityRuleId,\n  SchemaFirstParityRuleSummary,\n  schemaFirstBacklogRowKeys,\n  schemaFirstEntryOrder,\n  sortSchemaFirstEntries,\n} from \"./Lint.schemas.ts\";",
+          "symbolName": "export {\n  decodeEffectVitestFindingJson,\n  decodeEffectVitestInventoryDocument,\n  decodeEffectVitestPrimitiveGraphDocument,\n  EffectVitestCensusPath,\n  EffectVitestCensusRow,\n  EffectVitestFinding,\n  EffectVitestFindingRuleId,\n  EffectVitestInventoryDocument,\n  EffectVitestInventoryPath,\n  EffectVitestLintOptions,\n  EffectVitestPackageTiming,\n  EffectVitestPrimitive,\n  EffectVitestPrimitiveCoverage,\n  EffectVitestPrimitiveGraphDocument,\n  EffectVitestPrimitiveGraphPath,\n  EffectVitestReplacement,\n  EffectVitestRuleId,\n  EffectVitestScanTiming,\n  EffectVitestSourceFileGlobs,\n  encodeEffectVitestFindingJson,\n  encodeEffectVitestInventoryDocument,\n  encodeEffectVitestPrimitiveGraphDocument,\n  encodeSchemaFirstInventoryDocument,\n  isActiveSchemaFirstRuleAdvisory,\n  isEffectVitestTestFilePath,\n  LiteralKitConstAssertionViolation,\n  makeEffectVitestFindingKey,\n  makeSchemaFirstEntryIdentity,\n  makeSchemaFirstEntryKey,\n  SchemaCrispeningPolicyPath,\n  SchemaFirstBacklogRow,\n  SchemaFirstEntryIdentity,\n  SchemaFirstInventoryDocument,\n  SchemaFirstInventoryPath,\n  SchemaFirstLintOptions,\n  SchemaFirstLintSummary,\n  SchemaFirstOccurrenceAnchor,\n  SchemaFirstParityFindings,\n  SchemaFirstParityRuleId,\n  SchemaFirstParityRuleSummary,\n  schemaFirstBacklogRowKeys,\n  schemaFirstEntryOrder,\n  sortSchemaFirstEntries,\n} from \"./Lint.schemas.ts\";",
           "exportKind": "re-export",
           "filePath": "src/commands/Lint/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/index.ts",
           "line": 117,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-index-ts-117-export-decodeeffectvitestfindingjson-decodeeffectvitestinventorydocument-decodeeffectvitestprimitivegraphdocument-effectvitestcensuspath-effectvitestcensusrow-effectvitestfinding-effectvitestfindingruleid-effectvitestinventorydocument-effectvitestinventorypath-effectvitestlintoptions-effectvitestpackagetiming-effectvitestprimitive-effectvitestprimitivecoverage-effectvitestprimitivegraphdocument-effectvitestprimitivegraphpath-effectvitestreplacement-effectvitestruleid-effectvitestscantiming-effectvitestsourcefileglobs-encodeeffectvitestfindingjson-encodeeffectvitestinventorydocument-encodeeffectvitestprimitivegraphdocument-encodeschemafirstinventorydocument-isactiveschemafirstruleadvisory-iseffectvitesttestfilepath-literalkitconstassertionviolation-makeeffectvitestfindingkey-makeschemafirstentrykey-schemacrispeningpolicypath-schemafirstbacklogrow-schemafirstinventorydocument-schemafirstinventorypath-schemafirstlintoptions-schemafirstlintsummary-schemafirstoccurrenceanchor-schemafirstparityfindings-schemafirstparityruleid-schemafirstparityrulesummary-schemafirstbacklogrowkeys-schemafirstentryorder-sortschemafirstentries-from-lint-schemas-ts",
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-index-ts-117-export-decodeeffectvitestfindingjson-decodeeffectvitestinventorydocument-decodeeffectvitestprimitivegraphdocument-effectvitestcensuspath-effectvitestcensusrow-effectvitestfinding-effectvitestfindingruleid-effectvitestinventorydocument-effectvitestinventorypath-effectvitestlintoptions-effectvitestpackagetiming-effectvitestprimitive-effectvitestprimitivecoverage-effectvitestprimitivegraphdocument-effectvitestprimitivegraphpath-effectvitestreplacement-effectvitestruleid-effectvitestscantiming-effectvitestsourcefileglobs-encodeeffectvitestfindingjson-encodeeffectvitestinventorydocument-encodeeffectvitestprimitivegraphdocument-encodeschemafirstinventorydocument-isactiveschemafirstruleadvisory-iseffectvitesttestfilepath-literalkitconstassertionviolation-makeeffectvitestfindingkey-makeschemafirstentryidentity-makeschemafirstentrykey-schemacrispeningpolicypath-schemafirstbacklogrow-schemafirstentryidentity-schemafirstinventorydocument-schemafirstinventorypath-schemafirstlintoptions-schemafirstlintsummary-schemafirstoccurrenceanchor-schemafirstparityfindings-schemafirstparityruleid-schemafirstparityrulesummary-schemafirstbacklogrowkeys-schemafirstentryorder-sortschemafirstentries-from-lint-schemas-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -521121,8 +522149,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Lint/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/index.ts",
-          "line": 171,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-index-ts-171-export-from-opaqueroundtrips-ts",
+          "line": 173,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-index-ts-173-export-from-opaqueroundtrips-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -521143,8 +522171,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Lint/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/index.ts",
-          "line": 178,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-index-ts-178-export-collecttesttypecheckblindspots-defaulttesttypecheckbaselinepath-lintpackagetesttypecheckcommand-packagetesttypecheckoptions-readtesttypecheckmanifest-runpackagetesttypechecklint-testtypecheckblindspot-testtypecheckblindspotbaseline-testtypecheckblindspotkind-testtypecheckblindspotsummary-from-packagetesttypecheck-ts",
+          "line": 180,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-index-ts-180-export-collecttesttypecheckblindspots-defaulttesttypecheckbaselinepath-lintpackagetesttypecheckcommand-packagetesttypecheckoptions-readtesttypecheckmanifest-runpackagetesttypechecklint-testtypecheckblindspot-testtypecheckblindspotbaseline-testtypecheckblindspotkind-testtypecheckblindspotsummary-from-packagetesttypecheck-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -521165,8 +522193,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Lint/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/index.ts",
-          "line": 196,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-index-ts-196-export-generateschemacatalogdocument-generateschemacatalogshards-lintschemacatalogcommand-renderschemacatalogshard-runschemacatalog-schemacatalogdocument-schemacatalogentry-schemacatalogentrykind-schemacatalogoptions-schemacatalogowner-schemacatalogshard-schemacatalogsummary-schemacatalogshardpath-shardschemacatalogdocument-from-schemacatalog-ts",
+          "line": 198,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-index-ts-198-export-generateschemacatalogdocument-generateschemacatalogshards-lintschemacatalogcommand-renderschemacatalogshard-runschemacatalog-schemacatalogdocument-schemacatalogentry-schemacatalogentrykind-schemacatalogoptions-schemacatalogowner-schemacatalogshard-schemacatalogsummary-schemacatalogshardpath-shardschemacatalogdocument-from-schemacatalog-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -521187,8 +522215,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Lint/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/index.ts",
-          "line": 218,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-index-ts-218-export-diffschemafirstparity-fnschemaentryfromfunctionlike-getsomesstructentryfromcallexpression-isschemacrispeningpolicyexempt-lintschemafirstcommand-literalmemberequals-makeschemafirstownerresolver-makeschemafirstproject-normalizationentryfromcallexpression-nullreturnentryfromfunctionlike-runschemafirstlint-schemacrispeningfamilypolicy-schemacrispeningpolicydocument-schemafirstincludedglobs-schemafirstinventoryentry-schemafirstsourcefileglobs-schemacrispeningfamilyforfile-schemafirstparityentriesfromsourcefile-sourcetexthasschemaarbitrarypropertycoverage-toschemafirstbacklog-from-schemafirst-ts",
+          "line": 220,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-index-ts-220-export-diffschemafirstparity-fnschemaentryfromfunctionlike-getsomesstructentryfromcallexpression-isschemacrispeningpolicyexempt-lintschemafirstcommand-literalmemberequals-makeschemafirstownerresolver-makeschemafirstproject-normalizationentryfromcallexpression-nullreturnentryfromfunctionlike-runschemafirstlint-schemacrispeningfamilypolicy-schemacrispeningpolicydocument-schemafirstincludedglobs-schemafirstinventoryentry-schemafirstsourcefileglobs-schemacrispeningfamilyforfile-schemafirstparityentriesfromsourcefile-sourcetexthasschemaarbitrarypropertycoverage-toschemafirstbacklog-from-schemafirst-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -521209,8 +522237,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Lint/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/index.ts",
-          "line": 246,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-index-ts-246-export-from-schemaparitycodemod-ts",
+          "line": 248,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-index-ts-248-export-from-schemaparitycodemod-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -521231,8 +522259,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Lint/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/index.ts",
-          "line": 253,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-index-ts-253-export-from-schematopology-ts",
+          "line": 255,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-index-ts-255-export-from-schematopology-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -521253,8 +522281,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Lint/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/index.ts",
-          "line": 260,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-index-ts-260-export-collecttsconfigoverlayviolations-linttsconfigoverlaycommand-runtsconfigoverlaylint-tsconfigoverlaycompileroptionkey-tsconfigoverlaydocumentkey-tsconfigoverlayviolation-tsconfigoverlayviolationscope-from-tsconfigoverlay-ts",
+          "line": 262,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-index-ts-262-export-collecttsconfigoverlayviolations-linttsconfigoverlaycommand-runtsconfigoverlaylint-tsconfigoverlaycompileroptionkey-tsconfigoverlaydocumentkey-tsconfigoverlayviolation-tsconfigoverlayviolationscope-from-tsconfigoverlay-ts",
           "currentTags": [
             "@category",
             "@since"

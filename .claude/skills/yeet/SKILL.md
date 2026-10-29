@@ -480,8 +480,8 @@ comments exist). Deep review is on-demand:
 `bun run beep yeet ready` flips a draft at content-final once the head has a
 passing `yeet final-check` receipt, no required check is red, and every thread
 is answered; refusals name `pr-open`, `no-required-red`, `threads-resolved` or
-`final-check`. The S32 re-request push, the review window and
-`ready-pending-flip`: [`references/merge-loop.md`](references/merge-loop.md#ready).
+`final-check`. A main-merge head that only refreshed inventories or packet files carries an
+ancestor's receipt (`final <F> #N receipt <R>`); that rule, S32, the review window: [`references/merge-loop.md`](references/merge-loop.md#ready).
 
 ## References
 

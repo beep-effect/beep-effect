@@ -35,6 +35,9 @@
   375 projects, 90,238 file visits, seven Array findings and zero String findings.
 - `history/verification-2026-10-28.md`: current full Check and root configuration
   results, with scope, stable source head and cache accounting.
-- [Closeout PR #2318](https://github.com/beep-effect/beep-effect/pull/2318):
+- [Merged closeout PR #2318](https://github.com/beep-effect/beep-effect/pull/2318):
+  required hosted checks verify, but the declared local verdict is unavailable
+  or invalid and post-merge completion refresh returns `unknown`.
+- [Final follow-up PR #2324](https://github.com/beep-effect/beep-effect/pull/2324):
   proposed final PR; completion remains subject to exact-head readiness and
   merge-time verification.

@@ -78,7 +78,7 @@
   ],
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 2318
+    "finalPullRequest": 2324
   },
   "verificationCommands": [
     "test \"$(wc -m < goals/effect-string-migration/GOAL.md)\" -le 4000",

@@ -239,3 +239,65 @@ All Turbo-backed CI callers use the same optional startup in the existing setup
 action and exact-process cleanup at job exit. Protected main pushes write;
 same-repository PRs and main scheduled/manual jobs read. Forks stay local-only.
 The separate Cache Warm probe keeps its existing protected qualification path.
+
+## Signed-policy component lab
+
+`patches/4.0.20-signed-policy.patch` is a reviewed source patch to the exact
+upstream commit named by its adjacent metadata. It is unused by `adapter.sh`.
+Explicit `BEEP_CACHE_POLICY=signed-v1` requires a bearer, a canonical
+`BEEP_CACHE_NAMESPACE` beginning with `team_`, and
+`BEEP_CACHE_ACCESS_ROLE=reader|writer`. Each process binds one namespace and role;
+reader PUT and ambiguous/encoded selectors are denied before storage access.
+Writer uploads require one bounded opaque tag. The adapter never receives the
+artifact HMAC key or claims the tag proves a protected producer.
+
+Strict mode skips dotenv and telemetry initialization. A policy introduced only
+by cwd dotenv is rejected before logging initializes. Responses carry a finite
+`x-beep-cache-result`; an unclassified 404 stays `not-found`, and an unsuccessful
+PUT stays `write-ambiguous`. Explicit storage 429 responses retain the
+`throttled` class. A signed read with an unavailable metadata lookup fails as
+`backend-unavailable`, even when the object body was reachable. This preparation does not add production counters,
+trust-readiness, deployment authority or an accepted task profile.
+
+Prepare and check the reproducible source input:
+
+```sh
+RUSTUP_TOOLCHAIN=1.96.0 infra/r2-cache/policy.sh test-domain
+```
+
+Run `policy.sh cargo-test`, `policy.sh cargo-build` or
+`policy.sh cargo-build-musl` only inside the existing machine admission boundary
+or hosted CI. The caller must select the installed tested Rust 1.96.0 toolchain;
+no ordinary adapter startup compiles Rust. The source patch includes the root
+Cargo.lock metadata correction required by the release's Cargo.toml, maintained
+dotenvy and security dependency updates. The loopback server compiles the HTTP1
+and macros features it uses. Native artifact bytes remain opaque. The upstream
+MIT notice is retained in `patches/LICENSE.upstream.txt`.
+
+The optional `policy-lab.py` uses the pinned Python environment in
+`policy-lab-requirements.txt`. It starts two actual patched adapter processes and
+disposable loopback Moto S3, checks denials have zero storage calls, verifies
+metadata roundtrips, and tests valid and corrupt signed restores with both native
+Turbo pins. It takes `--adapter`, `--adapter-sha256` and `--output`; the executable
+must match the independently reviewed digest. Only synthetic credentials are used,
+and only exact owned child processes are stopped. See the packet's
+`research/adapter-policy-lab.json` for the local result and limits.
+
+The final dependency closure's statically linked x86_64 musl release build passed
+all20 wire, one startup-boundary and12 native controls on the current workstation. Earlier glibc
+receipts retain their original source inputs. The portable build uses installed
+Rust1.96.0 plus cargo-zigbuild0.20.1/Zig0.14.1, pinned in
+`policy-build-requirements.txt`; its checksum and byte size are retained beside
+the source patch. `cargo-build-musl` reproduces that build inside admission.
+Remote fleet execution, R2 grant negatives, producer attribution, rotation/rollback,
+deployment and representative observation remain required before activation.
+
+Run `policy.sh cargo-security` inside admission or hosted CI for the pinned
+Cargo lock scan. It mounts only public lock/config inputs into the exact OSV
+image, without a home or credential store. The adjacent `osv-scanner.toml`
+contains one expiring source-specific advisory assessment. The driver loads it
+only for the exact reviewed block-buffer0.10.4 archive and sole resolution;
+absent, different or mixed versions get an unfiltered scan. Other advisory IDs
+remain active. The source review and panic regression are retained in
+`research/adapter-dependency-review.json` under the trust packet. No shared
+repository security exceptions change.
