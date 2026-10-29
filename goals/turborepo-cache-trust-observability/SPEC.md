@@ -208,7 +208,20 @@ fault receipts. Remote fallback must never mean unsigned restore.
 | --- | --- | --- | --- | --- |
 | None approved | This goal | Goal executor | Record real exceptions before using them. | Every temporary exception needs a bounded removal condition. |
 
-## Decision log: pinned loopback policy component
+## Decision log
+
+### Receipt media-type safety
+
+- 2026-10-29: Project response Content-Type evidence through the existing
+  registered MimeType schema, discarding parameters and unknown subtypes at
+  both direct and proxy capture boundaries. Actual synthetic-secret regressions
+  demonstrated that truncation retained private material. Historical receipt
+  decoding remains compatible. Reversal: disable the affected collection path
+  while repairing its projection; raw header retention must not be re-enabled
+  without passing the synthetic-secret/path/artifact controls. This is a
+  receipt-safety repair and grants no deployment or task qualification.
+
+### Pinned loopback policy component
 
 2026-10-28: prepare a minimal patch against upstream adapter 4.0.20 commit
 `0e893f63e1c7f1ac3c460d79e75fb63d4c9f7c85`. Each explicitly enabled process
@@ -224,7 +237,7 @@ and test artifacts; a production activation needs its own numeric rollout,
 source-bound executable, cohort, grants, namespace/key and rollback evidence.
 The local process report does not satisfy those deployment or observation gates.
 
-## Decision log
+### Startup isolation
 
 - 2026-10-29: The pinned adapter must decide signed startup from its inherited
   process configuration. Reject policy introduced by dotenv before logging
