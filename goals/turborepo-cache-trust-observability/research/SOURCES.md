@@ -391,3 +391,22 @@ artifact, signing activation, deployed grant or observation window changes.
   suites, exact error adapter V8 hit and full package audit/documentation.
   Existing floors and implementation remain unchanged; consumer final proof
   and both full-goal contracts remain open.
+
+
+### Owned native capture and complete graph, 2026-10-29
+
+[The source-bound checkpoint](producer-capture-checkpoint.json) records actual
+pinned native protocol runs, separate incoming tag digests, complete minimal
+summary retention, and the reviewed whole-graph upload validator. It also records
+the current census without changing configuration or qualification decisions.
+Actual signed real-pilot execution, backend/supervisor integration and protected
+publication remain separate proof obligations.
+
+
+## Passing producer-capture whole-package replay
+
+`producer-capture-checkpoint.json` now also records the complete default
+`@beep/repo-cli` package audit and full Docgen pass on the fixed signed-summary
+fixture source at `11c6a3dc9a8d`. The run completed in 1158.844 seconds (audit
+1117.9 seconds, Docgen 39.4 seconds). Prior failed and interrupted runs remain
+historical evidence; this pass grants neither live trust nor qualification.
