@@ -683,6 +683,10 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("cheap-gates admission", (
           import { readdir } from "node:fs/promises";
           const [lease] = await readdir(process.env.TEST_ADMISSION_LEASES);
           await Bun.write("observed-lease.json", Bun.file(process.env.TEST_ADMISSION_LEASES + "/" + lease));
+          await Bun.write("observed-report-env.json", JSON.stringify({
+            path: process.env.BEEP_YEET_INNER_LANE_REPORT_PATH ?? null,
+            parent: process.env.BEEP_YEET_INNER_LANE_PARENT_ID ?? null,
+          }));
           console.log("fallow: 1 unused export"); process.exitCode = 23;
         `
           ),
@@ -722,6 +726,11 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("cheap-gates admission", (
         const lease = yield* fs
           .readFileString(path.join(root, "observed-lease.json"))
           .pipe(Effect.flatMap(decodeAdmissionLease));
+        if (mode !== "publish") {
+          const reportEnv = yield* fs.readFileString(path.join(root, "observed-report-env.json"));
+          expect(reportEnv).toContain("inner-lanes.ndjson");
+          expect(reportEnv).toContain(gate.id);
+        }
         expect(lease.kind).toBe("full-proof");
         expect(lease.weightTokens).toBe(3);
         expect(lease.priority).toBe(mode === "publish" ? "publish" : "verify");
