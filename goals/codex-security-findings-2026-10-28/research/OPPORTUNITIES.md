@@ -1,5 +1,11 @@
 # Friction receipts
 
+- 2026-10-29: PR #2333's native Windows workflow added two hosted jobs without
+  inventory entries. The same inventory assertion failed both unit and property
+  lanes; the unit failure also prevented its coverage artifact upload. Reproduced
+  with the focused `ci-runner-security.test.ts` inventory test. A workflow addition
+  checklist requiring inventory registration would have prevented this wave.
+
 - 2026-10-28: Default CLI package proof remained pending beyond ten minutes
   without a package result. The package-scoped lint/check subset passed; the
   default was interrupted and proof moves to hosted CI under the repo rule.

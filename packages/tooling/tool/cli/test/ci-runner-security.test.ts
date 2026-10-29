@@ -1459,6 +1459,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "fleet-shadow-check.yml:Shadow Probe",
         "heavy-admit.yml:Heavy Admission",
         "heavy-admit.yml:Heavy",
+        // Native Windows verification consumes only the sparse script artifact;
+        // these platform-specific jobs cannot run through the local CLI lane dispatcher.
+        "hub-pipe-security.yml:Collect Windows pipe scripts",
+        "hub-pipe-security.yml:Windows pipe owner authentication",
         "knowledge-baseline-mint.yml:Mint Knowledge Baseline",
         "property-laws-nightly.yml:Property Laws Sweep",
         "release-desktop.yml:Validate desktop release inputs",
@@ -1490,6 +1494,30 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         ).toEqual([]);
         expect(A.filter(declared, (context) => !A.contains(contexts, context))).toEqual([]);
       }
+    })
+  );
+  it.effect("keeps native Windows pipe verification read-only and bound to the collected scripts", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* findRepoRoot();
+      const workflow = parseDocument(yield* fs.readFileString(`${root}/.github/workflows/hub-pipe-security.yml`));
+      const jobs = yield* workflowJobs(workflow);
+      expect(workflow.getIn(["permissions", "contents"])).toBe("read");
+      expect(workflow.getIn(["jobs", "pipe-scripts", "steps", 0, "with", "persist-credentials"])).toBe(false);
+      expect(workflow.getIn(["jobs", "pipe-scripts", "steps", 0, "with", "sparse-checkout"])).toBe(
+        "/apps/practice-review-hub/deploy/windows/"
+      );
+      expect(workflow.getIn(["jobs", "windows-pipe", "needs"])).toBe("pipe-scripts");
+      expect(workflow.getIn(["jobs", "windows-pipe", "runs-on"])).toBe("windows-latest");
+      expect(workflow.getIn(["jobs", "pipe-scripts", "steps", 1, "with", "name"])).toBe(
+        workflow.getIn(["jobs", "windows-pipe", "steps", 0, "with", "name"])
+      );
+      const verification = stepByName(
+        jobSteps(jobs, "windows-pipe"),
+        "Check same-user transfer and foreign-owned replacements"
+      );
+      expect(verification.run).toBe("./apps/practice-review-hub/deploy/windows/test-send-token.ps1");
+      expect(workflow.getIn(["jobs", "windows-pipe", "steps", 1, "shell"])).toBe("powershell");
     })
   );
   it.effect("keeps coverage comparison separate from Heavy and validates same-run producer artifacts", () =>

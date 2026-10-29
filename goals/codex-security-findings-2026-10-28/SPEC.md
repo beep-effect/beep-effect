@@ -10,6 +10,11 @@ exact captured findings until no packet-applicable finding remains open.
 
 ## Non-Goals
 
+- 2026-10-29 takeover instruction: repair PR #2333 and leave it fully mergeable
+  and unmerged. Do not merge, enable auto-merge, close Cloud findings, or retire
+  the worktree. This instruction supersedes the original post-merge objective
+  and acceptance items below for this session.
+
 - No accepted-risk or `Won't fix` disposition.
 - No raw report bodies, signed artifact URLs, auth headers, cookie values,
   email addresses, secret material, or developer-local absolute paths in tracked
@@ -87,6 +92,18 @@ exact captured findings until no packet-applicable finding remains open.
 - A fix requires a product or architecture decision outside this packet.
 - A proposed security control would rely on a platform-specific fail-open path.
 - The same blocking condition repeats after reasonable investigation.
+
+## Decision Log
+
+- 2026-10-29: Register the artifact collection and native Windows pipe jobs as
+  explicit hosted-job inventory exemptions because their platform and artifact
+  handoff cannot be replayed by the local CLI dispatcher. Keep policy diagnostics
+  active and pin the read-only sparse checkout, handoff, Windows runner, and
+  PowerShell regression command in a focused workflow test. Reversal: remove the
+  two exemptions when equivalent dispatchable CI descriptors exist.
+
+- 2026-10-29: Merge current `main` into the published feature branch to consume
+  shared CLI and dependency repairs once. Preserve the published branch history.
 
 ## Exception Ledger
 
