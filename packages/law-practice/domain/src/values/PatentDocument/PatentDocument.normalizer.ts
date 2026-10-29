@@ -425,7 +425,13 @@ const parseClaim = Effect.fn("PatentDocument.parseClaim")(function* (
   const transitionStart = pipe(O.fromUndefinedOr(transitionMatch.index), O.getOrThrow);
   const preamble = Str.trim(Str.slice(0, transitionStart)(claimText));
   const body = Str.trim(Str.slice(transitionStart + transitionMatch[0].length)(claimText));
-  const references = yield* Effect.fromOption(parentClaimNumbers(preamble, claimNumber), () =>
+  const bodyReference = Str.match(
+    /\b(?:according to|as (?:recited|claimed|set forth) in|of)\s+claims?\s+\d+(?:\s*(?:-|–|—|through|to|and|or|,)\s*\d+)*/iu
+  )(body);
+  const referenceText = O.isSome(Str.match(claimReferenceMarkerPattern)(preamble))
+    ? preamble
+    : O.match(bodyReference, { onNone: () => preamble, onSome: (match) => match[0] });
+  const references = yield* Effect.fromOption(parentClaimNumbers(referenceText, claimNumber), () =>
     PatentDocumentNormalizationError.make({
       message: `Claim ${claimNumberText} contains an invalid parent-claim reference.`,
       reason: "invalid-claim",

@@ -28,7 +28,7 @@ import { PatentClaim } from "../PatentDocument/PatentDocument.model.ts";
 import { AntecedentFinding, AntecedentRuleId } from "./AntecedentFinding.model.ts";
 import { ClaimTermIntroducingDeterminer, ClaimTermReferringDeterminer } from "./ClaimElement.behavior.ts";
 import { ClaimTermDeterminer, ClaimTermRef } from "./ClaimElement.model.ts";
-import { isSingleModifiedHead as isSingleModifiedOf } from "./ClaimTerm.compatibility.ts";
+import { isExplicitAbbreviatedHead, isSingleModifiedHead as isSingleModifiedOf } from "./ClaimTerm.compatibility.ts";
 import type { PatentClaims } from "../PatentDocument/PatentDocument.model.ts";
 import type { ClaimTerm } from "./ClaimElement.model.ts";
 import type { ClaimElementTree } from "./ClaimElement.tree.model.ts";
@@ -306,6 +306,13 @@ const resolveInChain = (introductions: ReadonlyArray<LocatedTerm>, referring: Lo
             })
           ),
         ambiguous(rule.determinerNumberMismatch)
+      )
+    ),
+    O.orElse(() =>
+      byCount(
+        A.filter(introductions, ({ term }) => isExplicitAbbreviatedHead(head)(term.head)),
+        resolved,
+        ambiguous(rule.multipleIntroductions)
       )
     ),
     // Rule `single-modified-introduction` resolves one modified introduction; several are `ordinal-variants`.

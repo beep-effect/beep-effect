@@ -367,6 +367,7 @@ describe("ClaimElement rules", () => {
                 actual.edges,
                 (edge) =>
                   edge.kind !== "functional" &&
+                  (edge.kind !== "depends-on-element" || edge.dependent === `${actual.claimNumber}`) &&
                   (edge.kind !== "antecedent" ||
                     (claimNumberOfPath(edge.introducing.path) === actual.claimNumber &&
                       A.some(
