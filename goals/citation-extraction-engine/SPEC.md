@@ -895,6 +895,21 @@ instead of silently splitting delivery or weakening scope.
   or bounded-runtime claim follows. Reverse factory/work integration together
   while retaining equivalent source, concurrency, ceiling and default proof.
 
+- **2026-10-28 callback mutation requirements:** the pinned resolver preserves
+  empty groups, independent member order, repeated/cross-group members,
+  falsy/None dictionary keys, shared lists, retained dictionary aliases and
+  detached citation objects. Reopen provisional membership/projection
+  assumptions rather than normalize those values away. Ordered membership
+  and resolution decisions need distinct ownership within the document; a
+  single chosen edge per mention cannot be their sole representation.
+  Detached semantic objects must remain distinct from verified mentions and
+  receive no fabricated anchors/occurrence IDs. Live alias state belongs in
+  server implementation, not pure domain behavior. Ten final group-value
+  scenes are target-tested; all identity observations and six alias/detached
+  scenes remain open. No replacement graph or semantic waiver is approved by
+  this source checkpoint. Reverse the probe/test/evidence checkpoint together;
+  all sixteen scenes must enter final target proof before row promotion.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from

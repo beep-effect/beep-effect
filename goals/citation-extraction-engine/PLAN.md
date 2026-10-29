@@ -60,7 +60,9 @@ resource descriptors. A private callback session now matches 18 focused source
 contexts and all 53 callback events through captured custom adapters and
 production defaults. Production default callbacks also pass all 76 default
 contexts with shared, operation-local work accounting. General host/alias/model
-mutation and final document/service integration remain open.
+mutation and final document/service integration remain open. Sixteen new
+mutation observations expose provisional graph/alias restrictions; ten final
+group-value cases match the session, while identity/detached proof stays open.
 Exhaustive resolver/custom-resource proof, live artifact integration,
 Bluebook codecs and extension adoption/schema proof stay open.
 The remaining 37 provisional contract directories are retired; their donor obligations
