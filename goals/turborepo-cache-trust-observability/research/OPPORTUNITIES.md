@@ -19,3 +19,14 @@ relationship validator for worker, supervisor and importer use would prevent
 validation rules from diverging and make edited transport evidence testable at
 the actual import boundary. This is a source-review finding, not a demonstrated
 escape or a new native failure.
+
+### Response header truncation does not provide receipt safety
+
+Both direct-wire and proxy capture copied Content-Type response text into
+conformance evidence, truncated to128characters. Two actual-server regressions
+placed a synthetic credential, private path and artifact marker in parameters
+and an invented subtype; both paths serialized the synthetic credential. Reuse
+the registered MimeType schema to retain only a bounded canonical media type.
+Drop parameters and unregistered subtypes before constructing receipts; preserve
+the old receipt decode contract. Verify the two real capture paths and the
+projection boundary before using them in a signed rollout.

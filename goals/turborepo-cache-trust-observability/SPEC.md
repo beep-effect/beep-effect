@@ -207,3 +207,14 @@ fault receipts. Remote fallback must never mean unsigned restore.
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
 | None approved | This goal | Goal executor | Record real exceptions before using them. | Every temporary exception needs a bounded removal condition. |
+
+## Decision log
+
+- 2026-10-29: Project response Content-Type evidence through the existing
+  registered MimeType schema, discarding parameters and unknown subtypes at
+  both direct and proxy capture boundaries. Actual synthetic-secret regressions
+  demonstrated that truncation retained private material. Historical receipt
+  decoding remains compatible. Reversal: disable the affected collection path
+  while repairing its projection; raw header retention must not be re-enabled
+  without passing the synthetic-secret/path/artifact controls. This is a
+  receipt-safety repair and grants no deployment or task qualification.
