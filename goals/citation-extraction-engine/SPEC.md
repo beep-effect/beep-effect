@@ -754,6 +754,19 @@ instead of silently splitting delivery or weakening scope.
   Reversal requires equivalent proof and persistence boundaries with consumer
   migration, not decoding structural receipts as opaque runtime capabilities.
 
+- **2026-10-28 authority digest protocol:** produce ca1 from a versioned ordered
+  semantic key. Ordinary cases use volume/page and frozen corrected reporter;
+  missing-page cases bind the verified occurrence ID to preserve conservative
+  uniqueness. Law/journal keys retain all legal groups and the complete edition
+  bag with multiplicity, under the declared bag-order normalization law.
+  Metadata and current reporter aliases do not collapse historical authority
+  distinctions. A trusted artifact adapter supplies the selected spelling;
+  the private helper checks reference coherence but does not authenticate
+  adapter content or occurrence identity. The live Layer must establish both.
+  Focused resource equality and protocol vectors are proof of this helper,
+  not extraction or full resolution parity. Protocol changes require a new
+  ID version and migration rather than a silent ca1 reinterpretation.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from

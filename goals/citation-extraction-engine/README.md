@@ -25,9 +25,10 @@ FullLawCitation replaces the provisional statute/regulation shapes in the
 existing union. The canonical case, short/named reference, unknown and journal
 forms now have semantic schemas. Remaining mixed citation contracts and
 provisional extension stubs are retired. Verified mention composition and
-explicit receipt restoration now pass local package gates. Document/resolution
-relationships, Bluebook codecs, extension adoption/schema proof, runtime
-enforcement and family safety remain unfinished.
+explicit receipt restoration now pass local package gates. A private ca1
+authority-key producer matches focused oracle equality and protocol vectors.
+Document/resolution relationships, Bluebook codecs, extension adoption/schema
+proof, runtime enforcement and family safety remain unfinished.
 
 Current evidence:
 
@@ -52,6 +53,7 @@ Current evidence:
 - [Canonical model schemas](./history/evidence/2026-10-28-canonical-models.md)
 - [Retirement](./history/evidence/2026-10-28-provisional-retirement.md)
 - [Verified mentions](./history/evidence/2026-10-28-verified-mentions.md)
+- [Authority identity](./history/evidence/2026-10-28-authority-identity.md)
 
 ## Mission
 
