@@ -162,6 +162,9 @@ const GROK_BILLING_URL = "https://grok.com/grok_api_v2.GrokBuildBilling/GetGrokC
 // `base_url` is `https://api.kimi.com/coding`, and `/coding/usages` is a 404);
 // a login without a root is on the global deployment.
 const KIMI_GLOBAL_BASE_URL = "https://api.kimi.ai/coding/v1";
+// The profile only enriches the usages, so a slow one is dropped before the
+// poll's own timeout would fail the whole row.
+const KIMI_PROFILE_TIMEOUT = Duration.seconds(8);
 
 /**
  * The Kimi Code API root for a proxy login: its `base_url` with `/v1` appended
@@ -1145,8 +1148,8 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
       junie: () => pollJunie(),
       // The proxy refreshes the fifteen-minute Kimi access token ahead of
       // expiry, so the stored one is read as it is. The profile is read beside
-      // the usages for the identity and tier; a failed profile read keeps the
-      // usages.
+      // the usages for the identity and tier; a failed or slow profile read
+      // keeps the usages.
       kimi: () => {
         const base = kimiApiBase(login.base_url);
         const get = (suffix: string) =>
@@ -1163,7 +1166,11 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
             ),
             Effect.flatMap(get("me"), (response) =>
               response.status === 200 ? Effect.asSome(response.text) : Effect.succeedNone
-            ).pipe(Effect.orElseSucceed(O.none<string>)),
+            ).pipe(
+              Effect.timeoutOption(KIMI_PROFILE_TIMEOUT),
+              Effect.map(O.flatten),
+              Effect.orElseSucceed(O.none<string>)
+            ),
           ],
           { concurrency: 2 }
         ).pipe(Effect.map(([usage, profile]) => kimiUsageOutcome(usage, profile)));

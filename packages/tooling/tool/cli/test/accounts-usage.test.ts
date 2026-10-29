@@ -75,6 +75,7 @@ import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
 import * as Command from "effect/cli/Command";
 import * as DateTime from "effect/DateTime";
+import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
@@ -898,24 +899,39 @@ it.layer(inheritedPlatform, { timeout: "30 seconds" })("live account poller", (i
     })
   );
 
-  it.effect("keeps the Kimi usages when the profile request fails", () =>
+  it.effect("keeps the Kimi usages when the profile request fails or never answers", () =>
     Effect.gen(function* () {
+      const hung = yield* Deferred.make<void>();
       const client = HttpClient.make((request) =>
-        Effect.succeed(
-          Str.endsWith("/usages")(request.url) ? respond(request, kimiBody) : respond(request, "busy", 503)
-        )
+        Str.endsWith("/usages")(request.url)
+          ? Effect.succeed(respond(request, kimiBody))
+          : Str.endsWith("/me")(request.url) && Str.includes("Bearer kimi-token")(request.headers.authorization ?? "")
+            ? Deferred.succeed(hung, undefined).pipe(Effect.andThen(Effect.never))
+            : Effect.succeed(respond(request, "busy", 503))
       );
-      const usages = yield* runLive(
-        { "kimi-1761717000000.json": authFiles["kimi-1761717000000.json"] },
+      // The profile timeout runs on the test clock: the hung /me is dropped at eight seconds.
+      const polling = yield* runLive(
+        {
+          "kimi-1761717000000.json": authFiles["kimi-1761717000000.json"],
+          "kimi-ai-1761717000001.json": `{"type":"kimi-ai","access_token":"kimi-other","base_url":"https://api.kimi.ai/coding/v1"}`,
+        },
         client,
         pollAccounts
-      );
-      expect(A.map(usages, (usage) => usage.outcome._tag)).toEqual(["Ok"]);
-      const outcome = usages[0]?.outcome;
-      if (outcome?._tag !== "Ok") return;
-      assertNone(outcome.identity);
-      assertNone(outcome.plan);
-      expect(A.length(outcome.windows)).toBe(3);
+      ).pipe(Effect.forkChild);
+      yield* Deferred.await(hung);
+      yield* TestClock.adjust("8 seconds");
+      const usages = yield* Fiber.join(polling);
+      expect(A.map(usages, (usage) => [usage.account.label, usage.outcome._tag])).toEqual([
+        ["kimi-1761717000000", "Ok"],
+        ["kimi-ai-1761717000001", "Ok"],
+      ]);
+      for (const usage of usages) {
+        const outcome = usage.outcome;
+        if (outcome._tag !== "Ok") continue;
+        assertNone(outcome.identity);
+        assertNone(outcome.plan);
+        expect(A.length(outcome.windows)).toBe(3);
+      }
     })
   );
 
