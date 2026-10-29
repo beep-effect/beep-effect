@@ -1,14 +1,15 @@
 import * as NodeModule from "node:module";
 import { it } from "@beep/test-runner";
+import * as HostProcess from "@beep/utils/HostProcess";
 import { describe, expect } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import { vi } from "vitest";
 import {
   executableDirectory,
-  installNativeAddonResolver,
   isNativeAddonRequest,
   resolveNativeAddon,
   setDllDirectory,
@@ -105,7 +106,6 @@ describe("NativeAddon", () => {
         _resolveFilename: (request: string, ...rest: ReadonlyArray<unknown>) => string;
       };
       const original = resolver._resolveFilename;
-      const platform = process.platform;
       const registered: Array<string> = [];
       const calls: Array<string> = [];
       resolver._resolveFilename = (request, ...rest) => {
@@ -122,9 +122,11 @@ describe("NativeAddon", () => {
         return `fallback:${request}`;
       };
       try {
+        vi.resetModules();
+        vi.doMock("@beep/utils/HostProcess", () => ({ ...HostProcess, currentHostPlatform: "win32" }));
+        const { installNativeAddonResolver } = yield* Effect.promise(() => import("../src/NativeAddon.ts"));
         const addonDirectory = `${root}/node_modules/@duckdb/node-bindings-win32-x64`;
         Object.defineProperty(process, "execPath", { value: `${root}/practice-kg-mcp`, configurable: true });
-        Object.defineProperty(process, "platform", { value: "win32", configurable: true });
         installNativeAddonResolver((directory) => Effect.sync(() => registered.push(directory)));
         const installed = resolver._resolveFilename;
         yield* Effect.promise(() => import("../src/NativeAddon.install.ts"));
@@ -139,9 +141,9 @@ describe("NativeAddon", () => {
         expect(resolver._resolveFilename("effect/Effect")).toBe("fallback:effect/Effect");
         expect(calls).toEqual(["@duckdb/node-bindings-missing/duckdb.node", "effect/Effect"]);
       } finally {
+        vi.doUnmock("@beep/utils/HostProcess");
         resolver._resolveFilename = original;
         Object.defineProperty(process, "execPath", { value: executablePath, configurable: true });
-        Object.defineProperty(process, "platform", { value: platform, configurable: true });
       }
     })
   );
