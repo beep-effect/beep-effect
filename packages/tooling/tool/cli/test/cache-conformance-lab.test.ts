@@ -232,6 +232,34 @@ it.layer(Services, { timeout: "60 seconds", excludeTestServices: true })("cache 
 
   it.effect("does not turn an interrupted upload into an empty upstream write", () =>
     Effect.gen(function* () {
+      if (!abortsConnections) {
+        // The Node Bun.serve shim buffers the complete body before dispatching
+        // the handler. Run this streaming lifecycle control in the real runtime.
+        const root = yield* repoRoot;
+        const path = yield* Path.Path;
+        const native = yield* CacheRuntimeProcess.runCaptured({
+          command: "bun",
+          args: [
+            path.join(root, "node_modules/vitest/vitest.mjs"),
+            "run",
+            path.join(root, "packages/tooling/tool/cli/test/cache-conformance-lab.test.ts"),
+            "--testNamePattern",
+            "does not turn an interrupted upload into an empty upstream write",
+            "--fileParallelism=false",
+            "--maxWorkers=1",
+          ],
+          cwd: root,
+          bound: CacheRuntimeProcess.OutputBound.make({
+            maxChars: 16 * 1024,
+            truncatedNotice: "native interruption control exceeded its output bound",
+          }),
+          timeout: "45 seconds",
+          source: "merge",
+        });
+        expect(native.exitCode).toBe(0);
+        expect(native.truncated).toBe(false);
+        return;
+      }
       const server = yield* makeConformanceServer(goodMode);
       const { started, completed } = yield* observeProxyBody();
       const release = yield* Deferred.make<void>();

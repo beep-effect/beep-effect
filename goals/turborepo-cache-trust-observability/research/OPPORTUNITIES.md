@@ -321,3 +321,16 @@ than compensating with larger sleeps or retries.
   failures. Three controls and the full current process replay pass. Success
   receipt publication follows teardown, preventing a later cleanup failure from
   publishing fresh passing evidence. No live R2 service was touched.
+
+
+## 2026-10-29: Node CI cannot model a streaming Bun request lifecycle
+
+The CI shard passed 4,164 tests but timed out the interrupted-upload handshake.
+The Node Bun.serve shim buffers the body before dispatch, so waiting for handler
+body-read before releasing the body deadlocks. Local Bun-only CPU controls did
+not exercise this boundary. Reproduce using the actual Node entrypoint; run
+this physical streaming assertion in a bounded real Bun child from Node rather
+than changing the shim's declared behavior, skipping it, or increasing sleeps.
+The repaired Node and Bun suites pass, V8 instrumentation passes, and guard
+removals fail both the child control and its parent. Require both runtime paths
+for future changes to this lifecycle control. No production proxy change.

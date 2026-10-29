@@ -121,13 +121,18 @@
     }
   },
   "latestSourceCheckpoint": {
-    "path": "goals/turborepo-cache-trust-observability/research/proxy-request-completion-checkpoint.json",
-    "sha256": "1ce40bd4d9ae3c5be6449081291d17f603f2323dc277f87d184abd18fb8d5abd",
-    "scope": "Current hosted repair, bounded request settlement and synchronized interrupted-upload control. Older audits and evidence retain their recorded source scope."
+    "path": "goals/turborepo-cache-trust-observability/research/proxy-node-runtime-checkpoint.json",
+    "sha256": "c62719843df9e914203675f1a8ebf5f93c5d7c831a65c83c681754948fac6950",
+    "scope": "Actual Bun streaming lifecycle from both Node and Bun suites; earlier full audits and native evidence retain their original scope."
   },
   "priorCaptureCheckpoint": {
     "path": "goals/turborepo-cache-trust-observability/research/proxy-capture-bounds-checkpoint.json",
     "sha256": "acc277a914542bc29ed2950f892db464db9e2cf005532a0c4ec1d63f131a0379",
     "scope": "Bounded capture and streamed reply repair. All earlier source maps and full audits remain historical; no full-audit transfer to these new bytes."
+  },
+  "priorRequestCompletionCheckpoint": {
+    "path": "goals/turborepo-cache-trust-observability/research/proxy-request-completion-checkpoint.json",
+    "sha256": "1ce40bd4d9ae3c5be6449081291d17f603f2323dc277f87d184abd18fb8d5abd",
+    "scope": "Current hosted repair, bounded request settlement and synchronized interrupted-upload control. Older audits and evidence retain their recorded source scope."
   }
 }

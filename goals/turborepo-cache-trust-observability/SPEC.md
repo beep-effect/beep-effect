@@ -340,3 +340,17 @@ The local process report does not satisfy those deployment or observation gates.
   and a combined stop/log failure control precede the full synthetic replay.
   The reviewed Rust patch and binary are unchanged; production stays inactive.
   Reversal is to halt candidate experiments while retaining the incumbent.
+
+
+### Native streaming control under Node CI
+
+- 2026-10-29: The Node compatibility server collects the entire request body
+  before handler dispatch. A streaming test that waits for that handler before
+  completing its body cannot run against this shim. The Node suite now runs
+  this same control through the installed Bun runtime and local Vitest entry,
+  with one worker, a forty-five-second child deadline and 16,384 captured
+  characters. Bun executes the original physical HTTP control directly. The
+  five-second body/handler bounds remain unchanged. No skip, fabricated body
+  failure, longer streaming timeout or test retry substitutes for native proof.
+  Removed guards must fail both the native test and the Node parent. Reversal
+  keeps unproven evidence disabled; the production proxy is unchanged.

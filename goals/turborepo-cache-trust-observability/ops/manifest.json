@@ -69,7 +69,8 @@
     "research/proxy-request-completion-checkpoint.json",
     "research/adapter-runtime-checkpoint.json",
     "research/adapter-runtime-lab.json",
-    "research/adapter-runtime-lab-before-cleanup-review.json"
+    "research/adapter-runtime-lab-before-cleanup-review.json",
+    "research/proxy-node-runtime-checkpoint.json"
   ],
   "agentLaunchers": [
     {

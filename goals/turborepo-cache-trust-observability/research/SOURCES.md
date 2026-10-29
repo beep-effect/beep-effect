@@ -282,3 +282,9 @@ artifact, signing activation, deployed grant or observation window changes.
 - `adapter-runtime-lab-before-cleanup-review.json` retains the original runtime
   observation bytes. The current runtime report and checkpoint separately bind
   the cleanup review repair, three failure controls and fresh synthetic replay.
+
+- [Node runtime control checkpoint](proxy-node-runtime-checkpoint.json): source-
+  bound Node failure reproduction, actual Bun child propagation, Node/Bun
+  integrations, V8 instrumentation and CPU-constrained controls. The runtime
+  mismatch is grounded in `vitest.setup.ts`: `collectRequestBody` precedes
+  `respondToRequest`. Prior request-completion evidence is retained unchanged.

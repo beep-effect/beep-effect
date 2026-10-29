@@ -3,7 +3,7 @@
   "goal": "turborepo-cache-trust-observability",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "303691f34fcf85630f8c42857c85dae44fc5a0dab12553668e6572631111fd79",
+  "specSha256": "32bf10d431a81ecb290cc01f7fe79814b61b25eaec9e02a68745ea5f862d2358",
   "acceptance": [
     {
       "id": "AC-01",
@@ -202,7 +202,8 @@
     "backendResultComponent": "goals/turborepo-cache-trust-observability/research/backend-result-checkpoint.json",
     "proxyCaptureBoundsComponent": "goals/turborepo-cache-trust-observability/research/proxy-capture-bounds-checkpoint.json",
     "adapterRuntimeComponent": "goals/turborepo-cache-trust-observability/research/adapter-runtime-checkpoint.json",
-    "proxyRequestCompletionComponent": "goals/turborepo-cache-trust-observability/research/proxy-request-completion-checkpoint.json"
+    "proxyRequestCompletionComponent": "goals/turborepo-cache-trust-observability/research/proxy-request-completion-checkpoint.json",
+    "proxyNodeRuntimeComponent": "goals/turborepo-cache-trust-observability/research/proxy-node-runtime-checkpoint.json"
   },
   "remainingExplicitGates": [
     "SPEC verification matrix commands on actual final changes",
@@ -214,9 +215,11 @@
   "referenceBase": "repository root",
   "priorSpecSha256AtProtocolMain": "445dc9357d89db4f7a68d8e727f5ddc649fb7550d7071c9c6c5fb03277580c68",
   "currentIntegration": {
-    "component": "goals/turborepo-cache-trust-observability/research/proxy-request-completion-checkpoint.json",
-    "focusedTestsPassed": 271,
-    "sourceHeadAtVerification": "c3a816a2a1",
-    "scope": "Request-completion repair after merging reviewed main. Earlier full audits and native artifacts retain their recorded source scope; no deployment, qualification, adoption or representative-window acceptance."
-  }
+    "component": "goals/turborepo-cache-trust-observability/research/proxy-node-runtime-checkpoint.json",
+    "bunTestsPassed": 271,
+    "nodeTestsPassed": 271,
+    "sourceHeadAtVerification": "e496c1943ef462a8523f6f1c8ce4f72bc2d37973",
+    "scope": "Runtime-sensitive test correction only. Production proxy, native artifact bytes and earlier source-bound audits remain unchanged. New exact-head hosted acceptance and all deployment/qualification/window gates remain pending."
+  },
+  "priorSpecSha256AtNodeRuntimeRepair": "303691f34fcf85630f8c42857c85dae44fc5a0dab12553668e6572631111fd79"
 }

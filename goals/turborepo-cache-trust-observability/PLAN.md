@@ -372,3 +372,16 @@ unit assertion. Fresh 20-wire/one-startup/twelve-native controls and four measur
 runtime observations pass with zero adapter output. Current infra audit/docgen
 pass in 11.0/13.4 seconds. Success evidence is written after teardown. The prior
 report remains separate, and the exact Rust patch and binary are unchanged.
+
+
+### Actual streaming runtime in the Node CI suite
+
+The hosted Node shard exposed a deterministic compatibility-shim deadlock,
+reproduced locally before repair. Node now invokes the same physical control
+in a bounded Bun child; Bun runs it directly. Both eleven-file suites pass
+271 tests, the Node V8-instrumented control passes, and three independent
+Node-to-Bun executions pass under a one-CPU quota. Removing either the early-
+receipt or empty-upload guard fails both runtimes; exact proxy bytes are
+restored. Current package, Fallow and Effect/Vitest checks pass. See
+[the runtime checkpoint](research/proxy-node-runtime-checkpoint.json).
+Fresh hosted acceptance remains pending; production proxy bytes are unchanged.
