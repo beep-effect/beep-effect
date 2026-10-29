@@ -225,6 +225,7 @@
     "@beep/repo-docgen": "workspace:^",
     "@beep/repo-tsconfig": "workspace:^",
     "@beep/repo-utils": "workspace:^",
+    "@beep/repo-workspaces": "workspace:^",
     "@beep/runpod": "workspace:^",
     "@beep/runtime-env": "workspace:^",
     "@beep/schema": "workspace:^",

@@ -47,6 +47,7 @@ export {
   projectCacheActivation,
   projectCacheSignedActivation,
   projectCacheSignedRoot,
+  readCacheSignatureRequired,
 } from "../commands/Cache/Cache.fingerprint.ts";
 export {
   collectCacheRuntimeLinker,
