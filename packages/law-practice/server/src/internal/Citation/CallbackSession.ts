@@ -40,6 +40,7 @@ import {
 export { CitationCallbackFailure, CitationCallbackResource } from "./CallbackResource.ts";
 
 import { CitationAuthorityIdentityInput } from "./AuthorityIdentity.ts";
+import { CitationDefaultObservation, readCitationDefaultObservation } from "./CallbackObservations.ts";
 import { CitationCallbackRuntimeIndexFactory } from "./CallbackRuntimeIndex.ts";
 import { captureCitationMentionReceiptData } from "./Mention.ts";
 import { PreparedCitationResolution, prepareCitationResolution } from "./ResolutionInput.ts";
@@ -129,6 +130,7 @@ export const CitationCallbackDecision = S.Struct({
   callback: S.Literals(["full", "shortCase", "supra", "reference", "id", "unknown"]),
   resource: CitationCallbackResource,
   assignment: S.OptionFromNullOr(CitationCallbackAssignment),
+  observation: S.OptionFromNullOr(CitationDefaultObservation),
 }).pipe(
   $I.annoteSchema("CitationCallbackDecision", {
     description: "Source-order callback result and actual append history, independent of final dictionary contents.",
@@ -324,6 +326,12 @@ const SessionState = S.Struct({
           ...A.map(state.groups, (group) => group.resource),
           ...A.flatMap(state.decisions, (decision) => [
             decision.resource,
+            ...O.getOrElse(
+              O.map(decision.observation, (observation) =>
+                observation._tag === "Ambiguous" ? observation.resources : []
+              ),
+              A.empty<CitationCallbackResource>
+            ),
             ...O.toArray(O.map(decision.assignment, (assignment) => assignment.resource)),
           ]),
         ];
@@ -338,7 +346,13 @@ const SessionState = S.Struct({
           A.every(
             A.zip(state.decisions, state.mentions),
             ([decision, mention]) =>
-              decision.mentionId === mention.id && (decision.resource._tag !== "None" || O.isNone(decision.assignment))
+              decision.mentionId === mention.id &&
+              (decision.resource._tag !== "None" || O.isNone(decision.assignment)) &&
+              (O.isNone(decision.observation) ||
+                O.exists(
+                  decision.observation,
+                  (observation) => observation.mentionId === mention.id && decision.resource._tag === "None"
+                ))
           ) &&
           HashSet.size(HashSet.fromIterable(A.map(state.groups, (group) => group.entrySlot))) === A.length(state.groups)
         );
@@ -1259,6 +1273,7 @@ export const runPreparedCitationCallbackSession = Effect.fn("Citation.runPrepare
             CitationGroupMember.cases.Mention.make({ mentionId: original.id })
           );
           const mention = CitationMention.make({ ...original, citation });
+          let observation = O.none<CitationDefaultObservation>();
           if (isFull(mention.citation)) {
             const result = yield* callbacks.full(mention).pipe(Effect.mapError(callbackFailed));
             last = yield* S.decodeEffect(ResourceJson)(
@@ -1273,6 +1288,7 @@ export const runPreparedCitationCallbackSession = Effect.fn("Citation.runPrepare
             const result = yield* callbacks
               .id({ mention, last: yield* dictionary.currentResource(last), groups })
               .pipe(Effect.mapError(callbackFailed));
+            observation = yield* readCitationDefaultObservation(result, mention.id);
             const snapshot = yield* S.decodeEffect(IdJson)(
               yield* S.encodeEffect(IdJson)(result).pipe(Effect.mapError(invalid))
             ).pipe(Effect.mapError(invalid));
@@ -1288,6 +1304,7 @@ export const runPreparedCitationCallbackSession = Effect.fn("Citation.runPrepare
             const result = yield* callback({ mention, fulls: yield* dictionary.readFulls }).pipe(
               Effect.mapError(callbackFailed)
             );
+            observation = yield* readCitationDefaultObservation(result, mention.id);
             const snapshot = yield* S.decodeEffect(FullsJson)(
               yield* S.encodeEffect(FullsJson)(result).pipe(Effect.mapError(invalid))
             ).pipe(Effect.mapError(invalid));
@@ -1310,6 +1327,7 @@ export const runPreparedCitationCallbackSession = Effect.fn("Citation.runPrepare
                 : mention.citation.type,
             resource: last,
             assignment,
+            observation: last._tag === "None" ? observation : O.none(),
           });
           const finalGroups = yield* dictionary.read;
           if (
@@ -1330,7 +1348,17 @@ export const runPreparedCitationCallbackSession = Effect.fn("Citation.runPrepare
                     ...decision.assignment.value,
                     resource: yield* dictionary.currentResource(decision.assignment.value.resource),
                   });
-              return { ...decision, resource, assignment };
+              const observation =
+                O.isSome(decision.observation) && decision.observation.value._tag === "Ambiguous"
+                  ? O.some({
+                      ...decision.observation.value,
+                      resources: yield* Effect.forEach(
+                        decision.observation.value.resources,
+                        dictionary.currentResource
+                      ),
+                    })
+                  : decision.observation;
+              return { ...decision, resource, assignment, observation };
             }),
           { concurrency: 1 }
         );

@@ -91,13 +91,15 @@ const ResourceBindings = S.Array(CitationResourceBinding)
           (total, binding) =>
             total +
             A.length(binding.decisions) +
+            A.length(O.getOrElse(O.fromUndefinedOr(binding.candidates), A.empty)) +
             A.reduce(binding.groups, 0, (count, group) => count + A.length(group.list.members))
         ) <= CitationEngineAbsoluteMaxima.resolutionEdges &&
         A.reduce(bindings, 0, (count, binding) => count + A.length(binding.groups)) <=
           CitationEngineAbsoluteMaxima.authorities,
       $I.annote("TotalResourceBindingMembers", {
         title: "Total Resource Binding Members",
-        description: "Adapter-bound decisions and group references share the hard resolution edge ceiling.",
+        description:
+          "Adapter-bound chosen/candidate decisions and group references share the hard resolution edge ceiling.",
         message: "Too many resource binding members.",
       })
     )
@@ -115,12 +117,18 @@ const Snapshot = S.Struct({
         A.length(receipt.authorities) <= CitationEngineAbsoluteMaxima.authorities &&
         A.length(receipt.memberLists) <= CitationEngineAbsoluteMaxima.authorities &&
         A.length(receipt.groups) <= CitationEngineAbsoluteMaxima.authorities &&
-        A.reduce(receipt.memberLists, 0, (total, list) => total + A.length(list.members)) <=
+        A.reduce(receipt.memberLists, 0, (total, list) => total + A.length(list.members)) +
+          A.reduce(
+            receipt.resolutions,
+            0,
+            (total, resolution) =>
+              total + (resolution.status === "Ambiguous" ? A.length(resolution.candidateAuthorityIds) : 0)
+          ) <=
           CitationEngineAbsoluteMaxima.resolutionEdges,
       $I.annote("DocumentGraphCeilings", {
         title: "Document Graph Ceilings",
         description:
-          "All occurrence/object nodes, catalog/list nodes and ordered membership edges fit hard engine maxima.",
+          "All occurrence/object nodes, catalog/list nodes, ordered memberships and candidate edges fit hard engine maxima.",
         message: "Document graph exceeds hard limits.",
       })
     )
@@ -169,6 +177,14 @@ const verifyAuthorities = Effect.fn("Citation.verifyDocumentAuthorities")(functi
   const listById = HashMap.fromIterable(A.map(snapshot.receipt.memberLists, (list) => Tuple.make(list.id, list)));
   const listEquivalent = S.toEquivalence(CitationMemberList);
   const memberEquivalent = S.toEquivalence(S.Array(CitationGroupMember));
+  const candidatesByAuthority = A.groupBy(
+    A.flatMap(snapshot.receipt.resolutions, (resolution) =>
+      resolution.status === "Ambiguous"
+        ? A.map(resolution.candidateAuthorityIds, (authorityId) => ({ authorityId, mentionId: resolution.mentionId }))
+        : []
+    ),
+    (candidate) => candidate.authorityId
+  );
   // Out-of-band bindings are trusted adapter expectations, never receipt data.
   // Each binding fixes decision ownership separately from optional group/list
   // data. Only explicitly bound decisions may override a full default key.
@@ -185,6 +201,19 @@ const verifyAuthorities = Effect.fn("Citation.verifyDocumentAuthorities")(functi
     for (const member of binding.decisions) {
       const resolution = HashMap.get(resolutions, member);
       if (O.isNone(resolution) || resolution.value.status !== "Resolved" || resolution.value.authorityId !== id)
+        return yield* CitationDocumentFailure.make({ reason: "stale-authority" });
+    }
+    const expectedCandidates = O.getOrElse(O.fromUndefinedOr(binding.candidates), A.empty);
+    const actualCandidates = O.getOrElse(R.get(candidatesByAuthority, id), A.empty);
+    if (A.length(expectedCandidates) !== A.length(actualCandidates))
+      return yield* CitationDocumentFailure.make({ reason: "stale-authority" });
+    for (const candidate of expectedCandidates) {
+      const resolution = HashMap.get(resolutions, candidate.mentionId);
+      if (
+        O.isNone(resolution) ||
+        resolution.value.status !== "Ambiguous" ||
+        O.getOrElse(A.get(resolution.value.candidateAuthorityIds, candidate.position), () => "") !== id
+      )
         return yield* CitationDocumentFailure.make({ reason: "stale-authority" });
     }
     const actual = groupsFor(id);

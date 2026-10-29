@@ -178,6 +178,15 @@ and successful document restoration prove integration; sequential test adapter
 integers do not prove a production native allocator. No source coverage count
 or semantic waiver changes; the existing BSD-2-Clause attribution applies.
 
+The [default branch observation evidence](
+../history/evidence/2026-10-29-default-branch-observations.md) binds a new
+46-context corpus to the existing focused producer and fixture, resolve.py and
+models.py. Its return/len observer preserves 394 source-defined hash/equality
+calls and captures 108 completed decisions. Eight corruption controls and fresh
+replay pass. These observations support exact default status/reason and candidate
+set tests; they do not qualify arbitrary host/finalizer behavior or historical
+candidate label production. Existing eyecite BSD-2-Clause attribution applies.
+
 ## Incorporated-source discipline
 
 - A local clone is research state, not an incorporated dependency.

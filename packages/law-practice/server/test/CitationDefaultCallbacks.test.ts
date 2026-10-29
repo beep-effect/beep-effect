@@ -1,5 +1,6 @@
 import { fileURLToPath } from "node:url";
 import { citationAuthorityMentionIds, citationGroupMembers } from "@beep/law-practice-domain/values";
+import { readCitationDefaultObservation } from "@beep/law-practice-server/_test/Citation/CallbackObservations";
 import {
   CitationCallbackRuntimeIndexFactory,
   CitationMissingPageIdentities,
@@ -28,7 +29,12 @@ import {
 import { makeCitationRegisteredResolver } from "@beep/law-practice-server/_test/Citation/RegisteredResolver";
 import { prepareCitationResolution } from "@beep/law-practice-server/_test/Citation/ResolutionInput";
 import { resolveCitationMentions } from "@beep/law-practice-server/_test/Citation/Resolve";
+import { CitationResourceIdentity } from "@beep/law-practice-server/_test/Citation/ResourceIdentity";
 import { makeCitationRegisteredSessionDescriptors } from "@beep/law-practice-server/_test/Citation/SessionDescriptors";
+import {
+  CitationSessionResourceDescriptors,
+  makeCitationSessionDocumentProjector,
+} from "@beep/law-practice-server/_test/Citation/SessionDocument";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -94,6 +100,34 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("production defau
           ...A.map((yield* loadResolutionOperationContexts).contexts, (row) => row.context),
         ];
         expect(contexts).toHaveLength(76);
+        const observationsText = yield* (yield* FileSystem.FileSystem).readFileString(
+          fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/default-observations.json", import.meta.url))
+        );
+        expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(observationsText))).toBe(
+          "34bf392659ed8699115311a9f04377b7366b691e91e5171145b7cafdec6d1592"
+        );
+        const observed = yield* S.decodeEffect(
+          S.fromJsonString(
+            S.Struct({
+              cases: S.Array(
+                S.Struct({
+                  name: S.String,
+                  decisions: S.Array(
+                    S.Struct({
+                      index: S.Natural,
+                      status: S.Literals(["Resolved", "Unresolved", "Ambiguous"]),
+                      reason: S.optionalKey(S.String),
+                      distinctCount: S.optionalKey(S.Natural),
+                      candidateIndices: S.Natural.pipe(S.Array, S.optionalKey),
+                    })
+                  ),
+                })
+              ),
+            })
+          )
+        )(observationsText);
+        const branches = HashMap.fromIterable(A.map(observed.cases, (row) => [row.name, row.decisions] as const));
+        let checked = 0;
         for (const row of contexts) {
           const input = yield* prepare(row);
           if (row.outcome.status === "error") {
@@ -111,6 +145,32 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("production defau
               )
             );
             expect(members, row.name).toEqual(row.outcome.groups);
+            const expectations = HashMap.get(branches, row.name);
+            if (O.isSome(expectations)) {
+              expect(result.document.resolutions, row.name).toHaveLength(A.length(expectations.value));
+              for (const expected of expectations.value) {
+                checked++;
+                const resolution = A.getUnsafe(result.document.resolutions, expected.index);
+                expect(resolution.status, row.name).toBe(expected.status);
+                if (resolution.status === "Unresolved") expect(resolution.reason, row.name).toBe(expected.reason);
+                if (resolution.status === "Ambiguous") {
+                  expect(resolution.candidateAuthorityIds, row.name).toHaveLength(
+                    O.getOrElse(O.fromUndefinedOr(expected.distinctCount), () => 0)
+                  );
+                  const indices = expected.candidateIndices;
+                  if (indices === undefined) return yield* Effect.die("source candidate indices missing");
+                  const authorities = yield* Effect.forEach(indices, (index) =>
+                    Effect.gen(function* () {
+                      const prior = A.getUnsafe(result.document.resolutions, index);
+                      if (prior.status !== "Resolved")
+                        return yield* Effect.die("source candidate is not a resolved full");
+                      return prior.authorityId;
+                    })
+                  );
+                  expect(resolution.candidateAuthorityIds, row.name).toEqual(expect.arrayContaining(authorities));
+                }
+              }
+            }
             const restored = yield* restoreCitationDocument({
               receipt: result.receipt,
               editions: [],
@@ -121,8 +181,44 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("production defau
             });
             expect(restored.groups, row.name).toEqual(result.document.groups);
             expect(restored.memberLists, row.name).toEqual(result.document.memberLists);
+            if (row.name === "short-ambiguous") {
+              const tampered = {
+                ...result.receipt,
+                resolutions: A.map(result.receipt.resolutions, (resolution) =>
+                  resolution.status === "Ambiguous"
+                    ? { ...resolution, candidateAuthorityIds: A.reverse(resolution.candidateAuthorityIds) }
+                    : resolution
+                ),
+              };
+              expect(
+                (yield* Effect.flip(
+                  restoreCitationDocument({
+                    receipt: tampered,
+                    editions: [],
+                    resourceBindings: result.resourceBindings,
+                    expectedSource: input.verifiedSource.source,
+                    expectedEngineArtifact: input.engineArtifact,
+                    sourceText: row.text,
+                  })
+                )).reason
+              ).toBe("stale-authority");
+              const missing = A.map(result.resourceBindings, (binding) => ({ ...binding, candidates: [] }));
+              expect(
+                (yield* Effect.flip(
+                  restoreCitationDocument({
+                    receipt: result.receipt,
+                    editions: [],
+                    resourceBindings: missing,
+                    expectedSource: input.verifiedSource.source,
+                    expectedEngineArtifact: input.engineArtifact,
+                    sourceText: row.text,
+                  })
+                )).reason
+              ).toBe("stale-authority");
+            }
           }
         }
+        expect(checked).toBe(108);
         expect(builds).toBe(76);
         const input = yield* prepare(yield* selected);
         const [left, right] = yield* Effect.all([resolver.resolve(input), resolver.resolve(input)], { concurrency: 2 });
@@ -137,6 +233,20 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("production defau
         const absent = yield* makeCitationRegisteredResolver().pipe(
           Effect.provideService(CitationFrozenEditions, frozen)
         );
+        const ambiguousCase = yield* Effect.fromOption(A.findFirst(contexts, (row) => row.name === "short-ambiguous"));
+        const ambiguousInput = yield* prepare(ambiguousCase);
+        expect(
+          (yield* Effect.flip(
+            absent.resolve({ ...ambiguousInput, limits: { ...ambiguousInput.limits, resolutionEdges: 3 } })
+          )).reason
+        ).toBe("limit-exceeded");
+        expect(
+          A.getUnsafe(
+            (yield* absent.resolve({ ...ambiguousInput, limits: { ...ambiguousInput.limits, resolutionEdges: 4 } }))
+              .document.resolutions,
+            2
+          ).status
+        ).toBe("Ambiguous");
         const nullCase = yield* Effect.fromOption(
           A.findFirst(contexts, (row) => row.name === "missing-page"),
           () => CitationCallbackFailure.make({ reason: "invalid-input" })
@@ -188,6 +298,51 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("production defau
         )).reason
       ).toBe("limit-exceeded");
       expect((yield* resolver.resolve(input)).document.groups).toHaveLength(1);
+    })
+  );
+
+  it.effect("keeps branch evidence on the issued callback result and occurrence only", () =>
+    Effect.gen(function* () {
+      const prepared = yield* prepareCitationResolution(yield* prepare(yield* selected));
+      const work = yield* makeCitationResolutionWork(prepared.limits);
+      const owner = yield* makeCitationCallbackDictionary(prepared).pipe(
+        Effect.provideService(CitationResolutionWork, work)
+      );
+      const callbacks = yield* makeDefaultCitationResolutionCallbacks(prepared).pipe(
+        Effect.provideService(CitationResolutionWork, work),
+        Effect.provideService(CitationCallbackDictionary, owner)
+      );
+      yield* owner.start;
+      const mention = A.getUnsafe(prepared.mentions, 1);
+      const result = yield* callbacks.shortCase({ mention, fulls: [] });
+      const evidence = yield* readCitationDefaultObservation(result, mention.id);
+      expect(O.isSome(evidence)).toBe(true);
+      if (O.isSome(evidence))
+        expect(evidence.value).toEqual({ _tag: "Unresolved", mentionId: mention.id, reason: "no-matching-authority" });
+      expect(O.isNone(yield* readCitationDefaultObservation({ ...result }, mention.id))).toBe(true);
+      expect(O.isNone(yield* readCitationDefaultObservation(result, A.getUnsafe(prepared.mentions, 0).id))).toBe(true);
+      yield* owner.close;
+    })
+  );
+
+  it.effect("rejects an ambiguity projection when trusted descriptors collapse all candidate labels", () =>
+    Effect.gen(function* () {
+      const row = yield* Effect.fromOption(A.findFirst((yield* cases).cases, (row) => row.name === "short-ambiguous"));
+      const input = yield* prepare(row);
+      const session = yield* runDefaultCitationCallbackSession(input);
+      const identity = CitationResourceIdentity.cases.External.make({
+        scope: input.engineArtifact,
+        key: input.engineArtifact,
+      });
+      const projector = yield* makeCitationSessionDocumentProjector().pipe(
+        Effect.provideService(
+          CitationSessionResourceDescriptors,
+          CitationSessionResourceDescriptors.of({
+            describe: Effect.fn("BranchTest.collapsedLabels")(() => Effect.succeed(identity)),
+          })
+        )
+      );
+      expect((yield* Effect.flip(projector.project(session))).reason).toBe("identity-failed");
     })
   );
 

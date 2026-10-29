@@ -59,7 +59,14 @@
       "referencePaths": [
         "goals/citation-extraction-engine/ops/export-operations.py",
         "goals/citation-extraction-engine/history/evidence/2026-10-29-candidate-runtime-set.md",
-        "packages/law-practice/server/test/CitationRuntimeSet.test.ts"
+        "packages/law-practice/server/test/CitationRuntimeSet.test.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-10-29-default-branch-observations.md",
+        "packages/law-practice/server/src/internal/Citation/CallbackObservations.ts",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/default-observations.json",
+        "goals/citation-extraction-engine/ops/probe-default-observations.py",
+        "goals/citation-extraction-engine/ops/verify-default-observation-controls.py",
+        "packages/law-practice/server/src/internal/Citation/ResourceIdentity.ts",
+        "packages/law-practice/server/src/internal/Citation/Document.ts"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
@@ -88,7 +95,14 @@
         "packages/law-practice/server/test/CitationSessionDescriptors.test.ts",
         "goals/citation-extraction-engine/history/evidence/2026-10-29-registered-default-resolution.md",
         "packages/law-practice/server/src/internal/Citation/RegisteredResolver.ts",
-        "packages/law-practice/server/test/CitationDefaultCallbacks.test.ts"
+        "packages/law-practice/server/test/CitationDefaultCallbacks.test.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-10-29-default-branch-observations.md",
+        "packages/law-practice/server/src/internal/Citation/CallbackObservations.ts",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/default-observations.json",
+        "goals/citation-extraction-engine/ops/probe-default-observations.py",
+        "goals/citation-extraction-engine/ops/verify-default-observation-controls.py",
+        "packages/law-practice/server/src/internal/Citation/ResourceIdentity.ts",
+        "packages/law-practice/server/src/internal/Citation/Document.ts"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
@@ -155,7 +169,14 @@
         "packages/law-practice/server/test/CitationSessionDescriptors.test.ts",
         "goals/citation-extraction-engine/history/evidence/2026-10-29-registered-default-resolution.md",
         "packages/law-practice/server/src/internal/Citation/RegisteredResolver.ts",
-        "packages/law-practice/server/test/CitationDefaultCallbacks.test.ts"
+        "packages/law-practice/server/test/CitationDefaultCallbacks.test.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-10-29-default-branch-observations.md",
+        "packages/law-practice/server/src/internal/Citation/CallbackObservations.ts",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/default-observations.json",
+        "goals/citation-extraction-engine/ops/probe-default-observations.py",
+        "goals/citation-extraction-engine/ops/verify-default-observation-controls.py",
+        "packages/law-practice/server/src/internal/Citation/ResourceIdentity.ts",
+        "packages/law-practice/server/src/internal/Citation/Document.ts"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

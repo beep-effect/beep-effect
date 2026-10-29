@@ -492,7 +492,12 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
             expect(resolution.reason).toBe(
               A.getUnsafe(result.decisions, indexOf(resolution.mentionId)).callback === "unknown"
                 ? "unsupported-citation"
-                : "callback-unresolved"
+                : O.getOrElse(
+                    O.map(A.getUnsafe(result.decisions, indexOf(resolution.mentionId)).observation, (observation) =>
+                      observation._tag === "Unresolved" ? observation.reason : "callback-unresolved"
+                    ),
+                    () => "callback-unresolved"
+                  )
             );
         const restored = yield* restoreCitationDocument({
           receipt: output.receipt,

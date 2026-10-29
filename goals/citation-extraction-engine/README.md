@@ -50,6 +50,8 @@ unfinished.
 
 Current evidence:
 
+- [Default branch observations](./history/evidence/2026-10-29-default-branch-observations.md)
+
 - [Registered default resolution](./history/evidence/2026-10-29-registered-default-resolution.md)
 
 - [Canonical session descriptors](./history/evidence/2026-10-29-canonical-session-descriptors.md)

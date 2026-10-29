@@ -1085,6 +1085,15 @@ instead of silently splitting delivery or weakening scope.
   replay and budget-failure recovery preserve operation isolation. Public Layer,
   detailed diagnostics, native allocation and exhaustive proof remain open.
 
+- **2026-10-29 default branch observations:** bind actual default None-branch
+  evidence to its returned object and occurrence, then seal it into the session.
+  All 108 completed focused source decisions match target statuses/reasons;
+  five ambiguities retain exact candidate authority sets and restore receipts.
+  Independent replay retains 394 unchanged source-defined model hash/equality
+  calls. Custom None without issuance stays generic. Final descriptor collapse
+  rejects rather than fabricating two candidates; historical identity and general
+  host qualification remain open. No exhaustive completion or waiver follows.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from

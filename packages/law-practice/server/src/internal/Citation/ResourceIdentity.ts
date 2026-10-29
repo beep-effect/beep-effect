@@ -62,6 +62,19 @@ export type CitationResourceIdentity = typeof CitationResourceIdentity.Type;
 export class CitationResourceBinding extends S.Opaque<CitationResourceBinding, { readonly brand: unique symbol }>()(
   S.Struct({
     identity: CitationResourceIdentity,
+    candidates: S.optionalKey(
+      S.Array(S.Struct({ mentionId: CitationMentionId, position: S.Natural })).check(
+        S.isMaxLength(CitationEngineAbsoluteMaxima.mentions),
+        S.makeFilter(
+          (values) => A.length(A.dedupe(A.map(values, (value) => value.mentionId))) === A.length(values),
+          $I.annote("UniqueCandidateBindings", {
+            title: "Unique Candidate Bindings",
+            description: "One exact candidate position per occurrence for each resource.",
+            message: "Duplicate candidate binding occurrence.",
+          })
+        )
+      )
+    ),
     groups: S.Array(S.Struct({ position: S.Natural, id: CitationResourceGroupId, list: CitationMemberList })).check(
       S.isMaxLength(CitationEngineAbsoluteMaxima.authorities)
     ),
@@ -79,7 +92,7 @@ export class CitationResourceBinding extends S.Opaque<CitationResourceBinding, {
   }).pipe(
     $I.annoteSchema("CitationResourceBinding", {
       description:
-        "Bounded trusted resource key and exact expected decision set and insertion positions/group/list identities, absent from the persisted document.",
+        "Bounded trusted resource key and exact chosen/candidate decisions, candidate positions and insertion/group/list identities, absent from the persisted document.",
     })
   )
 ) {}

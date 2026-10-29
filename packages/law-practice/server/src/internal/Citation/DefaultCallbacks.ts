@@ -17,10 +17,10 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
 import * as Tuple from "effect/Tuple";
+import { CitationDefaultObservation, issueCitationDefaultNone } from "./CallbackObservations.ts";
 import {
   CitationCallbackDictionary,
   CitationCallbackFailure,
-  CitationCallbackResource,
   CitationResolutionCallbacks,
   CitationResolutionWork,
   makeCitationCallbackDictionary,
@@ -29,7 +29,7 @@ import {
 } from "./CallbackSession.ts";
 import { prepareCitationResolution } from "./ResolutionInput.ts";
 import { hasInvalidCitationPinCite, stripCitationAntecedentPunctuation } from "./ResolverText.ts";
-import type { CitationMention } from "@beep/law-practice-domain/values";
+import type { CitationMention, CitationMentionId } from "@beep/law-practice-domain/values";
 import type { CitationCallbackFull, CitationFullsCallbackInput, CitationIdCallbackInput } from "./CallbackSession.ts";
 import type { PreparedCitationResolution } from "./ResolutionInput.ts";
 
@@ -39,7 +39,6 @@ const Reporter = S.Struct({ value: S.NullOr(S.String), defined: S.Boolean, volum
     description: "Lazy corrected-reporter comparison fields preserving absent/null groups.",
   })
 );
-const none = () => CitationCallbackResource.cases.None.make({});
 const invalid = () => CitationCallbackFailure.make({ reason: "invalid-input" });
 const isFull = S.is(FullCitation);
 
@@ -82,8 +81,32 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
   const unique = Effect.fn("Citation.defaultUniqueResources")((fulls: ReadonlyArray<CitationCallbackFull>) =>
     dictionary.uniqueResourceCount(A.map(fulls, (entry) => entry.resource))
   );
-  const choose = Effect.fn("Citation.defaultChooseResource")(function* (fulls: ReadonlyArray<CitationCallbackFull>) {
-    return (yield* unique(fulls)) === 1 ? A.getUnsafe(fulls, 0).resource : none();
+  const unresolved = Effect.fn("Citation.defaultUnresolved")(
+    (
+      mentionId: CitationMentionId,
+      reason: Extract<CitationDefaultObservation, { readonly _tag: "Unresolved" }>["reason"]
+    ) => issueCitationDefaultNone(CitationDefaultObservation.cases.Unresolved.make({ mentionId, reason }))
+  );
+  const rejectedCandidates = Effect.fn("Citation.defaultRejectedCandidates")(
+    (mentionId: CitationMentionId, fulls: ReadonlyArray<CitationCallbackFull>, count: number) =>
+      count === 0
+        ? unresolved(mentionId, "no-matching-authority")
+        : issueCitationDefaultNone(
+            CitationDefaultObservation.cases.Ambiguous.make({
+              mentionId,
+              distinctCount: count,
+              resources: A.map(fulls, (entry) => entry.resource),
+            })
+          )
+  );
+  const choose = Effect.fn("Citation.defaultChooseResource")(function* (
+    fulls: ReadonlyArray<CitationCallbackFull>,
+    mentionId: CitationMentionId
+  ) {
+    const count = yield* unique(fulls);
+    return count === 1
+      ? { resource: A.getUnsafe(fulls, 0).resource }
+      : yield* rejectedCandidates(mentionId, fulls, count);
   });
   const partyMatches = (citation: Citation, guess: string) =>
     citation.type === "case" &&
@@ -131,15 +154,16 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
           if (current.value === previous.value && current.volume === previous.volume)
             candidates = A.append(candidates, entry);
         }
-        if ((yield* unique(candidates)) === 1) return { resource: A.getUnsafe(candidates, 0).resource };
+        const count = yield* unique(candidates);
+        if (count === 1) return { resource: A.getUnsafe(candidates, 0).resource };
         if (O.exists(citation.metadata.antecedentGuess, Str.isNonEmpty)) {
           candidates = yield* byParty(
             candidates,
             O.getOrElse(citation.metadata.antecedentGuess, () => "")
           );
-          return { resource: yield* choose(candidates) };
+          return yield* choose(candidates, input.mention.id);
         }
-        return { resource: none() };
+        return yield* rejectedCandidates(input.mention.id, candidates, count);
       },
       Effect.provideService(Crypto.Crypto, crypto)
     ),
@@ -148,13 +172,12 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
         const citation = yield* currentCitation(input.mention);
         if (citation.type !== "supra") return yield* invalid();
         const guess = citation.metadata.antecedentGuess;
-        const candidates = O.exists(guess, Str.isNonEmpty)
-          ? yield* byParty(
-              input.fulls,
-              O.getOrElse(guess, () => "")
-            )
-          : [];
-        return { resource: yield* choose(candidates) };
+        if (!O.exists(guess, Str.isNonEmpty)) return yield* unresolved(input.mention.id, "missing-antecedent");
+        const candidates = yield* byParty(
+          input.fulls,
+          O.getOrElse(guess, () => "")
+        );
+        return yield* choose(candidates, input.mention.id);
       },
       Effect.provideService(Crypto.Crypto, crypto)
     ),
@@ -166,6 +189,7 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
           A.getSomes(R.values(Struct.pick(citation.metadata, ["plaintiff", "defendant", "shortCaseName", "caseName"]))),
           Str.isNonEmpty
         );
+        if (A.length(names) === 0) return yield* unresolved(input.mention.id, "missing-antecedent");
         let candidates = A.empty<CitationCallbackFull>();
         if (A.length(names) > 0)
           for (const entry of input.fulls) {
@@ -174,7 +198,7 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
             const values = yield* metadataValues(prior);
             if (A.some(names, (name) => A.contains(values, name))) candidates = A.append(candidates, entry);
           }
-        return { resource: yield* choose(candidates) };
+        return yield* choose(candidates, input.mention.id);
       },
       Effect.provideService(Crypto.Crypto, crypto)
     ),
@@ -182,14 +206,15 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
       function* (input: CitationIdCallbackInput) {
         const citation = yield* currentCitation(input.mention);
         if (citation.type !== "id") return yield* invalid();
-        if (!(yield* dictionary.isTruthy(input.last))) return { resource: none() };
+        if (!(yield* dictionary.isTruthy(input.last)))
+          return yield* unresolved(input.mention.id, "no-previous-authority");
         const list = yield* dictionary.get(input.last);
         const first = yield* Effect.fromOption(A.head(yield* dictionary.readList(list)), invalid);
         const prior = yield* citationOf(first);
         const bad = yield* hasInvalidCitationPinCite({ fullCitation: prior, idCitation: citation }).pipe(
           Effect.mapError(() => CitationCallbackFailure.make({ reason: "callback-failed" }))
         );
-        return { resource: bad ? none() : input.last };
+        return bad ? yield* unresolved(input.mention.id, "invalid-pin-cite") : { resource: input.last };
       },
       Effect.provideService(Crypto.Crypto, crypto)
     ),

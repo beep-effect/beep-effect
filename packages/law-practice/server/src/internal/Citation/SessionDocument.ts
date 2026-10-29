@@ -6,6 +6,7 @@
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
+  CitationAmbiguous,
   CitationAuthority,
   CitationDocument,
   CitationMemberList,
@@ -23,6 +24,7 @@ import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { CitationCallbackFailure, readCapturedCitationSession } from "./CallbackSession.ts";
@@ -62,8 +64,9 @@ const limit = () => CitationCallbackFailure.make({ reason: "limit-exceeded" });
  * Capture Crypto and a trusted pure descriptor port. The returned method has
  * R = never, consumes only an issued session, and produces both the document
  * and out-of-band expectations from the same sealed execution history.
- * None preserves lack of branch evidence as callback-unresolved; detailed
- * default diagnostics and ambiguity translation remain separate obligations.
+ * None uses issued default branch observations when available; custom None
+ * results without evidence retain callback-unresolved. Historical candidate
+ * counts cannot certify that final descriptor labels remain distinct.
  * @internal
  * @category operations
  * @since 0.0.0
@@ -78,9 +81,14 @@ export const makeCitationSessionDocumentProjector = Effect.fn("Citation.makeSess
         let authorities = Chunk.empty<CitationAuthority>();
         let identities = HashMap.empty<CitationAuthorityId, CitationResourceIdentity>();
         let decisionSets = HashMap.empty<CitationAuthorityId, Chunk.Chunk<CitationMentionId>>();
+        let candidateSets = HashMap.empty<
+          CitationAuthorityId,
+          Chunk.Chunk<NonNullable<CitationResourceBinding["candidates"]>[number]>
+        >();
         let groupSets = HashMap.empty<CitationAuthorityId, Chunk.Chunk<CitationResourceBinding["groups"][number]>>();
         let order = Chunk.empty<CitationAuthorityId>();
         let resolutions = Chunk.empty<CitationResolution>();
+        let candidateEdges = 0;
         let memberLists = Chunk.empty<CitationMemberList>();
         let lists = HashMap.empty<number, CitationMemberList>();
         let groups = Chunk.empty<CitationResourceGroup>();
@@ -101,6 +109,7 @@ export const makeCitationSessionDocumentProjector = Effect.fn("Citation.makeSess
             if (Chunk.size(authorities) >= state.limits.authorities) return yield* limit();
             identities = HashMap.set(identities, id, identity);
             decisionSets = HashMap.set(decisionSets, id, Chunk.empty());
+            candidateSets = HashMap.set(candidateSets, id, Chunk.empty());
             groupSets = HashMap.set(groupSets, id, Chunk.empty());
             order = Chunk.append(order, id);
             authorities = Chunk.append(authorities, CitationAuthority.make({ id, representative: O.none() }));
@@ -122,11 +131,53 @@ export const makeCitationSessionDocumentProjector = Effect.fn("Citation.makeSess
         });
         for (const decision of state.decisions) {
           if (decision.resource._tag === "None") {
+            const observation = decision.observation;
+            if (O.isSome(observation) && observation.value._tag === "Ambiguous") {
+              let seen = HashSet.empty<CitationAuthorityId>();
+              let candidates = Chunk.empty<CitationAuthorityId>();
+              for (const resource of observation.value.resources) {
+                const id = yield* resolve(resource);
+                if (!HashSet.has(seen, id)) {
+                  if (candidateEdges >= state.limits.resolutionEdges) return yield* limit();
+                  candidateEdges += 1;
+                  seen = HashSet.add(seen, id);
+                  candidates = Chunk.append(candidates, id);
+                }
+              }
+              // Final descriptors must support distinct authorities. A historical
+              // native count cannot certify distinct final descriptor labels.
+              if (Chunk.size(candidates) < 2) return yield* failed();
+              for (const [id, position] of A.map(
+                A.fromIterable(candidates),
+                (id, position) => [id, position] as const
+              )) {
+                const positions = yield* Effect.fromOption(HashMap.get(candidateSets, id), failed);
+                candidateSets = HashMap.set(
+                  candidateSets,
+                  id,
+                  Chunk.append(positions, { mentionId: decision.mentionId, position })
+                );
+              }
+              resolutions = Chunk.append(
+                resolutions,
+                CitationAmbiguous.make({
+                  mentionId: decision.mentionId,
+                  candidateAuthorityIds: A.fromIterable(candidates),
+                  confidence: O.none(),
+                })
+              );
+              continue;
+            }
             resolutions = Chunk.append(
               resolutions,
               CitationUnresolved.make({
                 mentionId: decision.mentionId,
-                reason: decision.callback === "unknown" ? "unsupported-citation" : "callback-unresolved",
+                reason:
+                  decision.callback === "unknown"
+                    ? "unsupported-citation"
+                    : O.isSome(observation) && observation.value._tag === "Unresolved"
+                      ? observation.value.reason
+                      : "callback-unresolved",
               })
             );
             continue;
@@ -164,7 +215,7 @@ export const makeCitationSessionDocumentProjector = Effect.fn("Citation.makeSess
           groupSets = HashMap.set(groupSets, id, Chunk.append(expected, { position, id: group.id, list: value }));
         }
         if (
-          A.reduce(A.fromIterable(memberLists), 0, (count, list) => count + A.length(list.members)) >
+          candidateEdges + A.reduce(A.fromIterable(memberLists), 0, (count, list) => count + A.length(list.members)) >
           state.limits.resolutionEdges
         )
           return yield* limit();
@@ -176,6 +227,7 @@ export const makeCitationSessionDocumentProjector = Effect.fn("Citation.makeSess
             return CitationResourceBinding.make({
               identity,
               decisions: A.fromIterable(decisions),
+              candidates: A.fromIterable(yield* Effect.fromOption(HashMap.get(candidateSets, id), failed)),
               groups: A.fromIterable(expected),
             });
           })
