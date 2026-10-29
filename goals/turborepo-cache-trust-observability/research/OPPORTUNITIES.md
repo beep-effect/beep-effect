@@ -775,3 +775,19 @@ Vitest truncates assertion strings in JSON failure messages, so the receipt
 wrapper verifies the unique test plus identifying assertion prefixes rather
 than requiring untruncated prose. Both providers now prove all four fixture
 metrics at 100%, and the proxy exceeds its existing floors.
+
+
+## Review deliberate resource lifetimes before changing a test baseline
+
+The first socket draft publication stopped on a stale generated instrumentation
+shard and seven new test-rule findings. Regenerate the catalog through its
+owner. Replace the hand-written Option assertion with the canonical helper,
+preserving its payload. The other findings concern four deliberate shorter
+scopes and two physical filesystem subjects. Four scope-removal controls fail
+the cleanup assertions, so retain those lifetimes with explicit source-bound
+reasons. Preserve every existing inventory judgment and coverage floor.
+
+The initial targeted replay guessed two nonexistent sibling filters and selected
+only the four socket tests. Reuse the owner's recorded file list and assert the
+actual four-file, 51-test scope before reporting a broader pass. The corrected
+Node and Bun provider runs both meet that scope.

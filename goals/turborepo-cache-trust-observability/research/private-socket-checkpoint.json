@@ -1,13 +1,13 @@
 {
   "schemaVersion": "cache-private-socket-checkpoint/v1",
-  "recordedAt": "2026-10-29T22:04:30.269986+00:00",
+  "recordedAt": "2026-10-29T23:13:34.389000+00:00",
   "authority": "Source-bound transport component observations only; no protected producer, qualification, deployed signing or observation-window authority.",
-  "sourceBaseRevision": "24f9e2a2480937467caa594b1fe3b8ef550d936e",
+  "sourceBaseRevision": "098770ea2c41e13797cbf6da04bdcc1fa8278977",
   "sourceFiles": {
     "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.fixture.ts": "ed56ccf23a727041b8c46a8d4992df9d435e6328cd72f929780ec7772ae479f3",
     "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.proxy.ts": "c72ee0f1d1be185f333cadccdfda3a09adf6149dd65c233db2fc6099788204a6",
     "packages/tooling/tool/cli/src/test/Cache.test-kit.ts": "a83e92ca5531dbd1cce86fd66c8145d4e000cf87ba88dc363a0991f30bf8fbd6",
-    "packages/tooling/tool/cli/test/cache-private-socket.test.ts": "0a7c016d544b2120de303488cdfa868c08c819534aa350b3ddcdce4bb014d50a",
+    "packages/tooling/tool/cli/test/cache-private-socket.test.ts": "1abd6e27ed1d78f5f91240788b80d08a88043a95bdea9121c3d53da0f37e1abe",
     "packages/tooling/tool/cli/test/cache-private-socket-controls.test.ts": "78d62f94315057a2782e3549aaf54b77c6d9247c9a0c83f738d48a9a32b5ce0b"
   },
   "component": {
@@ -260,6 +260,42 @@
         "coverageFloorChanged": false
       },
       "coverageFloorChanged": false
+    },
+    "currentScopeReview": {
+      "path": "research/private-socket-scope-review.json",
+      "sha256": "718963d3bd9b4ae174654de83d4f70bb7e9885eaa9b6e05a0788377173a273d3",
+      "scope": "One equivalent assertion repair; current 51 tests/four files both runtimes, unchanged four-metric coverage, four actual shorter-scope removal failures. Old package/provider receipts retain their exact earlier source scope.",
+      "metrics": {
+        "node": {
+          "Cache.conformance.proxy.ts": {
+            "lines": 90.55,
+            "statements": 89.74,
+            "branches": 89.47,
+            "functions": 79.26
+          },
+          "Cache.protocol.fixture.ts": {
+            "lines": 100,
+            "statements": 100,
+            "branches": 100,
+            "functions": 100
+          }
+        },
+        "bun": {
+          "Cache.conformance.proxy.ts": {
+            "lines": 90.55,
+            "statements": 90.25,
+            "branches": 88.15,
+            "functions": 79.26
+          },
+          "Cache.protocol.fixture.ts": {
+            "lines": 100,
+            "statements": 100,
+            "branches": 100,
+            "functions": 100
+          }
+        }
+      },
+      "coverageFloorChanged": false
     }
   },
   "retainedFailures": [
@@ -280,5 +316,13 @@
     "Prove runtime credentials, signed epochs, rotation/rollback and actual7/7/14-day representative windows."
   ],
   "priorRecordedAtAtDefaultPackage": "2026-10-29T20:39:37.280982+00:00",
-  "priorSourceBaseRevisionBeforeCoverageControls": "11c6a3dc9a8d42cfc4264290c89b5ca6e8adf86f"
+  "priorSourceBaseRevisionBeforeCoverageControls": "11c6a3dc9a8d42cfc4264290c89b5ca6e8adf86f",
+  "priorRecordedAtAtScopeReview": "2026-10-29T22:04:30.269986+00:00",
+  "priorSourceFilesAtScopeReview": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.fixture.ts": "ed56ccf23a727041b8c46a8d4992df9d435e6328cd72f929780ec7772ae479f3",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.proxy.ts": "c72ee0f1d1be185f333cadccdfda3a09adf6149dd65c233db2fc6099788204a6",
+    "packages/tooling/tool/cli/src/test/Cache.test-kit.ts": "a83e92ca5531dbd1cce86fd66c8145d4e000cf87ba88dc363a0991f30bf8fbd6",
+    "packages/tooling/tool/cli/test/cache-private-socket.test.ts": "0a7c016d544b2120de303488cdfa868c08c819534aa350b3ddcdce4bb014d50a",
+    "packages/tooling/tool/cli/test/cache-private-socket-controls.test.ts": "78d62f94315057a2782e3549aaf54b77c6d9247c9a0c83f738d48a9a32b5ce0b"
+  }
 }

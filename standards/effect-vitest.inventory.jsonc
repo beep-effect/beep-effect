@@ -4013,13 +4013,101 @@
       "reason": "The environment lifetime is deliberately short: TURBO_API, TURBO_TOKEN and TURBO_TEAM are restored right after this warm operation, before the following assertions or the next operation; removing the scope broadens the process-global mutation. Owner: @beep/repo-cli. Exit: retire when the cache command reads TURBO_* through an injected ConfigProvider instead of process.env (#1855 wave 8 register)."
     },
     {
-      "id": "EV004:packages/tooling/tool/cli/test/cache-protocol-fixture.test.ts:468:scoped@10#1",
+      "id": "EV004:packages/tooling/tool/cli/test/cache-private-socket-controls.test.ts:107:scoped@96#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/cache-private-socket-controls.test.ts",
+      "line": 107,
+      "endLine": 107,
+      "symbol": "scoped",
+      "occurrence": "v2:2a38895468b2e3d49adf742eb92ea735d1c707d22755ea6b1ca744df60947219",
+      "class": "inner-helper-scope-lifetime-review",
+      "evidence": "Effect.scoped",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "This deliberate shorter scope closes its allocated socket/directory before the same test asserts removal. Four actual scope-removal controls fail the intended cleanup assertions; extending lifetime to the test scope changes the tested behavior. Owner: @beep/repo-cli. Evidence: goals/turborepo-cache-trust-observability/research/private-socket-scope-review.json. Exit: retire when EV004 recognizes deliberate cleanup-before-assertion scopes."
+    },
+    {
+      "id": "EV004:packages/tooling/tool/cli/test/cache-private-socket-controls.test.ts:44:scoped@31#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/cache-private-socket-controls.test.ts",
+      "line": 44,
+      "endLine": 60,
+      "symbol": "scoped",
+      "occurrence": "v2:db4cf937a3df2fd5caef4acc3acefc9635f79a2dc01c2a8afb63ed981bb00427",
+      "class": "shorter-scope-lifetime-review",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const proxy = yield* cache.makeCacheConformanceSocketProxy( cache.CacheConformanceProxyOptions.make({ target: fixture.targetFor({ url: \"http://127.0.0.1:0\" }),",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "This deliberate shorter scope closes its allocated socket/directory before the same test asserts removal. Four actual scope-removal controls fail the intended cleanup assertions; extending lifetime to the test scope changes the tested behavior. Owner: @beep/repo-cli. Evidence: goals/turborepo-cache-trust-observability/research/private-socket-scope-review.json. Exit: retire when EV004 recognizes deliberate cleanup-before-assertion scopes."
+    },
+    {
+      "id": "EV004:packages/tooling/tool/cli/test/cache-private-socket-controls.test.ts:87:scoped@96#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/cache-private-socket-controls.test.ts",
+      "line": 87,
+      "endLine": 87,
+      "symbol": "scoped",
+      "occurrence": "v2:93b2a6b1ec2d881be310bff6a8615151cbb0c100f2f4f14327ec69c0bc236670",
+      "class": "inner-helper-scope-lifetime-review",
+      "evidence": "Effect.scoped",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "This deliberate shorter scope closes its allocated socket/directory before the same test asserts removal. Four actual scope-removal controls fail the intended cleanup assertions; extending lifetime to the test scope changes the tested behavior. Owner: @beep/repo-cli. Evidence: goals/turborepo-cache-trust-observability/research/private-socket-scope-review.json. Exit: retire when EV004 recognizes deliberate cleanup-before-assertion scopes."
+    },
+    {
+      "id": "EV004:packages/tooling/tool/cli/test/cache-private-socket.test.ts:82:scoped@28#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/cache-private-socket.test.ts",
+      "line": 82,
+      "endLine": 155,
+      "symbol": "scoped",
+      "occurrence": "v2:90ad850f0a3703b65651c460415c38e920788dcd6b2becb5ab75fec362157c31",
+      "class": "shorter-scope-lifetime-review",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const proxy = yield* makeCacheConformanceSocketProxy( CacheConformanceProxyOptions.make({ target: targetFor({ url: upstream.url }), bearers, holdMs: 25, maxEve",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "This deliberate shorter scope closes its allocated socket/directory before the same test asserts removal. Four actual scope-removal controls fail the intended cleanup assertions; extending lifetime to the test scope changes the tested behavior. Owner: @beep/repo-cli. Evidence: goals/turborepo-cache-trust-observability/research/private-socket-scope-review.json. Exit: retire when EV004 recognizes deliberate cleanup-before-assertion scopes."
+    },
+    {
+      "id": "EV004:packages/tooling/tool/cli/test/cache-protocol-fixture.test.ts:515:scoped@10#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/cache-protocol-fixture.test.ts",
-      "line": 468,
-      "endLine": 468,
+      "line": 515,
+      "endLine": 515,
       "symbol": "scoped",
       "occurrence": "v2:a1dec90d5aeb9ecf0e8027ef853aa1be3107d5b5a56d0dd939d8ee609ecfe17a",
       "class": "inner-helper-scope-lifetime-review",
@@ -5849,7 +5937,7 @@
       "symbol": "it.live",
       "occurrence": "v2:c027e67dd880a2a8fe4d854ffa24710fb29e526922688554f73771e44f9220b0",
       "class": "unjustified-live-test",
-      "evidence": "it.live( \"never restores over a synchronous turn start (subscription races the dispatch)\", Effect.fnUntraced(function* () { // A submit whose write starts the turn synchronously inside the set — // th",
+      "evidence": "it.live( \"never restores over a synchronous turn start (subscription races the dispatch)\", Effect.fnUntraced(function* () { // A submit whose write starts the turn synchronously inside the set \u2014 // th",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -5893,7 +5981,7 @@
       "symbol": "it.live",
       "occurrence": "v2:839f4c06674803449cc12ea63d0ef0fe4c6c3b982ae7010cc7e7aa1039f70146",
       "class": "unjustified-live-test",
-      "evidence": "it.live( \"restores the draft when the dispatch is swallowed\", Effect.fnUntraced(function* () { // A submit whose write is silently dropped — the zombie-node failure // mode the QA 2026-08-26 P0 found:",
+      "evidence": "it.live( \"restores the draft when the dispatch is swallowed\", Effect.fnUntraced(function* () { // A submit whose write is silently dropped \u2014 the zombie-node failure // mode the QA 2026-08-26 P0 found:",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -8963,13 +9051,13 @@
       "reason": "The warm-lane tests run bun --version, git and bun -e through Bun.spawnSync and runCacheWarmLaneForTesting. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the warm lane runs behind a scripted spawner."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/cache-conformance-lab.test.ts:26:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/cache-conformance-lab.test.ts:27:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/cache-conformance-lab.test.ts",
-      "line": 26,
-      "endLine": 26,
+      "line": 27,
+      "endLine": 27,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
@@ -8985,13 +9073,13 @@
       "reason": "The lab builds its corpus from the real checkout (buildCacheConformanceCorpus(repoRoot)) and serves it from the loopback cache-conformance-server. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the corpus is seeded into memory and the lab server reads it through FileSystem."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/cache-conformance.test.ts:11:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/cache-conformance.test.ts:14:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/cache-conformance.test.ts",
-      "line": 11,
-      "endLine": 11,
+      "line": 14,
+      "endLine": 14,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
@@ -9071,6 +9159,50 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "The pilot runs a ChildProcessSpawner over real overlays and asserts readLink on the CLAUDE.md symlink. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the pilot's spawner and overlay links run on a memory volume."
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/cache-private-socket-controls.test.ts:3:@effect/platform-node/NodeServices@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/cache-private-socket-controls.test.ts",
+      "line": 3,
+      "endLine": 3,
+      "symbol": "@effect/platform-node/NodeServices",
+      "occurrence": "v2:fb7d6bba929488197f859519d08aea3efcf9ac097f647f2bbff02362d70850d7",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import * as NodeServices from \"@effect/platform-node/NodeServices\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "This in-process constructor-control test uses the real filesystem to assert owner-only mode bits and cleanup of its allocated path; only the HTTP constructor is doubled. The separate native Bun case proves actual Unix transport. Owner: @beep/repo-cli. Evidence: goals/turborepo-cache-trust-observability/research/private-socket-scope-review.json. Exit: retire when EV010 recognizes the explicit mode and removal subject, or the test changes its filesystem subject."
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/cache-private-socket.test.ts:11:@effect/platform-node/NodeServices@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/cache-private-socket.test.ts",
+      "line": 11,
+      "endLine": 11,
+      "symbol": "@effect/platform-node/NodeServices",
+      "occurrence": "v2:fb7d6bba929488197f859519d08aea3efcf9ac097f647f2bbff02362d70850d7",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import * as NodeServices from \"@effect/platform-node/NodeServices\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "This test binds an actual Bun Unix socket, queries physical owner-only mode bits, connects through the Node Unix agent, and asserts deletion after shutdown. An in-memory filesystem cannot preserve that subject. Owner: @beep/repo-cli. Evidence: goals/turborepo-cache-trust-observability/research/private-socket-scope-review.json. Exit: retire when EV010 recognizes native Unix lifecycle tests."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/cache-producer.test.ts:21:@effect/platform-node@0#1",

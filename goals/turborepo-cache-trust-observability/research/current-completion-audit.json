@@ -295,7 +295,7 @@
   "priorSpecSha256AtPrivateSocketTransport": "51aaf9fcbc3f1c861b8f800f4597302ee7f9223c2060fa8f6d0683accab9830d",
   "privateSocketCheckpoint": {
     "path": "goals/turborepo-cache-trust-observability/research/private-socket-checkpoint.json",
-    "sha256": "7bbaf5cbadc0541e129d7982811c4c1e4ae3f0a3a06e4fedaca421d80c37307f",
+    "sha256": "10d79b69a052847f91aa48ed6652a1d2685c6a48b2faaf0ffdec36f7e70b0f01",
     "authority": "Transport component only; no production or qualification authority.",
     "scope": "Original production and native-test bytes unchanged; new test-only in-process coverage/control file passes51 cases per provider and quick verification. Prior complete package scope retained; fresh combined-source final still required. No full-goal acceptance."
   }

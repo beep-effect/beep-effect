@@ -428,3 +428,9 @@ transport. Two source-removal controls fail their intended assertions and restor
 the exact source. The production implementation and original test stay byte
 identical to the prior full package replay; current integrated final proof
 remains required for the new test file and combined source.
+
+
+- [Private-socket test lifetime review](private-socket-scope-review.json):
+  one canonical Option assertion repair, six explicit resource judgments, and
+  four actual scope-removal controls that fail the required cleanup assertions.
+  Both current 51-test provider runs pass with unchanged coverage floors.
