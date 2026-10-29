@@ -28,9 +28,11 @@ provisional extension stubs are retired. Verified mention composition and
 explicit receipt restoration now pass local package gates. A private ca1
 authority-key producer matches focused oracle equality and protocol vectors.
 Stable-ID document/resolution schemas now validate graph coherence and
-structural receipt round-trips. Document production/restoration, full resolver
-proof, Bluebook codecs, extension adoption/schema proof, runtime enforcement
-and family safety remain unfinished.
+structural receipt round-trips. Private whole-document projection/restoration
+now checks occurrence/default authority keys and shares one source verification.
+Full resolver/custom-resource proof, live artifact integration, Bluebook codecs,
+extension adoption/schema proof, runtime enforcement and family safety remain
+unfinished.
 
 Current evidence:
 
@@ -57,6 +59,7 @@ Current evidence:
 - [Verified mentions](./history/evidence/2026-10-28-verified-mentions.md)
 - [Authority identity](./history/evidence/2026-10-28-authority-identity.md)
 - [Document relationships](./history/evidence/2026-10-28-document-relationships.md)
+- [Document persistence](./history/evidence/2026-10-28-document-persistence.md)
 
 ## Mission
 

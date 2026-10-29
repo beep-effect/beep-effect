@@ -40,8 +40,10 @@ authority production matches 169 focused oracle equality observations and 13
 independent protocol vectors. Artifact lookup and full grouping remain open.
 Stable-ID document/resolution schemas now enforce graph coherence, with one
 encoded membership edge per resolved mention and structural receipt round-trip
-proof. Whole-document production/restoration, full resolver proof, Bluebook
-codecs and extension adoption/schema proof stay open.
+proof. Private document projection/restoration now recomputes occurrence and
+default authority keys, sharing one canonical-source verification across all
+anchors. Full resolver/custom-resource proof, live artifact integration,
+Bluebook codecs and extension adoption/schema proof stay open.
 The remaining 37 provisional contract directories are retired; their donor obligations
 remain open. The non-citation SourceRef selector contract is preserved. The
 29-field limits/default policy and parent-owned process

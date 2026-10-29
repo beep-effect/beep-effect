@@ -11,7 +11,7 @@
   "packetPath": "goals/citation-extraction-engine",
   "lifecycle": "active",
   "mission": "Deliver Effect-native observable capability parity with pinned official eyecite 2.7.6, exact verified source evidence, schema-first legal models, lawful transformations, and proven TypeScript-port extensions.",
-  "statusNote": "P0/P1 remain in progress. The existing Citation union contains only eight canonical semantic families after retirement of 37 provisional mixed/locator/relationship/extension directories. Shared persisted citation identity is distinct; SourceRef quote-selector encoding is preserved. No donor disposition or behavior parity is completed by removing obsolete APIs/tests. Verified mention composition and explicit receipt restoration pass local package gates; they do not attest semantic classification. Private ca1 production matches focused oracle equality and protocol vectors; artifact integration and full grouping remain open. Stable-ID document/resolution schemas validate graph coherence and structural receipt round-trips. Whole-document production/restoration, full resolver proof, Bluebook codecs, extension proof and the bounded parser remain unfinished.",
+  "statusNote": "P0/P1 remain in progress. The existing Citation union contains only eight canonical semantic families after retirement of 37 provisional mixed/locator/relationship/extension directories. Shared persisted citation identity is distinct; SourceRef quote-selector encoding is preserved. No donor disposition or behavior parity is completed by removing obsolete APIs/tests. Verified mention composition and explicit receipt restoration pass local package gates; they do not attest semantic classification. Private ca1 production matches focused oracle equality and protocol vectors; artifact integration and full grouping remain open. Stable-ID document/resolution schemas validate graph coherence and structural receipt round-trips. Private document projection/restoration validates occurrence/default authority keys and shares source verification. Full resolver/custom-resource proof, live artifact integration, Bluebook codecs, extension proof and the bounded parser remain unfinished.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -66,7 +66,8 @@
     "goals/citation-extraction-engine/history/evidence/2026-10-28-provisional-retirement.md",
     "goals/citation-extraction-engine/history/evidence/2026-10-28-verified-mentions.md",
     "goals/citation-extraction-engine/history/evidence/2026-10-28-authority-identity.md",
-    "goals/citation-extraction-engine/history/evidence/2026-10-28-document-relationships.md"
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-document-relationships.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-28-document-persistence.md"
   ],
   "researchReports": [
     "research/EYECITE_BASELINE.md",

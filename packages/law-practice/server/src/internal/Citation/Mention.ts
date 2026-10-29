@@ -17,6 +17,7 @@ import { CitationEngineAbsoluteMaxima } from "@beep/law-practice-use-cases/serve
 import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import {
   toTextAnchorVerificationReceipt,
+  VerifiedSourceText,
   VerifySourceTextIdentityInput,
   VerifyTextAnchorAgainstVerifiedSourceInput,
   verifySourceTextIdentity,
@@ -25,11 +26,12 @@ import {
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
 import { makeCitationMentionId } from "./MentionIdentity.ts";
-import type { TextAnchorVerificationReceipt, VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
+import type { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor";
 import type * as Crypto from "effect/Crypto";
 
 const $I = $LawPracticeServerId.create("internal/Citation/Mention");
@@ -78,6 +80,8 @@ const Metadata = S.Struct(
   })
 );
 const MetadataJson = S.fromJsonString(Metadata);
+const MentionReceiptJson = S.fromJsonString(CitationMentionReceipt);
+const sourceEquivalent = S.toEquivalence(SourceTextIdentity);
 const RestoreInput = S.Struct({
   receipt: CitationMentionReceipt,
   expectedSource: SourceTextIdentity,
@@ -202,32 +206,69 @@ export const restoreCitationMention = Effect.fn("Citation.restoreMention")(funct
       sourceText: snapshot.sourceText,
     })
   ).pipe(Effect.mapError(evidenceFailure));
-  const anchor = yield* reverify(verifiedSource, receipt.anchor);
-  const components = yield* Effect.forEach(
-    receipt.components,
-    (component) =>
-      reverify(verifiedSource, component.anchor).pipe(
-        Effect.map((proof) => CitationComponentAnchor.make({ name: component.name, anchor: proof }))
-      ),
-    { concurrency: 1 }
-  );
-  const footnote = yield* O.match(receipt.footnote, {
-    onNone: () => Effect.succeedNone,
-    onSome: (zone) =>
-      reverify(verifiedSource, zone.anchor).pipe(
-        Effect.map((proof) => O.some(CitationFootnoteZone.make({ label: zone.label, anchor: proof })))
-      ),
-  });
-  const restored = yield* makeCitationMention({
-    citation: receipt.citation,
-    engineArtifact: receipt.engineArtifact,
-    signal: receipt.signal,
-    warnings: receipt.warnings,
-    evidenceConfidence: receipt.evidenceConfidence,
-    anchor,
-    components,
-    footnote,
-  });
-  if (restored.id !== receipt.id) return yield* CitationMentionFailure.make({ reason: "stale-identity" });
-  return restored;
+  return yield* restoreCitationMentionAgainstVerifiedSource(receipt, verifiedSource, snapshot.expectedEngineArtifact);
 });
+
+/**
+ * Restore one receipt against an already verified canonical source capability.
+ * Used by whole-document restoration to avoid hashing the same source again.
+ * Receipt source/engine checks and occurrence digest validation still apply.
+ * @internal
+ * @category validation
+ * @since 0.0.0
+ */
+export const restoreCitationMentionAgainstVerifiedSource: {
+  (
+    sourceProof: VerifiedSourceText,
+    expectedEngineArtifact: Sha256Hex
+  ): (input: CitationMentionReceipt) => Effect.Effect<CitationMention, CitationMentionFailure, Crypto.Crypto>;
+  (
+    input: CitationMentionReceipt,
+    sourceProof: VerifiedSourceText,
+    expectedEngineArtifact: Sha256Hex
+  ): Effect.Effect<CitationMention, CitationMentionFailure, Crypto.Crypto>;
+} = dual(
+  3,
+  Effect.fn("Citation.restoreMentionAgainstSource")(function* (
+    input: CitationMentionReceipt,
+    sourceProof: VerifiedSourceText,
+    expectedEngineArtifact: Sha256Hex
+  ): Effect.fn.Return<CitationMention, CitationMentionFailure, Crypto.Crypto> {
+    const verifiedSource = yield* S.decodeEffect(VerifiedSourceText)(sourceProof).pipe(
+      Effect.mapError(evidenceFailure)
+    );
+    const json = yield* S.encodeEffect(MentionReceiptJson)(input).pipe(Effect.mapError(invalid));
+    const receipt = yield* S.decodeEffect(MentionReceiptJson)(json).pipe(Effect.mapError(invalid));
+    if (!sourceEquivalent(receipt.anchor.source, verifiedSource.source)) return yield* evidenceFailure();
+    if (receipt.engineArtifact !== expectedEngineArtifact)
+      return yield* CitationMentionFailure.make({ reason: "stale-engine" });
+    const anchor = yield* reverify(verifiedSource, receipt.anchor);
+    const components = yield* Effect.forEach(
+      receipt.components,
+      (component) =>
+        reverify(verifiedSource, component.anchor).pipe(
+          Effect.map((proof) => CitationComponentAnchor.make({ name: component.name, anchor: proof }))
+        ),
+      { concurrency: 1 }
+    );
+    const footnote = yield* O.match(receipt.footnote, {
+      onNone: () => Effect.succeedNone,
+      onSome: (zone) =>
+        reverify(verifiedSource, zone.anchor).pipe(
+          Effect.map((proof) => O.some(CitationFootnoteZone.make({ label: zone.label, anchor: proof })))
+        ),
+    });
+    const restored = yield* makeCitationMention({
+      citation: receipt.citation,
+      engineArtifact: receipt.engineArtifact,
+      signal: receipt.signal,
+      warnings: receipt.warnings,
+      evidenceConfidence: receipt.evidenceConfidence,
+      anchor,
+      components,
+      footnote,
+    });
+    if (restored.id !== receipt.id) return yield* CitationMentionFailure.make({ reason: "stale-identity" });
+    return restored;
+  })
+);

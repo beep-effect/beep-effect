@@ -25,6 +25,20 @@ import type * as Crypto from "effect/Crypto";
 const $I = $LawPracticeServerId.create("internal/Citation/AuthorityIdentity");
 const encoder = new TextEncoder();
 /**
+ * Selected frozen edition spelling supplied by the trusted artifact adapter.
+ * Reference coherence is checked; this data does not authenticate its spelling.
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
+export class CitationAuthorityEdition extends S.Opaque<CitationAuthorityEdition, { readonly brand: unique symbol }>()(
+  S.Struct({ edition: CitationEditionRef, shortName: S.NonEmptyString }).pipe(
+    $I.annoteSchema("CitationAuthorityEdition", {
+      description: "Private frozen edition adapter data reused by authority and document identity checks.",
+    })
+  )
+) {}
+/**
  * Private decoded authority input from semantic models and trusted adapters.
  * @internal
  * @category models
@@ -37,7 +51,7 @@ export class CitationAuthorityIdentityInput extends S.Opaque<
   S.Struct({
     citation: FullCitation,
     mentionId: CitationMentionId,
-    selectedEdition: S.OptionFromNullOr(S.Struct({ edition: CitationEditionRef, shortName: S.NonEmptyString })),
+    selectedEdition: S.OptionFromNullOr(CitationAuthorityEdition),
   }).pipe(
     $I.annoteSchema("CitationAuthorityIdentityInput", {
       description:

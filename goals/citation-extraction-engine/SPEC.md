@@ -779,6 +779,19 @@ instead of silently splitting delivery or weakening scope.
   equivalent coherence/persistence proof and a consumer migration, not a second
   member array or mention-level group pointer.
 
+- **2026-10-28 whole-document persistence:** snapshot all structural document
+  data and trusted edition descriptors before hashing. Project only after
+  recomputing every occurrence ID and every resolved full default authority
+  key, including non-representative members. Restore against one verified
+  canonical source capability shared by every anchor; recheck source/engine,
+  occurrence IDs, full authority keys and final graph coherence. Keep failures
+  private and sanitized. Descriptor spelling, expected identity and installed
+  artifact authentication remain live Layer duties. These helpers do not
+  attest classification or short resolution. Canonical custom resource keys
+  still need explicit ports/policy and proof; no behavior is rejected here.
+  Reversal requires equivalent source/identity/mutation proof, not trusting
+  structural receipts as capabilities or checking only representatives.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from
