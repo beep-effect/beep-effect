@@ -35,3 +35,8 @@
   discovery and runner complexity. Repaired implementation and regenerated the
   exact catalog shards; no baseline suppression was added. A scoped preflight
   covering these root policies would shorten publication repair loops.
+- 2026-10-29: Hosted lint-a stopped before package lint because the generated
+  identity lint profile was stale after the root Biome evidence override changed.
+  Regenerated it through `bun run beep cache profile --write`; freshness then
+  passed. A root-configuration preflight that also checks this derived profile
+  would expose the missing generation step before the first hosted run.
