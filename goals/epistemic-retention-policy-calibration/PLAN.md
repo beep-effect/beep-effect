@@ -8,7 +8,7 @@ Status: `active` — explicitly launched. P0–P2 complete; P3 in progress; prep
 | P1 | complete | Implement native offline evaluation and candidate validation | Reusable harness, inert baseline, negative controls, no production wiring |
 | P2 | complete | Run frozen protocol and independent replay/review | Complete G2 evidence with supported recommendation or insufficient-evidence verdict; authority/rebuild proof |
 | P3 | in-progress | Deliver calibration through Yeet | Final-head hosted checks, review/window readiness and merged PR; no activation |
-| P4 | pending | Reflect, verify completion and retire execution lane | Reflection/state synchronized, matching completion receipt, lane retired |
+| P4 | in-progress | Reflect, verify completion and retire execution lane | Reflection/state synchronized, matching completion receipt, lane retired |
 
 ## Execution order
 
@@ -53,3 +53,6 @@ rg -n "epistemic-retention-policy-calibration|GOAL.md|agentLaunchers|packetAncho
 git diff --check -- goals/epistemic-retention-policy-calibration
 bun run beep lint reflection-artifacts
 ```
+
+Final delivery PR: #2357. The manifest declares prospective closeout; its active
+state is intentional until the matching completion receipt verifies.

@@ -56,3 +56,8 @@ retained rather than rewritten as evidence for a different source revision.
 
 The final deterministic receipt restoration increases native CLI coverage to
 17 tests (60 server unit tests). Package audit and docgen passed again.
+
+After rebase onto `fb80f878f5c4eb449a1769c247f4790a0387dde9`, source and
+packet trees remained identical. Fresh use-case coverage passed 91 tests with
+100% branches/functions and full Retention service coverage. Server coverage
+passed 77 tests. These are scoped local receipts, not hosted completion proof.

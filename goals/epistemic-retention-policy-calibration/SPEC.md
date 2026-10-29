@@ -188,3 +188,12 @@ unrelated work. There are no approved exceptions.
   calibration commit onto the merged main afterward. This saves the long commit
   scan from serializing with the review wait. Recovery: retained staged patch and
   named stash; no existing remote branch is rebased or force-pushed.
+- 2026-10-29: Shared tier aggregation and separated input/coverage checks preserve
+  the accepted frozen output. Restore the complete matching-policy receipt test
+  beside generated controls. Reversal: revert the refactor while retaining both
+  receipt rejection controls; do not relax admission.
+- 2026-10-29: Record one independently reviewed EV010 exception for the native
+  filesystem shared with a separate Bun executable. The test is an executable
+  integration/rebuild proof; replacing one side with memory changes its subject.
+  Owner and exit conditions are in the exact inventory entry. Reversal: remove
+  the exception when detection or a shared filesystem contract makes it obsolete.

@@ -22,7 +22,24 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Calibration completes only after exact-head hosted readiness, review/window gates, delivery PR merge and matching completion receipt; production activation is not a completion condition.",
-    "grandfathered": false
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 2354,
+        "role": "supporting"
+      },
+      {
+        "number": 2357,
+        "role": "final"
+      }
+    ],
+    "acceptanceEvidence": [
+      {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/codex_epistemic-retention-calibration-6457a25f3955/verdict.json",
+        "gating": true
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -70,7 +87,7 @@
     {
       "id": "P4",
       "name": "Reflect, verify completion and retire lane",
-      "status": "pending"
+      "status": "in-progress"
     }
   ],
   "verificationCommands": [
@@ -87,10 +104,14 @@
     "Evidence or authentication cannot be verified; hold the affected path and retain inert policy.",
     "New paid resources require explicit authorization."
   ],
-  "statusNote": "P0-P2 complete: independent final-source review accepted G2 insufficient-evidence verdict. All production parameters unresolved; G3 not-requested and G4 excluded. P3/P4 exact-head delivery remains operative.",
+  "statusNote": "G2 insufficient-evidence accepted; G3 not-requested and G4 excluded. PR #2357 carries proposed completed-retained closeout and reflection. Operative lifecycle stays active until exact-head hosted readiness, review/window, merge and matching completion receipt verify; lane retirement follows.",
   "dependencies": [
     "goals/epistemic-memory-retention-projections",
     "goals/epistemic-bitemporal-edge-core"
   ],
-  "blockedBy": []
+  "blockedBy": [],
+  "proposedCloseout": {
+    "status": "completed-retained",
+    "finalPullRequest": 2357
+  }
 }

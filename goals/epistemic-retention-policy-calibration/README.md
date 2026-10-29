@@ -45,3 +45,8 @@ No numerical production recommendation, approval or deployment is recorded.
 
 Completion may conclude that the evidence is insufficient and recommend keeping
 policy inert; an accountable negative result is a valid calibration outcome.
+
+Delivery: [PR #2357](https://github.com/beep-effect/beep-effect/pull/2357).
+The manifest proposes `completed-retained`; hosted readiness, review/window and
+merge evidence must verify through completion refresh before that lifecycle
+projects as complete. The proposal itself is not proof or activation approval.
