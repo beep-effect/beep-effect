@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 
-import { $RepoCliId } from "@beep/identity/packages";
 import { CacheClientPin } from "@beep/repo-configs/cache";
 import { Sha256HexFromBytes } from "@beep/schema";
 import * as A from "effect/Array";
@@ -37,6 +36,7 @@ import { makeCacheProtocolFixture } from "./Cache.protocol.fixture.ts";
 import {
   CacheProtocolExecution,
   CacheProtocolIsolationRoot,
+  CacheProtocolNativeSummary,
   CacheProtocolReadFailure,
   CacheProtocolRequest,
 } from "./Cache.protocol.runner.schemas.ts";
@@ -44,7 +44,8 @@ import { CacheProtocolObservation } from "./Cache.protocol.schemas.ts";
 import { validateCacheProtocolExecution } from "./Cache.protocol.ts";
 import { CacheCommandError } from "./Cache.schemas.ts";
 
-const $I = $RepoCliId.create("commands/Cache/Cache.protocol.runner");
+export { CacheProtocolNativeSummary } from "./Cache.protocol.runner.schemas.ts";
+
 const CacheProtocolJson = S.fromJsonString(S.Json);
 
 const cases = CacheProtocolIsolationRoot.fields.case;
@@ -86,41 +87,6 @@ export const cacheProtocolSandboxMounts: ReadonlyArray<string> = [
   "--tmpfs",
   "/tmp",
 ];
-/**
- * External Turbo `--summarize` boundary: select evidence, never trust an asserted hit.
- *
- * **Example** (Inspect the summary task fields)
- * ```ts
- * import { CacheProtocolNativeSummary } from "@beep/repo-cli/commands/Cache"
- * console.assert("tasks" in CacheProtocolNativeSummary.fields)
- * ```
- *
- * @internal
- * @category schemas
- * @since 0.0.0
- */
-export class CacheProtocolNativeSummary extends S.Opaque<
-  CacheProtocolNativeSummary,
-  { readonly brand: unique symbol }
->()(
-  S.Struct({
-    turboVersion: S.NonEmptyString,
-    tasks: S.Array(
-      S.Struct({
-        taskId: S.NonEmptyString,
-        hash: S.NonEmptyString,
-        cache: S.Struct({ status: S.Literals(["HIT", "MISS"]), source: S.OptionFromOptionalKey(S.String) }),
-        execution: S.Struct({ exitCode: S.Int }),
-      })
-    ),
-  }).pipe(
-    $I.annoteSchema("CacheProtocolNativeSummary", {
-      description:
-        "Selected fields of one native Turbo run summary; a reported hit is evidence only with wire receipts.",
-    })
-  )
-) {}
-
 const verifyPrivateNetwork = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const interfaces = A.filter(

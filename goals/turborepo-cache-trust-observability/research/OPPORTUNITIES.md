@@ -11,6 +11,31 @@ Historical leads remain in the [exploration ledger](../../../explorations/turbor
 and [opportunity disposition](../../../explorations/turborepo-quality-cache/research/opportunity-disposition.md).
 Refresh historical claims before treating them as current.
 
+## 2026-10-29: request tags need their own captured evidence
+
+The closed-producer source inspection found that `CacheFixtureEvent.tagPresent`
+describes the returned tag and cannot establish which opaque tag arrived on a
+request. Capture the incoming header's digest at the HTTP request boundary,
+including absence; test a GET whose request and response tags differ. Retain
+neither value. This closes a capture gap only: the synthetic fixture supplies
+no actual adapter backend-result evidence, and no success status may be
+translated into an asserted backend authorization. Owner: this goal. Protected
+publication remains closed until the owned native summary and actual adapter
+exchange are joined.
+
+The first full Effect/Vitest scan found EV006 in the new compound Option
+assertion. It is now expressed with the canonical `deepStrictEqual` helper,
+preserving all three expected payloads and order. The detector baseline stays
+unchanged; rerun the current tests and detector after this assertion repair.
+
+The signed pilot previously retained only its selected-task projection,
+dependency projections and original summary digest. The continuation retains
+the complete minimal native task summary from those same supervised bytes,
+using the existing schema moved into its schema role. This supplies the missing
+input for a full-graph validation before single-task selection. A schema or
+component-test pass is not actual native execution proof for this changed
+capture, and no backend authorization or protected publication is inferred.
+
 ### Complete protocol checks at the supervisor boundary
 
 While preparing accepted receipt import, source review found that
@@ -606,6 +631,71 @@ CI hit HTTP408 during checkout before lint ran. GitHub refused the exact-job
 retry while the workflow was running. This source repair will supersede that
 head; keep the environmental attribution and do not hide it by restarting an
 active proof.
+### Contained native replay request
+
+A native protocol replay refused an absolute request path outside the checkout
+before execution: `Cannot read the bounded local experiment request.` The
+request boundary intentionally accepts contained regular files only. Keep
+requests and reports under the checkout-owned ignored proof directory, then
+archive their bounded results privately. No native worker or cloud operation
+ran in the refused attempt.
+
+
+### Owned-graph negative fixture construction
+
+The first new graph-dependency test failed before its assertion because it sent
+already decoded `Option` values through a wire decoder: `Expected string` at
+the cache-source field. Construct schema-derived typed task arrays with `.make`
+for this internal fixture. The failed test log is retained; the implementation
+guards and the original successful native protocol reports are unchanged.
+
+
+### Pinned merge-gate invocation
+
+An initial readiness command omitted the required PR and head arguments; it
+returned usage before any merge. The canonical orchestrator gate requires
+`yeet merge-gate <pr> <sha> --dry-run` for a read-only check. Supply the exact
+verified head, then use the owner merge command only after that gate passes.
+The unsuccessful invocation is retained privately; no merge bypass was used.
+
+
+### Interrupted source commit hooks
+
+The initial source commit stopped in pre-commit with `signal: terminated` from
+the documentation and formatter hooks. Leak scanning and typo checks passed;
+Git HEAD and source bytes were unchanged. Retain the first log and rerun the
+normal hooks without disabling any hook, baseline or commit signing. Attribute
+a repeated failure before changing code or retrying further.
+
+
+### Full audit catches a stale native-summary fixture
+
+The complete CLI audit passed 8,119 tests and failed one signed process-boundary
+case because its fake native summary omitted `turboVersion`. Include the fake
+executable's own pin in that observation, then assert the retained version and
+all dependency task ids. Keep the production summary requirement unchanged.
+The same package attempt's docgen exited 130 and supplies no passing result;
+retain both logs and rerun the affected boundary and complete package proof.
+
+The standalone CLI docgen replay also exits 130. All 3,560 generated examples
+compile under direct Node and Bun launches, and the same compiler succeeds
+through both Effect process backends. The default hosted Docgen gate passed at
+the original head. Keep the local full-runner interruption unattributed while
+checking executable resolution; do not change a compiler or platform service
+on speculation, and do not report a whole-package pass.
+
+
+### Resolve current Effect HTTP leaves before a transport prototype
+
+- A disposable private-network transport probe selected two obsolete HTTP
+  import locations and failed before sending any request. The pinned package
+  exports use the dedicated `effect/http/HttpClient` and
+  `effect/http/HttpClientRequest` leaves. Read the installed import map and
+  implementation before writing the probe; guessing historical module paths
+  added avoidable retries. Exact original errors remain in private diagnostics
+  and are not attributed to the backend. The public ledger also enforces the
+  retired-path policy in prose, so describe the mistake without repeating a
+  prohibited import location.
 
 
 ### Existing native-addon runtime warnings
