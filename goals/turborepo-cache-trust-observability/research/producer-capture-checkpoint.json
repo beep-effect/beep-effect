@@ -126,5 +126,86 @@
     "This checkpoint supplies no whole-package or current-head hosted acceptance result.",
     "Input counts and digests are time-bound clone observations; changed counts grant no semantic review or task qualification."
   ],
-  "rawEvidence": "Bounded reports and original logs are preserved in operator-private state; no raw credentials or request tags are published."
+  "rawEvidence": "Bounded reports and original logs are preserved in operator-private state; no raw credentials or request tags are published.",
+  "boundaryFixtureRepair": {
+    "sourceHeadAtObservation": "f19fe1e5f19bb4199d67696b2689a770e01942d1",
+    "fixtureSource": {
+      "path": "packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts",
+      "sha256": "4bdeb426ca8ea866325fa7df95ab3b7f7813ffe2e703db5bc4f870dcc464e9d4"
+    },
+    "failedWholePackageAttempt": {
+      "testsPassed": 8119,
+      "testsFailed": 1,
+      "testsSkipped": 3,
+      "cause": "Fake native summary omitted turboVersion.",
+      "docgenExit": 130,
+      "sourceAndGoalManifestsUnchanged": true
+    },
+    "repair": "The fake executable reports its own pin; producer summaries must retain that version and all dependency ids. Production capture code and its summary requirements are unchanged.",
+    "focusedTests": [
+      {
+        "runtime": "node",
+        "passed": 221,
+        "files": 12
+      },
+      {
+        "runtime": "bun",
+        "passed": 221,
+        "files": 12
+      }
+    ],
+    "retentionControls": {
+      "sourceSha256": "a95016ed6292c3b4416b55da57825b4f98b5e1c76fa79dca39cd765c243b71ec",
+      "sourceRestored": true,
+      "fixtureSha256": "4bdeb426ca8ea866325fa7df95ab3b7f7813ffe2e703db5bc4f870dcc464e9d4",
+      "controls": [
+        {
+          "case": "missing-native-summary",
+          "exit": 1,
+          "intendedFailure": true,
+          "elapsedSeconds": 4.495
+        },
+        {
+          "case": "filtered-native-summary",
+          "exit": 1,
+          "intendedFailure": true,
+          "elapsedSeconds": 4.134
+        }
+      ]
+    },
+    "hostedAttribution": {
+      "repoCliUnit": "Same missing turboVersion fixture failure.",
+      "propertyLaws": "Same missing turboVersion fixture failure.",
+      "coverage": "UNIT_RESULT=failure prerequisite; no metric evaluation."
+    },
+    "documentationDiagnostics": {
+      "localFullRunnerExits": [130, 130],
+      "directGeneratedExamples": [
+        {
+          "runtime": "node",
+          "exit": 0,
+          "elapsedSeconds": 14.012
+        },
+        {
+          "runtime": "bun",
+          "exit": 0,
+          "elapsedSeconds": 14.412
+        }
+      ],
+      "effectProcessBackends": [
+        {
+          "backend": "bun",
+          "exit": 0,
+          "elapsedSeconds": 14.062
+        },
+        {
+          "backend": "node",
+          "exit": 0,
+          "elapsedSeconds": 13.334
+        }
+      ],
+      "scope": "Compiler checks pass; the local full-runner interruption remains unattributed. Original hosted Docgen passes at f19. Fresh repaired-head hosted and whole-package proof remain separate."
+    },
+    "limits": "Controlled process-boundary test doubles; the changed real signed-pilot worker is still not physically executed."
+  }
 }

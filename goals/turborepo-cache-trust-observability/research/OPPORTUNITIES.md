@@ -666,3 +666,20 @@ the documentation and formatter hooks. Leak scanning and typo checks passed;
 Git HEAD and source bytes were unchanged. Retain the first log and rerun the
 normal hooks without disabling any hook, baseline or commit signing. Attribute
 a repeated failure before changing code or retrying further.
+
+
+### Full audit catches a stale native-summary fixture
+
+The complete CLI audit passed 8,119 tests and failed one signed process-boundary
+case because its fake native summary omitted `turboVersion`. Include the fake
+executable's own pin in that observation, then assert the retained version and
+all dependency task ids. Keep the production summary requirement unchanged.
+The same package attempt's docgen exited 130 and supplies no passing result;
+retain both logs and rerun the affected boundary and complete package proof.
+
+The standalone CLI docgen replay also exits 130. All 3,560 generated examples
+compile under direct Node and Bun launches, and the same compiler succeeds
+through both Effect process backends. The default hosted Docgen gate passed at
+the original head. Keep the local full-runner interruption unattributed while
+checking executable resolution; do not change a compiler or platform service
+on speculation, and do not report a whole-package pass.
