@@ -1102,13 +1102,17 @@ instead of silently splitting delivery or weakening scope.
   custom/named composition, source maps and full family safety remain open.
   No canonical capability is rejected and no completion row is promoted.
 
-- **2026-10-29 HTML safety/fidelity hold:** the pinned native parser returns
-  empty success at depth 256 while recording fatal resource exhaustion. The
-  2,823-unit input fits the frozen source ceiling, creating a concrete conflict
-  with nontruncating limit enforcement. Sixty-nine source observations and
-  eight corruption controls retain the counterexample. The proposed closed
-  failure awaits an explicit ruling under GOAL.md. No target implementation,
-  behavior exception or completed canonical row follows from this audit.
+- **2026-10-29 approved HTML safety exception:** direct human authorization
+  in ops/html-safety-exception.json permits CitationSafetyLimitExceeded for
+  native HTML parser resource exhaustion, discarding any partial value. The
+  public limit category is nativeHtmlParserResource and adds no policy knob.
+  This supersedes the historical hold. Ordinary parse diagnostics and errors
+  retain source behavior; a fatal diagnostic alone does not authorize failure.
+  Focused completion replay rejects three depth-limit outcomes and preserves
+  60 other successful outputs; six source errors remain separate obligations.
+  Native parser qualification and exhaustive parity remain open. This is an
+  explicitly approved safety contract exception, not a normalization law or
+  a completed canonical capability row. The source-only audit remains frozen.
 
 ## Exception Ledger
 

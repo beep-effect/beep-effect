@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Keep the HTML safety conflict source-bound and explicitly unapproved."""
+"""Keep the HTML audit source-bound; approval belongs to a separate decision."""
 import argparse
 import copy
 import hashlib
@@ -75,7 +75,7 @@ def main():
             output = Path(folder) / 'report.json'
             subprocess.run([sys.executable, str(Path(__file__).with_name('probe-html-cleaner-audit.py')), '--oracle-root', str(args.oracle_root), '--output', str(output)], env={**os.environ,'PYTHONHASHSEED':'0'}, check=True)
             assert json.loads(output.read_bytes()) == data
-    print('PASS 69 HTML observations / 115 immutable strings / 8 corruption controls; successful native-depth truncation conflicts with the safety contract; no target or divergence approval')
+    print('PASS 69 HTML observations / 115 immutable strings / 8 corruption controls; successful native-depth truncation conflicts with the safety contract; no target proof or approval embedded in source audit')
 
 
 if __name__ == '__main__': main()

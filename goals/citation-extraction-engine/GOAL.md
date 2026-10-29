@@ -64,6 +64,9 @@ Required interpretation:
     update in one PR. Use phase-local green commits and do not freeze a public
     completion claim until all accounting and quality gates pass.
 
+Approved 2026-10-29: native HTML resource exhaustion fails without partial
+output per `ops/html-safety-exception.json`. Other parity duties remain.
+
 Stop rather than weaken scope when a prerequisite is incompatible, exhaustive
 parity cannot be proved, safety/fidelity needs an unrecorded divergence, or the
 one-PR constraint cannot remain reviewable.

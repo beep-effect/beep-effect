@@ -112,7 +112,14 @@
         "goals/citation-extraction-engine/history/evidence/2026-10-29-html-safety-hold.md",
         "packages/law-practice/use-cases/test/fixtures/eyecite/html-cleaner-audit.json",
         "goals/citation-extraction-engine/ops/probe-html-cleaner-audit.py",
-        "goals/citation-extraction-engine/ops/verify-html-cleaner-audit-controls.py"
+        "goals/citation-extraction-engine/ops/verify-html-cleaner-audit-controls.py",
+        "goals/citation-extraction-engine/ops/html-safety-exception.json",
+        "goals/citation-extraction-engine/ops/verify-html-safety-exception.py",
+        "goals/citation-extraction-engine/history/evidence/2026-10-29-html-safety-approval.md",
+        "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.safety.ts",
+        "packages/law-practice/use-cases/test/CitationSafetyFailure.test.ts",
+        "packages/law-practice/server/src/internal/Citation/HtmlCompletion.ts",
+        "packages/law-practice/server/test/CitationHtmlCompletion.test.ts"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

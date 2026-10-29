@@ -1,8 +1,14 @@
 # HTML parser audit and required safety/fidelity ruling
 
-Date: 2026-10-29. Status: awaiting the operator's scope ruling. This is source
-evidence and a concrete proposed behavior change, not target HTML implementation
-or approval of a divergence.
+Superseded on 2026-10-29 by the direct human approval recorded in
+[html-safety-exception.json](../../ops/html-safety-exception.json). The historical
+proposal and source evidence below are retained as originally recorded. See
+[implementation evidence](./2026-10-29-html-safety-approval.md) for the bounded
+completion guard; native parser qualification remains open.
+
+Date: 2026-10-29. Historical status: awaiting the operator's scope ruling.
+This is source evidence and a concrete proposed behavior change, not target
+HTML implementation or approval of a divergence.
 
 ## Counterexample under the frozen oracle
 

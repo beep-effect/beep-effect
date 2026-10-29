@@ -4,10 +4,12 @@
 
 Lifecycle: `active`
 
-Implementation hold (2026-10-29): the pinned HTML parser silently returns empty
-success at its native depth limit, conflicting with the nontruncating safety
-contract. The [source evidence and proposed ruling](./history/evidence/2026-10-29-html-safety-hold.md)
-await explicit direction under GOAL.md's stop condition. No divergence is approved.
+Approved safety exception (2026-10-29): native HTML parser resource exhaustion
+returns CitationSafetyLimitExceeded without a partial value. The
+[recorded human authorization](./ops/html-safety-exception.json) clears the
+[previous hold](./history/evidence/2026-10-29-html-safety-hold.md). Other HTML
+behavior retains its parity obligations. The completion guard is implemented;
+the native parser backend and its full qualification remain open.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 

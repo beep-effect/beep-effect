@@ -19,6 +19,12 @@ export {
   CitationEngineLimitTightening,
 } from "./CitationEngine/CitationEngine.limits.ts";
 /**
+ * Closed citation resource names and nontruncating safety failures.
+ * @category errors
+ * @since 0.0.0
+ */
+export { CitationSafetyBudget, CitationSafetyLimitExceeded } from "./CitationEngine/CitationEngine.safety.ts";
+/**
  * Claim self-check models, errors, USPTO claims port and service contract.
  *
  * **Example** (Verify the self-check service export)
