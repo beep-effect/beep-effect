@@ -238,11 +238,12 @@ strict UTF-8; alternate config and working-directory overrides are refused befor
 selection. Native inspection clears conflicting legacy cache environment flags.
 
 The [component checkpoint](research/signing-posture-checkpoint.json) binds source
-hashes to 147 focused tests and seven real runtime controls on each pinned stable
+hashes to 148 focused tests and ten real runtime controls on each pinned stable
 and canary binary. The resolved-key positive control contacts the isolated remote
 endpoint; missing-key readers execute with zero HTTP requests; prohibited writers,
 canaries and alternate-policy requests produce no task output or HTTP request.
-This is component preparation. The full package audit is pending the separate
-fixture-isolation fix. No signing activation, credential change, backend tenant
+This is component preparation. The full package audit and docgen passed from the
+default enrolled root (1125.9 and 37.3 seconds). No signing activation, credential
+change, backend tenant
 hardening, namespace rotation, production qualification or observation window is
 claimed. P1 and later acceptance remain open.

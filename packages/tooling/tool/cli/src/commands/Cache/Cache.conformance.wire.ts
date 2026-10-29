@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
+import { MimeType, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { O } from "@beep/utils";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
@@ -14,6 +14,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Base64 from "effect/encoding/Base64";
 import * as Hex from "effect/encoding/Hex";
+import { flow } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Headers from "effect/http/Headers";
 import * as HttpClient from "effect/http/HttpClient";
@@ -204,6 +205,39 @@ export const classifyCacheConformanceStatus = (neverWritten: boolean) =>
     Match.orElse((): CacheConformanceOutcome => "unexpected-status")
   );
 
+const ReceiptMediaType = MimeType.check(S.isMaxLength(128)).pipe(
+  $I.annoteSchema("ReceiptMediaType", { description: "Registered media type within the exchange receipt bound." })
+);
+const isReceiptMediaType = S.is(ReceiptMediaType);
+
+/**
+ * Retain a registered media type while dropping untrusted response parameters.
+ *
+ * **Details**
+ * Unknown subtypes are omitted. Response parameters and invented media types
+ * may contain credentials, private paths or artifact content; truncating their
+ * raw text does not make them safe evidence. Historical receipt decoding is
+ * unchanged; both current wire capture paths use this projection.
+ *
+ * **Example** (Discard response parameters)
+ * ```ts
+ * import { classifyCacheConformanceMediaType } from "@beep/repo-cli/commands/Cache"
+ * import * as O from "effect/Option"
+ * console.assert(O.contains(classifyCacheConformanceMediaType(O.some("application/json; charset=utf-8")), "application/json"))
+ * ```
+ *
+ * @param header - Optional untrusted response Content-Type field.
+ * @returns Only the bounded registered media type, without parameters.
+ * @category validation
+ * @since 0.0.0
+ */
+export const classifyCacheConformanceMediaType = (header: O.Option<string>): O.Option<string> =>
+  header.pipe(
+    O.flatMap(flow(Str.split(";"), A.head)),
+    O.map(flow(Str.trim, Str.toLowerCase)),
+    O.filter(isReceiptMediaType)
+  );
+
 const authorization = (bearers: CacheConformanceBearers, role: CacheConformanceCredentialRole) =>
   Match.value(role).pipe(
     Match.when("missing", O.none<string>),
@@ -335,7 +369,7 @@ const send = Effect.fnUntraced(function* (context: WireContext, unsigned: WireSt
       })
     ),
     status: observed.status,
-    contentType: Headers.get(observed.headers, "content-type").pipe(O.map(Str.slice(0, 128))),
+    contentType: classifyCacheConformanceMediaType(Headers.get(observed.headers, "content-type")),
     requestBytes: S.Natural.make(
       O.match(requestBody, {
         onNone: () => 0,

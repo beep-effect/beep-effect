@@ -122,6 +122,34 @@ it.layer(Services, { timeout: "60 seconds", excludeTestServices: true })("cache 
 });
 
 it.layer(Services, { timeout: "60 seconds", excludeTestServices: true })("cache conformance fault proxy", (it) => {
+  it.effect("redacts untrusted response media-type values from proxy receipts", () =>
+    Effect.gen(function* () {
+      const canary = "proxy-header-artifact-content-4ef2";
+      const privatePath = "/fixture/private/proxy-artifact";
+      for (const responseContentType of [
+        `application/octet-stream; token=${secrets.reader}; path=${privatePath}; body=${canary}`,
+        `application/x-${secrets.reader}`,
+      ]) {
+        const server = yield* makeConformanceServer({ ...goodMode, responseContentType });
+        const proxy = yield* makeCacheConformanceFaultProxy(
+          CacheConformanceProxyOptions.make({ target: targetFor({ url: server.url }), bearers, holdMs: 400 })
+        );
+        const url = `${proxy.url}/v8/artifacts/00112233445566778899aabbccddeeff?teamId=${teamId}`;
+        yield* HttpClientRequest.put(url).pipe(
+          HttpClientRequest.setHeaders({ authorization: `Bearer ${secrets.writer}`, "x-artifact-tag": "Atag-value" }),
+          HttpClientRequest.bodyUint8Array(new TextEncoder().encode("opaque fixture artifact")),
+          HttpClient.execute,
+          Effect.flatMap((reply) => reply.arrayBuffer)
+        );
+        yield* HttpClient.get(url, { headers: { authorization: `Bearer ${secrets.reader}` } }).pipe(
+          Effect.flatMap((reply) => reply.arrayBuffer)
+        );
+        const encoded = yield* encodeProxyEvents(yield* proxy.events);
+        for (const secret of [secrets.reader, privatePath, canary]) expect(encoded).not.toContain(secret);
+      }
+    })
+  );
+
   it.effect("forwards unchanged and injects each read fault with a direct receipt", () =>
     Effect.gen(function* () {
       const server = yield* makeConformanceServer(goodMode);

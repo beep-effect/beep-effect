@@ -3,13 +3,14 @@ import {
   CacheConformanceExchange,
   CacheConformancePaths,
   CacheConformanceRun,
+  classifyCacheConformanceMediaType,
   renderCacheConformanceCorpus,
   runCacheConformance,
   syncCacheConformanceCorpus,
 } from "@beep/repo-cli/commands/Cache";
 import { NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
-import { assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -182,6 +183,21 @@ it.layer(Services, { timeout: "120 seconds", excludeTestServices: true })("cache
     })
   );
 
+  it.effect("redacts untrusted response media-type parameters and subtype values", () =>
+    Effect.gen(function* () {
+      const canary = "header-artifact-content-9c12";
+      const privatePath = "/fixture/private/cache-artifact";
+      for (const responseContentType of [
+        `application/octet-stream; token=${secrets.reader}; path=${privatePath}; body=${canary}`,
+        `application/x-${secrets.reader}`,
+      ]) {
+        const { report } = yield* runAgainst({ ...goodMode, responseContentType });
+        const encoded = yield* S.encodeEffect(RunJson)(report);
+        for (const secret of [secrets.reader, privatePath, canary]) expect(encoded).not.toContain(secret);
+      }
+    })
+  );
+
   it.effect("refuses a non-loopback base URL for the local-container profile", () =>
     Effect.gen(function* () {
       const corpus = yield* buildCacheConformanceCorpus(yield* repoRoot);
@@ -208,3 +224,18 @@ it.effect.prop(
     }),
   { arbitrary: { runs: 50 } }
 );
+
+it("projects only registered parameter-free response media types", () => {
+  assertSome(
+    classifyCacheConformanceMediaType(O.some("  APPLICATION/OCTET-STREAM ; token=private-fixture")),
+    "application/octet-stream"
+  );
+  assertSome(classifyCacheConformanceMediaType(O.some("application/json; charset=utf-8")), "application/json");
+  for (const header of [
+    O.none(),
+    O.some(""),
+    O.some("application/json-private-fixture"),
+    O.some("application/x-private-fixture"),
+  ])
+    header.pipe(classifyCacheConformanceMediaType, assertNone);
+});

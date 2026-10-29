@@ -50,6 +50,16 @@ precedence. Forwarded task arguments do not participate.148focused tests and
 ten real native controls per channel pass; explicit writer/canary declarations
 still require their signing key. The full default-root package audit/docgen
 passed1125.9s/37.3s on the corrected source.
+### Response header truncation does not provide receipt safety
+
+Both direct-wire and proxy capture copied Content-Type response text into
+conformance evidence, truncated to128characters. Two actual-server regressions
+placed a synthetic credential, private path and artifact marker in parameters
+and an invented subtype; both paths serialized the synthetic credential. Reuse
+the registered MimeType schema to retain only a bounded canonical media type.
+Drop parameters and unregistered subtypes before constructing receipts; preserve
+the old receipt decode contract. Verify the two real capture paths and the
+projection boundary before using them in a signed rollout.
 ### Reproducible source patch and native fixture boundary
 
 The pinned 4.0.20 source release has root package version `0.0.0` in Cargo.lock
@@ -120,3 +130,11 @@ compiler version. The corrected drivers use the tracked source preparation and
 pin the actual installed compiler bin in child PATH, rather than relying on
 RUSTUP_TOOLCHAIN across shim/default differences. Rust1.96.0 passes48tests and
 the exact static executable passes all33process controls.
+
+### Keep the plan summary aligned with retained proof
+
+Review found stale focused-test/control counts and a pending-audit statement in
+PLAN.md after the checkpoint was refreshed. The retained checkpoint already bound
+148 tests, ten controls per native channel, and the passed default-root full audit
+and docgen. Updated the summary from that source. A checkpoint refresh should
+include its adjacent plan summary so readers see the same bounded claim.

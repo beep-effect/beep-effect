@@ -154,6 +154,7 @@ export {
   CacheConformanceWireCheck,
   CacheConformanceWireOutcome,
   cacheConformanceLabCaseIds,
+  classifyCacheConformanceMediaType,
   classifyCacheConformanceStatus,
   readCacheConformanceReply,
   runCacheConformanceLabCase,
