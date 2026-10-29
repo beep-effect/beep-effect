@@ -225,6 +225,14 @@ fault receipts. Remote fallback must never mean unsigned restore.
   epoch/role/tenant policy, bounded rollout and rollback evidence are complete.
   This component prepares enforcement; it does not activate a signed cohort.
 
+### Resume and native execution, 2026-10-28
+
+| Date | Decision and reason | Reversal |
+| --- | --- | --- |
+| 2026-10-28 | Resume in the dedicated `codex/turborepo-goals-completion` lane. Refresh current source, client pins and population before promoting anything; older qualification remains bound to its original tuple. | Retain the previous approved configuration and remove only this lane's changes through a reviewed revert. |
+| 2026-10-28 | Treat the already approved R2 fleet as the current consumer path and retain AWS as its rollback. The user approved named trusted workstation writers; this grants upload capability, not protected-workflow producer identity. Refresh both boundaries before claiming production trust. | Disable affected remote reuse, stop mixed writes and restore the prior approved endpoint and epoch through a rehearsed path. |
+| 2026-10-28 | Pin native experiment execution with `--skip-infer --single-package`; a zero-task fixture is a failure. Keep supervisor failures bounded to exit code or capture truncation without attaching private worker streams. | Revert the runner change through Yeet; keep promotion closed when exact native execution is unproven. |
+
 ### Receipt media-type safety
 
 - 2026-10-29: Project response Content-Type evidence through the existing

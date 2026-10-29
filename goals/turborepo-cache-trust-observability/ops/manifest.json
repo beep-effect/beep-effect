@@ -57,6 +57,10 @@
     "research/signing-posture-checkpoint.json",
     "research/signing-posture-native-stable.json",
     "research/signing-posture-native-canary.json",
+    "research/current-completion-audit.json",
+    "research/current-native-stable.json",
+    "research/current-native-canary.json",
+    "research/current-native-checkpoint.json",
     "research/receipt-media-type-checkpoint.json",
     "research/adapter-policy-lab.json",
     "research/adapter-dependency-review.json"
@@ -121,5 +125,5 @@
     "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
     "Do not overwrite another owner's artifacts or weaken hosted proof."
   ],
-  "statusNote": "Active early handoff for task qualification under delegated blocker-resolution authority. PR #1327 merged; remaining work is consolidated on the final implementation branch. Single writer for shared Cache contracts and local signed fixtures. Broader packet criteria remain incomplete; no cloud deployment or production readiness is claimed."
+  "statusNote": "Completion resumed 2026-10-28. Retained PR1327/1389 producer and protocol mechanisms are reused under their original evidence scope; current native and deployed trust boundaries are being refreshed. All nine SPEC acceptance criteria remain unproven as a whole; no deployment, observation-window completion or production readiness is claimed."
 }

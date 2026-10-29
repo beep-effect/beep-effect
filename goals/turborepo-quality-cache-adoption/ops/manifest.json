@@ -3,13 +3,13 @@
   "initiative": {
     "id": "turborepo-quality-cache-adoption",
     "title": "Turborepo quality cache adoption",
-    "status": "paused",
+    "status": "active",
     "created": "2026-09-08",
-    "updated": "2026-09-08",
+    "updated": "2026-10-28",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/turborepo-quality-cache-adoption",
-  "lifecycle": "paused",
+  "lifecycle": "active",
   "mission": "Adopt every eligible quality computation in its proven profiles and optimize the full Turbo/CI/Yeet workflow with measured benefits and fresh hosted statuses.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -36,7 +36,14 @@
     "explorations/turborepo-quality-cache/DECISIONS.md",
     "explorations/turborepo-quality-cache/MAP.md"
   ],
-  "researchReports": ["research/SOURCES.md", "research/OPPORTUNITIES.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/OPPORTUNITIES.md",
+    "research/current-completion-audit.json",
+    "research/current-population.json",
+    "research/current-feature-matrix.json",
+    "research/current-client-pins.json"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -50,7 +57,7 @@
     {
       "id": "P0",
       "name": "Population, feature and value audit",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P1",
@@ -97,5 +104,5 @@
     "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
     "Do not overwrite another owner's artifacts or weaken hosted proof."
   ],
-  "statusNote": "Graduated 2026-09-08 after user approval; authored but not started. Launch GOAL.md to activate P0. SPEC/PLAN define milestone dependencies and measured deployment gates."
+  "statusNote": "Launched 2026-10-28. Current P0 inventory: 190 workspaces, 4586 configured nodes and 2571 executable computations; all final dispositions remain open. Stable 2.11.10 and published canary 2.11.9-canary.1 are pinned with native inference disabled. No new qualification, production signing or whole-program completion is claimed."
 }
