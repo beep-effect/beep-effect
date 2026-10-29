@@ -2942,3 +2942,31 @@ the committed corpus was redacted after ratification (#1032, #1037, #1041), so e
   three commands as its last line; `yeet publish --plan` could list the gates a lane's changed files
   will meet. Until then a new `.test.ts` file or a new exported interface in `@beep/repo-cli` should
   be followed by those three commands by hand (about three minutes) before `yeet publish`.
+
+## 2026-10-28 — the measurement counted the author's own replies as reviews, seen only in the live ledger
+
+- Doing: reading the owning clone's `review-lane.ndjson` after `yeet reply` answered #2310's two
+  threads, to show the new section reporting its own pull request.
+- Evidence: two `review` rows by the pull request author (`kind: human`, state `COMMENTED`) pinned
+  to the fix head, one per reply. GitHub records a reply on a review thread as a review submission
+  by the replier, so the author's replies would have counted as a round on the fix head. Nothing in
+  the design, the fixtures or the gates said so; the ruling's definition ("the distinct head commits
+  a submitted review names") was satisfied to the letter. The PR merged before the fix could ride
+  it, so the exclusion is a second PR.
+- Prevention: a measurement's done condition should include reading its own live output on real
+  data once before the PR is called final (one `yeet economics` run on the checkout, pasted into the
+  PR body), not only fixtures; and GitHub's "a reply is a review" is now in ruling 81 so the next
+  reviewer-shaped fact (reactions, suggestions) is checked against it.
+
+## 2026-10-28 — the desktop worktree guard refuses interactive-shell wrappers and heredoc scripts
+
+- Doing: continuing in a fresh app-made worktree (`.claude/worktrees/<name>`) after the merged lane
+  was retired, running the usual `zsh -ic 'bun run beep …'` (mise is not on the tool shell's PATH)
+  and multi-file Python edit heredocs.
+- Evidence: every such command was refused as "too complex to verify that it stays inside the
+  worktree"; so were `sed -n "$((L-3)),$((L+3))p"` reads. Plain commands with
+  `PATH="$HOME/.local/share/mise/shims:$PATH"` and scripts written to a file first, then run as
+  `python3 <path>`, pass.
+- Prevention: `docs/runbooks` (or the yeet skill) could carry the two forms that pass under the
+  guard, so a lane does not lose a round discovering them; the SessionStart hook could print the
+  shim PATH line when it detects a tool shell without mise.

@@ -30,6 +30,7 @@ import {
   hashCacheExperimentExecutable,
   readCacheExperimentBytes,
   requireCacheLinuxX64,
+  requireCacheSupervisorCapture,
 } from "./Cache.evidence.ts";
 import { CacheFixtureCredentials, CacheFixtureScenario } from "./Cache.protocol.fixture.schemas.ts";
 import { makeCacheProtocolFixture } from "./Cache.protocol.fixture.ts";
@@ -276,6 +277,8 @@ export const runCacheProtocolWorker = Effect.fn("CacheProtocol.worker")(
           "--chdir",
           "/work",
           "/tools/turbo",
+          "--skip-infer",
+          "--single-package",
           "run",
           "build",
           "--cache=remote:rw",
@@ -518,8 +521,7 @@ export const runCacheProtocolExperiment = Effect.fn("CacheProtocol.experiment")(
           env: { PATH: "/usr/bin", HOME: "/tmp", CI: "1", NO_COLOR: "1" },
           bound,
         }).pipe(Effect.timeout(Duration.minutes(15)));
-        if (captured.exitCode !== 0 || captured.truncated)
-          return yield* CacheCommandError.new("Protocol supervisor failed or exceeded its capture bound.");
+        yield* requireCacheSupervisorCapture(captured, "Protocol");
         const report = yield* readCacheExperimentBytes(directory, "report.json", 256 * 1024).pipe(
           Effect.flatMap(decodeCacheExperimentText),
           Effect.flatMap(JsonStringCodec(CacheProtocolExecution).decode)

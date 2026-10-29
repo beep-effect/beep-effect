@@ -297,6 +297,8 @@ operator reviews them asynchronously.
 | 2026-10-28 | W4-h (3-A6 part) Ledgers. The Exception Ledger row "Duplicate tsconfig document model" is removed. `history/reuse-ledger.md` flips #160 (docgen `Configuration.ts`, `CLI.ts`, `Core.ts`) to adopted and #161/#242/#266 (repo-utils `schemas/TSConfig.ts` and its test) to deleted, and closes the config-file row that deferred `readTSConfig` here. `ops/manifest.json` registers `ops/tsconfig-validator-parity.ts`. | Each duplicate is retired by the PR that names it. | Restore the row and the queued statuses. |
 | 2026-10-28 | W4-i (3-A6 part) No changeset. `@beep/tsconfig` and `@beep/repo-tsconfig` are `private`; `@beep/repo-docgen` and `@beep/repo-utils` are changeset-ignored (`quality changeset-graph` reports no missing reference). docgen gains the `@beep/repo-tsconfig` and `@beep/tsconfig` dependencies and the `@beep/memfs` devDependency (cache baseline request `research/cache-baseline-request-3-a6.json`). | W3-j. | Add the changesets. |
 
+| 2026-10-28 | PR #2329 takeover merges current main, regenerates the JSDoc inventory, and removes the second identical `ops/github-reporting-gfm-differential.ts` registration. | Hosted Lint Policy failed `goals doctor` with `ops-script-duplicate`; one registration preserves the oracle and passes the manifest uniqueness check. | Restore the removed registration only if the manifest contract permits duplicate script paths. |
+
 ## Exception Ledger
 
 | Exception | Scope | Owner | Rationale | Removal condition |
