@@ -35,10 +35,11 @@
     }
   },
   "focusedVerification": {
-    "command": "bunx --bun vitest run --config vitest.config.ts test/cache-signed-runner.test.ts test/cache-protocol-runner.test.ts test/cache-protocol.test.ts test/cache-producer.test.ts test/turbo-cache.test.ts",
-    "files": 5,
-    "passed": 136,
-    "seconds": 6.15
+    "command": "bun run --cwd packages/tooling/tool/cli beep:test test/cache-signed-runner.test.ts test/cache-protocol-runner.test.ts test/cache-protocol.test.ts test/cache-producer.test.ts test/turbo-cache.test.ts test/cache-runtime.test.ts test/shared-internals.test.ts test/cache-conformance.test.ts test/cache-conformance-lab.test.ts",
+    "files": 9,
+    "passed": 240,
+    "seconds": 19.44,
+    "scope": "Posture/protocol integration on the merged tree. Native observations retain their original artifact bytes and protocol-source bindings."
   },
   "limits": [
     "The new six-case matrix omits wrong-team; retained conformance RC-021 supplies exact-client synthetic rejection evidence at its recorded lab scope.",
@@ -52,7 +53,11 @@
     "packages/tooling/tool/cli/test/cache-protocol-runner.test.ts": "81bef677f21f621fa72eb9a0ed3aac126fdde57efae4011164de6d502dba4ce9",
     "packages/tooling/tool/cli/test/cache-protocol.test.ts": "0376fd82905be9664ac410d5213da75c5f1e841a5455228d440970fbeed311b2",
     "packages/tooling/tool/cli/test/cache-producer.test.ts": "baba5b57f8c8794ff4bda1274fd4f4a6ae7f8b19596ecb853f5e27a210894aa9",
-    "packages/tooling/tool/cli/test/turbo-cache.test.ts": "9c768c5dadd4968c6e278554f02867de0d99435677f06ab1942baa9ed0533a9d"
+    "packages/tooling/tool/cli/test/turbo-cache.test.ts": "595b11dde0faf0261841f2168d169d6af80d7f1413bf9eeee0944cc7ea10b52e",
+    "packages/tooling/tool/cli/test/cache-runtime.test.ts": "51ed48a9451bdbe8b9c7b93db514e375af1eb8dc1a91dff3d2f8c91c07ed4b25",
+    "packages/tooling/tool/cli/test/shared-internals.test.ts": "46d73e193c0fbbd16ce01dcb784552d0f0b5e92df41b051a98877a8038f7e2c5",
+    "packages/tooling/tool/cli/test/cache-conformance.test.ts": "f82894ec318ca4136afbcd3585d166a2a28b96c061bf8c51c102f9cfbef9bc56",
+    "packages/tooling/tool/cli/test/cache-conformance-lab.test.ts": "d8bc35e3cb0ebe6d02c1b54666f241fcc5dfe6d9213ca908686be11528b59f4b"
   },
   "retainedConformance": {
     "stable": {
@@ -93,5 +98,23 @@
   "fallowAudit": {
     "blockingFindings": 0,
     "command": "bun run beep quality fallow audit --base origin/main --check --out .beep/fallow/audit.repair.json --quiet"
-  }
+  },
+  "priorFocusedVerification": {
+    "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
+    "focusedVerification": {
+      "command": "bunx --bun vitest run --config vitest.config.ts test/cache-signed-runner.test.ts test/cache-protocol-runner.test.ts test/cache-protocol.test.ts test/cache-producer.test.ts test/turbo-cache.test.ts",
+      "files": 5,
+      "passed": 136,
+      "seconds": 6.15
+    },
+    "verificationSourceFiles": {
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts": "e03cc66fbc1ea4ed6ea3c0783b7070b3b757c879c71f355296642907d9c5e483",
+      "packages/tooling/tool/cli/test/cache-signed-runner.test.ts": "dad2ef5164389f950f7a8b5c63eaf89c78818558c67209c9ec4b3397ebac6d33",
+      "packages/tooling/tool/cli/test/cache-protocol-runner.test.ts": "81bef677f21f621fa72eb9a0ed3aac126fdde57efae4011164de6d502dba4ce9",
+      "packages/tooling/tool/cli/test/cache-protocol.test.ts": "0376fd82905be9664ac410d5213da75c5f1e841a5455228d440970fbeed311b2",
+      "packages/tooling/tool/cli/test/cache-producer.test.ts": "baba5b57f8c8794ff4bda1274fd4f4a6ae7f8b19596ecb853f5e27a210894aa9",
+      "packages/tooling/tool/cli/test/turbo-cache.test.ts": "9c768c5dadd4968c6e278554f02867de0d99435677f06ab1942baa9ed0533a9d"
+    }
+  },
+  "verificationIntegrationRevision": "e90ec4819e4d436f5e7a60f00a52b767e006e716"
 }

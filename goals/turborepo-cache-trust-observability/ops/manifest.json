@@ -54,6 +54,9 @@
     "research/owned-producer-workflow.json",
     "research/owned-producer-frozen-profile.json",
     "research/owned-producer-private-approval.json",
+    "research/signing-posture-checkpoint.json",
+    "research/signing-posture-native-stable.json",
+    "research/signing-posture-native-canary.json",
     "research/current-completion-audit.json",
     "research/current-native-stable.json",
     "research/current-native-canary.json",
@@ -80,7 +83,7 @@
     {
       "id": "P1",
       "name": "Posture and safe events",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",

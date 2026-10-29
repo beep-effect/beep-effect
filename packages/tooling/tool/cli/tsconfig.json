@@ -165,6 +165,9 @@
       "path": "../../library/repo-utils/tsconfig.json"
     },
     {
+      "path": "../../library/repo-workspaces/tsconfig.json"
+    },
+    {
       "path": "../../policy-pack/repo-configs/tsconfig.json"
     },
     {

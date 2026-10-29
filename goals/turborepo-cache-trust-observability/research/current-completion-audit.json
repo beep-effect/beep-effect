@@ -3,7 +3,7 @@
   "goal": "turborepo-cache-trust-observability",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "445dc9357d89db4f7a68d8e727f5ddc649fb7550d7071c9c6c5fb03277580c68",
+  "specSha256": "ba30a00e2c84b3b89c1e62ae39f7bc452e554cdd58b8c54b5af6fa97f09cd8f0",
   "acceptance": [
     {
       "id": "AC-01",
@@ -136,11 +136,11 @@
     "features": "goals/turborepo-quality-cache-adoption/research/current-feature-matrix.json",
     "pins": "goals/turborepo-quality-cache-adoption/research/current-client-pins.json",
     "focusedTests": {
-      "command": "bunx --bun vitest run --config vitest.config.ts test/cache-signed-runner.test.ts test/cache-protocol-runner.test.ts test/cache-protocol.test.ts test/cache-producer.test.ts test/turbo-cache.test.ts",
-      "files": 5,
-      "passed": 136,
-      "seconds": 6.15,
-      "scope": "unit/fixture only; not deployed trust or all-task qualification"
+      "command": "bun run --cwd packages/tooling/tool/cli beep:test test/cache-signed-runner.test.ts test/cache-protocol-runner.test.ts test/cache-protocol.test.ts test/cache-producer.test.ts test/turbo-cache.test.ts test/cache-runtime.test.ts test/shared-internals.test.ts test/cache-conformance.test.ts test/cache-conformance-lab.test.ts",
+      "files": 9,
+      "passed": 240,
+      "seconds": 19.44,
+      "scope": "Posture/protocol integration on the merged tree. Native observations retain their original artifact bytes and protocol-source bindings."
     },
     "retainedQualification": "goals/turborepo-task-qualification/research/current-signed-qualification.json applies only to its recorded older private-loopback tuple",
     "nativeProtocol": "goals/turborepo-cache-trust-observability/research/current-native-checkpoint.json",
@@ -184,6 +184,19 @@
           "status": "passed"
         },
         "scope": "Main response media-type projection inherited from its independently audited component; no protocol or retained artifact bytes changed."
+      },
+      "postSigningPostureIntegration": {
+        "head": "e90ec4819e4d436f5e7a60f00a52b767e006e716",
+        "status": "passed",
+        "protocolSourceBindingsUnchanged": true,
+        "originalNativeArtifactsUnchanged": true,
+        "focusedTestsPassed": 240,
+        "packageQuick": {
+          "lintSeconds": 5.9,
+          "checkSeconds": 12.8,
+          "status": "passed"
+        },
+        "verificationSourceBindings": "Refreshed against the passing current suite; original 136-test proof and its six source bindings retained separately in the native checkpoint."
       }
     }
   },

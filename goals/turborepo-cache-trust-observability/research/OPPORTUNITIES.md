@@ -82,6 +82,36 @@ validation rules from diverging and make edited transport evidence testable at
 the actual import boundary. This is a source-review finding, not a demonstrated
 escape or a new native failure.
 
+## 2026-10-28: real native selection exposed inherited legacy flags
+
+The signed reader fallback passed mocked spawn tests but an isolated real-runtime
+control failed during native dry selection. Turbo rejects explicit `--cache`
+combined with inherited `TURBO_REMOTE_ONLY` or `TURBO_REMOTE_CACHE_READ_ONLY`, even
+for a dry run. Inspection now clears those legacy environment flags; forced local
+execution also clears them. The real wrapper controls pass on both pinned native
+channels, including a resolved-key remote-request positive control. Prevention:
+retain native selection and execution proof alongside metadata/argument tests.
+Owner: this goal. No production setting changed.
+
+## 2026-10-28: schema compilation belongs at module scope
+
+The signed-client publication preflight found three introduced
+`no-inline-schema-compile` findings in access-mode and legacy-boolean parsing.
+Hoisted named literal domains and their schema-derived guards to module scope.
+Targeted Oxlint, 147 focused tests, package lint/type checks, and both seven-case
+real native controls passed again on the corrected source. The unpublished
+commit is corrected before pushing. No rule is waived. Owner: this goal.
+
+### Effective cache mode must drive inferred signing role
+
+Review found that role inference combined an explicit cache directive with an
+inherited upload mode, even though the native directive outranks that mode. A
+keyless local/read-only request was misclassified as a writer. The new boundary
+test failed first; extraction of pre-task cache directives now follows that
+precedence. Forwarded task arguments do not participate.148focused tests and
+ten real native controls per channel pass; explicit writer/canary declarations
+still require their signing key. The full default-root package audit/docgen
+passed1125.9s/37.3s on the corrected source.
 ### Response header truncation does not provide receipt safety
 
 Both direct-wire and proxy capture copied Content-Type response text into
@@ -163,6 +193,24 @@ pin the actual installed compiler bin in child PATH, rather than relying on
 RUSTUP_TOOLCHAIN across shim/default differences. Rust1.96.0 passes48tests and
 the exact static executable passes all33process controls.
 
+### Keep the plan summary aligned with retained proof
+
+Review found stale focused-test/control counts and a pending-audit statement in
+PLAN.md after the checkpoint was refreshed. The retained checkpoint already bound
+148 tests, ten controls per native channel, and the passed default-root full audit
+and docgen. Updated the summary from that source. A checkpoint refresh should
+include its adjacent plan summary so readers see the same bounded claim.
+
+### Use the package test runner and gate dependent steps
+
+A post-merge replay was invoked with `bun test` against Vitest suites and failed
+before collecting cases with “Vitest failed to find the current suite.” The
+package-owned `beep:test` script then passed all 156 selected cases. A source-map
+check also caught the inherited Cache barrel export; the old full-audit map was
+preserved and a separate current integration map was added after focused tests
+and lint/check. Driver verification failures must stop dependent commit steps;
+use the package script and explicit subprocess exit checking. Neither failure
+was a source regression or a passing proof.
 ### Reuse state after base integration
 
 `yeet publish --push-only --reuse-verified` refused with “No reusable Yeet proof
@@ -172,3 +220,15 @@ package replay remain independently recorded. Use the existing constrained-
 compute direct-push route after its ten-minute root-replay threshold, with exact
 final-check skips and hosted proof retained; never manufacture a reusable state
 file or copy an unrelated verdict into the new context.
+
+### Refresh source-bound inventories after shared Cache changes
+
+Integrating the signed-client and receipt-safety components left seven census
+source digests different from the retained inventory, even though task counts
+were unchanged. Reran the existing census/UTF-8 refresh recipe and checked all
+427 source digests. The original native verification test snapshot also predates
+the signing posture test change; preserved that exact proof separately, reran
+240 integration tests and bound the current verification sources to this new
+result. Native artifact bytes and protocol source hashes remain unchanged.
+Source-bound evidence must be refreshed at its actual boundary after integration,
+not treated as permanent qualification.
