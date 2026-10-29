@@ -301,3 +301,16 @@ All 427 census source bindings were verified. Original 136- and 240-test
 verification snapshots and full-audit source maps remain separate historical
 evidence. The original native artifact bytes and protocol sources are unchanged.
 This integration does not close production, observation or adoption gates.
+
+## 2026-10-29: fail-closed lab capture budgets
+
+The former 5,000-event cap silently discarded later events, and the request-body
+error fallback could forward an empty tagged upload. Actual negative controls
+reproduce both problems. Atomic request/replay reservations, bounded streamed
+replies and incomplete-receipt errors now reject affected traffic. Seven new
+controls are part of the passing 256-test integrated suite; package lint/check
+pass in 5.7/12.2 seconds, root oxlint passes and the schema catalog is current.
+The 427 current census bindings verify. Historical full audits are not proof of
+this new implementation. See the source-bound
+[capture checkpoint](research/proxy-capture-bounds-checkpoint.json). The live
+R2 service, producer integration and all representative windows are unchanged.

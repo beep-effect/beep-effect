@@ -263,3 +263,12 @@ the signing posture test change; preserved that exact proof separately, reran
 result. Native artifact bytes and protocol source hashes remain unchanged.
 Source-bound evidence must be refreshed at its actual boundary after integration,
 not treated as permanent qualification.
+
+- 2026-10-29 — Existing proxy capture silently truncated after 5,000 events;
+  an unreadable-body fallback could write an empty artifact upstream. The actual
+  interrupted-request negative control observed one upstream tag with the old
+  fallback and none with the repair. Explicit atomic request/byte/key budgets,
+  bounded streamed replies and a sticky incomplete-capture failure now prevent
+  truncated evidence from appearing complete. Seven actual controls and 256
+  integrated tests pass. The proxy remains a lab tool, with production joining
+  and transport-level completeness still outside this component's proof.

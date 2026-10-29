@@ -252,3 +252,7 @@ server controls supply capture and redaction evidence. These are observation-onl
 labels: a response header does not establish a genuine miss, HMAC validity or a
 protected producer. The checkpoint separates the frozen full audit from later
 test-codec hoisting, canonical catalog refresh and main integration.
+
+- `proxy-capture-bounds-checkpoint.json`: current source bindings, intended-cause
+  budget/interrupted-upload failures and 256 passing integrated tests. It does
+  not transfer historical full audits or claim deployed production collection.

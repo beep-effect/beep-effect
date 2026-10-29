@@ -281,3 +281,17 @@ The local process report does not satisfy those deployment or observation gates.
   synthetic-secret and known-written-404 controls justify the boundary. Reversal:
   disable the optional projection while retaining independent transport outcomes;
   never retain raw header text as a fallback. No deployed collector is enabled.
+
+### Bounded lab capture repair
+
+- 2026-10-29: Retain the existing conformance proxy and finite backend-result
+  projection. Enforce its request cap before forwarding and reject incomplete
+  capture instead of silently dropping events. Defaults are 5,000 requests,
+  64 MiB per body, 64 MiB of tagged upload attempts, 64 reserved replay keys and
+  4 KiB per encoded record; schema-validated overrides only lower these bounds.
+  Invalid capture yields a static typed error and refuses further proxy traffic.
+  Interrupted request bodies cannot become empty upstream uploads; streamed
+  oversized replies retain a payload-rejected cause. This is admitted lab
+  traffic proof, not production telemetry or producer authority. Reversal is to
+  stop the candidate experiment and retain the incumbent; do not restore silent
+  truncation or the empty-body fallback. No live service or cloud change.

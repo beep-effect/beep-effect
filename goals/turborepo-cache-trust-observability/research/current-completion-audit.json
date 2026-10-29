@@ -3,7 +3,7 @@
   "goal": "turborepo-cache-trust-observability",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "80656dbc230ce625c88d7f65932492c719704341cf4cc33071168c0bed41723e",
+  "specSha256": "7dc3fd566bae7133c2c0de49232f279fbaf6acac3189844480d9be97ac3cc600",
   "acceptance": [
     {
       "id": "AC-01",
@@ -199,7 +199,8 @@
         "verificationSourceBindings": "Refreshed against the passing current suite; original 136-test proof and its six source bindings retained separately in the native checkpoint."
       }
     },
-    "backendResultComponent": "goals/turborepo-cache-trust-observability/research/backend-result-checkpoint.json"
+    "backendResultComponent": "goals/turborepo-cache-trust-observability/research/backend-result-checkpoint.json",
+    "proxyCaptureBoundsComponent": "goals/turborepo-cache-trust-observability/research/proxy-capture-bounds-checkpoint.json"
   },
   "remainingExplicitGates": [
     "SPEC verification matrix commands on actual final changes",
@@ -211,9 +212,8 @@
   "referenceBase": "repository root",
   "priorSpecSha256AtProtocolMain": "445dc9357d89db4f7a68d8e727f5ddc649fb7550d7071c9c6c5fb03277580c68",
   "currentIntegration": {
-    "reviewedMain": "9e06ce011505c859d69e210a2084fa9cfd27efb8",
-    "component": "backend-result-checkpoint.json",
-    "focusedTestsPassed": 249,
-    "scope": "Current source integration only; no deployed trust, observation window or task qualification acceptance."
+    "component": "goals/turborepo-cache-trust-observability/research/proxy-capture-bounds-checkpoint.json",
+    "focusedTestsPassed": 256,
+    "scope": "Bounded lab capture repair only. Historical broad audits retain their original source maps; no deployed trust, qualification or representative observation acceptance."
   }
 }
