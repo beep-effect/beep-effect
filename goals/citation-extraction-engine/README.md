@@ -37,12 +37,16 @@ all canonical semantic families. Semantic-context coverage totals 76 contexts
 and 210 mentions; original-source span/extraction proof stays separate.
 Authority representatives now refer to any resolved mention. Private
 persistence accepts exact expected membership from trusted canonical/external
-resource descriptors; host normalization and callback state remain open.
+resource descriptors. A private callback session now matches 18 focused source
+contexts and all 53 callback events through test adapters. Production callback
+defaults, general host/alias/model mutation and final integration remain open.
 Exhaustive resolver/custom-resource proof, live artifact integration, Bluebook codecs,
 extension adoption/schema proof, runtime enforcement and family safety remain
 unfinished.
 
 Current evidence:
+
+- [Private callback session](./history/evidence/2026-10-28-callback-session.md)
 
 - [Trusted resource identity bindings](./history/evidence/2026-10-28-resource-identity-bindings.md)
 

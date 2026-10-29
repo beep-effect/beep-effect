@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationComponents, FullCitation, IdCitation } from "@beep/law-practice-domain/values";
+import { Citation, CitationComponents, IdCitation } from "@beep/law-practice-domain/values";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as BI from "effect/BigInt";
@@ -27,7 +27,7 @@ const decimalValues = HashMap.fromIterable(
     Tuple.make(char, A.getUnsafe(["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"], index % 10))
   )
 );
-const Input = S.Struct({ fullCitation: FullCitation, idCitation: IdCitation });
+const Input = S.Struct({ fullCitation: Citation, idCitation: IdCitation });
 const FailureReason = LiteralKit(["invalid-input", "canonical-page-type", "integer-conversion"]).pipe(
   $I.annoteSchema("FailureReason", {
     description:
@@ -108,6 +108,8 @@ const decimalInteger = Effect.fn("Citation.parseResolverDecimal")(function* (cha
 
 /**
  * Exact default Id. pin validation, with arbitrary-precision Unicode decimals.
+ * The first grouped citation can be non-full when a custom callback introduced
+ * its resource; the source cast does not impose a runtime FullCitation check.
  * Source exceptions become sanitized private failures, not unresolved outcomes.
  * No regex, Python runtime or numeric coercion is used for decimal parsing.
  * @internal

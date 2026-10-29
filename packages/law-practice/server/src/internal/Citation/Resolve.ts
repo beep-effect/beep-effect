@@ -12,16 +12,11 @@ import {
   CitationAuthorityId,
   CitationComponents,
   CitationDocument,
-  CitationMention,
-  CitationMentionReceipt,
   CitationResolved,
   CitationUnresolved,
   FullCitation,
 } from "@beep/law-practice-domain/values";
-import { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
-import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
-import { LiteralKit, Sha256Hex } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Chunk from "effect/Chunk";
 import * as Effect from "effect/Effect";
@@ -32,39 +27,13 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
 import * as Tuple from "effect/Tuple";
-import { CitationAuthorityEdition, makeCitationAuthorityId } from "./AuthorityIdentity.ts";
-import { captureCitationMentionReceiptData, restoreCitationMentionAgainstVerifiedSource } from "./Mention.ts";
+import { makeCitationAuthorityId } from "./AuthorityIdentity.ts";
+import { prepareCitationResolution } from "./ResolutionInput.ts";
 import { hasInvalidCitationPinCite, stripCitationAntecedentPunctuation } from "./ResolverText.ts";
-import type { CitationResolution } from "@beep/law-practice-domain/values";
+import type { CitationMention, CitationResolution } from "@beep/law-practice-domain/values";
 import type * as Crypto from "effect/Crypto";
 
 const $I = $LawPracticeServerId.create("internal/Citation/Resolve");
-const SourceProof: S.Codec<VerifiedSourceText> = VerifiedSourceText;
-const Input = S.Struct({
-  verifiedSource: SourceProof,
-  engineArtifact: Sha256Hex,
-  mentions: S.Array(CitationMention),
-  editions: S.Array(CitationAuthorityEdition),
-  limits: CitationEngineLimits,
-}).pipe(
-  $I.annoteSchema("Input", {
-    description:
-      "Genuine canonical source capability, verified ordered mentions, trusted edition data and explicit decoded limits.",
-  })
-);
-const Snapshot = S.Struct({
-  source: SourceTextIdentity,
-  engineArtifact: Sha256Hex,
-  mentions: S.Array(CitationMentionReceipt),
-  editions: S.Array(CitationAuthorityEdition),
-  limits: CitationEngineLimits,
-}).pipe(
-  $I.annoteSchema("Snapshot", {
-    description:
-      "Structural legal/assertion data copied before asynchronous verification; source proof remains a separate capability.",
-  })
-);
-const SnapshotJson = S.fromJsonString(Snapshot);
 const Entry = S.Struct({
   citation: FullCitation,
   authorityId: CitationAuthorityId,
@@ -126,29 +95,12 @@ const matchesParty = (entry: typeof Entry.Type, name: string): boolean =>
 export const resolveCitationMentions = Effect.fn("Citation.resolveMentions")(function* (
   input: unknown
 ): Effect.fn.Return<CitationDocument, CitationResolveFailure, Crypto.Crypto> {
-  const decoded = yield* S.decodeUnknownEffect(S.toType(Input))(input).pipe(Effect.mapError(invalid));
-  const verifiedSource = decoded.verifiedSource;
-  const json = yield* S.encodeEffect(SnapshotJson)({
-    source: verifiedSource.source,
-    engineArtifact: decoded.engineArtifact,
-    mentions: A.map(decoded.mentions, captureCitationMentionReceiptData),
-    editions: decoded.editions,
-    limits: decoded.limits,
-  }).pipe(Effect.mapError(invalid));
-  const snapshot = yield* S.decodeEffect(SnapshotJson)(json).pipe(Effect.mapError(invalid));
-  const limits = snapshot.limits;
-  const editions = HashMap.fromIterable(A.map(snapshot.editions, (edition) => Tuple.make(edition.edition, edition)));
-  if (HashMap.size(editions) !== A.length(snapshot.editions)) return yield* invalid();
-  if (A.length(snapshot.mentions) > limits.mentions || Str.length(verifiedSource.sourceText) > limits.sourceUtf16)
-    return yield* exceeded();
-  const mentions = yield* Effect.forEach(
-    snapshot.mentions,
-    (mention) =>
-      restoreCitationMentionAgainstVerifiedSource(mention, verifiedSource, snapshot.engineArtifact).pipe(
-        Effect.mapError(() => CitationResolveFailure.make({ reason: "evidence-failed" }))
-      ),
-    { concurrency: 1 }
+  const snapshot = yield* prepareCitationResolution(input).pipe(
+    Effect.mapError((error) => CitationResolveFailure.make({ reason: error.reason }))
   );
+  const limits = snapshot.limits;
+  const mentions = snapshot.mentions;
+  const editions = HashMap.fromIterable(A.map(snapshot.editions, (edition) => Tuple.make(edition.edition, edition)));
   let fulls = Chunk.empty<typeof Entry.Type>();
   let authorities = Chunk.empty<CitationAuthority>();
   let resolutions = Chunk.empty<CitationResolution>();

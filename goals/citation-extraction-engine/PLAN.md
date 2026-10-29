@@ -56,7 +56,9 @@ service-port treatment before custom resolution can be implemented. These
 source observations do not increase the 76 target-tested contexts.
 Authority representatives now refer to any resolved mention. Private
 persistence accepts exact expected membership from trusted canonical/external
-resource descriptors; host normalization and callback state remain open.
+resource descriptors. A private callback session now matches 18 focused source
+contexts and all 53 callback events through test adapters. Production callback
+defaults, general host/alias/model mutation and final integration remain open.
 Exhaustive resolver/custom-resource proof, live artifact integration,
 Bluebook codecs and extension adoption/schema proof stay open.
 The remaining 37 provisional contract directories are retired; their donor obligations

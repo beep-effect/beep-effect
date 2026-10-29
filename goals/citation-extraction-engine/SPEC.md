@@ -868,6 +868,20 @@ instead of silently splitting delivery or weakening scope.
   remains the regression gate. Host normalization, first-value/truthiness and
   mutable callback state need their own source-bound proof.
 
+- **2026-10-28 private callback session:** share verified input preparation
+  with the default path and inject five captured callbacks through a private
+  Context.Service. Preserve actual last results, falsy prior-full entries,
+  first key presentation and callback-boundary list/dictionary updates. Keep
+  resource identity separate from truthiness/presentation. The oracle's Id.
+  first-member cast is not a runtime full-only restriction; the private pin
+  helper accepts canonical non-full members too. The explicit transition
+  protocol matches all 18 focused source contexts and 53 events using test
+  adapters. It does not yet prove arbitrary aliases/model mutation or publish
+  production defaults/public ports. Keep transient groups, including empty or
+  mutable memberships, until final projection has its own lawful proof.
+  Reverse the session, shared preparation refactor and pin-input widening
+  together, retaining equivalent default and source-trace regression proof.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from
