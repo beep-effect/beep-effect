@@ -50,6 +50,8 @@ unfinished.
 
 Current evidence:
 
+- [Registered default resolution](./history/evidence/2026-10-29-registered-default-resolution.md)
+
 - [Canonical session descriptors](./history/evidence/2026-10-29-canonical-session-descriptors.md)
 
 - [Callback mutation shapes](./history/evidence/2026-10-28-callback-mutation-shapes.md)

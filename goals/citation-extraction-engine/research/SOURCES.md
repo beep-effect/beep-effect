@@ -169,6 +169,15 @@ presentation spoofing, unused null-page failure and independent replay are
 target proof laws. They do not expand source runtime coverage or complete the
 production Layer. Attribution remains the existing eyecite BSD-2-Clause notice.
 
+The [registered default resolver evidence](
+../history/evidence/2026-10-29-registered-default-resolution.md) reuses four
+controlled source-id rows from the case-hash corpus, all 46 focused default
+contexts and all 30 existing default operation observations. Source replay
+matches every decoded focused-fixture field. Explicit injected identity inputs
+and successful document restoration prove integration; sequential test adapter
+integers do not prove a production native allocator. No source coverage count
+or semantic waiver changes; the existing BSD-2-Clause attribution applies.
+
 ## Incorporated-source discipline
 
 - A local clone is research state, not an incorporated dependency.

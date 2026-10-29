@@ -46,7 +46,12 @@ export type CitationCallbackResource = typeof CitationCallbackResource.Type;
  * @since 0.0.0
  */
 export const CitationCallbackResourceOrigin = S.TaggedUnion({
-  Canonical: { scope: Sha256Hex, slot: S.Natural, reference: CitationGroupMember },
+  Canonical: {
+    scope: Sha256Hex,
+    slot: S.Natural,
+    reference: CitationGroupMember,
+    missingPageIdentityHash: S.OptionFromNullOr(S.BigIntFromString),
+  },
   Host: { scope: Sha256Hex, slot: S.Natural },
 }).pipe(
   $I.annoteSchema("CitationCallbackResourceOrigin", {

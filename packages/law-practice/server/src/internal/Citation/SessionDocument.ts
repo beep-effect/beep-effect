@@ -92,7 +92,9 @@ export const makeCitationSessionDocumentProjector = Effect.fn("Citation.makeSess
           const cached = O.flatMap(reference, (key) => HashMap.get(registered, key));
           if (O.isSome(cached)) return cached.value;
           const identity = yield* S.decodeEffect(S.toType(CitationResourceIdentity))(
-            yield* descriptors.describe(resource).pipe(Effect.mapError(failed))
+            yield* descriptors
+              .describe(resource)
+              .pipe(Effect.mapError((error) => (error.reason === "limit-exceeded" ? limit() : failed())))
           ).pipe(Effect.mapError(failed));
           const id = yield* makeCitationResourceAuthorityId(identity).pipe(Effect.mapError(failed));
           if (!HashMap.has(identities, id)) {

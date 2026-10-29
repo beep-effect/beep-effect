@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationGroupMember, FullCitation } from "@beep/law-practice-domain/values";
+import { CitationComponents, CitationGroupMember, FullCitation } from "@beep/law-practice-domain/values";
 import { Sha256HexFromBytes } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
@@ -14,6 +14,7 @@ import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import {
   CitationCallbackFailure,
@@ -48,6 +49,33 @@ import type { CitationRuntimeDictionaryEntry } from "./RuntimeDictionary.ts";
 const $I = $LawPracticeServerId.create("internal/Citation/CallbackRuntimeIndex");
 const Entry = S.Struct({ entryId: S.Natural, resource: CitationCallbackResource, slot: S.Natural });
 const bad = () => CitationCallbackFailure.make({ reason: "identity-failed" });
+/**
+ * Trusted semantic-object identity reads within one operation. The provider
+ * supplies the source identity integer; citation content never substitutes it.
+ * @internal
+ * @category services
+ * @since 0.0.0
+ */
+export class CitationMissingPageIdentities extends Context.Service<
+  CitationMissingPageIdentities,
+  { readonly read: (reference: CitationGroupMember) => Effect.Effect<bigint, CitationCallbackFailure> }
+>()($I`CitationMissingPageIdentities`) {}
+/**
+ * Allocate an independent identity adapter per runtime owner. No request field
+ * selects this optional server service, and no native address is inferred.
+ * @internal
+ * @category services
+ * @since 0.0.0
+ */
+export class CitationMissingPageIdentityFactory extends Context.Service<
+  CitationMissingPageIdentityFactory,
+  {
+    readonly build: Effect.Effect<Context.Service.Shape<typeof CitationMissingPageIdentities>, CitationCallbackFailure>;
+  }
+>()($I`CitationMissingPageIdentityFactory`) {}
+const referenceKey = (reference: CitationGroupMember) =>
+  reference._tag === "Mention" ? `Mention:${reference.mentionId}` : `Detached:${reference.detachedId}`;
+
 /**
  * Captured index operations, separate from member-list ownership. Custom resources require a captured host adapter; automatic primitive
  * normalization and reentrant comparison remain separate work.
@@ -115,6 +143,7 @@ export const makeCitationCallbackRuntimeIndexFactory = Effect.fn("Citation.makeC
     const frozen = yield* CitationFrozenEditions;
     const crypto = yield* Crypto.Crypto;
     const hostFactory = yield* Effect.serviceOption(CitationHostResourceAdapterFactory);
+    const identityFactory = yield* Effect.serviceOption(CitationMissingPageIdentityFactory);
     return CitationCallbackRuntimeIndexFactory.of({
       build: Effect.fn("Citation.buildCallbackRuntimeIndex")(function* (owner) {
         const nonce = yield* crypto.randomBytes(32).pipe(Effect.mapError(bad));
@@ -122,6 +151,10 @@ export const makeCitationCallbackRuntimeIndexFactory = Effect.fn("Citation.makeC
           Effect.provideService(Crypto.Crypto, crypto),
           Effect.mapError(bad)
         );
+        const identities = O.isSome(identityFactory)
+          ? O.some(yield* identityFactory.value.build.pipe(Effect.mapError(bad)))
+          : O.none();
+        let identityHashes = HashMap.empty<string, bigint>();
         const models = CitationResourceModels.of({
           read: Effect.fn("Citation.callbackRuntimeSemantic")(function* (reference: CitationGroupMember) {
             const citation = yield* owner
@@ -129,7 +162,29 @@ export const makeCitationCallbackRuntimeIndexFactory = Effect.fn("Citation.makeC
               .pipe(Effect.mapError(() => CitationResourceObjectFailure.make({ reason: "model-failed" })));
             if (!S.is(FullCitation)(citation))
               return yield* CitationResourceObjectFailure.make({ reason: "model-failed" });
-            return CitationResourceModelInput.make({ citation, missingPageIdentityHash: O.none() });
+            let missingPageIdentityHash = O.none<bigint>();
+            if (citation.type === "case") {
+              const groups = yield* S.encodeEffect(CitationComponents)(citation.components).pipe(
+                Effect.mapError(() => CitationResourceObjectFailure.make({ reason: "model-failed" }))
+              );
+              if (O.exists(R.get(groups, "page"), (page) => page === null)) {
+                const key = referenceKey(reference);
+                missingPageIdentityHash = HashMap.get(identityHashes, key);
+                if (O.isNone(missingPageIdentityHash) && O.isSome(identities)) {
+                  const identityReference =
+                    reference._tag === "Mention"
+                      ? CitationGroupMember.cases.Mention.make({ mentionId: reference.mentionId })
+                      : CitationGroupMember.cases.Detached.make({ detachedId: reference.detachedId });
+                  const hash = yield* identities.value.read(identityReference).pipe(
+                    Effect.flatMap(S.decodeEffect(S.BigInt)),
+                    Effect.mapError(() => CitationResourceObjectFailure.make({ reason: "identity-unavailable" }))
+                  );
+                  identityHashes = HashMap.set(identityHashes, key, hash);
+                  missingPageIdentityHash = O.some(hash);
+                }
+              }
+            }
+            return CitationResourceModelInput.make({ citation, missingPageIdentityHash });
           }),
           step: owner.step.pipe(
             Effect.mapError(() => CitationResourceObjectFailure.make({ reason: "limit-exceeded" }))
@@ -358,6 +413,7 @@ export const makeCitationCallbackRuntimeIndexFactory = Effect.fn("Citation.makeC
                           scope,
                           slot,
                           reference: record.reference,
+                          missingPageIdentityHash: HashMap.get(identityHashes, referenceKey(record.reference)),
                         })
                       : CitationCallbackResourceOrigin.cases.Host.make({ scope, slot })
                   )

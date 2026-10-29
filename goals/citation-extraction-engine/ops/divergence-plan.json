@@ -85,7 +85,10 @@
         "packages/law-practice/server/src/internal/Citation/SessionDocument.ts",
         "goals/citation-extraction-engine/history/evidence/2026-10-29-canonical-session-descriptors.md",
         "packages/law-practice/server/src/internal/Citation/SessionDescriptors.ts",
-        "packages/law-practice/server/test/CitationSessionDescriptors.test.ts"
+        "packages/law-practice/server/test/CitationSessionDescriptors.test.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-10-29-registered-default-resolution.md",
+        "packages/law-practice/server/src/internal/Citation/RegisteredResolver.ts",
+        "packages/law-practice/server/test/CitationDefaultCallbacks.test.ts"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
@@ -149,7 +152,10 @@
         "packages/law-practice/server/src/internal/Citation/SessionDocument.ts",
         "goals/citation-extraction-engine/history/evidence/2026-10-29-canonical-session-descriptors.md",
         "packages/law-practice/server/src/internal/Citation/SessionDescriptors.ts",
-        "packages/law-practice/server/test/CitationSessionDescriptors.test.ts"
+        "packages/law-practice/server/test/CitationSessionDescriptors.test.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-10-29-registered-default-resolution.md",
+        "packages/law-practice/server/src/internal/Citation/RegisteredResolver.ts",
+        "packages/law-practice/server/test/CitationDefaultCallbacks.test.ts"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

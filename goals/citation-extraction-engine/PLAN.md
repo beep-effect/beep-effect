@@ -89,6 +89,14 @@ compatibility/scaling and final parity-gate integration remain open. The
 explicit-presence audit passes all 123 deletion controls across seven
 validators; constructor defaults do not fill omitted decoded evidence.
 
+Latest integration evidence (2026-10-29): the registered default resolver now
+produces and restores document receipts for all 71 successful contexts across
+the 76-context corpus; five expected source exceptions yield closed failures.
+Null-page contexts use an explicit controlled identity adapter. Canonical
+origin capture preserves acquired identity integers into sealed projection.
+This supersedes earlier integration gaps above without completing production
+native identity allocation, live assets/Layer or exhaustive target parity.
+
 ## Delivery Rule
 
 This is one all-in implementation PR to control hosted CI cost. Work may use

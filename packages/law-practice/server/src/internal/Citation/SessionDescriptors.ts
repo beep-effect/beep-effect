@@ -15,7 +15,8 @@ import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { CitationCallbackFailure, readCapturedCitationSession } from "./CallbackSession.ts";
+import { CitationCallbackResourceOrigin } from "./CallbackResource.ts";
+import { CitationCallbackFailure, CitationResolutionWork, readCapturedCitationSession } from "./CallbackSession.ts";
 import { CitationFrozenEditions } from "./FrozenEditions.ts";
 import { CitationResourceIdentity } from "./ResourceIdentity.ts";
 import {
@@ -57,7 +58,7 @@ const mapped = (error: { readonly reason: string }) =>
  * edition payloads. No dispatch key, host hash, equality or truth method runs.
  * Current Resource hashes are the pinned class's equality domain, including
  * order-sensitive publication payloads. Null-page native identity allocation
- * remains unavailable; absent identity data fails closed instead of guessing.
+ * comes from the captured trusted identity adapter; absent data fails closed.
  * @internal
  * @category operations
  * @since 0.0.0
@@ -71,16 +72,36 @@ export const makeCitationRegisteredSessionDescriptors = Effect.fn("Citation.make
     const origins = HashMap.fromIterable(
       A.map(state.resourceOrigins, (origin) => [`${origin.scope}:${origin.slot}`, origin] as const)
     );
+    const identityHashes = HashMap.fromIterable(
+      A.map(
+        A.filter(state.resourceOrigins, CitationCallbackResourceOrigin.guards.Canonical),
+        (origin) =>
+          [
+            origin.reference._tag === "Mention"
+              ? `Mention:${origin.reference.mentionId}`
+              : `Detached:${origin.reference.detachedId}`,
+            origin.missingPageIdentityHash,
+          ] as const
+      )
+    );
     const mentions = HashMap.fromIterable(A.map(state.mentions, (mention) => [mention.id, mention.citation] as const));
     const detached = HashMap.fromIterable(
       A.map(state.detachedCitations, (object) => [object.id, object.citation] as const)
     );
+    const sharedWork = yield* Effect.serviceOption(CitationResolutionWork);
+    if (O.isSome(sharedWork) && sharedWork.value.maximum !== state.limits.resolutionIterations)
+      return yield* CitationCallbackFailure.make({ reason: "invalid-input" });
     let work = 0;
-    const step = Effect.suspend(() =>
+    const localStep = Effect.suspend(() =>
       work++ >= state.limits.resolutionIterations
         ? Effect.fail(CitationResourceObjectFailure.make({ reason: "limit-exceeded" }))
         : Effect.void
     );
+    const step = O.isSome(sharedWork)
+      ? sharedWork.value.step.pipe(
+          Effect.mapError(() => CitationResourceObjectFailure.make({ reason: "limit-exceeded" }))
+        )
+      : localStep;
     const models = CitationResourceModels.of({
       step,
       read: Effect.fn("Citation.sealedCanonicalModel")(function* (reference: CitationGroupMember) {
@@ -91,7 +112,12 @@ export const makeCitationRegisteredSessionDescriptors = Effect.fn("Citation.make
           modelFailed
         );
         if (!S.is(FullCitation)(citation)) return yield* modelFailed();
-        return CitationResourceModelInput.make({ citation, missingPageIdentityHash: O.none() });
+        const key =
+          reference._tag === "Mention" ? `Mention:${reference.mentionId}` : `Detached:${reference.detachedId}`;
+        return CitationResourceModelInput.make({
+          citation,
+          missingPageIdentityHash: O.flatten(HashMap.get(identityHashes, key)),
+        });
       }),
     });
     const objects = yield* makeCitationResourceObjects(state.limits).pipe(

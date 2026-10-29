@@ -1076,6 +1076,15 @@ instead of silently splitting delivery or weakening scope.
   remain required. Unavailable null-page identity inputs fail closed. The live
   Layer, general host normalization and exhaustive completion remain open.
 
+- **2026-10-29 registered default resolution:** one captured private resolver
+  connects verified preparation, registered default dispatch and sealed document
+  production. All 76 committed contexts run through it, including 71 successful
+  receipt restorations and five closed source-error outcomes. A trusted optional
+  operation identity port carries controlled source null-page integers into the
+  sealed origins. It does not supply a production native allocator. Concurrent
+  replay and budget-failure recovery preserve operation isolation. Public Layer,
+  detailed diagnostics, native allocation and exhaustive proof remain open.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from

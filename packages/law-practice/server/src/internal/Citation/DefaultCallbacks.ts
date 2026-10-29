@@ -197,6 +197,30 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
 });
 
 /**
+ * Execute prepared default callbacks with the caller's operation work counter.
+ * Closing covers callback construction as well as dispatch failures.
+ * @internal
+ * @category operations
+ * @since 0.0.0
+ */
+export const runPreparedDefaultCitationCallbackSession = Effect.fn("Citation.runPreparedDefaultCallbackSession")(
+  function* (prepared: PreparedCitationResolution) {
+    const work = yield* CitationResolutionWork;
+    const dictionary = yield* makeCitationCallbackDictionary(prepared);
+    return yield* Effect.gen(function* () {
+      const callbacks = yield* makeDefaultCitationResolutionCallbacks(prepared).pipe(
+        Effect.provideService(CitationCallbackDictionary, dictionary)
+      );
+      return yield* runPreparedCitationCallbackSession(prepared).pipe(
+        Effect.provideService(CitationResolutionCallbacks, callbacks),
+        Effect.provideService(CitationCallbackDictionary, dictionary),
+        Effect.provideService(CitationResolutionWork, work)
+      );
+    }).pipe(Effect.ensuring(dictionary.close));
+  }
+);
+
+/**
  * Run a fresh default callback session after one shared input verification.
  * Work state and callbacks are allocated per operation, including concurrent
  * operations; final document diagnostics/projection remain separate.
@@ -211,16 +235,7 @@ export const runDefaultCitationCallbackSession = Effect.fn("Citation.runDefaultC
     Effect.mapError((error) => CitationCallbackFailure.make({ reason: error.reason }))
   );
   const work = yield* makeCitationResolutionWork(prepared.limits);
-  const dictionary = yield* makeCitationCallbackDictionary(prepared).pipe(
-    Effect.provideService(CitationResolutionWork, work)
-  );
-  const callbacks = yield* makeDefaultCitationResolutionCallbacks(prepared).pipe(
-    Effect.provideService(CitationCallbackDictionary, dictionary),
-    Effect.provideService(CitationResolutionWork, work)
-  );
-  return yield* runPreparedCitationCallbackSession(prepared).pipe(
-    Effect.provideService(CitationResolutionCallbacks, callbacks),
-    Effect.provideService(CitationCallbackDictionary, dictionary),
+  return yield* runPreparedDefaultCitationCallbackSession(prepared).pipe(
     Effect.provideService(CitationResolutionWork, work)
   );
 });
