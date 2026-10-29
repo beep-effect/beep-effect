@@ -110,8 +110,10 @@ infra/r2-cache/workstation.sh install
 infra/r2-cache/workstation.sh enable /absolute/path/to/the/checkout
 ```
 
-The installed unprivileged `beep-turbo-r2.service` binds `127.0.0.1:9427`, limits
-restart attempts and memory, and runs two adapter workers. It receives storage
+The installed unprivileged `beep-turbo-r2.service` binds `127.0.0.1:9427` and limits
+restart attempts and memory. Its upstream HTTP-worker default follows host
+parallelism; the candidate worker guard below needs separate qualification and
+deployment. The service receives storage
 access but strips vault and application credentials from the adapter environment.
 A persistent failure leaves quality commands able to execute locally.
 
@@ -283,7 +285,7 @@ must match the independently reviewed digest. Only synthetic credentials are use
 and only exact owned child processes are stopped. See the packet's
 `research/adapter-policy-lab.json` for the local result and limits.
 
-The final dependency closure's statically linked x86_64 musl release build passed
+The earlier policy candidate's statically linked x86_64 musl release build passed
 all20 wire, one startup-boundary and12 native controls on the current workstation. Earlier glibc
 receipts retain their original source inputs. The portable build uses installed
 Rust1.96.0 plus cargo-zigbuild0.20.1/Zig0.14.1, pinned in
@@ -291,6 +293,25 @@ Rust1.96.0 plus cargo-zigbuild0.20.1/Zig0.14.1, pinned in
 the source patch. `cargo-build-musl` reproduces that build inside admission.
 Remote fleet execution, R2 grant negatives, producer attribution, rotation/rollback,
 deployment and representative observation remain required before activation.
+
+The current candidate fixes two Tokio core workers, two HTTP workers and two
+blocking threads per runtime. `cargo-test` includes the binary runtime test.
+Add `--runtime-envelope` to the process lab on Linux with an active systemd user
+manager to measure the actual executable, explicit environment, worker counts
+and cgroup limits at readiness and after load. The synthetic services have a
+two-CPU quota, 256 MiB memory cap and sixteen-task cap. Cleanup stops only fresh
+owned units and also proves an activating unit is stopped. All 33 original
+wire/startup/native controls pass with this envelope and zero adapter output;
+the source-bound results are `research/adapter-runtime-checkpoint.json` and
+`research/adapter-runtime-lab.json` under the trust packet. The actual deployed
+credential-launcher chain still requires its own resource and grant proof.
+
+Cleanup attempts every owned unit and child before reporting an aggregate
+failure. An ExitStack closes logs, temporary data and the storage fixture even
+if stopping or another closure fails. Three failure controls cover a stop
+timeout, a status-query failure and combined cleanup/log closure failures;
+the first two use real disposable units and a child process. A success receipt
+is written only after teardown finishes.
 
 Run `policy.sh cargo-security` inside admission or hosted CI for the pinned
 Cargo lock scan. It mounts only public lock/config inputs into the exact OSV

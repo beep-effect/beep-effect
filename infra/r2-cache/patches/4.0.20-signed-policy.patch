@@ -984,14 +984,37 @@ index 625e944..794d195 100644
  /// Returns `None` when the scheme is not Bearer or the token is empty.
  fn parse_bearer_token(header_value: &str) -> Option<&str> {
 diff --git a/src/main.rs b/src/main.rs
-index d196b24..13f37af 100644
+index d196b24..4a1693c 100644
 --- a/src/main.rs
 +++ b/src/main.rs
-@@ -13,27 +13,41 @@
+@@ -3,6 +3,7 @@
  
- #[tokio::main]
- async fn main() -> Result<(), std::io::Error> {
+ use decay::{
+     app_settings::get_settings,
++    startup::CACHE_WORKER_LIMIT,
+     telemetry::{
+         get_telemetry_subscriber, init_system_metrics, init_telemetry_subscriber, otel_service_name,
+     },
+@@ -11,32 +12,115 @@
+ const PKG_NAME: &str = env!("CARGO_PKG_NAME");
+ const PKG_VERSION: &str = env!("CARGO_PKG_VERSION");
+ 
+-#[tokio::main]
+-async fn main() -> Result<(), std::io::Error> {
 -    dotenv::dotenv().ok();
++fn build_runtime() -> Result<tokio::runtime::Runtime, std::io::Error> {
++    tokio::runtime::Builder::new_multi_thread()
++        .enable_all()
++        .worker_threads(CACHE_WORKER_LIMIT)
++        .max_blocking_threads(CACHE_WORKER_LIMIT)
++        .build()
++}
++
++fn main() -> Result<(), std::io::Error> {
++    build_runtime()?.block_on(run_main())
++}
++
++async fn run_main() -> Result<(), std::io::Error> {
 +    let signed_policy = std::env::var_os("BEEP_CACHE_POLICY").is_some();
 +    if !signed_policy {
 +        dotenvy::dotenv().ok();
@@ -1023,8 +1046,6 @@ index d196b24..13f37af 100644
 -    // This must be called after the meter provider is set globally
 -    // The returned SystemMetrics struct must be kept alive for the application lifetime
 -    let _system_metrics = init_system_metrics(PKG_NAME, service_name, PKG_VERSION);
--
--    let app_settings = get_settings();
 +    let _system_metrics = if signed_policy {
 +        None
 +    } else {
@@ -1036,7 +1057,8 @@ index d196b24..13f37af 100644
 +            std::io::stdout,
 +        );
 +        init_telemetry_subscriber(subscriber);
-+
+ 
+-    let app_settings = get_settings();
 +        // Initialize system metrics collection (CPU, RAM)
 +        // This must be called after the meter provider is set globally
 +        // The returned SystemMetrics struct must be kept alive for the application lifetime
@@ -1045,6 +1067,67 @@ index d196b24..13f37af 100644
  
      let address = format!("{}:{}", app_settings.host, app_settings.port);
      let listener = TcpListener::bind(address)?;
+ 
+     decay::startup::run(listener, app_settings)?.await
+ }
++
++#[cfg(test)]
++mod runtime_tests {
++    use std::sync::{
++        Arc, Condvar, Mutex,
++        atomic::{AtomicUsize, Ordering},
++        mpsc,
++    };
++    use std::time::Duration;
++
++    #[test]
++    fn core_and_blocking_workers_are_bounded() {
++        let runtime = super::build_runtime().unwrap();
++        assert_eq!(runtime.metrics().num_workers(), 2);
++        let gate = Arc::new((Mutex::new(false), Condvar::new()));
++        let active = Arc::new(AtomicUsize::new(0));
++        let peak = Arc::new(AtomicUsize::new(0));
++        let (started, events) = mpsc::channel();
++        let tasks = runtime.block_on(async {
++            (0..4)
++                .map(|_| {
++                    let gate = Arc::clone(&gate);
++                    let active = Arc::clone(&active);
++                    let peak = Arc::clone(&peak);
++                    let started = started.clone();
++                    tokio::task::spawn_blocking(move || {
++                        let count = active.fetch_add(1, Ordering::SeqCst) + 1;
++                        peak.fetch_max(count, Ordering::SeqCst);
++                        started.send(()).unwrap();
++                        let (lock, ready) = &*gate;
++                        let mut released = lock.lock().unwrap();
++                        while !*released {
++                            released = ready.wait(released).unwrap();
++                        }
++                        active.fetch_sub(1, Ordering::SeqCst);
++                    })
++                })
++                .collect::<Vec<_>>()
++        });
++        let first = events.recv_timeout(Duration::from_secs(2));
++        let second = events.recv_timeout(Duration::from_secs(2));
++        let extra = events.recv_timeout(Duration::from_millis(50));
++        // Release every owned task even when an assertion would fail.
++        {
++            let (lock, ready) = &*gate;
++            *lock.lock().unwrap() = true;
++            ready.notify_all();
++        }
++        runtime.block_on(async {
++            for task in tasks {
++                task.await.unwrap();
++            }
++        });
++        assert!(first.is_ok() && second.is_ok());
++        assert!(matches!(extra, Err(mpsc::RecvTimeoutError::Timeout)));
++        assert_eq!(peak.load(Ordering::SeqCst), 2);
++    }
++}
 diff --git a/src/routes/artifacts.rs b/src/routes/artifacts.rs
 index a5bf2ea..9af90bb 100644
 --- a/src/routes/artifacts.rs
@@ -1126,6 +1209,29 @@ index a5bf2ea..9af90bb 100644
      let stream = response.bytes.map(|maybe_chunk| match maybe_chunk {
          Ok(bytes) => Result::<Bytes, actix_web::error::Error>::Ok(bytes),
          Err(error) => {
+diff --git a/src/startup.rs b/src/startup.rs
+index e57652f..0c69e58 100644
+--- a/src/startup.rs
++++ b/src/startup.rs
+@@ -19,6 +19,9 @@
+     storage::Storage,
+ };
+ 
++/// Fixed core and per-runtime blocking-worker limit for the reviewed adapter.
++pub const CACHE_WORKER_LIMIT: usize = 2;
++
+ pub fn run(listener: TcpListener, app_settings: AppSettings) -> Result<Server, std::io::Error> {
+     let storage = Storage::new(&app_settings);
+     let storage = web::Data::new(storage);
+@@ -48,6 +51,8 @@
+             .app_data(app_settings.clone())
+             .app_data(storage.clone())
+     })
++    .workers(CACHE_WORKER_LIMIT)
++    .worker_max_blocking_threads(CACHE_WORKER_LIMIT)
+     .listen(listener)?
+     .run();
+ 
 diff --git a/src/storage.rs b/src/storage.rs
 index 92b16f9..9048d30 100644
 --- a/src/storage.rs

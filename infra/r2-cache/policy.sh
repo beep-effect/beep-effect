@@ -83,7 +83,7 @@ PY
     cd "$source"
     [[ "$(rustc --version | cut -d ' ' -f 2)" == 1.96.0 ]] || { echo 'This component is pinned to installed Rust1.96.0' >&2; exit 1; }
     if [[ "$operation" == cargo-test ]]; then
-      cargo test --locked --lib --test signed_policy --test dependency_scope
+      cargo test --locked --lib --bin decay --test signed_policy --test dependency_scope
     elif [[ "$operation" == cargo-build-musl ]]; then
       [[ "$(cargo-zigbuild --version)" == 'cargo-zigbuild 0.20.1' && "$(zig version)" == 0.14.1 ]] || { echo 'Portable build needs cargo-zigbuild0.20.1 and Zig0.14.1' >&2; exit 1; }
       cargo zigbuild --locked --release --bin decay --target x86_64-unknown-linux-musl

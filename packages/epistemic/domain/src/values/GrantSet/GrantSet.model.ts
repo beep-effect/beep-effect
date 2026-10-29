@@ -1,10 +1,12 @@
 /**
  * Grant set: the Draft/Frozen authority container and the pure evaluator.
  *
+ * **Details**
+ *
  * The freeze is expressed as types, not as a runtime flag someone must
  * remember to check: {@link addGrant} accepts only a {@link DraftGrantSet},
  * and evaluation accepts only a {@link FrozenGrantSet}, so widening a frozen
- * set does not compile. Because `S.Class` always exposes `.make`, the frozen
+ * set does not compile. Because `S.Opaque` always exposes `.make`, the frozen
  * class is additionally sealed two ways: a digest computed at freeze time and
  * re-verifiable at any read ({@link verifyFrozenGrantSetDigest}), and a repo
  * law banning `FrozenGrantSet.make` outside this module — so
@@ -243,6 +245,8 @@ export const emptyDraftGrantSet = (policyRevision: PolicyRevision): DraftGrantSe
  * {@link FrozenGrantSet} is a compile error, which is the freeze invariant
  * expressed as a type rather than as a runtime check.
  *
+ * **Details**
+ *
  * Fails with {@link GrantRevisionMismatch} when the grant's own
  * `policyRevision` differs from the set's: a set pinned to revision X must not
  * smuggle in authority issued under revision Y, or the revision recorded in
@@ -456,7 +460,9 @@ const principalsEqual = S.toEquivalence(Principal);
  * The pure evaluator: a total function of (frozen grants, request, evaluation
  * options) with error channel `never` — refusal is a value.
  *
- * It re-verifies the set's seal **first**, because `S.Class` and schema
+ * **Details**
+ *
+ * It re-verifies the set's seal **first**, because `S.Opaque` and schema
  * decoding can both produce a `FrozenGrantSet` whose `digest` does not match
  * its contents; without this check the freeze would depend on every caller
  * remembering to call {@link verifyFrozenGrantSetDigest}. A tampered set denies

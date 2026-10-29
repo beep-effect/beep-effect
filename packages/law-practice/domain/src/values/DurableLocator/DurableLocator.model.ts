@@ -2,6 +2,8 @@
  * Durable-locator value object: a portable, host-agnostic locator for a
  * citation, in the style of W3C Web Annotation selectors.
  *
+ * **Details**
+ *
  * Stores the citation as a quote plus surrounding context (TextQuoteSelector)
  * and an offset hint (TextPositionSelector), so it survives edits to the
  * document.

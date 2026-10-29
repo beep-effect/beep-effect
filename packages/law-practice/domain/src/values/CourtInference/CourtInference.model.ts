@@ -2,6 +2,8 @@
  * Court-inference value object: the court level and jurisdiction inferred from
  * the reporter series of a parsed citation.
  *
+ * **Details**
+ *
  * These classifications are populated independently of the
  * parenthetical-extracted `court` field, so a citation can carry both a
  * reporter-derived inference and an explicitly parsed court.

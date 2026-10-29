@@ -106,6 +106,20 @@ export class SetupRepairRefused extends S.TaggedError<SetupRepairRefused, { read
 /**
  * Service shape of the setup doctor.
  *
+ * **Example** (Stub a doctor that reports nothing)
+ *
+ * ```ts
+ * import { ProbeSatisfied } from "@beep/law-practice-domain/values/SetupRequirement"
+ * import { assembleReport, SetupDoctorShape } from "@beep/law-practice-use-cases/PracticeSetup"
+ * import * as Effect from "effect/Effect"
+ *
+ * const shape = SetupDoctorShape.make({
+ *   check: () => assembleReport([], () => Effect.succeed(ProbeSatisfied.make({}))),
+ *   repair: () => Effect.succeed(ProbeSatisfied.make({}))
+ * })
+ * console.log(typeof shape.check) // "function"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
