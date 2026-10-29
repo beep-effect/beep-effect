@@ -130,14 +130,15 @@ export const makeCitationAuthorityId = Effect.fn("Citation.makeAuthorityId")(fun
   if (citation.type === "case") {
     const page = R.get(components, "page");
     const reporter = R.get(components, "reporter");
-    if (O.isNone(page) || O.isNone(reporter)) return yield* invalid();
+    if (O.isNone(page)) return yield* invalid();
     if (page.value === null) {
       preimage = yield* S.encodeEffect(Key)(["citation-authority/v1", "case-occurrence", decoded.mentionId]).pipe(
         Effect.mapError(invalid)
       );
     } else {
       const groups = A.filter(pairs, ([name]) => name === "volume" || name === "page");
-      const correctedReporter = O.isSome(edition) ? edition.value.shortName : reporter.value;
+      if (O.isNone(edition) && O.isNone(reporter)) return yield* invalid();
+      const correctedReporter = O.isSome(edition) ? edition.value.shortName : O.getOrElse(reporter, () => null);
       preimage = yield* S.encodeEffect(Key)([
         "citation-authority/v1",
         "case",

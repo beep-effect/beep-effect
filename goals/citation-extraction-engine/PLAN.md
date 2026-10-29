@@ -43,8 +43,10 @@ encoded membership edge per resolved mention and structural receipt round-trip
 proof. Private document projection/restoration now recomputes occurrence and
 default authority keys, sharing one canonical-source verification across all
 anchors. Private resolver text helpers preserve the pinned punctuation,
-Unicode digit/whitespace and arbitrary-precision Id. pin rules. Complete
-resolver/custom-resource proof, live artifact integration,
+Unicode digit/whitespace and arbitrary-precision Id. pin rules. The private
+default resolver matches 46 focused contexts over all canonical families; this
+supports P1 integration while exhaustive P2 operation/corpus work stays pending.
+Exhaustive resolver/custom-resource proof, live artifact integration,
 Bluebook codecs and extension adoption/schema proof stay open.
 The remaining 37 provisional contract directories are retired; their donor obligations
 remain open. The non-citation SourceRef selector contract is preserved. The

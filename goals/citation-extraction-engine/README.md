@@ -31,8 +31,9 @@ Stable-ID document/resolution schemas now validate graph coherence and
 structural receipt round-trips. Private whole-document projection/restoration
 now checks occurrence/default authority keys and shares one source verification.
 Private resolver text helpers now preserve frozen Unicode/punctuation and
-arbitrary-precision Id. pin behavior. Full resolver/custom-resource proof,
-live artifact integration, Bluebook codecs,
+arbitrary-precision Id. pin behavior. A private default resolver now matches
+46 focused oracle scenarios across all canonical semantic families. Exhaustive
+resolver/custom-resource proof, live artifact integration, Bluebook codecs,
 extension adoption/schema proof, runtime enforcement and family safety remain
 unfinished.
 
@@ -63,6 +64,7 @@ Current evidence:
 - [Document relationships](./history/evidence/2026-10-28-document-relationships.md)
 - [Document persistence](./history/evidence/2026-10-28-document-persistence.md)
 - [Resolver text](./history/evidence/2026-10-28-resolver-text.md)
+- [Default resolution](./history/evidence/2026-10-28-default-resolution.md)
 
 ## Mission
 

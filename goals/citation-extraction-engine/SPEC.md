@@ -802,6 +802,18 @@ instead of silently splitting delivery or weakening scope.
   and regex-family safety remain open. Reverse only through a new oracle
   baseline and equivalent Unicode/numeric/punctuation comparison evidence.
 
+- **2026-10-28 default resolver integration:** process verified mentions in
+  caller order with immutable pre-hash snapshots. Preserve first full resource
+  representatives, corrected reporter/volume matching, antecedent refinement,
+  exact all-metadata name matching and Id. reset/page rules. Retain ambiguous
+  candidates as data without membership. Preserve lazy reporter-field access:
+  missing-page identity and selected corrections do not require a raw reporter,
+  while an actual unselected short comparison may fail. Check basic published
+  count budgets without claiming full deadlines/isolation. The focused corpus
+  is semantic-context proof, not target extraction or exhaustive parity.
+  Custom resource ports/key policy and final boundary mapping remain open.
+  Reverse only through equivalent source/state/identity/budget evidence.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from

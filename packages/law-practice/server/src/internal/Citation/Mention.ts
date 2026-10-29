@@ -172,6 +172,27 @@ export const projectCitationMentionReceipt = Effect.fn("Citation.projectMentionR
   }).pipe(Effect.mapError(invalid));
 });
 
+/**
+ * Capture structural evidence from an already validated runtime mention.
+ * This does not check its ID or deep-copy metadata; callers must snapshot the
+ * whole request before asynchronous work and validate identity before output.
+ * @internal
+ * @category encoding
+ * @since 0.0.0
+ */
+export const captureCitationMentionReceiptData = (mention: CitationMention): CitationMentionReceipt =>
+  CitationMentionReceipt.make({
+    ...mention,
+    schemaVersion: "citation-mention-receipt/v1",
+    anchor: toTextAnchorVerificationReceipt(mention.anchor),
+    components: A.map(mention.components, (component) =>
+      CitationComponentReceipt.make({ name: component.name, anchor: toTextAnchorVerificationReceipt(component.anchor) })
+    ),
+    footnote: O.map(mention.footnote, (zone) =>
+      CitationFootnoteReceipt.make({ label: zone.label, anchor: toTextAnchorVerificationReceipt(zone.anchor) })
+    ),
+  });
+
 const reverify = Effect.fn("Citation.reverifyMentionAnchor")(function* (
   verifiedSource: VerifiedSourceText,
   receipt: TextAnchorVerificationReceipt
