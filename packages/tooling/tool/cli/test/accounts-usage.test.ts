@@ -370,7 +370,15 @@ describe("credits, resets, and the Muse and Grok providers", () => {
       "kimi-1761717000000",
       null,
     ]);
-    assertSome(kimiProfileIdentity(KimiProfileBody.make({ email: null, nickname: "Someone" })), "Someone");
+    assertSome(kimiProfileIdentity(KimiProfileBody.make({ email: O.none(), nickname: "Someone" })), "Someone");
+    const oddEmail = kimiUsageOutcome(
+      { identity, status: 200, body: kimiBody },
+      O.some(`{"user_id":"u_1","nickname":"Someone","user_level_name":"Plus","email":"not a label"}`)
+    );
+    expect(oddEmail._tag === "Ok" ? [O.getOrNull(oddEmail.identity), O.getOrNull(oddEmail.plan)] : []).toEqual([
+      "Someone",
+      "Plus",
+    ]);
     expect(kimiUsageOutcome({ identity, status: 401, body: "" }, O.none())._tag).toBe("NeedsLogin");
     expect(kimiUsageOutcome({ identity, status: 200, body: "not json" }, O.none())._tag).toBe("Failed");
   });

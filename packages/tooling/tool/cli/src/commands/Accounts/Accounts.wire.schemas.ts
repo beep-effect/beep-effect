@@ -644,9 +644,27 @@ export const kimiCreditBalances = (body: KimiUsageBody): ReadonlyArray<CreditBal
     O.toArray
   );
 
+// The profile's email is external text: a value outside the label format is
+// dropped, so one odd email cannot fail the whole profile and lose the tier.
+const KimiProfileEmail = S.String.pipe(
+  S.NullOr,
+  S.decodeTo(
+    S.Option(AccountLabel),
+    SchemaTransformation.transform({
+      decode: (input: string | null) => O.filter(O.fromNullishOr(input), S.is(AccountLabel)),
+      encode: O.getOrNull,
+    })
+  )
+);
+
 /**
  * The Kimi Code profile response: who the login belongs to and the membership
  * tier it holds.
+ *
+ * **Details**
+ *
+ * `email` decodes to `None` when Kimi reports one outside the account-label
+ * format, so the nickname and tier still read.
  *
  * **Example** (Decode a profile)
  *
@@ -662,7 +680,7 @@ export const kimiCreditBalances = (body: KimiUsageBody): ReadonlyArray<CreditBal
  */
 export class KimiProfileBody extends S.Opaque<KimiProfileBody, { readonly brand: unique symbol }>()(
   S.Struct({
-    email: AccountLabel.pipe(S.NullOr, S.optionalKey),
+    email: KimiProfileEmail.pipe(S.optionalKey),
     nickname: S.String.pipe(S.NullOr, S.optionalKey),
     user_level_name: S.String.pipe(S.NullOr, S.optionalKey),
   }).pipe($I.annoteSchema("KimiProfileBody", { description: "Kimi Code login identity and membership tier." }))
@@ -694,7 +712,7 @@ export const KimiProfileBodyJson = JsonStringCodec(KimiProfileBody);
  * import { KimiProfileBody, kimiProfileIdentity } from "@beep/repo-cli/test/Accounts"
  * import * as O from "effect/Option"
  *
- * console.log(O.getOrNull(kimiProfileIdentity(KimiProfileBody.make({ email: "me@example.com", nickname: "me" })))) // "me@example.com"
+ * console.log(O.getOrNull(kimiProfileIdentity(KimiProfileBody.make({ email: O.some("me@example.com"), nickname: "me" })))) // "me@example.com"
  * ```
  *
  * @param body - The decoded profile.
@@ -703,7 +721,7 @@ export const KimiProfileBodyJson = JsonStringCodec(KimiProfileBody);
  * @since 0.0.0
  */
 export const kimiProfileIdentity = (body: KimiProfileBody): O.Option<string> =>
-  O.orElse(O.fromNullishOr(body.email), () => O.filter(O.fromNullishOr(body.nickname), Str.isNonEmpty));
+  O.orElse(O.flatten(O.fromNullishOr(body.email)), () => O.filter(O.fromNullishOr(body.nickname), Str.isNonEmpty));
 
 // Protobuf wire types: 0 varint, 1 fixed 64-bit, 2 length-delimited, 5 fixed 32-bit.
 const ProtoField = S.Struct({
