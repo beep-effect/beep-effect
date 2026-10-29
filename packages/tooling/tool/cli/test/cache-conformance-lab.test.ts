@@ -42,6 +42,7 @@ import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import {
   bearers,
@@ -122,6 +123,189 @@ it.layer(Services, { timeout: "60 seconds", excludeTestServices: true })("cache 
 });
 
 it.layer(Services, { timeout: "60 seconds", excludeTestServices: true })("cache conformance fault proxy", (it) => {
+  it.effect("rejects later traffic and invalidates evidence when the request budget is exhausted", () =>
+    Effect.gen(function* () {
+      const server = yield* makeConformanceServer(goodMode);
+      const proxy = yield* makeCacheConformanceFaultProxy(
+        CacheConformanceProxyOptions.make({
+          target: targetFor({ url: server.url }),
+          bearers,
+          holdMs: 400,
+          maxEvents: 2,
+        })
+      );
+      const put = HttpClientRequest.put(
+        `${proxy.url}/v8/artifacts/00112233445566778899aabbccddeeff?teamId=${teamId}`
+      ).pipe(
+        HttpClientRequest.setHeaders({ authorization: `Bearer ${secrets.writer}`, "x-artifact-tag": "A" }),
+        HttpClientRequest.bodyUint8Array(new TextEncoder().encode("body")),
+        HttpClient.execute,
+        Effect.flatMap((response) => response.arrayBuffer.pipe(Effect.as(response.status)))
+      );
+      expect(yield* put).toBe(200);
+      expect(yield* put).toBe(200);
+      expect(yield* put).toBe(503);
+      expect(yield* put).toBe(503);
+      expect((yield* server.tags).length).toBe(2);
+      expect(Result.isFailure(yield* proxy.events.pipe(Effect.result))).toBe(true);
+    })
+  );
+
+  it.effect("refuses an unreadable request body without forwarding an empty upload", () =>
+    Effect.gen(function* () {
+      const server = yield* makeConformanceServer(goodMode);
+      const proxy = yield* makeCacheConformanceFaultProxy(
+        CacheConformanceProxyOptions.make({
+          target: targetFor({ url: server.url }),
+          bearers,
+          holdMs: 400,
+          maxBodyBytes: 4,
+        })
+      );
+      const response = yield* HttpClientRequest.put(
+        `${proxy.url}/v8/artifacts/00112233445566778899aabbccddeeff?teamId=${teamId}`
+      ).pipe(
+        HttpClientRequest.setHeaders({ authorization: `Bearer ${secrets.writer}`, "x-artifact-tag": "A" }),
+        HttpClientRequest.bodyUint8Array(new TextEncoder().encode("large")),
+        HttpClient.execute
+      );
+      expect(response.status).toBe(413);
+      expect(yield* server.tags).toEqual([]);
+      expect(Result.isFailure(yield* proxy.events.pipe(Effect.result))).toBe(true);
+    })
+  );
+
+  it.effect("bounds retained replay bytes and rejects overflow before an upstream write", () =>
+    Effect.gen(function* () {
+      const server = yield* makeConformanceServer(goodMode);
+      const proxy = yield* makeCacheConformanceFaultProxy(
+        CacheConformanceProxyOptions.make({
+          target: targetFor({ url: server.url }),
+          bearers,
+          holdMs: 400,
+          maxCaptureBytes: 10,
+        })
+      );
+      const put = HttpClientRequest.put(
+        `${proxy.url}/v8/artifacts/00112233445566778899aabbccddeeff?teamId=${teamId}`
+      ).pipe(
+        HttpClientRequest.setHeaders({ authorization: `Bearer ${secrets.writer}`, "x-artifact-tag": "A" }),
+        HttpClientRequest.bodyUint8Array(new TextEncoder().encode("body")),
+        HttpClient.execute,
+        Effect.flatMap((response) => response.arrayBuffer.pipe(Effect.as(response.status)))
+      );
+      expect(yield* put).toBe(200);
+      expect(yield* put).toBe(200);
+      expect(yield* put).toBe(503);
+      expect((yield* server.tags).length).toBe(2);
+      expect(Result.isFailure(yield* proxy.events.pipe(Effect.result))).toBe(true);
+    })
+  );
+
+  it.effect("does not turn an interrupted upload into an empty upstream write", () =>
+    Effect.gen(function* () {
+      const server = yield* makeConformanceServer(goodMode);
+      const proxy = yield* makeCacheConformanceFaultProxy(
+        CacheConformanceProxyOptions.make({ target: targetFor({ url: server.url }), bearers, holdMs: 400 })
+      );
+      yield* HttpClientRequest.put(`${proxy.url}/v8/artifacts/00112233445566778899aabbccddeeff?teamId=${teamId}`).pipe(
+        HttpClientRequest.setHeaders({ authorization: `Bearer ${secrets.writer}`, "x-artifact-tag": "A" }),
+        HttpClientRequest.bodyStream(
+          Stream.concat(
+            Stream.make(new TextEncoder().encode("partial")),
+            Stream.fromEffect(Effect.sleep("50 millis")).pipe(
+              Stream.drain,
+              Stream.concat(Stream.fail("synthetic request abort"))
+            )
+          )
+        ),
+        HttpClient.execute,
+        Effect.result
+      );
+      yield* Effect.sleep("100 millis");
+      expect(yield* server.tags).toEqual([]);
+      expect(Result.isFailure(yield* proxy.events.pipe(Effect.result))).toBe(true);
+    })
+  );
+
+  it.effect("rejects an oversized upstream body and cannot return a complete receipt", () =>
+    Effect.gen(function* () {
+      const server = yield* makeConformanceServer(goodMode);
+      const path = `/v8/artifacts/00112233445566778899aabbccddeeff?teamId=${teamId}`;
+      yield* HttpClientRequest.put(`${server.url}${path}`).pipe(
+        HttpClientRequest.setHeaders({ authorization: `Bearer ${secrets.writer}`, "x-artifact-tag": "A" }),
+        HttpClientRequest.bodyUint8Array(new TextEncoder().encode("large")),
+        HttpClient.execute,
+        Effect.flatMap((response) => response.arrayBuffer)
+      );
+      const proxy = yield* makeCacheConformanceFaultProxy(
+        CacheConformanceProxyOptions.make({
+          target: targetFor({ url: server.url }),
+          bearers,
+          holdMs: 400,
+          maxBodyBytes: 4,
+        })
+      );
+      const response = yield* HttpClient.get(`${proxy.url}${path}`, {
+        headers: { authorization: `Bearer ${secrets.reader}` },
+      });
+      expect(response.status).toBe(503);
+      expect(Result.isFailure(yield* proxy.events.pipe(Effect.result))).toBe(true);
+    })
+  );
+
+  it.effect("reserves the request budget atomically across concurrent clients", () =>
+    Effect.gen(function* () {
+      const server = yield* makeConformanceServer(goodMode);
+      const proxy = yield* makeCacheConformanceFaultProxy(
+        CacheConformanceProxyOptions.make({
+          target: targetFor({ url: server.url }),
+          bearers,
+          holdMs: 400,
+          maxEvents: 2,
+        })
+      );
+      const statuses = yield* Effect.forEach(
+        A.range(1, 8),
+        () =>
+          HttpClientRequest.put(`${proxy.url}/v8/artifacts/00112233445566778899aabbccddeeff?teamId=${teamId}`).pipe(
+            HttpClientRequest.setHeaders({ authorization: `Bearer ${secrets.writer}`, "x-artifact-tag": "A" }),
+            HttpClientRequest.bodyUint8Array(new TextEncoder().encode("body")),
+            HttpClient.execute,
+            Effect.flatMap((response) => response.arrayBuffer.pipe(Effect.as(response.status)))
+          ),
+        { concurrency: 8 }
+      );
+      expect(A.filter(statuses, (status) => status === 200).length).toBeLessThanOrEqual(2);
+      expect(A.filter(statuses, (status) => status === 503).length).toBeGreaterThanOrEqual(6);
+      expect((yield* server.tags).length).toBeLessThanOrEqual(2);
+      expect(Result.isFailure(yield* proxy.events.pipe(Effect.result))).toBe(true);
+    })
+  );
+
+  it.effect("reserves the replay-entry limit before concurrent upstream writes", () =>
+    Effect.gen(function* () {
+      const server = yield* makeConformanceServer(goodMode);
+      const proxy = yield* makeCacheConformanceFaultProxy(
+        CacheConformanceProxyOptions.make({ target: targetFor({ url: server.url }), bearers, holdMs: 400 })
+      );
+      const statuses = yield* Effect.forEach(
+        A.range(1, 65),
+        (index) =>
+          HttpClientRequest.put(`${proxy.url}/v8/artifacts/${Str.padStart(32, "0")(`${index}`)}?teamId=${teamId}`).pipe(
+            HttpClientRequest.setHeaders({ authorization: `Bearer ${secrets.writer}`, "x-artifact-tag": "A" }),
+            HttpClientRequest.bodyUint8Array(new TextEncoder().encode("body")),
+            HttpClient.execute,
+            Effect.flatMap((response) => response.arrayBuffer.pipe(Effect.as(response.status)))
+          ),
+        { concurrency: 8 }
+      );
+      expect(statuses).toContain(503);
+      expect((yield* server.tags).length).toBe(64);
+      expect(Result.isFailure(yield* proxy.events.pipe(Effect.result))).toBe(true);
+    })
+  );
+
   it.effect("preserves bounded backend claims through proxy capture and rejects secret text", () =>
     Effect.gen(function* () {
       for (const responseCacheResult of ["not-found", `${secrets.reader} /fixture/private/result body-canary-15ab`]) {

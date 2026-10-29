@@ -739,6 +739,7 @@ export const CacheConformanceOutcome = LiteralKit([
   "timeout",
   "transport-error",
   "truncated-body",
+  "payload-rejected",
 ]).pipe(
   $I.annoteSchema("CacheConformanceOutcome", {
     description:

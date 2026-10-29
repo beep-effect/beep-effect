@@ -384,18 +384,39 @@ const withWriterTag = Effect.fnUntraced(function* (step: WireStep) {
  *
  * @internal
  * @param response - Client response to drain.
+ * @param maximumBodyBytes - Maximum complete body retained; callers may lower the 64 MiB default.
  * @returns An effect yielding the status, headers and complete body bytes.
  * @category utilities
  * @since 0.0.0
  */
-export const readCacheConformanceReply = (response: HttpClientResponse.HttpClientResponse) =>
-  response.arrayBuffer.pipe(
-    Effect.map((buffer) => ({
-      status: O.some(response.status),
-      headers: response.headers,
-      body: new Uint8Array(buffer),
-    }))
+export const readCacheConformanceReply = Effect.fnUntraced(function* (
+  response: HttpClientResponse.HttpClientResponse,
+  maximumBodyBytes = 64 * 1024 * 1024
+) {
+  let size = 0;
+  const chunks = yield* response.stream.pipe(
+    Stream.catchTag("HttpClientError", (error) =>
+      Match.value(error.reason).pipe(
+        Match.tag("EmptyBodyError", () => Stream.empty),
+        Match.orElse(() => Stream.fail(error))
+      )
+    ),
+    Stream.tap((chunk) => {
+      if (chunk.byteLength > maximumBodyBytes - size)
+        return CacheCommandError.new("Conformance response body exceeded its byte bound.");
+      size += chunk.byteLength;
+      return Effect.void;
+    }),
+    Stream.runCollect
   );
+  const body = new Uint8Array(size);
+  let offset = 0;
+  for (const chunk of chunks) {
+    body.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return { status: O.some(response.status), headers: response.headers, body };
+});
 
 const send = Effect.fnUntraced(function* (context: WireContext, unsigned: WireStep) {
   const client = yield* HttpClient.HttpClient;
@@ -406,6 +427,14 @@ const send = Effect.fnUntraced(function* (context: WireContext, unsigned: WireSt
     Effect.flatMap((response) =>
       readCacheConformanceReply(response).pipe(
         Effect.map((reply) => ({ ...reply, fault: O.none<CacheConformanceOutcome>() })),
+        Effect.catchTag("CacheCommandError", () =>
+          Effect.succeed({
+            status: O.some(response.status),
+            headers: response.headers,
+            body: empty,
+            fault: O.some<CacheConformanceOutcome>("payload-rejected"),
+          })
+        ),
         Effect.orElseSucceed(() => ({
           status: O.some(response.status),
           headers: response.headers,
@@ -1210,8 +1239,8 @@ const outcomeOf = (recorder: Recorder) =>
 
 type FaultProxy = {
   readonly url: string;
-  readonly events: Effect.Effect<ReadonlyArray<CacheConformanceProxyEvent>>;
-  readonly setScenario: (id: string, fault: CacheConformanceFault) => Effect.Effect<void>;
+  readonly events: Effect.Effect<ReadonlyArray<CacheConformanceProxyEvent>, CacheCommandError>;
+  readonly setScenario: (id: string, fault: CacheConformanceFault) => Effect.Effect<void, CacheCommandError>;
 };
 
 type LabCase = (

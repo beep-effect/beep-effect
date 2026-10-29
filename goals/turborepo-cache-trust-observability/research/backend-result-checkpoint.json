@@ -119,5 +119,10 @@
       "executableComputations": 2571,
       "authority": "inventory only"
     }
+  },
+  "latestSourceCheckpoint": {
+    "path": "goals/turborepo-cache-trust-observability/research/proxy-capture-bounds-checkpoint.json",
+    "sha256": "90adcc94948c24a7daff9a835df7a2e65119aa5ae8020346a752f75cd6c35c84",
+    "scope": "Bounded capture and streamed reply repair. All earlier source maps and full audits remain historical; no full-audit transfer to these new bytes."
   }
 }
