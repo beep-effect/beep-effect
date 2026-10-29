@@ -282,3 +282,13 @@ The local process report does not satisfy those deployment or observation gates.
   Reverse by stopping candidate admission and selecting the prior reviewed
   artifact only after its applicable gates; the incumbent service and objects
   remain available. No live adapter, credentials or cloud resource changes.
+
+### Owned lab cleanup review repair
+
+- 2026-10-29: Attempt every owned unit and child before reporting a bounded
+  aggregate cleanup failure. An ExitStack closes every log, temporary directory
+  and storage fixture even if stopping or another closure fails. Publish success
+  evidence only after teardown completes. Real-unit stop/status failure controls
+  and a combined stop/log failure control precede the full synthetic replay.
+  The reviewed Rust patch and binary are unchanged; production stays inactive.
+  Reversal is to halt candidate experiments while retaining the incumbent.

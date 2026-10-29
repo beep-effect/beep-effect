@@ -241,3 +241,11 @@ the signing posture test change; preserved that exact proof separately, reran
 result. Native artifact bytes and protocol source hashes remain unchanged.
 Source-bound evidence must be refreshed at its actual boundary after integration,
 not treated as permanent qualification.
+
+- 2026-10-29 — PR #2353 cleanup review found that the first stop/show failure
+  skipped other owned resources and fixture closure. Actual failure injection
+  reproduced the remaining active unit. Cleanup now aggregates after all unit/
+  process attempts; ExitStack closes logs, temporary data and storage even on
+  failures. Three controls and the full current process replay pass. Success
+  receipt publication follows teardown, preventing a later cleanup failure from
+  publishing fresh passing evidence. No live R2 service was touched.

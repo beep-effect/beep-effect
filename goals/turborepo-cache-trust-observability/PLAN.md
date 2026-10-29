@@ -286,3 +286,14 @@ The candidate remains inactive; deployed launcher/grant proof and all production
 acceptance gates remain open. See the source-bound
 [checkpoint](research/adapter-runtime-checkpoint.json) and
 [actual process observations](research/adapter-runtime-lab.json).
+
+### Cleanup review repair
+
+The first-error cleanup gap is repaired. Three failure controls pass: an injected
+stop timeout and a status-query failure still stop the remaining real owned unit
+and reap its child; combined cleanup/log closure failure still attempts every
+log and the storage fixture. The original helper fails the intended remaining-
+unit assertion. Fresh 20-wire/one-startup/twelve-native controls and four measured
+runtime observations pass with zero adapter output. Current infra audit/docgen
+pass in 11.0/13.4 seconds. Success evidence is written after teardown. The prior
+report remains separate, and the exact Rust patch and binary are unchanged.

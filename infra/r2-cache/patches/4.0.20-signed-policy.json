@@ -29,7 +29,8 @@
     "runtimeBinaryTests": 1,
     "totalCargoTests": 49,
     "runtimeObservations": 4,
-    "pendingUnitCleanupControls": 1
+    "pendingUnitCleanupControls": 1,
+    "cleanupFailureControls": 3
   },
   "productionReadiness": false
 }

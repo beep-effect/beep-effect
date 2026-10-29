@@ -65,7 +65,8 @@
     "research/adapter-policy-lab.json",
     "research/adapter-dependency-review.json",
     "research/adapter-runtime-checkpoint.json",
-    "research/adapter-runtime-lab.json"
+    "research/adapter-runtime-lab.json",
+    "research/adapter-runtime-lab-before-cleanup-review.json"
   ],
   "agentLaunchers": [
     {

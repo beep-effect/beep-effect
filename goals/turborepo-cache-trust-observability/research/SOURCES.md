@@ -247,3 +247,7 @@ binds changed runner source bytes. Historical claims above keep their dates.
   source/build bindings, 49 Cargo tests, synthetic wire/native controls and
   actual fixture worker/cgroup/environment observations. Local component proof
   only; historical adapter-policy evidence retains its original binary.
+
+- `adapter-runtime-lab-before-cleanup-review.json` retains the original runtime
+  observation bytes. The current runtime report and checkpoint separately bind
+  the cleanup review repair, three failure controls and fresh synthetic replay.

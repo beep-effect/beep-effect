@@ -306,6 +306,13 @@ the source-bound results are `research/adapter-runtime-checkpoint.json` and
 `research/adapter-runtime-lab.json` under the trust packet. The actual deployed
 credential-launcher chain still requires its own resource and grant proof.
 
+Cleanup attempts every owned unit and child before reporting an aggregate
+failure. An ExitStack closes logs, temporary data and the storage fixture even
+if stopping or another closure fails. Three failure controls cover a stop
+timeout, a status-query failure and combined cleanup/log closure failures;
+the first two use real disposable units and a child process. A success receipt
+is written only after teardown finishes.
+
 Run `policy.sh cargo-security` inside admission or hosted CI for the pinned
 Cargo lock scan. It mounts only public lock/config inputs into the exact OSV
 image, without a home or credential store. The adjacent `osv-scanner.toml`

@@ -3,7 +3,7 @@
   "goal": "turborepo-cache-trust-observability",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "33bc1bea1f47b965258f8b49f6920ff59126fcb5a6f9766af109eb21605d8c08",
+  "specSha256": "456a722a999a75f0b630a1d3b2fb7737c96bb858fa4c72eea391b86bdb1286a3",
   "acceptance": [
     {
       "id": "AC-01",
