@@ -44,6 +44,8 @@ export type ServerMode = {
   readonly dropTags: boolean;
   /** When true, an artifact stored without a tag reads as 404 (tag-passthrough shim behaviour). */
   readonly hideUntagged: boolean;
+  /** Untrusted artifact-response header used by receipt safety controls. */
+  readonly responseContentType?: string;
 };
 export const goodMode: ServerMode = {
   putStatus: 200,
@@ -125,7 +127,7 @@ const readArtifact = Effect.fnUntraced(function* (
   if (O.isNone(stored)) return status(404);
   const headers = state.mode.dropTags ? R.remove(stored.value.headers, "x-artifact-tag") : stored.value.headers;
   return HttpServerResponse.uint8Array(stored.value.body, {
-    contentType: "application/octet-stream",
+    contentType: state.mode.responseContentType ?? "application/octet-stream",
     headers: { "x-artifact-duration": "0", ...headers },
   });
 });

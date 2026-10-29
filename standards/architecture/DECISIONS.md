@@ -456,6 +456,7 @@ with top-level application entrypoints composing those boundaries.
 ## 2026-04-23: Use Semantic Foundation Names And Repo-Scoped Tooling Names
 
 - **Status:** Active
+- **Amended by:** [2026-10-28: One beep App Composes beep-Prefixed Command Tools](#2026-10-28-one-beep-app-composes-beep-prefixed-command-tools)
 
 Decision:
 
@@ -2410,3 +2411,67 @@ Rejected:
   what let `omit` through.
 - Leave the doctrine alone and reopen facets case by case. The same error
   would recur on the next concept.
+
+## 2026-10-28: One beep App Composes beep-Prefixed Command Tools
+
+- **Status:** Active
+- **Amends:** 2026-04-23 "Use Semantic Foundation Names And Repo-Scoped Tooling Names"
+
+Decision:
+
+The `beep` command line is assembled in one app, `@beep/beep`.
+The app owns the `beep` and `beep-cli` bins, a lazy dispatch manifest that maps
+each command group to a dynamic import and static help text, and the runtime
+Layers each group needs, built per group. It publishes no TypeScript API and
+no docgen surface. It may depend on any tooling package, and no product app,
+slice, or tooling package depends on it.
+
+Command groups live in `tooling/tool` packages named `@beep/beep-<group>` at
+`packages/tooling/tool/beep-<group>`. A tool composed by `@beep/beep` may omit
+`src/bin.ts`. Tools still never import each other: code that two tools share
+moves into a `tooling/library` package. Libraries, policy packs, and test kits
+keep `@beep/repo-<purpose>` names. Ten tooling packages that predate this
+entry keep their names as recorded exceptions: `@beep/ai-sync`,
+`@beep/codegen-kit`, `@beep/fc-runs`, `@beep/lint-rules`, `@beep/mcpb-kit`,
+`@beep/memfs`, `@beep/palantiri`, `@beep/qa-capture`, `@beep/test-runner`, and
+`@beep/test-utils`. New tooling names follow the rule.
+
+Until `goals/beep-cli-composition` completes, `@beep/repo-cli`
+(`packages/tooling/tool/cli`) remains the composition root and holds every
+command group. That is transitional compatibility, not drift.
+
+This entry supersedes three package-local locks against new packages: the
+"no new packages" lock in `goals/repo-cli-modularization`, D8 in
+`goals/packet-control-plane-core` ("no new workspace package" for the packet
+core), and the rule in `explorations/turborepo-quality-cache` that a tooling
+library is extracted only after two independent production consumers.
+
+Rationale:
+
+`@beep/repo-cli` grew from about 92k source lines when its modularization
+packet started on 2026-07-07 to about 438k on 2026-10-21. Its test task was
+the largest Turbo task in the fleet (8.8% of task time, 11% cache hits), its
+coverage shard ran 1,358 seconds against 521 for the next largest, and an
+edit anywhere in it invalidated the lint policy fingerprint for about 520
+tasks. About 340 consumers (generated package scripts, workflows, systemd
+units, hooks, and skills) bind to the `beep` bin rather than to the package,
+so the split keeps one bin and moves composition to where the architecture
+already puts runtime wiring: an app. That needs no new tooling kind and no
+exception to the tool-to-tool rule. It also removes today's tool-to-tool
+import from `@beep/repo-cli` to `@beep/repo-docgen`, whose command group the
+renamed `@beep/beep-docgen` absorbs. The `beep-` prefix says a package adds a
+`beep <group>` command; `repo-` says a package is imported substrate.
+
+Rejected:
+
+- A new `command-pack` tooling kind. It would define a second composition
+  concept beside apps, with its own dependency row.
+- Command groups as `tooling/library` packages. Libraries would need command
+  role files and a dependency on policy packs.
+- Separate tools with their own bins. That rewrites about 160 generated
+  manifests, 11 workflows, the systemd units, 21 permission grants, and the
+  skills.
+- An aggregator exemption that lets `@beep/repo-cli` import other tools. It
+  keeps the composition root in tooling under a standing exception.
+- Bare `@beep/<group>` names. They collide with product vocabulary such as
+  knowledge, harness, files, and media.

@@ -28,6 +28,7 @@ import {
   readCacheEvidenceBytes,
   readCacheExperimentBytes,
   requireCacheLinuxX64,
+  requireCacheSupervisorCapture,
 } from "./Cache.evidence.ts";
 import { CacheSignedPilotReceipt, CacheSignedPilotRequest } from "./Cache.pilot.signed.schemas.ts";
 import { validateCacheSignedPilotReceipt } from "./Cache.pilot.signed.ts";
@@ -218,8 +219,7 @@ BunRuntime.runMain(Effect.gen(function* () {
           env: { PATH: `${path.dirname(bun)}:${path.dirname(node)}:/usr/bin`, HOME: "/tmp", CI: "1", NO_COLOR: "1" },
           bound,
         }).pipe(Effect.timeout(Duration.minutes(20)));
-        if (captured.exitCode !== 0 || captured.truncated)
-          return yield* CacheCommandError.new("Signed pilot supervisor failed or exceeded its capture bound.");
+        yield* requireCacheSupervisorCapture(captured, "Signed pilot");
         const report = yield* readCacheExperimentBytes(directory, "report.json", 256 * 1024).pipe(
           Effect.flatMap(decodeCacheExperimentText),
           Effect.flatMap(JsonStringCodec(CacheSignedPilotReceipt).decode)

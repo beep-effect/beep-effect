@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-28T21:43:09.922Z",
+  "generatedAt": "2026-10-28T22:37:54.902Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -485671,8 +485671,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Docgen/Docgen.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Docgen/Docgen.command.ts",
-          "line": 1223,
-          "anchor": "packages-tooling-tool-cli-src-commands-docgen-docgen-command-ts-1223-docgencommand",
+          "line": 1232,
+          "anchor": "packages-tooling-tool-cli-src-commands-docgen-docgen-command-ts-1232-docgencommand",
           "currentTags": [
             "@category",
             "@since"
