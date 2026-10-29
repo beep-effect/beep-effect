@@ -652,3 +652,14 @@ the policy check; do not add a baseline finding or waive the detector.
   source mounts in evidence claims. Overbroad wording was corrected before the
   first push; the superseded publication wave is not passing proof. Describe
   additions relative to the reviewed mount baseline to prevent this ambiguity.
+
+
+### Runtime-alias regression fixture complexity
+
+Normal publication rejected the new test callback because repeated optional
+argument fallbacks increased cognitive complexity. Decode required arguments
+once through Option and reuse the resulting array; absent arguments now fail
+the fixture explicitly. Both18-test runtime suites, quick package lint/check
+and targeted Fallow audit/health pass. Retain the rejected publication and
+unchanged baselines. The earlier full package replay covers the production
+launcher and prior fixture bytes; fresh final proof must cover the new fixture.

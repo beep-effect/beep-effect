@@ -118,19 +118,16 @@ const fixture = Effect.fn("SignedRunnerTest.fixture")(function* (fault: typeof F
         });
       expect(options.command).toBe("/usr/bin/bwrap");
       expect(options.extendEnv).toBe(false);
-      expect(options.args).toContain("--unshare-all");
-      expect(options.args).not.toContain(issuer);
+      const args = O.getOrThrow(O.fromUndefinedOr(options.args));
+      expect(args).toContain("--unshare-all");
+      expect(args).not.toContain(issuer);
       expect(options.env?.PATH).toBe("/tools:/usr/bin");
-      expect(A.window(options.args ?? [], 3)).toContainEqual([
-        "--ro-bind",
-        yield* fs.realPath(process.execPath),
-        "/tools/bun",
-      ]);
-      expect(A.window(options.args ?? [], 3)).toContainEqual(["--ro-bind", tool, "/tools/node"]);
-      const worker = O.getOrThrow(A.last(options.args ?? []));
+      expect(A.window(args, 3)).toContainEqual(["--ro-bind", yield* fs.realPath(process.execPath), "/tools/bun"]);
+      expect(A.window(args, 3)).toContainEqual(["--ro-bind", tool, "/tools/node"]);
+      const worker = O.getOrThrow(A.last(args));
       const directory = path.dirname(worker);
       const config = `--config=${path.join(directory, "bunfig.toml")}`;
-      expect(options.args).toContain(config);
+      expect(args).toContain(config);
       expect(yield* fs.readFileString(path.join(directory, "bunfig.toml"))).toBe("");
       expect(yield* fs.readFileString(worker)).toContain("runCacheSignedPilotWorker");
       const protect = (pair: (typeof signedPilotInput.pairs)[number]) => ({
