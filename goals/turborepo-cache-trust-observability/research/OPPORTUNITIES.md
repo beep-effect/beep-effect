@@ -138,3 +138,14 @@ PLAN.md after the checkpoint was refreshed. The retained checkpoint already boun
 148 tests, ten controls per native channel, and the passed default-root full audit
 and docgen. Updated the summary from that source. A checkpoint refresh should
 include its adjacent plan summary so readers see the same bounded claim.
+
+### Use the package test runner and gate dependent steps
+
+A post-merge replay was invoked with `bun test` against Vitest suites and failed
+before collecting cases with “Vitest failed to find the current suite.” The
+package-owned `beep:test` script then passed all 156 selected cases. A source-map
+check also caught the inherited Cache barrel export; the old full-audit map was
+preserved and a separate current integration map was added after focused tests
+and lint/check. Driver verification failures must stop dependent commit steps;
+use the package script and explicit subprocess exit checking. Neither failure
+was a source regression or a passing proof.
