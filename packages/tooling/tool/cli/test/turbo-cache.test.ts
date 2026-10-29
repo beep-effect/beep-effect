@@ -1,5 +1,6 @@
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
+  forceLocalTurboCacheArgs,
   hasRemoteTurboCacheArgs,
   isTurboCacheControlArg,
   isTurboCacheDirArg,
@@ -24,7 +25,7 @@ import {
   turboCacheValueSourceFor,
 } from "@beep/repo-cli/test/SharedInternals";
 import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect, it, vi } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -66,6 +67,7 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "10 seco
           [
             "TURBO_API=http://127.0.0.1:9427",
             "TURBO_TOKEN=op://fixture/cache/bearer",
+            "TURBO_REMOTE_CACHE_SIGNATURE_KEY=op://fixture/cache/signing",
             "TURBO_TEAM=fixture",
             "TURBO_CACHE=local:rw,remote:rw",
             "BEEP_TURBO_TRUSTED_WRITER=true",
@@ -89,10 +91,18 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "10 seco
         expect(defaults).toEqual({
           TURBO_API: "http://127.0.0.1:9427",
           TURBO_TOKEN: "op://fixture/cache/bearer",
+          TURBO_REMOTE_CACHE_SIGNATURE_KEY: "op://fixture/cache/signing",
           TURBO_TEAM: "fixture",
           TURBO_CACHE: "local:rw,remote:rw",
           BEEP_TURBO_TRUSTED_WRITER: "true",
         });
+        expect(
+          yield* loadHostTurboCacheDefaults(
+            { ...environment, TURBO_REMOTE_CACHE_SIGNATURE_KEY: "op://fixture/other/signing" },
+            false,
+            "git@github.com:beep-effect/beep-effect.git"
+          )
+        ).toEqual({});
         const inherited = {
           ...environment,
           ...defaults,
@@ -103,6 +113,13 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "10 seco
         expect(
           yield* loadHostTurboCacheDefaults(inherited, false, "git@github.com:beep-effect/beep-effect.git")
         ).toEqual(defaults);
+        expect(
+          yield* loadHostTurboCacheDefaults(
+            { ...inherited, TURBO_REMOTE_CACHE_SIGNATURE_KEY: "op://fixture/other/signing" },
+            false,
+            "git@github.com:beep-effect/beep-effect.git"
+          )
+        ).toEqual({});
         for (const override of [
           { BEEP_TURBO_HOST_CACHE_MANAGED: "false" },
           { BEEP_TURBO_HOST_CACHE_DISABLED: "true" },
@@ -278,8 +295,13 @@ describe("turbo cache plan resolution", () => {
 });
 
 describe("turbo cache control arguments", () => {
-  it("limits secret-session references to Turbo's endpoint, token, and team", () => {
-    expect(TurboCacheSecretEnvName.literals).toEqual(["TURBO_API", "TURBO_TOKEN", "TURBO_TEAM"]);
+  it("limits secret-session references to Turbo credentials and the artifact signing key", () => {
+    expect(TurboCacheSecretEnvName.literals).toEqual([
+      "TURBO_API",
+      "TURBO_TOKEN",
+      "TURBO_TEAM",
+      "TURBO_REMOTE_CACHE_SIGNATURE_KEY",
+    ]);
   });
 
   it.each(["--filter=@beep/schema", "--concurrency=3", "--summarize", "check", "--cache-dir=.turbo"])(
@@ -305,11 +327,63 @@ describe("turbo cache control arguments", () => {
   });
 });
 
+describe("forced local signing fallback", () => {
+  it("replaces every native cache mode spelling and preserves forwarded task arguments", () => {
+    expect(
+      forceLocalTurboCacheArgs([
+        "run",
+        "check",
+        "--cache",
+        "remote:r",
+        "--remote-only=false",
+        "--remote-cache-read-only",
+        "true",
+        "--cache=local:rw,remote:rw",
+        "--force",
+        "--cache-dir=shared",
+        "--",
+        "--cache=remote:rw",
+        "true",
+      ])
+    ).toEqual(["run", "check", "--force", "--cache-dir=shared", "--cache=local:rw", "--", "--cache=remote:rw", "true"]);
+    expect(forceLocalTurboCacheArgs(["run", "check"])).toEqual(["run", "check", "--cache=local:rw"]);
+  });
+});
+
 describe("run-time local-only degradation", () => {
   it("reports whether the checkout's credentials need an op run session", () => {
     expect(turboCacheEnvironmentNeedsSecretSession(completeEnvironment)).toBe(true);
     expect(turboCacheEnvironmentNeedsSecretSession(environmentWith("literal", REMOTE_READ_MODE))).toBe(false);
     expect(turboCacheEnvironmentNeedsSecretSession(TurboCacheEnvironment.make({}))).toBe(false);
+  });
+
+  it("resolves signing references without retaining secret values in the posture model", () => {
+    const environment = readTurboCacheEnvironment({
+      TURBO_API: "http://127.0.0.1:9427",
+      TURBO_TOKEN: "fixture-bearer",
+      TURBO_TEAM: "team_fixture",
+      TURBO_CACHE: REMOTE_READ_MODE,
+      TURBO_REMOTE_CACHE_SIGNATURE_KEY: "op://fixture/cache/signing",
+    });
+    expect(environment.signatureKey).toBe("secret-reference");
+    expect(turboCacheEnvironmentNeedsSecretSession(environment)).toBe(true);
+    const literal = readTurboCacheEnvironment({ TURBO_REMOTE_CACHE_SIGNATURE_KEY: "synthetic-signing-value" });
+    expect(literal.signatureKey).toBe("literal");
+    expect(turboCacheEnvironmentNeedsSecretSession(literal)).toBe(false);
+    expect(readTurboCacheEnvironment({ TURBO_REMOTE_CACHE_SIGNATURE_KEY: "  " })).toEqual(
+      TurboCacheEnvironment.make({})
+    );
+  });
+
+  it("includes signing references in the synchronous secret-session decision", () => {
+    vi.stubEnv("TURBO_REMOTE_CACHE_SIGNATURE_KEY", "op://fixture/cache/signing");
+    try {
+      const environment = readTurboCacheEnvironmentSync();
+      expect(environment.signatureKey).toBe("secret-reference");
+      expect(turboCacheEnvironmentNeedsSecretSession(environment)).toBe(true);
+    } finally {
+      vi.unstubAllEnvs();
+    }
   });
 
   it("classifies both value sources", () => {
@@ -345,7 +419,7 @@ describe("run-time local-only degradation", () => {
 describe("turboCachePullRequestPosture", () => {
   it("names every Turbo cache env name, scrubs the credentials, and pins local-only", () => {
     expect(A.sort(R.keys(turboCachePullRequestPosture), Str.Order)).toEqual(
-      A.sort(TurboCacheEnvName.literals, Str.Order)
+      A.sort(A.dedupe([...TurboCacheEnvName.literals, ...TurboCacheSecretEnvName.literals]), Str.Order)
     );
     A.forEach(TurboCacheSecretEnvName.literals, (name) => {
       expect(turboCachePullRequestPosture).toHaveProperty(name);

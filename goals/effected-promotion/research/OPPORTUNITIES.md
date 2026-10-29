@@ -1,3 +1,4 @@
 # Friction receipts
 
 - 2026-10-28, PR #2329 takeover: hosted Heavy / Lint Policy ran for 1,091 seconds before reporting `goals doctor` failure `ops-script-duplicate` for `ops/github-reporting-gfm-differential.ts`. Running `bun run beep goals doctor` after manifest merge would have caught the duplicate before publication. Removed the second identical registration and reran the focused check.
+- 2026-10-28, PR #2329 review closure: main advanced through #2340 while the full final-check was running. Shared SPEC append rows, Fallow boundaries, JSDoc inventory and totals conflicted, requiring another generator pass and invalidating the in-progress receipt. Coordinating shared packet/inventory publication with the lane owner would avoid repeating this work; preserve both decisions and regenerate artifacts from the merged tree.
