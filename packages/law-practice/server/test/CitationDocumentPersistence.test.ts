@@ -22,6 +22,11 @@ import {
   makeCitationMention,
   restoreCitationMentionAgainstVerifiedSource,
 } from "@beep/law-practice-server/_test/Citation/Mention";
+import {
+  CitationResourceBinding,
+  CitationResourceIdentity,
+  makeCitationResourceAuthorityId,
+} from "@beep/law-practice-server/_test/Citation/ResourceIdentity";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import {
@@ -48,6 +53,11 @@ const artifact = Sha256Hex.make(Str.repeat(64)("a"));
 const staleAuthority = CitationAuthorityId.make(`ca1:${Str.repeat(64)("f")}`);
 const staleMention = CitationMentionId.make(`cm1:${Str.repeat(64)("f")}`);
 const Json = S.fromJsonString(CitationDocumentReceipt);
+const externalIdentity = () =>
+  CitationResourceIdentity.cases.External.make({
+    scope: artifact,
+    key: Sha256Hex.make(Str.repeat(64)("b")),
+  });
 const fixture = Effect.gen(function* () {
   const hash = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(text));
   const digest = SourceTextDigest.make(`sha256:${hash}`);
@@ -129,6 +139,157 @@ const fixture = Effect.gen(function* () {
 }).pipe(Effect.withSpan("DocumentPersistenceTest.fixture"));
 
 it.layer(BunCrypto.layer)("whole citation document persistence", (it) => {
+  it.effect("persists a resource introduced without a full citation using a trusted out-of-band binding", () =>
+    Effect.gen(function* () {
+      const data = yield* fixture;
+      const mention = A.getUnsafe(data.document.mentions, 2);
+      const identity = externalIdentity();
+      const authorityId = yield* makeCitationResourceAuthorityId(identity);
+      const resourceBindings = [CitationResourceBinding.make({ identity, members: [mention.id] })];
+      const document = CitationDocument.make({
+        ...data.document,
+        mentions: [mention],
+        authorities: [CitationAuthority.make({ id: authorityId, representativeMentionId: mention.id })],
+        resolutions: [CitationResolved.make({ mentionId: mention.id, authorityId, confidence: O.none() })],
+      });
+      const receipt = yield* projectCitationDocumentReceipt({ document, editions: [], resourceBindings });
+      const restored = yield* restoreCitationDocument({ ...data.restore, receipt, editions: [], resourceBindings });
+      expect(restored.mentions).toHaveLength(1);
+      expect(A.getUnsafe(restored.mentions, 0).citation.type).toBe("id");
+      expect(restored.authorities).toEqual(document.authorities);
+      expect("resourceBindings" in receipt).toBe(false);
+      expect((yield* Effect.flip(restoreCitationDocument({ ...data.restore, receipt, editions: [] }))).reason).toBe(
+        "authority-key-unavailable"
+      );
+      // A receipt cannot authorize itself by carrying an extra binding field.
+      expect(
+        (yield* Effect.flip(
+          restoreCitationDocument({ ...data.restore, receipt: { ...receipt, resourceBindings }, editions: [] })
+        )).reason
+      ).toBe("authority-key-unavailable");
+    })
+  );
+
+  it.effect("supports canonical fallback bindings without a full member and snapshots adapter expectations", () =>
+    Effect.gen(function* () {
+      const data = yield* fixture;
+      const mention = A.getUnsafe(data.document.mentions, 2);
+      const authority = yield* S.decodeUnknownEffect(CitationAuthorityIdentityInput)(A.getUnsafe(cases.cases, 0).input);
+      const identity = CitationResourceIdentity.cases.Canonical.make({ authority });
+      const authorityId = yield* makeCitationResourceAuthorityId(identity);
+      const binding = CitationResourceBinding.make({ identity, members: [mention.id] });
+      const document = CitationDocument.make({
+        ...data.document,
+        mentions: [mention],
+        authorities: [CitationAuthority.make({ id: authorityId, representativeMentionId: mention.id })],
+        resolutions: [CitationResolved.make({ mentionId: mention.id, authorityId, confidence: O.none() })],
+      });
+      const crypto = yield* Crypto.Crypto;
+      let hashes = 0;
+      const receipt = yield* projectCitationDocumentReceipt({
+        document,
+        editions: [],
+        resourceBindings: [binding],
+      }).pipe(
+        Effect.provideService(
+          Crypto.Crypto,
+          Crypto.make({
+            randomBytes: (size) => new Uint8Array(size),
+            digest: (algorithm, bytes) =>
+              Effect.suspend(() => {
+                hashes += 1;
+                if (hashes === 1) Reflect.set(binding, "members", [staleMention]);
+                return crypto.digest(algorithm, bytes);
+              }),
+          })
+        )
+      );
+      expect(receipt.authorities).toEqual(document.authorities);
+      const originalBinding = CitationResourceBinding.make({ identity, members: [mention.id] });
+      const restored = yield* restoreCitationDocument({
+        ...data.restore,
+        receipt,
+        editions: [],
+        resourceBindings: [originalBinding],
+      });
+      expect(restored.authorities).toEqual(document.authorities);
+      expect(
+        (yield* Effect.flip(
+          restoreCitationDocument({ ...data.restore, receipt, editions: [], resourceBindings: [binding] })
+        )).reason
+      ).toBe("stale-authority");
+    })
+  );
+
+  it.effect("requires exact binding membership when custom resources merge distinct full keys", () =>
+    Effect.gen(function* () {
+      const data = yield* fixture;
+      const identity = externalIdentity();
+      const authorityId = yield* makeCitationResourceAuthorityId(identity);
+      const second = A.getUnsafe(data.document.mentions, 1);
+      const wire = yield* S.encodeEffect(Citation)(second.citation);
+      const citation = yield* S.decodeEffect(Citation)({ ...wire, components: { ...wire.components, volume: "2" } });
+      const mentions = A.map(data.document.mentions, (mention) =>
+        mention.id === second.id ? CitationMention.make({ ...mention, citation }) : mention
+      );
+      const first = A.getUnsafe(mentions, 0);
+      const last = A.getUnsafe(mentions, 2);
+      const document = CitationDocument.make({
+        ...data.document,
+        mentions,
+        authorities: [CitationAuthority.make({ id: authorityId, representativeMentionId: first.id })],
+        resolutions: A.map(mentions, (mention) =>
+          CitationResolved.make({ mentionId: mention.id, authorityId, confidence: O.none() })
+        ),
+      });
+      const binding = CitationResourceBinding.make({ identity, members: [first.id, second.id, last.id] });
+      const receipt = yield* projectCitationDocumentReceipt({ document, editions: [], resourceBindings: [binding] });
+      const restored = yield* restoreCitationDocument({
+        ...data.restore,
+        receipt,
+        editions: [],
+        resourceBindings: [binding],
+      });
+      expect(restored.authorities).toEqual(document.authorities);
+      const incomplete = CitationResourceBinding.make({ identity, members: [first.id] });
+      expect(
+        (yield* Effect.flip(projectCitationDocumentReceipt({ document, editions: [], resourceBindings: [incomplete] })))
+          .reason
+      ).toBe("stale-authority");
+      const extra = CitationResourceBinding.make({ identity, members: [first.id, second.id, last.id, staleMention] });
+      expect(
+        (yield* Effect.flip(
+          restoreCitationDocument({ ...data.restore, receipt, editions: [], resourceBindings: [extra] })
+        )).reason
+      ).toBe("stale-authority");
+      expect(
+        (yield* Effect.flip(
+          restoreCitationDocument({ ...data.restore, receipt, editions: [], resourceBindings: [binding, binding] })
+        )).reason
+      ).toBe("invalid-input");
+      const changed = CitationResourceBinding.make({
+        ...binding,
+        identity: CitationResourceIdentity.cases.External.make({ scope: artifact, key: artifact }),
+      });
+      expect(
+        (yield* Effect.flip(
+          restoreCitationDocument({ ...data.restore, receipt, editions: [], resourceBindings: [changed] })
+        )).reason
+      ).toBe("stale-authority");
+      expect(
+        (yield* Effect.flip(
+          restoreCitationDocument({
+            ...data.restore,
+            receipt,
+            editions: [],
+            resourceBindings: [binding],
+            sourceText: `${text}!`,
+          })
+        )).reason
+      ).toBe("unverifiable-evidence");
+    })
+  );
+
   it.effect("checks a full-member identity witness independently of the representative kind", () =>
     Effect.gen(function* () {
       const data = yield* fixture;

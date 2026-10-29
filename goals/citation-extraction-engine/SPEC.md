@@ -837,7 +837,6 @@ instead of silently splitting delivery or weakening scope.
   is removal of the focused probe/evidence checkpoint; existing target behavior
   and the canonical accounting rows remain unchanged.
 
-
 - **2026-10-28 general authority representative:** replace the provisional
   `fullMentionId` field with `representativeMentionId`. Graph coherence requires
   an existing mention resolved to the authority, without restricting its
@@ -853,6 +852,21 @@ instead of silently splitting delivery or weakening scope.
   replacement carries no compatibility alias; reverse by reverting the schema,
   producer, persistence guard and tests together. Resource-key policy, mutable
   state ports and target callback proof remain open.
+
+- **2026-10-28 trusted resource bindings:** keep canonical fallback identity
+  unchanged and add a private external descriptor containing adapter-scope and
+  equality-key fingerprints. Its ca1 preimage uses the distinct
+  `external-resource` domain. The adapter owns host equality normalization;
+  fingerprints do not attest equality or truthiness. Keep expected membership
+  out of the receipt, captured from the trusted adapter, and require exact
+  group coverage before overriding a full member's default key. Snapshot all
+  binding data before hashing. No public request field authorizes this trust
+  input. Continue rejecting unknown keys and validating source, anchors,
+  occurrence IDs and all unbound full keys. This implements a private identity
+  boundary, not callback parity or a semantic waiver. Reverse by removing the
+  descriptor/helper and binding seam together; the empty-binding default path
+  remains the regression gate. Host normalization, first-value/truthiness and
+  mutable callback state need their own source-bound proof.
 
 ## Exception Ledger
 

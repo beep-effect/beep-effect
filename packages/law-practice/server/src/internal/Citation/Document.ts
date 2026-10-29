@@ -24,6 +24,7 @@ import * as Tuple from "effect/Tuple";
 import { CitationAuthorityEdition, makeCitationAuthorityId } from "./AuthorityIdentity.ts";
 import { restoreCitationMentionAgainstVerifiedSource } from "./Mention.ts";
 import { makeCitationMentionId } from "./MentionIdentity.ts";
+import { CitationResourceBinding, makeCitationResourceAuthorityId } from "./ResourceIdentity.ts";
 import type * as Crypto from "effect/Crypto";
 
 const $I = $LawPracticeServerId.create("internal/Citation/Document");
@@ -68,13 +69,43 @@ const Editions = S.Array(CitationAuthorityEdition).check(
     })
   )
 );
-const Snapshot = S.Struct({ receipt: CitationDocumentReceipt, editions: Editions }).pipe(
+const ResourceBindings = S.Array(CitationResourceBinding)
+  .check(
+    S.isMaxLength(CitationEngineAbsoluteMaxima.authorities),
+    S.makeFilter(
+      (bindings) =>
+        A.reduce(bindings, 0, (total, binding) => total + A.length(binding.members)) <=
+        CitationEngineAbsoluteMaxima.mentions,
+      $I.annote("TotalResourceBindingMembers", {
+        title: "Total Resource Binding Members",
+        description: "The total number of adapter-bound occurrence references cannot exceed the hard mention ceiling.",
+        message: "Too many resource binding members.",
+      })
+    )
+  )
+  .pipe(
+    $I.annoteSchema("ResourceBindings", {
+      description: "Bounded expected resource identities supplied by a trusted adapter, separately from the document.",
+    })
+  );
+const Snapshot = S.Struct({
+  receipt: CitationDocumentReceipt,
+  editions: Editions,
+  resourceBindings: ResourceBindings,
+}).pipe(
   $I.annoteSchema("Snapshot", {
     description: "Structural document and trusted edition descriptors copied before asynchronous identity work.",
   })
 );
 const SnapshotJson = S.fromJsonString(Snapshot);
-const ProjectInput = S.Struct({ document: CitationDocument, editions: Editions });
+const DefaultBindings = S.toType(ResourceBindings).pipe(
+  S.withDecodingDefaultKey(Effect.succeed(A.empty<CitationResourceBinding>()))
+);
+const ProjectInput = S.Struct({
+  document: S.toType(CitationDocument),
+  editions: S.toType(Editions),
+  resourceBindings: DefaultBindings,
+});
 const RestoreInput = S.Struct({
   ...Snapshot.fields,
   expectedSource: SourceTextIdentity,
@@ -82,6 +113,14 @@ const RestoreInput = S.Struct({
   sourceText: S.String.check(S.isMaxLength(CitationEngineAbsoluteMaxima.sourceUtf16)),
 });
 const RestoreJson = S.fromJsonString(RestoreInput);
+const RestoreBoundary = S.Struct({
+  receipt: S.toType(CitationDocumentReceipt),
+  editions: S.toType(Editions),
+  expectedSource: S.toType(SourceTextIdentity),
+  expectedEngineArtifact: Sha256Hex,
+  sourceText: RestoreInput.fields.sourceText,
+  resourceBindings: DefaultBindings,
+});
 const isFull = S.is(FullCitation);
 
 const verifyAuthorities = Effect.fn("Citation.verifyDocumentAuthorities")(function* (snapshot: typeof Snapshot.Type) {
@@ -89,16 +128,39 @@ const verifyAuthorities = Effect.fn("Citation.verifyDocumentAuthorities")(functi
   const resolutions = HashMap.fromIterable(
     A.map(snapshot.receipt.resolutions, (resolution) => Tuple.make(resolution.mentionId, resolution))
   );
-  // A representative need not be full. Require a checked key witness for
-  // every group; the current adapter can establish only full-member keys.
-  let verified = HashSet.empty<CitationDocumentReceipt["authorities"][number]["id"]>();
+  // Out-of-band bindings are trusted adapter expectations, never receipt data.
+  // Each binding must cover exactly one group's members; it may override a full
+  // member's default key only when that occurrence is explicitly bound.
+  let custom = HashMap.empty<
+    CitationDocumentReceipt["authorities"][number]["id"],
+    HashSet.HashSet<CitationDocumentReceipt["mentions"][number]["id"]>
+  >();
+  for (const binding of snapshot.resourceBindings) {
+    const id = yield* makeCitationResourceAuthorityId(binding.identity).pipe(Effect.mapError(identityFailure));
+    if (HashMap.has(custom, id)) return yield* invalid();
+    const members = HashSet.fromIterable(binding.members);
+    for (const member of binding.members) {
+      const resolution = HashMap.get(resolutions, member);
+      if (O.isNone(resolution) || resolution.value.status !== "Resolved" || resolution.value.authorityId !== id)
+        return yield* CitationDocumentFailure.make({ reason: "stale-authority" });
+    }
+    custom = HashMap.set(custom, id, members);
+  }
+  let verified = custom.pipe(HashMap.keys, HashSet.fromIterable);
   yield* Effect.forEach(
     snapshot.receipt.mentions,
     (mention) =>
       Effect.gen(function* () {
         const citation = mention.citation;
         const resolution = HashMap.get(resolutions, mention.id);
-        if (!isFull(citation) || O.isNone(resolution) || resolution.value.status !== "Resolved") return;
+        if (O.isNone(resolution) || resolution.value.status !== "Resolved") return;
+        const binding = HashMap.get(custom, resolution.value.authorityId);
+        if (O.isSome(binding)) {
+          if (!HashSet.has(binding.value, mention.id))
+            return yield* CitationDocumentFailure.make({ reason: "stale-authority" });
+          return;
+        }
+        if (!isFull(citation)) return;
         const selectedEdition = O.flatMap(citation.publication.selectedEdition, (id) => HashMap.get(editions, id));
         const expected = yield* makeCitationAuthorityId({ citation, mentionId: mention.id, selectedEdition }).pipe(
           Effect.mapError(identityFailure)
@@ -115,8 +177,9 @@ const verifyAuthorities = Effect.fn("Citation.verifyDocumentAuthorities")(functi
 
 /**
  * Project a runtime document only after checking every occurrence and resolved
- * full authority key. Snapshot all structural data before the first hash.
- * Custom resource keys are rejected until their trusted adapter is available.
+ * full authority key unless a trusted binding supplies its resource identity.
+ * Snapshot all structural data before the first hash.
+ * Custom groups require exact out-of-band bindings from the trusted adapter.
  * Trusted edition descriptors still need live artifact authentication.
  * @internal
  * @category encoding
@@ -125,10 +188,11 @@ const verifyAuthorities = Effect.fn("Citation.verifyDocumentAuthorities")(functi
 export const projectCitationDocumentReceipt = Effect.fn("Citation.projectDocumentReceipt")(function* (
   input: unknown
 ): Effect.fn.Return<CitationDocumentReceipt, CitationDocumentFailure, Crypto.Crypto> {
-  const decoded = yield* S.decodeUnknownEffect(S.toType(ProjectInput))(input).pipe(Effect.mapError(invalid));
+  const decoded = yield* S.decodeUnknownEffect(ProjectInput)(input).pipe(Effect.mapError(invalid));
   const anchors = A.map(decoded.document.mentions, (mention) => mention.anchor);
   const data = {
     editions: decoded.editions,
+    resourceBindings: decoded.resourceBindings,
     receipt: {
       ...decoded.document,
       schemaVersion: "citation-document-receipt/v1",
@@ -170,8 +234,8 @@ export const projectCitationDocumentReceipt = Effect.fn("Citation.projectDocumen
 /**
  * Restore a receipt against trusted source/engine identity, hashing its raw
  * source once for every mention/component/zone. Recompute all occurrence IDs
- * and resolved full authority keys before returning a coherent runtime value.
- * Custom resource keys are rejected until their trusted adapter is available.
+ * and unbound full authority keys before returning a coherent runtime value.
+ * Custom groups require exact out-of-band bindings from the trusted adapter.
  * These checks do not authenticate semantic classification or short resolution.
  * @internal
  * @category validation
@@ -180,7 +244,7 @@ export const projectCitationDocumentReceipt = Effect.fn("Citation.projectDocumen
 export const restoreCitationDocument = Effect.fn("Citation.restoreDocument")(function* (
   input: unknown
 ): Effect.fn.Return<CitationDocument, CitationDocumentFailure, Crypto.Crypto> {
-  const decoded = yield* S.decodeUnknownEffect(S.toType(RestoreInput))(input).pipe(Effect.mapError(invalid));
+  const decoded = yield* S.decodeUnknownEffect(RestoreBoundary)(input).pipe(Effect.mapError(invalid));
   const json = yield* S.encodeEffect(RestoreJson)(decoded).pipe(Effect.mapError(invalid));
   const snapshot = yield* S.decodeEffect(RestoreJson)(json).pipe(Effect.mapError(invalid));
   const receipt = snapshot.receipt;
