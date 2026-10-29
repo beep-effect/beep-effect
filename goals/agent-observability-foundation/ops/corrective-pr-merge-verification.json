@@ -1,0 +1,31 @@
+{
+  "recordedAt": "2026-10-29T21:24:20.524062+00:00",
+  "pr": {
+    "headRefOid": "08ae2c5aaa78478c34c00da4db1ae22145d4b690",
+    "mergeCommit": {
+      "oid": "70492533f20378d5cd9747f3fba62d13590ccf9f"
+    },
+    "mergedAt": "2026-10-29T21:22:39Z",
+    "state": "MERGED",
+    "url": "https://github.com/beep-effect/beep-effect/pull/2362"
+  },
+  "archive": "~/.local/state/beep/observation-proof-archive/yeet-cheap-gate-attribution-52g_5q7e",
+  "finalCheck": {
+    "head": "08ae2c5aaa78478c34c00da4db1ae22145d4b690",
+    "complete": true,
+    "verdict": "pass",
+    "receiptSha256": "af72a0e93c4cbad3da09a2bc070cc5e115294f79f4974f9fc4ac4e52e23ee44b",
+    "disclosedSkips": [
+      "cheap-gates",
+      "lint-policy",
+      "check",
+      "docgen",
+      "coverage",
+      "repo-sanity"
+    ]
+  },
+  "hosted": "Current-head code checks green including Coverage Regression; only confirmed Vercel free-tier build-rate-limit failures exempted",
+  "review": "Canonical closeout reported merge-ready yes, zero actionable or unresolved threads, elapsed review window",
+  "monitor": "terminal inactive/dead MainPID0 after merge",
+  "recoveryHold": "preserved"
+}
