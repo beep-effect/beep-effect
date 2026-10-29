@@ -460,6 +460,18 @@ The local process report does not satisfy those deployment or observation gates.
   epoch rollback and consumer requalification remain required before activation.
 
 
+### Deterministic contained-directory error control, 2026-10-29
+
+- Exercise the existing filesystem parent-creation error adapter with a scoped
+  service failure and its actual typed platform cause. Require the contained
+  root, target and failing directory, preserved cause, and no target write.
+  Restore the spy through its scope finalizer. Retain existing coverage floors;
+  do not depend on incidental concurrent filesystem errors to reach the branch.
+- This test-only repair changes no filesystem implementation or cache policy.
+  Reversal removes only the new fixture; it grants no cache qualification or
+  production authority. Fresh component final and consumer proof remain required.
+
+
 ### Owned graph upload join preparation
 
 - 2026-10-29: Extend the existing pure upload join with the complete independently

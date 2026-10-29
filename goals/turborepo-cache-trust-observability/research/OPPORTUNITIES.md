@@ -791,3 +791,17 @@ The initial targeted replay guessed two nonexistent sibling filters and selected
 only the four socket tests. Reuse the owner's recorded file list and assert the
 actual four-file, 51-test scope before reporting a broader pass. The corrected
 Node and Bun provider runs both meet that scope.
+
+
+## Deterministic contained-directory error coverage
+
+- PR #2361's current final repeat passed 8,114 tests with 5 skips but lost the
+  existing FsGuards file floors. Its implementation is identical to the passing
+  producer-capture lane; actual lcov shows 0 executions of the parent-creation
+  error callback versus 1 incidental execution in the passing lane. A controlled
+  filesystem creation failure now proves the original platform cause, contained
+  root/target/path, and refusal before writing. Both runtime suites pass 34 tests;
+  targeted Node V8 records 1 execution of that callback. Retain the floor and use
+  a deliberate error-path fixture rather than incidental concurrent filesystem
+  behavior. The full package audit and documentation pass; fresh final and
+  hosted acceptance remain in progress.

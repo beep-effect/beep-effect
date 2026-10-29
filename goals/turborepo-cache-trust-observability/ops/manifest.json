@@ -83,6 +83,7 @@
     "research/producer-coverage-repair-checkpoint.json",
     "research/producer-review-repair-checkpoint.json",
     "research/producer-packet-review-checkpoint.json",
+    "research/fs-guards-directory-coverage-checkpoint.json",
     "research/producer-capture-checkpoint.json",
     "research/private-socket-checkpoint.json",
     "research/private-socket-scope-review.json"
