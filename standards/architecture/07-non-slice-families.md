@@ -330,7 +330,7 @@ private parser seams, and root alias drift.
 
 ## Repo CLI Command Topology
 
-The `beep` command line is composed by `apps/beep` (`@beep/beep`) from command
+The `beep` command line is composed by the `@beep/beep` app from command
 tools named `@beep/beep-<group>` under `packages/tooling/tool/beep-<group>`
 (DECISIONS 2026-10-28). The app owns the bins, the lazy dispatch manifest, and
 the per-group runtime Layers; command tools own the commands and never import

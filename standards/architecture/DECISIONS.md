@@ -2419,7 +2419,7 @@ Rejected:
 
 Decision:
 
-The `beep` command line is assembled in one app, `apps/beep` (`@beep/beep`).
+The `beep` command line is assembled in one app, `@beep/beep`.
 The app owns the `beep` and `beep-cli` bins, a lazy dispatch manifest that maps
 each command group to a dynamic import and static help text, and the runtime
 Layers each group needs, built per group. It publishes no TypeScript API and
@@ -2427,7 +2427,7 @@ no docgen surface. It may depend on any tooling package, and no product app,
 slice, or tooling package depends on it.
 
 Command groups live in `tooling/tool` packages named `@beep/beep-<group>` at
-`packages/tooling/tool/beep-<group>`. A tool composed by `apps/beep` may omit
+`packages/tooling/tool/beep-<group>`. A tool composed by `@beep/beep` may omit
 `src/bin.ts`. Tools still never import each other: code that two tools share
 moves into a `tooling/library` package. Libraries, policy packs, and test kits
 keep `@beep/repo-<purpose>` names. Ten tooling packages that predate this
