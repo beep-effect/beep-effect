@@ -210,6 +210,8 @@ fault receipts. Remote fallback must never mean unsigned restore.
 
 ## Decision log
 
+### Receipt media-type safety
+
 - 2026-10-29: Project response Content-Type evidence through the existing
   registered MimeType schema, discarding parameters and unknown subtypes at
   both direct and proxy capture boundaries. Actual synthetic-secret regressions
@@ -218,3 +220,29 @@ fault receipts. Remote fallback must never mean unsigned restore.
   while repairing its projection; raw header retention must not be re-enabled
   without passing the synthetic-secret/path/artifact controls. This is a
   receipt-safety repair and grants no deployment or task qualification.
+
+### Pinned loopback policy component
+
+2026-10-28: prepare a minimal patch against upstream adapter 4.0.20 commit
+`0e893f63e1c7f1ac3c460d79e75fb63d4c9f7c85`. Each explicitly enabled process
+binds one reader/writer role and one tenant/epoch namespace, independently of
+artifact HMAC possession. Keep the artifact key in native clients. This closes
+method and selector gaps in the disposable lab while retaining the existing
+loopback adapter and object-store topology. Use synthetic local storage, one
+canonical admitted job and two compiler workers; no new cloud spend or service.
+
+The patch is opt-in preparation. Existing production `adapter.sh` stays on its
+published binary pin. Rollback of this component is removal of the unused patch
+and test artifacts; a production activation needs its own numeric rollout,
+source-bound executable, cohort, grants, namespace/key and rollback evidence.
+The local process report does not satisfy those deployment or observation gates.
+
+### Startup isolation
+
+- 2026-10-29: The pinned adapter must decide signed startup from its inherited
+  process configuration. Reject policy introduced by dotenv before logging
+  begins; retain the legacy metadata-failure warning as static text only. The
+  previous executable failed the new startup control and the repaired exact
+  binary passes. Reversal: keep this candidate inactive and continue using the
+  incumbent while repairing the candidate; do not restore the mixed-mode path.
+  This component decision grants no deployment or broad qualification.
