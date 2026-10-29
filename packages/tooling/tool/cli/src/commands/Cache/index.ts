@@ -340,7 +340,12 @@ export { validateCacheProtocolExecution, validateCacheProtocolObservation } from
  * @category commands
  * @since 0.0.0
  */
-export { assertCacheRuntimeKeyUnspecified, cacheRuntimeStep, runCacheRuntimeTasks } from "./Cache.runtime.ts";
+export {
+  assertCacheRuntimeKeyUnspecified,
+  cacheRuntimeStep,
+  resolveCacheSigningPosture,
+  runCacheRuntimeTasks,
+} from "./Cache.runtime.ts";
 /**
  * Public cache command schemas and errors.
  *
@@ -369,6 +374,10 @@ export {
   CacheRunMode,
   CacheRuntimeExecutable,
   CacheRuntimeLinkerSnapshot,
+  CacheSigningKeyState,
+  CacheSigningPosture,
+  CacheSigningRequest,
+  CacheSigningRole,
   CacheToolchainSnapshot,
   CacheTransitionRequest,
   CacheWallTime,

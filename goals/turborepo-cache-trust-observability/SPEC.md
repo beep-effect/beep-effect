@@ -210,6 +210,23 @@ fault receipts. Remote fallback must never mean unsigned restore.
 
 ## Decision log
 
+### Signed-client component, 2026-10-28
+
+- Route optional artifact-key references through the existing cache secret-session
+  allowlist; keep backend and storage credentials separate. A reference cannot
+  reach a direct native child unresolved. Reverse by reverting this component
+  before any signed epoch is activated.
+- Resolve policy from the checkout root and reject alternate-root inputs before
+  selection. Use the same forced local arguments for selection and execution;
+  clear deprecated conflicting cache environment flags in inspection and fallback.
+  The isolated native controls justify this behavior; it grants no trust or task
+  qualification authority.
+- Preserve the current unsigned configuration until deployment readiness, explicit
+  epoch/role/tenant policy, bounded rollout and rollback evidence are complete.
+  This component prepares enforcement; it does not activate a signed cohort.
+
+### Resume and native execution, 2026-10-28
+
 | Date | Decision and reason | Reversal |
 | --- | --- | --- |
 | 2026-10-28 | Resume in the dedicated `codex/turborepo-goals-completion` lane. Refresh current source, client pins and population before promoting anything; older qualification remains bound to its original tuple. | Retain the previous approved configuration and remove only this lane's changes through a reviewed revert. |

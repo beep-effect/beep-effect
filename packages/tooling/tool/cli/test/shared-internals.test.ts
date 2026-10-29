@@ -427,6 +427,17 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
+    it.effect("resolves signing references only through the cache secret session", () =>
+      Effect.gen(function* () {
+        const environment = { TURBO_REMOTE_CACHE_SIGNATURE_KEY: OP_REFERENCE, APPLICATION_TOKEN: OP_REFERENCE };
+        const direct = yield* overridesFor(environment, "bunx", ["turbo", "run", "check"]);
+        expect(direct).toHaveProperty("TURBO_REMOTE_CACHE_SIGNATURE_KEY", undefined);
+        const wrapped = yield* overridesFor(environment, "op", ["run", "--", "bunx", "turbo", "run", "check"]);
+        expect(wrapped).toHaveProperty("TURBO_REMOTE_CACHE_SIGNATURE_KEY", OP_REFERENCE);
+        expect(wrapped).not.toHaveProperty("APPLICATION_TOKEN");
+      })
+    );
+
     it.effect("guards the TUI on a direct turbo spawn with resolved credentials", () =>
       Effect.gen(function* () {
         expect(
