@@ -384,3 +384,10 @@ artifact, signing activation, deployed grant or observation window changes.
   excerpts stay distinct from eighteen real synthetic native replay processes.
   Earlier observations keep their original driver identities and full goal
   acceptance remains open.
+
+
+- [Deterministic contained-directory error coverage](fs-guards-directory-coverage-checkpoint.json):
+  real typed filesystem cause, refusal before writing, both34-test runtime
+  suites, exact error adapter V8 hit and full package audit/documentation.
+  Existing floors and implementation remain unchanged; consumer final proof
+  and both full-goal contracts remain open.

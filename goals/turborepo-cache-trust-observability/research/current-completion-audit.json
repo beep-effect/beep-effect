@@ -3,7 +3,7 @@
   "goal": "turborepo-cache-trust-observability",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "511be224c49a558752eb531a086e571a1838bd38514359d049b59b621106fcdb",
+  "specSha256": "51c8055c5db3b0524e80a15e9c63d5e49cf83ff0dcac69e5ceacd6ed77a4aa92",
   "acceptance": [
     {
       "id": "AC-01",
@@ -285,5 +285,10 @@
     "path": "goals/turborepo-cache-trust-observability/research/producer-packet-review-checkpoint.json",
     "sha256": "7974b7a10bb72a491e571b3aa1c01b431f9227a2d5f6bd9206e6d77411a264c5",
     "scope": "Goal-packet control/historical-claim repair only; runtime CLI proof remains bound to c8c434026f."
+  },
+  "priorSpecSha256AtDirectoryCoverage": "511be224c49a558752eb531a086e571a1838bd38514359d049b59b621106fcdb",
+  "fsGuardsDirectoryCoverageCheckpoint": {
+    "path": "goals/turborepo-cache-trust-observability/research/fs-guards-directory-coverage-checkpoint.json",
+    "scope": "Test-only deliberate error-path control; complete package verification passed; no full-goal acceptance claimed."
   }
 }
