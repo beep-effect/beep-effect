@@ -90,7 +90,7 @@ const fixture = Effect.fn("HostedProducerTest.fixture")(function* () {
         archiveSha256: binding.configurationDigest,
         archiveBytes: 128,
         status: 202,
-        backendResult: "written",
+        backendResult: "allowed",
       },
     ],
   });

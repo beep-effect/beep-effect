@@ -72,7 +72,9 @@
     "research/adapter-runtime-lab-before-cleanup-review.json",
     "research/proxy-node-runtime-checkpoint.json",
     "research/reply-error-coverage-checkpoint.json",
-    "research/hosted-producer-verifier-checkpoint.json"
+    "research/hosted-producer-verifier-checkpoint.json",
+    "research/native-upload-join-checkpoint.json",
+    "research/native-upload-join-observations.json"
   ],
   "agentLaunchers": [
     {

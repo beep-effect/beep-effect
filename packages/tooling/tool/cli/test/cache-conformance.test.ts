@@ -327,14 +327,17 @@ it("checks every backend label against method and status without inventing genui
 });
 
 it.effect.prop(
-  "decodes historical exchanges without backend-result metadata",
+  "decodes historical exchanges without optional upload metadata",
   { exchange: CacheConformanceExchange },
   ({ exchange }) =>
     Effect.gen(function* () {
       const encoded = yield* encodeExchange(CacheConformanceExchange.make(exchange));
       const historical = yield* decodeHistoricalExchange(encoded);
-      const decoded = yield* S.decodeUnknownEffect(CacheConformanceExchange)(R.remove(historical, "backendResult"));
+      const decoded = yield* S.decodeUnknownEffect(CacheConformanceExchange)(
+        R.remove(R.remove(historical, "backendResult"), "taskHash")
+      );
       assertNone(decoded.backendResult);
+      assertNone(decoded.taskHash);
     }),
   { arbitrary: { runs: 25 } }
 );

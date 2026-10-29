@@ -414,3 +414,17 @@ This is observation verification only. A closed protected producer still needs
 to join actual successful uploads to its owned native task summary. Deployment
 grants, current qualification, key/epoch rotation, rollback and representative
 windows remain open. No production service, credential or signing change.
+
+
+### Exact native task and upload-byte join
+
+Canonical task-hash projection and a bounded internal observation join now reject
+missing/duplicate/foreign/faulted/ambiguous uploads and non-fresh or mismatched
+native tasks. Both pinned native clients physically produce the expected tagged
+PUT; their task hashes, complete archive bytes and digests join. Removing three
+guards fails the intended assertions and restores exact source. Node and Bun
+each pass 347 tests in seventeen files; fresh full package verification, Fallow
+and Effect/Vitest checks pass. See
+[the source-bound checkpoint](research/native-upload-join-checkpoint.json).
+This remains a local component: closed protected execution/publication, deployed
+trust readiness, current task qualification and observation windows remain open.

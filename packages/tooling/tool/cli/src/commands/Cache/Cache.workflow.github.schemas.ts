@@ -8,6 +8,8 @@ import { RepoRef } from "@beep/github/Repo";
 import { $RepoCliId } from "@beep/identity/packages";
 import { Sha256Hex } from "@beep/schema";
 import * as S from "effect/Schema";
+import { CacheConformanceBackendResult } from "./Cache.conformance.schemas.ts";
+import { CacheSyntheticRun } from "./Cache.experiment.schemas.ts";
 import { CacheProducerBinding } from "./Cache.producer.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Cache/Cache.workflow.github.schemas");
@@ -88,11 +90,11 @@ export class CacheHostedProducerReference extends S.Opaque<
  */
 export class CacheHostedProducerUpload extends S.Opaque<CacheHostedProducerUpload, { readonly brand: unique symbol }>()(
   S.Struct({
-    taskHash: S.NonEmptyString.check(S.isPattern(/^[0-9a-f]{16}$/)),
+    taskHash: CacheSyntheticRun.fields.taskHash,
     archiveSha256: Sha256Hex,
     archiveBytes: S.Int.check(S.isBetween({ minimum: 1, maximum: 50 * 1024 * 1024 })),
     status: S.Int.check(S.isBetween({ minimum: 200, maximum: 299 })),
-    backendResult: S.tag("written"),
+    backendResult: S.tag(CacheConformanceBackendResult.Enum.allowed),
   }).pipe(
     $I.annoteSchema("CacheHostedProducerUpload", {
       description:

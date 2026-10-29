@@ -315,3 +315,12 @@ artifact, signing activation, deployed grant or observation window changes.
   integrated tests, three intended-failure guard controls, zero Fallow/test-style
   findings and the frozen audit plus documentation-only repair. This is a local
   verifier component; fixture API metadata is not actual CI publication.
+
+- [Native upload-join checkpoint](native-upload-join-checkpoint.json),
+  [bounded physical observations](native-upload-join-observations.json) and
+  [retained native control](native-upload-join-control.ts): exact source/runtime
+  digests, actual stable/canary upload bytes, cross-runtime integration, three
+  intended-failure guard controls and the original failed full package run with its explicit attribution.
+  A clean-manifest replay is still pending in this prepared checkpoint. Reproduce
+  with the pinned Bun using the retained control. No live R2, producer approval,
+  protected publication or real-computation qualification is inferred.

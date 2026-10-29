@@ -56,3 +56,14 @@ Re-ran the canonical census and retained refresh recipe, verified every retained
 source digest, and compared all population counts. Counts and qualification
 states are unchanged. Future source-changing waves must regenerate the derived
 population as well as inspecting a newly emitted private census.
+## 2026-10-29: Native feature evidence needs the invoked runtime identity
+
+The private controls were initially tied to local absolute paths. The retained
+driver removes those paths, checks both client digests and the pinned Bun, and
+cleans owned fixtures before success publication. Resolving the multiplexer
+symlink and invoking its target directly changes argv-based tool selection;
+that failed the Bun-pin preflight before any fixture execution. Resolve the
+actual native executable through the selected Bun's `process.execPath` instead.
+Both pinned clients now complete all eighteen executions. Description-only
+configuration edits also change hashes here, so preserve this observation and
+avoid promising metadata-only reuse without a supported implementation.

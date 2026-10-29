@@ -387,3 +387,37 @@ category. Use the canonical `validation` category already used by sibling
 verifiers. The repaired code has identical comment-free syntax; current docgen
 typechecks 3,551 CLI examples and package lint/type checking pass. Check the
 canonical category vocabulary before a long audit to catch this earlier.
+
+## 2026-10-29: preserve inherited decisions during unpublished replay
+
+A prior documentation conflict resolution dropped inherited request-completion
+and runtime section text while appending hosted-verifier notes. The code was
+unchanged, but the packet must retain the complete governing decisions. The
+unpublished replay now starts from the complete parent document and appends
+only the original feature section. Prefix checks for SPEC, PLAN, SOURCES and
+OPPORTUNITIES prove that no parent text is removed. Use explicit bounded
+section extraction for append conflicts; never a DOTALL conflict-marker pattern
+whose line wildcard can consume the body it is meant to preserve.
+
+
+## 2026-10-29: Physical upload controls corrected a prototype result label
+
+The unpublished hosted-upload model used `written`, but the adapter's actual
+finite success vocabulary is `allowed`. Real HTTP upload controls rejected the
+prototype rather than silently accepting a new label. Reuse the conformance
+result domain; both pinned native clients now join their successful PUT bytes
+to the exact executed task hash. Require a single settled upload, writer/tenant
+attribution, successful coherent statuses and opaque tag presence; removing
+three guards makes the intended negative assertions fail. A carried tag is
+not proof of native signature validity or protected producer identity.
+
+
+## 2026-10-29: Package audit also depends on committed goal manifests
+
+The full CLI audit passed 8,093 tests but failed a Models eligibility timeout
+and the knowledge-doctor HEAD/live manifest comparison; docgen passed. A focused
+replay passed all Models tests and retained only the manifest mismatch. The
+knowledge test compares committed HEAD with the live goal manifest, which was
+being prepared in this worktree. Freeze the whole repository input profile,
+commit the prepared manifests and replay both affected files without concurrent
+edits. Preserve the original failure and do not call it a successful full run.

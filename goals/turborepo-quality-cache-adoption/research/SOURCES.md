@@ -225,3 +225,16 @@ binds changed runner source bytes. Historical claims above keep their dates.
 - [Retained qualification](../../turborepo-task-qualification/research/current-signed-qualification.json):
   applies to its original identity-lint computation, reuse layer, profile and
   epoch; it cannot promote the refreshed population.
+
+
+### Native feature controls, 2026-10-29
+
+- [Bounded observations](native-input-controls.json) and
+  [retained driver](native-input-controls.py): eighteen actual native local-cache
+  executions, exact client and Bun digests, output agreement and fixture cleanup.
+  Reproduce with `python3 goals/turborepo-quality-cache-adoption/research/native-input-controls.py`.
+  Uses installed/cached pinned clients, no credentials or remote cache. The
+  report is synthetic feature evidence, not a real Beep computation's qualified
+  tuple or a representative production window. Description-only edits caused
+  invalidation on both pins; the earlier private reuse hypothesis remains
+  separately retained and was not promoted into an assertion.

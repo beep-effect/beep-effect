@@ -378,3 +378,19 @@ The local process report does not satisfy those deployment or observation gates.
   prerequisites. No existing live endpoint, writer policy or signing setting
   changes. Reverse by removing the internal verifier and leaving reuse local
   at this unqualified boundary.
+
+
+### Exact owned-task upload observation join
+
+- 2026-10-29: Reuse the canonical sixteen-lowercase-hex native task-hash schema
+  in optional exchange metadata; historical receipts decode absence. The first
+  producer join requires one successful fresh task at the approved client and
+  full computation identity, one exact matching artifact PUT and a settled
+  capture bounded to two hundred events. Writer/tenant attribution, unfaulted
+  complete outcomes, coherent successful upstream/delivered statuses, the finite
+  adapter result `allowed`, bounded complete archive bytes/digest and opaque tag
+  presence are mandatory. Only successful status/events metadata may accompany
+  that upload. This is observation validation, not caller authentication, native
+  HMAC verification, a qualification transition or protected producer issuance.
+  The closed supervisor still owns source/command/capture and GitHub publication.
+  Reversal leaves this preparatory component unwired; no live epoch changes.

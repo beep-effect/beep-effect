@@ -43,7 +43,8 @@
     "research/current-population.json",
     "research/current-feature-matrix.json",
     "research/current-client-pins.json",
-    "research/population-source-refresh-checkpoint.json"
+    "research/population-source-refresh-checkpoint.json",
+    "research/native-input-controls.json"
   ],
   "agentLaunchers": [
     {

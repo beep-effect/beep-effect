@@ -96,3 +96,18 @@ closeout to an unrelated state-only PR.
 Use SPEC's rollback at the affected boundary. Record the failed gate, remaining
 work and safe resume action. Retain paused state with explicit conditions when
 external evidence/authority is missing; do not label that pause complete.
+
+
+### Executed native input and restoration observations
+
+A retained local-only driver verifies current stable/canary executable digests
+and the actual pinned Bun executable, then runs eighteen isolated executions.
+Sixteen invariant controls pass: exact restoration and benign/unrelated changes
+reuse; declared input, semantic environment, global input and implementation
+bytes invalidate. Both description-only changes cause MISS with a changed hash,
+recorded as observations rather than a promised optimization. Output bytes
+agree after every run. All owned fixtures are removed before the bounded report
+is written. Seven matrix rows now link this partial evidence; all real
+computation qualification and acceptance statuses remain pending. See
+[the observations](research/native-input-controls.json) and
+[their reproducible driver](research/native-input-controls.py).

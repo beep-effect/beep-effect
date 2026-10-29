@@ -137,7 +137,12 @@
       "correctnessCase": "Mutate child task config and assert required hash change and inherited behavior.",
       "disposition": "review existing use and qualify applicable changes",
       "acceptanceStatus": "pending",
-      "availabilityTerm": "extends"
+      "availabilityTerm": "extends",
+      "runtimeObservation": {
+        "report": "native-input-controls.json",
+        "scope": "Global input invalidation only; child configuration remains untested.",
+        "authority": "synthetic feature observation only; real computation qualification remains pending"
+      }
     },
     {
       "feature": "task-inputs",
@@ -164,7 +169,12 @@
       "correctnessCase": "One mutation per semantic source/config/tool/dependency class; unrelated mutations stay stable.",
       "disposition": "review existing use and qualify applicable changes",
       "acceptanceStatus": "pending",
-      "availabilityTerm": "inputs"
+      "availabilityTerm": "inputs",
+      "runtimeObservation": {
+        "report": "native-input-controls.json",
+        "scope": "One synthetic task: declared input and implementation-byte invalidation.",
+        "authority": "synthetic feature observation only; real computation qualification remains pending"
+      }
     },
     {
       "feature": "environment-and-passthrough",
@@ -191,7 +201,12 @@
       "correctnessCase": "Change semantic env and passthrough values independently; capture no secret values.",
       "disposition": "review existing use and qualify applicable changes",
       "acceptanceStatus": "pending",
-      "availabilityTerm": "passThroughEnv"
+      "availabilityTerm": "passThroughEnv",
+      "runtimeObservation": {
+        "report": "native-input-controls.json",
+        "scope": "One synthetic strict task: semantic variables invalidate; benign passthrough changes reuse.",
+        "authority": "synthetic feature observation only; real computation qualification remains pending"
+      }
     },
     {
       "feature": "outputs-and-portability",
@@ -218,7 +233,12 @@
       "correctnessCase": "Cold/replay tree equality, missing output and absolute-root cross-worktree controls.",
       "disposition": "review existing use and qualify applicable changes",
       "acceptanceStatus": "pending",
-      "availabilityTerm": "outputs"
+      "availabilityTerm": "outputs",
+      "runtimeObservation": {
+        "report": "native-input-controls.json",
+        "scope": "Output removal and local restoration agree; cross-machine portability remains untested.",
+        "authority": "synthetic feature observation only; real computation qualification remains pending"
+      }
     },
     {
       "feature": "task-descriptions",
@@ -245,7 +265,12 @@
       "correctnessCase": "Compare schema-supported descriptions against effective task configuration.",
       "disposition": "review existing use and qualify applicable changes",
       "acceptanceStatus": "pending",
-      "availabilityTerm": "description"
+      "availabilityTerm": "description",
+      "runtimeObservation": {
+        "report": "native-input-controls.json",
+        "scope": "Description-only changes produce MISS and a changed hash on both pins; no reuse guarantee assumed.",
+        "authority": "synthetic feature observation only; real computation qualification remains pending"
+      }
     },
     {
       "feature": "persistence-and-watch",
@@ -380,7 +405,12 @@
       "correctnessCase": "Join every invocation to actual tasks and distinguish task hits from archive transport.",
       "disposition": "review existing use and qualify applicable changes",
       "acceptanceStatus": "pending",
-      "availabilityTerm": "--summarize"
+      "availabilityTerm": "--summarize",
+      "runtimeObservation": {
+        "report": "native-input-controls.json",
+        "scope": "Executed task, cache status, hash and restored output are observed together.",
+        "authority": "synthetic feature observation only; real computation qualification remains pending"
+      }
     },
     {
       "feature": "query",
@@ -714,7 +744,12 @@
       "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
       "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
       "disposition": "retain observed setting pending current evidence",
-      "acceptanceStatus": "pending"
+      "acceptanceStatus": "pending",
+      "runtimeObservation": {
+        "report": "native-input-controls.json",
+        "scope": "Pinned local globalConfiguration profile; no other future flag is inferred.",
+        "authority": "synthetic feature observation only; real computation qualification remains pending"
+      }
     },
     {
       "feature": "futureFlag:longerSignatureKey",
