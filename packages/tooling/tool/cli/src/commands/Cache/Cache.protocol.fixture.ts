@@ -213,7 +213,12 @@ export const makeCacheProtocolFixture = Effect.fn("Cache.makeProtocolFixture")(f
   const events = yield* Ref.make(A.empty<CacheFixtureEvent>());
   const sequence = yield* Ref.make(0);
   const scenario = yield* Ref.make(CacheFixtureScenario.make({ id: "initial", fault: "none" }));
-  const makeReply = (id: number, current: CacheFixtureScenario, role: CacheFixtureEvent["role"]) =>
+  const makeReply = (
+    id: number,
+    current: CacheFixtureScenario,
+    role: CacheFixtureEvent["role"],
+    requestTag: O.Option<string>
+  ) =>
     Effect.fn("CacheFixture.reply")(function* (
       status: number,
       operation: CacheFixtureEvent["operation"],
@@ -231,6 +236,9 @@ export const makeCacheProtocolFixture = Effect.fn("Cache.makeProtocolFixture")(f
         digest: O.isSome(artifact) && status === 200 ? O.some(yield* hashBytes(body)) : O.none(),
         bytes: S.Natural.make(body.byteLength),
         tagPresent: O.isSome(tag),
+        requestTagSha256: O.isSome(requestTag)
+          ? O.some(yield* hashBytes(new TextEncoder().encode(requestTag.value)))
+          : O.none(),
       });
       yield* Ref.update(events, (all) => (all.length < requestLimit + 1 ? A.append(all, event) : all));
       return HttpServerResponse.uint8Array(operation === "put" ? new Uint8Array() : body, {
@@ -310,7 +318,7 @@ export const makeCacheProtocolFixture = Effect.fn("Cache.makeProtocolFixture")(f
     const id = yield* Ref.updateAndGet(sequence, (n) => Math.min(n + 1, requestLimit + 1));
     const bearer = Headers.get(request.headers, "authorization");
     const role = fixtureRole(credentials, bearer);
-    const reply = makeReply(id, current, role);
+    const reply = makeReply(id, current, role, Headers.get(request.headers, "x-artifact-tag"));
     if (id > requestLimit) return yield* reply(429, "rejected");
     if (role === "unknown") return yield* reply(401, "rejected");
     return yield* routeRequest(request, role, current, reply);
