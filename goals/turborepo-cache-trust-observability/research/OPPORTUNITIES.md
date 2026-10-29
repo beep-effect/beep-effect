@@ -606,3 +606,15 @@ CI hit HTTP408 during checkout before lint ran. GitHub refused the exact-job
 retry while the workflow was running. This source repair will supersede that
 head; keep the environmental attribution and do not hide it by restarting an
 active proof.
+
+
+### Docgen child interpreter compatibility
+
+- While replaying the producer-capture package audit, full Docgen twice
+  returned130 at example typechecking. Direct compilation of all3560 generated
+  examples and both Effect process backends passed. A complete launch without
+  `bunx --bun` passed; a later default before/after pair both passed, retaining
+  the intermittent nature of the failure. The CLI script now relies on the
+  executable's Bun shebang and preserves the compiler's own Node interpreter.
+  Prevent recurrence by qualifying actual full command launches, not only the
+  generated compiler input or mocked child processes. No gate is disabled.
