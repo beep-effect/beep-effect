@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "c1a415495daf6228edf7a9679b5d00c6c2707a0a0a0c37b8c2955960cd644d9c",
+  "planSha256": "296d4b2c412155ceb4c936471bcee8b0f0ed604ecb483a69458f39903fe39194",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -141,7 +141,15 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationCallbackRuntimeIndex.test.ts",
-          "sha256": "236065c54f590fd4077523c549496c94d988a4fa667242342699105560ed04a6"
+          "sha256": "60b4fbcdfd24b0d3d07c0df88a16200e5bec83d5b5a967eb86d74f59e26d1993"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-10-29-host-resource-protocol.md",
+          "sha256": "99776f55a317d4f17f35638a67e38f370282241869d5685afcf78a0b432b0035"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationHostResources.test.ts",
+          "sha256": "32dbfc38226f9243ac0c7b9bc5c77fbe983081ab807b478628f66fdce7ccce40"
         }
       ],
       "workflowState": "audit",
@@ -229,7 +237,15 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationCallbackRuntimeIndex.test.ts",
-          "sha256": "236065c54f590fd4077523c549496c94d988a4fa667242342699105560ed04a6"
+          "sha256": "60b4fbcdfd24b0d3d07c0df88a16200e5bec83d5b5a967eb86d74f59e26d1993"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-10-29-host-resource-protocol.md",
+          "sha256": "99776f55a317d4f17f35638a67e38f370282241869d5685afcf78a0b432b0035"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationHostResources.test.ts",
+          "sha256": "32dbfc38226f9243ac0c7b9bc5c77fbe983081ab807b478628f66fdce7ccce40"
         }
       ],
       "workflowState": "audit",

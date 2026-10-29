@@ -288,6 +288,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered callback
         owner.start,
         () =>
           Effect.gen(function* () {
+            expect(yield* owner.readListNodes).toEqual([]);
             const first = yield* owner.canonicalResource(ref);
             const alias = yield* owner.canonicalResource(ref);
             const list = yield* owner.allocate([ref]);
@@ -321,9 +322,9 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered callback
                 }),
               () => foreign.close
             );
-            expect((yield* Effect.flip(owner.validateResource({ ...first, truthy: false }))).reason).toBe(
-              "identity-failed"
-            );
+            expect(
+              (yield* Effect.flip(owner.validateResource({ ...first, value: "forged canonical presentation" }))).reason
+            ).toBe("identity-failed");
             yield* owner.clear;
             expect(yield* owner.read).toEqual([]);
             yield* owner.write(list, []);

@@ -119,6 +119,15 @@ Attribution remains eyecite BSD-2-Clause and the previously recorded CPython
 implementation license. Host normalization and unconditional Layer cutover
 remain open.
 
+The [controlled host-resource evidence](
+../history/evidence/2026-10-29-host-resource-protocol.md) records eight mixed-key
+histories, forty-eight operations and three actual full/default-Id scenes.
+Exact native hook traces, current views, ordered entries and retained lists
+match in the target through an explicitly captured adapter. Source metadata and
+fresh replay remain pinned; attribution remains BSD-2-Clause and the existing
+CPython notice. Automatic native values, source set semantics and reentrancy
+remain open.
+
 ## Incorporated-source discipline
 
 - A local clone is research state, not an incorporated dependency.

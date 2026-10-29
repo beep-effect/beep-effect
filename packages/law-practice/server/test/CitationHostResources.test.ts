@@ -1,0 +1,421 @@
+import { fileURLToPath } from "node:url";
+import { Citation, CitationGroupMember, CitationMention } from "@beep/law-practice-domain/values";
+import {
+  CitationCallbackRuntimeIndexFactory,
+  makeCitationCallbackRuntimeIndexFactory,
+} from "@beep/law-practice-server/_test/Citation/CallbackRuntimeIndex";
+import {
+  CitationCallbackDictionary,
+  CitationCallbackFailure,
+  CitationResolutionCallbacks,
+  CitationResolutionWork,
+  makeCitationCallbackDictionary,
+  makeCitationResolutionWork,
+  runPreparedCitationCallbackSession,
+} from "@beep/law-practice-server/_test/Citation/CallbackSession";
+import { makeDefaultCitationResolutionCallbacks } from "@beep/law-practice-server/_test/Citation/DefaultCallbacks";
+import {
+  CitationFrozenEditions,
+  makeCitationFrozenEditions,
+} from "@beep/law-practice-server/_test/Citation/FrozenEditions";
+import {
+  CitationHostResource,
+  CitationHostResourceAdapterFactory,
+} from "@beep/law-practice-server/_test/Citation/HostResources";
+import { prepareCitationResolution } from "@beep/law-practice-server/_test/Citation/ResolutionInput";
+import { Sha256HexFromBytes } from "@beep/schema";
+import { it } from "@beep/test-runner";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
+import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
+import { expect } from "@effect/vitest";
+import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as R from "effect/Record";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import { CitationCallbackObservation, prepareCallbackObservation } from "./CitationCallbackSession.fixtures.ts";
+import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
+import type { CitationHostComparisonOperand } from "@beep/law-practice-server/_test/Citation/HostResources";
+
+const HostState = S.Struct({
+  hashRaw: S.String,
+  mode: S.Literals(["token", "false", "not-implemented", "normalized", "citation"]),
+  token: S.String,
+  truth: S.Boolean,
+  truthAfterHash: S.NullOr(S.Boolean),
+  failHash: S.Boolean,
+  failEq: S.Boolean,
+  failBool: S.Boolean,
+});
+const Operation = S.Union([
+  S.Struct({ kind: S.Literals(["set"]), key: S.Natural, value: S.Natural }),
+  S.Struct({ kind: S.Literals(["get", "remove", "alias"]), key: S.Natural }),
+  S.Struct({ kind: S.Literals(["append"]), key: S.Natural, member: S.Natural }),
+  S.Struct({ kind: S.Literals(["clear"]) }),
+  S.Struct({ kind: S.Literals(["page"]), value: S.String }),
+  S.Struct({ kind: S.Literals(["truth"]), host: S.Natural, value: S.Boolean }),
+  S.Struct({ kind: S.Literals(["hashRaw", "token"]), host: S.Natural, value: S.String }),
+  S.Struct({
+    kind: S.Literals(["flag"]),
+    host: S.Natural,
+    field: S.Literals(["failHash", "failEq", "failBool"]),
+    value: S.Boolean,
+  }),
+]);
+const Corpus = S.fromJsonString(
+  S.Struct({
+    normalizedHashes: S.Record(S.String, S.String),
+    cases: S.Array(
+      S.Struct({
+        name: S.String,
+        hosts: S.Array(HostState),
+        keys: S.Array(
+          S.Union([S.Struct({ kind: S.Literal("canonical") }), S.Struct({ kind: S.Literal("host"), host: S.Natural })])
+        ),
+        events: S.Array(
+          S.Struct({
+            operation: Operation,
+            outcome: S.Json,
+            entries: S.Array(S.Json),
+            lists: S.Natural.pipe(S.Array, S.Array),
+            trace: S.Array(S.Json),
+            priorPresentation: S.Json,
+          })
+        ),
+      })
+    ),
+    callbacks: S.Array(
+      S.Struct({ name: S.String, host: HostState, trace: S.Array(S.Json), groups: S.Natural.pipe(S.Array, S.Array) })
+    ),
+  })
+);
+const bad = () => CitationCallbackFailure.make({ reason: "callback-failed" });
+
+// Deliberately controlled adapter: normalized hashes are actual Python observations,
+// not a claimed general implementation of Python's numeric/object protocol.
+const harness = (initial: ReadonlyArray<typeof HostState.Type>, normalized: Readonly<Record<string, string>>) => {
+  const states = A.map(initial, (state) => ({ ...state }));
+  const handles = A.map(states, (_, slot) => CitationHostResource.make({ slot }));
+  let trace = A.empty<S.Json>();
+  let closed = false;
+  const emit = (event: S.Json) => {
+    trace = A.append(trace, event);
+  };
+  const owned = Effect.fn("HostTest.owned")(function* (handle: CitationHostResource) {
+    if (closed || A.getUnsafe(handles, handle.slot) !== handle) return yield* bad();
+    return A.getUnsafe(states, handle.slot);
+  });
+  const rawHash = Effect.fn("HostTest.rawHash")(function* (handle: CitationHostResource) {
+    const state = yield* owned(handle);
+    emit({ kind: "hash", slot: handle.slot, raw: state.hashRaw });
+    if (state.failHash) return yield* bad();
+    if (state.truthAfterHash !== null) state.truth = state.truthAfterHash;
+    return BigInt(state.hashRaw);
+  });
+  const hash = Effect.fn("HostTest.hash")(function* (handle: CitationHostResource) {
+    yield* rawHash(handle);
+    return BigInt(yield* Effect.fromOption(R.get(normalized, (yield* owned(handle)).hashRaw), bad));
+  });
+  const operandView = (operand: CitationHostComparisonOperand): S.Json =>
+    operand._tag === "Canonical"
+      ? { kind: "canonical", slot: operand.slot }
+      : { kind: "host", slot: operand.handle.slot };
+  const factory = CitationHostResourceAdapterFactory.of({
+    build: Effect.fn("HostTest.build")(function* (canonical) {
+      const method = Effect.fn("HostTest.method")(function* (
+        left: CitationHostComparisonOperand,
+        right: CitationHostComparisonOperand
+      ) {
+        if (left._tag === "Canonical") {
+          emit({ kind: "resource-eq", slot: left.slot, other: operandView(right) });
+          const a = yield* canonical.hash(left.slot);
+          const b = right._tag === "Canonical" ? yield* canonical.hash(right.slot) : yield* rawHash(right.handle);
+          return O.some(a === b);
+        }
+        const state = yield* owned(left.handle);
+        emit({ kind: "eq", slot: left.handle.slot, other: operandView(right) });
+        if (state.failEq) return yield* bad();
+        if (state.mode === "false") return O.some(false);
+        if (state.mode === "not-implemented") return O.none<boolean>();
+        if (state.mode === "normalized") {
+          const a = yield* hash(left.handle);
+          const b = right._tag === "Canonical" ? yield* canonical.hash(right.slot) : yield* hash(right.handle);
+          return O.some(a === b);
+        }
+        if (state.mode === "citation") {
+          if (right._tag !== "Canonical") return O.none<boolean>();
+          const wire = yield* S.encodeEffect(Citation)(yield* canonical.citation(right.slot)).pipe(
+            Effect.mapError(bad)
+          );
+          return O.some(O.getOrNull(R.get(wire.components, "page")) === state.token);
+        }
+        return right._tag === "Host" ? O.some(state.token === (yield* owned(right.handle)).token) : O.none<boolean>();
+      });
+      return {
+        capture: Effect.fn("HostTest.capture")(function* (input: unknown) {
+          const slot = yield* Effect.fromOption(
+            A.findFirstIndex(states, (state) => state === input),
+            bad
+          );
+          const handle = A.getUnsafe(handles, slot);
+          yield* owned(handle);
+          return handle;
+        }),
+        presentation: Effect.fn("HostTest.presentation")(function* (handle: CitationHostResource) {
+          return { kind: "host", slot: handle.slot, token: (yield* owned(handle)).token };
+        }),
+        truthy: Effect.fn("HostTest.truthy")(function* (handle: CitationHostResource) {
+          const state = yield* owned(handle);
+          emit({ kind: "bool", slot: handle.slot, result: state.truth });
+          if (state.failBool) return yield* bad();
+          return state.truth;
+        }),
+        hash,
+        compare: Effect.fn("HostTest.compare")(function* (
+          left: CitationHostComparisonOperand,
+          right: CitationHostComparisonOperand
+        ) {
+          const first = yield* method(left, right);
+          return O.isSome(first) ? first.value : O.getOrElse(yield* method(right, left), () => false);
+        }),
+        close: Effect.sync(() => {
+          closed = true;
+        }),
+      };
+    }),
+  });
+  return {
+    states,
+    factory,
+    trace: () => trace,
+    reset: () => {
+      trace = A.empty();
+    },
+  };
+};
+const prepare = Effect.fn("HostTest.prepare")(function* (name: string) {
+  const input = yield* prepareCallbackObservation(
+    CitationCallbackObservation.make({
+      name,
+      kinds: ["case", "id"],
+      pages: {},
+      bindings: {},
+      events: [],
+      outcome: { status: "value", groups: [] },
+    })
+  );
+  const mentions = yield* Effect.forEach(input.mentions, (mention, index) =>
+    Effect.gen(function* () {
+      const wire = yield* S.encodeEffect(Citation)(mention.citation);
+      const citation = yield* S.decodeUnknownEffect(Citation)({
+        ...wire,
+        components: index === 0 ? { volume: "1", reporter: "U.S.", page: "1" } : wire.components,
+        metadata: { ...wire.metadata, pinCite: index === 0 ? null : "2" },
+      });
+      return CitationMention.make({ ...mention, citation });
+    })
+  );
+  return yield* prepareCitationResolution({ ...input, mentions });
+});
+const load = Effect.fn("HostTest.load")(function* () {
+  const raw = yield* (yield* FileSystem.FileSystem).readFileString(
+    fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/host-resources.json", import.meta.url))
+  );
+  expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
+    "2eaf20a0492da410f793712cb7f3b5728bb6e912b9fc7659a07764fd24bdf43f"
+  );
+  return yield* S.decodeEffect(Corpus)(raw);
+});
+it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resources", (it) => {
+  it.effect("matches the source's truth/hash call order through full and default Id callbacks", () =>
+    Effect.gen(function* () {
+      const corpus = yield* load();
+      const frozen = yield* makeCitationFrozenEditions((yield* loadCitationFrozenEditionFixtures()).bundle);
+      for (const row of corpus.callbacks) {
+        const host = harness([row.host], corpus.normalizedHashes);
+        const factory = yield* makeCitationCallbackRuntimeIndexFactory().pipe(
+          Effect.provideService(CitationFrozenEditions, frozen),
+          Effect.provideService(CitationHostResourceAdapterFactory, host.factory)
+        );
+        const prepared = yield* prepare(row.name);
+        const work = yield* makeCitationResolutionWork(prepared.limits);
+        const owner = yield* makeCitationCallbackDictionary(prepared).pipe(
+          Effect.provideService(CitationResolutionWork, work),
+          Effect.provideService(CitationCallbackRuntimeIndexFactory, factory)
+        );
+        const defaults = yield* makeDefaultCitationResolutionCallbacks(prepared).pipe(
+          Effect.provideService(CitationResolutionWork, work),
+          Effect.provideService(CitationCallbackDictionary, owner)
+        );
+        const callbacks = CitationResolutionCallbacks.of({
+          ...defaults,
+          full: Effect.fn("HostTest.full")(() => owner.hostResource(A.getUnsafe(host.states, 0))),
+        });
+        const result = yield* runPreparedCitationCallbackSession(prepared).pipe(
+          Effect.provideService(CitationResolutionWork, work),
+          Effect.provideService(CitationCallbackDictionary, owner),
+          Effect.provideService(CitationResolutionCallbacks, callbacks)
+        );
+        expect(host.trace(), row.name).toEqual(row.trace);
+        expect(
+          A.map(result.groups, (group) =>
+            A.map(group.members, (member) =>
+              O.getOrElse(
+                A.findFirstIndex(
+                  prepared.mentions,
+                  (mention) => member._tag === "Mention" && mention.id === member.mentionId
+                ),
+                () => -1
+              )
+            )
+          ),
+          row.name
+        ).toEqual(row.groups);
+      }
+    })
+  );
+  it.effect("matches all directional comparison, mutation, alias and error histories without observer hooks", () =>
+    Effect.gen(function* () {
+      const corpus = yield* load();
+      const frozen = yield* makeCitationFrozenEditions((yield* loadCitationFrozenEditionFixtures()).bundle);
+      for (const row of corpus.cases) {
+        const host = harness(row.hosts, corpus.normalizedHashes);
+        const factory = yield* makeCitationCallbackRuntimeIndexFactory().pipe(
+          Effect.provideService(CitationFrozenEditions, frozen),
+          Effect.provideService(CitationHostResourceAdapterFactory, host.factory)
+        );
+        const prepared = yield* prepare(row.name);
+        const work = yield* makeCitationResolutionWork(prepared.limits);
+        const owner = yield* makeCitationCallbackDictionary(prepared).pipe(
+          Effect.provideService(CitationResolutionWork, work),
+          Effect.provideService(CitationCallbackRuntimeIndexFactory, factory)
+        );
+        const members = A.map(prepared.mentions, (mention) =>
+          CitationGroupMember.cases.Mention.make({ mentionId: mention.id })
+        );
+        const ref = A.getUnsafe(members, 0);
+        const memberIndex = (member: CitationGroupMember) =>
+          O.getOrElse(
+            A.findFirstIndex(members, (candidate) => S.toEquivalence(CitationGroupMember)(candidate, member)),
+            () => -1
+          );
+        yield* Effect.acquireUseRelease(
+          owner.start,
+          () =>
+            Effect.gen(function* () {
+              let keys = yield* Effect.forEach(row.keys, (key) =>
+                key.kind === "canonical"
+                  ? owner.canonicalResource(ref)
+                  : owner.hostResource(A.getUnsafe(host.states, key.host))
+              );
+              const lists = yield* Effect.forEach(
+                A.makeBy(4, (i) => i),
+                () => owner.allocate([])
+              );
+              const prior = yield* owner.hostResource(A.getUnsafe(host.states, 0));
+              yield* owner.writeFulls([yield* owner.createFullPair(ref, prior)]);
+              const action = Effect.fn("HostTest.action")(function* (
+                op: typeof Operation.Type
+              ): Effect.fn.Return<number | null, CitationCallbackFailure> {
+                switch (op.kind) {
+                  case "set":
+                    yield* owner.set(A.getUnsafe(keys, op.key), A.getUnsafe(lists, op.value));
+                    return null;
+                  case "get":
+                    return (yield* owner.get(A.getUnsafe(keys, op.key))).slot;
+                  case "remove":
+                    return O.getOrNull(O.map(yield* owner.remove(A.getUnsafe(keys, op.key)), (list) => list.slot));
+                  case "clear":
+                    yield* owner.clear;
+                    return null;
+                  case "alias": {
+                    const key = A.getUnsafe(keys, op.key);
+                    const alias = yield* owner.hostResource(A.getUnsafe(host.states, 0));
+                    keys = A.append(keys, alias);
+                    if (key._tag !== "Registered") return yield* bad();
+                    return key.slot;
+                  }
+                  case "append": {
+                    const key = A.getUnsafe(keys, op.key);
+                    if (yield* owner.isTruthy(key))
+                      yield* owner.appendCurrent(key, A.getUnsafe(prepared.mentions, op.member).id);
+                    return null;
+                  }
+                  case "page": {
+                    const wire = yield* S.encodeEffect(Citation)(yield* owner.citationOf(ref)).pipe(
+                      Effect.mapError(bad)
+                    );
+                    yield* owner.writeCitation(
+                      ref,
+                      yield* S.decodeEffect(Citation)({
+                        ...wire,
+                        components: { ...wire.components, page: op.value },
+                      }).pipe(Effect.mapError(bad))
+                    );
+                    return null;
+                  }
+                  case "truth":
+                    A.getUnsafe(host.states, op.host).truth = op.value;
+                    return null;
+                  case "hashRaw":
+                    A.getUnsafe(host.states, op.host).hashRaw = op.value;
+                    return null;
+                  case "token":
+                    A.getUnsafe(host.states, op.host).token = op.value;
+                    return null;
+                  case "flag":
+                    A.getUnsafe(host.states, op.host)[op.field] = op.value;
+                    return null;
+                }
+              });
+              for (const [index, event] of A.map(row.events, (event, index) => [index, event] as const)) {
+                const label = `${row.name}:${index}`;
+                host.reset();
+                const result = yield* Effect.result(action(event.operation));
+                if (Result.isFailure(result)) {
+                  expect(
+                    S.is(S.Struct({ status: S.Literal("error") }))(event.outcome),
+                    `${label}:${result.failure.reason}`
+                  ).toBe(true);
+                  const expected = yield* S.decodeUnknownEffect(
+                    S.Struct({ status: S.Literal("error"), operation: S.Literals(["hash", "bool", "compare"]) })
+                  )(event.outcome);
+                  expect(result.failure.reason, label).toBe(
+                    expected.operation === "compare" ? "identity-failed" : "callback-failed"
+                  );
+                } else expect({ status: "value", result: result.success }, label).toEqual(event.outcome);
+                const entries = yield* owner.read;
+                expect(
+                  A.map(entries, (group) => {
+                    const resource = group.resource;
+                    if (resource._tag !== "Registered") throw new Error("unregistered");
+                    return {
+                      objectId: resource.slot,
+                      slot: group.listSlot,
+                      presentation: S.is(S.Struct({ kind: S.Literal("host") }))(resource.value)
+                        ? resource.value
+                        : { kind: "canonical", slot: resource.slot },
+                    };
+                  }),
+                  label
+                ).toEqual(event.entries);
+                expect(
+                  A.map(yield* owner.readListNodes, (list) => A.map(list, memberIndex)),
+                  label
+                ).toEqual(event.lists);
+                const pairs = yield* owner.readFulls;
+                const resource = A.getUnsafe(pairs, 0).resource;
+                expect(resource._tag === "Registered" ? resource.value : null, label).toEqual(event.priorPresentation);
+                yield* owner.writeFulls(pairs);
+                expect(host.trace(), label).toEqual(event.trace);
+              }
+            }),
+          () => owner.close
+        );
+      }
+    })
+  );
+});

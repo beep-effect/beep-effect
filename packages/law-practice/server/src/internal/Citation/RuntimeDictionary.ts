@@ -118,6 +118,11 @@ export class CitationRuntimeDictionaryFailure extends S.TaggedError<
 export class CitationRuntimeDictionaryComparison extends Context.Service<
   CitationRuntimeDictionaryComparison,
   {
+    readonly beforeSet?: (
+      entries: ReadonlyArray<CitationRuntimeDictionaryEntry>,
+      previous: O.Option<CitationRuntimeDictionaryEntry>,
+      value: number
+    ) => Effect.Effect<void, CitationRuntimeDictionaryFailure>;
     readonly equal: (left: number, right: number) => Effect.Effect<boolean, CitationRuntimeDictionaryFailure>;
     readonly step: Effect.Effect<void, CitationRuntimeDictionaryFailure>;
   }
@@ -272,6 +277,13 @@ export const makeCitationRuntimeDictionary = Effect.fn("Citation.makeRuntimeDict
     const decodedValue = yield* S.decodeEffect(S.Natural)(value).pipe(Effect.mapError(invalid));
     yield* step;
     const hit = yield* lookup(key);
+    if (comparison.beforeSet !== undefined) {
+      const previous = O.map(
+        O.flatMap(hit, (hit) => HashMap.get(entries, hit.entryId)),
+        copyEntry
+      );
+      yield* comparison.beforeSet(yield* read, previous, decodedValue).pipe(Effect.mapError(freshFailure));
+    }
     if (O.isSome(hit)) {
       const entry = yield* Effect.fromOption(HashMap.get(entries, hit.value.entryId), invalid);
       entries = HashMap.set(

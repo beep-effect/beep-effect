@@ -20,7 +20,7 @@ const $I = $LawPracticeServerId.create("internal/Citation/CallbackResource");
  */
 export const CitationCallbackResource = S.TaggedUnion({
   None: {},
-  Registered: { scope: Sha256Hex, slot: S.Natural, truthy: S.Boolean, value: S.Json },
+  Registered: { scope: Sha256Hex, slot: S.Natural, value: S.Json },
   Hashable: { identity: CitationResourceIdentity, truthy: S.Boolean, value: S.Json },
   Unhashable: { truthy: S.Boolean, value: S.Json },
 }).pipe(

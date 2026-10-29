@@ -183,7 +183,7 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
       function* (input: CitationIdCallbackInput) {
         const citation = yield* currentCitation(input.mention);
         if (citation.type !== "id") return yield* invalid();
-        if (input.last._tag === "None" || !input.last.truthy) return { resource: none() };
+        if (!(yield* dictionary.isTruthy(input.last))) return { resource: none() };
         const list = yield* dictionary.get(input.last);
         const first = yield* Effect.fromOption(A.head(yield* dictionary.readList(list)), invalid);
         const prior = yield* citationOf(first);

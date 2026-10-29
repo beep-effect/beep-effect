@@ -176,38 +176,46 @@ Layer cutover and final session projection remain open. The new
 and sixty-two events. The private
 [case/resource hash helper](
 ./history/evidence/2026-10-29-case-resource-hashes.md) matches twenty-four source
-observations, including controlled null-page identities. Live identity
-allocation and owner integration are still required before the three mutable-key
-engine cases can close.
+observations, including controlled null-page identities. Null-page identity
+allocation remains open; registered callback execution is recorded below.
 
 The [live case-resource composition](
 ./history/evidence/2026-10-29-live-case-resources.md) connects current semantic
 owner reads/writes, resource object identity, exact hashes and the runtime
-table across five source histories and thirty-eight events. Default callback
-owner integration and the three mutable-key engine cases remain open.
+table across five source histories and thirty-eight events. Registered callback
+owner integration is recorded below; final public projection remains open.
 
 The [law/journal hash evidence](
 ./history/evidence/2026-10-29-publication-resource-hashes.md) matches twenty-two
 source observations and qualifies candidate-bag normalization: tied edition
 abbreviations can make relative order observable through resource hashes.
-The frozen edition adapter and unified callback-owner table remain open.
+Final production asset loading and unconditional Layer cutover remain open.
 
 The [frozen edition adapter](
 ./history/evidence/2026-10-29-frozen-edition-adapter.md) validates all 2,430
 reporter and 2,533 edition content identities and complete runtime payloads.
 Its lookups preserve order/multiplicity and reject modified artifacts. Final
-production asset loading and callback-owner integration remain open.
+production asset loading and unconditional Layer cutover remain open.
 
 The [generalized live-resource composition](
 ./history/evidence/2026-10-29-mixed-resource-objects.md) matches six mixed
 case/law/journal histories and eighty-nine events in one table. Actual frozen
 law/journal abbreviation ties and independently retained edition selections
-are preserved. Final callback-owner dictionary integration remains open.
+are preserved. Unconditional production Layer integration remains open.
 
 The [registered callback-owner integration](
 ./history/evidence/2026-10-29-registered-callback-dictionary.md) preserves live
 resource identity, table insertion entries and owned list handles through full
 callback dispatch. All three mutable default-key scenes match complete source
-events and final groups. The registered canonical port rejects unregistered
-host keys; the legacy adapter remains during migration. Complete host-key
+events and final groups. The registered port rejects unregistered
+host keys and accepts an explicitly captured adapter as described below. The
+legacy adapter remains during migration. Complete host-key
 support, Layer cutover and final document projection are still required.
+
+The [captured host-resource protocol](
+./history/evidence/2026-10-29-host-resource-protocol.md) matches eight controlled
+mixed-key histories, forty-eight operations and three full/default-Id callback
+scenes, including exact bool/hash/equality traces. Host and canonical resources
+share one table while retaining their own object identities and current views.
+Automatic Python value normalization, source set uniqueness, reentrant mutation,
+Layer cutover and final document projection remain open.
