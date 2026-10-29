@@ -210,6 +210,29 @@ fault receipts. Remote fallback must never mean unsigned restore.
 
 ## Decision log
 
+### Owned request-tag capture, 2026-10-29
+
+- Retain the complete minimal native summary in each newly executed signed
+  pilot run, decoded from the same supervised summary bytes before any task
+  selection. Move the existing summary schema into the existing runner schema
+  role and retain its original export. Decode historical absence as `None`;
+  absence cannot satisfy a future producer upload join. This captures evidence
+  only: full-graph comparison, actual adapter results and protected publication
+  still need their owned integration and runtime proof. Reverse by reverting
+  the additive field and schema move before enabling such a consumer.
+- Retain only a SHA-256 digest of the actual incoming opaque artifact-tag header
+  in fixture observations. Keep request evidence distinct from response tag
+  presence, and decode historical events without this field as absent. The
+  digest grants neither signature validity nor backend authorization. A real
+  adapter result must still be observed independently before producer upload
+  publication. Reverse by reverting the additive capture before activating any
+  consumer that requires it.
+- Develop the capture continuation in an unpublished sibling lane based on
+  PR #2358's frozen head while its validation runs. Publish only after that
+  dependency lands and the unpublished continuation is reconciled with main.
+  This preserves the current proof's source and avoids parallel edits to its
+  workflow owner. Reverse by archive-retiring the unpublished lane.
+
 ### Signed-client component, 2026-10-28
 
 - Route optional artifact-key references through the existing cache secret-session
@@ -448,3 +471,16 @@ The local process report does not satisfy those deployment or observation gates.
   directory to the existing read-only mounts; use the fixed search path.
 - Reversal leaves signed experiments disabled and reverts this launcher fix.
   This repair grants no producer, qualification or signed production authority.
+
+
+### Owned graph upload join preparation
+
+- 2026-10-29: Extend the existing pure upload join with the complete independently
+  reviewed task-id closure, retaining the one-task default. Check exact graph
+  membership, duplicates, the 64-task bound, canonical hashes and successful
+  fresh execution for every node before selecting the upload task. This closes
+  the selected-task filtering gap without creating a new producer authority.
+  The supervisor must supply the reviewed closure and actual complete capture;
+  caller-supplied schema values alone remain untrusted. Reversal is to stop
+  multi-task producer publication and restore the single-task profile. No
+  signing, production configuration or qualification state changes here.

@@ -166,3 +166,14 @@ tuple; a stale compare-and-swap request fails without changing baseline or
 ledger. Cache audit reports zero blocking findings and 1,621 unassessed cached
 computations. See the immutable review and current-runtime baseline checkpoint.
 This is observation readiness; qualification and signed rollout remain open.
+
+
+### Producer capture prerequisite
+
+The [new component checkpoint](../turborepo-cache-trust-observability/research/producer-capture-checkpoint.json)
+records native request capture and reviewed full-graph validation. The current
+431-source census retains all 2,571 executable dispositions, 130 configuration
+records and the unchanged qualification ledger. Input-count/digest observations
+are refreshed for this checkout; no semantic review or cache flag is promoted.
+Closed producer integration and actual current-computation qualification remain
+required before adopting signed reuse.

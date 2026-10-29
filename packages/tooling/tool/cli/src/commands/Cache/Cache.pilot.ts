@@ -90,6 +90,7 @@ import {
 import { renderCacheIdentityLintProfile, verifyCacheIdentityLintProfile } from "./Cache.profile.ts";
 import { CacheFixtureCredentials, CacheFixtureScenario } from "./Cache.protocol.fixture.schemas.ts";
 import { makeCacheProtocolFixture } from "./Cache.protocol.fixture.ts";
+import { CacheProtocolNativeSummary } from "./Cache.protocol.runner.schemas.ts";
 import { assertCachePrivateNetwork } from "./Cache.protocol.runner.ts";
 import {
   CacheActivationPreview,
@@ -1065,9 +1066,12 @@ const runPilot = Effect.fn("CachePilot.run")(
         summarySha256: yield* hashBytes(bytes),
         sourceTreeUnchanged,
       };
-      return yield* O.isSome(transport)
-        ? S.decodeUnknownEffect(CacheSignedPilotRun)(observed)
-        : S.decodeUnknownEffect(CachePilotRun)(observed);
+      if (O.isNone(transport)) return yield* S.decodeUnknownEffect(CachePilotRun)(observed);
+      const run = yield* S.decodeUnknownEffect(CacheSignedPilotRun)(observed);
+      const nativeSummary = yield* decodeText(bytes).pipe(
+        Effect.flatMap(JsonStringCodec(CacheProtocolNativeSummary).decode)
+      );
+      return CacheSignedPilotRun.make({ ...run, nativeSummary: O.some(nativeSummary) });
     });
     const execute = Effect.fn("CachePilot.execute")(function* (
       fixture: PilotRoot,
