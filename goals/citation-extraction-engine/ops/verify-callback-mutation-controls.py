@@ -100,7 +100,7 @@ def main():
             subprocess.run([sys.executable, str(exporter), "--oracle-root", str(args.oracle_root), "--output", str(output)],
                            env={**os.environ, "PYTHONHASHSEED": "0"}, check=True)
             assert json.loads(output.read_bytes()) == data, "pinned source replay differs"
-    print("PASS 16 mutation source observations; alias/detached target and final projection proof remain open")
+    print("PASS 16 mutation source observations; target execution and final projection proof are separate gates")
 
 
 if __name__ == "__main__":

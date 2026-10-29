@@ -204,7 +204,7 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
     id: Effect.fn("Citation.defaultIdCallback")(
       function* (input: CitationIdCallbackInput) {
         if (input.mention.citation.type !== "id") return yield* invalid();
-        if (input.last._tag === "None" || !input.last.truthy) return { resource: none(), groups: input.groups };
+        if (input.last._tag === "None" || !input.last.truthy) return { resource: none() };
         const id = yield* key(input.last);
         for (const group of input.groups) {
           yield* work.step;
@@ -215,7 +215,7 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
             fullCitation: prior.citation,
             idCitation: input.mention.citation,
           }).pipe(Effect.mapError(() => CitationCallbackFailure.make({ reason: "callback-failed" })));
-          return { resource: bad ? none() : input.last, groups: input.groups };
+          return { resource: bad ? none() : input.last };
         }
         return yield* invalid();
       },

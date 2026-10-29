@@ -15,10 +15,11 @@ import {
   citationAuthorityMembers,
 } from "@beep/law-practice-domain/values";
 import {
+  CitationCallbackDictionary,
   CitationCallbackFailure,
-  CitationIdCallbackOutput,
   CitationResolutionCallbacks,
   CitationResolutionWork,
+  makeCitationCallbackDictionary,
   makeCitationResolutionWork,
   runPreparedCitationCallbackSession,
 } from "@beep/law-practice-server/_test/Citation/CallbackSession";
@@ -38,7 +39,6 @@ import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
@@ -71,9 +71,12 @@ const KnownMutation = LiteralKit([
   "none-key",
   "insert-current",
   "read-missing-default",
+  "alias-member-lists",
+  "dictionary-identity",
+  "retained-dictionary-full",
 ]).pipe(
   $I.annoteSchema("KnownMutation", {
-    description: "Ten known-input group-value scenes; alias/detached proof is explicitly separate.",
+    description: "Thirteen known-input dictionary/list scenes; detached execution remains separate.",
   })
 );
 type KnownMutation = typeof KnownMutation.Type;
@@ -117,116 +120,197 @@ const Corpus = S.Struct({
 const invalid = () => CitationCallbackFailure.make({ reason: "invalid-input" });
 
 it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback mutation group values", (it) => {
-  it.effect("preserves all ten known-input group values without claiming alias/detached projection", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const raw = yield* fs.readFileString(
-        fileURLToPath(
-          new URL("../../use-cases/test/fixtures/eyecite/callback-mutation-observations.json", import.meta.url)
-        )
-      );
-      expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
-        "26e81eae9bfcd03ef2370be5d22f7241d96eea18591df602cced8dbc12540a63"
-      );
-      const data = yield* S.decodeEffect(S.fromJsonString(Corpus))(raw);
-      expect(A.length(data.cases)).toBe(16);
-      expect(A.reduce(data.cases, 0, (count, row) => count + A.length(row.kinds))).toBe(38);
-      const rows = A.filter(data.cases, (row) => row.family === "known-group");
-      expect(A.length(rows)).toBe(10);
-      expect(A.length(A.filter(data.cases, (row) => row.family === "alias"))).toBe(3);
-      expect(A.length(A.filter(data.cases, (row) => row.family === "detached-member"))).toBe(1);
-      expect(A.length(A.filter(data.cases, (row) => row.family === "detached-prior-full"))).toBe(2);
-      expect(
-        A.sort(
-          A.map(rows, (row) => row.name),
-          Order.String
-        )
-      ).toEqual(A.sort(KnownMutation.literals, Order.String));
-      for (const row of rows) {
-        const action = yield* S.decodeUnknownEffect(KnownMutation)(row.name);
-        const input = yield* prepareCallbackObservation(
-          CitationCallbackObservation.make({
-            name: `mutation-${row.name}`,
-            kinds: row.kinds,
-            pages: {},
-            bindings: {},
-            events: [],
-            outcome: { status: "value", groups: [] },
-          })
+  it.effect(
+    "preserves all thirteen known-input dictionary/list observations including shared aliases and retained state",
+    () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const raw = yield* fs.readFileString(
+          fileURLToPath(
+            new URL("../../use-cases/test/fixtures/eyecite/callback-mutation-observations.json", import.meta.url)
+          )
         );
-        const prepared = yield* prepareCitationResolution(input);
-        const work = yield* makeCitationResolutionWork(prepared.limits);
-        const defaults = yield* makeDefaultCitationResolutionCallbacks(prepared).pipe(
-          Effect.provideService(CitationResolutionWork, work)
+        expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
+          "26e81eae9bfcd03ef2370be5d22f7241d96eea18591df602cced8dbc12540a63"
         );
-        const baseResource = yield* resource("base");
-        const emptyResource = yield* resource("empty");
-        const movedResource = yield* resource("moved");
-        const otherResource = yield* resource("other");
-        const zeroResource = yield* resource(0);
-        const unusedResource = yield* resource("unused");
-        const output = (value: CitationCallbackResource, groups: ReadonlyArray<CitationCallbackGroup>) =>
-          CitationIdCallbackOutput.make({ resource: value, groups });
-        const callbacks = CitationResolutionCallbacks.of({
-          ...defaults,
-          full: Effect.fn("MutationTest.full")(() => Effect.succeed(baseResource)),
-          id: Effect.fn("MutationTest.id")(function* (arg: CitationIdCallbackInput) {
-            const base = yield* Effect.fromOption(A.head(arg.groups), invalid);
-            const first = A.getUnsafe(prepared.mentions, 0).id;
-            const apply = Match.type<KnownMutation>().pipe(
-              Match.when("create-empty", () =>
-                Effect.succeed(output(none(), A.append(arg.groups, { resource: emptyResource, members: [] })))
-              ),
-              Match.when("clear-groups", () => Effect.succeed(output(none(), []))),
-              Match.when("move-members", () =>
-                Effect.succeed(output(movedResource, [{ resource: movedResource, members: base.members }]))
-              ),
-              Match.when("reverse-members", () =>
-                Effect.succeed(output(base.resource, [{ ...base, members: A.reverse(base.members) }]))
-              ),
-              Match.when("duplicate-prior", () =>
-                Effect.succeed(output(base.resource, [{ ...base, members: A.append(base.members, first) }]))
-              ),
-              Match.when("copy-to-second", () =>
-                Effect.succeed(
-                  output(base.resource, A.append(arg.groups, { resource: otherResource, members: [first] }))
-                )
-              ),
-              Match.when("falsy-key", () =>
-                Effect.succeed(output(none(), A.append(arg.groups, { resource: zeroResource, members: [] })))
-              ),
-              Match.when("none-key", () =>
-                Effect.succeed(output(none(), A.append(arg.groups, { resource: none(), members: [first] })))
-              ),
-              Match.when("insert-current", () =>
-                Effect.succeed(output(base.resource, [{ ...base, members: A.append(base.members, arg.mention.id) }]))
-              ),
-              Match.when("read-missing-default", () =>
-                defaults.id({ ...arg, groups: A.append(arg.groups, { resource: unusedResource, members: [] }) })
-              ),
-              Match.exhaustive
-            );
-            return yield* apply(action);
-          }),
-        });
-        const result = yield* runPreparedCitationCallbackSession(prepared).pipe(
-          Effect.provideService(CitationResolutionWork, work),
-          Effect.provideService(CitationResolutionCallbacks, callbacks)
-        );
-        const indices = HashMap.fromIterable(A.map(result.mentions, (mention, index) => Tuple.make(mention.id, index)));
-        const actual = A.map(result.groups, (group) => ({
-          resource: presentation(group.resource),
-          members: A.map(group.members, (id) =>
-            Member.cases.input.make({ index: O.getOrElse(HashMap.get(indices, id), () => -1) })
-          ),
-        }));
-        // Source list identity is retained in the fixture but deliberately not
-        // asserted by this value-only lane. Alias handling remains an open gate.
-        expect(actual, row.name).toEqual(
-          A.map(row.outcome.groups, (group) => ({ resource: group.resource, members: group.members }))
-        );
-      }
-    })
+        const data = yield* S.decodeEffect(S.fromJsonString(Corpus))(raw);
+        expect(A.length(data.cases)).toBe(16);
+        expect(A.reduce(data.cases, 0, (count, row) => count + A.length(row.kinds))).toBe(38);
+        const rows = A.filter(data.cases, (row) => row.family === "known-group" || row.family === "alias");
+        expect(A.length(rows)).toBe(13);
+        expect(A.length(A.filter(data.cases, (row) => row.family === "alias"))).toBe(3);
+        expect(A.length(A.filter(data.cases, (row) => row.family === "detached-member"))).toBe(1);
+        expect(A.length(A.filter(data.cases, (row) => row.family === "detached-prior-full"))).toBe(2);
+        expect(
+          A.sort(
+            A.map(rows, (row) => row.name),
+            Order.String
+          )
+        ).toEqual(A.sort(KnownMutation.literals, Order.String));
+        for (const row of rows) {
+          const action = yield* S.decodeUnknownEffect(KnownMutation)(row.name);
+          const input = yield* prepareCallbackObservation(
+            CitationCallbackObservation.make({
+              name: `mutation-${row.name}`,
+              kinds: row.kinds,
+              pages: {},
+              bindings: {},
+              events: [],
+              outcome: { status: "value", groups: [] },
+            })
+          );
+          const prepared = yield* prepareCitationResolution(input);
+          const work = yield* makeCitationResolutionWork(prepared.limits);
+          const dictionary = yield* makeCitationCallbackDictionary(prepared).pipe(
+            Effect.provideService(CitationResolutionWork, work)
+          );
+          let retained: O.Option<typeof dictionary> = O.none();
+          let dictionaries = A.empty<typeof dictionary>();
+          const dictionarySlot = (value: typeof dictionary) => {
+            const found = A.findFirstIndex(dictionaries, (entry) => entry === value);
+            if (O.isSome(found)) return found.value;
+            const slot = A.length(dictionaries);
+            dictionaries = A.append(dictionaries, value);
+            return slot;
+          };
+          let events = A.empty<S.Json>();
+          const indexOf = (id: (typeof prepared.mentions)[number]["id"]) =>
+            A.findFirstIndex(prepared.mentions, (mention) => mention.id === id).pipe(O.getOrElse(() => -1));
+          const groupView = (groups: ReadonlyArray<CitationCallbackGroup>) =>
+            A.map(groups, (group) => ({
+              resource: presentation(group.resource),
+              listSlot: group.listSlot,
+              members: A.map(group.members, (id) => ({ kind: "input", index: indexOf(id) })),
+            }));
+          const defaults = yield* makeDefaultCitationResolutionCallbacks(prepared).pipe(
+            Effect.provideService(CitationResolutionWork, work)
+          );
+          const baseResource = yield* resource("base");
+          const emptyResource = yield* resource("empty");
+          const movedResource = yield* resource("moved");
+          const otherResource = yield* resource("other");
+          const zeroResource = yield* resource(0);
+          const unusedResource = yield* resource("unused");
+          const callbacks = CitationResolutionCallbacks.of({
+            ...defaults,
+            full: Effect.fn("MutationTest.full")(function* (mention: (typeof prepared.mentions)[number]) {
+              let event: S.Json = { slot: "full", mention: { kind: "input", index: indexOf(mention.id) } };
+              if (action === "retained-dictionary-full" && O.isSome(retained)) {
+                yield* retained.value.clear;
+                event = {
+                  slot: "full",
+                  mention: { kind: "input", index: indexOf(mention.id) },
+                  clearedDictionarySlot: dictionarySlot(retained.value),
+                };
+              }
+              events = A.append(events, event);
+              return baseResource;
+            }),
+            id: Effect.fn("MutationTest.id")(function* (arg: CitationIdCallbackInput) {
+              const before = groupView(arg.groups);
+              const base = yield* Effect.fromOption(A.head(arg.groups), invalid);
+              const first = A.getUnsafe(prepared.mentions, 0).id;
+              const baseList = yield* dictionary.get(baseResource);
+              let result: CitationCallbackResource = none();
+              const apply = Match.type<KnownMutation>().pipe(
+                Match.when("create-empty", () => dictionary.get(emptyResource).pipe(Effect.asVoid)),
+                Match.when("clear-groups", () => dictionary.clear),
+                Match.when("move-members", () =>
+                  Effect.gen(function* () {
+                    yield* dictionary.remove(baseResource);
+                    yield* dictionary.set(movedResource, baseList);
+                    result = movedResource;
+                  })
+                ),
+                Match.when("reverse-members", () =>
+                  dictionary.write(baseList, A.reverse(base.members)).pipe(
+                    Effect.andThen(
+                      Effect.sync(() => {
+                        result = baseResource;
+                      })
+                    )
+                  )
+                ),
+                Match.when("duplicate-prior", () =>
+                  dictionary.write(baseList, A.append(base.members, first)).pipe(
+                    Effect.andThen(
+                      Effect.sync(() => {
+                        result = baseResource;
+                      })
+                    )
+                  )
+                ),
+                Match.when("copy-to-second", () =>
+                  Effect.gen(function* () {
+                    yield* dictionary.set(otherResource, yield* dictionary.allocate([first]));
+                    result = baseResource;
+                  })
+                ),
+                Match.when("falsy-key", () => dictionary.get(zeroResource).pipe(Effect.asVoid)),
+                Match.when("none-key", () =>
+                  Effect.gen(function* () {
+                    yield* dictionary.set(none(), yield* dictionary.allocate([first]));
+                  })
+                ),
+                Match.when("insert-current", () =>
+                  dictionary.write(baseList, A.append(base.members, arg.mention.id)).pipe(
+                    Effect.andThen(
+                      Effect.sync(() => {
+                        result = baseResource;
+                      })
+                    )
+                  )
+                ),
+                Match.when("read-missing-default", () =>
+                  Effect.gen(function* () {
+                    yield* dictionary.get(unusedResource);
+                    result = (yield* defaults.id({ ...arg, groups: yield* dictionary.read })).resource;
+                  })
+                ),
+                Match.when("alias-member-lists", () =>
+                  dictionary.set(otherResource, baseList).pipe(
+                    Effect.andThen(
+                      Effect.sync(() => {
+                        result = baseResource;
+                      })
+                    )
+                  )
+                ),
+                Match.when(Match.is("dictionary-identity", "retained-dictionary-full"), () =>
+                  Effect.gen(function* () {
+                    result = (yield* defaults.id(arg)).resource;
+                  })
+                ),
+                Match.exhaustive
+              );
+              yield* apply(action);
+              const common = {
+                slot: "id",
+                mention: { kind: "input", index: indexOf(arg.mention.id) },
+                last: presentation(arg.last),
+                dictionarySlot: dictionarySlot(dictionary),
+                before,
+                after: groupView(yield* dictionary.read),
+              };
+              if (action === "dictionary-identity" || action === "retained-dictionary-full") {
+                events = A.append(events, {
+                  ...common,
+                  retainedDictionaryMatches: O.isNone(retained) ? null : retained.value === dictionary,
+                });
+                retained = O.some(dictionary);
+              } else events = A.append(events, common);
+              return { resource: result };
+            }),
+          });
+          const result = yield* runPreparedCitationCallbackSession(prepared).pipe(
+            Effect.provideService(CitationResolutionWork, work),
+            Effect.provideService(CitationCallbackDictionary, dictionary),
+            Effect.provideService(CitationResolutionCallbacks, callbacks)
+          );
+          expect(groupView(result.groups), row.name).toEqual(row.outcome.groups);
+          expect(events, row.name).toEqual(row.events);
+        }
+      })
   );
   it.effect(
     "encodes all sixteen source group snapshots including list aliases and detached nodes without claiming callback execution",

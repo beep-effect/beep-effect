@@ -155,5 +155,8 @@ The current document model preserves ordered/repeated members, empty groups,
 shared list references and detached semantic objects separately from resolution
 decisions. See [ordered document membership evidence](
 ./history/evidence/2026-10-29-ordered-document-membership.md). Structural codec
-proof covers all sixteen mutation snapshots; live alias/detached callback
-execution and final session projection remain open.
+proof covers all sixteen mutation snapshots. The private session now matches
+all thirteen known-input dictionary/list scenes and their thirty events; see
+[callback dictionary evidence](
+./history/evidence/2026-10-29-callback-dictionary.md). Detached callback execution,
+general host/model mutation and final session projection remain open.

@@ -930,6 +930,24 @@ instead of silently splitting delivery or weakening scope.
   Reverse graph, persistence, tests and this checkpoint together if retired;
   do not retain the v1 format as a competing public representation.
 
+- **2026-10-29 live callback dictionary:** replace Id. callback array-replacement
+  output with an operation-owned captured dictionary service. Its schema data
+  snapshots carry list slots; owned runtime handles preserve sharing and
+  retained lists across removal/clear. Custom callback factories capture the
+  service and all dependencies with R = never, including access retained by a
+  later full callback. Id. input group data is a fresh snapshot, not a mutable
+  host dictionary or a request function. This is the Effect service adaptation
+  of the callable interface, with known-input observations compared directly
+  against source. All thirteen known-input mutation scenes now match all
+  thirty events and final groups, including list slots and retained service
+  identity. Methods serialize asynchronous updates, verify handle ownership,
+  snapshot values, enforce bounded retained state and alias multiplicity, and
+  close/release state on success, failure or interruption. This does not prove
+  detached objects, arbitrary host/model mutation, public port capture,
+  production list-token issuance or final document diagnostics/projection.
+  Reverse runtime protocol, adapters, tests and this checkpoint together if
+  retired; do not keep array replacement as a competing dictionary path.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from

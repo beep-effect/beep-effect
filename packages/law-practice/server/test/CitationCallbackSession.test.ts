@@ -1,9 +1,12 @@
 import { fileURLToPath } from "node:url";
 import { CitationMentionId } from "@beep/law-practice-domain/values";
 import {
+  CitationCallbackDictionary,
   CitationCallbackFailure,
+  CitationCallbackList,
   CitationResolutionCallbacks,
   CitationResolutionWork,
+  makeCitationCallbackDictionary,
   makeCitationResolutionWork,
   runCitationCallbackSession,
   runPreparedCitationCallbackSession,
@@ -17,7 +20,9 @@ import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
+import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
@@ -41,6 +46,7 @@ import type {
 } from "@beep/law-practice-server/_test/Citation/CallbackSession";
 
 const Corpus = S.Struct({ schemaVersion: S.tag("citation-custom-resolution-observations/v1"), cases: S.Array(Row) });
+const staleId = () => CitationMentionId.make(`cm1:${Str.repeat(64)("f")}`);
 const fail = () => CitationCallbackFailure.make({ reason: "callback-failed" });
 const emptyCallbacks = CitationResolutionCallbacks.of({
   full: Effect.fn("CallbackTest.emptyFull")(() => Effect.succeed(none())),
@@ -53,9 +59,7 @@ const emptyCallbacks = CitationResolutionCallbacks.of({
   reference: Effect.fn("CallbackTest.emptyReference")((arg: CitationFullsCallbackInput) =>
     Effect.succeed({ resource: none(), fulls: arg.fulls })
   ),
-  id: Effect.fn("CallbackTest.emptyId")((arg: CitationIdCallbackInput) =>
-    Effect.succeed({ resource: none(), groups: arg.groups })
-  ),
+  id: Effect.fn("CallbackTest.emptyId")(() => Effect.succeed({ resource: none() })),
 });
 const controls = () =>
   context(
@@ -76,10 +80,10 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
       let calls = 0;
       const callbacks = CitationResolutionCallbacks.of({
         ...emptyCallbacks,
-        id: Effect.fn("CallbackTest.count")((arg: CitationIdCallbackInput) =>
+        id: Effect.fn("CallbackTest.count")(() =>
           Effect.sync(() => {
             calls += 1;
-            return { resource: none(), groups: arg.groups };
+            return { resource: none() };
           })
         ),
       });
@@ -111,21 +115,160 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
   it.effect("rejects callback state references outside the verified input without leaking payloads", () =>
     Effect.gen(function* () {
       const input = yield* controls();
+      const prepared = yield* prepareCitationResolution(input);
+      const work = yield* makeCitationResolutionWork(prepared.limits);
+      const dictionary = yield* makeCitationCallbackDictionary(prepared).pipe(
+        Effect.provideService(CitationResolutionWork, work)
+      );
       const callbacks = CitationResolutionCallbacks.of({
         ...emptyCallbacks,
-        id: Effect.fn("CallbackTest.invalid")(() =>
-          Effect.succeed({
-            resource: none(),
-            groups: [{ resource: none(), members: [CitationMentionId.make(`cm1:${Str.repeat(64)("f")}`)] }],
-          })
-        ),
+        id: Effect.fn("CallbackTest.invalid")(function* () {
+          yield* dictionary.allocate([CitationMentionId.make(`cm1:${Str.repeat(64)("f")}`)]);
+          return { resource: none() };
+        }),
       });
       const rejected = yield* Effect.flip(
-        runCitationCallbackSession(input).pipe(Effect.provideService(CitationResolutionCallbacks, callbacks))
+        runPreparedCitationCallbackSession(prepared).pipe(
+          Effect.provideService(CitationResolutionCallbacks, callbacks),
+          Effect.provideService(CitationResolutionWork, work),
+          Effect.provideService(CitationCallbackDictionary, dictionary)
+        )
       );
       expect(rejected.reason).toBe("invalid-input");
       expect("cause" in rejected).toBe(false);
       expect("groups" in rejected).toBe(false);
+    })
+  );
+
+  it.effect("owns stable list handles, preserves aliases and retained lists, and serializes concurrent appends", () =>
+    Effect.gen(function* () {
+      const prepared = yield* prepareCitationResolution(yield* controls());
+      const work = yield* makeCitationResolutionWork(prepared.limits);
+      const first = A.getUnsafe(prepared.mentions, 0).id;
+      const second = A.getUnsafe(prepared.mentions, 1).id;
+      const dictionary = yield* makeCitationCallbackDictionary(prepared).pipe(
+        Effect.provideService(CitationResolutionWork, work)
+      );
+      const otherOwner = yield* makeCitationCallbackDictionary(prepared).pipe(
+        Effect.provideService(CitationResolutionWork, work)
+      );
+      yield* dictionary.start;
+      yield* otherOwner.start;
+      const base = yield* resource("base");
+      const other = yield* resource("other");
+      const list = yield* dictionary.get(base);
+      expect(yield* dictionary.get(base)).toBe(list);
+      const forged = CitationCallbackList.make({ slot: list.slot });
+      expect((yield* Effect.flip(dictionary.write(forged, [first]))).reason).toBe("invalid-input");
+      expect((yield* Effect.flip(otherOwner.set(base, list))).reason).toBe("invalid-input");
+      yield* dictionary.write(list, [first]);
+      yield* dictionary.set(other, list);
+      expect(yield* dictionary.get(other)).toBe(list);
+      Reflect.set(list, "slot", 999);
+      yield* dictionary.appendCurrent(base, second);
+      const snapshot = yield* dictionary.read;
+      expect(A.map(snapshot, (group) => group.members)).toEqual([
+        [first, second],
+        [first, second],
+      ]);
+      expect(A.map(snapshot, (group) => group.listSlot)).toEqual([0, 0]);
+      Reflect.set(A.getUnsafe(snapshot, 0).members, "0", staleId());
+      Reflect.set(A.getUnsafe(snapshot, 0).resource, "value", "changed snapshot");
+      expect(A.getUnsafe(yield* dictionary.read, 0).members).toEqual([first, second]);
+      expect(A.getUnsafe(yield* dictionary.read, 0).resource).toEqual(base);
+      yield* dictionary.clear;
+      yield* dictionary.set(other, list);
+      expect(A.getUnsafe(yield* dictionary.read, 0).members).toEqual([first, second]);
+      const fresh = yield* dictionary.get(base);
+      expect(fresh).not.toBe(list);
+      yield* Effect.all([dictionary.appendCurrent(base, first), dictionary.appendCurrent(base, second)], {
+        concurrency: "unbounded",
+      });
+      expect(A.getUnsafe(yield* dictionary.read, 1).members).toEqual([first, second]);
+      expect(A.getUnsafe(yield* dictionary.read, 0).listSlot).not.toBe(A.getUnsafe(yield* dictionary.read, 1).listSlot);
+      yield* dictionary.close;
+      yield* otherOwner.close;
+      expect((yield* Effect.flip(dictionary.read)).reason).toBe("invalid-input");
+      expect((yield* Effect.flip(dictionary.get(base))).reason).toBe("invalid-input");
+    })
+  );
+
+  it.effect("bounds aliased reference multiplicity atomically and closes the dictionary after callback failure", () =>
+    Effect.gen(function* () {
+      const input = yield* controls();
+      const prepared = yield* prepareCitationResolution({ ...input, limits: { ...input.limits, resolutionEdges: 2 } });
+      const work = yield* makeCitationResolutionWork(prepared.limits);
+      const dictionary = yield* makeCitationCallbackDictionary(prepared).pipe(
+        Effect.provideService(CitationResolutionWork, work)
+      );
+      const base = yield* resource("base");
+      const other = yield* resource("other");
+      const first = A.getUnsafe(prepared.mentions, 0).id;
+      let calls = 0;
+      const callbacks = CitationResolutionCallbacks.of({
+        ...emptyCallbacks,
+        id: Effect.fn("CallbackTest.boundedFailure")(function* () {
+          calls += 1;
+          const list = yield* dictionary.get(base);
+          yield* dictionary.write(list, [first, first]);
+          const aliasFailure = yield* Effect.result(dictionary.set(other, list));
+          expect(aliasFailure._tag).toBe("Failure");
+          if (aliasFailure._tag === "Failure") expect(aliasFailure.failure.reason).toBe("limit-exceeded");
+          expect(yield* dictionary.read).toHaveLength(1);
+          const writeFailure = yield* Effect.result(dictionary.write(list, [first, first, first]));
+          expect(writeFailure._tag).toBe("Failure");
+          if (writeFailure._tag === "Failure") expect(writeFailure.failure.reason).toBe("limit-exceeded");
+          expect(A.getUnsafe(yield* dictionary.read, 0).members).toEqual([first, first]);
+          return yield* fail();
+        }),
+      });
+      const run = runPreparedCitationCallbackSession(prepared).pipe(
+        Effect.provideService(CitationResolutionWork, work),
+        Effect.provideService(CitationCallbackDictionary, dictionary),
+        Effect.provideService(CitationResolutionCallbacks, callbacks)
+      );
+      const wrongWork = yield* makeCitationResolutionWork(prepared.limits);
+      const mismatch = yield* Effect.flip(
+        runPreparedCitationCallbackSession(prepared).pipe(
+          Effect.provideService(CitationResolutionWork, wrongWork),
+          Effect.provideService(CitationCallbackDictionary, dictionary),
+          Effect.provideService(CitationResolutionCallbacks, callbacks)
+        )
+      );
+      expect(mismatch.reason).toBe("invalid-input");
+      expect(calls).toBe(0);
+      expect((yield* Effect.flip(run)).reason).toBe("callback-failed");
+      expect((yield* Effect.flip(dictionary.read)).reason).toBe("invalid-input");
+      expect((yield* Effect.flip(run)).reason).toBe("invalid-input");
+      expect(calls).toBe(1);
+    })
+  );
+
+  it.effect("closes retained dictionary capabilities when a running callback is interrupted", () =>
+    Effect.gen(function* () {
+      const prepared = yield* prepareCitationResolution(yield* controls());
+      const work = yield* makeCitationResolutionWork(prepared.limits);
+      const dictionary = yield* makeCitationCallbackDictionary(prepared).pipe(
+        Effect.provideService(CitationResolutionWork, work)
+      );
+      const entered = yield* Deferred.make<void>();
+      const callbacks = CitationResolutionCallbacks.of({
+        ...emptyCallbacks,
+        id: Effect.fn("CallbackTest.interrupt")(function* () {
+          yield* Deferred.succeed(entered, undefined);
+          return yield* Effect.never;
+        }),
+      });
+      const fiber = yield* runPreparedCitationCallbackSession(prepared).pipe(
+        Effect.provideService(CitationResolutionWork, work),
+        Effect.provideService(CitationCallbackDictionary, dictionary),
+        Effect.provideService(CitationResolutionCallbacks, callbacks),
+        Effect.forkChild
+      );
+      yield* Deferred.await(entered);
+      yield* Fiber.interrupt(fiber);
+      expect((yield* Effect.flip(dictionary.read)).reason).toBe("invalid-input");
+      expect((yield* Effect.flip(dictionary.start)).reason).toBe("invalid-input");
     })
   );
 
@@ -230,7 +373,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
                   last: presentation(arg.last),
                   groups: A.map(arg.groups, groupValue),
                 });
-                if (action !== "default") return { resource: yield* resource(action), groups: arg.groups };
+                if (action !== "default") return { resource: yield* resource(action) };
                 return yield* defaults.id(arg);
               },
               Effect.provideService(Crypto.Crypto, crypto),
