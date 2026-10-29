@@ -293,3 +293,19 @@ artifact, signing activation, deployed grant or observation window changes.
   exact test/wire digests, actual hosted regression attribution, Bun and Node/V8
   tests, and supplemental coverage scope. A locally combined observation is not
   a substitute for the fresh hosted comparison. Earlier evidence is preserved.
+
+### Hosted artifact provenance preparation, 2026-10-29
+
+- [GitHub artifact REST contract](https://docs.github.com/en/rest/actions/artifacts):
+  immutable artifact identity, SHA-256 archive digest and owning workflow-run
+  metadata. These API fields require independent workflow approval and exact
+  byte verification; a caller-provided digest is insufficient.
+- Current implementation: `Cache.workflow.github.schemas.ts` and
+  `Cache.workflow.github.ts` in the existing Cache command owner, with tests
+  in `cache-hosted-producer.test.ts`. The standard-library ZIP reader never
+  extracts paths and checks original names before accepting normalized names.
+  Workflow content is restricted to a bounded ASCII profile so text decoding
+  cannot silently substitute bytes before the independently approved hash.
+- Fixtures prove the verifier mechanism, not actual protected CI publication
+  or a production R2 upload. Current source-bound verification is being
+  collected; no acceptance criterion or observation window closes here.

@@ -354,3 +354,27 @@ The local process report does not satisfy those deployment or observation gates.
   failure, longer streaming timeout or test retry substitutes for native proof.
   Removed guards must fail both the native test and the Node parent. Reversal
   keeps unproven evidence disabled; the production proxy is unchanged.
+
+### Hosted upload provenance preparation
+
+- 2026-10-29: Use existing authenticated GitHub client/content operations and
+  independently selected approval to verify an exact Actions artifact. Bind
+  repository database identity, same-repository non-fork main execution,
+  successful current attempt, approved workflow revision and ASCII bytes, immutable
+  archive digest, and the entire existing computation/client/profile/epoch
+  binding. A report cannot choose its own trust roots. Reusable workflows
+  remain refused until their resolved identities have independent approval.
+- The first cohort permits at most sixty-four KiB of ASCII workflow text. This
+  rejects Unicode replacement and lossy text decoding before hashing. Unicode
+  workflows require a raw-byte content route before this profile can widen.
+- Bound the component to a one-MiB ZIP containing only `cache-producer.json`,
+  sixty-four upload rows and sixty-four KiB of ASCII JSON, with a ten-second
+  parser child and a twenty-four-hour receipt lifetime. Retain only finite
+  status/result, canonical task/content hashes and byte counts. Read no tag,
+  bearer, artifact payload, source path or caller URL into the receipt.
+- This verifies an immutable hosted observation only. The actual closed
+  protected producer, deployed environment/credential controls, current source
+  qualification, semantic input closure, native HMAC checks and rollout remain
+  prerequisites. No existing live endpoint, writer policy or signing setting
+  changes. Reverse by removing the internal verifier and leaving reuse local
+  at this unqualified boundary.

@@ -355,3 +355,23 @@ unchanged, but the recorded byte digest was wrong. Both pointers now hash the
 formatted report. Audit every path/digest reference in the current checkpoint
 and completion audit against committed bytes after hooks, not merely source
 file bindings or pre-format serialization. Preserve historical proof scopes.
+## 2026-10-29: immutable hosted upload provenance preparation
+
+The existing issuer authenticates owned isolated pilot bundles, but it does not
+join production uploads to independently approved GitHub workflow identity.
+The new bounded verifier is a component toward that join; no production
+producer, signing activation or qualification is installed by it.
+
+Local checks caught a complex orchestration function and a nested fixture
+response selector. Separate metadata/binding checks and simpler fixture
+responses restored zero Fallow findings without a suppression. The Effect
+compiler also caught default-boolean inference and a missing named Effect
+wrapper in the new test helper; both were fixed before publication.
+
+ZIP listing text is an unsuitable file-type boundary. The implementation now
+uses the standard ZIP parser with one literal member, regular-file metadata,
+a bounded stream, strict ASCII, a ten-second child deadline and no extraction.
+The parser normalizes embedded NULs in names, so original and normalized names
+must agree. Real ZIP controls cover a valid JSON symlink target, overflow,
+extra members and a NUL-normalized name. Prevent recurrence by retaining these
+controls and immutable-digest red-first tests in the upgrade gate.

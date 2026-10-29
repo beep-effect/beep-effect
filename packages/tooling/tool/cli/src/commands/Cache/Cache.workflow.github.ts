@@ -1,0 +1,285 @@
+/**
+ * Authenticated GitHub provenance for bounded, immutable producer upload reports.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+import { GitHubClient } from "@beep/github/GitHubClient";
+import { GitHubContent } from "@beep/github/GitHubContent";
+import { Repo } from "@beep/github/Repo";
+import { $RepoCliId } from "@beep/identity/packages";
+import { Sha256HexFromBytes } from "@beep/schema";
+import { GitObjectId } from "@beep/schema/Conformance";
+import * as A from "effect/Array";
+import * as Clock from "effect/Clock";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
+import * as S from "effect/Schema";
+import { OutputBound, runCaptured } from "../../internal/process/index.ts";
+import { CacheProducerBinding } from "./Cache.producer.schemas.ts";
+import { CacheCommandError } from "./Cache.schemas.ts";
+import {
+  CacheHostedProducerApproval,
+  CacheHostedProducerObservation,
+  CacheHostedProducerReference,
+  CacheHostedProducerReport,
+} from "./Cache.workflow.github.schemas.ts";
+
+const $I = $RepoCliId.create("commands/Cache/Cache.workflow.github");
+const id = CacheHostedProducerReference.fields.runId;
+const repository = S.Struct({ id, full_name: S.NonEmptyString, fork: S.Boolean }).pipe(
+  $I.annoteSchema("Repository", { description: "GitHub repository database identity and fork status." })
+);
+const Run = S.Struct({
+  id,
+  run_attempt: id,
+  event: S.Literals(["workflow_dispatch", "schedule"]),
+  status: S.tag("completed"),
+  conclusion: S.tag("success"),
+  head_branch: S.tag("main"),
+  head_sha: GitObjectId,
+  path: CacheHostedProducerApproval.fields.workflowPath,
+  repository,
+  head_repository: repository,
+  // A reusable workflow needs its own approved resolved identity. This first
+  // route refuses it instead of trusting only the caller workflow's bytes.
+  referenced_workflows: S.Array(S.Unknown)
+    .check(S.isMaxLength(0))
+    .pipe(S.withDecodingDefaultKey(Effect.succeed(A.empty<unknown>()))),
+}).pipe(
+  $I.annoteSchema("Run", { description: "Completed successful main workflow metadata authenticated by GitHub." })
+);
+const Artifact = S.Struct({
+  id,
+  name: S.NonEmptyString.check(S.isMaxLength(100)),
+  size_in_bytes: S.Int.check(S.isBetween({ minimum: 1, maximum: 1024 * 1024 })),
+  digest: S.String.check(S.isPattern(/^sha256:[0-9a-f]{64}$/)),
+  expired: S.tag(false),
+  created_at: S.DateTimeUtcFromString,
+  expires_at: S.DateTimeUtcFromString,
+  workflow_run: S.Struct({
+    id,
+    repository_id: id,
+    head_repository_id: id,
+    head_branch: S.tag("main"),
+    head_sha: GitObjectId,
+  }),
+}).pipe(
+  $I.annoteSchema("Artifact", {
+    description: "Immutable bounded archive identity and owning workflow run authenticated by GitHub.",
+  })
+);
+const hashBytes = S.decodeEffect(Sha256HexFromBytes);
+const encodeApproval = S.encodeEffect(S.fromJsonString(CacheHostedProducerApproval));
+const decodeApproval = S.decodeUnknownEffect(S.fromJsonString(CacheHostedProducerApproval));
+const decodeReport = S.decodeUnknownEffect(S.fromJsonString(CacheHostedProducerReport), { onExcessProperty: "error" });
+const sameBinding = S.toEquivalence(CacheProducerBinding);
+const sameRun = S.toEquivalence(Run);
+const sameArtifact = S.toEquivalence(Artifact);
+const bound = OutputBound.make({ maxChars: 64 * 1024, truncatedNotice: "producer report exceeded its bound" });
+const AsciiWorkflow = S.String.check(S.isMaxLength(64 * 1024), S.isPattern(/^[\x09\x0a\x0d\x20-\x7e]*$/)).pipe(
+  $I.annoteSchema("AsciiWorkflow", {
+    description: "First-cohort ASCII workflow profile; rejects lossy UTF-8 decoding before exact byte hashing.",
+  })
+);
+const isAsciiWorkflow = S.is(AsciiWorkflow);
+// The standard ZIP parser owns directory/CRC/compression handling. No member
+// path is ever extracted, and the report stream is read with a hard byte cap.
+const readReportScript = `import sys, zipfile, stat
+try:
+    with zipfile.ZipFile(sys.argv[1]) as archive:
+        entries = archive.infolist()
+        if len(entries) != 1:
+            sys.exit(2)
+        item = entries[0]
+        mode = stat.S_IFMT(item.external_attr >> 16)
+        if item.filename != "cache-producer.json" or item.orig_filename != item.filename:
+            sys.exit(2)
+        if mode not in (0, stat.S_IFREG) or item.external_attr & 0x10:
+            sys.exit(2)
+        if item.flag_bits & 1 or item.compress_type not in (zipfile.ZIP_STORED, zipfile.ZIP_DEFLATED):
+            sys.exit(2)
+        if item.file_size > 65536:
+            sys.exit(2)
+        with archive.open(item) as member:
+            body = member.read(65537)
+        if len(body) > 65536:
+            sys.exit(2)
+        body.decode("ascii", errors="strict")
+        sys.stdout.buffer.write(body)
+except (OSError, ValueError, zipfile.BadZipFile, RuntimeError, NotImplementedError):
+    sys.exit(3)
+`;
+const assertFreshArtifact = Effect.fn("CacheWorkflow.freshHostedArtifact")(function* (artifact: typeof Artifact.Type) {
+  const now = yield* Clock.currentTimeMillis;
+  const created = DateTime.toEpochMillis(artifact.created_at);
+  if (
+    created > now ||
+    now - created > Duration.toMillis(Duration.hours(24)) ||
+    DateTime.toEpochMillis(artifact.expires_at) <= now
+  )
+    return yield* CacheCommandError.new("Producer artifact is expired or outside its observation lifetime.");
+});
+
+const readReport = Effect.fn("CacheWorkflow.readHostedReport")(function* (archive: Uint8Array) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const directory = yield* fs.makeTempDirectoryScoped({ prefix: "beep-cache-producer-" });
+  yield* fs.chmod(directory, 0o700);
+  const file = path.join(directory, "report.zip");
+  yield* fs.writeFile(file, archive, { mode: 0o600 });
+  const result = yield* runCaptured({
+    command: "/usr/bin/python3",
+    args: ["-I", "-S", "-c", readReportScript, file],
+    cwd: directory,
+    extendEnv: false,
+    env: { PATH: "/usr/bin", LANG: "C", LC_ALL: "C" },
+    bound,
+    timeout: Duration.seconds(10),
+    source: "merge",
+  });
+  if (result.exitCode !== 0 || result.truncated)
+    return yield* CacheCommandError.new("Producer ZIP inspection failed or exceeded its bound.");
+  const text = result.output;
+  const report = yield* decodeReport(text);
+  return { report, reportSha256: yield* hashBytes(new TextEncoder().encode(text)) };
+});
+
+const inspectHostedMetadata = Effect.fn("CacheWorkflow.inspectHostedMetadata")(function* (
+  approval: CacheHostedProducerApproval,
+  selected: CacheHostedProducerReference
+) {
+  const client = yield* GitHubClient;
+  const at = { owner: approval.repository.owner, repo: approval.repository.repo };
+  const readRun = client.requestDecoded(
+    "GET /repos/{owner}/{repo}/actions/runs/{run_id}",
+    { ...at, run_id: selected.runId },
+    Run
+  );
+  const readArtifact = client.requestDecoded(
+    "GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}",
+    { ...at, artifact_id: selected.artifactId },
+    Artifact
+  );
+  const run = yield* readRun;
+  const artifact = yield* readArtifact;
+  const name = `cache-producer-${selected.runId}-${selected.attempt}`;
+  const approvedRepository = { id: approval.repositoryId, full_name: approval.repository.slug, fork: false };
+  if (
+    !sameRun(run, {
+      ...run,
+      id: selected.runId,
+      run_attempt: selected.attempt,
+      head_sha: approval.binding.workflowRevision,
+      path: approval.workflowPath,
+      repository: approvedRepository,
+      head_repository: approvedRepository,
+    })
+  )
+    return yield* CacheCommandError.new("Producer run differs from independent approval.");
+  if (
+    !sameArtifact(artifact, {
+      ...artifact,
+      id: selected.artifactId,
+      name,
+      workflow_run: {
+        id: selected.runId,
+        repository_id: approval.repositoryId,
+        head_repository_id: approval.repositoryId,
+        head_sha: run.head_sha,
+        head_branch: "main",
+      },
+    })
+  )
+    return yield* CacheCommandError.new("Producer artifact differs from independent approval.");
+
+  return { run, artifact, readRun, readArtifact };
+});
+
+const assertHostedReport = Effect.fn("CacheWorkflow.assertHostedReport")(function* (
+  report: CacheHostedProducerReport,
+  approval: CacheHostedProducerApproval,
+  selected: CacheHostedProducerReference
+) {
+  if (
+    report.runId !== selected.runId ||
+    report.attempt !== selected.attempt ||
+    !sameBinding(report.binding, approval.binding) ||
+    A.dedupe(A.map(report.uploads, (upload) => upload.taskHash)).length !== report.uploads.length
+  )
+    return yield* CacheCommandError.new("Producer report identity, binding or unique upload set is invalid.");
+});
+
+/**
+ * Join exact archived bytes to authenticated GitHub metadata and independent approval.
+ *
+ * **Details**
+ * The caller transports a ZIP; its digest is checked against GitHub before any
+ * member is read. Run and artifact identities are re-read after inspection.
+ * The current completed main attempt, same non-fork repository, exact approved
+ * workflow revision and bounded ASCII bytes, finite upload results and full computation binding
+ * must agree. Reports expire after twenty-four hours. No report-selected URL,
+ * trust root, arbitrary signing request or qualification transition exists.
+ *
+ * Approval must cover the workflow's complete reviewed execution boundary,
+ * including pinned actions and protected credentials. These API checks do not
+ * establish deployed environment rules, honest task inputs or HMAC validity.
+ * Reusable workflows are refused until their resolved approvals are supported.
+ *
+ * **Example** (Reference immutable producer verification)
+ * ```ts
+ * import { verifyCacheHostedProducerUpload } from "@beep/repo-cli/test/Cache"
+ * console.assert(typeof verifyCacheHostedProducerUpload === "function")
+ * ```
+ *
+ * @internal
+ * @category verification
+ * @since 0.0.0
+ */
+export const verifyCacheHostedProducerUpload = Effect.fn("CacheWorkflow.verifyHostedUpload")(
+  function* (
+    approved: CacheHostedProducerApproval,
+    reference: CacheHostedProducerReference,
+    transportedArchive: Uint8Array
+  ) {
+    if (transportedArchive.byteLength === 0 || transportedArchive.byteLength > 1024 * 1024)
+      return yield* CacheCommandError.new("Producer archive exceeded its compressed byte bound.");
+    const archive = new Uint8Array(transportedArchive);
+    const approval = yield* encodeApproval(approved).pipe(Effect.flatMap(decodeApproval));
+    const selected = yield* S.encodeEffect(CacheHostedProducerReference)(reference).pipe(
+      Effect.flatMap(S.decodeUnknownEffect(CacheHostedProducerReference))
+    );
+    const content = yield* GitHubContent;
+    const { run, artifact, readRun, readArtifact } = yield* inspectHostedMetadata(approval, selected);
+    yield* assertFreshArtifact(artifact);
+    const artifactSha256 = yield* hashBytes(archive);
+    if (archive.byteLength !== artifact.size_in_bytes || `sha256:${artifactSha256}` !== artifact.digest)
+      return yield* CacheCommandError.new("Transported producer archive differs from GitHub's immutable digest.");
+    const workflow = yield* content
+      .getFile(approval.workflowPath, { ref: run.head_sha })
+      .pipe(Repo.provide(approval.repository));
+    const workflowBytes = new TextEncoder().encode(workflow);
+    if (!isAsciiWorkflow(workflow) || (yield* hashBytes(workflowBytes)) !== approval.workflowSha256)
+      return yield* CacheCommandError.new("Producer workflow bytes differ from independent approval.");
+    const decoded = yield* readReport(archive);
+    yield* assertHostedReport(decoded.report, approval, selected);
+    if (!sameRun(run, yield* readRun) || !sameArtifact(artifact, yield* readArtifact))
+      return yield* CacheCommandError.new("Producer run or immutable artifact changed during verification.");
+    yield* assertFreshArtifact(artifact);
+    return CacheHostedProducerObservation.make({
+      reference: selected,
+      artifactSha256,
+      reportSha256: decoded.reportSha256,
+      report: decoded.report,
+    });
+  },
+  Effect.scoped,
+  Effect.mapError((error) =>
+    S.is(CacheCommandError)(error)
+      ? CacheCommandError.new(error.message)
+      : CacheCommandError.new("Cannot verify the independently approved GitHub producer artifact.")
+  )
+);

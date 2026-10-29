@@ -82,6 +82,14 @@ export {
   writeCacheIdentityLintProfile,
 } from "../commands/Cache/Cache.profile.ts";
 export {
+  CacheHostedProducerApproval,
+  CacheHostedProducerObservation,
+  CacheHostedProducerReference,
+  CacheHostedProducerReport,
+  CacheHostedProducerUpload,
+} from "../commands/Cache/Cache.workflow.github.schemas.ts";
+export { verifyCacheHostedProducerUpload } from "../commands/Cache/Cache.workflow.github.ts";
+export {
   CacheProducerObservation,
   CacheProducerWorkflow,
   CacheProducerWorkflowFile,
