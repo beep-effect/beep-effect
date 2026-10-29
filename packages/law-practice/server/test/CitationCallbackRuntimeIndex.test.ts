@@ -1,17 +1,10 @@
 import { fileURLToPath } from "node:url";
 import {
   Citation,
-  CitationAuthority,
-  CitationDocument,
   CitationDocumentReceipt,
   CitationGroupMember,
-  CitationMemberList,
-  CitationMemberListId,
   CitationMention,
   CitationMentionId,
-  CitationResolved,
-  CitationResourceGroup,
-  CitationResourceGroupId,
   citationAuthorityMembers,
   citationGroupMembers,
 } from "@beep/law-practice-domain/values";
@@ -30,20 +23,17 @@ import {
   runPreparedCitationCallbackSession,
 } from "@beep/law-practice-server/_test/Citation/CallbackSession";
 import { makeDefaultCitationResolutionCallbacks } from "@beep/law-practice-server/_test/Citation/DefaultCallbacks";
-import {
-  projectCitationDocumentReceipt,
-  restoreCitationDocument,
-} from "@beep/law-practice-server/_test/Citation/Document";
+import { restoreCitationDocument } from "@beep/law-practice-server/_test/Citation/Document";
 import {
   CitationFrozenEditions,
   makeCitationFrozenEditions,
 } from "@beep/law-practice-server/_test/Citation/FrozenEditions";
 import { prepareCitationResolution } from "@beep/law-practice-server/_test/Citation/ResolutionInput";
+import { CitationResourceIdentity } from "@beep/law-practice-server/_test/Citation/ResourceIdentity";
 import {
-  CitationResourceBinding,
-  CitationResourceIdentity,
-  makeCitationResourceAuthorityId,
-} from "@beep/law-practice-server/_test/Citation/ResourceIdentity";
+  CitationSessionResourceDescriptors,
+  makeCitationSessionDocumentProjector,
+} from "@beep/law-practice-server/_test/Citation/SessionDocument";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -277,34 +267,20 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered callback
           yield* Effect.forEach(result.mentions, (mention) => semanticView(ref(mention), mention.citation)),
           row.name
         ).toEqual(row.objects);
-        // Controlled out-of-band expectations bind the final runtime graph;
-        // no native key hash/equality is evaluated while persisting it.
         const identity = CitationResourceIdentity.cases.External.make({
           scope: prepared.engineArtifact,
           key: yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(`${row.name}:resource:0`)),
         });
-        const authorityId = yield* makeCitationResourceAuthorityId(identity);
-        const nodes = yield* Effect.forEach(result.groups, (group, index) =>
-          Effect.gen(function* () {
-            expect(group.resource._tag === "Registered" && group.resource.slot === 0).toBe(true);
-            const groupDigest = yield* S.decodeEffect(Sha256HexFromBytes)(
-              new TextEncoder().encode(`${row.name}:entry:${group.entrySlot}`)
-            );
-            const listDigest = yield* S.decodeEffect(Sha256HexFromBytes)(
-              new TextEncoder().encode(`${row.name}:list:${group.listSlot}`)
-            );
-            const list = CitationMemberList.make({
-              id: CitationMemberListId.make(`cl1:${listDigest}`),
-              members: group.members,
-            });
-            const entry = CitationResourceGroup.make({
-              id: CitationResourceGroupId.make(`cg1:${groupDigest}`),
-              authorityId,
-              memberListId: list.id,
-            });
-            return { entry, list, expected: { position: index, id: entry.id, list } };
-          })
+        const projector = yield* makeCitationSessionDocumentProjector().pipe(
+          Effect.provideService(
+            CitationSessionResourceDescriptors,
+            CitationSessionResourceDescriptors.of({
+              describe: Effect.fn("RuntimeSessionProjector.describe")(() => Effect.succeed(identity)),
+            })
+          )
         );
+        const { document, receipt, resourceBindings } = yield* projector.project(result);
+        const authorityId = A.getUnsafe(document.authorities, 0).id;
         expect(A.map(result.decisions, (decision) => decision.mentionId)).toEqual(
           A.map(result.mentions, (mention) => mention.id)
         );
@@ -317,34 +293,12 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered callback
           ),
           row.name
         ).toEqual(row.name === "default-page-after-insertion" ? [0, 1, 1] : A.map(result.mentions, () => 0));
-        const decisions = A.map(result.decisions, (decision) => decision.mentionId);
-        const binding = CitationResourceBinding.make({
-          identity,
-          decisions,
-          groups: A.map(nodes, (node) => node.expected),
-        });
-        const document = CitationDocument.make({
-          source: prepared.source,
-          engineArtifact: prepared.engineArtifact,
-          mentions: result.mentions,
-          authorities: [CitationAuthority.make({ id: authorityId, representative: O.none() })],
-          resolutions: A.map(decisions, (mentionId) =>
-            CitationResolved.make({ mentionId, authorityId, confidence: O.none() })
-          ),
-          groups: A.map(nodes, (node) => node.entry),
-          memberLists: A.dedupeWith(
-            A.map(nodes, (node) => node.list),
-            (left, right) => left.id === right.id
-          ),
-          detachedCitations: result.detachedCitations,
-        });
-        const receipt = yield* projectCitationDocumentReceipt({ document, editions: [], resourceBindings: [binding] });
         const codec = S.fromJsonString(CitationDocumentReceipt);
         const persisted = yield* S.decodeEffect(codec)(yield* S.encodeEffect(codec)(receipt));
         const restored = yield* restoreCitationDocument({
           receipt: persisted,
           editions: [],
-          resourceBindings: [binding],
+          resourceBindings,
           expectedSource: prepared.source,
           expectedEngineArtifact: prepared.engineArtifact,
           sourceText: A.join("")(A.map(prepared.mentions, (_, index) => `witness-${index}; `)),
@@ -361,6 +315,49 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered callback
         if (A.length(restored.groups) === 2) {
           expect(A.getUnsafe(restored.groups, 0).authorityId).toBe(A.getUnsafe(restored.groups, 1).authorityId);
           expect(A.getUnsafe(restored.groups, 0).id).not.toBe(A.getUnsafe(restored.groups, 1).id);
+        }
+        if (row.name === "default-page-before-insertion") {
+          const replayWork = yield* makeCitationResolutionWork(prepared.limits);
+          const replayOwner = yield* makeCitationCallbackDictionary(prepared).pipe(
+            Effect.provideService(CitationResolutionWork, replayWork),
+            Effect.provideService(CitationCallbackRuntimeIndexFactory, factory)
+          );
+          const replayDefaults = yield* makeDefaultCitationResolutionCallbacks(prepared).pipe(
+            Effect.provideService(CitationResolutionWork, replayWork),
+            Effect.provideService(CitationCallbackDictionary, replayOwner)
+          );
+          const replayCallbacks = CitationResolutionCallbacks.of({
+            ...replayDefaults,
+            full: Effect.fn("RuntimeSessionProjector.replayFull")(function* (mention: CitationMention) {
+              const resource = yield* replayDefaults.full(mention);
+              const reference = ref(mention);
+              const wire = yield* S.encodeEffect(Citation)(yield* replayOwner.citationOf(reference)).pipe(
+                Effect.mapError(invalid)
+              );
+              yield* replayOwner.writeCitation(
+                reference,
+                yield* S.decodeEffect(Citation)({ ...wire, components: { ...wire.components, page: "2" } }).pipe(
+                  Effect.mapError(invalid)
+                )
+              );
+              return resource;
+            }),
+          });
+          const replay = yield* runPreparedCitationCallbackSession(prepared).pipe(
+            Effect.provideService(CitationResolutionWork, replayWork),
+            Effect.provideService(CitationCallbackDictionary, replayOwner),
+            Effect.provideService(CitationResolutionCallbacks, replayCallbacks)
+          );
+          const firstResource = A.getUnsafe(result.decisions, 0).resource;
+          const secondResource = A.getUnsafe(replay.decisions, 0).resource;
+          expect(
+            firstResource._tag === "Registered" &&
+              secondResource._tag === "Registered" &&
+              firstResource.scope !== secondResource.scope
+          ).toBe(true);
+          const projectedReplay = yield* projector.project(replay);
+          expect(projectedReplay.receipt).toEqual(receipt);
+          expect(projectedReplay.resourceBindings).toEqual(resourceBindings);
         }
         for (const [index, mention] of A.map(result.mentions, (mention, index) => [index, mention] as const)) {
           expect(mention.id).toBe(A.getUnsafe(prepared.mentions, index).id);

@@ -241,3 +241,11 @@ callback returns and selected append destinations independently of surviving
 groups. Eight source histories and nineteen decisions match exact hook traces,
 including falsy results, removed entries and equal-but-distinct returned keys.
 Final identity/binding production and public resolution translation remain open.
+
+The [issued-session document producer](
+./history/evidence/2026-10-29-issued-session-document-producer.md) builds document
+relationships and exact bindings from sealed execution history plus a captured
+trusted descriptor port. Eight source histories and all three mutable-key scenes
+now restore automatically produced receipts. Copies cannot authorize production;
+view edits do not alter issued history. Default registered descriptors, detailed
+diagnostics and production Layer integration remain open.

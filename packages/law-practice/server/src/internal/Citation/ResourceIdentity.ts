@@ -25,9 +25,11 @@ const encoder = new TextEncoder();
 /**
  * Adapter-owned identity evidence. Canonical fallback uses the existing key
  * producer. External scope/key fingerprints are supplied by a trusted adapter;
- * they do not certify arbitrary host-object equality by themselves. Equal
- * resources must share the same descriptor regardless of their representation.
- * Truthiness and the first returned resource value belong to resolver state.
+ * they do not certify arbitrary host-object equality by themselves. The legacy
+ * fingerprint lookup route requires equality-compatible descriptors. Registered
+ * lookup instead uses captured runtime comparisons; its external descriptors
+ * may preserve distinct native objects even when one lookup compares them equal.
+ * Truthiness and the first stored key belong to captured execution state.
  * @internal
  * @category models
  * @since 0.0.0
@@ -38,7 +40,7 @@ export const CitationResourceIdentity = S.TaggedUnion({
 }).pipe(
   $I.annoteSchema("CitationResourceIdentity", {
     description:
-      "Trusted canonical fallback or adapter-scoped external equality fingerprint; never taken from a document receipt.",
+      "Trusted canonical fallback or adapter-scoped external identity descriptor; never taken from a document receipt.",
   })
 );
 /**

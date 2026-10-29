@@ -152,6 +152,14 @@ unique-list scenes normalize allocation slots without asserting general shared
 list selection. Source metadata, fresh replay and eight corruption controls
 remain separate from target execution. Attribution remains BSD-2-Clause.
 
+The [issued-session producer evidence](
+../history/evidence/2026-10-29-issued-session-document-producer.md) reuses the
+unchanged eight dispatch histories and three mutable default-resource scenes.
+Automatic document/binding construction preserves exact groups without replaying
+native hooks. Issuance, tamper isolation, anchor retention and independent replay
+controls are target identity/proof laws, not extra oracle capabilities. The pure
+trusted descriptor port still needs its default registered implementation.
+
 ## Incorporated-source discipline
 
 - A local clone is research state, not an incorporated dependency.

@@ -8,11 +8,14 @@
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
   Citation,
+  CitationComponentAnchor,
   CitationDetached,
   CitationDetachedId,
+  CitationFootnoteZone,
   CitationGroupMember,
   CitationMention,
   CitationMentionId,
+  CitationMentionReceipt,
   FullCitation,
 } from "@beep/law-practice-domain/values";
 import { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
@@ -34,6 +37,7 @@ export { CitationCallbackFailure, CitationCallbackResource } from "./CallbackRes
 
 import { CitationAuthorityIdentityInput } from "./AuthorityIdentity.ts";
 import { CitationCallbackRuntimeIndexFactory } from "./CallbackRuntimeIndex.ts";
+import { captureCitationMentionReceiptData } from "./Mention.ts";
 import { PreparedCitationResolution, prepareCitationResolution } from "./ResolutionInput.ts";
 import { CitationResourceIdentity, makeCitationResourceAuthorityId } from "./ResourceIdentity.ts";
 import type { CitationCallbackRuntimeIndex } from "./CallbackRuntimeIndex.ts";
@@ -324,6 +328,54 @@ const SessionState = S.Struct({
       description: "Private post-dispatch state; not a final document or grouping correctness proof.",
     })
   );
+const CapturedData = S.Struct({ ...SessionState.fields, mentions: S.Array(CitationMentionReceipt) });
+const CapturedJson = S.fromJsonString(CapturedData);
+const NativeAnchors = S.Struct({
+  anchor: CitationMention.fields.anchor,
+  components: S.Array(CitationComponentAnchor.fields.anchor),
+  footnote: S.Option(CitationFootnoteZone.fields.anchor),
+});
+const Issued = S.Struct({ json: S.String, anchors: S.Array(NativeAnchors) });
+const issuedSessions = new WeakMap<object, typeof Issued.Type>();
+/**
+ * Read the immutable issued snapshot, not mutable fields on its outward view.
+ * Copies and receipts cannot issue this operation-local capability. Native
+ * anchor capabilities remain separately captured; no structural proof is minted.
+ * @internal
+ * @category capabilities
+ * @since 0.0.0
+ */
+export const readCapturedCitationSession = Effect.fn("Citation.readCapturedSession")(function* (input: unknown) {
+  if (typeof input !== "object" || input === null)
+    return yield* CitationCallbackFailure.make({ reason: "identity-failed" });
+  const sealed = issuedSessions.get(input);
+  if (sealed === undefined) return yield* CitationCallbackFailure.make({ reason: "identity-failed" });
+  const data = yield* S.decodeEffect(CapturedJson)(sealed.json).pipe(
+    Effect.mapError(() => CitationCallbackFailure.make({ reason: "identity-failed" }))
+  );
+  const mentions = yield* Effect.forEach(data.mentions, (mention, index) =>
+    Effect.gen(function* () {
+      const anchors = A.getUnsafe(sealed.anchors, index);
+      const components = A.map(mention.components, (component, componentIndex) =>
+        CitationComponentAnchor.make({ name: component.name, anchor: A.getUnsafe(anchors.components, componentIndex) })
+      );
+      const footnote = O.isNone(mention.footnote)
+        ? O.none<CitationFootnoteZone>()
+        : O.some(
+            CitationFootnoteZone.make({ label: mention.footnote.value.label, anchor: O.getOrThrow(anchors.footnote) })
+          );
+      return yield* S.decodeUnknownEffect(S.toType(CitationMention))({
+        ...mention,
+        anchor: anchors.anchor,
+        components,
+        footnote,
+      });
+    })
+  ).pipe(Effect.mapError(() => CitationCallbackFailure.make({ reason: "identity-failed" })));
+  return yield* S.decodeEffect(S.toType(SessionState))({ ...data, mentions }).pipe(
+    Effect.mapError(() => CitationCallbackFailure.make({ reason: "identity-failed" }))
+  );
+});
 const ResourceJson = S.fromJsonString(CitationCallbackResource);
 const FullsJson = S.fromJsonString(CitationFullsCallbackOutput);
 const IdJson = S.fromJsonString(CitationIdCallbackOutput);
@@ -1248,7 +1300,7 @@ export const runPreparedCitationCallbackSession = Effect.fn("Citation.runPrepare
           { concurrency: 1 }
         );
 
-        return yield* S.decodeEffect(S.toType(SessionState))({
+        const result = yield* S.decodeEffect(S.toType(SessionState))({
           ...prepared,
           mentions: yield* dictionary.readMentions,
           fulls: yield* dictionary.readFulls,
@@ -1257,6 +1309,19 @@ export const runPreparedCitationCallbackSession = Effect.fn("Citation.runPrepare
           last: yield* dictionary.currentResource(last),
           detachedCitations: yield* dictionary.detachedCitations,
         }).pipe(Effect.mapError(invalid));
+        const json = yield* S.encodeEffect(CapturedJson)({
+          ...result,
+          mentions: A.map(result.mentions, captureCitationMentionReceiptData),
+        }).pipe(Effect.mapError(invalid));
+        issuedSessions.set(result, {
+          json,
+          anchors: A.map(result.mentions, (mention) => ({
+            anchor: mention.anchor,
+            components: A.map(mention.components, (component) => component.anchor),
+            footnote: O.map(mention.footnote, (zone) => zone.anchor),
+          })),
+        });
+        return result;
       }),
     () => dictionary.close
   );

@@ -80,7 +80,9 @@
         "packages/law-practice/domain/test/CitationDocument.test.ts",
         "goals/citation-extraction-engine/history/evidence/2026-10-29-dispatch-decision-capture.md",
         "packages/law-practice/use-cases/test/fixtures/eyecite/dispatch-decisions.json",
-        "goals/citation-extraction-engine/ops/probe-dispatch-decisions.py"
+        "goals/citation-extraction-engine/ops/probe-dispatch-decisions.py",
+        "goals/citation-extraction-engine/history/evidence/2026-10-29-issued-session-document-producer.md",
+        "packages/law-practice/server/src/internal/Citation/SessionDocument.ts"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
@@ -139,7 +141,9 @@
         "packages/law-practice/domain/test/CitationDocument.test.ts",
         "goals/citation-extraction-engine/history/evidence/2026-10-29-dispatch-decision-capture.md",
         "packages/law-practice/use-cases/test/fixtures/eyecite/dispatch-decisions.json",
-        "goals/citation-extraction-engine/ops/probe-dispatch-decisions.py"
+        "goals/citation-extraction-engine/ops/probe-dispatch-decisions.py",
+        "goals/citation-extraction-engine/history/evidence/2026-10-29-issued-session-document-producer.md",
+        "packages/law-practice/server/src/internal/Citation/SessionDocument.ts"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

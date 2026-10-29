@@ -27,10 +27,11 @@ export const CitationUnresolvedReason = LiteralKit([
   "no-previous-authority",
   "invalid-pin-cite",
   "unsupported-citation",
+  "callback-unresolved",
 ]).pipe(
   $I.annoteSchema("CitationUnresolvedReason", {
     description:
-      "Finite resolver diagnostics for missing names, absent matches/previous resolution, invalid Id. pincites or unsupported citations.",
+      "Finite resolver diagnostics, including an explicit None callback return when no richer branch evidence was captured.",
   })
 );
 /**
@@ -58,13 +59,14 @@ export class CitationResolved extends S.Opaque<CitationResolved, { readonly bran
     confidence: S.OptionFromNullOr(UnitInterval),
   }).pipe(
     $I.annoteSchema("CitationResolved", {
-      description: "One resolved membership edge; bounded confidence is an optional producer assertion, not proof.",
+      description:
+        "One chosen resource decision, independent of final membership; bounded confidence is optional producer data, not proof.",
     })
   )
 ) {}
 
 /**
- * Multiple distinct candidate authorities without a chosen membership.
+ * Multiple distinct candidate authorities without a chosen resource.
  * **Example** (Inspect candidate evidence)
  * ```ts
  * import { CitationAmbiguous } from "@beep/law-practice-domain/values"
@@ -119,7 +121,7 @@ export class CitationUnresolved extends S.Opaque<CitationUnresolved, { readonly 
 export const CitationResolution = S.Union([CitationResolved, CitationAmbiguous, CitationUnresolved]).pipe(
   S.toTaggedUnion("status"),
   $I.annoteSchema("CitationResolution", {
-    description: "Resolved membership, ambiguous candidates or explicit non-resolution; no optional result bag.",
+    description: "Resolved resource decision, ambiguous candidates or explicit non-resolution; no optional result bag.",
   })
 );
 /**

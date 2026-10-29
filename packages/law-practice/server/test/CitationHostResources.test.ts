@@ -1,5 +1,11 @@
 import { fileURLToPath } from "node:url";
-import { Citation, CitationGroupMember, CitationMention } from "@beep/law-practice-domain/values";
+import {
+  Citation,
+  CitationComponentAnchor,
+  CitationFootnoteZone,
+  CitationGroupMember,
+  CitationMention,
+} from "@beep/law-practice-domain/values";
 import {
   CitationCallbackRuntimeIndexFactory,
   makeCitationCallbackRuntimeIndexFactory,
@@ -15,6 +21,7 @@ import {
   runPreparedCitationCallbackSession,
 } from "@beep/law-practice-server/_test/Citation/CallbackSession";
 import { makeDefaultCitationResolutionCallbacks } from "@beep/law-practice-server/_test/Citation/DefaultCallbacks";
+import { restoreCitationDocument } from "@beep/law-practice-server/_test/Citation/Document";
 import {
   CitationFrozenEditions,
   makeCitationFrozenEditions,
@@ -24,12 +31,18 @@ import {
   CitationHostResourceAdapterFactory,
 } from "@beep/law-practice-server/_test/Citation/HostResources";
 import { prepareCitationResolution } from "@beep/law-practice-server/_test/Citation/ResolutionInput";
+import { CitationResourceIdentity } from "@beep/law-practice-server/_test/Citation/ResourceIdentity";
+import {
+  CitationSessionResourceDescriptors,
+  makeCitationSessionDocumentProjector,
+} from "@beep/law-practice-server/_test/Citation/SessionDocument";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -262,7 +275,9 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
                 ]),
                 hosts: S.Array(HostState),
                 decisions: S.Array(S.Json),
-                groups: S.Array(S.Json),
+                groups: S.Array(
+                  S.Struct({ entrySlot: S.Natural, listSlot: S.Natural, resource: S.Json, members: S.Array(S.Natural) })
+                ),
                 trace: S.Array(S.Json),
               })
             ),
@@ -280,7 +295,20 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
           Effect.provideService(CitationFrozenEditions, frozen),
           Effect.provideService(CitationHostResourceAdapterFactory, host.factory)
         );
-        const prepared = yield* prepare(row.name, row.kinds);
+        const base = yield* prepare(row.name, row.kinds);
+        const prepared =
+          row.action === "equal"
+            ? {
+                ...base,
+                mentions: A.map(base.mentions, (mention) =>
+                  CitationMention.make({
+                    ...mention,
+                    components: [CitationComponentAnchor.make({ name: "token", anchor: mention.anchor })],
+                    footnote: O.some(CitationFootnoteZone.make({ label: O.some("n1"), anchor: mention.anchor })),
+                  })
+                ),
+              }
+            : base;
         const work = yield* makeCitationResolutionWork(prepared.limits);
         const owner = yield* makeCitationCallbackDictionary(prepared).pipe(
           Effect.provideService(CitationResolutionWork, work),
@@ -342,8 +370,144 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
           })),
           row.name
         ).toEqual(row.groups);
+        const crypto = yield* Crypto.Crypto;
+        let described = 0;
+        const descriptors = CitationSessionResourceDescriptors.of({
+          describe: Effect.fn("SessionProjectionTest.describe")(
+            function* (resource: CitationCallbackResource) {
+              described += 1;
+              if (resource._tag !== "Registered") return yield* bad();
+              const value = yield* S.decodeUnknownEffect(S.Struct({ token: S.String }))(resource.value).pipe(
+                Effect.mapError(bad)
+              );
+              const key = yield* S.decodeEffect(Sha256HexFromBytes)(
+                new TextEncoder().encode(`controlled-host-token/v1:${value.token}`)
+              ).pipe(Effect.mapError(bad));
+              return CitationResourceIdentity.cases.External.make({ scope: prepared.engineArtifact, key });
+            },
+            Effect.provideService(Crypto.Crypto, crypto)
+          ),
+        });
+        const projector = yield* makeCitationSessionDocumentProjector().pipe(
+          Effect.provideService(CitationSessionResourceDescriptors, descriptors)
+        );
+        expect((yield* Effect.flip(projector.project({ ...result }))).reason).toBe("identity-failed");
+        expect(described).toBe(0);
+        const output = yield* projector.project(result);
+        expect(described).toBe(
+          A.length(
+            A.dedupe(
+              A.getSomes(
+                A.map(result.decisions, (decision) =>
+                  decision.resource._tag === "Registered" ? O.some(decision.resource.slot) : O.none<number>()
+                )
+              )
+            )
+          )
+        );
+        const nativeIndex = (member: CitationGroupMember) =>
+          member._tag === "Mention" ? indexOf(member.mentionId) : -1;
+        const listById = (id: (typeof output.document.memberLists)[number]["id"]) =>
+          O.getOrThrow(A.findFirst(output.document.memberLists, (list) => list.id === id));
+        expect(
+          A.map(output.document.groups, (group) => A.map(listById(group.memberListId).members, nativeIndex)),
+          row.name
+        ).toEqual(A.map(row.groups, (group) => group.members));
+        expect(
+          A.map(output.document.resolutions, (resolution) => resolution.status),
+          row.name
+        ).toEqual(
+          A.map(result.decisions, (decision) => (decision.resource._tag === "None" ? "Unresolved" : "Resolved"))
+        );
+        for (const resolution of output.document.resolutions)
+          if (resolution.status === "Unresolved")
+            expect(resolution.reason).toBe(
+              A.getUnsafe(result.decisions, indexOf(resolution.mentionId)).callback === "unknown"
+                ? "unsupported-citation"
+                : "callback-unresolved"
+            );
+        const restored = yield* restoreCitationDocument({
+          receipt: output.receipt,
+          editions: [],
+          resourceBindings: output.resourceBindings,
+          expectedSource: prepared.source,
+          expectedEngineArtifact: prepared.engineArtifact,
+          sourceText: A.join("")(A.map(prepared.mentions, (_, index) => `witness-${index}; `)),
+        });
+        expect(restored.groups).toEqual(output.document.groups);
+        expect(restored.memberLists).toEqual(output.document.memberLists);
+        expect(restored.resolutions).toEqual(output.document.resolutions);
+        if (row.action === "equal") {
+          expect(A.getUnsafe(output.document.mentions, 0).anchor).toBe(A.getUnsafe(prepared.mentions, 0).anchor);
+          expect(A.getUnsafe(A.getUnsafe(output.document.mentions, 0).components, 0).anchor).toBe(
+            A.getUnsafe(prepared.mentions, 0).anchor
+          );
+          expect(O.getOrThrow(A.getUnsafe(output.document.mentions, 0).footnote).label).toEqual(O.some("n1"));
+        }
+        if (row.action === "equal") {
+          const opaque = CitationSessionResourceDescriptors.of({
+            describe: Effect.fn("SessionProjectionTest.opaqueIdentity")(
+              function* (resource: CitationCallbackResource) {
+                if (resource._tag !== "Registered") return yield* bad();
+                const value = yield* S.decodeUnknownEffect(S.Struct({ slot: S.Natural }))(resource.value).pipe(
+                  Effect.mapError(bad)
+                );
+                const key = yield* S.decodeEffect(Sha256HexFromBytes)(
+                  new TextEncoder().encode(`controlled-host-object/v1:${value.slot}`)
+                ).pipe(Effect.mapError(bad));
+                return CitationResourceIdentity.cases.External.make({ scope: prepared.engineArtifact, key });
+              },
+              Effect.provideService(Crypto.Crypto, crypto)
+            ),
+          });
+          const opaqueProjector = yield* makeCitationSessionDocumentProjector().pipe(
+            Effect.provideService(CitationSessionResourceDescriptors, opaque)
+          );
+          const distinct = yield* opaqueProjector.project(result);
+          expect(distinct.document.authorities).toHaveLength(2);
+          const first = A.getUnsafe(distinct.document.resolutions, 0);
+          const second = A.getUnsafe(distinct.document.resolutions, 1);
+          expect(
+            first.status === "Resolved" && second.status === "Resolved" && first.authorityId !== second.authorityId
+          ).toBe(true);
+          expect(
+            first.status === "Resolved" && A.getUnsafe(distinct.document.groups, 0).authorityId === first.authorityId
+          ).toBe(true);
+          expect(A.getUnsafe(distinct.document.memberLists, 0).members).toHaveLength(2);
+          const restoredDistinct = yield* restoreCitationDocument({
+            receipt: distinct.receipt,
+            editions: [],
+            resourceBindings: distinct.resourceBindings,
+            expectedSource: prepared.source,
+            expectedEngineArtifact: prepared.engineArtifact,
+            sourceText: A.join("")(A.map(prepared.mentions, (_, index) => `witness-${index}; `)),
+          });
+          expect(restoredDistinct.resolutions).toEqual(distinct.document.resolutions);
+        }
+        if (row.action === "equal") {
+          const sensitive = CitationCallbackFailure.make({ reason: "callback-failed" });
+          Reflect.set(sensitive, "message", "private-source-sentinel");
+          Reflect.set(sensitive, "detail", "private-source-sentinel");
+          const failedProjector = yield* makeCitationSessionDocumentProjector().pipe(
+            Effect.provideService(
+              CitationSessionResourceDescriptors,
+              CitationSessionResourceDescriptors.of({
+                describe: Effect.fn("SessionProjectionTest.failedDescriptor")(() => Effect.fail(sensitive)),
+              })
+            )
+          );
+          const sanitized = yield* Effect.flip(failedProjector.project(result));
+          expect(sanitized.reason).toBe("identity-failed");
+          expect("detail" in sanitized).toBe(false);
+          expect(sanitized.message).not.toContain("private-source-sentinel");
+        }
+        const before = output.receipt;
+        Reflect.set(result, "decisions", []);
+        Reflect.set(result, "groups", []);
+        const again = yield* projector.project(result);
+        expect(again.receipt, row.name).toEqual(before);
         expect(host.trace(), row.name).toEqual(row.trace);
-        count += A.length(result.decisions);
+        count += A.length(output.document.resolutions);
       }
       expect(count).toBe(19);
     })

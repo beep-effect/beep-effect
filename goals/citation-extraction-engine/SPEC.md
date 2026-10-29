@@ -1054,6 +1054,19 @@ instead of silently splitting delivery or weakening scope.
   does not prove shared-list selection. Public resolution translation and final
   trusted identity/binding production remain open; no completion row advances.
 
+- **2026-10-29 issued-session document production:** seal actual dispatch data
+  behind its issued view and capture genuine anchor handles separately. Copies
+  cannot authorize projection; outward mutations do not alter issued history.
+  A captured pure descriptor port supplies resource labels while the producer
+  derives catalogs, decisions, ordered entries, list aliases and exact bindings.
+  Descriptor IDs do not replace native runtime comparisons. Node IDs bind source,
+  engine artifact, kind and slot, independent of random runtime resource scopes.
+  Non-None results remain decisions independently of membership; None records a
+  generic callback-unresolved reason unless a source branch is known. Eight
+  actual histories and three mutable-key scenes now restore automatic receipts.
+  Default registered descriptors, richer diagnostics and the live Layer remain
+  open; no exhaustive completion or semantic waiver follows.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from
