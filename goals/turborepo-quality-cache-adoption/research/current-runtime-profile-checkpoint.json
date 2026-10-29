@@ -106,7 +106,7 @@
   },
   "population": {
     "path": "goals/turborepo-quality-cache-adoption/research/current-population.json",
-    "sha256": "8e355c913f6b9faf61ce77f7fdc8d06cad6572539c6d172b9741ae7d19f7132c",
+    "sha256": "0ea49f7b903162d1ee7cdfa985d9caff0ab4573657e27b5156dc14a9f724b46f",
     "sourcesVerified": 431,
     "counts": {
       "workspaces": 190,
@@ -124,7 +124,8 @@
     "qualificationLedgerSha256": "13067bf343f413b4cc99b4cefca3ce7d094a1f09247a54ffc20114e766d4d2bb",
     "configuredFlagsChanged": false,
     "qualificationEntriesChanged": false,
-    "priorPopulationBeforeMainIntegration": "acf0a0e81c5936df4758bf688ac8420d4b0c9c512bdae6b6f7585e39c2cdabcb"
+    "priorPopulationBeforeMainIntegration": "acf0a0e81c5936df4758bf688ac8420d4b0c9c512bdae6b6f7585e39c2cdabcb",
+    "priorPopulationBeforePropertyCoverageRefresh": "8e355c913f6b9faf61ce77f7fdc8d06cad6572539c6d172b9741ae7d19f7132c"
   },
   "secretHandoff": {
     "agentCreateFailed": true,
@@ -189,5 +190,10 @@
     "path": "goals/turborepo-quality-cache-adoption/research/current-runtime-baseline-checkpoint.json",
     "sha256": "747dce251c43af011311b34831831bac76d8d0de914086c180c2e66196ecfacd",
     "scope": "Explicit current baseline review and public observation only; old frozen proofs retain their original source identity."
+  },
+  "publicationGateRepair": {
+    "path": "goals/turborepo-cache-trust-observability/research/producer-publication-gate-repair-checkpoint.json",
+    "sha256": "190073e4df011357ab0395fba831c101eb106c0c71f7975afd6dc296f215637e",
+    "scope": "Current test properties/catalog and regression only; no runtime behavior or qualification change."
   }
 }

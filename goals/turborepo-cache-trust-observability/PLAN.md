@@ -483,3 +483,17 @@ without inheriting historical qualification. Durable secret handoff remains
 pending after an agent item-creation failure; the approved backend diagnostic
 passes and no item/reference files were created. A human-only resumable command
 is prepared. Signed runtime activation and protected publication remain closed.
+
+
+### Publication gate repair
+
+The collected publication check found two introduced failures before any push:
+missing schema-derived properties in the new tests and one stale generated
+instrumentation shard. Both are repaired without changing runtime behavior.
+Properties bind generated native hashes and run/artifact references; removing
+each matching production guard causes its property to fail, then exact source
+bytes are restored. Current Node and Bun integrations each pass 361 tests in
+18 files; quick package checks pass. Schema-first has no missing/stale entries
+and the canonical instrumentation catalog has zero drift. The original failed
+publication is retained in the gate-repair checkpoint. Hosted proof and the
+full goal obligations remain open.

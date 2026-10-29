@@ -142,13 +142,14 @@
   },
   "currentPopulation": {
     "path": "goals/turborepo-quality-cache-adoption/research/current-population.json",
-    "sha256": "8e355c913f6b9faf61ce77f7fdc8d06cad6572539c6d172b9741ae7d19f7132c",
+    "sha256": "0ea49f7b903162d1ee7cdfa985d9caff0ab4573657e27b5156dc14a9f724b46f",
     "base": "repository-root",
     "sourcesVerified": 431,
     "refreshedAt": "2026-10-29T10:05:33.391812+00:00",
     "scope": "Inventory metadata only; the original native execution and qualification limitations are unchanged.",
     "priorInventoryAtRuntimeObservation": "acf0a0e81c5936df4758bf688ac8420d4b0c9c512bdae6b6f7585e39c2cdabcb",
-    "integrationScope": "Canonical inventory metadata refresh after merged parent; original native upload observations and their source/proof scope are unchanged."
+    "integrationScope": "Canonical inventory metadata refresh after merged parent; original native upload observations and their source/proof scope are unchanged.",
+    "priorInventoryBeforePropertyCoverageRefresh": "8e355c913f6b9faf61ce77f7fdc8d06cad6572539c6d172b9741ae7d19f7132c"
   },
   "productionChanges": false,
   "qualified": false,
@@ -166,5 +167,10 @@
     "referenceBase": "private completion evidence bundle",
     "retainedAtSourceRevision": "d5181fbc27fab7755061eb9825169f8aaaccf6c9",
     "scope": "Frozen earlier inventory; original native observations are unchanged."
+  },
+  "publicationGateRepair": {
+    "path": "goals/turborepo-cache-trust-observability/research/producer-publication-gate-repair-checkpoint.json",
+    "sha256": "190073e4df011357ab0395fba831c101eb106c0c71f7975afd6dc296f215637e",
+    "scope": "Later test-only properties and generated catalog; original component proof keeps its original source map."
   }
 }

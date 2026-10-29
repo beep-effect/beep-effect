@@ -11,6 +11,7 @@ import {
   verifyCacheHostedProducerUpload,
 } from "@beep/repo-cli/test/Cache";
 import { Sha256HexFromBytes } from "@beep/schema";
+import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
@@ -65,7 +66,7 @@ const zipReport = Effect.fn("HostedProducerTest.zip")(function* (
   return yield* fs.readFile(path.join(directory, "report.zip"));
 });
 
-const fixture = Effect.fn("HostedProducerTest.fixture")(function* () {
+const fixture = Effect.fn("HostedProducerTest.fixture")(function* (selectedReference = reference) {
   const binding = yield* S.decodeUnknownEffect(CacheProducerBinding)({
     ...input.pilot,
     protocolClient: input.protocol.observation.client,
@@ -82,8 +83,8 @@ const fixture = Effect.fn("HostedProducerTest.fixture")(function* () {
   });
   const report = CacheHostedProducerReport.make({
     binding,
-    runId: reference.runId,
-    attempt: reference.attempt,
+    runId: selectedReference.runId,
+    attempt: selectedReference.attempt,
     uploads: [
       {
         taskHash: "0123456789abcdef",
@@ -99,8 +100,8 @@ const fixture = Effect.fn("HostedProducerTest.fixture")(function* () {
   const now = yield* Clock.currentTimeMillis;
   const repository = { id: 33, full_name: "beep-effect/beep-effect", fork: false };
   const run = {
-    id: reference.runId,
-    run_attempt: reference.attempt,
+    id: selectedReference.runId,
+    run_attempt: selectedReference.attempt,
     event: "workflow_dispatch",
     status: "completed",
     conclusion: "success",
@@ -111,15 +112,15 @@ const fixture = Effect.fn("HostedProducerTest.fixture")(function* () {
     head_repository: repository,
   };
   const artifact = {
-    id: reference.artifactId,
-    name: "cache-producer-11-2",
+    id: selectedReference.artifactId,
+    name: `cache-producer-${selectedReference.runId}-${selectedReference.attempt}`,
     size_in_bytes: archive.byteLength,
     digest: `sha256:${yield* hashBytes(archive)}`,
     expired: false,
     created_at: DateTime.formatIso(DateTime.makeUnsafe(now - 1000)),
     expires_at: DateTime.formatIso(DateTime.makeUnsafe(now + 60_000)),
     workflow_run: {
-      id: reference.runId,
+      id: selectedReference.runId,
       repository_id: 33,
       head_repository_id: 33,
       head_branch: "main",
@@ -162,7 +163,7 @@ const fixture = Effect.fn("HostedProducerTest.fixture")(function* () {
           return Effect.succeed(responses.workflow ?? workflow);
         }),
       });
-      return verifyCacheHostedProducerUpload(approved, reference, transported).pipe(
+      return verifyCacheHostedProducerUpload(approved, selectedReference, transported).pipe(
         Effect.provideService(GitHubClient, client),
         Effect.provideService(GitHubContent, content)
       );
@@ -179,6 +180,27 @@ const fixture = Effect.fn("HostedProducerTest.fixture")(function* () {
 });
 
 it.layer(NodeServices.layer, { timeout: "30 seconds" })("immutable hosted producer evidence", (it) => {
+  it.effect.prop(
+    "binds schema-generated run references and rejects a different authenticated artifact identity",
+    { selectedReference: CacheHostedProducerReference },
+    ({ selectedReference }) =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const f = yield* fixture(selectedReference);
+          const observed = yield* f.verify();
+          expect(observed.reference).toEqual(selectedReference);
+          expect(observed.report.runId).toBe(selectedReference.runId);
+          expect(observed.report.attempt).toBe(selectedReference.attempt);
+          const otherId = selectedReference.artifactId === 1 ? 2 : 1;
+          (yield* f.verify({ artifact: { ...f.artifact, id: otherId } }).pipe(Effect.result)).pipe(
+            Result.isFailure,
+            assertTrue
+          );
+        })
+      ),
+    { arbitrary: fcRuns(12) }
+  );
+
   it.effect("joins a real ZIP to exact authenticated run, workflow, artifact and computation identities", () =>
     Effect.gen(function* () {
       const f = yield* fixture();

@@ -267,3 +267,7 @@ binds changed runner source bytes. Historical claims above keep their dates.
   compare-and-swap recording, unchanged task projection/ledger, actual public
   fingerprint, stale-update rejection and passing cache audit. No qualification
   or signed activation is inferred.
+
+- [Producer publication gate repair](../../turborepo-cache-trust-observability/research/producer-publication-gate-repair-checkpoint.json):
+  current properties/catalog and 361-test integrations. Inventory refresh
+  preserves all computation dispositions and configuration records.

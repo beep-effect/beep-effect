@@ -349,3 +349,8 @@ artifact, signing activation, deployed grant or observation window changes.
 - [Cloudflare OAuth account-token provisioning](https://developers.cloudflare.com/changelog/post/2026-10-01-account-api-token-provisioning/)
   and [account-token ownership](https://developers.cloudflare.com/fundamentals/api/get-started/account-owned-tokens/):
   existing OAuth creation scope and creator-limited management.
+
+- [Publication gate repair](producer-publication-gate-repair-checkpoint.json):
+  introduced catalog/property findings, canonical regeneration, schema-derived
+  binding properties, two intended-failure controls, exact restoration and
+  current Node/Bun integration. Earlier full audits retain their exact scope.

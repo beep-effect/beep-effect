@@ -8,6 +8,7 @@ import {
 } from "@beep/repo-cli/commands/Cache";
 import { CacheHostedProducerUpload, joinCacheProducerUpload } from "@beep/repo-cli/test/Cache";
 import { Sha256HexFromBytes } from "@beep/schema";
+import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
@@ -64,6 +65,31 @@ const fixture = Effect.fn("ProducerUploadTest.fixture")(function* (taskHash = ha
 });
 
 it.layer(Services, { timeout: "30 seconds", excludeTestServices: true })("owned producer upload join", (it) => {
+  it.effect.prop(
+    "joins schema-generated native hashes and refuses a different owned summary hash",
+    { taskHash: CacheHostedProducerUpload.fields.taskHash },
+    ({ taskHash }) =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const f = yield* fixture(taskHash);
+          const upload = yield* joinCacheProducerUpload(f.binding, f.summary, f.events);
+          expect(upload.taskHash).toBe(taskHash);
+          expect(upload.archiveSha256).toBe(f.archiveSha256);
+          expect(upload.archiveBytes).toBe(f.archiveBytes);
+          const wrongHash = taskHash === hash ? "fedcba9876543210" : hash;
+          const altered = CacheProtocolNativeSummary.make({
+            ...f.summary,
+            tasks: A.map(f.summary.tasks, (task) => ({ ...task, hash: wrongHash })),
+          });
+          (yield* joinCacheProducerUpload(f.binding, altered, f.events).pipe(Effect.result)).pipe(
+            Result.isFailure,
+            assertTrue
+          );
+        })
+      ),
+    { arbitrary: fcRuns(12) }
+  );
+
   it.effect("joins actual observed upload bytes to one successful fresh native task", () =>
     Effect.gen(function* () {
       const f = yield* fixture();

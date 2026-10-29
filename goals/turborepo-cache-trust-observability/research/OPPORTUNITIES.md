@@ -517,3 +517,17 @@ the agent. The already created Alchemy roles remain unassigned.
   children; raw credentials are not added to quality gates. The existing Yeet
   identity selector receives the same reference. Persistent GitHub settings
   remain unchanged. Remove the temporary PATH entry after its monitor ends.
+
+
+### Schema-heavy tests and generated spans are publication inputs
+
+- The collected cheap-gates run ended before pushing with two introduced reds:
+  missing schema-derived property coverage in the two new producer test files,
+  and a stale CLI instrumentation shard. Package audit and docgen alone do not
+  establish these repository-level checks.
+- Added generated hash/reference binding properties, proved each fails with
+  its corresponding production guard removed, restored exact source, and used
+  the canonical catalog writer. No schema-first inventory or baseline waiver.
+- Read red lines as the collected run emits them; a tail showing later green
+  steps is not evidence that earlier lanes passed. Retain all completed checks
+  and attribute each red before repeating the publish wave.
