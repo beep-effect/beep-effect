@@ -5,6 +5,8 @@ import {
   CacheConformanceRun,
   classifyCacheConformanceBackendResult,
   classifyCacheConformanceMediaType,
+  classifyCacheConformanceStatus,
+  readCacheConformanceReply,
   renderCacheConformanceCorpus,
   runCacheConformance,
   syncCacheConformanceCorpus,
@@ -16,6 +18,8 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -333,4 +337,68 @@ it.effect.prop(
       assertNone(decoded.backendResult);
     }),
   { arbitrary: { runs: 25 } }
+);
+
+it("keeps unexpected HTTP status observations distinct from genuine misses", () => {
+  for (const status of [101, 199, 302, 600]) {
+    expect(classifyCacheConformanceStatus(true)(status)).toBe("unexpected-status");
+    expect(classifyCacheConformanceStatus(false)(status)).toBe("unexpected-status");
+  }
+  expect(classifyCacheConformanceStatus(true)(404)).toBe("miss");
+  expect(classifyCacheConformanceStatus(false)(404)).toBe("not-found");
+});
+
+it.effect("drains segmented replies up to the byte bound and refuses a partial oversized body", () =>
+  Effect.gen(function* () {
+    const response = () =>
+      HttpClientResponse.fromWeb(
+        HttpClientRequest.get("http://fixture.invalid/artifact"),
+        new Response(
+          new ReadableStream<Uint8Array>({
+            start(controller) {
+              controller.enqueue(new Uint8Array([1, 2]));
+              controller.enqueue(new Uint8Array([3, 4]));
+              controller.close();
+            },
+          })
+        )
+      );
+    const complete = yield* readCacheConformanceReply(response(), 4);
+    assertSome(complete.status, 200);
+    expect(complete.body).toEqual(new Uint8Array([1, 2, 3, 4]));
+    const oversized = yield* readCacheConformanceReply(response(), 3).pipe(Effect.result);
+    oversized.pipe(Result.isFailure, assertTrue);
+    if (Result.isFailure(oversized)) {
+      expect(oversized.failure._tag).toBe("CacheCommandError");
+      expect(oversized.failure.message).toContain("exceeded its byte bound");
+    }
+    const empty = HttpClientResponse.fromWeb(
+      HttpClientRequest.get("http://fixture.invalid/artifact"),
+      new Response(null)
+    );
+    expect((yield* readCacheConformanceReply(empty, 0)).body.byteLength).toBe(0);
+  })
+);
+
+it.effect("propagates a reply stream failure rather than returning its completed prefix", () =>
+  Effect.gen(function* () {
+    let started = false;
+    const response = HttpClientResponse.fromWeb(
+      HttpClientRequest.get("http://fixture.invalid/artifact"),
+      new Response(
+        new ReadableStream<Uint8Array>({
+          pull(controller) {
+            if (started) controller.error("synthetic interrupted response");
+            else {
+              started = true;
+              controller.enqueue(new Uint8Array([1, 2]));
+            }
+          },
+        })
+      )
+    );
+    const result = yield* readCacheConformanceReply(response).pipe(Effect.result);
+    result.pipe(Result.isFailure, assertTrue);
+    if (Result.isFailure(result)) expect(result.failure._tag).toBe("HttpClientError");
+  })
 );

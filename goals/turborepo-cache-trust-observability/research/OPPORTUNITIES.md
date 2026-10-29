@@ -334,3 +334,14 @@ than changing the shim's declared behavior, skipping it, or increasing sleeps.
 The repaired Node and Bun suites pass, V8 instrumentation passes, and guard
 removals fail both the child control and its parent. Require both runtime paths
 for future changes to this lifecycle control. No production proxy change.
+
+
+## 2026-10-29: Successful unit shards did not settle response error-path coverage
+
+PR #2352 passed its unit shards but failed Coverage Regression on conformance
+wire lines/statements. The new streaming reply reader lacked a direct failed-
+stream control; unusual HTTP statuses were also unexercised. Added focused
+complete/empty/oversize/interrupted reply controls and unexpected-status tests.
+Both runtimes pass; Node/V8 observes the previously uncovered paths. Keep the
+committed floors and require the fresh hosted comparison. Do not infer coverage
+acceptance from a unit-pass aggregate or lower the baseline to make it green.

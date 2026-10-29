@@ -288,3 +288,8 @@ artifact, signing activation, deployed grant or observation window changes.
   integrations, V8 instrumentation and CPU-constrained controls. The runtime
   mismatch is grounded in `vitest.setup.ts`: `collectRequestBody` precedes
   `respondToRequest`. Prior request-completion evidence is retained unchanged.
+
+- [Response error-path coverage checkpoint](reply-error-coverage-checkpoint.json):
+  exact test/wire digests, actual hosted regression attribution, Bun and Node/V8
+  tests, and supplemental coverage scope. A locally combined observation is not
+  a substitute for the fresh hosted comparison. Earlier evidence is preserved.

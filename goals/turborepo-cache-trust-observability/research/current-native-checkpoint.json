@@ -251,5 +251,10 @@
     "passed": 271,
     "seconds": 36.89,
     "scope": "Actual Node CLI entrypoint with one worker; interrupted streaming assertion invokes the real Bun runtime."
+  },
+  "replyErrorCoverageCheckpoint": {
+    "path": "goals/turborepo-cache-trust-observability/research/reply-error-coverage-checkpoint.json",
+    "sha256": "1f18796d33f586ae9f1f8bd1908669f180c94dde61b42308b4d50817939c41dd",
+    "scope": "Tests-only repair; earlier implementation/runtime proofs retain their original source bindings."
   }
 }

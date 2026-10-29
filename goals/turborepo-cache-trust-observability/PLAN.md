@@ -385,3 +385,15 @@ receipt or empty-upload guard fails both runtimes; exact proxy bytes are
 restored. Current package, Fallow and Effect/Vitest checks pass. See
 [the runtime checkpoint](research/proxy-node-runtime-checkpoint.json).
 Fresh hosted acceptance remains pending; production proxy bytes are unchanged.
+
+
+### Response error-path coverage repair
+
+All current hosted unit shards passed; their coverage comparison found the
+conformance wire below its retained line/statement floors. Added direct reply-
+reader controls for exact byte bounds, segmented and empty bodies, interrupted
+streams and unexpected statuses. Bun and Node/V8 each pass 19 tests. Combining
+the supplemental Node/V8 observations with the downloaded exact-head shard
+coverage clears the reported floors locally; fresh hosted acceptance is still
+required. No baseline or production source changed. See
+[the coverage checkpoint](research/reply-error-coverage-checkpoint.json).
