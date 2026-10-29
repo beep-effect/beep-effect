@@ -40,3 +40,12 @@
   Regenerated it through `bun run beep cache profile --write`; freshness then
   passed. A root-configuration preflight that also checks this derived profile
   would expose the missing generation step before the first hosted run.
+- 2026-10-29: Final publication preflight exceeded ten minutes; the parallel
+  broad lint-policy gate also exceeded ten minutes after 385 checks passed.
+  Stopped only this lane's owned proof processes under the constrained-compute
+  rule. Retained all touched-package audits/docgen, focused tests, coverage and
+  byte-identical final-head replay. Broad local gates are explicitly skipped
+  with reasons in the final-check receipt and PR body; hosted checks on the
+  accepted head remain authoritative and must pass before merge. Root formatting
+  configuration expands affected routing to the workspace and causes repeated
+  broad scans for this narrow evidence-preservation change.
