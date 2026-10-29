@@ -173,6 +173,17 @@
         "checkSeconds": 22.3,
         "status": "passed",
         "census": "Rerun after adapter main integration;190workspaces/2571executable computations. All raw native evidence, retained conformance, source/test and merged SPEC bindings verified."
+      },
+      "postResponseSafetyMainIntegration": {
+        "head": "afaf686c5d334a8f0cdfa6ba82f33834555d09cb",
+        "status": "passed",
+        "protocolSourceAndVerificationBindingsUnchanged": true,
+        "packageQuick": {
+          "lintSeconds": 4.8,
+          "checkSeconds": 11.7,
+          "status": "passed"
+        },
+        "scope": "Main response media-type projection inherited from its independently audited component; no protocol or retained artifact bytes changed."
       }
     }
   },
