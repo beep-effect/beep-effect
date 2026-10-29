@@ -1,0 +1,166 @@
+{
+  "schemaVersion": "cache-goal-completion-audit/v1",
+  "goal": "turborepo-quality-cache-adoption",
+  "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
+  "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
+  "specSha256": "9c2c1c88a7f13efab9252774f154d1e1e31e8d395695b2ab37dabc212af27e5c",
+  "acceptance": [
+    {
+      "id": "AC-01",
+      "source": "SPEC.md:165",
+      "requirement": "Current executable/lane population and applicable stable/canary feature matrix are complete, source-backed and assigned to owners.",
+      "status": "unproven",
+      "nextProof": "Close current semantic reviews for 2571 executable computations and all applicable feature cases; consume the economics owner baseline."
+    },
+    {
+      "id": "AC-02",
+      "source": "SPEC.md:166",
+      "requirement": "Every adopted computation has valid tuple-specific qualification, semantic invalidation, output/log safety and supported portability/concurrency evidence.",
+      "status": "unproven",
+      "nextProof": "Obtain tuple-specific current qualification with invalidation, output/log, portability, concurrency and shadow evidence for every adopted computation."
+    },
+    {
+      "id": "AC-03",
+      "source": "SPEC.md:167",
+      "requirement": "Root/child graph, scripts, env, outputs, persistence and Actions transport match the reviewed qualification projection.",
+      "status": "unproven",
+      "nextProof": "Reconcile root/child graph, generated scripts, environment, outputs, persistence and Actions transport to the reviewed projection."
+    },
+    {
+      "id": "AC-04",
+      "source": "SPEC.md:168",
+      "requirement": "Named hosted cohorts preserve fork/read/write policy and emit fresh required statuses tied to the source and resolved workflow actually executed.",
+      "status": "unproven",
+      "nextProof": "Execute named hosted cohorts with current trust readiness and fresh source/resolved-workflow-bound required statuses."
+    },
+    {
+      "id": "AC-05",
+      "source": "SPEC.md:169",
+      "requirement": "Demand-based warming and result attribution have bounded costs and demonstrable critical-path/reliability value using the owning baseline.",
+      "status": "unproven",
+      "nextProof": "Implement and prove qualified demand-based warmer budgets and typed result attribution; demonstrate value against the owning baseline."
+    },
+    {
+      "id": "AC-06",
+      "source": "SPEC.md:170",
+      "requirement": "Every in-scope computation has a final disposition, eligible work is adopted, and representative observations and rollback evidence are complete.",
+      "status": "unproven",
+      "nextProof": "Record every final disposition, adopt eligible work and finish representative observations plus rollback; current review-queue rows are not final dispositions."
+    },
+    {
+      "id": "AC-07",
+      "source": "SPEC.md:171",
+      "requirement": "Relevant package/protocol checks pass; failures are attributed and no introduced regression remains.",
+      "status": "unproven",
+      "nextProof": "Complete final touched-package/protocol verification and repair introduced regressions."
+    },
+    {
+      "id": "AC-08",
+      "source": "SPEC.md:173",
+      "requirement": "The final implementation PR reaches Yeet `merge-ready: yes`, with required checks and reviews handled.",
+      "status": "unproven",
+      "nextProof": "Obtain final implementation exact-head Yeet merge-ready with required checks and reviews handled."
+    },
+    {
+      "id": "AC-09",
+      "source": "SPEC.md:175",
+      "requirement": "Final evidence, reflection and lifecycle closeout land in that same PR.",
+      "status": "unproven",
+      "nextProof": "Land final evidence, reflection and completed-retained lifecycle in the final implementation PR."
+    }
+  ],
+  "implementationContract": [
+    {
+      "id": "IC-01",
+      "source": "SPEC.md:50",
+      "section": "Comprehensive audit",
+      "requirement": "Refresh the entire executable computation population across root/child Turbo config, workspace scripts, nested commands, Quality, CI and Yeet. Reconcile historical OPPORTUNITIES.md and misspelled opportunity-file leads with current source, disposition and owner. Keep actual executions distinct from configured nodes, and required hosted contexts tied to a current ruleset/run receipt.",
+      "status": "requires current evidence"
+    },
+    {
+      "id": "IC-02",
+      "source": "SPEC.md:56",
+      "section": "Comprehensive audit",
+      "requirement": "For stable and exact published canary, inventory graph/dependencies/transit, entrypoint/affected/filter semantics, global/task config, inputs, env and passthrough, outputs, descriptions, persistence/watch, concurrency, worktrees, artifacts, summaries/query tooling, pruning/deployment workflows, boundaries, future/experimental flags, archive transport and warming. Record exact availability, prerequisites, Beep use case, correctness test, expected benefit, disposition and owner for each applicable feature. Unsupported/non-applicable features need a reason. Main stays a non-scoring research appendix.",
+      "status": "requires current evidence"
+    },
+    {
+      "id": "IC-03",
+      "source": "SPEC.md:67",
+      "section": "Governed task changes",
+      "requirement": "Use the qualification policy and transition API for all promotion and suspension. Adoption supplies evidence and owns rollout, not a parallel state store. Qualify each computation/layer/profile/epoch with the full comparison, input perturbation, portability, concurrency, safe-log and shadow requirements. Preserve real semantic inputs even when they reduce hit rate.",
+      "status": "requires current evidence"
+    },
+    {
+      "id": "IC-04",
+      "source": "SPEC.md:73",
+      "section": "Governed task changes",
+      "requirement": "Inspect build compiler state and portable outputs; lint/check dependencies and transit alternatives; property seeds/run counts; docgen discovery/order/writes; coverage shard/aggregate/ratchet boundaries and shared paths; browser and integration prerequisites; and separate no-write checks for mutating generators. Fixers, services and required external/security verdicts remain fresh at their current whole-task boundary. Cache eligible pure prerequisites separately.",
+      "status": "requires current evidence"
+    },
+    {
+      "id": "IC-05",
+      "source": "SPEC.md:80",
+      "section": "Governed task changes",
+      "requirement": "Audit Actions cache keys/save timing including child configuration and output ownership. Archive restore is transport, not a qualified task hit. Correct schema/version alignment and config descriptions as part of the exact-version review. Experimental flags change individually with regression evidence.",
+      "status": "requires current evidence"
+    },
+    {
+      "id": "IC-06",
+      "source": "SPEC.md:87",
+      "section": "Hosted and Yeet adoption",
+      "requirement": "Prove local use first, then supported cross-worktree directions. Name the hosted workflow/runner/source cohort before enabling remote reuse and consume trust's production-ready signing/tenant/credential receipt. Preserve fork isolation and protected writers. Record the reusable Heavy definition actually resolved by the run; branch-local edits are not execution proof.",
+      "status": "requires current evidence"
+    },
+    {
+      "id": "IC-07",
+      "source": "SPEC.md:93",
+      "section": "Hosted and Yeet adoption",
+      "requirement": "Required jobs must start and produce their own exact-source or merge-ref status even when pure prerequisites hit. Quality lane reuse, Yeet full proof and the time-to-certainty ProofLedger remain distinct authorities. Integrate through curated facades and existing owners, never private Yeet imports or new proof/lease/scheduler stores.",
+      "status": "requires current evidence"
+    },
+    {
+      "id": "IC-08",
+      "source": "SPEC.md:101",
+      "section": "Value and completion",
+      "requirement": "Consume ci-lane-economics' baseline rather than publishing a competing timing or runner-placement authority. Measure correctness/security, critical-path seconds, reliability, compute/storage/transfer/operations cost, then hit rate. Attribute real hits and remote faults using the conformance/trust result model. Rank warming by measured protected-source demand and qualified profile, with explicit time, byte, request and concurrency bounds and selection receipts.",
+      "status": "requires current evidence"
+    },
+    {
+      "id": "IC-09",
+      "source": "SPEC.md:108",
+      "section": "Value and completion",
+      "requirement": "Complete named local/hosted/broader cohorts inside proven profiles. Preserve the seven-day nonproduction, seven-day cohort and fourteen-day broader backend observation when the trust/backend change is rolled out; cite the owning receipt rather than rerunning an already valid observation window. Do not manufacture elapsed representative time from synthetic samples.",
+      "status": "requires current evidence"
+    },
+    {
+      "id": "IC-10",
+      "source": "SPEC.md:114",
+      "section": "Value and completion",
+      "requirement": "Every in-scope entry needs a final evidence-backed disposition. Eligible work must be qualified and adopted; exclusions need reasons and pure decomposition where viable. Unassessed/candidate/shadow/suspended entries and temporary exceptions are unfinished work, unless a new explicit scope decision removes them with rationale. A lower hit rate never justifies a correctness regression.",
+      "status": "requires current evidence"
+    }
+  ],
+  "currentEvidence": {
+    "population": "goals/turborepo-quality-cache-adoption/research/current-population.json",
+    "features": "goals/turborepo-quality-cache-adoption/research/current-feature-matrix.json",
+    "pins": "goals/turborepo-quality-cache-adoption/research/current-client-pins.json",
+    "focusedTests": {
+      "command": "bunx --bun vitest run --config vitest.config.ts test/cache-signed-runner.test.ts test/cache-protocol-runner.test.ts test/cache-protocol.test.ts test/cache-producer.test.ts test/turbo-cache.test.ts",
+      "files": 5,
+      "passed": 136,
+      "seconds": 6.15,
+      "scope": "unit/fixture only; not deployed trust or all-task qualification"
+    },
+    "retainedQualification": "goals/turborepo-task-qualification/research/current-signed-qualification.json applies only to its recorded older private-loopback tuple",
+    "nativeProtocol": "goals/turborepo-cache-trust-observability/research/current-native-checkpoint.json"
+  },
+  "remainingExplicitGates": [
+    "SPEC verification matrix commands on actual final changes",
+    "Runtime behavior and negative cases at the required scope",
+    "Current named deployment/cohort/numeric budget/rollback before execution",
+    "Representative observation cannot be replaced by synthetic samples",
+    "Final PR readiness, reflection and lifecycle"
+  ],
+  "referenceBase": "repository root"
+}

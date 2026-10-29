@@ -203,3 +203,34 @@ records each important reconciliation.
 
 These are graduated-goal deliverables, not omissions to conceal with static
 confidence.
+
+## 2026-10-28 implementation refresh
+
+The current source baseline is `2c59e073c8`; the native checkpoint separately
+binds changed runner source bytes. Historical claims above keep their dates.
+
+- [Current client pins](../../turborepo-quality-cache-adoption/research/current-client-pins.json):
+  installed stable 2.11.10 and published canary 2.11.9-canary.1, executable
+  hashes, registry package integrity and native delegation controls.
+- [Current population](../../turborepo-quality-cache-adoption/research/current-population.json):
+  Cache census source hashes and the retained qualification owner's handoff;
+  inventory only, with current semantic review and disposition still pending.
+- [Current feature inventory](../../turborepo-quality-cache-adoption/research/current-feature-matrix.json):
+  exact bundled-document hashes and installed-schema flags; applicability and
+  runtime correctness remain separate proof obligations.
+- [Current native protocol checkpoint](../../turborepo-cache-trust-observability/research/current-native-checkpoint.json):
+  real stable/canary synthetic runs with signing and transport controls; no
+  deployed role, tenant or observation-window authority.
+- [Retained qualification](../../turborepo-task-qualification/research/current-signed-qualification.json):
+  applies to its original identity-lint computation, reuse layer, profile and
+  epoch; it cannot promote the refreshed population.
+
+## 2026-10-29 backend-result projection
+
+The finite labels and status/method checks follow `Code::label`, `Code::status`
+and `Code::from_response` in the tracked pinned adapter policy patch. Its exact
+digest is retained in `backend-result-checkpoint.json`. Direct/proxy synthetic
+server controls supply capture and redaction evidence. These are observation-only
+labels: a response header does not establish a genuine miss, HMAC validity or a
+protected producer. The checkpoint separates the frozen full audit from later
+test-codec hoisting, canonical catalog refresh and main integration.

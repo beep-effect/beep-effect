@@ -6,9 +6,10 @@ Status: `active`
 Lifecycle: `active`
 
 Launched for the early handoff required by task qualification, under the
-operator's delegated blocker-resolution authority. The initial work landed in PR #1327; remaining implementation is on
-`codex/qualification-signed-implementation`, with one writer for Cache contracts
-and fixtures and one final PR planned. This slice produces
+operator's delegated blocker-resolution authority. Initial work landed in PRs
+#1327 and #1389. Current completion work is owned by
+`codex/turborepo-goals-completion`, with one writer for Cache contracts and the
+two requested packets. The retained qualification slice produces
 local signed-boundary evidence; it does not claim whole-packet completion or
 production readiness. Remaining comparison/deployment milestones retain their
 SPEC gates. Prefer local fixtures with no incremental cloud resources.
@@ -28,6 +29,17 @@ SPEC gates. Prefer local fixtures with no incremental cloud resources.
 ## First action
 
 Refresh the checked-in and applicable deployed trust boundary, then define the cache-result and protected-producer receipt contract with the conformance owner.
+
+### Current checkpoint: 2026-10-28
+
+The current producer, protocol and client-posture unit/fixture set passed 98
+tests across three files at source base `8f19a8ad84`. These results do not prove
+deployed signing, current native protocol behavior, tenant isolation, epoch
+rotation or representative production observation. The current completion audit
+in `research/current-completion-audit.json` keeps all nine acceptance criteria
+and eight implementation-contract paragraphs unproven until their required
+evidence is obtained. The old private-loopback qualification is retained under
+its original source, profile, clients and epoch.
 
 ## Dependency gates
 
@@ -227,6 +239,17 @@ audit 649.6 seconds and docgen 39.2 seconds.
 The accepted policy document, complete authenticated evidence bundle and
 operational promotion importer remain open. No qualification is granted.
 
+### Current native checkpoint: 2026-10-28
+
+`research/current-native-checkpoint.json` binds the current protocol source
+bytes to stable 2.11.10 and published canary 2.11.9-canary.1 runs. Each completed
+six signing/replay cases and three transport-failure cases over nine isolated
+roots and 23 wire events. Valid replay restored the expected 28 bytes; rejected
+cases materialized no outputs. The focused runner/protocol/producer/posture
+suite passed 136 tests. Wrong-team native proof, deployed R2/AWS capabilities,
+epoch rotation, production provenance and representative observation remain
+open. No whole acceptance criterion is closed by this checkpoint.
+
 ## 2026-10-29: finite backend-result capture
 
 The optional exchange field preserves fifteen pinned adapter labels, with a
@@ -235,7 +258,9 @@ claims. Direct and proxy controls retain failure causes through JSON and reject
 synthetic credential/path/artifact text. A known-written object returning 404
 remains not-found; the backend header cannot establish a genuine miss. Historical
 receipts default to absent attribution. The focused set passes 34 tests, and
-package lint/check pass. Full audit/docgen is pending; see
+package lint/check pass. The full audit (1068.2 seconds) and docgen (275.4
+seconds) passed on their frozen recorded source. The later test-codec hoist and
+schema-catalog refresh have separate current-source checks in
 [the component checkpoint](research/backend-result-checkpoint.json).
 Protected producer integration, production event capture and representative
 observation remain open. No current adapter/service/cloud configuration changes.

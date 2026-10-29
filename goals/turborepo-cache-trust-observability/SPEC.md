@@ -210,17 +210,11 @@ fault receipts. Remote fallback must never mean unsigned restore.
 
 ## Decision log
 
-### Finite backend-result capture
-
-- 2026-10-29: Preserve the pinned adapter’s finite result vocabulary in optional
-  conformance exchange metadata. Both direct and proxy capture validate the
-  method/status combination and replace unknown or inconsistent claims with a
-  static invalid-evidence label. Historical exchanges decode with absent metadata.
-  The field is an untrusted observation, grants no protected producer or HMAC
-  authority, and cannot classify a not-found response as a genuine miss. Actual
-  synthetic-secret and known-written-404 controls justify the boundary. Reversal:
-  disable the optional projection while retaining independent transport outcomes;
-  never retain raw header text as a fallback. No deployed collector is enabled.
+| Date | Decision and reason | Reversal |
+| --- | --- | --- |
+| 2026-10-28 | Resume in the dedicated `codex/turborepo-goals-completion` lane. Refresh current source, client pins and population before promoting anything; older qualification remains bound to its original tuple. | Retain the previous approved configuration and remove only this lane's changes through a reviewed revert. |
+| 2026-10-28 | Treat the already approved R2 fleet as the current consumer path and retain AWS as its rollback. The user approved named trusted workstation writers; this grants upload capability, not protected-workflow producer identity. Refresh both boundaries before claiming production trust. | Disable affected remote reuse, stop mixed writes and restore the prior approved endpoint and epoch through a rehearsed path. |
+| 2026-10-28 | Pin native experiment execution with `--skip-infer --single-package`; a zero-task fixture is a failure. Keep supervisor failures bounded to exit code or capture truncation without attaching private worker streams. | Revert the runner change through Yeet; keep promotion closed when exact native execution is unproven. |
 
 ### Receipt media-type safety
 
@@ -258,3 +252,15 @@ The local process report does not satisfy those deployment or observation gates.
   binary passes. Reversal: keep this candidate inactive and continue using the
   incumbent while repairing the candidate; do not restore the mixed-mode path.
   This component decision grants no deployment or broad qualification.
+
+### Finite backend-result capture
+
+- 2026-10-29: Preserve the pinned adapter’s finite result vocabulary in optional
+  conformance exchange metadata. Both direct and proxy capture validate the
+  method/status combination and replace unknown or inconsistent claims with a
+  static invalid-evidence label. Historical exchanges decode with absent metadata.
+  The field is an untrusted observation, grants no protected producer or HMAC
+  authority, and cannot classify a not-found response as a genuine miss. Actual
+  synthetic-secret and known-written-404 controls justify the boundary. Reversal:
+  disable the optional projection while retaining independent transport outcomes;
+  never retain raw header text as a fallback. No deployed collector is enabled.

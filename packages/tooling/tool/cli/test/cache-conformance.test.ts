@@ -250,6 +250,8 @@ it.layer(Services, { timeout: "120 seconds", excludeTestServices: true })("cache
 const ExchangeJson = S.fromJsonString(CacheConformanceExchange);
 const encodeExchange = S.encodeEffect(ExchangeJson);
 const decodeExchange = S.decodeEffect(ExchangeJson);
+const HistoricalExchangeJson = S.fromJsonString(S.Record(S.String, S.Unknown));
+const decodeHistoricalExchange = S.decodeEffect(HistoricalExchangeJson);
 
 it.effect.prop(
   "round trips schema-generated exchange receipts through JSON",
@@ -325,10 +327,8 @@ it.effect.prop(
   { exchange: CacheConformanceExchange },
   ({ exchange }) =>
     Effect.gen(function* () {
-      const encoded = yield* S.encodeEffect(S.fromJsonString(CacheConformanceExchange))(
-        CacheConformanceExchange.make(exchange)
-      );
-      const historical = yield* S.decodeEffect(S.fromJsonString(S.Record(S.String, S.Unknown)))(encoded);
+      const encoded = yield* encodeExchange(CacheConformanceExchange.make(exchange));
+      const historical = yield* decodeHistoricalExchange(encoded);
       const decoded = yield* S.decodeUnknownEffect(CacheConformanceExchange)(R.remove(historical, "backendResult"));
       assertNone(decoded.backendResult);
     }),
