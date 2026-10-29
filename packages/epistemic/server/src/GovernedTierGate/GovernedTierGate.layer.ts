@@ -1,6 +1,8 @@
 /**
  * Governed tier gate layer factory.
  *
+ * **Details**
+ *
  * A factory rather than a constant because the granted operations, sink, and
  * grant metadata are composition-root data: the app entrypoint that already
  * imports both the governed toolkit and this slice supplies them, and neither

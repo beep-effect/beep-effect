@@ -252,6 +252,15 @@ post-audit test-only change and imported main are recorded separately. Refreshed
 the census after the shared source changes and verified all427 source digests.
 The initial collected root replay lasted over ten minutes; publish through the
 standing scoped-proof/direct-draft route with hosted broad proof retained.
+- 2026-10-29 — The candidate runtime inherited host-dependent HTTP worker
+  defaults, and an invalid ambient Tokio worker setting prevented startup.
+  Source-pinned worker counts, an actual startup negative control, executable
+  identity and measured cgroup caps now bind the synthetic fixture. The old
+  candidate fails for the intended reason; the new one passes. The lab cleanup
+  also skipped activating units when it only tested active state. It now stops
+  every fresh owned unit and proves cleanup against an activating oneshot.
+  These controls prevent fixture success from being mistaken for deployed
+  launcher or R2 grant proof; no live service was changed.
 ### Refresh source-bound inventories after shared Cache changes
 
 Integrating the signed-client and receipt-safety components left seven census
@@ -305,3 +314,10 @@ invariant or restoring the old empty-upload fallback separately makes the
 synchronized control fail. Both counterfactuals restore exact source bytes.
 Retain these controls in hosted and CPU-constrained native verification rather
 than compensating with larger sleeps or retries.
+- 2026-10-29 — PR #2353 cleanup review found that the first stop/show failure
+  skipped other owned resources and fixture closure. Actual failure injection
+  reproduced the remaining active unit. Cleanup now aggregates after all unit/
+  process attempts; ExitStack closes logs, temporary data and storage even on
+  failures. Three controls and the full current process replay pass. Success
+  receipt publication follows teardown, preventing a later cleanup failure from
+  publishing fresh passing evidence. No live R2 service was touched.

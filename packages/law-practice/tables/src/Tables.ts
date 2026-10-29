@@ -1,6 +1,8 @@
 /**
  * Practice knowledge-graph Drizzle schema collection.
  *
+ * **Details**
+ *
  * Composition lives in `ReadModels.ts` (the read-model composer); this module
  * re-exports it for the `./tables` subpath.
  *

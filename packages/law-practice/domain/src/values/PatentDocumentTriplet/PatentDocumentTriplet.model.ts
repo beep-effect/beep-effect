@@ -53,10 +53,10 @@ const CanonicalPatentDocumentNumber = S.String.check(
  * console.log(S.is(PatentDocumentTriplet)("US 7654321 B2")) // false
  * ```
  *
- * @see https://www.wipo.int/export/sites/www/standards/en/pdf/03-01-01.pdf
- * @see https://www.wipo.int/documents/d/standards/docs-en-03-03-01.pdf
- * @see https://www.wipo.int/documents/d/standards/docs-en-03-06-01.pdf
- * @see https://www.wipo.int/documents/d/standards/docs-en-03-16-01.pdf
+ * @see {@link https://www.wipo.int/export/sites/www/standards/en/pdf/03-01-01.pdf} for WIPO ST.1 minimum patent-document identification data.
+ * @see {@link https://www.wipo.int/documents/d/standards/docs-en-03-03-01.pdf} for the WIPO ST.3 two-letter office codes.
+ * @see {@link https://www.wipo.int/documents/d/standards/docs-en-03-06-01.pdf} for WIPO ST.6 publication-number formatting.
+ * @see {@link https://www.wipo.int/documents/d/standards/docs-en-03-16-01.pdf} for the WIPO ST.16 kind-code categories.
  * @category value-objects
  * @since 0.0.0
  */

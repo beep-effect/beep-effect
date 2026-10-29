@@ -3,7 +3,7 @@
   "goal": "turborepo-cache-trust-observability",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "0954f299798bc0eb896454d307d64b76b744503f4c20d56aa701fb1b73243f0f",
+  "specSha256": "303691f34fcf85630f8c42857c85dae44fc5a0dab12553668e6572631111fd79",
   "acceptance": [
     {
       "id": "AC-01",
@@ -200,7 +200,8 @@
       }
     },
     "backendResultComponent": "goals/turborepo-cache-trust-observability/research/backend-result-checkpoint.json",
-    "proxyCaptureBoundsComponent": "goals/turborepo-cache-trust-observability/research/proxy-capture-bounds-checkpoint.json"
+    "proxyCaptureBoundsComponent": "goals/turborepo-cache-trust-observability/research/proxy-capture-bounds-checkpoint.json",
+    "adapterRuntimeComponent": "goals/turborepo-cache-trust-observability/research/adapter-runtime-checkpoint.json"
   },
   "remainingExplicitGates": [
     "SPEC verification matrix commands on actual final changes",

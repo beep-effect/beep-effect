@@ -271,3 +271,14 @@ scan, zero Fallow findings, two counterfactuals and three CPU-constrained
 loopback processes. The prior capture checkpoint remains byte-identical and
 retains its own historical source maps and full-audit scope. No native
 artifact, signing activation, deployed grant or observation window changes.
+
+## 2026-10-29 candidate adapter runtime
+
+- `adapter-runtime-checkpoint.json` and `adapter-runtime-lab.json`: exact candidate
+  source/build bindings, 49 Cargo tests, synthetic wire/native controls and
+  actual fixture worker/cgroup/environment observations. Local component proof
+  only; historical adapter-policy evidence retains its original binary.
+
+- `adapter-runtime-lab-before-cleanup-review.json` retains the original runtime
+  observation bytes. The current runtime report and checkpoint separately bind
+  the cleanup review repair, three failure controls and fresh synthetic replay.
