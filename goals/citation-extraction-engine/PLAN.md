@@ -75,6 +75,10 @@ scenes now expose a concrete live-key requirement. Eight stable-resource scenes
 match all semantic/event snapshots with source anchors and IDs preserved;
 three mutable default-key scenes remain open. Preserve both duplicate-entry
 and single-entry source outcomes rather than assume a key-normalization waiver.
+A bounded private combined/general-key table now matches eight CPython
+histories and all 62 events/comparison traces, including stored-hash resize.
+This backend is not yet connected to live resource hashing or the callback
+owner, so the three engine-level key-mutation cases remain open.
 Exhaustive resolver/custom-resource proof, live artifact integration,
 Bluebook codecs and extension adoption/schema proof stay open.
 The remaining 37 provisional contract directories are retired; their donor obligations

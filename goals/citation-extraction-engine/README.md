@@ -168,4 +168,8 @@ and final context/groups. Eight further stable-resource
 ./history/evidence/2026-10-29-semantic-model-mutations.md) match complete events
 and semantic snapshots without changing verified anchors or mention IDs. Three
 mutable default-key scenes remain open, along with general host/model behavior
-and final session projection.
+and final session projection. The new
+[runtime dictionary backend](
+./history/evidence/2026-10-29-runtime-dictionary.md) matches eight frozen histories
+and sixty-two events; live hash production and owner integration are still
+required before the three mutable-key engine cases can close.

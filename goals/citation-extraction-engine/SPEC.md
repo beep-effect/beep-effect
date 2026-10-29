@@ -999,6 +999,21 @@ instead of silently splitting delivery or weakening scope.
   approved by this checkpoint. Full safety/parity and final projection remain
   open; no exhaustive row is promoted.
 
+- **2026-10-29 runtime dictionary backend:** pin CPython 3.11.15 general-key
+  table behavior underlying the observed mutable default-resource cases. The
+  private Effect backend uses current normalized 64-bit hashes, resource-object
+  handles, cached insertion hashes and separate insertion-entry identities.
+  Check object identity before cached-hash/equality, preserve deleted probe
+  markers, retain insertion order, and rebuild growth tables with stored hashes.
+  Bounded probes, captured comparison/work services, serialized operations and
+  typed errors do not add a Python runtime dependency. Eight source histories
+  now match all sixty-two results, equality-call traces and ordered entries.
+  CPython source/license hashes and PSF attribution are explicit. Full live hash
+  production, owner integration, reentrant comparison mutation and split or
+  Unicode-specialized tables remain outside this backend's proof. The three
+  mutable-key engine cases remain open; no normalization waiver or exhaustive
+  row promotion follows from isolated backend tests.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from
@@ -1015,3 +1030,9 @@ artifact is retired.
 | Exception | Scope | Owner | Removal condition |
 | --- | --- | --- | --- |
 | Python 3.12 baseline bootstrap | The pinned `pyahocorasick==2.0.0` fails to compile under this host's Python 3.12/C23 toolchain before tests run; Python 3.11 passes all official tests. | P0 source baseline | Record as environment evidence; oracle generation uses pinned Python 3.11 unless upstream dependencies are deliberately re-pinned in a separate baseline decision. |
+
+The verbatim CPython license block in THIRD_PARTY_NOTICES.md has scoped MD013
+and MD046 allowances to preserve upstream bytes and the notice's existing
+block style. Its digest is checked by the runtime dictionary source verifier.
+The proper Dutch institution names are allowed only for that notice path in
+_typos.toml; authored prose is still checked normally.

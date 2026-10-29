@@ -46,6 +46,28 @@ File hashes captured on 2026-07-29:
 The official pin declares version 2.7.6 and production/stable status. See
 [`EYECITE_BASELINE.md`](./EYECITE_BASELINE.md) for executable proof.
 
+## Frozen runtime implementation reference
+
+CPython 3.11.15 is an implementation reference for dictionary behavior observed
+through the pinned eyecite runtime. It does not become another citation oracle
+or a production dependency. The server-private combined/general-key table
+adaptation is attributed in THIRD_PARTY_NOTICES.md, with the complete upstream
+license and a summary of the TypeScript/Effect changes.
+
+- Source: [Objects/dictobject.c at v3.11.15](
+  https://github.com/python/cpython/blob/v3.11.15/Objects/dictobject.c).
+- Source SHA-256:
+  `474b899187e73c5ec416b82e17346d2c17616b1b662e1c2fd1c7e53bb2bf19d8`.
+- Complete license SHA-256:
+  `3b2f81fe21d181c499c59a256c8e1968455d6689d269aa85373bfb6af41da3bf`.
+- Scope and remaining integration proof:
+  [runtime dictionary evidence](
+  ../history/evidence/2026-10-29-runtime-dictionary.md).
+
+No C implementation file or Python interpreter is incorporated. The isolated
+backend proof does not promote the three mutable-key engine cases or any
+canonical/donor/safety/divergence row.
+
 ## Incorporated-source discipline
 
 - A local clone is research state, not an incorporated dependency.

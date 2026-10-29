@@ -196,3 +196,12 @@ extend-exclude = [
 [type.harness-ledger]
 extend-glob = ["*.jsonl"]
 extend-ignore-re = ['"(?:ref|repoRevision)":"[0-9a-f]{7,40}"']
+
+# Preserve the Dutch institution's legal name in the verbatim CPython license.
+# This is a proper-name allowlist, not an exclusion of the notice's prose.
+[type.cpython-notice]
+extend-glob = ["THIRD_PARTY_NOTICES.md"]
+
+[type.cpython-notice.extend-words]
+Stichting = "Stichting"
+Mathematisch = "Mathematisch"
