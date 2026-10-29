@@ -20,6 +20,7 @@ import {
   ProofJobUnit,
   parseYeetReadyInheritedRed,
   RepoRunContext,
+  readYeetReviewLaneLedger,
   recordInheritedRedsWithRest,
   reviewerRequestPushable,
   runYeetReady,
@@ -424,6 +425,31 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet ready gate run", (
       expect(decision._tag).toBe("flip");
       expect(yield* Ref.get(calls)).toEqual([["ready", "42"]]);
       expect(yield* Ref.get(requests)).toEqual([[42, headSha]]);
+    })
+  );
+
+  it.effect("records the flip with the pull request author in the checkout's review lane ledger", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const work = yield* fs.makeTempDirectoryScoped({ prefix: "ready-gate-flip-" });
+      const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+      const decision = yield* runYeetReadyGate(RepoRunContext.make({ ...context, repoRoot: work, cwd: work }), {
+        finalCheck: passingFinalCheck,
+        squashCommitlint: passingSquashCommitlint,
+        recordInherited: () => Effect.void,
+        read: () => Effect.succeed(prView()),
+        readAuthor: () => Effect.succeedSome("octocat"),
+        markReady: recordingMarkReady(calls),
+        requestReview: stubReviewerRequest,
+        findMonitor: () => Effect.succeedNone,
+      });
+      expect(decision._tag).toBe("flip");
+      const ledger = yield* readYeetReviewLaneLedger(work);
+      expect(A.map(ledger.rows, (row) => row._tag)).toEqual(["flip"]);
+      assertSome(
+        O.flatMap(A.head(ledger.rows), (row) => (row._tag === "flip" ? row.author : O.none())),
+        "octocat"
+      );
     })
   );
 

@@ -1,0 +1,1353 @@
+diff --git a/Cargo.lock b/Cargo.lock
+index e0b98f6..e7dd452 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -21,40 +21,32 @@
+ 
+ [[package]]
+ name = "actix-http"
+-version = "3.18.13"
++version = "3.20.0"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "a3f290edc569ad10c07287eebb96629686b37f1e55283a093569151d3adde0c7"
++checksum = "d20a22850ea7fecad12c5f8cd97d246c3af1f04ef400033977c2f13425c45816"
+ dependencies = [
+  "actix-codec",
+  "actix-service",
+  "actix-utils",
+- "base64 0.22.1",
+  "bitflags",
+- "brotli",
+  "bytes",
+  "bytestring",
+  "derive_more",
+  "encoding_rs",
+- "flate2",
+  "foldhash",
+  "futures-core",
+- "h2 0.3.27",
+  "http 0.2.12",
+  "httparse",
+  "httpdate",
+  "itoa",
+  "language-tags",
+- "local-channel",
+  "mime",
+  "percent-encoding",
+  "pin-project-lite",
+- "rand 0.10.3",
+- "sha1",
+  "smallvec",
+  "tokio",
+  "tokio-util",
+  "tracing",
+- "zstd",
+ ]
+ 
+ [[package]]
+@@ -77,7 +69,6 @@
+  "bytestring",
+  "cfg-if",
+  "http 0.2.12",
+- "regex",
+  "regex-lite",
+  "serde",
+  "tracing",
+@@ -131,9 +122,9 @@
+ 
+ [[package]]
+ name = "actix-web"
+-version = "4.16.0"
++version = "4.18.1"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "824c7250d7e468feb7903e41efc5d6883cb1f3957e8db2c3d2402a9ff430b886"
++checksum = "81f8da0d2ae4200dde8773d72ba47a65c220b251ba7b9248db5bd263c247e959"
+ dependencies = [
+  "actix-codec",
+  "actix-http",
+@@ -147,7 +138,6 @@
+  "bytes",
+  "bytestring",
+  "cfg-if",
+- "cookie",
+  "derive_more",
+  "encoding_rs",
+  "foldhash",
+@@ -160,7 +150,6 @@
+  "mime",
+  "once_cell",
+  "pin-project-lite",
+- "regex",
+  "regex-lite",
+  "serde",
+  "serde_json",
+@@ -175,9 +164,9 @@
+ 
+ [[package]]
+ name = "actix-web-codegen"
+-version = "4.4.0"
++version = "4.5.0"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "b96b09c4878563f8ab4a5fd0c59f9f0d6e0e9f60eb9b748526a0b9604fd89c50"
++checksum = "f7c9f4c52b954a73c76757a3952d3437fca00a2fbcb49704f8a6ea9f767e73f0"
+ dependencies = [
+  "actix-router",
+  "proc-macro2",
+@@ -185,12 +174,6 @@
+  "syn 3.0.8",
+ ]
+ 
+-[[package]]
+-name = "adler2"
+-version = "2.0.1"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "320119579fcad9c21884f5c4861d16174d0e06250625266f50fe6898340abefa"
+-
+ [[package]]
+ name = "ahash"
+ version = "0.8.12"
+@@ -213,21 +196,6 @@
+  "memchr",
+ ]
+ 
+-[[package]]
+-name = "alloc-no-stdlib"
+-version = "2.0.4"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "cc7bb162ec39d46ab1ca8c77bf72e890535becd1751bb45f64c597edb4c8c6b3"
+-
+-[[package]]
+-name = "alloc-stdlib"
+-version = "0.2.4"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "0e76a019e91224d279006ff972f1e984179a6e9feb050adba6ce8274aef23195"
+-dependencies = [
+- "alloc-no-stdlib",
+-]
+-
+ [[package]]
+ name = "anyhow"
+ version = "1.0.104"
+@@ -401,36 +369,6 @@
+  "generic-array",
+ ]
+ 
+-[[package]]
+-name = "block-buffer"
+-version = "0.12.1"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "d2f6c7dbe95a6ed67ad9f18e57daf93a2f034c524b99fd2b76d18fdfeb6660aa"
+-dependencies = [
+- "hybrid-array",
+-]
+-
+-[[package]]
+-name = "brotli"
+-version = "8.0.4"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "5cc91aac060a7a1e25823bdccbfb6af1875b88f17c6daac97894eed8207166b3"
+-dependencies = [
+- "alloc-no-stdlib",
+- "alloc-stdlib",
+- "brotli-decompressor",
+-]
+-
+-[[package]]
+-name = "brotli-decompressor"
+-version = "5.0.3"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "3a32acac15fe1967bc3986b2a6347dffc965602354ea6f450ad07e8bfd253583"
+-dependencies = [
+- "alloc-no-stdlib",
+- "alloc-stdlib",
+-]
+-
+ [[package]]
+ name = "bumpalo"
+ version = "3.20.3"
+@@ -540,12 +478,6 @@
+  "serde_core",
+ ]
+ 
+-[[package]]
+-name = "const-oid"
+-version = "0.10.2"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "a6ef517f0926dd24a1582492c791b6a4818a4d94e789a334894aa15b0d12f55c"
+-
+ [[package]]
+ name = "const-random"
+ version = "0.1.18"
+@@ -575,17 +507,6 @@
+  "unicode-segmentation",
+ ]
+ 
+-[[package]]
+-name = "cookie"
+-version = "0.16.2"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "e859cd57d0710d9e06c381b550c06e76992472a8c6d527aecd2fc673dcc231fb"
+-dependencies = [
+- "percent-encoding",
+- "time",
+- "version_check",
+-]
+-
+ [[package]]
+ name = "core-foundation"
+ version = "0.9.4"
+@@ -636,15 +557,6 @@
+  "libc",
+ ]
+ 
+-[[package]]
+-name = "crc32fast"
+-version = "1.5.2"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "01a7799fd6b852db0e61728dde9a204c423b44d689dbd432522543614b490e78"
+-dependencies = [
+- "cfg-if",
+-]
+-
+ [[package]]
+ name = "crossbeam-channel"
+ version = "0.5.17"
+@@ -676,15 +588,6 @@
+  "typenum",
+ ]
+ 
+-[[package]]
+-name = "crypto-common"
+-version = "0.2.2"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "ce6e4c961d6cd6c9a86db418387425e8bdeaf05b3c8bc1411e6dca4c252f1453"
+-dependencies = [
+- "hybrid-array",
+-]
+-
+ [[package]]
+ name = "deadpool"
+ version = "0.12.3"
+@@ -705,10 +608,11 @@
+ 
+ [[package]]
+ name = "decay"
+-version = "0.0.0"
++version = "4.0.20"
+ dependencies = [
+  "actix-web",
+- "dotenv",
++ "block-buffer",
++ "dotenvy",
+  "futures",
+  "http 1.5.0",
+  "openssl",
+@@ -780,22 +684,11 @@
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "9ed9a281f7bc9b7576e61468ba615a66a5c8cfdff42420a70aa82701a3b1e292"
+ dependencies = [
+- "block-buffer 0.10.4",
+- "crypto-common 0.1.7",
++ "block-buffer",
++ "crypto-common",
+  "subtle",
+ ]
+ 
+-[[package]]
+-name = "digest"
+-version = "0.11.3"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "f1dd6dbb5841937940781866fa1281a1ff7bd3bf827091440879f9994983d5c2"
+-dependencies = [
+- "block-buffer 0.12.1",
+- "const-oid",
+- "crypto-common 0.2.2",
+-]
+-
+ [[package]]
+ name = "dispatch2"
+ version = "0.3.1"
+@@ -827,10 +720,10 @@
+ ]
+ 
+ [[package]]
+-name = "dotenv"
+-version = "0.15.0"
++name = "dotenvy"
++version = "0.15.7"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "77c90badedccf4105eca100756a0b1289e191f6fcbdadd3cee1d2f614f97da8f"
++checksum = "1aaf95b3e5c8f23aa320147307562d361db0ae0d51242340f558153b4eb2439b"
+ 
+ [[package]]
+ name = "dunce"
+@@ -886,17 +779,6 @@
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "aedcfb3409746eddb02b9e19ebda1c3394f759a152e48ee875a0844d1b955484"
+ 
+-[[package]]
+-name = "flate2"
+-version = "1.1.10"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "6e634e2e0ebac1ee034020da1ca582e17ffe4e0f5e985823721e168928136dcb"
+-dependencies = [
+- "crc32fast",
+- "miniz_oxide",
+- "zlib-rs",
+-]
+-
+ [[package]]
+ name = "fnv"
+ version = "1.0.7"
+@@ -1086,25 +968,6 @@
+  "wasm-bindgen",
+ ]
+ 
+-[[package]]
+-name = "h2"
+-version = "0.3.27"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "0beca50380b1fc32983fc1cb4587bfa4bb9e78fc259aad4a0032d2080309222d"
+-dependencies = [
+- "bytes",
+- "fnv",
+- "futures-core",
+- "futures-sink",
+- "futures-util",
+- "http 0.2.12",
+- "indexmap",
+- "slab",
+- "tokio",
+- "tokio-util",
+- "tracing",
+-]
+-
+ [[package]]
+ name = "h2"
+ version = "0.4.20"
+@@ -1154,7 +1017,7 @@
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "6c49c37c09c17a53d937dfbb742eb3a961d65a994e6bcdcf37e7399d0cc8ab5e"
+ dependencies = [
+- "digest 0.10.7",
++ "digest",
+ ]
+ 
+ [[package]]
+@@ -1222,15 +1085,6 @@
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "df3b46402a9d5adb4c86a0cf463f42e19994e3ee891101b1841f30a545cb49a9"
+ 
+-[[package]]
+-name = "hybrid-array"
+-version = "0.4.15"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "27f864f10dfb56725ce5ce5472bc52252c8f93a4ab86327122cebf62c5f59a17"
+-dependencies = [
+- "typenum",
+-]
+-
+ [[package]]
+ name = "hyper"
+ version = "1.12.0"
+@@ -1241,7 +1095,7 @@
+  "bytes",
+  "futures-channel",
+  "futures-core",
+- "h2 0.4.20",
++ "h2",
+  "http 1.5.0",
+  "http-body",
+  "httparse",
+@@ -1564,17 +1418,6 @@
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "47d9d19d1d6efa0109d2f65ff4c85cddd50bd572e5a00127ab10987290bcefae"
+ 
+-[[package]]
+-name = "local-channel"
+-version = "0.1.5"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "b6cbc85e69b8df4b8bb8b89ec634e7189099cea8927a276b7384ce5488e53ec8"
+-dependencies = [
+- "futures-core",
+- "futures-sink",
+- "local-waker",
+-]
+-
+ [[package]]
+ name = "local-waker"
+ version = "0.1.4"
+@@ -1655,16 +1498,6 @@
+  "rxml",
+ ]
+ 
+-[[package]]
+-name = "miniz_oxide"
+-version = "0.9.1"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "b63fbc4a50860e98e7b2aa7804ded1db5cbc3aff9193adaff57a6931bf7c4b4c"
+-dependencies = [
+- "adler2",
+- "simd-adler32",
+-]
+-
+ [[package]]
+ name = "mio"
+ version = "1.2.4"
+@@ -2368,7 +2201,7 @@
+  "futures-channel",
+  "futures-core",
+  "futures-util",
+- "h2 0.4.20",
++ "h2",
+  "http 1.5.0",
+  "http-body",
+  "http-body-util",
+@@ -2485,9 +2318,9 @@
+ 
+ [[package]]
+ name = "rustls"
+-version = "0.23.45"
++version = "0.23.46"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "0d41d731c7d2f962d1ccc364cec258de3c0e93b38c2fb3ba97ac74513048d634"
++checksum = "48e13bd8c0e9365c43cfa5c9e8f9ad49d3c8444926c9aac819e0e4dc503c8fdf"
+ dependencies = [
+  "aws-lc-rs",
+  "once_cell",
+@@ -2548,9 +2381,9 @@
+ 
+ [[package]]
+ name = "rustls-webpki"
+-version = "0.103.15"
++version = "0.103.16"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "f3c3cf1d8b1e7d4927e2d154c3fcb02979afb9939629c62cd9048d4f07b60ac2"
++checksum = "4443b1b6d39d7c663139942cc4558262562d2c84123bb6282ef177009ca8b281"
+ dependencies = [
+  "aws-lc-rs",
+  "ring",
+@@ -2706,17 +2539,6 @@
+  "serde",
+ ]
+ 
+-[[package]]
+-name = "sha1"
+-version = "0.11.0"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "aacc4cc499359472b4abe1bf11d0b12e688af9a805fa5e3016f9a386dc2d0214"
+-dependencies = [
+- "cfg-if",
+- "cpufeatures 0.3.1",
+- "digest 0.11.3",
+-]
+-
+ [[package]]
+ name = "sha2"
+ version = "0.10.9"
+@@ -2725,7 +2547,7 @@
+ dependencies = [
+  "cfg-if",
+  "cpufeatures 0.2.17",
+- "digest 0.10.7",
++ "digest",
+ ]
+ 
+ [[package]]
+@@ -2753,12 +2575,6 @@
+  "libc",
+ ]
+ 
+-[[package]]
+-name = "simd-adler32"
+-version = "0.3.10"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "3a219298ac11a56ea9a6d2120044824d6f01aeb034955e7af7bc16858527deea"
+-
+ [[package]]
+ name = "simd_cesu8"
+ version = "1.2.0"
+@@ -3012,9 +2828,9 @@
+ 
+ [[package]]
+ name = "tokio"
+-version = "1.53.2"
++version = "1.53.3"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "e95f91fcc7a621e8b030f6aa23c71fe9838ae2fb4d8118b75602a328f5144044"
++checksum = "ce3335fa71841cda333a58d7615b03901380ecf09d59b3296d21f8bbac0dde4e"
+ dependencies = [
+  "bytes",
+  "libc",
+@@ -3093,7 +2909,7 @@
+  "axum",
+  "base64 0.22.1",
+  "bytes",
+- "h2 0.4.20",
++ "h2",
+  "http 1.5.0",
+  "http-body",
+  "http-body-util",
+@@ -3530,9 +3346,9 @@
+ 
+ [[package]]
+ name = "webpki-root-certs"
+-version = "1.0.9"
++version = "1.0.10"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "b96554aa2acc8ccdb7e1c9a58a7a68dd5d13bccc69cd124cb09406db612a1c9b"
++checksum = "58ec80e73fd8baf57bf0d9615554c75348bda990d6d5bbeab964dd068319fecb"
+ dependencies = [
+  "rustls-pki-types",
+ ]
+@@ -4004,42 +3820,8 @@
+  "syn 3.0.8",
+ ]
+ 
+-[[package]]
+-name = "zlib-rs"
+-version = "0.6.8"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "b268e58e7c693d7c271f93ffc4ba3b380412554231c85bf61ca7af91042a4112"
+-
+ [[package]]
+ name = "zmij"
+ version = "1.0.23"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "29666d0abbfad1e3dc4dcf6144730dd3a3ab225bbbdac83319345b1b44ccfc1b"
+-
+-[[package]]
+-name = "zstd"
+-version = "0.13.3"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "e91ee311a569c327171651566e07972200e76fcfe2242a4fa446149a3881c08a"
+-dependencies = [
+- "zstd-safe",
+-]
+-
+-[[package]]
+-name = "zstd-safe"
+-version = "7.3.0"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "64d80649ab6db9d9f6f9c80a40becd948eda4714a0a5ac8c4d157a32231c7882"
+-dependencies = [
+- "zstd-sys",
+-]
+-
+-[[package]]
+-name = "zstd-sys"
+-version = "2.1.1+zstd.1.5.7"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "aeec9eaf2dffbbd09201e23bd0ffcbaa33bb8e9266a10734fd7ed90a85eca078"
+-dependencies = [
+- "cc",
+- "pkg-config",
+-]
+diff --git a/Cargo.toml b/Cargo.toml
+index 0756c91..9ed3d2b 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -16,8 +16,8 @@
+ name = "decay"
+ 
+ [dependencies]
+-actix-web = "4"
+-dotenv = "0.15.0"
++actix-web = { version = "4", default-features = false, features = ["macros"] }
++dotenvy = "0.15.7"
+ rust-s3 = "0.38"
+ serde = { version = "1.0", features = ["derive"] }
+ tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+@@ -51,6 +51,7 @@
+ subtle = "2"
+ 
+ [dev-dependencies]
++block-buffer = "=0.10.4"
+ pretty_assertions = "1.4.1"
+ reqwest = "0.13"
+ wiremock = "0.6"
+diff --git a/src/app_settings.rs b/src/app_settings.rs
+index 8890c8d..5e5d05a 100644
+--- a/src/app_settings.rs
++++ b/src/app_settings.rs
+@@ -57,6 +57,8 @@
+ 
+ #[derive(Clone)]
+ pub struct AppSettings {
++    /// Opt-in signed-epoch authorization; never contains the artifact HMAC key.
++    pub cache_policy: Option<crate::auth::policy::Policy>,
+     /// Host where to bind the server to
+     /// Defaults to the loopback address
+     pub host: String,
+@@ -102,7 +104,29 @@
+ 
+     let turbo_token = env::var("TURBO_TOKEN").ok().map(SecretString::from);
+ 
++    let cache_policy = match env::var("BEEP_CACHE_POLICY") {
++        Err(env::VarError::NotPresent) => None,
++        Ok(mode) if mode == "signed-v1" => {
++            assert!(
++                turbo_token.as_ref().is_some_and(|value| {
++                    use secrecy::ExposeSecret;
++                    !value.expose_secret().is_empty()
++                }),
++                "Signed policy requires a bearer credential"
++            );
++            Some(
++                crate::auth::policy::Policy::new(
++                    env::var("BEEP_CACHE_NAMESPACE").expect("Signed policy requires a namespace"),
++                    &env::var("BEEP_CACHE_ACCESS_ROLE").expect("Signed policy requires a role"),
++                )
++                .expect("Invalid signed cache policy"),
++            )
++        }
++        _ => panic!("Unsupported cache policy mode"),
++    };
++
+     AppSettings {
++        cache_policy,
+         host,
+         port,
+         s3_access_key,
+diff --git a/src/auth/mod.rs b/src/auth/mod.rs
+index f03291a..09d75c2 100644
+--- a/src/auth/mod.rs
++++ b/src/auth/mod.rs
+@@ -1 +1,3 @@
+ pub mod turbo_token;
++
++pub mod policy;
+diff --git a/src/auth/policy.rs b/src/auth/policy.rs
+new file mode 100644
+index 0000000..c04bb2a
+--- /dev/null
++++ b/src/auth/policy.rs
+@@ -0,0 +1,285 @@
++//! The signed-epoch policy is independent of artifact HMAC and S3 credentials.
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++pub enum Role {
++    Reader,
++    Writer,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++pub enum Code {
++    Allowed,
++    AuthenticationDenied,
++    WriteDenied,
++    TenantDenied,
++    SelectorInvalid,
++    RouteInvalid,
++    MethodDenied,
++    SignatureMissing,
++    MetadataInvalid,
++    NotFound,
++    Throttled,
++    BackendUnavailable,
++    WriteAmbiguous,
++    PayloadRejected,
++    UnexpectedStatus,
++}
++impl Code {
++    pub fn label(self) -> &'static str {
++        match self {
++            Self::Allowed => "allowed",
++            Self::AuthenticationDenied => "authentication-denied",
++            Self::WriteDenied => "write-denied",
++            Self::TenantDenied => "tenant-denied",
++            Self::SelectorInvalid => "selector-invalid",
++            Self::RouteInvalid => "route-invalid",
++            Self::MethodDenied => "method-denied",
++            Self::SignatureMissing => "signature-missing",
++            Self::MetadataInvalid => "metadata-invalid",
++            Self::NotFound => "not-found",
++            Self::Throttled => "throttled",
++            Self::BackendUnavailable => "backend-unavailable",
++            Self::WriteAmbiguous => "write-ambiguous",
++            Self::PayloadRejected => "payload-rejected",
++            Self::UnexpectedStatus => "unexpected-status",
++        }
++    }
++    pub fn status(self) -> u16 {
++        match self {
++            Self::Allowed => 200,
++            Self::AuthenticationDenied => 401,
++            Self::WriteDenied | Self::TenantDenied => 403,
++            Self::RouteInvalid | Self::NotFound => 404,
++            Self::MethodDenied => 405,
++            Self::Throttled => 429,
++            Self::BackendUnavailable | Self::WriteAmbiguous => 503,
++            Self::UnexpectedStatus => 502,
++            Self::SelectorInvalid
++            | Self::SignatureMissing
++            | Self::MetadataInvalid
++            | Self::PayloadRejected => 400,
++        }
++    }
++    pub fn from_response(method: &str, status: u16) -> Self {
++        match status {
++            200..=299 => Self::Allowed,
++            401 => Self::AuthenticationDenied,
++            404 => Self::NotFound,
++            429 => Self::Throttled,
++            400 | 413 => Self::PayloadRejected,
++            500..=599 if method == "PUT" => Self::WriteAmbiguous,
++            500..=599 => Self::BackendUnavailable,
++            _ => Self::UnexpectedStatus,
++        }
++    }
++}
++#[derive(Clone, Debug)]
++pub struct Policy {
++    namespace: String,
++    role: Role,
++}
++impl Policy {
++    pub fn new(namespace: String, role: &str) -> Result<Self, Code> {
++        if !(8..=96).contains(&namespace.len())
++            || !namespace.starts_with("team_")
++            || !namespace
++                .bytes()
++                .all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'-')
++        {
++            return Err(Code::SelectorInvalid);
++        }
++        let role = match role {
++            "reader" => Role::Reader,
++            "writer" => Role::Writer,
++            _ => return Err(Code::WriteDenied),
++        };
++        Ok(Self { namespace, role })
++    }
++    /// Accept exactly one canonical native selector, never a decoded alias or unknown query.
++    pub fn assess(&self, method: &str, path: &str, query: &str, tags: &[&str]) -> Code {
++        let namespace = query
++            .strip_prefix("teamId=")
++            .or_else(|| query.strip_prefix("slug="));
++        let Some(namespace) = namespace else {
++            return Code::SelectorInvalid;
++        };
++        if namespace.is_empty()
++            || !namespace
++                .bytes()
++                .all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'-')
++        {
++            return Code::SelectorInvalid;
++        }
++        if namespace != self.namespace {
++            return Code::TenantDenied;
++        }
++        match (method, path) {
++            ("GET", "/v8/artifacts/status")
++            | ("POST", "/v8/artifacts/events")
++            | ("POST", "/v8/artifacts") => Code::Allowed,
++            (_, "/v8/artifacts/status" | "/v8/artifacts/events" | "/v8/artifacts") => {
++                Code::MethodDenied
++            }
++            _ => {
++                let Some(hash) = path.strip_prefix("/v8/artifacts/") else {
++                    return Code::RouteInvalid;
++                };
++                if !(16..=64).contains(&hash.len())
++                    || !hash
++                        .bytes()
++                        .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
++                {
++                    return Code::RouteInvalid;
++                }
++                match method {
++                    "GET" | "HEAD" => Code::Allowed,
++                    "PUT" if self.role == Role::Reader => Code::WriteDenied,
++                    "PUT" if tags.is_empty() || tags.iter().any(|tag| tag.trim().is_empty()) => {
++                        Code::SignatureMissing
++                    }
++                    "PUT"
++                        if tags.len() != 1
++                            || tags.iter().any(|tag| tag.len() > 512 || !tag.is_ascii()) =>
++                    {
++                        Code::MetadataInvalid
++                    }
++                    "PUT" => Code::Allowed,
++                    _ => Code::MethodDenied,
++                }
++            }
++        }
++    }
++}
++#[cfg(test)]
++mod tests {
++    use super::*;
++    const PATH: &str = "/v8/artifacts/0123456789abcdef";
++    const TEAM: &str = "team_beep_signed_epoch_1";
++    fn policy(role: &str) -> Policy {
++        Policy::new(TEAM.to_owned(), role).unwrap()
++    }
++    #[test]
++    fn canonical_configuration_only() {
++        for team in [
++            "",
++            "beep",
++            "team_../escape",
++            "team_test%2fescape",
++            "team_test&slug=x",
++        ] {
++            assert!(Policy::new(team.to_owned(), "writer").is_err());
++        }
++        assert!(Policy::new(TEAM.to_owned(), "admin").is_err());
++    }
++    #[test]
++    fn reader_has_no_artifact_write_capability() {
++        assert_eq!(
++            policy("reader").assess("PUT", PATH, &format!("teamId={TEAM}"), &["opaque"]),
++            Code::WriteDenied
++        );
++        for method in ["GET", "HEAD"] {
++            assert_eq!(
++                policy("reader").assess(method, PATH, &format!("teamId={TEAM}"), &[]),
++                Code::Allowed
++            );
++        }
++    }
++    #[test]
++    fn writer_requires_one_bounded_opaque_tag() {
++        let p = policy("writer");
++        let query = format!("teamId={TEAM}");
++        assert_eq!(p.assess("PUT", PATH, &query, &[]), Code::SignatureMissing);
++        assert_eq!(p.assess("PUT", PATH, &query, &[""]), Code::SignatureMissing);
++        assert_eq!(
++            p.assess("PUT", PATH, &query, &["one", "two"]),
++            Code::MetadataInvalid
++        );
++        assert_eq!(
++            p.assess("PUT", PATH, &query, &[&"x".repeat(513)]),
++            Code::MetadataInvalid
++        );
++        assert_eq!(
++            p.assess("PUT", PATH, &query, &["v=1:opaque-tag"]),
++            Code::Allowed
++        );
++    }
++    #[test]
++    fn rejects_conflicting_duplicate_encoded_and_unknown_selectors() {
++        let p = policy("reader");
++        for query in [
++            "",
++            "teamId=",
++            "teamId=team_beep_signed_epoch_1&teamId=other",
++            "teamId=team_beep_signed_epoch_1&slug=other",
++            "slug=team_beep_signed_epoch_1&teamId=other",
++            "teamId=team_beep_signed_epoch_1%2fescape",
++            "teamId=team_beep_signed_epoch_1+suffix",
++            "unknown=team_beep_signed_epoch_1",
++        ] {
++            assert_eq!(p.assess("GET", PATH, query, &[]), Code::SelectorInvalid);
++        }
++        assert_eq!(
++            p.assess("GET", PATH, "teamId=team_foreign_epoch", &[]),
++            Code::TenantDenied
++        );
++        assert_eq!(
++            p.assess("GET", PATH, "teamId=team_beep_signed_epoch_0", &[]),
++            Code::TenantDenied
++        );
++    }
++    #[test]
++    fn accepts_native_id_and_slug_without_ambiguity() {
++        for selector in ["teamId", "slug"] {
++            assert_eq!(
++                policy("reader").assess("GET", PATH, &format!("{selector}={TEAM}"), &[]),
++                Code::Allowed
++            );
++        }
++    }
++    #[test]
++    fn rejects_escaping_and_encoded_artifact_paths() {
++        for path in [
++            "/v8/artifacts/../escape",
++            "/v8/artifacts/%30%31",
++            "/v8/artifacts/0123456789abcdef/extra",
++            "/v8/artifacts/ABCDEF0123456789",
++            "/v8/artifacts/hash",
++            "/v7/artifacts/0123456789abcdef",
++        ] {
++            assert_eq!(
++                policy("reader").assess("GET", path, &format!("teamId={TEAM}"), &[]),
++                Code::RouteInvalid
++            );
++        }
++        assert_eq!(
++            policy("writer").assess("DELETE", PATH, &format!("teamId={TEAM}"), &[]),
++            Code::MethodDenied
++        );
++    }
++    #[test]
++    fn metadata_routes_are_tenant_bound_and_method_limited() {
++        for (method, path) in [
++            ("GET", "/v8/artifacts/status"),
++            ("POST", "/v8/artifacts/events"),
++            ("POST", "/v8/artifacts"),
++        ] {
++            assert_eq!(
++                policy("reader").assess(method, path, &format!("teamId={TEAM}"), &[]),
++                Code::Allowed
++            );
++            assert_eq!(
++                policy("reader").assess(method, path, "slug=team_foreign_epoch", &[]),
++                Code::TenantDenied
++            );
++        }
++    }
++    #[test]
++    fn unknown_not_found_is_not_claimed_as_a_genuine_miss() {
++        assert_eq!(Code::from_response("GET", 404), Code::NotFound);
++    }
++    #[test]
++    fn preserve_ambiguous_writes_and_transient_faults() {
++        assert_eq!(Code::from_response("PUT", 500), Code::WriteAmbiguous);
++        assert_eq!(Code::from_response("GET", 500), Code::BackendUnavailable);
++        assert_eq!(Code::from_response("GET", 429), Code::Throttled);
++        assert_eq!(Code::from_response("PUT", 201), Code::Allowed);
++    }
++}
+diff --git a/src/auth/turbo_token.rs b/src/auth/turbo_token.rs
+index 625e944..794d195 100644
+--- a/src/auth/turbo_token.rs
++++ b/src/auth/turbo_token.rs
+@@ -12,6 +12,7 @@
+ use subtle::ConstantTimeEq;
+ 
+ use crate::app_settings::AppSettings;
++use crate::auth::policy::Code;
+ 
+ #[derive(Serialize)]
+ struct AuthError {
+@@ -57,6 +58,41 @@
+         }
+     };
+ 
++    let policy = req
++        .app_data::<Data<AppSettings>>()
++        .and_then(|settings| settings.cache_policy.clone());
++    if let Some(policy) = policy {
++        if !matches!(outcome, Outcome::Valid) {
++            return Ok(policy_denied(req, Code::AuthenticationDenied));
++        }
++        let tags = req
++            .headers()
++            .get_all("x-artifact-tag")
++            .map(|value| value.to_str())
++            .collect::<Result<Vec<_>, _>>();
++        let tags = match tags {
++            Ok(tags) => tags,
++            Err(_) => return Ok(policy_denied(req, Code::MetadataInvalid)),
++        };
++        let decision = policy.assess(
++            req.method().as_str(),
++            req.uri().path(),
++            req.query_string(),
++            &tags,
++        );
++        if decision != Code::Allowed {
++            return Ok(policy_denied(req, decision));
++        }
++        let method = req.method().to_string();
++        return next.call(req).await.map(|mut response| {
++            let code = Code::from_response(&method, response.status().as_u16());
++            response.headers_mut().insert(
++                header::HeaderName::from_static("x-beep-cache-result"),
++                header::HeaderValue::from_static(code.label()),
++            );
++            response.map_into_boxed_body()
++        });
++    }
+     match outcome {
+         Outcome::NoTokenConfigured => {
+             tracing::debug!("No TURBO_TOKEN configured. Skipping token validation");
+@@ -77,6 +113,20 @@
+     }
+ }
+ 
++/// A bounded machine-readable result, with no request-derived detail or raw cause.
++fn policy_denied(req: ServiceRequest, code: Code) -> ServiceResponse {
++    let status =
++        actix_web::http::StatusCode::from_u16(code.status()).expect("Policy status is valid");
++    let mut response = HttpResponse::build(status);
++    response.insert_header(("x-beep-cache-result", code.label()));
++    if code == Code::AuthenticationDenied {
++        response.insert_header((header::WWW_AUTHENTICATE, "Bearer"));
++    }
++    req.into_response(response.json(AuthError {
++        error: code.label(),
++    }))
++}
++
+ /// Extracts the token from an `Authorization` header value.
+ /// Returns `None` when the scheme is not Bearer or the token is empty.
+ fn parse_bearer_token(header_value: &str) -> Option<&str> {
+diff --git a/src/main.rs b/src/main.rs
+index d196b24..13f37af 100644
+--- a/src/main.rs
++++ b/src/main.rs
+@@ -13,27 +13,41 @@
+ 
+ #[tokio::main]
+ async fn main() -> Result<(), std::io::Error> {
+-    dotenv::dotenv().ok();
++    let signed_policy = std::env::var_os("BEEP_CACHE_POLICY").is_some();
++    if !signed_policy {
++        dotenvy::dotenv().ok();
++        if std::env::var_os("BEEP_CACHE_POLICY").is_some() {
++            return Err(std::io::Error::new(
++                std::io::ErrorKind::InvalidInput,
++                "Cache policy must be provided before process startup",
++            ));
++        }
++    }
++    // Validate before any logger starts. Strict mode neither reloads client dotenv
++    // material nor initializes URL/payload-bearing request logs, files or OTEL.
++    let app_settings = get_settings();
+ 
+     let service_name = otel_service_name(PKG_NAME);
+ 
+     // Initialise our logger and telemetry stack
+     // for entire lifecycle of our web server
+-    let subscriber = get_telemetry_subscriber(
+-        PKG_NAME,
+-        Arc::clone(&service_name),
+-        PKG_VERSION,
+-        "info".into(),
+-        std::io::stdout,
+-    );
+-    init_telemetry_subscriber(subscriber);
+-
+-    // Initialize system metrics collection (CPU, RAM)
+-    // This must be called after the meter provider is set globally
+-    // The returned SystemMetrics struct must be kept alive for the application lifetime
+-    let _system_metrics = init_system_metrics(PKG_NAME, service_name, PKG_VERSION);
+-
+-    let app_settings = get_settings();
++    let _system_metrics = if signed_policy {
++        None
++    } else {
++        let subscriber = get_telemetry_subscriber(
++            PKG_NAME,
++            Arc::clone(&service_name),
++            PKG_VERSION,
++            "info".into(),
++            std::io::stdout,
++        );
++        init_telemetry_subscriber(subscriber);
++
++        // Initialize system metrics collection (CPU, RAM)
++        // This must be called after the meter provider is set globally
++        // The returned SystemMetrics struct must be kept alive for the application lifetime
++        Some(init_system_metrics(PKG_NAME, service_name, PKG_VERSION))
++    };
+ 
+     let address = format!("{}:{}", app_settings.host, app_settings.port);
+     let listener = TcpListener::bind(address)?;
+diff --git a/src/routes/artifacts.rs b/src/routes/artifacts.rs
+index a5bf2ea..9af90bb 100644
+--- a/src/routes/artifacts.rs
++++ b/src/routes/artifacts.rs
+@@ -8,6 +8,7 @@
+ use serde::Serialize;
+ use tokio_util::io::StreamReader;
+ 
++use crate::app_settings::AppSettings;
+ use crate::storage::{Storage, StorageError};
+ 
+ /// When Turborepo is configured with `"signature": true` (turbo.json), the CLI
+@@ -146,6 +147,7 @@
+             builder.finish()
+         }
+         Err(StorageError::NotFound) => HttpResponse::NotFound().finish(),
++        Err(StorageError::Throttled) => HttpResponse::TooManyRequests().finish(),
+         Err(error) => {
+             tracing::error!(error = %error, "Could not check artifact on the bucket");
+             HttpResponse::InternalServerError().finish()
+@@ -176,6 +178,7 @@
+ 
+             HttpResponse::Created().json(artifact)
+         }
++        Err(StorageError::Throttled) => HttpResponse::TooManyRequests().finish(),
+         Err(error) => {
+             tracing::error!(error = %error, "Could not store artifact on the bucket");
+             HttpResponse::InternalServerError().finish()
+@@ -183,8 +186,12 @@
+     }
+ }
+ 
+-#[tracing::instrument(name = "Read artifact", skip(storage))]
+-pub async fn get_file(req: HttpRequest, storage: Data<Storage>) -> impl Responder {
++#[tracing::instrument(name = "Read artifact", skip(req, storage, settings))]
++pub async fn get_file(
++    req: HttpRequest,
++    storage: Data<Storage>,
++    settings: Data<AppSettings>,
++) -> impl Responder {
+     let artifact_info = match ArtifactRequest::from(&req) {
+         Some(info) => info,
+         None => return HttpResponse::NotFound().finish(),
+@@ -192,20 +199,33 @@
+ 
+     let file_path = artifact_info.file_path();
+ 
+-    let (maybe_response, metadata) = tokio::join!(
+-        storage.get_file(&file_path),
+-        storage.get_metadata(&file_path),
+-    );
++    let (maybe_response, metadata) =
++        tokio::join!(storage.get_file(&file_path), storage.head_file(&file_path),);
+ 
+     let response = match maybe_response {
+         Ok(response) => response,
+         Err(StorageError::NotFound) => return HttpResponse::NotFound().finish(),
++        Err(StorageError::Throttled) => return HttpResponse::TooManyRequests().finish(),
+         Err(error) => {
+             tracing::error!(error = %error, "Could not read artifact from the bucket");
+             return HttpResponse::InternalServerError().finish();
+         }
+     };
+ 
++    let metadata = match metadata {
++        Ok(metadata) => metadata,
++        Err(StorageError::Throttled) if settings.cache_policy.is_some() => {
++            return HttpResponse::TooManyRequests().finish();
++        }
++        Err(_) if settings.cache_policy.is_some() => {
++            return HttpResponse::ServiceUnavailable().finish();
++        }
++        Err(_) => {
++            tracing::warn!("HEAD request failed, omitting object metadata");
++            HashMap::new()
++        }
++    };
++
+     let stream = response.bytes.map(|maybe_chunk| match maybe_chunk {
+         Ok(bytes) => Result::<Bytes, actix_web::error::Error>::Ok(bytes),
+         Err(error) => {
+diff --git a/src/storage.rs b/src/storage.rs
+index 92b16f9..9048d30 100644
+--- a/src/storage.rs
++++ b/src/storage.rs
+@@ -13,6 +13,8 @@
+ pub enum StorageError {
+     /// The bucket answered, but holds no object under that path.
+     NotFound,
++    /// The store explicitly throttled this request.
++    Throttled,
+     /// The bucket could not be reached, or rejected the request.
+     Unreachable(S3Error),
+ }
+@@ -21,6 +23,7 @@
+     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+         match self {
+             Self::NotFound => write!(f, "no such object in the bucket"),
++            Self::Throttled => write!(f, "object store throttled the request"),
+             Self::Unreachable(error) => write!(f, "S3 request failed: {error}"),
+         }
+     }
+@@ -29,7 +32,7 @@
+ impl std::error::Error for StorageError {
+     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+         match self {
+-            Self::NotFound => None,
++            Self::NotFound | Self::Throttled => None,
+             Self::Unreachable(error) => Some(error),
+         }
+     }
+@@ -39,6 +42,7 @@
+     fn from(error: S3Error) -> Self {
+         match error {
+             S3Error::HttpFailWithBody(404, _) => Self::NotFound,
++            S3Error::HttpFailWithBody(429, _) => Self::Throttled,
+             other => Self::Unreachable(other),
+         }
+     }
+@@ -165,8 +169,20 @@
+ mod tests {
+     use super::*;
+ 
++    #[test]
++    fn preserves_explicit_storage_throttling_without_a_raw_body() {
++        let error = StorageError::from(S3Error::HttpFailWithBody(
++            429,
++            "synthetic-private-storage-body".to_owned(),
++        ));
++        assert!(matches!(error, StorageError::Throttled));
++        assert_eq!(error.to_string(), "object store throttled the request");
++        assert!(std::error::Error::source(&error).is_none());
++    }
++
+     fn settings_with_credentials() -> AppSettings {
+         AppSettings {
++            cache_policy: None,
+             host: "127.0.0.1".to_owned(),
+             port: 8000,
+             s3_access_key: Some("super-secret-access-key".into()),
+diff --git a/tests/dependency_scope.rs b/tests/dependency_scope.rs
+new file mode 100644
+index 0000000..49289bc
+--- /dev/null
++++ b/tests/dependency_scope.rs
+@@ -0,0 +1,21 @@
++// GHSA-qwgh-2vcv-g2f7 describes a later inline-cursor implementation.
++// In pinned0.10.4 the cursor is a separate private field, outside the block.
++use block_buffer::{EagerBuffer, generic_array::typenum::U4};
++use std::panic::{AssertUnwindSafe, catch_unwind};
++
++#[test]
++fn pinned_legacy_cursor_is_not_corrupted_by_a_panicking_callback() {
++    for value in 0..=u8::MAX {
++        let mut buffer = EagerBuffer::<U4>::new(&[1, 2]);
++        assert!(
++            catch_unwind(AssertUnwindSafe(|| {
++                buffer.digest_blocks(&[3, value], |_| panic!("synthetic compression failure"));
++            }))
++            .is_err()
++        );
++        assert_eq!(buffer.get_pos(), 2);
++        buffer.reset();
++        buffer.digest_blocks(&[4; 8], |_| {});
++        assert_eq!(buffer.get_pos(), 0);
++    }
++}
+diff --git a/tests/signed_policy.rs b/tests/signed_policy.rs
+new file mode 100644
+index 0000000..7efca46
+--- /dev/null
++++ b/tests/signed_policy.rs
+@@ -0,0 +1,133 @@
++use actix_web::{App, HttpResponse, http::Method, middleware::from_fn, test, web};
++use decay::{
++    app_settings::get_settings,
++    auth::{policy::Policy, turbo_token::validate_turbo_token},
++};
++use std::sync::{
++    Arc,
++    atomic::{AtomicUsize, Ordering},
++};
++
++#[actix_web::test]
++async fn signed_policy_denials_never_reach_the_backend_and_never_reflect_input() {
++    for role in ["reader", "writer"] {
++        let mut settings = get_settings();
++        settings.turbo_token = Some("synthetic-bound-bearer".into());
++        settings.cache_policy = Some(Policy::new("team_beep_epoch_1".to_owned(), role).unwrap());
++        let calls = Arc::new(AtomicUsize::new(0));
++        let observed = Arc::clone(&calls);
++        let app = test::init_service(
++            App::new()
++                .app_data(web::Data::new(settings))
++                .wrap(from_fn(validate_turbo_token))
++                .default_service(web::to(move || {
++                    observed.fetch_add(1, Ordering::SeqCst);
++                    async { HttpResponse::Created().finish() }
++                })),
++        )
++        .await;
++        let path = "/v8/artifacts/0123456789abcdef?teamId=team_beep_epoch_1";
++        let role_write = if role == "reader" {
++            (403, "write-denied")
++        } else {
++            (201, "allowed")
++        };
++        for (method, url, auth, tag, status, code) in [
++            (Method::GET, path, false, None, 401, "authentication-denied"),
++            (
++                Method::GET,
++                "/v8/artifacts/0123456789abcdef?teamId=team_private_selector",
++                true,
++                None,
++                403,
++                "tenant-denied",
++            ),
++            (
++                Method::GET,
++                "/v8/artifacts/0123456789abcdef?teamId=team_beep_epoch_1&slug=private_query_secret",
++                true,
++                None,
++                400,
++                "selector-invalid",
++            ),
++            (
++                Method::GET,
++                "/v8/artifacts/0123456789abcdef?teamId=team_beep_epoch_1%2fescape",
++                true,
++                None,
++                400,
++                "selector-invalid",
++            ),
++            (
++                Method::GET,
++                "/v8/artifacts/%30%31?teamId=team_beep_epoch_1",
++                true,
++                None,
++                404,
++                "route-invalid",
++            ),
++            (
++                Method::PUT,
++                path,
++                true,
++                Some("synthetic-private-opaque-tag"),
++                role_write.0,
++                role_write.1,
++            ),
++            (Method::GET, path, true, None, 201, "allowed"),
++        ] {
++            let before = calls.load(Ordering::SeqCst);
++            let mut request = test::TestRequest::default().method(method).uri(url);
++            if auth {
++                request = request.insert_header(("Authorization", "Bearer synthetic-bound-bearer"));
++            }
++            if let Some(tag) = tag {
++                request = request.insert_header(("x-artifact-tag", tag));
++            }
++            let response = test::call_service(&app, request.to_request()).await;
++            assert_eq!(response.status().as_u16(), status);
++            assert_eq!(response.headers().get("x-beep-cache-result").unwrap(), code);
++            let body = test::read_body(response).await;
++            let body = std::str::from_utf8(&body).unwrap();
++            for secret in [
++                "synthetic-bound-bearer",
++                "team_private_selector",
++                "private_query_secret",
++                "synthetic-private-opaque-tag",
++            ] {
++                assert!(!body.contains(secret));
++            }
++            assert_eq!(
++                calls.load(Ordering::SeqCst) - before,
++                usize::from(status < 400)
++            );
++        }
++    }
++}
++
++#[actix_web::test]
++async fn writer_tag_rejection_precedes_backend_io() {
++    let mut settings = get_settings();
++    settings.turbo_token = Some("synthetic-bound-bearer".into());
++    settings.cache_policy = Some(Policy::new("team_beep_epoch_1".to_owned(), "writer").unwrap());
++    let app = test::init_service(
++        App::new()
++            .app_data(web::Data::new(settings))
++            .wrap(from_fn(validate_turbo_token))
++            .default_service(web::to(|| async {
++                panic!("Denied upload reached backend");
++                HttpResponse::Ok().finish()
++            })),
++    )
++    .await;
++    for tags in [vec![], vec![""], vec!["one", "two"]] {
++        let mut request = test::TestRequest::put()
++            .uri("/v8/artifacts/0123456789abcdef?teamId=team_beep_epoch_1")
++            .insert_header(("Authorization", "Bearer synthetic-bound-bearer"));
++        for tag in &tags {
++            request = request.append_header(("x-artifact-tag", *tag));
++        }
++        let response = test::call_service(&app, request.to_request()).await;
++        assert_eq!(response.status().as_u16(), 400);
++    }
++}
