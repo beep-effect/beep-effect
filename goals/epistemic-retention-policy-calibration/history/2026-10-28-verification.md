@@ -44,10 +44,15 @@ Server and use-case package-verify passed again (audit plus docgen). Server has
 59 unit tests and 49 integration tests passing; two existing integration files
 remain skipped. The native CLI suite remains 16 tests, with the receipt test
 now checking five schema-generated digests. Focused report/evaluation coverage
-now contains 21 tests. Schema-first, schema-tag, Effect/Vitest, Oxlint, Fallow
-audit and Fallow health checks passed. No lint baseline was weakened.
+now contains 21 tests. Schema-first, schema-tag, Oxlint, Fallow audit and Fallow health passed.
+The first Effect/Vitest inventory extraction succeeded, but its actual parity
+check found one native-filesystem judgment; see the subsequent independent
+review and exact exception in 2026-10-29-repair-review.md.
 
 The exact repair sources are recorded in `2026-10-29-repair-replay.json`.
 Replay is byte-identical to the frozen accepted bundle; the fixture, protocol,
 candidates and output hashes did not change. Historical verification above is
 retained rather than rewritten as evidence for a different source revision.
+
+The final deterministic receipt restoration increases native CLI coverage to
+17 tests (60 server unit tests). Package audit and docgen passed again.

@@ -55,6 +55,46 @@ const copyPacket = Effect.fn("CalibrationCLITest.copyPacket")(function* () {
   return { fs, path, temp, packet };
 });
 
+const assertUntrustedReceipt = Effect.fn("CalibrationCLITest.assertUntrustedReceipt")(function* (policyDigest: string) {
+  const { fs, path, temp, packet } = yield* copyPacket();
+  const fixturePath = path.join(packet, "ops/fixture-v1.json");
+  const manifestPath = path.join(packet, "ops/dataset-v1.json");
+  const fixture = yield* S.decodeEffect(Json)(yield* fs.readFileString(fixturePath));
+  const manifest = yield* S.decodeEffect(Json)(yield* fs.readFileString(manifestPath));
+  // Entirely synthetic untrusted fixture: the user principal does not attest to approval.
+  // Schema validity must not promote caller data to trusted registry membership.
+  const untrusted = yield* S.decodeUnknownEffect(RetentionCalibration)({
+    policyDigest,
+    datasetDigest: manifest.sha256,
+    orgId: 1,
+    mechanism: "retention-v1",
+    sampleCount: 104,
+    evaluationReport: "fixture://untrusted-report",
+    approvedBy: { kind: "User", userId: 1 },
+    approvedAt: 0,
+    expiresAt: 40000,
+    purpose: "production",
+  });
+  const text = yield* S.encodeEffect(Json)({
+    ...fixture,
+    calibration: yield* S.encodeEffect(RetentionCalibration)(untrusted),
+  });
+  yield* fs.writeFileString(fixturePath, text);
+  const crypto = yield* Crypto.Crypto;
+  yield* fs.writeFileString(
+    manifestPath,
+    yield* S.encodeEffect(Json)({
+      ...manifest,
+      sha256: Hex.encode(yield* crypto.digest("SHA-256", new TextEncoder().encode(text))),
+    })
+  );
+  const output = path.join(temp, "bundle.json");
+  const result = yield* run(packet, output);
+  expect(result.code, result.text).not.toBe(0);
+  expect(result.text).toContain("calibration");
+  expect(yield* fs.exists(output)).toBe(false);
+});
+
 it.layer(
   Layer.provideMerge(
     NodeChildProcessSpawner.layer,
@@ -83,49 +123,13 @@ it.layer(
       expect(yield* fs.readFileString(path.join(store, "bundle.json"))).toBe(bytes);
     })
   );
+  it.effect("refuses a complete matching-policy receipt without trusted membership", () =>
+    assertUntrustedReceipt("edb7f5df1b46ebf063d933253c91fd497dcb84a604f1d7e350b4860f5e97a2d0")
+  );
   it.effect.prop(
     "refuses schema-generated self-submitted receipts without trusted membership",
     [Arbitrary.schema(RetentionCalibration.fields.policyDigest)],
-    ([policyDigest]) =>
-      Effect.gen(function* () {
-        const { fs, path, temp, packet } = yield* copyPacket();
-        const fixturePath = path.join(packet, "ops/fixture-v1.json");
-        const manifestPath = path.join(packet, "ops/dataset-v1.json");
-        const fixture = yield* S.decodeEffect(Json)(yield* fs.readFileString(fixturePath));
-        const manifest = yield* S.decodeEffect(Json)(yield* fs.readFileString(manifestPath));
-        // Entirely synthetic untrusted fixture: the user principal does not attest to approval.
-        // Schema validity must not promote caller data to trusted registry membership.
-        const untrusted = yield* S.decodeUnknownEffect(RetentionCalibration)({
-          policyDigest,
-          datasetDigest: manifest.sha256,
-          orgId: 1,
-          mechanism: "retention-v1",
-          sampleCount: 104,
-          evaluationReport: "fixture://untrusted-report",
-          approvedBy: { kind: "User", userId: 1 },
-          approvedAt: 0,
-          expiresAt: 40000,
-          purpose: "production",
-        });
-        const text = yield* S.encodeEffect(Json)({
-          ...fixture,
-          calibration: yield* S.encodeEffect(RetentionCalibration)(untrusted),
-        });
-        yield* fs.writeFileString(fixturePath, text);
-        const crypto = yield* Crypto.Crypto;
-        yield* fs.writeFileString(
-          manifestPath,
-          yield* S.encodeEffect(Json)({
-            ...manifest,
-            sha256: Hex.encode(yield* crypto.digest("SHA-256", new TextEncoder().encode(text))),
-          })
-        );
-        const output = path.join(temp, "bundle.json");
-        const result = yield* run(packet, output);
-        expect(result.code, result.text).not.toBe(0);
-        expect(result.text).toContain("calibration");
-        expect(yield* fs.exists(output)).toBe(false);
-      }),
+    ([policyDigest]) => assertUntrustedReceipt(policyDigest),
     { arbitrary: { runs: 5 } }
   );
   for (const [reason, submission] of [

@@ -3221,13 +3221,13 @@
       "reason": "The inner scope is the cancellation subject: the test interrupts its child fiber and checks that the real subprocess was killed and drained before the outer scope ends. Owner: @beep/effect-drizzle. Exit: retire when EV004 recognises assertions that run after a shorter scope closes (#1855 wave 8 register)."
     },
     {
-      "id": "EV004:packages/epistemic/server/test/RetentionAuthority.pglite.test.ts:276:scoped@18#1",
+      "id": "EV004:packages/epistemic/server/test/RetentionAuthority.pglite.test.ts:322:scoped@18#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/epistemic-server",
       "file": "packages/epistemic/server/test/RetentionAuthority.pglite.test.ts",
-      "line": 276,
-      "endLine": 276,
+      "line": 322,
+      "endLine": 322,
       "symbol": "scoped",
       "occurrence": "v2:16300555d4ce899ded58fe5a5815ba450e83c9a0814471e8cecf0c202d25625b",
       "class": "inner-helper-scope-lifetime-review",
@@ -5849,7 +5849,7 @@
       "symbol": "it.live",
       "occurrence": "v2:c027e67dd880a2a8fe4d854ffa24710fb29e526922688554f73771e44f9220b0",
       "class": "unjustified-live-test",
-      "evidence": "it.live( \"never restores over a synchronous turn start (subscription races the dispatch)\", Effect.fnUntraced(function* () { // A submit whose write starts the turn synchronously inside the set — // th",
+      "evidence": "it.live( \"never restores over a synchronous turn start (subscription races the dispatch)\", Effect.fnUntraced(function* () { // A submit whose write starts the turn synchronously inside the set \u2014 // th",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -5893,7 +5893,7 @@
       "symbol": "it.live",
       "occurrence": "v2:839f4c06674803449cc12ea63d0ef0fe4c6c3b982ae7010cc7e7aa1039f70146",
       "class": "unjustified-live-test",
-      "evidence": "it.live( \"restores the draft when the dispatch is swallowed\", Effect.fnUntraced(function* () { // A submit whose write is silently dropped — the zombie-node failure // mode the QA 2026-08-26 P0 found:",
+      "evidence": "it.live( \"restores the draft when the dispatch is swallowed\", Effect.fnUntraced(function* () { // A submit whose write is silently dropped \u2014 the zombie-node failure // mode the QA 2026-08-26 P0 found:",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -7687,13 +7687,13 @@
       "reason": "One real SQLite file is shared between Node drizzle-kit, Bun Database and the Effect SQLite adapter; the memory filesystem cannot give native paths to those processes. Owner: @beep/effect-drizzle. Exit: retire when the three adapters can share an in-memory SQLite database."
     },
     {
-      "id": "EV010:packages/epistemic/server/test/RetentionAuthority.pglite.test.ts:19:@effect/platform-node/NodeServices@0#1",
+      "id": "EV010:packages/epistemic/server/test/RetentionAuthority.pglite.test.ts:23:@effect/platform-node/NodeServices@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/epistemic-server",
       "file": "packages/epistemic/server/test/RetentionAuthority.pglite.test.ts",
-      "line": 19,
-      "endLine": 19,
+      "line": 23,
+      "endLine": 23,
       "symbol": "@effect/platform-node/NodeServices",
       "occurrence": "v2:fb7d6bba929488197f859519d08aea3efcf9ac097f647f2bbff02362d70850d7",
       "class": "platform-resource-provenance-review",
@@ -7707,6 +7707,28 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "The chosen projection store uses native filesystem creation, rename, complete directory deletion and byte-for-byte reconstruction. MemoryFileSystem would substitute the subject. NodeServices is provided at the it.layer boundary, with a deliberate shorter artifact scope per property case. Owner: @beep/epistemic-server. Exit: retire when EV010 recognises this native store/rebuild integration proof."
+    },
+    {
+      "id": "EV010:packages/epistemic/server/test/RetentionCalibrationCLI.test.ts:6:@effect/platform-node/NodeFileSystem@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/epistemic-server",
+      "file": "packages/epistemic/server/test/RetentionCalibrationCLI.test.ts",
+      "line": 6,
+      "endLine": 6,
+      "symbol": "@effect/platform-node/NodeFileSystem",
+      "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
+      "class": "platform-filesystem-candidate",
+      "evidence": "import * as NodeFileSystem from \"@effect/platform-node/NodeFileSystem\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "A separate Bun executable reads the packet and writes output through its own native filesystem service. The parent test creates, reads and completely removes those same native paths; MemoryFileSystem would change the executable integration and rebuild subject. Owner: @beep/epistemic-server. Exit: reassess when EV010 recognizes subprocess filesystem integration or both sides can share an alternative filesystem without weakening this proof. Independently reviewed in goals/epistemic-retention-policy-calibration/history/2026-10-29-repair-review.md."
     },
     {
       "id": "EV010:packages/epistemic/server/test/integration/ContradictionTriage.p0.pglite.test.ts:15:@effect/platform-node/NodeFileSystem@0#1",

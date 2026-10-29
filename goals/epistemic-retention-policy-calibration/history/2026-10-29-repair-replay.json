@@ -12,5 +12,6 @@
   "exitCode": 0,
   "durationSeconds": 0.3000019079991034,
   "productionEligible": false,
-  "approvalState": "not-requested"
+  "approvalState": "not-requested",
+  "finalReceiptControlSourceSha256": "b43ff51930a5fc47d9869e986a289e0fb3b3ad566da748272bce4f36cf8b757a"
 }
