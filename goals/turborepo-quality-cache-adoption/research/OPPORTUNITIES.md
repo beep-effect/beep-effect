@@ -56,3 +56,77 @@ Re-ran the canonical census and retained refresh recipe, verified every retained
 source digest, and compared all population counts. Counts and qualification
 states are unchanged. Future source-changing waves must regenerate the derived
 population as well as inspecting a newly emitted private census.
+## 2026-10-29: Native feature evidence needs the invoked runtime identity
+
+The private controls were initially tied to local absolute paths. The retained
+driver removes those paths, checks both client digests and the pinned Bun, and
+cleans owned fixtures before success publication. Resolving the multiplexer
+symlink and invoking its target directly changes argv-based tool selection;
+that failed the Bun-pin preflight before any fixture execution. Resolve the
+actual native executable through the selected Bun's `process.execPath` instead.
+Both pinned clients now complete all eighteen executions. Description-only
+configuration edits also change hashes here, so preserve this observation and
+avoid promising metadata-only reuse without a supported implementation.
+
+
+## 2026-10-29: Current pin blocked by a historical observation domain
+
+The actual collector rejects Bun1.4.4 before qualification because the snapshot
+schema permits only1.4.1/1.4.2. Expand observation support for the exact current
+pin, while retaining the declared-pin and historical-key barriers. Current
+native collection and a real wrong-pin fixture now pass/refuse respectively.
+The first scratch driver had an incorrect export and omitted FsUtils; neither
+result was accepted as runtime evidence. The retained driver uses curated test
+APIs and provides the real platform/admission services.
+
+A known encoded test fixture initially used decodeUnknownEffect. The type check
+requires decodeEffect; retain the failed check and its repair. The2.5MiB census
+exceeds Biome's default file limit. Keep the retained recipe's JSON serialization
+and validate JSON/source hashes directly. Forcing a larger formatting limit
+introduced unrelated array-layout churn, which was removed without changing
+the observed data or the repository-wide limit.
+
+
+## 2026-10-29: Ignored non-workspace metadata enters the real lint hash
+
+Both exact pinned clients include an owned Git-ignored tmp/package.json fixture
+in the real identity lint dry plan. The selected input count rises1153to1154
+and its task hash changes; cleanup restores the exact original hash in both
+clients. No quality task executes and no remote cache is used. Root-wide
+metadata globs are a narrowing candidate, but exclusion still requires tracing
+the wrapper's real reads and proving actual output/verdict equivalence. The
+current task remains cache:false. Keep that work in this active adoption goal.
+
+
+### Current runtime whole replay and resume overhead
+
+- The committed Bun1.4.4 observation change passes the whole CLI package audit
+  in1118.9seconds and docgen in36.4seconds; frozen source and manifests match.
+- Resume friction: the scheduler status command emitted over two thousand
+  historical quarantine rows while inspecting live admission. Future status
+  consumption should request a bounded projection where supported. No runtime
+  or cache behavior was changed for this observation.
+
+
+### Runtime observation and reviewed baseline must advance together
+
+- Historical refusal: the public fingerprint command rejected Bun1.4.4 while
+  its reviewed baseline still named Bun1.4.2. Collector support alone did not
+  authorize that new tuple; the guard behaved as designed.
+- The [baseline checkpoint](current-runtime-baseline-checkpoint.json) records
+  the completed Bun1.4.4 review, qualification-v3 epoch and current-profile
+  public fingerprint. Effective configuration, cache flags, scope and ledger
+  stayed unchanged. Existing qualification remains bound to its original tuple.
+- Publication was stopped before its push stage while that review was prepared;
+  the reviewed observation path subsequently landed in this source wave.
+
+
+### Research controls must preserve evidence checks
+
+Review found assert-dependent plan and native-invariant checks that Python
+optimization could erase. Both drivers now refuse that mode before runtime
+state is created; the ignored plan also explicitly rejects nonzero exits,
+duplicate or missing targets and reported execution. A fresh report directory
+is created before writing. The new control receipt separates unit excerpts
+from actual synthetic stable/canary replay and retains all historical source
+bindings. Owner: the active Turbo goals. No qualification or rollout changed.

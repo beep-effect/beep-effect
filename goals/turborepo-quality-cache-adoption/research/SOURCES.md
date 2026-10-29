@@ -225,3 +225,49 @@ binds changed runner source bytes. Historical claims above keep their dates.
 - [Retained qualification](../../turborepo-task-qualification/research/current-signed-qualification.json):
   applies to its original identity-lint computation, reuse layer, profile and
   epoch; it cannot promote the refreshed population.
+
+
+### Native feature controls, 2026-10-29
+
+- [Bounded observations](native-input-controls.json) and
+  [retained driver](native-input-controls.py): eighteen actual native local-cache
+  executions, exact client and Bun digests, output agreement and fixture cleanup.
+  Reproduce with `python3 goals/turborepo-quality-cache-adoption/research/native-input-controls.py`.
+  Uses installed/cached pinned clients, no credentials or remote cache. The
+  report is synthetic feature evidence, not a real Beep computation's qualified
+  tuple or a representative production window. Description-only edits caused
+  invalidation on both pins; the earlier private reuse hypothesis remains
+  separately retained and was not promoted into an assertion.
+
+
+### Current pinned runtime control
+
+- [Runtime checkpoint](current-runtime-profile-checkpoint.json),
+  [physical observation](current-runtime-profile-observation.json), and
+  [retained admitted control](current-runtime-profile-control.ts): current
+  binaries/dependencies/linkage, actual wrong-pin refusal, cleanup, cross-runtime
+  regressions and source-restored support-removal control. No qualification.
+- The current population was regenerated with Cache's canonical census and the
+  retained recipe. All430source digests agree; counts and ledger are unchanged.
+  The prior upload-join inventory and complete checkpoint are retained in the
+  private completion evidence bundle before metadata refresh.
+
+- [Actual ignored-input dry observation](actual-ignored-input-observation.json)
+  and [retained control](actual-ignored-input-control.py): both pinned clients,
+  one real computation, no task execution/remote use, and exact baseline
+  restoration after the scoped ignored fixture is removed.
+
+- The current-runtime checkpoint now retains the passing whole CLI package
+  replay at frozen head2b295197c1: audit1118.9seconds/docgen36.4seconds. Exact
+  source bytes and both goal manifests remained unchanged through execution.
+  Historical failed runs and their repairs remain in their original checkpoints.
+
+- [Current runtime baseline review](current-runtime-baseline-review.md) and
+  [checkpoint](current-runtime-baseline-checkpoint.json): explicit canonical
+  compare-and-swap recording, unchanged task projection/ledger, actual public
+  fingerprint, stale-update rejection and passing cache audit. No qualification
+  or signed activation is inferred.
+
+- [Producer publication gate repair](../../turborepo-cache-trust-observability/research/producer-publication-gate-repair-checkpoint.json):
+  current properties/catalog and 361-test integrations. Inventory refresh
+  preserves all computation dispositions and configuration records.

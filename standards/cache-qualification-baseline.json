@@ -1,7 +1,7 @@
 {
   "schemaVersion": "cache-qualification-baseline/v2",
-  "profile": "local-linux-x64-bun1.4.2",
-  "epoch": "qualification-v2",
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
   "scope": [
     "@beep/identity#lint",
     "@beep/types#lint",
@@ -11,10 +11,10 @@
   "reviews": {
     "//": {
       "reviewer": "GPT-6-Astra independent foundation panel",
-      "reason": "Record the six reviewed task configuration changes from foundation dependencies and canonical jsonl policy closure inputs. No cache qualification or exception is added.",
+      "reason": "Preserve upstream Bun1.4.4 qualification-v3 tuple and reapply reviewed foundation configuration inputs; no qualification or exception added.",
       "basis": {
-        "path": "goals/agent-observability-foundation/research/CACHE-BASELINE-REVIEW.md",
-        "sha256": "67c9d7d18844c8ead6abf384586d4dac98bc6646a87819d66c8bee0fc02b866d"
+        "path": "goals/agent-observability-foundation/research/CACHE-BASE-SYNC-REVIEW.md",
+        "sha256": "718ca64163c71d5feb5e5a074b25f1b8cde0c4f003666e017f2fd7dda2dfaca6"
       }
     },
     "@beep/acp": {
@@ -1123,10 +1123,10 @@
     },
     "@beep/repo-ai-metrics": {
       "reviewer": "GPT-6-Astra independent foundation panel",
-      "reason": "Record the six reviewed task configuration changes from foundation dependencies and canonical jsonl policy closure inputs. No cache qualification or exception is added.",
+      "reason": "Preserve upstream Bun1.4.4 qualification-v3 tuple and reapply reviewed foundation configuration inputs; no qualification or exception added.",
       "basis": {
-        "path": "goals/agent-observability-foundation/research/CACHE-BASELINE-REVIEW.md",
-        "sha256": "67c9d7d18844c8ead6abf384586d4dac98bc6646a87819d66c8bee0fc02b866d"
+        "path": "goals/agent-observability-foundation/research/CACHE-BASE-SYNC-REVIEW.md",
+        "sha256": "718ca64163c71d5feb5e5a074b25f1b8cde0c4f003666e017f2fd7dda2dfaca6"
       }
     },
     "@beep/repo-cli": {

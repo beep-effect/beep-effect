@@ -12,6 +12,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { CacheSyntheticRun } from "./Cache.experiment.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Cache/Cache.conformance.schemas");
 
@@ -820,6 +821,10 @@ export class CacheConformanceExchange extends S.Opaque<CacheConformanceExchange,
     strictScored: S.Boolean,
     selector: CacheConformanceSelectorShape,
     hash: CacheConformanceHashShape,
+    taskHash: S.OptionFromNullOr(CacheSyntheticRun.fields.taskHash).pipe(
+      S.withDecodingDefaultKey(Effect.succeed(null)),
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
     outcome: CacheConformanceOutcome,
     status: S.OptionFromNullOr(S.Int.check(S.isBetween({ minimum: 100, maximum: 599 }))),
     backendResult: S.OptionFromNullOr(CacheConformanceBackendResult).pipe(

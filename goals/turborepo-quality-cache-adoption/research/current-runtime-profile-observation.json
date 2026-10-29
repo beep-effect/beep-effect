@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "cache-current-runtime-profile-control/v1",
+  "recordedAt": "2026-10-29T09:56:19.732Z",
+  "authority": "runtime-observation-only",
+  "qualified": false,
+  "sourceHead": "d5181fbc27fab7755061eb9825169f8aaaccf6c9",
+  "sourceState": "working-tree-bound",
+  "sourceFiles": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.schemas.ts",
+      "sha256": "9d003f173bb5181577ace15195d94ba4e4844580b2f81bdb11dd4e4841bc44ed"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.fingerprint.ts",
+      "sha256": "36c69fa69e539bcacd74cd2bc72b6f601e821ff5c4567eecc0b7ff7c90f5a955"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.dependencies.ts",
+      "sha256": "74e58902aaea5dc0ab6684fdb6a68a60edc36ef37fbd263096f4c126d6a264e0"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.linker.ts",
+      "sha256": "ac563e51e4b48c5c6d663e8f4bcb6f18400f0cb5fbbc8aea1f22e6441a72f368"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts",
+      "sha256": "d443672935b5ae9c4bfacb9672180d3c70dfd2faa6b885e0bae06d91a67c2573"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-census.test.ts",
+      "sha256": "1856ea93ec938b54a820d58725d62ebc0e786d6c08462286d9d3a71cf8e528cf"
+    },
+    {
+      "path": "goals/turborepo-quality-cache-adoption/research/current-runtime-profile-control.ts",
+      "sha256": "48bffbbb8e42191aac8908e33e052ca474bdbdbfff16d7fad86cf9e26cdc44c1"
+    }
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "bun": {
+    "version": "1.4.4",
+    "sha256": "10702245766b225e70bbf6235fd6b47214fd94b4760d00ffaed8ab0df57ac235"
+  },
+  "node": {
+    "version": "v24.22.1",
+    "sha256": "e32e2d16081cf644f88392934288086e7662529d0d43277c34f7aad2207cfafb"
+  },
+  "turbo": {
+    "version": "2.11.10",
+    "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6"
+  },
+  "biome": {
+    "version": "Version: 2.5.6",
+    "sha256": "3cc9a0c3fa26ac26a89e8a3b203c010c9ae88e36f69a2679e79981f267ce9d57"
+  },
+  "toolchainDigest": "6d1632260f5dbb0d5091f1361f236d7e96fe7f97e88a87aa7bcf3ffba75b91bd",
+  "dependenciesDigest": "8fc819af1ac8074b469de12f61d7b242fd4aa9f8cd4d0dcdd3a7a6813df0209b",
+  "startupLinkerObserved": true,
+  "declaredMismatch": {
+    "declaration": "1.4.2",
+    "actualBun": "1.4.4",
+    "diagnosticMatched": true,
+    "fixtureRemoved": true
+  }
+}

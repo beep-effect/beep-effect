@@ -781,7 +781,7 @@ export class CacheRuntimeLinkerSnapshot extends S.Opaque<
  */
 export class CacheToolchainSnapshot extends S.Opaque<CacheToolchainSnapshot, { readonly brand: unique symbol }>()(
   S.Struct({
-    profile: LiteralKit(["local-linux-x64-bun1.4.1", "local-linux-x64-bun1.4.2"]),
+    profile: LiteralKit(["local-linux-x64-bun1.4.1", "local-linux-x64-bun1.4.2", "local-linux-x64-bun1.4.4"]),
     kernel: S.NonEmptyString,
     libc: S.NonEmptyString,
     bun: CacheExecutablePin,

@@ -1,0 +1,194 @@
+{
+  "schemaVersion": "cache-native-upload-join-control/v1",
+  "recordedAt": "2026-10-29T07:14:51.793Z",
+  "authority": "synthetic-mechanism-observation-only",
+  "observations": [
+    {
+      "channel": "stable",
+      "client": {
+        "version": "2.11.10",
+        "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6",
+        "namespace": "team_conformance"
+      },
+      "bunVersion": "1.4.4",
+      "bunSha256": "10702245766b225e70bbf6235fd6b47214fd94b4760d00ffaed8ab0df57ac235",
+      "summary": {
+        "turboVersion": "2.11.10",
+        "tasks": [
+          {
+            "taskId": "@beep/producer-fixture#build",
+            "hash": "5002551c374586d3",
+            "cache": {
+              "status": "MISS"
+            },
+            "execution": {
+              "exitCode": 0
+            }
+          }
+        ]
+      },
+      "events": [
+        {
+          "scenario": "initial",
+          "fault": "none",
+          "upstreamStatus": 200,
+          "exchange": {
+            "step": "proxy-get-initial",
+            "role": "writer",
+            "method": "GET",
+            "route": "/v8/artifacts/status",
+            "operationId": "getArtifactStatus",
+            "strictScored": true,
+            "selector": "team-id",
+            "hash": "none",
+            "taskHash": null,
+            "outcome": "success",
+            "status": 200,
+            "backendResult": "allowed",
+            "contentType": "application/json",
+            "requestBytes": 0,
+            "requestSha256": null,
+            "requestTagSha256": null,
+            "responseBytes": 20,
+            "responseSha256": "a3e4e5a7745800459fc40635b77d50d3b651655e899ee82ccd324a506ecee8fa",
+            "tagPresent": false,
+            "tagSha256": null,
+            "durationPresent": false,
+            "elapsedMs": 4
+          }
+        },
+        {
+          "scenario": "initial",
+          "fault": "none",
+          "upstreamStatus": 200,
+          "exchange": {
+            "step": "proxy-put-initial",
+            "role": "writer",
+            "method": "PUT",
+            "route": "/v8/artifacts/{hash}",
+            "operationId": "uploadArtifact",
+            "strictScored": true,
+            "selector": "team-id",
+            "hash": "valid",
+            "taskHash": "5002551c374586d3",
+            "outcome": "success",
+            "status": 200,
+            "backendResult": "allowed",
+            "contentType": "application/json",
+            "requestBytes": 197,
+            "requestSha256": "03d5b60a81e7801746d089fad22e82ed0dd50111a8738d19f745e3ce14b4852a",
+            "requestTagSha256": "58388a745b8914e32fbd73be9c062e66cbf12c3c66ca672ce2389e52bf927a3f",
+            "responseBytes": 11,
+            "responseSha256": "36272563f7d6f72258af5f51b1f887492953aa1a21f765a3c0f5e88aee92d245",
+            "tagPresent": false,
+            "tagSha256": null,
+            "durationPresent": false,
+            "elapsedMs": 2
+          }
+        }
+      ],
+      "upload": {
+        "taskHash": "5002551c374586d3",
+        "archiveSha256": "03d5b60a81e7801746d089fad22e82ed0dd50111a8738d19f745e3ce14b4852a",
+        "archiveBytes": 197,
+        "status": 200,
+        "backendResult": "allowed"
+      }
+    },
+    {
+      "channel": "canary",
+      "client": {
+        "version": "2.11.9-canary.1",
+        "sha256": "f0686d3818ff00361d89919ec5e09d151aa6d9641cb5ddfda8fa734bf906cbbb",
+        "namespace": "team_conformance"
+      },
+      "bunVersion": "1.4.4",
+      "bunSha256": "10702245766b225e70bbf6235fd6b47214fd94b4760d00ffaed8ab0df57ac235",
+      "summary": {
+        "turboVersion": "2.11.9-canary.1",
+        "tasks": [
+          {
+            "taskId": "@beep/producer-fixture#build",
+            "hash": "5002551c374586d3",
+            "cache": {
+              "status": "MISS"
+            },
+            "execution": {
+              "exitCode": 0
+            }
+          }
+        ]
+      },
+      "events": [
+        {
+          "scenario": "initial",
+          "fault": "none",
+          "upstreamStatus": 200,
+          "exchange": {
+            "step": "proxy-get-initial",
+            "role": "writer",
+            "method": "GET",
+            "route": "/v8/artifacts/status",
+            "operationId": "getArtifactStatus",
+            "strictScored": true,
+            "selector": "team-id",
+            "hash": "none",
+            "taskHash": null,
+            "outcome": "success",
+            "status": 200,
+            "backendResult": "allowed",
+            "contentType": "application/json",
+            "requestBytes": 0,
+            "requestSha256": null,
+            "requestTagSha256": null,
+            "responseBytes": 20,
+            "responseSha256": "a3e4e5a7745800459fc40635b77d50d3b651655e899ee82ccd324a506ecee8fa",
+            "tagPresent": false,
+            "tagSha256": null,
+            "durationPresent": false,
+            "elapsedMs": 2
+          }
+        },
+        {
+          "scenario": "initial",
+          "fault": "none",
+          "upstreamStatus": 200,
+          "exchange": {
+            "step": "proxy-put-initial",
+            "role": "writer",
+            "method": "PUT",
+            "route": "/v8/artifacts/{hash}",
+            "operationId": "uploadArtifact",
+            "strictScored": true,
+            "selector": "team-id",
+            "hash": "valid",
+            "taskHash": "5002551c374586d3",
+            "outcome": "success",
+            "status": 200,
+            "backendResult": "allowed",
+            "contentType": "application/json",
+            "requestBytes": 197,
+            "requestSha256": "03d5b60a81e7801746d089fad22e82ed0dd50111a8738d19f745e3ce14b4852a",
+            "requestTagSha256": "58388a745b8914e32fbd73be9c062e66cbf12c3c66ca672ce2389e52bf927a3f",
+            "responseBytes": 11,
+            "responseSha256": "36272563f7d6f72258af5f51b1f887492953aa1a21f765a3c0f5e88aee92d245",
+            "tagPresent": false,
+            "tagSha256": null,
+            "durationPresent": false,
+            "elapsedMs": 2
+          }
+        }
+      ],
+      "upload": {
+        "taskHash": "5002551c374586d3",
+        "archiveSha256": "03d5b60a81e7801746d089fad22e82ed0dd50111a8738d19f745e3ce14b4852a",
+        "archiveBytes": 197,
+        "status": 200,
+        "backendResult": "allowed"
+      }
+    }
+  ],
+  "productionChanges": false,
+  "qualified": false,
+  "protectedProducer": false
+}

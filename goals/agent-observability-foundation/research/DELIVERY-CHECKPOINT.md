@@ -1,5 +1,30 @@
 # Delivery checkpoint — 2026-10-29
 
+## Reviewed repair commit and upstream sync — 13:30 CDT
+
+The complete owned repair wave is saved at `4c93cd6d6d`. Pre-commit secret,
+spelling, JSDoc, formatting and commit-message hooks passed. Formatting touched
+three non-source files; every source/test hash from the prior source manifest,
+updated with the ownership receipt hashes, still matches the committed tree.
+A single staged secret-scanner match was an independently verified file SHA-256;
+only its exact report path/rule/line fingerprint was excepted.
+
+Upstream `524a5fad6f` merged source/catalogs automatically. The sole conflict was
+root cache-baseline review metadata. Independent Astra review accepted the
+composite basis/request; the canonical writer regenerated foundation inputs atop
+the upstream baseline. It preserved the upstream Bun1.4.4 qualification-v3 tuple,
+four-computation scope, all 187 other reviews and byte-identical qualification
+ledger. Its projection exactly equals the previously reviewed foundation
+projection (nine changed nodes versus upstream). Cache audit passes with zero
+blocking findings; 1621 cached computations remain unassessed, not qualified.
+See `ops/delivery-cache-base-sync-verification.json` for archived inputs/results.
+
+Final canonical catalogs, cheap publication preflight and merged-head checks are
+still needed. The full catalog profile requires at least 32 GiB initial host
+headroom; current headroom is around 18 GiB. No limit was weakened. Remaining
+complexity repairs and whole-CLI crash diagnosis can proceed in bounded lanes.
+Recovery hold and installed/canary/publication/hosted/closeout requirements remain.
+
 ## Ownership sentinel checkpoint — 13:23 CDT
 
 Five directory/socket checks now require a present matching UID. Previously, an
