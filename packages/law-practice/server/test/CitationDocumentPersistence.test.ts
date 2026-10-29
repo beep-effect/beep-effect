@@ -13,6 +13,7 @@ import {
   CitationMentionId,
   CitationResolved,
   CitationResourceGroup,
+  CitationResourceGroupId,
 } from "@beep/law-practice-domain/values";
 import {
   CitationAuthorityIdentityInput,
@@ -56,11 +57,22 @@ const member = (mentionId: CitationMentionId) => CitationGroupMember.cases.Menti
 const membership = (authorityId: CitationAuthorityId, ids: ReadonlyArray<CitationMentionId>) => {
   const id = CitationMemberListId.make(`cl1:${Str.slice(4)(authorityId)}`);
   return {
-    groups: [CitationResourceGroup.make({ authorityId, memberListId: id })],
+    groups: [
+      CitationResourceGroup.make({
+        id: CitationResourceGroupId.make(`cg1:${Str.slice(4)(authorityId)}`),
+        authorityId,
+        memberListId: id,
+      }),
+    ],
     memberLists: [CitationMemberList.make({ id, members: A.map(ids, member) })],
     detachedCitations: [],
   };
 };
+const expectedGroup = (list: CitationMemberList) => ({
+  position: 0,
+  id: CitationResourceGroupId.make(`cg1:${Str.slice(4)(list.id)}`),
+  list,
+});
 const bindingFor = (
   identity: CitationResourceIdentity,
   authorityId: CitationAuthorityId,
@@ -69,7 +81,7 @@ const bindingFor = (
   CitationResourceBinding.make({
     identity,
     decisions,
-    group: O.some(A.getUnsafe(membership(authorityId, decisions).memberLists, 0)),
+    groups: [expectedGroup(A.getUnsafe(membership(authorityId, decisions).memberLists, 0))],
   });
 const text = "😀 1 U.S. 1; 1 U.S. 1; Id.";
 const artifact = Sha256Hex.make(Str.repeat(64)("a"));
@@ -324,6 +336,84 @@ it.layer(BunCrypto.layer)("whole citation document persistence", (it) => {
   );
 
   it.effect(
+    "restores multiple entries for one bound resource and rejects entry identity, position or coverage changes",
+    () =>
+      Effect.gen(function* () {
+        const data = yield* fixture;
+        const identity = externalIdentity();
+        const authorityId = yield* makeCitationResourceAuthorityId(identity);
+        const ids = A.map(data.document.mentions, (mention) => mention.id);
+        const firstList = CitationMemberList.make({
+          id: CitationMemberListId.make(`cl1:${Str.repeat(64)("b")}`),
+          members: [member(A.getUnsafe(ids, 0))],
+        });
+        const secondList = CitationMemberList.make({
+          id: CitationMemberListId.make(`cl1:${Str.repeat(64)("c")}`),
+          members: A.map(A.drop(ids, 1), member),
+        });
+        const firstEntry = CitationResourceGroup.make({
+          id: CitationResourceGroupId.make(`cg1:${Str.repeat(64)("b")}`),
+          authorityId,
+          memberListId: firstList.id,
+        });
+        const secondEntry = CitationResourceGroup.make({
+          id: CitationResourceGroupId.make(`cg1:${Str.repeat(64)("c")}`),
+          authorityId,
+          memberListId: secondList.id,
+        });
+        const document = CitationDocument.make({
+          ...data.document,
+          authorities: [CitationAuthority.make({ id: authorityId, representative: O.none() })],
+          groups: [firstEntry, secondEntry],
+          memberLists: [firstList, secondList],
+          resolutions: A.map(ids, (mentionId) =>
+            CitationResolved.make({ mentionId, authorityId, confidence: O.none() })
+          ),
+        });
+        const binding = CitationResourceBinding.make({
+          identity,
+          decisions: ids,
+          groups: [
+            { position: 0, id: firstEntry.id, list: firstList },
+            { position: 1, id: secondEntry.id, list: secondList },
+          ],
+        });
+        const receipt = yield* projectCitationDocumentReceipt({ document, editions: [], resourceBindings: [binding] });
+        const restored = yield* restoreCitationDocument({
+          ...data.restore,
+          receipt,
+          editions: [],
+          resourceBindings: [binding],
+        });
+        expect(restored.groups).toEqual([firstEntry, secondEntry]);
+        expect(restored.memberLists).toEqual([firstList, secondList]);
+        const changes = [
+          CitationResourceBinding.make({ ...binding, groups: A.take(binding.groups, 1) }),
+          CitationResourceBinding.make({
+            ...binding,
+            groups: A.map(binding.groups, (group) => ({ ...group, position: 1 - group.position })),
+          }),
+          CitationResourceBinding.make({
+            ...binding,
+            groups: A.map(binding.groups, (group) => ({ ...group, id: firstEntry.id })),
+          }),
+        ];
+        for (const wrong of changes)
+          expect(
+            (yield* Effect.flip(
+              restoreCitationDocument({ ...data.restore, receipt, editions: [], resourceBindings: [wrong] })
+            )).reason
+          ).toBe("stale-authority");
+        const reversed = CitationDocumentReceipt.make({ ...receipt, groups: A.reverse(receipt.groups) });
+        expect(
+          (yield* Effect.flip(
+            restoreCitationDocument({ ...data.restore, receipt: reversed, editions: [], resourceBindings: [binding] })
+          )).reason
+        ).toBe("stale-authority");
+      })
+  );
+
+  it.effect(
     "binds exact list order, multiplicity, identity and empty-versus-absent presence separately from decisions",
     () =>
       Effect.gen(function* () {
@@ -346,7 +436,7 @@ it.layer(BunCrypto.layer)("whole citation document persistence", (it) => {
             CitationResolved.make({ mentionId, authorityId, confidence: O.none() })
           ),
         });
-        const binding = CitationResourceBinding.make({ identity, decisions: ids, group: O.some(ordered) });
+        const binding = CitationResourceBinding.make({ identity, decisions: ids, groups: [expectedGroup(ordered)] });
         const receipt = yield* projectCitationDocumentReceipt({ document, editions: [], resourceBindings: [binding] });
         expect(
           (yield* restoreCitationDocument({ ...data.restore, receipt, editions: [], resourceBindings: [binding] }))
@@ -354,7 +444,7 @@ it.layer(BunCrypto.layer)("whole citation document persistence", (it) => {
         ).toEqual([ordered]);
         const wrongOrder = CitationResourceBinding.make({
           ...binding,
-          group: O.some(CitationMemberList.make({ ...ordered, members: A.reverse(ordered.members) })),
+          groups: [expectedGroup(CitationMemberList.make({ ...ordered, members: A.reverse(ordered.members) }))],
         });
         expect(
           (yield* Effect.flip(
@@ -363,9 +453,11 @@ it.layer(BunCrypto.layer)("whole citation document persistence", (it) => {
         ).toBe("stale-authority");
         const wrongId = CitationResourceBinding.make({
           ...binding,
-          group: O.some(
-            CitationMemberList.make({ ...ordered, id: CitationMemberListId.make(`cl1:${Str.repeat(64)("e")}`) })
-          ),
+          groups: [
+            expectedGroup(
+              CitationMemberList.make({ ...ordered, id: CitationMemberListId.make(`cl1:${Str.repeat(64)("e")}`) })
+            ),
+          ],
         });
         expect(
           (yield* Effect.flip(
@@ -374,13 +466,13 @@ it.layer(BunCrypto.layer)("whole citation document persistence", (it) => {
         ).toBe("stale-authority");
         const emptyList = CitationMemberList.make({ ...list, members: [] });
         const empty = CitationDocument.make({ ...document, memberLists: [emptyList] });
-        const emptyBinding = CitationResourceBinding.make({ ...binding, group: O.some(emptyList) });
+        const emptyBinding = CitationResourceBinding.make({ ...binding, groups: [expectedGroup(emptyList)] });
         const emptyReceipt = yield* projectCitationDocumentReceipt({
           document: empty,
           editions: [],
           resourceBindings: [emptyBinding],
         });
-        const absentBinding = CitationResourceBinding.make({ ...binding, group: O.none() });
+        const absentBinding = CitationResourceBinding.make({ ...binding, groups: [] });
         expect(
           (yield* Effect.flip(
             restoreCitationDocument({

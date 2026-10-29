@@ -227,3 +227,10 @@ scenes. Registered callbacks now construct source-equivalent resource sets;
 short-form resolution avoids a redundant uniqueness pass. Native-value handling,
 reentrant comparison, unconditional Layer integration and final projection
 remain open.
+
+The [insertion-entry receipt correction](
+./history/evidence/2026-10-29-insertion-entry-receipts.md) introduces explicit
+cg1 entry IDs and receipt v3. Multiple entries may reference the same authority
+without collapsing their lists. All three actual mutable-key callback scenes
+now roundtrip their final group/list graphs through trusted bindings and source
+restoration. Automatic final session identity/binding production remains open.

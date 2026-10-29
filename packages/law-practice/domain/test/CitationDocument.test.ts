@@ -16,8 +16,11 @@ import {
   CitationOverlapWarning,
   CitationResolved,
   CitationResourceGroup,
+  CitationResourceGroupId,
   CitationUnresolved,
+  citationAuthorityMembers,
   citationAuthorityMentionIds,
+  citationGroupMembers,
 } from "@beep/law-practice-domain/values";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import {
@@ -48,8 +51,16 @@ const listA = CitationMemberListId.make(`cl1:${Str.repeat(64)("a")}`);
 const listB = CitationMemberListId.make(`cl1:${Str.repeat(64)("b")}`);
 const member = (mentionId: CitationMentionId) => CitationGroupMember.cases.Mention.make({ mentionId });
 const groups = [
-  CitationResourceGroup.make({ authorityId: a, memberListId: listA }),
-  CitationResourceGroup.make({ authorityId: b, memberListId: listB }),
+  CitationResourceGroup.make({
+    id: CitationResourceGroupId.make(`cg1:${Str.slice(4)(a)}`),
+    authorityId: a,
+    memberListId: listA,
+  }),
+  CitationResourceGroup.make({
+    id: CitationResourceGroupId.make(`cg1:${Str.slice(4)(b)}`),
+    authorityId: b,
+    memberListId: listB,
+  }),
 ];
 const text = "1 U.S. 1; 2 U.S. 2; Id.; § 2";
 const full = (volume: string) => ({
@@ -146,7 +157,7 @@ const fixture = Effect.gen(function* () {
   });
   const receipt = CitationDocumentReceipt.make({
     ...document,
-    schemaVersion: "citation-document-receipt/v2",
+    schemaVersion: "citation-document-receipt/v3",
     mentions: A.map(mentions, (mention) =>
       CitationMentionReceipt.make({
         ...mention,
@@ -164,6 +175,31 @@ const isReceipt = S.is(CitationDocumentReceipt);
 const ReceiptJson = S.fromJsonString(CitationDocumentReceipt);
 
 it.layer(TestCrypto)("citation document relationships", (it) => {
+  it.effect(
+    "retains separate insertion entries for one authority and projects shared lists without dropping entries",
+    () =>
+      Effect.gen(function* () {
+        const { document, receipt, first, second } = yield* fixture;
+        const id = CitationResourceGroupId.make(`cg1:${Str.repeat(64)("c")}`);
+        const entry = CitationResourceGroup.make({ id, authorityId: a, memberListId: listB });
+        const multiple = CitationDocument.make({
+          ...document,
+          groups: [A.getUnsafe(groups, 0), entry, A.getUnsafe(groups, 1)],
+        });
+        expect(citationAuthorityMentionIds(multiple, a)).toEqual([first.id, second.id]);
+        expect(citationAuthorityMembers(a)(multiple)).toEqual([member(first.id), member(second.id)]);
+        expect(citationGroupMembers(multiple, id)).toEqual([member(second.id)]);
+        expect(citationGroupMembers(id)(multiple)).toEqual([member(second.id)]);
+        expect(citationGroupMembers(multiple, CitationResourceGroupId.make(`cg1:${Str.repeat(64)("f")}`))).toEqual([]);
+        expect(isDocument({ ...multiple, groups: [...multiple.groups, entry] })).toBe(false);
+        const encoded = yield* S.encodeEffect(ReceiptJson)(
+          CitationDocumentReceipt.make({ ...receipt, groups: multiple.groups })
+        );
+        const decoded = yield* S.decodeEffect(ReceiptJson)(encoded);
+        expect(decoded.groups).toEqual(multiple.groups);
+        expect(isReceipt({ ...decoded, schemaVersion: "citation-document-receipt/v2" })).toBe(false);
+      })
+  );
   it.effect("round-trips structural relationships without converting receipts into runtime proof", () =>
     Effect.gen(function* () {
       const { document, receipt, first } = yield* fixture;
@@ -363,7 +399,14 @@ it.layer(TestCrypto)("citation document relationships", (it) => {
       const reference = CitationGroupMember.cases.Detached.make({ detachedId });
       const members = [reference, member(first.id), member(first.id)];
       const shared = {
-        groups: [...groups, CitationResourceGroup.make({ authorityId: missingAuthority, memberListId: listB })],
+        groups: [
+          ...groups,
+          CitationResourceGroup.make({
+            id: CitationResourceGroupId.make(`cg1:${Str.slice(4)(missingAuthority)}`),
+            authorityId: missingAuthority,
+            memberListId: listB,
+          }),
+        ],
         memberLists: [
           CitationMemberList.make({ id: listA, members }),
           CitationMemberList.make({ id: listB, members: [] }),
@@ -375,7 +418,11 @@ it.layer(TestCrypto)("citation document relationships", (it) => {
         ],
       };
       // Two resources can share the same sequence even though their decisions differ.
-      shared.groups[1] = CitationResourceGroup.make({ authorityId: b, memberListId: listA });
+      shared.groups[1] = CitationResourceGroup.make({
+        id: CitationResourceGroupId.make(`cg1:${Str.slice(4)(b)}`),
+        authorityId: b,
+        memberListId: listA,
+      });
       const graph = CitationDocument.make({ ...document, ...shared });
       const restored = yield* S.decodeEffect(ReceiptJson)(
         yield* S.encodeEffect(ReceiptJson)(CitationDocumentReceipt.make({ ...receipt, ...shared }))

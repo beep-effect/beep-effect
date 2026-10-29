@@ -21,7 +21,7 @@ import {
 } from "./Citation.membership.ts";
 import { CitationMention, CitationMentionReceipt } from "./Citation.mention.ts";
 import { CitationResolution } from "./Citation.resolution.ts";
-import type { CitationMentionId } from "./Citation.identity.ts";
+import type { CitationMentionId, CitationResourceGroupId } from "./Citation.identity.ts";
 
 const $I = $LawPracticeDomainId.create("values/Citation/Citation.document");
 const sourceEquivalent = S.toEquivalence(SourceTextIdentity);
@@ -57,7 +57,7 @@ const Relationships = {
 };
 const RuntimeShape = S.Struct({ ...Relationships, mentions: S.Array(CitationMention) });
 const ReceiptShape = S.Struct({
-  schemaVersion: S.tag("citation-document-receipt/v2"),
+  schemaVersion: S.tag("citation-document-receipt/v3"),
   ...Relationships,
   mentions: S.Array(CitationMentionReceipt),
 });
@@ -74,7 +74,7 @@ const coherent = (document: typeof RuntimeShape.Type | typeof ReceiptShape.Type)
   const byDetached = HashMap.fromIterable(
     A.map(document.detachedCitations, (citation) => Tuple.make(citation.id, citation))
   );
-  const byGroup = HashMap.fromIterable(A.map(document.groups, (group) => Tuple.make(group.authorityId, group)));
+  const byGroup = HashMap.fromIterable(A.map(document.groups, (group) => Tuple.make(group.id, group)));
   const referenceExists = (reference: CitationGroupMember) =>
     CitationGroupMember.match(reference, {
       Mention: (value) => HashMap.has(byMention, value.mentionId),
@@ -183,7 +183,8 @@ export class CitationDocumentReceipt extends S.Opaque<CitationDocumentReceipt, {
 ) {}
 
 /**
- * Read the exact listed member sequence, preserving order and repetitions.
+ * Read all listed entry member sequences for an authority, concatenated in
+ * dictionary entry order with repetitions and shared-list aliases preserved.
  * Catalog presence alone does not create a group; an absent group has no
  * members. Detached references remain explicit rather than being dropped.
  * **Example** (Inspect the projection)
@@ -207,18 +208,17 @@ export const citationAuthorityMembers: {
   (
     document: CitationDocument | CitationDocumentReceipt,
     authorityId: CitationAuthorityId
-  ): ReadonlyArray<CitationGroupMember> =>
-    O.getOrElse(
-      O.flatMap(
-        A.findFirst(document.groups, (group) => group.authorityId === authorityId),
-        (group) =>
-          O.map(
-            A.findFirst(document.memberLists, (list) => list.id === group.memberListId),
-            (list) => list.members
-          )
-      ),
-      A.empty<CitationGroupMember>
-    )
+  ): ReadonlyArray<CitationGroupMember> => {
+    const lists = HashMap.fromIterable(A.map(document.memberLists, (list) => Tuple.make(list.id, list)));
+    return A.flatMap(
+      A.filter(document.groups, (group) => group.authorityId === authorityId),
+      (group: CitationResourceGroup) =>
+        O.getOrElse(
+          O.map(HashMap.get(lists, group.memberListId), (list) => list.members),
+          A.empty<CitationGroupMember>
+        )
+    );
+  }
 );
 /**
  * Project only verified mention IDs from a listed sequence. This explicitly
@@ -249,5 +249,43 @@ export const citationAuthorityMentionIds: {
     A.map(
       A.filter(citationAuthorityMembers(document, authorityId), CitationGroupMember.guards.Mention),
       (member) => member.mentionId
+    )
+);
+
+/**
+ * Read one insertion entry's exact member sequence without merging other
+ * entries for the same authority. The document retains empty entry presence.
+ * **Example** (Inspect the entry projection)
+ * ```ts
+ * import { citationGroupMembers } from "@beep/law-practice-domain/values"
+ * console.log(citationGroupMembers !== undefined) // true
+ * ```
+ * @category getters
+ * @since 0.0.0
+ */
+export const citationGroupMembers: {
+  (
+    groupId: CitationResourceGroupId
+  ): (document: CitationDocument | CitationDocumentReceipt) => ReadonlyArray<CitationGroupMember>;
+  (
+    document: CitationDocument | CitationDocumentReceipt,
+    groupId: CitationResourceGroupId
+  ): ReadonlyArray<CitationGroupMember>;
+} = dual(
+  2,
+  (
+    document: CitationDocument | CitationDocumentReceipt,
+    groupId: CitationResourceGroupId
+  ): ReadonlyArray<CitationGroupMember> =>
+    O.getOrElse(
+      O.flatMap(
+        A.findFirst(document.groups, (group) => group.id === groupId),
+        (group) =>
+          O.map(
+            A.findFirst(document.memberLists, (list) => list.id === group.memberListId),
+            (list) => list.members
+          )
+      ),
+      A.empty<CitationGroupMember>
     )
 );

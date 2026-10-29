@@ -12,6 +12,7 @@ import {
   CitationMemberListId,
   CitationMention,
   CitationResourceGroup,
+  CitationResourceGroupId,
   CitationUnresolved,
   citationAuthorityMembers,
 } from "@beep/law-practice-domain/values";
@@ -468,9 +469,17 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback mutatio
               });
               return {
                 authority: CitationAuthority.make({ id, representative: O.none() }),
-                group: CitationResourceGroup.make({ authorityId: id, memberListId: list.id }),
+                group: CitationResourceGroup.make({
+                  id: CitationResourceGroupId.make(`cg1:${Str.slice(4)(id)}`),
+                  authorityId: id,
+                  memberListId: list.id,
+                }),
                 list,
-                binding: CitationResourceBinding.make({ identity, decisions: [], group: O.some(list) }),
+                binding: CitationResourceBinding.make({
+                  identity,
+                  decisions: [],
+                  groups: [{ position: index, id: CitationResourceGroupId.make(`cg1:${Str.slice(4)(id)}`), list }],
+                }),
               };
             })
           );

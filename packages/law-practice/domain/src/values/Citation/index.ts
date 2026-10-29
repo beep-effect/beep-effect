@@ -24,6 +24,7 @@ export {
   CitationDetachedId,
   CitationMemberListId,
   CitationMentionId,
+  CitationResourceGroupId,
 } from "./Citation.identity.ts";
 /**
  * Canonical journal semantics.

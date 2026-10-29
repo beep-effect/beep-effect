@@ -1032,6 +1032,18 @@ instead of silently splitting delivery or weakening scope.
   mutable-key engine cases remain open; no normalization waiver or exhaustive
   row promotion follows from isolated backend tests.
 
+- **2026-10-29 insertion-entry receipts:** receipt v3 separates cg1 insertion
+  identity from ca1 authority identity and cl1 member-list alias identity.
+  Distinct entries may reference the same authority without collapsing their
+  order or lists. Trusted resource bindings fix every expected entry's global
+  position, identity and complete list node. Unbound defaults still require
+  their deterministic single-entry graph. Per-entry getters preserve boundaries;
+  authority getters concatenate every matching entry with repetitions. All
+  three actual mutable-key callback scenes now preserve their final graphs
+  through codec and verified-source restoration under controlled out-of-band
+  expectations. Automatic session identity/decision/binding production remains
+  open; no parity or representation-law completion follows from this contract.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from

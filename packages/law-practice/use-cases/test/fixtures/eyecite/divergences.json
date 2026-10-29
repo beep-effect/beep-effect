@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "e7148c9f305934d8dbbbdc12cfeba1b9846493f9fa2089414faef62408218b46",
+  "planSha256": "e1a6527f3ea419808280f9e4e62ab96cfe2121300ad1a6fd71fb5dec3dad2ee1",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -149,7 +149,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationCallbackRuntimeIndex.test.ts",
-          "sha256": "60b4fbcdfd24b0d3d07c0df88a16200e5bec83d5b5a967eb86d74f59e26d1993"
+          "sha256": "8618dd51cb3b5a66b9161f1e08262e10915edaf48e22bedf97f506ea92203a00"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-10-29-host-resource-protocol.md",
@@ -158,6 +158,18 @@
         {
           "path": "packages/law-practice/server/test/CitationHostResources.test.ts",
           "sha256": "b345539c78d467bc9778a3adf5c2164fc337f2dd893a710cb91c281cd99c8b85"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-10-29-insertion-entry-receipts.md",
+          "sha256": "8492a0fdb634d81c1e86e1b5f59a90ae645401b431dfb9ec20aced66b52e1771"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationDocumentPersistence.test.ts",
+          "sha256": "e0d51dabccbda7a9fa1b669bfe65dfb30faf22def9ba44952e8df5dcd8bdd169"
+        },
+        {
+          "path": "packages/law-practice/domain/test/CitationDocument.test.ts",
+          "sha256": "12b4fa946246ac473426569e06dd3ae217bffd35b9e5dce4c16ac0515c40ee87"
         }
       ],
       "workflowState": "audit",
@@ -245,7 +257,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationCallbackRuntimeIndex.test.ts",
-          "sha256": "60b4fbcdfd24b0d3d07c0df88a16200e5bec83d5b5a967eb86d74f59e26d1993"
+          "sha256": "8618dd51cb3b5a66b9161f1e08262e10915edaf48e22bedf97f506ea92203a00"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-10-29-host-resource-protocol.md",
@@ -262,6 +274,18 @@
         {
           "path": "packages/law-practice/server/test/CitationRuntimeSet.test.ts",
           "sha256": "08b592abcb312c7092425adcaf9c1fc8d87aa15bf9ede7221d7edbd015dffbb3"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-10-29-insertion-entry-receipts.md",
+          "sha256": "8492a0fdb634d81c1e86e1b5f59a90ae645401b431dfb9ec20aced66b52e1771"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationDocumentPersistence.test.ts",
+          "sha256": "e0d51dabccbda7a9fa1b669bfe65dfb30faf22def9ba44952e8df5dcd8bdd169"
+        },
+        {
+          "path": "packages/law-practice/domain/test/CitationDocument.test.ts",
+          "sha256": "12b4fa946246ac473426569e06dd3ae217bffd35b9e5dce4c16ac0515c40ee87"
         }
       ],
       "workflowState": "audit",

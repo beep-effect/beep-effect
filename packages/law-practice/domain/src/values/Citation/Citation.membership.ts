@@ -10,6 +10,7 @@ import {
   CitationDetachedId,
   CitationMemberListId,
   CitationMentionId,
+  CitationResourceGroupId,
 } from "./Citation.identity.ts";
 import { Citation } from "./Citation.models.ts";
 
@@ -91,9 +92,10 @@ export class CitationMemberList extends S.Opaque<CitationMemberList, { readonly 
  * @since 0.0.0
  */
 export class CitationResourceGroup extends S.Opaque<CitationResourceGroup, { readonly brand: unique symbol }>()(
-  S.Struct({ authorityId: CitationAuthorityId, memberListId: CitationMemberListId }).pipe(
+  S.Struct({ id: CitationResourceGroupId, authorityId: CitationAuthorityId, memberListId: CitationMemberListId }).pipe(
     $I.annoteSchema("CitationResourceGroup", {
-      description: "Ordered listed group referencing one authority and one shared member-list node.",
+      description:
+        "Ordered insertion entry with its own identity, referencing one authority and one shared member-list node.",
     })
   )
 ) {}

@@ -137,6 +137,13 @@ default short/supra/reference callbacks. The add-only TypeScript adaptation
 preserves source hash-before-pointer checks and cached-hash growth order.
 Native-value normalization and reentrant mutation remain open.
 
+The [insertion-entry receipt evidence](
+../history/evidence/2026-10-29-insertion-entry-receipts.md) uses the unchanged
+model-mutation fixture and all three actual registered callback executions.
+Receipt v3 preserves multiple entries for one authority with independent cg1
+identities; trusted binding expectations verify exact entry positions and list
+nodes through source restoration. Automatic session projection remains open.
+
 ## Incorporated-source discipline
 
 - A local clone is research state, not an incorporated dependency.

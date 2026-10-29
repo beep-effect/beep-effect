@@ -1,5 +1,20 @@
 import { fileURLToPath } from "node:url";
-import { Citation, CitationGroupMember, CitationMention, CitationMentionId } from "@beep/law-practice-domain/values";
+import {
+  Citation,
+  CitationAuthority,
+  CitationDocument,
+  CitationDocumentReceipt,
+  CitationGroupMember,
+  CitationMemberList,
+  CitationMemberListId,
+  CitationMention,
+  CitationMentionId,
+  CitationResolved,
+  CitationResourceGroup,
+  CitationResourceGroupId,
+  citationAuthorityMembers,
+  citationGroupMembers,
+} from "@beep/law-practice-domain/values";
 import {
   CitationCallbackRuntimeIndexFactory,
   makeCitationCallbackRuntimeIndexFactory,
@@ -16,10 +31,19 @@ import {
 } from "@beep/law-practice-server/_test/Citation/CallbackSession";
 import { makeDefaultCitationResolutionCallbacks } from "@beep/law-practice-server/_test/Citation/DefaultCallbacks";
 import {
+  projectCitationDocumentReceipt,
+  restoreCitationDocument,
+} from "@beep/law-practice-server/_test/Citation/Document";
+import {
   CitationFrozenEditions,
   makeCitationFrozenEditions,
 } from "@beep/law-practice-server/_test/Citation/FrozenEditions";
 import { prepareCitationResolution } from "@beep/law-practice-server/_test/Citation/ResolutionInput";
+import {
+  CitationResourceBinding,
+  CitationResourceIdentity,
+  makeCitationResourceAuthorityId,
+} from "@beep/law-practice-server/_test/Citation/ResourceIdentity";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -253,6 +277,79 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered callback
           yield* Effect.forEach(result.mentions, (mention) => semanticView(ref(mention), mention.citation)),
           row.name
         ).toEqual(row.objects);
+        // Controlled out-of-band expectations bind the final runtime graph;
+        // no native key hash/equality is evaluated while persisting it.
+        const identity = CitationResourceIdentity.cases.External.make({
+          scope: prepared.engineArtifact,
+          key: yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(`${row.name}:resource:0`)),
+        });
+        const authorityId = yield* makeCitationResourceAuthorityId(identity);
+        const nodes = yield* Effect.forEach(result.groups, (group, index) =>
+          Effect.gen(function* () {
+            expect(group.resource._tag === "Registered" && group.resource.slot === 0).toBe(true);
+            const groupDigest = yield* S.decodeEffect(Sha256HexFromBytes)(
+              new TextEncoder().encode(`${row.name}:entry:${index}`)
+            );
+            const listDigest = yield* S.decodeEffect(Sha256HexFromBytes)(
+              new TextEncoder().encode(`${row.name}:list:${group.listSlot}`)
+            );
+            const list = CitationMemberList.make({
+              id: CitationMemberListId.make(`cl1:${listDigest}`),
+              members: group.members,
+            });
+            const entry = CitationResourceGroup.make({
+              id: CitationResourceGroupId.make(`cg1:${groupDigest}`),
+              authorityId,
+              memberListId: list.id,
+            });
+            return { entry, list, expected: { position: index, id: entry.id, list } };
+          })
+        );
+        const decisions = A.map(result.mentions, (mention) => mention.id);
+        const binding = CitationResourceBinding.make({
+          identity,
+          decisions,
+          groups: A.map(nodes, (node) => node.expected),
+        });
+        const document = CitationDocument.make({
+          source: prepared.source,
+          engineArtifact: prepared.engineArtifact,
+          mentions: result.mentions,
+          authorities: [CitationAuthority.make({ id: authorityId, representative: O.none() })],
+          resolutions: A.map(decisions, (mentionId) =>
+            CitationResolved.make({ mentionId, authorityId, confidence: O.none() })
+          ),
+          groups: A.map(nodes, (node) => node.entry),
+          memberLists: A.dedupeWith(
+            A.map(nodes, (node) => node.list),
+            (left, right) => left.id === right.id
+          ),
+          detachedCitations: result.detachedCitations,
+        });
+        const receipt = yield* projectCitationDocumentReceipt({ document, editions: [], resourceBindings: [binding] });
+        const codec = S.fromJsonString(CitationDocumentReceipt);
+        const persisted = yield* S.decodeEffect(codec)(yield* S.encodeEffect(codec)(receipt));
+        const restored = yield* restoreCitationDocument({
+          receipt: persisted,
+          editions: [],
+          resourceBindings: [binding],
+          expectedSource: prepared.source,
+          expectedEngineArtifact: prepared.engineArtifact,
+          sourceText: A.join("")(A.map(prepared.mentions, (_, index) => `witness-${index}; `)),
+        });
+        expect(restored.groups, row.name).toEqual(document.groups);
+        expect(restored.memberLists, row.name).toEqual(document.memberLists);
+        expect(
+          A.map(restored.groups, (entry) => A.map(citationGroupMembers(restored, entry.id), referenceView)),
+          row.name
+        ).toEqual(A.map(result.groups, (group) => A.map(group.members, referenceView)));
+        expect(citationAuthorityMembers(restored, authorityId)).toEqual(
+          A.flatMap(result.groups, (group) => group.members)
+        );
+        if (A.length(restored.groups) === 2) {
+          expect(A.getUnsafe(restored.groups, 0).authorityId).toBe(A.getUnsafe(restored.groups, 1).authorityId);
+          expect(A.getUnsafe(restored.groups, 0).id).not.toBe(A.getUnsafe(restored.groups, 1).id);
+        }
         for (const [index, mention] of A.map(result.mentions, (mention, index) => [index, mention] as const)) {
           expect(mention.id).toBe(A.getUnsafe(prepared.mentions, index).id);
           expect(mention.anchor).toBe(A.getUnsafe(prepared.mentions, index).anchor);

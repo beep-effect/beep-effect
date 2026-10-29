@@ -17,6 +17,7 @@ import {
   CitationMemberListId,
   CitationResolved,
   CitationResourceGroup,
+  CitationResourceGroupId,
   CitationUnresolved,
   FullCitation,
 } from "@beep/law-practice-domain/values";
@@ -266,6 +267,7 @@ export const resolveCitationMentions = Effect.fn("Citation.resolveMentions")(fun
     detachedCitations: [],
     groups: A.map(A.fromIterable(authorities), (authority) =>
       CitationResourceGroup.make({
+        id: CitationResourceGroupId.make(`cg1:${Str.slice(4)(authority.id)}`),
         authorityId: authority.id,
         memberListId: CitationMemberListId.make(`cl1:${Str.slice(4)(authority.id)}`),
       })

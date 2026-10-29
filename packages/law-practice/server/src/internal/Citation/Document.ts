@@ -11,6 +11,7 @@ import {
   CitationGroupMember,
   CitationMemberList,
   CitationMemberListId,
+  CitationResourceGroupId,
   FullCitation,
 } from "@beep/law-practice-domain/values";
 import { CitationEngineAbsoluteMaxima } from "@beep/law-practice-use-cases/server";
@@ -26,6 +27,7 @@ import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
@@ -33,6 +35,7 @@ import { CitationAuthorityEdition, makeCitationAuthorityId } from "./AuthorityId
 import { restoreCitationMentionAgainstVerifiedSource } from "./Mention.ts";
 import { makeCitationMentionId } from "./MentionIdentity.ts";
 import { CitationResourceBinding, makeCitationResourceAuthorityId } from "./ResourceIdentity.ts";
+import type { CitationAuthorityId, CitationResourceGroup } from "@beep/law-practice-domain/values";
 import type * as Crypto from "effect/Crypto";
 
 const $I = $LawPracticeServerId.create("internal/Citation/Document");
@@ -88,8 +91,10 @@ const ResourceBindings = S.Array(CitationResourceBinding)
           (total, binding) =>
             total +
             A.length(binding.decisions) +
-            O.match(binding.group, { onNone: () => 0, onSome: (group) => A.length(group.members) })
-        ) <= CitationEngineAbsoluteMaxima.resolutionEdges,
+            A.reduce(binding.groups, 0, (count, group) => count + A.length(group.list.members))
+        ) <= CitationEngineAbsoluteMaxima.resolutionEdges &&
+        A.reduce(bindings, 0, (count, binding) => count + A.length(binding.groups)) <=
+          CitationEngineAbsoluteMaxima.authorities,
       $I.annote("TotalResourceBindingMembers", {
         title: "Total Resource Binding Members",
         description: "Adapter-bound decisions and group references share the hard resolution edge ceiling.",
@@ -109,6 +114,7 @@ const Snapshot = S.Struct({
         A.length(receipt.mentions) + A.length(receipt.detachedCitations) <= CitationEngineAbsoluteMaxima.mentions &&
         A.length(receipt.authorities) <= CitationEngineAbsoluteMaxima.authorities &&
         A.length(receipt.memberLists) <= CitationEngineAbsoluteMaxima.authorities &&
+        A.length(receipt.groups) <= CitationEngineAbsoluteMaxima.authorities &&
         A.reduce(receipt.memberLists, 0, (total, list) => total + A.length(list.members)) <=
           CitationEngineAbsoluteMaxima.resolutionEdges,
       $I.annote("DocumentGraphCeilings", {
@@ -157,9 +163,9 @@ const verifyAuthorities = Effect.fn("Citation.verifyDocumentAuthorities")(functi
   const resolutions = HashMap.fromIterable(
     A.map(snapshot.receipt.resolutions, (resolution) => Tuple.make(resolution.mentionId, resolution))
   );
-  const groupByAuthority = HashMap.fromIterable(
-    A.map(snapshot.receipt.groups, (group) => Tuple.make(group.authorityId, group))
-  );
+  const groupsByAuthority = A.groupBy(snapshot.receipt.groups, (group) => group.authorityId);
+  const groupsFor = (id: CitationAuthorityId) =>
+    O.getOrElse(R.get(groupsByAuthority, id), A.empty<CitationResourceGroup>);
   const listById = HashMap.fromIterable(A.map(snapshot.receipt.memberLists, (list) => Tuple.make(list.id, list)));
   const listEquivalent = S.toEquivalence(CitationMemberList);
   const memberEquivalent = S.toEquivalence(S.Array(CitationGroupMember));
@@ -181,12 +187,22 @@ const verifyAuthorities = Effect.fn("Citation.verifyDocumentAuthorities")(functi
       if (O.isNone(resolution) || resolution.value.status !== "Resolved" || resolution.value.authorityId !== id)
         return yield* CitationDocumentFailure.make({ reason: "stale-authority" });
     }
-    const group = HashMap.get(groupByAuthority, id);
-    if (O.isNone(binding.group)) {
-      if (O.isSome(group)) return yield* CitationDocumentFailure.make({ reason: "stale-authority" });
-    } else {
+    const actual = groupsFor(id);
+    if (
+      A.length(actual) !== A.length(binding.groups) ||
+      HashSet.size(HashSet.fromIterable(A.map(binding.groups, (group) => group.id))) !== A.length(binding.groups)
+    )
+      return yield* CitationDocumentFailure.make({ reason: "stale-authority" });
+    for (const expected of binding.groups) {
+      const group = A.get(snapshot.receipt.groups, expected.position);
       const list = O.flatMap(group, (value) => HashMap.get(listById, value.memberListId));
-      if (O.isNone(list) || !listEquivalent(list.value, binding.group.value))
+      if (
+        O.isNone(group) ||
+        group.value.id !== expected.id ||
+        group.value.authorityId !== id ||
+        O.isNone(list) ||
+        !listEquivalent(list.value, expected.list)
+      )
         return yield* CitationDocumentFailure.make({ reason: "stale-authority" });
     }
     custom = HashMap.set(custom, id, members);
@@ -231,13 +247,17 @@ const verifyAuthorities = Effect.fn("Citation.verifyDocumentAuthorities")(functi
       ),
       (mention) => CitationGroupMember.cases.Mention.make({ mentionId: mention.id })
     );
-    const group = HashMap.get(groupByAuthority, authority.id);
+    const actual = groupsFor(authority.id);
+    const group = A.head(actual);
     const list = O.flatMap(group, (value) => HashMap.get(listById, value.memberListId));
     const expectedListId = CitationMemberListId.make(`cl1:${Str.slice(4)(authority.id)}`);
+    const expectedGroupId = CitationResourceGroupId.make(`cg1:${Str.slice(4)(authority.id)}`);
     if (
-      A.isArrayEmpty(expected)
+      A.length(actual) > 1 ||
+      (O.isSome(group) && group.value.id !== expectedGroupId) ||
+      (A.isArrayEmpty(expected)
         ? O.isSome(group)
-        : O.isNone(list) || list.value.id !== expectedListId || !memberEquivalent(list.value.members, expected)
+        : O.isNone(list) || list.value.id !== expectedListId || !memberEquivalent(list.value.members, expected))
     )
       return yield* CitationDocumentFailure.make({ reason: "stale-authority" });
   }
@@ -270,7 +290,7 @@ export const projectCitationDocumentReceipt = Effect.fn("Citation.projectDocumen
     resourceBindings: decoded.resourceBindings,
     receipt: {
       ...decoded.document,
-      schemaVersion: "citation-document-receipt/v2",
+      schemaVersion: "citation-document-receipt/v3",
       mentions: A.map(decoded.document.mentions, (mention) => ({
         ...mention,
         schemaVersion: "citation-mention-receipt/v1",

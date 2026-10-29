@@ -135,3 +135,28 @@ export const CitationMemberListId = S.TemplateLiteral(["cl1:", Sha256Hex]).pipe(
  * @since 0.0.0
  */
 export type CitationMemberListId = typeof CitationMemberListId.Type;
+
+/**
+ * Identity of one dictionary insertion entry, separate from its authority and
+ * shared member list. Repeated resource objects may occupy distinct entries.
+ * **Example** (Inspect the entry token)
+ * ```ts
+ * import { CitationResourceGroupId } from "@beep/law-practice-domain/values"
+ * console.log(CitationResourceGroupId !== undefined) // true
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export const CitationResourceGroupId = S.TemplateLiteral(["cg1:", Sha256Hex]).pipe(
+  S.brand("CitationResourceGroupId"),
+  $I.annoteSchema("CitationResourceGroupId", {
+    description:
+      "Document-local insertion-entry token; distinct from authority equality and member-list alias identity.",
+  })
+);
+/**
+ * Schema-derived insertion-entry identity.
+ * @category models
+ * @since 0.0.0
+ */
+export type CitationResourceGroupId = typeof CitationResourceGroupId.Type;
