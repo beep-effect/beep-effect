@@ -324,3 +324,12 @@ suite passes 256 tests in 29.20 seconds, package lint/check pass in 6.9/16.1
 seconds, and the exact-source Fallow audit has zero findings. No suppression or
 baseline waiver was added. The current source checkpoint retains the earlier
 functional proof separately; production and overall acceptance remain open.
+
+### Final main integration for this capture repair
+
+Three reviewed main changes were merged without owned-source overlap. The
+selected suite now passes 271 tests across eleven files, including the inherited
+ecosystem-polarity tests. Current package lint/check pass in 5.8/15.7 seconds;
+Fallow audit, Fallow health and repository oxlint pass with zero findings. The
+catalog remains current and all 427 census source bindings verify. Earlier
+256-test and full-audit snapshots remain separate historical evidence.

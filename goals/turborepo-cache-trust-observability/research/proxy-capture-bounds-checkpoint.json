@@ -39,13 +39,13 @@
   ],
   "integratedVerification": {
     "status": "passed",
-    "files": 10,
-    "testsPassed": 256,
-    "seconds": 29.2,
+    "files": 11,
+    "testsPassed": 271,
+    "seconds": 33.19,
     "packageQuick": {
       "status": "passed",
-      "lintSeconds": 6.9,
-      "checkSeconds": 16.1
+      "lintSeconds": 5.8,
+      "checkSeconds": 15.7
     },
     "schemaCatalog": {
       "status": "current",
@@ -53,6 +53,14 @@
       "shards": 173
     },
     "rootOxlint": "passed",
+    "fallowAudit": {
+      "status": "passed",
+      "findings": 0
+    },
+    "fallowHealth": {
+      "status": "passed",
+      "findings": 0
+    },
     "censusSourceBindingsVerified": 427
   },
   "productionChanges": false,
@@ -114,5 +122,42 @@
       "scope": "Final current source"
     },
     "noSuppressionOrBaselineChange": true
+  },
+  "preMainIntegratedVerification": {
+    "status": "passed",
+    "files": 10,
+    "testsPassed": 256,
+    "seconds": 29.2,
+    "packageQuick": {
+      "status": "passed",
+      "lintSeconds": 6.9,
+      "checkSeconds": 16.1
+    },
+    "schemaCatalog": {
+      "status": "current",
+      "entries": 9333,
+      "shards": 173
+    },
+    "rootOxlint": "passed",
+    "censusSourceBindingsVerified": 427
+  },
+  "postMainIntegration": {
+    "headAtVerification": "bde1beb3c8",
+    "reviewedMain": "b87a1418e8",
+    "selectedFiles": 11,
+    "selectedTestsPassed": 271,
+    "seconds": 33.19,
+    "sourceSha256": {
+      "bun.lock": "de99074dff56a7afb2daf995d16308376b8e21b378985d4f87651f72ae531305",
+      "turbo.json": "e1fdc840e70992359d20318b3841fb0c0bcbd18802ad76bf5879c45ebcfcb8cf",
+      "standards/policy-tools.fingerprint.json": "7416e97c11d8f08e779c0d53f3e4320b3c00fbe782d5fc465292087155abf3c7",
+      "standards/cache-qualification-baseline.json": "3f48e1865cc7feb265f7300ab79c6e363e837e9c422e2105851cf737d247c33a",
+      "packages/tooling/tool/cli/package.json": "4dc99d9055163269c73b8d96826ab38846e863ce5e3bb82a0f927271ba50fa2d",
+      "packages/tooling/tool/cli/tsconfig.json": "d9c3e5467defdc4b7716756e0b5a72214c03582c6a1c599867e0c0646caad1c3",
+      "packages/tooling/tool/cli/tsconfig.check.json": "46f47f74e0a23d162718613ac1c830feadd7f9aefe6ad14b5888ff84c2a8fb11",
+      "packages/tooling/tool/cli/src/commands/Lint/EcosystemPolarity.ts": "d5d739d07e74da8a9aa0191b4c2ef6b5253fc490b2a0013bae8f20c4a45ef8b6",
+      "packages/tooling/tool/cli/test/ecosystem-polarity.test.ts": "8b5e91105eafb6aea4b014e41db31f8c93404aedfcb36932bce34ba2f8da01f1"
+    },
+    "scope": "Merged three reviewed main changes. Only an already-available workspace dependency link changed in bun.lock; no third-party dependency version changed. Current package checks include the inherited CLI project references, and the selected suite includes15 ecosystem-polarity tests. Own capture implementation bytes are unchanged from the passing seam repair."
   }
 }

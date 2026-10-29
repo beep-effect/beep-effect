@@ -213,7 +213,8 @@
   "priorSpecSha256AtProtocolMain": "445dc9357d89db4f7a68d8e727f5ddc649fb7550d7071c9c6c5fb03277580c68",
   "currentIntegration": {
     "component": "goals/turborepo-cache-trust-observability/research/proxy-capture-bounds-checkpoint.json",
-    "focusedTestsPassed": 256,
-    "scope": "Bounded lab capture repair only. Historical broad audits retain their original source maps; no deployed trust, qualification or representative observation acceptance."
+    "focusedTestsPassed": 271,
+    "scope": "Bounded lab capture repair only. Historical broad audits retain their original source maps; no deployed trust, qualification or representative observation acceptance.",
+    "sourceHeadAtVerification": "bde1beb3c8"
   }
 }
