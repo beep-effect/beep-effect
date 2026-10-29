@@ -84,7 +84,7 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Delivery active in separate current-main checkout; Dankserver draft PR 3 published, Beep committed but pre-push quality repairs remain. Recovery hold intact.",
+  "statusNote": "Delivery active: Dankserver PR3 merged without rollout; Beep PR2364 draft with local hosted-build repair and current source binding; scanner correction PR2366 in hosted review. Synthetic scope accepted by named panel; final gates and closeout remain. Recovery hold intact.",
   "resumeConditions": [
     "Explicit launch of this packet after dependency proof; refresh live state before changes."
   ],

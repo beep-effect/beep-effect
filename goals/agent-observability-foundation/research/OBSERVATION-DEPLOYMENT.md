@@ -13,7 +13,7 @@ bun run beep ai-metrics install observation-plan --input <private-deployment-req
 ```
 
 The typed request requires a distinct new `beep-observation-*` unit name, canonical
-absolute state/artifact/environment/Bun paths, a non-privileged loopback port and
+absolute state/artifact/credential/Bun paths, a non-privileged loopback port and
 an explicit 30–3600 second lifetime. State paths obey the existing worker's 80-byte
 ASCII boundary. Unit interpolation characters, surrounding whitespace, overlapping
 state/artifact directories and executable/secret files inside those directories
@@ -24,7 +24,7 @@ errors; no secrets are read to construct the plan.
 ## Runtime artifacts and limits
 
 The installation must provide a bundled `worker.mjs`, an exact Bun binary,
-checksum-pinned Caddy, `intake.json`, the private worker configuration, and trusted
+checksum-pinned Caddy, `intake.json`, private credential files, the worker configuration, and trusted
 checksum manifests. The worker manifest binds bundle, Bun binary and worker
 configuration; the frontend manifest binds Caddy and its configuration. Each unit
 verifies its manifest before launch. A valid checksum is provenance for selected
@@ -38,7 +38,7 @@ artifacts. Install only into an explicitly owned new artifact location.
 | CPU | 50% of one CPU | 25% of one CPU |
 | Tasks | 64 | 64 |
 | File descriptors | 256 | 128 |
-| Per-file write size | 2 MiB | 2 MiB |
+| Per-file write size | Twice the configured journal page budget: default 2 MiB, maximum 64 MiB | 2 MiB |
 | Core dumps | disabled | disabled |
 | Restart | no automatic restart | no automatic restart |
 | Lifetime | explicit finite request | same finite request |
@@ -46,10 +46,13 @@ artifacts. Install only into an explicitly owned new artifact location.
 The worker uses inherited exclusive flock ownership and starts paused. The
 frontend is bound to the worker's service lifetime. Stopping the worker also stops
 the intake service. Neither unit has an Install section, so rendering or writing
-it does not enable boot startup. The worker reads the existing private environment
-file, but strips the historical raw archive key/data-root variables from its own
-environment. The installed-process proof checks their absence without printing
-other environment values.
+it does not enable boot startup. Systemd loads the hash salt and optional Phoenix
+query credential from the named private files. The worker starts with
+`env --ignore-environment` and a positive environment allowlist; it does not inherit
+the historical raw archive key or data-root variables. Once a credential directory
+is present, missing/invalid credentials refuse startup instead of falling back.
+The installed proof checks positive credential behavior and environment isolation
+without printing unrelated secret values.
 
 These limits do not establish aggregate backup retention, off-device durability,
 source enrollment or permanently operating service policy. Those deployment
@@ -104,3 +107,21 @@ retaining a precise canary identity and rollback. Install source and backup
 ownership, external freshness/absence alert delivery and conservative recovery
 before enrolling real sources. The historical hold is still active. Broad CLI
 quality, final review panel, repository publication and full SPEC remain open.
+
+## Page budget and canonical-path diagnostics
+
+Set `journalMaxDatabasePages` in the deployment request to the same value as
+`intake.maxDatabasePages` in the launch configuration (256–8192 pages). Rendering
+is a pure plan operation and does not read the private launch file. Before opening
+SQLite, the installed worker independently compares its actual per-file limit with
+the configured budget and requires twice the database ceiling for rollback-journal
+overhead. An insufficient actual file ceiling refuses startup with a content-free message. Diagnose it by
+comparing those two non-secret budgets and the rendered limit; do not increase the
+limit blindly or modify an existing journal's immutable policy.
+
+Discovery roots must be canonical paths with no symlinked parent. The directory
+helper deliberately returns `changed` when canonical-path or same-source identity
+checks fail. That status includes a symlinked-root configuration; it does not by
+itself prove that transcript contents changed. Resolve and qualify the intended
+physical root before enrollment, and preserve the old identity/evidence while
+correcting the declaration. Do not follow the symlink to silently widen discovery.

@@ -1,5 +1,11 @@
 # Declared repository route proof
 
+Current qualification is the explicitly new v3 pair documented in
+[hosted build repair](./HOSTED-BUILD-REPAIR.md), its
+[v3 preparation receipt](../ops/declared-canary-root-v3-preparation-verification.json),
+and [committed source binding](../ops/committed-source-binding-verification.json).
+The account below is retained historical v2 evidence and is not relabeled as v3.
+
 The disposable and live stages passed against the same retained v2 synthetic Git
 root. Both used the actual installed worker and frontend, the pinned collector and
 two explicit synthetic CLI/desktop records. See
@@ -39,3 +45,13 @@ evidence. They are not substituted for the final source-bound pair.
 This proves the stated synthetic association. It does not prove actual activity
 from Grok, Claude Code/Desktop, Codex CLI, ChatGPT Desktop, Muse or Cursor, and does
 not release the historical recovery hold or complete repository delivery.
+
+## Host association boundary
+
+The retained Phoenix REST rows expose the stage route ID and deterministic event
+IDs, but not separate resource-level host/namespace fields. The proof checks the
+pre-send declared root and host, the unique per-stage route and expected IDs, the
+exact stored row set, and the local journal host/namespace and visibility set.
+That association is transitive through the unique route/events. It proves the
+single declared synthetic route required here; it does not claim an independent
+backend host attribute or cross-host fleet coverage.

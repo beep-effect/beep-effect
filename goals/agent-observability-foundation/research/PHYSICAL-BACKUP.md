@@ -11,3 +11,37 @@ Six SQLite scenarios cover preserved original receipts/cursors and newer source 
 The resource-limited actual worker also captured a 147,456-byte physical snapshot under its 512 MiB/zero-swap/50%-CPU limits. An independent Python SQLite reader verified integrity and the receipt population; the snapshot survived the later deliberate worker OOM. This is evidence for the tested snapshot size, not maximum-size throughput or device-loss recovery. See ops/worker-resource-oom-verification.json. The deliberately induced OOM caused a KDE notification; routine resource runs now omit that scenario unless explicitly requested with --exercise-oom.
 
 All data in these tests was synthetic. The original masked forwarder and historical archives remain untouched. The full foundation SPEC and repository delivery are still open.
+
+## Recovering a consumed maintenance backup slot
+
+The private maintenance route has four create-only destinations, `backup-0`
+through `backup-3`. A timeout or lost response is uncertain: synchronous SQLite
+work may have completed, and a partial directory still consumes its slot. Never
+retry against the same occupied destination, infer a completed backup from a
+503/timeout, or weaken the slot ceiling to make it fit.
+
+The journal custodian first pauses and drains intake, then stops the exact owned
+worker and confirms its process has exited before touching a slot. Inventory all
+slot files and the independently retained backup receipts. Classify each slot as
+verified complete, incomplete, or uncertain; a manifest without the independent
+trusted receipt is insufficient authority for restore. Preserve the last verified
+backup and all unresolved artifacts.
+
+Reclaim a slot only through explicit offline archival: provision a private,
+separately budgeted archive on the same filesystem, check its available capacity,
+record the source file inventory and hashes, and atomically rename the entire slot
+directory into a new, never-overwritten archive generation. Sync the affected
+parent directories and verify the archived inventory and hashes. Preserve the
+original external receipt; do not manufacture restore authority from an uncertain
+artifact. A verified complete generation also requires a successful fresh-destination
+restore rehearsal before any later disposal. Incomplete generations stay retained
+for reconciliation. This archival path is an operator/custodian procedure, not an
+automatic API deletion or rotation policy; archive bytes have a separate explicit
+quota and retention owner.
+
+With the original slot name absent, restart the same owned configuration in its
+paused state, read the new maintenance owner context, and request a backup into
+that slot. Retain its returned receipt independently and verify the new snapshot.
+If any archive, ownership, capacity, restore or identity check is uncertain, keep
+collection paused and the occupied slot intact. Historical forwarder stores and
+queues are outside this procedure and remain held.

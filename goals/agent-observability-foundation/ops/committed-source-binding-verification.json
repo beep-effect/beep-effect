@@ -1,0 +1,27 @@
+{
+  "recordedAt": "2026-10-29T22:24:31.672372+00:00",
+  "committedHead": "95711cb9df8f850c67aa16967567e5c7535e2801",
+  "scope": "Exact committed blobs independently match archived execution hashes. This is source binding, not a hosted-check or behavioral rerun. Documentation edits are excluded from runtime identity.",
+  "preparation": {
+    "sourceFiles": 82,
+    "mismatches": []
+  },
+  "stages": {
+    "disposable": {
+      "evidencePath": "/home/elpresidank/.local/state/beep/observation-proof-archive/hosted-repair-final-ee2fty2f/disposable/evidence.json",
+      "evidenceSha256": "40917598aa61f3f6a570a9c114b6db1b5c9b1b82d267eb5d40b324e41507b290",
+      "sourceFiles": 87,
+      "mismatches": []
+    },
+    "live": {
+      "evidencePath": "/home/elpresidank/.local/state/beep/observation-proof-archive/hosted-repair-final-ee2fty2f/live/evidence.json",
+      "evidenceSha256": "9e3b5e3e5369c8e8c4516a2c095a8ed80336951e7b1a1eed3fd44c92bc51da93",
+      "sourceFiles": 86,
+      "mismatches": []
+    }
+  },
+  "repair": {
+    "sourceFiles": 8,
+    "mismatches": []
+  }
+}

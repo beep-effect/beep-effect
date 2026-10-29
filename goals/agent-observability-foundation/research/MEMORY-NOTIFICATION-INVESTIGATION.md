@@ -1,5 +1,16 @@
 # Memory notification investigation — 2026-10-28
 
+## Follow-up — October 29, 17:16 CDT
+
+The retained cross-boot kernel query still contains nine OOM decisions, latest at
+10:56:06 CDT. No new decision occurred during the guarded delivery work. Available
+RAM was 29.3 GiB of 125.1 GiB and swap free was about 77 MiB of 48 GiB. The earlier
+Dolphin PID348619 no longer existed; this does not establish its growth cause.
+ComfyUI and an unrelated TypeScript lint process were the largest observed
+allocations. Both held forwarder units remain masked/inactive, with service PID0.
+No unrelated process, swap setting or notification preference changed. Evidence:
+`../ops/memory-notification-followup-20261029-1716.json`.
+
 ## Follow-up — October 29, 15:52 CDT
 
 The fresh cross-boot query still has nine distinct OOM decisions, latest at

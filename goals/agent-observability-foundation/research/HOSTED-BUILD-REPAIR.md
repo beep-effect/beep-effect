@@ -28,10 +28,16 @@ by relabeling the earlier v2 receipts.
 
 Separately, PR2364's base-pinned secret scan flagged 15 historical source-file SHA-256
 values in proof receipts. All values were independently recomputed at their source
-commit and current checkout. PR2366 adds only their exact commit/path/rule/line
-fingerprints to the reviewed base ignore file; the pinned scanner reports 15 before
-and zero with those entries. No broad rule/directory allowance was added. It remains
-a separate merge dependency, not a passing scan claim for the foundation branch.
+commit and current checkout. Review correctly found that commit fingerprints would
+fail after squash. PR2366 now adds nine reviewed-base config allowances, each limited
+to the generic-api-key detector AND an exact receipt path AND a fully anchored exact
+source-key/digest line. Its ignore file is unchanged from base. The pinned scanner
+reports15 before/zero after on both actual history and a fresh synthetic commit;
+all60 changed-value/key/field/path controls retain identical findings. Independent
+Astra review accepted config SHA256
+`22e1b88b8910ce96693c34a9621c8aa46b4fa4dd367187b47cec03e8e8e3dc95`.
+Archive: `scanner-squash-final-6buxkzmd`. This remains a separate merge dependency,
+not a passing scan claim for the foundation branch.
 
 The first final-check and Claude final-panel attempts were stopped under host memory
 pressure. Neither is a passing final delivery proof; the panel produced no report.

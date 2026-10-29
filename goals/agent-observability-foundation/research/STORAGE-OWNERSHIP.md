@@ -74,3 +74,16 @@ retained immutable facts without launching a child; restore only to a new
 destination with surviving independent launch authority; verify read-back; resume
 only the explicitly qualified route. If the launch fence itself is lost or rolled
 back, keep launches held. Do not reset it to regain availability.
+
+## Repository identity privacy boundary
+
+Remote-based verified repository identity is the unsalted SHA-256 digest of the
+normalized Git remote, deliberately shared across hosts so clones can join to the same repository.
+It is a stable pseudonymous identifier, not secrecy or anonymization: a reader with
+a candidate list of remotes can compute the same digest and test membership.
+Credentials and raw remote text are excluded from exported metadata, but access to
+the identity still reveals equality and allows that candidate attack. Private source/session identifiers and the local-clone repository fallback use
+the configured salt namespace; host identity is modeled separately. That does
+not add secrecy to the remote-based repository digest. Restrict access and retention of this
+metadata accordingly. Changing this join scheme would require a versioned identity
+migration; this packet does not silently re-key existing records.

@@ -1,0 +1,53 @@
+{
+  "result": "not-passing-guard-race",
+  "archive": "/home/elpresidank/.local/state/beep/observation-proof-archive/whole-cli-guard-race-dt1ax7bn",
+  "sourceHead": "95711cb9df8f850c67aa16967567e5c7535e2801",
+  "sourceFilesChecked": 1421,
+  "sourceChangesDuringRun": [],
+  "guard": {
+    "ownedScopes": {
+      "agent-run-d0b4b0f0-7c23-4ed2-9452-facebc6ea71b.scope": {
+        "group": "/user.slice/user-1000.slice/user@1000.service/agent.slice/agent-runs.slice/agent-run-d0b4b0f0-7c23-4ed2-9452-facebc6ea71b.scope",
+        "invocationId": "2e8e5411608a413bb1cb8e46d45487a1",
+        "preGuardPeakBytes": 57040896,
+        "ownership": "live descendant of proof service MainPID"
+      },
+      "agent-run-d5b03f46-4eb3-492a-97d0-d9f38d373997.scope": {
+        "group": "/user.slice/user-1000.slice/user@1000.service/agent.slice/agent-runs.slice/agent-run-d5b03f46-4eb3-492a-97d0-d9f38d373997.scope",
+        "invocationId": "43c68a54ff2f43318451e04e357e8692",
+        "preGuardPeakBytes": 3690496,
+        "ownership": "live descendant of proof service MainPID"
+      }
+    },
+    "unit": "foundation-whole-cli-final-v2.service",
+    "profile": "bounded",
+    "memoryStopBytes": 8589934592,
+    "hostAvailableFloorBytes": 17179869184,
+    "initialAvailableBytes": 40848539648,
+    "peakObservedBytes": 5422419968,
+    "minimumAvailableBytes": 27052625920,
+    "stoppedFor": null,
+    "tasksMax": 1024,
+    "peakObservedTasks": 289,
+    "pidsLimitEvents": 0,
+    "observedPhases": [
+      {
+        "phase": "beep:build",
+        "observedAtEpochSeconds": 1793311901.5373826
+      },
+      {
+        "phase": "beep:check",
+        "observedAtEpochSeconds": 1793311917.634793
+      },
+      {
+        "phase": "beep:test",
+        "observedAtEpochSeconds": 1793311927.662609
+      }
+    ],
+    "guardError": "CalledProcessError",
+    "exitCode": 1,
+    "orphanCleanup": []
+  },
+  "repair": "Only accept failed scope limit application if systemd reports not-found/inactive/no invocation AND cgroup no longer exists; live/unknown failures still refuse. Five isolated decisions passed; original memory/CPU/headroom/task limits unchanged.",
+  "replay": "pending; no passing whole-CLI claim"
+}
