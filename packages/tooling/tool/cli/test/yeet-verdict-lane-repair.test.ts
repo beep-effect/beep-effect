@@ -18,7 +18,6 @@ import * as O from "effect/Option";
 import type { YeetVerdict, YeetVerdictLane } from "@beep/repo-cli/test/Yeet";
 
 const OSV_HINT = "Inspect the OSV finding and rerun `bun run beep quality github-checks security`.";
-const CHANGESET_HINT_PREFIX = "Run `bun run beep quality changeset-status --since origin/main`.";
 const GOALS_INDEX_HINT = "Run `bun run beep goals index`, inspect the update, then rerun the cheap-gates tier.";
 const SHADCN_HINT =
   "Run `bun run lint:shadcn`, fix every finding with the recipes in docs/runbooks/design-system-lint.md (no allow-lists or disable comments), then rerun the failing tier.";
@@ -170,9 +169,10 @@ const concurrentTypoOutput = A.join(
 );
 
 describe("yeet verdict lane repair commands", () => {
-  it("documents the whole-output scan trap the lane-run record replaces", () => {
-    assertSome(knownSubLaneRemediationFromOutput(fullProofOutput), OSV_HINT);
-    expect(O.getOrUndefined(knownSubLaneRemediationFromOutput(cheapGatesOutput))).toContain(CHANGESET_HINT_PREFIX);
+  it("uses explicit failed-lane lines without borrowing passing siblings", () => {
+    assertNone(knownSubLaneRemediationFromOutput(fullProofOutput));
+    assertSome(knownSubLaneRemediationFromOutput(cheapGatesOutput), GOALS_INDEX_HINT);
+    assertNone(knownSubLaneRemediationFromOutput("goals:doctor: ok in 1200ms\nFound 5 warnings and 0 errors."));
   });
 
   it("gives the tier lane and the red coverage lane coverage's own command instead of the passing OSV marker", () => {

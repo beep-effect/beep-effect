@@ -606,3 +606,25 @@ CI hit HTTP408 during checkout before lint ran. GitHub refused the exact-job
 retry while the workflow was running. This source repair will supersede that
 head; keep the environmental attribution and do not hide it by restarting an
 active proof.
+
+
+### Existing native-addon runtime warnings
+
+Publication exposed two `no-global-process-runtime` warnings in the KG addon
+bootstrap and its Windows-path test. The synchronous bootstrap uses the
+existing sanctioned `currentHostPlatform` constant; the test pins that existing dependency through its scoped module
+mock. The Windows test no longer mutates the process platform.
+Keep this repair in a separate small PR; no cache configuration is changed.
+
+The first package audit caught an introduced `missingPipeableSignature` error
+from an extra installer argument. Remove that argument and keep the existing
+one-argument API; pin the existing platform helper in the test instead. The
+failed audit is retained and no diagnostic or hook is waived.
+
+A subsequent audit rejected an async mock factory (`effect(asyncFunction)`).
+Use the test framework's scoped module pin and lift the dynamic import through
+`Effect.promise`; keep both failed audits and rerun the complete package check.
+
+Hosted policy found EV011 on the direct `vi` import from `vitest`. Import the
+same API through the pinned `@effect/vitest` export-star entrypoint and rerun
+the policy check; do not add a baseline finding or waive the detector.
