@@ -507,3 +507,15 @@ of typed verifier failure causes. Thirty focused tests pass per runtime; the
 prior mapper fails both new cause-preservation assertions. The census retains
 all executable rows and semantic obligations. Publication and full acceptance
 remain open.
+
+
+### Native capture and complete graph component
+
+The [capture checkpoint](research/producer-capture-checkpoint.json) records actual
+stable/canary protocol execution, 196 focused tests in each runtime, 100 percent
+focused upload-join coverage and five intended guard-removal failures. Complete
+minimal signed-run summaries are retained; their changed real-pilot worker still
+needs actual execution. The pure join now checks the whole independently reviewed
+closure before selecting its upload task. It has not yet been connected to the
+owned supervisor or actual backend-result capture. No protected publication,
+signed rollout, task qualification or representative window is claimed.

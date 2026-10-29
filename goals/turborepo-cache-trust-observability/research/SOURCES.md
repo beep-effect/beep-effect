@@ -384,3 +384,13 @@ artifact, signing activation, deployed grant or observation window changes.
   excerpts stay distinct from eighteen real synthetic native replay processes.
   Earlier observations keep their original driver identities and full goal
   acceptance remains open.
+
+
+### Owned native capture and complete graph, 2026-10-29
+
+[The source-bound checkpoint](producer-capture-checkpoint.json) records actual
+pinned native protocol runs, separate incoming tag digests, complete minimal
+summary retention, and the reviewed whole-graph upload validator. It also records
+the current census without changing configuration or qualification decisions.
+Actual signed real-pilot execution, backend/supervisor integration and protected
+publication remain separate proof obligations.
