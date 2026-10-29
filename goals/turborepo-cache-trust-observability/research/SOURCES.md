@@ -256,3 +256,9 @@ test-codec hoisting, canonical catalog refresh and main integration.
 - `proxy-capture-bounds-checkpoint.json`: current source bindings, intended-cause
   budget/interrupted-upload failures and 256 passing integrated tests. It does
   not transfer historical full audits or claim deployed production collection.
+
+- `reproduce-interrupted-upload-red-restore.patch`: a small byte reconstruction
+  from the later committed proxy to the uncommitted historical restoration
+  state. The checkpoint names the restored file and state; the base commit is
+  explicitly not presented as a revision of the restored state. Its digest was
+  reproduced by applying the patch in a disposable directory.

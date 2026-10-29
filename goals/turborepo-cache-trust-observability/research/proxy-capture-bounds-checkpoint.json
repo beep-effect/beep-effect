@@ -21,11 +21,22 @@
   },
   "redFirst": {
     "threeBudgetControls": "Original proxy logic with the declared lower limits still returned200 where503/413 was expected; all three failed for the intended assertions.",
-    "interruptedUpload": "Restoring only the old empty-body fallback caused an actual interrupted upload to write its tag upstream. The new control expected no upstream write and failed; current source was restored byte-for-byte afterward.",
+    "interruptedUpload": "Restoring only the old empty-body fallback caused an actual interrupted upload to write its tag upstream. The control expected no upstream write and failed. The historical uncommitted proxy state identified below was restored byte-for-byte; it is not the current checkpoint state.",
     "redRestore": {
       "exitCode": 1,
       "restoredCurrentSourceSha256": "d245e7899b7afdf5d7fee2d9354ce0fd4272b0a198b03a2ccf24a369d7391b9d",
-      "sourceRestoredExactly": true
+      "sourceRestoredExactly": true,
+      "restoredFile": "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.proxy.ts",
+      "sourceState": "uncommitted-working-tree",
+      "relationshipToCheckpoint": "Historical working-tree state before the later event-encoding failure guard and capture seam refactor. This restoration is not claimed to match the current checkpoint source; the later integrated verification is separate.",
+      "reconstruction": {
+        "baseRevision": "0fd21698130886ce797b2f5c3d880f64ebac14f2",
+        "baseFile": "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.proxy.ts",
+        "patch": "goals/turborepo-cache-trust-observability/research/reproduce-interrupted-upload-red-restore.patch",
+        "patchSha256": "3feaf901def21f1af89b278987f676b457ace3cf4cf9e3a61b24b39c5598fa83",
+        "baseIsRestoredStateRevision": false,
+        "scope": "The base is a later committed checkpoint used only to reconstruct the earlier uncommitted bytes. Applying the small patch reproduces the recorded restoration digest exactly."
+      }
     }
   },
   "actualControls": [

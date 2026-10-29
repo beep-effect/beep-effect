@@ -279,3 +279,10 @@ not treated as permanent qualification.
   now form a private local component, preserving transport behavior and all
   seven controls. Current tests and the zero-finding Fallow audit pass; no
   suppression or baseline waiver hides the finding.
+
+- 2026-10-29 — Review found two historical evidence ambiguities: a shallow
+  snapshot had carried current counts into the prior integration, and the red
+  restoration digest did not name its uncommitted file state. The prior249-test
+  result is restored from its immutable revision; the restoration now names its
+  file/state and includes a digest-verified reconstruction without inventing a
+  commit for that earlier working tree. Current implementation proof is separate.
