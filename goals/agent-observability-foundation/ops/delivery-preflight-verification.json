@@ -1,0 +1,236 @@
+{
+  "observedAt": "2026-10-29T13:46:45.124160-05:00",
+  "head": "98c762efbff9abfda6cee6383ced7a07ea50a514",
+  "archive": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-preflight-pxghfzcv",
+  "artifacts": [
+    {
+      "file": "foundation-delivery-cheap-v2.log",
+      "sha256": "d4e41a68a1c240b57d453ab753d04f70576f421ecf5eb3fa247c1d1df761bfb7",
+      "bytes": 118526
+    },
+    {
+      "file": "foundation-delivery-cheap-v2-guard.json",
+      "sha256": "ce3703499e4ddc87a3f709551f574644f32f6da4ec93eae6222c7b87cde34902",
+      "bytes": 726
+    },
+    {
+      "file": "audit.check.json",
+      "sha256": "1984a5c724029466c7de7539abfaa66199a17f1785ca7fad288e87d2348a2835",
+      "bytes": 8407
+    },
+    {
+      "file": "audit.check.combined.txt",
+      "sha256": "22b4a438efae6824a568db87c13df53c1f50eaac09ec71004d24b5b3e1a1c995",
+      "bytes": 79818
+    },
+    {
+      "file": "dead-code.check.json",
+      "sha256": "5132b1ccc74af373afa435a64b12b04667d958e20823f729f89790e9c88df2ac",
+      "bytes": 628
+    },
+    {
+      "file": "dead-code.check.combined.txt",
+      "sha256": "e3a127fbde4f9154983b9b14720f1376e52f70c98404357a83303320ba1e2a41",
+      "bytes": 3308
+    },
+    {
+      "file": "health.check.json",
+      "sha256": "9127caa4b5917c6d2161d6bc7ddf8738bef848bc2431f838873fcd2bb1253ca7",
+      "bytes": 8315
+    },
+    {
+      "file": "health.check.combined.txt",
+      "sha256": "a3c5d6add1b0e39d643694e287b8dae520ec4732659744921ac040f2d94bd8c1",
+      "bytes": 932168
+    },
+    {
+      "file": "beep_root.md",
+      "sha256": "3b0a2a33498f006e8e0a2808f902569c3d3250d8f493a3274e6d1848f2e0a816",
+      "bytes": 694
+    }
+  ],
+  "results": {
+    "schemaVersion": "github-check-run/v1",
+    "failurePolicy": "collect-all",
+    "lanes": [
+      {
+        "id": "quality:changeset-status",
+        "stage": "repo-quality",
+        "status": "passed",
+        "wave": "preflight"
+      },
+      {
+        "id": "version-sync:check-runtime",
+        "stage": "repo-sanity",
+        "status": "passed",
+        "wave": "preflight"
+      },
+      {
+        "id": "quality:cache-policy",
+        "stage": "repo-quality",
+        "status": "passed",
+        "wave": "preflight"
+      },
+      {
+        "id": "goals:index-check",
+        "stage": "repo-sanity",
+        "status": "passed",
+        "wave": "preflight"
+      },
+      {
+        "id": "explore:atlas-check",
+        "stage": "repo-sanity",
+        "status": "passed",
+        "wave": "preflight"
+      },
+      {
+        "id": "observability:catalog-check",
+        "stage": "repo-quality",
+        "status": "failed",
+        "wave": "preflight"
+      },
+      {
+        "id": "quality:catalog-usage",
+        "stage": "repo-sanity",
+        "status": "passed",
+        "wave": "preflight"
+      },
+      {
+        "id": "repo-sanity:tsconfig-sync",
+        "stage": "repo-sanity",
+        "status": "passed",
+        "wave": "preflight"
+      },
+      {
+        "id": "lint:effect-imports",
+        "stage": "repo-quality",
+        "status": "passed",
+        "wave": "preflight"
+      },
+      {
+        "id": "lint:effect-imports-markdown",
+        "stage": "repo-quality",
+        "status": "passed",
+        "wave": "preflight"
+      },
+      {
+        "id": "lint:markdown-fences",
+        "stage": "repo-quality",
+        "status": "passed",
+        "wave": "preflight"
+      },
+      {
+        "id": "lint:retired-effect-paths",
+        "stage": "repo-quality",
+        "status": "passed",
+        "wave": "preflight"
+      },
+      {
+        "id": "lint:retired-iri-authorities",
+        "stage": "repo-quality",
+        "status": "passed",
+        "wave": "preflight"
+      },
+      {
+        "id": "lint:schema-tag-idioms",
+        "stage": "repo-quality",
+        "status": "failed",
+        "wave": "preflight"
+      },
+      {
+        "id": "lint:schema-first",
+        "stage": "repo-quality",
+        "status": "passed",
+        "wave": "preflight"
+      },
+      {
+        "id": "lint:effect-vitest",
+        "stage": "repo-quality",
+        "status": "failed",
+        "wave": "preflight"
+      },
+      {
+        "id": "lint:allowlist",
+        "stage": "repo-sanity",
+        "status": "passed",
+        "wave": "preflight"
+      },
+      {
+        "id": "goals:doctor",
+        "stage": "repo-sanity",
+        "status": "passed",
+        "wave": "preflight"
+      },
+      {
+        "id": "lint:oxlint",
+        "stage": "repo-quality",
+        "status": "passed",
+        "wave": "preflight"
+      },
+      {
+        "id": "quality:jsdoc-ratchet:regenerated",
+        "stage": "repo-quality",
+        "status": "passed",
+        "wave": "preflight"
+      },
+      {
+        "id": "quality:jsdoc-ratchet:committed",
+        "stage": "repo-quality",
+        "status": "passed",
+        "wave": "preflight"
+      },
+      {
+        "id": "fallow:audit",
+        "stage": "repo-quality",
+        "status": "failed",
+        "wave": "preflight"
+      },
+      {
+        "id": "fallow:dead-code",
+        "stage": "repo-quality",
+        "status": "passed",
+        "wave": "preflight"
+      },
+      {
+        "id": "fallow:health",
+        "stage": "repo-quality",
+        "status": "failed",
+        "wave": "preflight"
+      },
+      {
+        "id": "lint:schema-catalog",
+        "stage": "repo-sanity",
+        "status": "failed",
+        "wave": "heavy"
+      }
+    ],
+    "firstRed": "observability:catalog-check",
+    "skippedAfterRed": 0
+  },
+  "guard": {
+    "ownedScopes": {
+      "agent-run-894d1358-f96d-447a-84d3-224f004e7064.scope": {
+        "group": "/user.slice/user-1000.slice/user@1000.service/agent.slice/agent-runs.slice/agent-run-894d1358-f96d-447a-84d3-224f004e7064.scope",
+        "invocationId": "30a8a83bc60641439ca57573abd22f8b",
+        "preGuardPeakBytes": 19062784,
+        "ownership": "live descendant of proof service MainPID"
+      }
+    },
+    "unit": "foundation-delivery-cheap-v2.service",
+    "profile": "catalog",
+    "memoryStopBytes": 17179869184,
+    "hostAvailableFloorBytes": 17179869184,
+    "initialAvailableBytes": 51214544896,
+    "peakObservedBytes": 15465615360,
+    "minimumAvailableBytes": 20843950080,
+    "stoppedFor": null,
+    "exitCode": 1,
+    "orphanCleanup": []
+  },
+  "interpretation": "19 passed, 6 failed; no gate skipped. The generated root issue packet incorrectly names goals-doctor despite its passed result. Individual structured lane results are authoritative. Diagnostic review requested.",
+  "limits": [
+    "No completed publication or hosted proof.",
+    "Runtime source will change for repair; passing checks bind this tested head only.",
+    "Guard peak aggregates owned service plus observed admitted sibling scope; unit-local memory summary alone understates usage."
+  ]
+}

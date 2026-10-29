@@ -254,7 +254,7 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) => {
         "error",
         "error",
       ]);
-      expect(A.every(A.take(native.spans, 6), (span) => O.isNone(span.parentSpanId))).toBe(true);
+      assertTrue(A.every(A.take(native.spans, 6), (span) => O.isNone(span.parentSpanId)));
       const unnamed = native.spans[5];
       assertTrue(unnamed !== undefined);
       assertNone(unnamed.nameHash);

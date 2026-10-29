@@ -110,7 +110,7 @@ const requireInheritedLock = Effect.fnUntraced(function* (directory: string, uid
 });
 const ProcessPopulationLimits = S.Struct({
   memory: S.Number.check(S.isGreaterThan(0), S.isLessThanOrEqualTo(2147483648)),
-  swap: S.Literal(0),
+  swap: S.tag(0),
   pids: S.Number.check(S.isGreaterThanOrEqualTo(1), S.isLessThanOrEqualTo(128)),
 }).pipe(
   $I.annoteSchema("ProcessPopulationLimits", {

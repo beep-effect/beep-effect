@@ -201,6 +201,7 @@
     {"name":"AiMetrics.readObservationClaimPopulation","owner":"@beep/repo-ai-metrics","family":"tooling","conforms":true},
     {"name":"AiMetrics.readObservationCoverage","owner":"@beep/repo-ai-metrics","family":"tooling","conforms":true},
     {"name":"AiMetrics.readObservationHttpBytes","owner":"@beep/repo-ai-metrics","family":"tooling","conforms":true},
+    {"name":"AiMetrics.readObservationHttpText","owner":"@beep/repo-ai-metrics","family":"tooling","conforms":true},
     {"name":"AiMetrics.readObservationInventory","owner":"@beep/repo-ai-metrics","family":"tooling","conforms":true},
     {"name":"AiMetrics.readObservationLaunchConfig","owner":"@beep/repo-ai-metrics","family":"tooling","conforms":true},
     {"name":"AiMetrics.readPreviousConfigSnapshotAt","owner":"@beep/repo-ai-metrics","family":"tooling","conforms":true},
