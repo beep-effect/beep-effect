@@ -46,7 +46,8 @@ The corrective Beep PR2362 is merged at
 code gates passed. Foundation delivery still requires its own current-head repository gates. The
 [final named panel](./research/FINAL-PANEL-DISPOSITIONS.md) accepted the bounded
 source and the follow-up evidence/operator-documentation fixes.
-Lifecycle remains active; this page is not completion signoff.
+The [closeout reflection](./history/reflections/2026-10-29-codex.md) is prepared
+with delivery still pending. Lifecycle remains active; this page is not completion signoff.
 
 The old forwarder service/timer remain masked and inactive. Metadata plus curated,
 sanitized examples remains the approved collection policy. Real harness enrollment,

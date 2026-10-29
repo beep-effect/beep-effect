@@ -26,9 +26,10 @@ separate requirements. No completion or historical-hold release is certified.
 
 Source paths in the table are under `packages/tooling/library/ai-metrics`, unless
 they refer to the recorded Dankserver checkout; research and receipt names resolve
-under this packet's `research/` and `ops/`. Current source-bound receipts are
-`ops/terminal-classification-verification.json` and
-`ops/boundary-predicates-verification.json`. Earlier documents retain historical
+under this packet's `research/` and `ops/`. The latest runtime source binding is
+`ops/committed-source-binding-verification.json`, covering the v3 stages in
+`ops/hosted-build-repair-verification.json` and its separately recorded preparation.
+Earlier terminal-classification and boundary receipts retain their historical scope. Earlier documents retain historical
 scope; their obsolete remaining-work paragraphs are not authoritative current status.
 
 ## Original correction required for AC12 (now completed)
@@ -51,7 +52,7 @@ Its earlier acceptance of route behavior is narrowed by this explicit check of
 the repository qualifier. This was the initial audit boundary. The final evidence below closes AC12; overall
 completion still requires the remaining repository-delivery gates.
 
-## Preparation checkpoint
+## Historical v2 preparation checkpoint
 
 The real root-probe command now positively identifies one retained synthetic Git
 repository in the private `declared-canary-root-20261029-v2` proof archive. Independent
@@ -66,11 +67,11 @@ the v2 qualification hash is
 `5ba97f27866de55bbeb2b70e64892cc4e7d0068802b313044d41a50020c390b3`.
 See `ops/declared-canary-root-preparation-verification.json` for its private archive
 reference and hash-bound source snapshots. At this preparation checkpoint both route stages were not-run, and
-all seven real-harness launch/event populations remain Unknown. Reuse this exact
-v2 root after verifying its qualification; do not substitute the retained initial
-v1 preparation or infer identity from the verifier checkout.
+all seven real-harness launch/event populations remain Unknown. At that checkpoint the exact v2 root was required. Current qualification uses the
+separately prepared v3 root; do not substitute either historical root for current
+source or infer identity from the verifier checkout.
 
-## Final AC12 artifact acceptance
+## Historical v2 AC12 artifact acceptance
 
 Independent Astra accepted the final disposable and live pair after separately
 checking all 87 and 86 source hashes, plan/input/configuration digests, independently
@@ -103,3 +104,14 @@ exited zero without protective stops or PID-limit events. The current-source AC1
 support remains scoped to two synthetic records per stage. No earlier receipt was
 relabeled, and real enrollment/populations remain unqualified. Repository delivery
 and the remaining final panel/hosted checks still govern overall completion.
+
+## Final source panel and commit binding
+
+The named Claude and Grok reviews completed successfully at runtime source95711;
+Astra independently accepted the final evidence and operator-documentation repairs.
+`FINAL-PANEL-DISPOSITIONS.md` records every final finding. The explicit committed
+binding verifies82 preparation,87 disposable,86 live and8 repair sources against
+Git blobs at `95711cb9df8f850c67aa16967567e5c7535e2801`, with no mismatches.
+This closes source/evidence review while preserving historical execution receipts.
+Current-head repository gates, hosted delivery, merge and terminal lifecycle remain
+open. The closeout reflection is prepared and explicitly reports that pending state.
