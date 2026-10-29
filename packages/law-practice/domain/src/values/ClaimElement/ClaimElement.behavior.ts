@@ -224,7 +224,7 @@ const locateParts = ({
       O.filter((bodyStart) =>
         O.isSome(
           Str.match(
-            /\b(?:consisting essentially of|consisting of|comprising|comprises|comprised of|including|includes|having|wherein|where|characteri[sz]ed (?:in that|by(?: the fact that)?)|in which(?: method)?)\b/iu
+            /\b(?:consisting essentially of|consisting of|comprising|comprises|comprised of|including|includes|having|wherein|where|(?:(?:is|being)\s+)?characteri[sz]ed (?:in that|by(?: the fact that| the steps of)?)|in which(?: method)?)\b/iu
           )(Str.slice(preambleStart + Str.length(preamble), bodyStart)(claimText))
         )
       ),
@@ -310,14 +310,14 @@ const digitsPattern = /^[0-9]+$/u;
 const punctuation = HashSet.make(",", ";", ":", ".", "(", ")", "[", "]");
 const boundaryWords = HashSet.fromIterable(
   Str.split(
-    "that which wherein whereby where when configured adapted operable arranged having comprising comprises including includes containing contains being is are was were has have to for in on of at by with from into onto between through via and or such so than as each said the a an its their according claim claims they it we them can may shall must should will would be been not apart respectively along below above beyond across",
+    "that which wherein whereby where when configured adapted operable arranged having comprising comprises including includes containing contains being is are was were has have to for in on of at by with from into onto between through via and or such so than as each said the a an its their according claim claims they it we them can may shall must should will would be been not apart respectively further out along below above beyond across",
     " "
   )
 );
 // Closed grammatical separators, not a lexical token cap or suffix guess.
 const predicateWords = HashSet.fromIterable(
   Str.split(
-    "irradiates switching reconstructs detects indicates controls samples outputs detect facing wired operates configuring comprised flushing provides passes determining acts formed couple depressed spaced bending skip start passed received transmitted assigned generated allocated chosen configured adapted operable arranged connected coupled mounted attached positioned located disposed formed extending extends comprises includes contains comprising including containing detects detecting based before after during upon under over near within without until than whose respectively either both such",
+    "irradiates switching reconstructs detects indicates controls samples outputs detect provide support accommodate allow allows determines invokes transmits triggering avoiding facing wired operates configuring comprised flushing provides passes determining acts formed couple depressed spaced bending skip start passed received transmitted assigned generated allocated chosen configured adapted operable arranged connected coupled mounted attached positioned located disposed formed extending extends comprises includes contains comprising including containing detects detecting based before after during upon under over near within without until than whose respectively either both such",
     " "
   )
 );
@@ -330,16 +330,24 @@ const nominalFollowers = HashSet.fromIterable(
 const isPredicateToken = (tokens: ReadonlyArray<Span>, index: number): boolean => {
   const current = O.map(A.get(tokens, index), ({ text }) => Str.toLowerCase(text));
   const next = O.map(A.get(tokens, index + 1), ({ text }) => Str.toLowerCase(text));
+  const previous = O.map(A.get(tokens, index - 1), ({ text }) => Str.toLowerCase(text));
+  const participle = O.exists(
+    current,
+    (word) => Str.length(word) > 4 && (Str.endsWith("ed")(word) || Str.endsWith("ing")(word))
+  );
+  const complement = O.exists(next, (word) =>
+    HashSet.has(
+      HashSet.make("to", "in", "into", "on", "with", "by", "the", "a", "an", "said", "its", "their", "them"),
+      word
+    )
+  );
+  const nominal =
+    O.exists(current, (word) => Str.endsWith("ed")(word)) &&
+    O.exists(previous, (word) => HashSet.has(HashSet.make("a", "an", "the", "said", "its", "their"), word));
   return (
-    (O.exists(current, (word) => HashSet.has(predicateWords, word)) ||
-      (O.exists(current, (word) => Str.length(word) > 4 && (Str.endsWith("ed")(word) || Str.endsWith("ing")(word))) &&
-        O.exists(next, (word) =>
-          HashSet.has(
-            HashSet.make("to", "in", "into", "on", "with", "by", "the", "a", "an", "said", "its", "their", "them"),
-            word
-          )
-        ))) &&
-    !O.exists(next, (word) => HashSet.has(nominalFollowers, word))
+    (O.exists(current, (word) => HashSet.has(predicateWords, word)) || (participle && complement)) &&
+    !O.exists(next, (word) => HashSet.has(nominalFollowers, word)) &&
+    !nominal
   );
 };
 
@@ -408,6 +416,39 @@ const headAt = (tokens: ReadonlyArray<Span>, index: number): ReadonlyArray<Span>
       abbreviationAt(tokens, position - 2)
     )
       return true;
+    const ordinalWords = HashSet.make(
+      "first",
+      "second",
+      "third",
+      "fourth",
+      "fifth",
+      "sixth",
+      "seventh",
+      "eighth",
+      "ninth",
+      "tenth"
+    );
+    const coordinatedOrdinal =
+      word === "and" &&
+      offset > 0 &&
+      A.every(A.take(A.drop(tokens, index), offset), ({ text }) => HashSet.has(ordinalWords, Str.toLowerCase(text))) &&
+      O.exists(A.get(tokens, position + 1), ({ text }) => HashSet.has(ordinalWords, Str.toLowerCase(text)));
+    const alternativeName =
+      word === "or" &&
+      offset > 0 &&
+      O.exists(
+        A.get(tokens, position + 1),
+        ({ text }) => !HashSet.has(boundaryWords, Str.toLowerCase(text)) && !HashSet.has(punctuation, text)
+      ) &&
+      !isPredicateToken(tokens, position + 1);
+    const selectorList =
+      O.exists(A.get(tokens, index - 2), ({ text }) => Str.toLowerCase(text) === "one") &&
+      O.exists(A.get(tokens, index - 1), ({ text }) => Str.toLowerCase(text) === "of");
+    if (selectorList && (text === "," || word === "or" || word === "and")) return true;
+    const throughHole =
+      word === "through" &&
+      offset === 0 &&
+      O.exists(A.get(tokens, position + 1), ({ text }) => Str.toLowerCase(text) === "hole");
     const partitive =
       word === "of" &&
       A.some(A.take(A.drop(tokens, index), offset), ({ text }) =>
@@ -416,7 +457,7 @@ const headAt = (tokens: ReadonlyArray<Span>, index: number): ReadonlyArray<Span>
       O.exists(A.get(tokens, position + 1), ({ text }) => !HashSet.has(boundaryWords, Str.toLowerCase(text)));
     return (
       !HashSet.has(punctuation, text) &&
-      (!HashSet.has(boundaryWords, word) || partitive) &&
+      (!HashSet.has(boundaryWords, word) || partitive || coordinatedOrdinal || alternativeName || throughHole) &&
       !isPredicateToken(tokens, position) &&
       (!Str.endsWith("ly")(word) ||
         Str.endsWith("assembly")(word) ||
@@ -466,11 +507,20 @@ const scanStep =
       [
         ["by", "means", "of"],
         ["side", "by", "side"],
+        ["in", "association", "with"],
         ["at", "least", "by", "means", "of"],
       ],
       (words) => surfaceAt(tokens, index)(words)
     );
     if (O.isSome(idiom)) return scanStepOf(O.none(), index + idiom.value.length);
+    if (surfaceAt(tokens, index)(["one", "of"])) return scanStepOf(O.none(), index + 2);
+    if (
+      surfaceAt(tokens, index)(["at", "least"]) &&
+      O.exists(A.get(tokens, index + 2), ({ text }) =>
+        HashSet.has(HashSet.make("the", "said", "a", "an", "each"), Str.toLowerCase(text))
+      )
+    )
+      return scanStepOf(O.none(), index + 2);
     return pipe(
       determinerAt(tokens, index),
       O.match({
@@ -503,7 +553,23 @@ const scanStep =
 const termsIn =
   (claimText: string) =>
   (span: Span): ReadonlyArray<EncodedTerm> => {
-    const tokens = matchesIn(tokenPattern)(span);
+    const material = Str.match(
+      /\b(?:is|are|was|were)\s+(?:formed|made|composed)\s+(?:of|from)\s+(?!a\b|an\b|the\b|said\b)([^,;]+)$/iu
+    )(span.text).pipe(
+      O.filter((match) =>
+        O.exists(A.get(match, 1), (tail) => O.isNone(Str.match(/\b(?:a|an|the|said|its|their)\b/iu)(tail)))
+      )
+    );
+    const entitySpan = O.match(material, {
+      onNone: () => span,
+      onSome: (match) =>
+        sliceSpan(
+          span,
+          0,
+          O.getOrElse(O.fromUndefinedOr(match.index), () => span.text.length)
+        ),
+    });
+    const tokens = matchesIn(tokenPattern)(entitySpan);
     const step = scanStep(claimText, tokens);
     return A.getSomes(A.unfold(0, (index) => (index < A.length(tokens) ? O.some(step(index)) : O.none())));
   };
@@ -592,6 +658,10 @@ const antecedentEdges = (
             A.some(ancestors, (element) => element.path === path && element.kind === "preamble-subject"))
       );
       const bareMentions = A.filter(mentions, ({ term }) => term.determiner === "bare");
+      const modifiedMentions = A.filter(
+        before,
+        ({ path, term }) => !local(path) && isSingleModifiedHead(referring.term.head)(term.head)
+      );
       const rootShortened = root(referring.path)
         ? A.filter(
             eligible,
@@ -601,7 +671,10 @@ const antecedentEdges = (
           )
         : [];
       const introductions = O.getOrElse(
-        A.findFirst([exact, abbreviated, rootShortened, modified, bareMentions, mentions], A.isReadonlyArrayNonEmpty),
+        A.findFirst(
+          [exact, abbreviated, rootShortened, modified, bareMentions, mentions, modifiedMentions],
+          A.isReadonlyArrayNonEmpty
+        ),
         () => []
       );
       return O.map(
@@ -662,7 +735,9 @@ const treeInput = (
   const segments = A.filter(
     A.map(splitBody(parts.body), (segment) => {
       const cleaned = cleanSegment(segment);
-      return claim.transition === "wherein" || methodFrame
+      return claim.transition === "wherein" ||
+        methodFrame ||
+        O.isSome(Str.match(/\bfurther\s+(?:comprising|including|having)\b/iu)(claim.claimText))
         ? pipe(cleaned, dropPrefix(["wherein "]), trimSpan)
         : cleaned;
     }),

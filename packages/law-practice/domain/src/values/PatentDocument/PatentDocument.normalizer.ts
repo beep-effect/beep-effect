@@ -33,7 +33,7 @@ const decodeUnknownPatentClaims = S.decodeUnknownEffect(PatentClaims);
 const $I = $LawPracticeDomainId.create("values/PatentDocument/PatentDocument.normalizer");
 const claimBlockPattern = /(?:^|\n)[\t ]*(\d+)\.[\t ]+(.+?)(?=\n[\t ]*\d+\.[\t ]+|\s*$)/gsu;
 const transitionPattern =
-  /\b(consisting essentially of|consisting of|comprising|comprises|comprised of|including|includes|having|wherein|where|characteri[sz]ed (?:in that|by (?:the fact that)?)|in which(?: method)?)\b/giu;
+  /\b(consisting essentially of|consisting of|comprising|comprises|comprised of|including|includes|having|wherein|where|(?:(?:is|being)\s+)?characteri[sz]ed (?:in that|by(?: the fact that| the steps of)?)|in which(?: method)?)\b/giu;
 const claimReferenceMarkerPattern = /\bclaims?\b/iu;
 const claimReferencePattern = /(\d+)(?:\s*(?:-|–|—|through|thru|to)\s*(\d+))?/giu;
 const ambiguousLexicalTransition = LiteralKit(["including", "having"]);
@@ -328,26 +328,31 @@ const collectSectionDrafts = (document: Document): SectionDraftState =>
 const parseClaimNumber = (value: string): O.Option<PosInt> => decodeClaimNumberFromStringOption(value);
 const parseClaimTransition: (value: string) => PatentClaimTransition = flow(
   Str.toLowerCase,
-  Str.replace(/^(?:characteri[sz]ed .+|in which(?: method)?|where)$/u, "wherein"),
+  Str.replace(/^(?:(?:(?:is|being)\s+)?characteri[sz]ed .+|in which(?: method)?|where)$/u, "wherein"),
   Str.replace(/^(?:comprises|comprised of)$/u, "comprising"),
   Str.replace(/^includes$/u, "including"),
   S.decodeUnknownOption(PatentClaimTransition),
   O.getOrThrow
 );
 
-const transitionFromClaimText = (claimText: string): O.Option<RegExpMatchArray> =>
-  pipe(
-    A.fromIterable(Str.matchAll(transitionPattern)(claimText)),
-    A.findFirst((match) => {
-      const transition = Str.toLowerCase(pipe(A.get(match, 0), O.getOrThrow));
-      if (!isAmbiguousLexicalTransition(transition)) {
-        return true;
-      }
-      const matchIndex = pipe(O.fromUndefinedOr(match.index), O.getOrThrow);
-      const prefix = Str.slice(0, matchIndex)(claimText);
-      return O.isNone(Str.match(ambiguousTransitionPrefixPattern)(prefix));
-    })
+const transitionFromClaimText = (claimText: string): O.Option<RegExpMatchArray> => {
+  const matches = A.filter(A.fromIterable(Str.matchAll(transitionPattern)(claimText)), (match) => {
+    const transition = pipe(A.get(match, 0), O.getOrThrow, Str.toLowerCase);
+    const index = O.getOrElse(O.fromUndefinedOr(match.index), () => 0);
+    return (
+      !isAmbiguousLexicalTransition(transition) ||
+      O.isNone(Str.match(ambiguousTransitionPrefixPattern)(Str.slice(0, index)(claimText)))
+    );
+  });
+  const first = A.head(matches);
+  const defining = A.findFirst(matches, (match) =>
+    O.isSome(Str.match(/^(?:(?:is|being)\s+)?characteri[sz]ed\b/iu)(match[0]))
   );
+  return O.exists(first, (match) => O.isSome(Str.match(/^(?:wherein|having|including)$/iu)(match[0]))) &&
+    O.isSome(defining)
+    ? defining
+    : first;
+};
 
 const isPriorClaimNumber = (currentClaimNumber: PosInt, candidate: PosInt): boolean =>
   Num.isLessThan(candidate, currentClaimNumber);
@@ -423,7 +428,12 @@ const parseClaim = Effect.fn("PatentDocument.parseClaim")(function* (
   );
   const transition = parseClaimTransition(transitionMatch[0]);
   const transitionStart = pipe(O.fromUndefinedOr(transitionMatch.index), O.getOrThrow);
-  const preamble = Str.trim(Str.slice(0, transitionStart)(claimText));
+  const preamble = pipe(
+    Str.slice(0, transitionStart)(claimText),
+    Str.trim,
+    Str.replace(/,?\s+further$/iu, ""),
+    Str.trim
+  );
   const body = Str.trim(Str.slice(transitionStart + transitionMatch[0].length)(claimText));
   const bodyReference = Str.match(
     /\b(?:according to|as (?:recited|claimed|set forth) in|of)\s+claims?\s+\d+(?:\s*(?:-|–|—|through|to|and|or|,)\s*\d+)*/iu
