@@ -309,3 +309,9 @@ artifact, signing activation, deployed grant or observation window changes.
 - Fixtures prove the verifier mechanism, not actual protected CI publication
   or a production R2 upload. Current source-bound verification is being
   collected; no acceptance criterion or observation window closes here.
+
+- [Hosted producer verifier checkpoint](hosted-producer-verifier-checkpoint.json):
+  exact implementation/test/content-decoder hashes, 101 focused and 341
+  integrated tests, three intended-failure guard controls, zero Fallow/test-style
+  findings and the frozen audit plus documentation-only repair. This is a local
+  verifier component; fixture API metadata is not actual CI publication.

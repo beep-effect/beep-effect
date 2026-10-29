@@ -375,3 +375,15 @@ The parser normalizes embedded NULs in names, so original and normalized names
 must agree. Real ZIP controls cover a valid JSON symlink target, overflow,
 extra members and a NUL-normalized name. Prevent recurrence by retaining these
 controls and immutable-digest red-first tests in the upgrade gate.
+
+The existing GitHub text-content API decodes UTF-8 before returning text.
+An exact workflow-byte approval must refuse lossy decoding. The first cohort
+accepts only bounded ASCII workflow text. Even a matching hash over a
+replacement-character string is rejected; removing the ASCII guard makes that
+control fail. A Unicode profile requires raw-byte content verification.
+
+The full package audit passed, then docgen rejected an invented `verification`
+category. Use the canonical `validation` category already used by sibling
+verifiers. The repaired code has identical comment-free syntax; current docgen
+typechecks 3,551 CLI examples and package lint/type checking pass. Check the
+canonical category vocabulary before a long audit to catch this earlier.

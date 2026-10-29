@@ -397,3 +397,20 @@ the supplemental Node/V8 observations with the downloaded exact-head shard
 coverage clears the reported floors locally; fresh hosted acceptance is still
 required. No baseline or production source changed. See
 [the coverage checkpoint](research/reply-error-coverage-checkpoint.json).
+
+### Immutable hosted producer verifier component
+
+A bounded internal verifier joins a transported ZIP to authenticated GitHub run,
+artifact and independently selected workflow/binding identities. Real ZIP and
+ASCII workflow controls pass; three removed guards each fail one intended
+assertion and restore exact source. The integrated suite passes 341 tests in
+sixteen files. The frozen package audit passes in 1,181.5 seconds. Its docgen
+step failed on an introduced unsupported category; the canonical category
+repair has identical executable syntax and current passing docgen, lint and
+type checking. The failed original unit remains recorded. See
+[the component checkpoint](research/hosted-producer-verifier-checkpoint.json).
+
+This is observation verification only. A closed protected producer still needs
+to join actual successful uploads to its owned native task summary. Deployment
+grants, current qualification, key/epoch rotation, rollback and representative
+windows remain open. No production service, credential or signing change.

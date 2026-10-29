@@ -3,7 +3,7 @@
   "goal": "turborepo-cache-trust-observability",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "32bf10d431a81ecb290cc01f7fe79814b61b25eaec9e02a68745ea5f862d2358",
+  "specSha256": "cc3e2b7fa50d899586f3a1db1d8250253210fea0e9bbd42ffa7fe364106f55f7",
   "acceptance": [
     {
       "id": "AC-01",
@@ -203,7 +203,8 @@
     "proxyCaptureBoundsComponent": "goals/turborepo-cache-trust-observability/research/proxy-capture-bounds-checkpoint.json",
     "adapterRuntimeComponent": "goals/turborepo-cache-trust-observability/research/adapter-runtime-checkpoint.json",
     "proxyRequestCompletionComponent": "goals/turborepo-cache-trust-observability/research/proxy-request-completion-checkpoint.json",
-    "proxyNodeRuntimeComponent": "goals/turborepo-cache-trust-observability/research/proxy-node-runtime-checkpoint.json"
+    "proxyNodeRuntimeComponent": "goals/turborepo-cache-trust-observability/research/proxy-node-runtime-checkpoint.json",
+    "hostedProducerVerifierComponent": "goals/turborepo-cache-trust-observability/research/hosted-producer-verifier-checkpoint.json"
   },
   "remainingExplicitGates": [
     "SPEC verification matrix commands on actual final changes",
@@ -226,5 +227,6 @@
     "path": "goals/turborepo-cache-trust-observability/research/reply-error-coverage-checkpoint.json",
     "sha256": "e584ed096093741dc6324c4a4d619d427e6c7a1ded384fb418b8f2dfdbd7ad5c",
     "scope": "Tests-only repair; earlier implementation/runtime proofs retain their original source bindings."
-  }
+  },
+  "priorSpecSha256AtHostedProducerRefresh": "32bf10d431a81ecb290cc01f7fe79814b61b25eaec9e02a68745ea5f862d2358"
 }

@@ -236,7 +236,7 @@ const assertHostedReport = Effect.fn("CacheWorkflow.assertHostedReport")(functio
  * ```
  *
  * @internal
- * @category verification
+ * @category validation
  * @since 0.0.0
  */
 export const verifyCacheHostedProducerUpload = Effect.fn("CacheWorkflow.verifyHostedUpload")(
