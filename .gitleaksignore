@@ -134,23 +134,3 @@ scratchpad/effected/github/GitHubApp.ts:private-key:56
 # Documentation-only PEM header in imported effected-port JSDoc; no key body.
 # Scoped to the exact staged finding produced when integrating main.
 scratchpad/effected/github/GitHubApp.ts:private-key:120
-
-# PR2364 evidence receipts: exact historical SHA-256 source fingerprints.
-# All 15 values were independently recomputed from the named source files at
-# their introduction commit and current head. Commit/path/rule/line scope only;
-# no rule, directory or future-value allowlist. See PR validation evidence.
-4c93cd6d6df4acd59cb01c6fc8539d64fdd732f4:goals/agent-observability-foundation/ops/delivery-policy-verification.json:generic-api-key:136
-1ed9704cc640a24fe880a5b1dc161b009d1ca1ef:goals/agent-observability-foundation/ops/atomic-pause-package-verification.json:generic-api-key:90
-1ed9704cc640a24fe880a5b1dc161b009d1ca1ef:goals/agent-observability-foundation/ops/maintenance-package-verification.json:generic-api-key:93
-1ed9704cc640a24fe880a5b1dc161b009d1ca1ef:goals/agent-observability-foundation/ops/review-health-package-verification.json:generic-api-key:90
-1ed9704cc640a24fe880a5b1dc161b009d1ca1ef:goals/agent-observability-foundation/ops/query-backoff-package-verification.json:generic-api-key:93
-1ed9704cc640a24fe880a5b1dc161b009d1ca1ef:goals/agent-observability-foundation/ops/retirement-package-verification.json:generic-api-key:85
-1ed9704cc640a24fe880a5b1dc161b009d1ca1ef:goals/agent-observability-foundation/ops/replay-package-verification.json:generic-api-key:90
-1ed9704cc640a24fe880a5b1dc161b009d1ca1ef:goals/agent-observability-foundation/ops/surface-label-package-verification.json:generic-api-key:93
-1ed9704cc640a24fe880a5b1dc161b009d1ca1ef:goals/agent-observability-foundation/ops/whole-cli-runtime-abort-verification.json:generic-api-key:66
-1ed9704cc640a24fe880a5b1dc161b009d1ca1ef:goals/agent-observability-foundation/ops/whole-cli-runtime-abort-verification.json:generic-api-key:67
-1ed9704cc640a24fe880a5b1dc161b009d1ca1ef:goals/agent-observability-foundation/ops/whole-cli-runtime-abort-verification.json:generic-api-key:468
-1ed9704cc640a24fe880a5b1dc161b009d1ca1ef:goals/agent-observability-foundation/ops/whole-cli-runtime-abort-verification.json:generic-api-key:620
-1ed9704cc640a24fe880a5b1dc161b009d1ca1ef:goals/agent-observability-foundation/ops/whole-cli-runtime-abort-verification.json:generic-api-key:831
-1ed9704cc640a24fe880a5b1dc161b009d1ca1ef:goals/agent-observability-foundation/ops/whole-cli-runtime-abort-verification.json:generic-api-key:972
-1ed9704cc640a24fe880a5b1dc161b009d1ca1ef:goals/agent-observability-foundation/ops/whole-cli-runtime-abort-verification.json:generic-api-key:1333
