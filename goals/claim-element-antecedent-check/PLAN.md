@@ -41,6 +41,9 @@ are fixed, never before.
 
 ## Current Blockers
 
+- **Discourse-role repair with pass retention (2026-10-28):** [the comparison](history/2026-10-28-discourse-comparison.md) records **29/538 complete matches (5.39%)**, retaining all previous 21. Final [paired gate](history/2026-10-28-v10-retention.json) has eight gains and zero losses. Edge F1 is slightly lower at 29.26%; recall improves but precision declines. All old labels/results/scorer remain unchanged. 451 structural mismatches and 58 input failures remain; eight new regressions and all package checks pass. Full goal/human acceptance remain incomplete.
+
+
 - **Next closest-match repair (2026-10-28):** [the comparison](history/2026-10-28-next-closest-comparison.md) records **21/538 strict matches (3.90%)**, retaining all previous 11, and exact typed-edge F1 **29.31%**. All labels, earlier results and the scorer remain unchanged; the intermediate 19-match source/result is preserved at 007427078c. 459 mismatches and 58 input failures remain. This is development-set remediation; human agreement and full-goal acceptance are still open.
 
 

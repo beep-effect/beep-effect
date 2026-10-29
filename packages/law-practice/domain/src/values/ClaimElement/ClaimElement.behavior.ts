@@ -658,25 +658,27 @@ const antecedentEdges = (
             term.determiner === "bare" &&
             A.some(ancestors, (element) => element.path === path && element.kind === "preamble-subject"))
       );
-      const eligible = A.filter(
-        introductionsBefore,
-        ({ path, term }) =>
-          !A.some(
-            A.appendAll(elements, ancestors),
-            (element) =>
-              element.path === path &&
-              element.kind === "preamble-subject" &&
-              O.exists(A.head(element.terms), (first) => first.anchor.startChar === term.anchor.startChar) &&
-              O.isSome(Str.match(/\bclaims?\s+\d/iu)(element.anchor.quote)) &&
-              A.some(
-                ancestors,
-                (origin) =>
-                  origin.path !== path &&
-                  origin.kind === "preamble-subject" &&
-                  A.some(origin.terms, (first) => first.head === term.head)
+      const eligible = root(referring.path)
+        ? introductionsBefore
+        : A.filter(
+            introductionsBefore,
+            ({ path, term }) =>
+              !A.some(
+                A.appendAll(elements, ancestors),
+                (element) =>
+                  element.path === path &&
+                  element.kind === "preamble-subject" &&
+                  O.exists(A.head(element.terms), (first) => first.anchor.startChar === term.anchor.startChar) &&
+                  O.isSome(Str.match(/\bclaims?\s+\d/iu)(element.anchor.quote)) &&
+                  A.some(
+                    ancestors,
+                    (origin) =>
+                      origin.path !== path &&
+                      origin.kind === "preamble-subject" &&
+                      A.some(origin.terms, (first) => first.head === term.head)
+                  )
               )
-          )
-      );
+          );
       const exact = A.filter(eligible, ({ term }) => term.head === referring.term.head);
       const abbreviated = A.filter(eligible, ({ term }) => isExplicitAbbreviatedHead(referring.term.head)(term.head));
       const modified = A.filter(eligible, ({ term }) => isSingleModifiedHead(referring.term.head)(term.head));

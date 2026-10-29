@@ -30,6 +30,24 @@ describe("source discourse and grammatical dependency roles", () => {
     })
   );
 
+  it.effect("canonicalizes inherited body mentions without widening conservative root linking", () =>
+    Effect.gen(function* () {
+      const claims = yield* normalizePatentClaims([
+        ["1", "A fixture comprising a panel."],
+        ["2", "A fixture of claim 1 wherein the panel is covered."],
+        ["3", "A fixture of claim 2 wherein said fixture is attached to a post."],
+      ]);
+      const tree = yield* decomposeClaim(O.getOrThrow(A.last(claims)), claims);
+      assert.isTrue(
+        A.some(
+          tree.edges,
+          (edge) => edge.kind === "antecedent" && edge.referring.path === "3.a" && edge.introducing.path === "1"
+        )
+      );
+      assert.isFalse(A.some(tree.edges, (edge) => edge.kind === "antecedent" && edge.referring.path === "3"));
+    })
+  );
+
   it.effect("excludes alternative dependency scaffolding from preamble terms", () =>
     Effect.gen(function* () {
       for (const wording of ["any of", "any one of"]) {
@@ -138,10 +156,10 @@ describe("source discourse and grammatical dependency roles", () => {
 
   it.effect("attaches an introduced spatial part to its explicit owner, not a later object", () =>
     Effect.gen(function* () {
-      for (const [body, expected] of A.make(
-        ["a central portion of the housing is provided with a recess.", true],
-        ["a relay is coupled to the housing.", false]
-      )) {
+      for (const { body, expected } of [
+        { body: "a central portion of the housing is provided with a recess.", expected: true },
+        { body: "a relay is coupled to the housing.", expected: false },
+      ]) {
         const claims = yield* normalizePatentClaims([
           ["1", "A fixture comprising a housing."],
           ["2", `The fixture of claim 1 wherein ${body}`],
