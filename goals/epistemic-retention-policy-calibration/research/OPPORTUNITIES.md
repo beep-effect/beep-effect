@@ -29,3 +29,9 @@
   explicit coverage skip for the renewed receipt; hosted unit checks remain
   required. A scanner-config-specific affected scope would avoid unrelated suite
   expansion while preserving the detector controls and hosted gates.
+- 2026-10-29: Root cheap-gates found checks outside package-verify: generated
+  schema/span catalogs, tag idioms, property-test coverage, explicit native test
+  services, inline schema compilation, duplicate tier aggregation, runner entry
+  discovery and runner complexity. Repaired implementation and regenerated the
+  exact catalog shards; no baseline suppression was added. A scoped preflight
+  covering these root policies would shorten publication repair loops.

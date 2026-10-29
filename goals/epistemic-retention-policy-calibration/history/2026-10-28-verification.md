@@ -30,3 +30,24 @@ registry authentication/revocation. See G2-REPORT.md for exact scope.
 Not yet proven: Yeet publication/final-check, hosted readiness, reviews/window,
 merge, completion receipt or lane retirement. Production CLI and registry composition
 remain unchanged. Do not treat this local evidence as production calibration.
+
+## 2026-10-29 root-gate repair
+
+The publication preflight found introduced root-policy violations outside the
+package audit. The repair uses required schema tags, hoisted codecs, explicit
+native filesystem/path/process test layers, schema-derived property tests,
+a shared tier-summary function, and a declared standalone CLI entrypoint.
+Input admission and baseline coverage now have separate validation steps.
+Generated schema/span catalogs were refreshed by their owning commands.
+
+Server and use-case package-verify passed again (audit plus docgen). Server has
+59 unit tests and 49 integration tests passing; two existing integration files
+remain skipped. The native CLI suite remains 16 tests, with the receipt test
+now checking five schema-generated digests. Focused report/evaluation coverage
+now contains 21 tests. Schema-first, schema-tag, Effect/Vitest, Oxlint, Fallow
+audit and Fallow health checks passed. No lint baseline was weakened.
+
+The exact repair sources are recorded in `2026-10-29-repair-replay.json`.
+Replay is byte-identical to the frozen accepted bundle; the fixture, protocol,
+candidates and output hashes did not change. Historical verification above is
+retained rather than rewritten as evidence for a different source revision.

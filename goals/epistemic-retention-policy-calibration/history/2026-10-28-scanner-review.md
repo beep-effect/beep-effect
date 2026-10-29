@@ -7,7 +7,10 @@ superseded-output matches, and 2,266 final-output matches. No finding was an
 unknown value or another detector. Production data and credentials were absent.
 
 Prerequisite delivery: [PR #2354](https://github.com/beep-effect/beep-effect/pull/2354).
-Merge and hosted verification remain pending at this record.
+Merged 2026-10-29 as `8fc6c5056c961d6ef719e26bf4776c164b9b1154`.
+All hosted checks passed on head `800d08f453631e4a22ebcb027cf3fe077682e3ff`;
+fresh review-thread and elapsed-window gates passed. The prerequisite lane was
+retired through Yeet after merge.
 
 The separately reviewed prerequisite configuration uses one rule-specific
 allowlist, `condition = AND`, `regexTarget = match`, 104 exact complete field/value
@@ -34,5 +37,5 @@ produce complete matches and do not need the broader configuration. This is not
 a claim that every possible scanner mode is clean.
 
 The independent reviewer accepted the final exception scope and attribution.
-Hosted checks, review window and merge of the prerequisite remain delivery gates.
+The prerequisite delivery gates are verified; calibration delivery has its own gates.
 The configuration is not calibration acceptance, approval, or production activation.

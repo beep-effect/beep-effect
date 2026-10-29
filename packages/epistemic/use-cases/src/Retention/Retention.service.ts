@@ -36,6 +36,16 @@ import type { ClaimDisposition } from "@beep/epistemic-domain/entities/ClaimDisp
 import type { RetentionSnapshot } from "@beep/epistemic-domain/values/Retention";
 import type * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 
+const summarizeTiers = (rows: ReadonlyArray<RetentionRow>) =>
+  A.map(RetentionTier.literals, (tier) => {
+    const bucket = A.filter(rows, (row) => row.tier === tier);
+    return RetentionTierSummary.make({
+      tier,
+      count: bucket.length,
+      payloadBytes: A.reduce(bucket, 0, (sum, row) => sum + row.payloadBytes),
+    });
+  });
+
 const unavailable =
   (operation: string) =>
   <A, R>(effect: Effect.Effect<A, S.SchemaError, R>): Effect.Effect<A, RetentionUnavailable, R> =>
@@ -196,14 +206,7 @@ export const generateRetentionReport = Effect.fn("Retention.generateReport")(fun
         payloadBytes: A.reduce(bucket, 0, (sum, row) => sum + row.payloadBytes),
       });
     }),
-    tiers: A.map(RetentionTier.literals, (tier) => {
-      const bucket = A.filter(rows, (row) => row.tier === tier);
-      return RetentionTierSummary.make({
-        tier,
-        count: bucket.length,
-        payloadBytes: A.reduce(bucket, 0, (sum, row) => sum + row.payloadBytes),
-      });
-    }),
+    tiers: summarizeTiers(rows),
   });
   // Revalidate field schemas before exposing a report; this does not check cross-field arithmetic.
   return yield* S.encodeEffect(RetentionReport)(report).pipe(
@@ -331,14 +334,7 @@ export const evaluateRetentionCandidate = Effect.fn("Retention.evaluateCandidate
     rows,
     payloadBytes,
     pressureRatio: payloadBytes / policy.payloadBudgetBytes,
-    tiers: A.map(RetentionTier.literals, (tier) => {
-      const bucket = A.filter(rows, (row) => row.tier === tier);
-      return RetentionTierSummary.make({
-        tier,
-        count: bucket.length,
-        payloadBytes: A.reduce(bucket, 0, (sum, row) => sum + row.payloadBytes),
-      });
-    }),
+    tiers: summarizeTiers(rows),
   });
   return yield* S.encodeEffect(RetentionEvaluation)(evaluation).pipe(
     Effect.flatMap(S.decodeEffect(RetentionEvaluation)),

@@ -10,6 +10,7 @@ import { evaluateRetentionCandidate, generateRetentionReport } from "@beep/epist
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -28,6 +29,21 @@ const baseline = Effect.fn("EvaluationTest.baseline")(function* (knownAt: number
 });
 
 describe("offline retention evaluation", () => {
+  it.effect.prop(
+    "keeps budget sensitivity separate from baseline authority and approval",
+    [Arbitrary.schema(RetentionPolicy.fields.payloadBudgetBytes.check(S.isLessThanOrEqualTo(1_000_000)))],
+    ([payloadBudgetBytes]) =>
+      Effect.gen(function* () {
+        const report = yield* baseline(1500);
+        const before = yield* S.encodeEffect(RetentionReport)(report);
+        const policy = yield* S.decodeEffect(RetentionPolicy)({ ...policyInput, payloadBudgetBytes });
+        const result = yield* evaluateRetentionCandidate(report, policy);
+        expect(result.pressureRatio).toBe(report.payloadBytes / payloadBudgetBytes);
+        expect(result.baseline.admission.state).toBe("inert");
+        expect(yield* S.encodeEffect(RetentionReport)(report)).toEqual(before);
+        assertNone(S.decodeUnknownOption(RetentionCalibration)(yield* S.encodeEffect(RetentionEvaluation)(result)));
+      })
+  );
   it.effect("shares inclusive cutoffs and rational decay without admitting a policy", () =>
     Effect.gen(function* () {
       const policy = yield* S.decodeEffect(RetentionPolicy)(policyInput);

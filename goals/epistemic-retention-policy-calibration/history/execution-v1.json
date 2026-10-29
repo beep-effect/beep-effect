@@ -25,12 +25,14 @@
   "encoding": "SHA-256 exact UTF-8 artifact bytes including terminal newline",
   "approvalState": "not-requested",
   "productionEligible": false,
-  "finalRunnerSourceSha256": "90c21fa85661f0ad40e1f7d11d4e892a31be362adc2a6ced79454f5b1b991191",
+  "finalRunnerSourceSha256": "12c35e2a8c5ad05cbf6a68204e3f1b3c37ad725e91e6b00bee95f3c6689b7741",
   "finalReplay": {
     "command": "bun run packages/epistemic/server/scripts/retention-calibrate.ts <packet> <fresh-output>",
     "exitCode": 0,
     "durationSeconds": 0.2573704629976419,
     "byteIdentical": true,
     "outputSha256": "245df0b67475dd56133be9e5abb65d043dcdd122252b5f91bbb6c99c50b92e86"
-  }
+  },
+  "priorFinalRunnerSourceSha256": "90c21fa85661f0ad40e1f7d11d4e892a31be362adc2a6ced79454f5b1b991191",
+  "finalRepairReplay": "history/2026-10-29-repair-replay.json"
 }
