@@ -1,0 +1,26 @@
+{
+  "id": "retention-synthetic-v1",
+  "purpose": "synthetic",
+  "authorization": "GOAL.md launch; generated controls only",
+  "provenance": "Deterministic generated edges from protocol-v1 age/tenant/time grid; audit fields use existing ProductEntity fixture wire conventions. No product/private data.",
+  "encoding": "SHA-256 over exact UTF-8 file bytes including terminal newline",
+  "sha256": "03b9b93a8a5a098d0df16da435a50d762b27e2bbcf48f5e983803cd8b51e0fbe",
+  "protocolSha256": "1b73974efbc1d36c39e039fc68fdd8629ff5bab80ef3330d6b293978a0f544e8",
+  "suppliedEdges": 104,
+  "usableEdges": 104,
+  "excludedEdges": 0,
+  "dispositionRecords": 64,
+  "queryCount": 4,
+  "independentLogicalIdentities": 104,
+  "productSamples": 0,
+  "independentLabels": 0,
+  "validCandidatesExpected": 11,
+  "invalidCandidatesExpected": 5,
+  "limitations": [
+    "Generated tenant/time strata are controls, not representative product samples.",
+    "Payload-size skew is synthetic; no real workload budget justification.",
+    "Held-out identities are disjoint; age distribution deliberately identical to tuning to test mechanics, not generalization.",
+    "Disposition is not a usefulness label.",
+    "Wrong-digest and approval controls run separately; they do not construct production approval."
+  ]
+}
