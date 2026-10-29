@@ -29,7 +29,7 @@ import { PatentClaim } from "../PatentDocument/PatentDocument.model.ts";
 import { ClaimDecompositionError } from "./ClaimElement.errors.ts";
 import { ClaimTermDeterminer } from "./ClaimElement.model.ts";
 import { ClaimElementTree } from "./ClaimElement.tree.model.ts";
-import { isExplicitAbbreviatedHead, isSingleModifiedHead } from "./ClaimTerm.compatibility.ts";
+import { isDesignatedHead, isExplicitAbbreviatedHead, isSingleModifiedHead } from "./ClaimTerm.compatibility.ts";
 import type { PatentClaims } from "../PatentDocument/PatentDocument.model.ts";
 import type { ClaimElementEdge, ClaimFunctionalPart } from "./ClaimElement.edge.model.ts";
 import type { ClaimElement, ClaimElementKind, ClaimTerm } from "./ClaimElement.model.ts";
@@ -323,7 +323,7 @@ const predicateWords = HashSet.fromIterable(
 );
 const nominalFollowers = HashSet.fromIterable(
   Str.split(
-    "unit units condition conditions device devices circuit circuits member members portion portions surface surfaces means system systems apparatus assembly assemblies mechanism mechanisms",
+    "unit units condition conditions device devices circuit circuits member members portion portions surface surfaces means system systems apparatus assembly assemblies mechanism mechanisms strip strips rod rods bracket brackets",
     " "
   )
 );
@@ -341,12 +341,16 @@ const isPredicateToken = (tokens: ReadonlyArray<Span>, index: number): boolean =
       word
     )
   );
-  const nominal =
-    O.exists(current, (word) => Str.endsWith("ed")(word)) &&
-    O.exists(previous, (word) => HashSet.has(HashSet.make("a", "an", "the", "said", "its", "their"), word));
+  const nominal = O.exists(previous, (word) =>
+    HashSet.has(HashSet.make("a", "an", "the", "said", "its", "their"), word)
+  );
+  const finite = O.exists(current, (word) =>
+    HashSet.has(HashSet.make("display", "extend", "mesh"), pipe(word, Str.replace(/(?:es|s)$/u, "")))
+  );
+  const clauseVerb = O.exists(previous, (word) => HashSet.has(HashSet.make("to", "that", "which"), word));
   return (
-    (O.exists(current, (word) => HashSet.has(predicateWords, word)) || (participle && complement)) &&
-    !O.exists(next, (word) => HashSet.has(nominalFollowers, word)) &&
+    (O.exists(current, (word) => HashSet.has(predicateWords, word)) || finite || (participle && complement)) &&
+    (!O.exists(next, (word) => HashSet.has(nominalFollowers, word)) || clauseVerb) &&
     !nominal
   );
 };
@@ -605,7 +609,7 @@ const elementOf =
         kind === "preamble-subject"
           ? O.match(
               Str.match(
-                /\b(?:according to|in accordance with|as (?:set forth|recited|claimed) in|of)\s+(?:the\s+)?claims?\b/iu
+                /\b(?:according to|in accordance with|as (?:set forth|recited|claimed) in|of)\s+(?:the\s+|any(?:\s+one)?\s+of\s+)?claims?\b/iu
               )(span.text),
               {
                 onNone: () => span,
@@ -646,13 +650,32 @@ const antecedentEdges = (
         located,
         ({ path, term }) => !local(path) || term.anchor.startChar < referring.term.anchor.startChar
       );
-      const eligible = A.filter(
+      const introductionsBefore = A.filter(
         before,
         ({ path, term }) =>
           isIntroducingDeterminer(term.determiner) ||
           (root(referring.path) &&
             term.determiner === "bare" &&
             A.some(ancestors, (element) => element.path === path && element.kind === "preamble-subject"))
+      );
+      const eligible = A.filter(
+        introductionsBefore,
+        ({ path, term }) =>
+          !A.some(
+            A.appendAll(elements, ancestors),
+            (element) =>
+              element.path === path &&
+              element.kind === "preamble-subject" &&
+              O.exists(A.head(element.terms), (first) => first.anchor.startChar === term.anchor.startChar) &&
+              O.isSome(Str.match(/\bclaims?\s+\d/iu)(element.anchor.quote)) &&
+              A.some(
+                ancestors,
+                (origin) =>
+                  origin.path !== path &&
+                  origin.kind === "preamble-subject" &&
+                  A.some(origin.terms, (first) => first.head === term.head)
+              )
+          )
       );
       const exact = A.filter(eligible, ({ term }) => term.head === referring.term.head);
       const abbreviated = A.filter(eligible, ({ term }) => isExplicitAbbreviatedHead(referring.term.head)(term.head));
@@ -662,12 +685,16 @@ const antecedentEdges = (
       const mentions = A.filter(
         before,
         ({ path, term }) =>
-          !local(path) &&
           term.head === referring.term.head &&
           (!root(referring.path) ||
             A.some(ancestors, (element) => element.path === path && element.kind === "preamble-subject"))
       );
       const bareMentions = A.filter(mentions, ({ term }) => term.determiner === "bare");
+      const localDesignated = A.filter(
+        before,
+        ({ path, term }) => local(path) && isDesignatedHead(referring.term.head)(term.head)
+      );
+      const designated = A.filter(before, ({ term }) => isDesignatedHead(referring.term.head)(term.head));
       const modifiedMentions = A.filter(
         before,
         ({ path, term }) => !local(path) && isSingleModifiedHead(referring.term.head)(term.head)
@@ -682,7 +709,17 @@ const antecedentEdges = (
         : [];
       const introductions = O.getOrElse(
         A.findFirst(
-          [exact, abbreviated, rootShortened, modified, bareMentions, mentions, modifiedMentions],
+          [
+            localDesignated,
+            exact,
+            abbreviated,
+            designated,
+            rootShortened,
+            modified,
+            bareMentions,
+            mentions,
+            modifiedMentions,
+          ],
           A.isReadonlyArrayNonEmpty
         ),
         () => []
@@ -918,23 +955,26 @@ export const decomposeClaim: {
         input.elements,
         (element) =>
           element.path === edge.referring.path &&
-          O.exists(
-            A.head(element.terms),
-            (term) =>
-              term.anchor.startChar === edge.referring.anchor.startChar &&
-              A.some(
-                ancestors,
-                (ancestor) =>
-                  ancestor.path === edge.introducing.path &&
-                  A.some(
-                    ancestor.terms,
-                    (introduced) =>
-                      introduced.anchor.startChar === edge.introducing.anchor.startChar &&
-                      isIntroducingDeterminer(introduced.determiner) &&
-                      introduced.head === term.head
-                  )
-              )
-          )
+          O.exists(A.head(element.terms), (term) => {
+            if (term.anchor.startChar !== element.anchor.startChar) return false;
+            const partOwner =
+              isIntroducingDeterminer(term.determiner) &&
+              O.isSome(Str.match(/\b(?:portion|surface|edge|end|region|area|section|side)$/u)(term.head)) &&
+              Str.trim(Str.slice(term.anchor.endChar, edge.referring.anchor.startChar)(claim.claimText)) === "of";
+            if (term.anchor.startChar !== edge.referring.anchor.startChar && !partOwner) return false;
+            return A.some(
+              ancestors,
+              (ancestor) =>
+                ancestor.path === edge.introducing.path &&
+                A.some(
+                  ancestor.terms,
+                  (introduced) =>
+                    introduced.anchor.startChar === edge.introducing.anchor.startChar &&
+                    isIntroducingDeterminer(introduced.determiner) &&
+                    (partOwner || introduced.head === term.head)
+                )
+            );
+          })
       );
       return parent && subject
         ? [{ kind: "depends-on-element", dependent: edge.referring.path, ancestor: edge.introducing.path }]

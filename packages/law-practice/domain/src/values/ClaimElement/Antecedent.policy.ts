@@ -120,7 +120,12 @@ const rule = {
 };
 
 /** One term of one tree, with the claim it belongs to and its reference. */
-type LocatedTerm = { readonly claimNumber: number; readonly ref: ClaimTermRef; readonly term: ClaimTerm };
+type LocatedTerm = {
+  readonly claimNumber: number;
+  readonly ref: ClaimTermRef;
+  readonly term: ClaimTerm;
+  readonly inheritedSubject: boolean;
+};
 
 /** A dependency chain from the checked claim towards its root, and whether every step could be followed. */
 type Chain = { readonly claims: A.NonEmptyReadonlyArray<number>; readonly resolvable: boolean };
@@ -138,7 +143,8 @@ type Verdict = O.Option<AntecedentFinding>;
 
 const isIntroducingDeterminer = S.is(ClaimTermIntroducingDeterminer);
 const isReferringDeterminer = S.is(ClaimTermReferringDeterminer);
-const isIntroducing = ({ term }: LocatedTerm): boolean => isIntroducingDeterminer(term.determiner);
+const isIntroducing = ({ term, inheritedSubject }: LocatedTerm): boolean =>
+  isIntroducingDeterminer(term.determiner) && !inheritedSubject;
 const isReferring = ({ term }: LocatedTerm): boolean =>
   isReferringDeterminer(term.determiner) || ClaimTermDeterminer.is.bare(term.determiner);
 
@@ -153,6 +159,10 @@ const locatedTerms = (tree: ClaimElementTree): ReadonlyArray<LocatedTerm> =>
       claimNumber: tree.claimNumber,
       ref: ClaimTermRef.make({ path: element.path, anchor: term.anchor }),
       term,
+      inheritedSubject:
+        element.path === `${tree.claimNumber}` &&
+        O.exists(A.head(element.terms), (first) => first.anchor.startChar === term.anchor.startChar) &&
+        A.some(tree.edges, (edge) => edge.kind === "depends-on-element" && edge.dependent === element.path),
     }))
   );
 

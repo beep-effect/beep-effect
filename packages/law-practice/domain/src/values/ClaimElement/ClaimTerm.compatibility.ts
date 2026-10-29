@@ -45,3 +45,19 @@ export const isExplicitAbbreviatedHead =
       )
     );
   };
+
+/**
+ * Match a name whose source supplies a trailing letter-number designator.
+ * @example
+ * ```ts
+ * import { isDesignatedHead } from "../../src/values/ClaimElement/ClaimTerm.compatibility.ts"
+ * console.log(isDesignatedHead("relaxation time")("relaxation time t2")) // true
+ * console.log(isDesignatedHead("sensor")("sensor 12")) // false
+ * ```
+ * @category domain-logic
+ * @since 0.0.0
+ */
+export const isDesignatedHead =
+  (head: string) =>
+  (candidate: string): boolean =>
+    O.exists(Str.match(/^(.+)\s+[a-z]{1,4}\d+[a-z0-9]*$/u)(candidate), (match) => O.contains(A.get(match, 1), head));
