@@ -33,6 +33,12 @@ the newer public vocabulary artifact pins above. The committed operation corpus
 records their versions and the SHA-256 of the exact upstream `uv.lock`; it does
 not silently replace the public vocabulary or add a runtime Python dependency.
 
+Private citation resolver compatibility data also records observable character
+classification facts from the frozen Python 3.11.15 runtime's Unicode 14.0.0
+properties. The maintainer producer and fact provenance are recorded in the
+citation-engine packet. No Python or Unicode implementation source is included,
+and no Python runtime dependency is introduced.
+
 Copyright (c) 2014, Free Law Project (reporters-db)
 
 Copyright (c) 2020, Free Law Project (courts-db and eyecite)

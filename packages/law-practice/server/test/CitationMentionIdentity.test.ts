@@ -1,4 +1,8 @@
 import { CitationMentionId } from "@beep/law-practice-domain/values";
+import {
+  CitationMentionIdentityInput,
+  makeCitationMentionId,
+} from "@beep/law-practice-server/_test/Citation/MentionIdentity";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import {
@@ -17,7 +21,6 @@ import * as Effect from "effect/Effect";
 import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { CitationMentionIdentityInput, makeCitationMentionId } from "../src/internal/Citation/MentionIdentity.ts";
 
 const sourceText = "😀 1 U.S. 1; 1 U.S. 1";
 const artifact = Sha256Hex.make("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef");

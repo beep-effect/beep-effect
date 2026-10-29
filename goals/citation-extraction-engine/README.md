@@ -30,7 +30,9 @@ authority-key producer matches focused oracle equality and protocol vectors.
 Stable-ID document/resolution schemas now validate graph coherence and
 structural receipt round-trips. Private whole-document projection/restoration
 now checks occurrence/default authority keys and shares one source verification.
-Full resolver/custom-resource proof, live artifact integration, Bluebook codecs,
+Private resolver text helpers now preserve frozen Unicode/punctuation and
+arbitrary-precision Id. pin behavior. Full resolver/custom-resource proof,
+live artifact integration, Bluebook codecs,
 extension adoption/schema proof, runtime enforcement and family safety remain
 unfinished.
 
@@ -60,6 +62,7 @@ Current evidence:
 - [Authority identity](./history/evidence/2026-10-28-authority-identity.md)
 - [Document relationships](./history/evidence/2026-10-28-document-relationships.md)
 - [Document persistence](./history/evidence/2026-10-28-document-persistence.md)
+- [Resolver text](./history/evidence/2026-10-28-resolver-text.md)
 
 ## Mission
 

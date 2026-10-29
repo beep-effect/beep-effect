@@ -792,6 +792,16 @@ instead of silently splitting delivery or weakening scope.
   Reversal requires equivalent source/identity/mutation proof, not trusting
   structural receipts as capabilities or checking only representatives.
 
+- **2026-10-28 resolver text fidelity:** preserve the exact strip_punct
+  substitution order and frozen Python 3.11.15 / Unicode 14 digit, decimal and
+  whitespace facts. Do not substitute JavaScript whitespace or numeric
+  conversion. Use arbitrary-precision decimal comparison for Id. with the
+  canonical inclusive 150-page range and frozen 4,300-digit conversion policy.
+  Preserve missing/null page distinctions and source conversion/type failures
+  through sanitized private errors. Full resolver integration, boundary mapping
+  and regex-family safety remain open. Reverse only through a new oracle
+  baseline and equivalent Unicode/numeric/punctuation comparison evidence.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from

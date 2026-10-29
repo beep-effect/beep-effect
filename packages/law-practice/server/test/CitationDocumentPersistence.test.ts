@@ -10,6 +10,18 @@ import {
   CitationMentionId,
   CitationResolved,
 } from "@beep/law-practice-domain/values";
+import {
+  CitationAuthorityIdentityInput,
+  makeCitationAuthorityId,
+} from "@beep/law-practice-server/_test/Citation/AuthorityIdentity";
+import {
+  projectCitationDocumentReceipt,
+  restoreCitationDocument,
+} from "@beep/law-practice-server/_test/Citation/Document";
+import {
+  makeCitationMention,
+  restoreCitationMentionAgainstVerifiedSource,
+} from "@beep/law-practice-server/_test/Citation/Mention";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import {
@@ -30,9 +42,6 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import cases from "../../use-cases/test/fixtures/eyecite/authority-identity-cases.json" with { type: "json" };
-import { CitationAuthorityIdentityInput, makeCitationAuthorityId } from "../src/internal/Citation/AuthorityIdentity.ts";
-import { projectCitationDocumentReceipt, restoreCitationDocument } from "../src/internal/Citation/Document.ts";
-import { makeCitationMention, restoreCitationMentionAgainstVerifiedSource } from "../src/internal/Citation/Mention.ts";
 
 const text = "😀 1 U.S. 1; 1 U.S. 1; Id.";
 const artifact = Sha256Hex.make(Str.repeat(64)("a"));

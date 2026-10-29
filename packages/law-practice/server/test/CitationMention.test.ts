@@ -7,6 +7,12 @@ import {
   CitationMentionReceipt,
   CitationOverlapWarning,
 } from "@beep/law-practice-domain/values";
+import {
+  makeCitationMention,
+  projectCitationMentionReceipt,
+  restoreCitationMention,
+} from "@beep/law-practice-server/_test/Citation/Mention";
+import { makeCitationMentionId } from "@beep/law-practice-server/_test/Citation/MentionIdentity";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { VerifiedTextAnchor, VerifyTextAnchorInput, verifyTextAnchor } from "@beep/provenance/VerifiedTextAnchor";
@@ -25,12 +31,6 @@ import * as PlatformError from "effect/PlatformError";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import {
-  makeCitationMention,
-  projectCitationMentionReceipt,
-  restoreCitationMention,
-} from "../src/internal/Citation/Mention.ts";
-import { makeCitationMentionId } from "../src/internal/Citation/MentionIdentity.ts";
 
 const text = "1. 😀 1 U.S. 1; 1 U.S. 1\r\n";
 const artifact = Sha256Hex.make("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef");
