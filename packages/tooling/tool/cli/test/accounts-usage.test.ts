@@ -329,6 +329,16 @@ describe("credits, resets, and the Muse and Grok providers", () => {
       expect(
         kimiCreditBalances(KimiUsageBody.make({ boosterWallet: { balance: { type: "GIFT", amount: 5 } } }))
       ).toEqual([]);
+      const unlabelled = yield* KimiUsageBodyJson.decode(
+        `{"boosterWallet":{"balance":{"type":"BOOSTER","amount":100000000,"amountLeft":"50000000"},"monthlyChargeLimit":{"currency":""}}}`
+      );
+      expect(A.map(kimiCreditBalances(unlabelled), (credit) => [credit.label, credit.unit, credit.remaining])).toEqual([
+        ["extra usage", "usd", 0.5],
+      ]);
+      const unreadableReset = yield* KimiUsageBodyJson.decode(
+        `{"usages":{"limit_5h":{"used_ratio":0.5,"reset_time":"soon"}}}`
+      );
+      expect(A.map(kimiUsageWindows(unreadableReset), (window) => O.isNone(window.resetsAt))).toEqual([true]);
     })
   );
 
@@ -363,6 +373,26 @@ describe("credits, resets, and the Muse and Grok providers", () => {
     assertSome(kimiProfileIdentity(KimiProfileBody.make({ email: null, nickname: "Someone" })), "Someone");
     expect(kimiUsageOutcome({ identity, status: 401, body: "" }, O.none())._tag).toBe("NeedsLogin");
     expect(kimiUsageOutcome({ identity, status: 200, body: "not json" }, O.none())._tag).toBe("Failed");
+  });
+
+  it("names a Kimi row after its login file until a poll reads the profile", () => {
+    const kimiRow = (label: string, outcome: AccountUsageOutcome) =>
+      AccountUsage.make({ account: AccountRef.make({ provider: "kimi", label, source: "synthetic" }), outcome });
+    const board = plainBoard(
+      reportOf([
+        kimiRow("kimi-1761717000000", kimiUsageOutcome({ identity: O.none(), status: 401, body: "" }, O.none())),
+        kimiRow(
+          "kimi-ai-1761717000001",
+          kimiUsageOutcome({ identity: O.none(), status: 200, body: "not json" }, O.none())
+        ),
+        kimiRow("kimi-1761717000002", kimiUsageOutcome({ identity: O.none(), status: 200, body: kimiBody }, O.none())),
+      ])
+    );
+    expect(board).toContain("kimi-1761717000000");
+    expect(board).toContain("kimi-ai-1761717000001");
+    expect(board).toContain("kimi-1761717000002");
+    expect(board).toContain("needs login");
+    expect(board).toContain("unreadable");
   });
 
   it("decodes the Grok weekly pool from a gRPC-web protobuf reply", () => {
@@ -684,6 +714,22 @@ describe("accounts board rendering", () => {
     expect(board).toContain(
       "$247 of $250 cloud session credits (expire Nov 5) · 62287 credits · 2 limit resets unused · plan pro"
     );
+    const single = plainBoard(
+      reportOf([
+        AccountUsage.make({
+          account: account("one@example.com", "codex"),
+          outcome: AccountUsageOutcome.cases.Ok.make({
+            identity: O.none(),
+            plan: O.none(),
+            windows: [weekly(40, inHours(10))],
+            credits: [],
+            limitResets: O.some(1),
+            asOf: O.none(),
+          }),
+        }),
+      ])
+    );
+    expect(single).toContain("1 limit reset unused");
   });
 
   it("keeps every line inside the board at the minimum width with a long label", () => {
@@ -841,6 +887,27 @@ it.layer(inheritedPlatform, { timeout: "30 seconds" })("live account poller", (i
         ["GET", "https://chatgpt.com/backend-api/wham/usage", "Bearer codex-token", "acct-1"],
         ["POST", "https://grok.com/grok_api_v2.GrokBuildBilling/GetGrokCreditsConfig", "Bearer xai-token", "1"],
       ]);
+    })
+  );
+
+  it.effect("keeps the Kimi usages when the profile request fails", () =>
+    Effect.gen(function* () {
+      const client = HttpClient.make((request) =>
+        Effect.succeed(
+          Str.endsWith("/usages")(request.url) ? respond(request, kimiBody) : respond(request, "busy", 503)
+        )
+      );
+      const usages = yield* runLive(
+        { "kimi-1761717000000.json": authFiles["kimi-1761717000000.json"] },
+        client,
+        pollAccounts
+      );
+      expect(A.map(usages, (usage) => usage.outcome._tag)).toEqual(["Ok"]);
+      const outcome = usages[0]?.outcome;
+      if (outcome?._tag !== "Ok") return;
+      assertNone(outcome.identity);
+      assertNone(outcome.plan);
+      expect(A.length(outcome.windows)).toBe(3);
     })
   );
 
