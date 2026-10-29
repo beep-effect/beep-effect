@@ -66,3 +66,9 @@ hashing, host-key normalization, live identity allocation, per-entry group
 projection, shared work limits and final engine error mapping also remain open.
 No canonical, donor, divergence or safety row is promoted. Full engine parity,
 Bluebook, exhaustive proof and one-PR delivery remain required.
+
+A subsequent [live-resource composition checkpoint](
+./2026-10-29-live-case-resources.md#verification-correction) corrected a final
+mutation-test edit that the original package run had not read. The corrected
+stable files pass a fresh full server gate; the source hash fixture and
+implementation remain unchanged.

@@ -81,6 +81,13 @@ controlled identity-hook scope, fresh replay and remaining live integration.
 No source process address is incorporated or inferred from citation content.
 This proof does not promote the three mutable-key engine cases.
 
+The [live case-resource composition evidence](
+../history/evidence/2026-10-29-live-case-resources.md) records five actual
+Resource/dictionary histories and thirty-eight events. The private registry
+adapts Resource.__hash__/__eq__ through the exact hash helper and captures the
+semantic owner through an injected service. Attribution remains BSD-2-Clause.
+This component proof does not establish final default callback integration.
+
 ## Incorporated-source discipline
 
 - A local clone is research state, not an incorporated dependency.

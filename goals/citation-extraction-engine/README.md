@@ -177,3 +177,9 @@ and sixty-two events. The private
 observations, including controlled null-page identities. Live identity
 allocation and owner integration are still required before the three mutable-key
 engine cases can close.
+
+The [live case-resource composition](
+./history/evidence/2026-10-29-live-case-resources.md) connects current semantic
+owner reads/writes, resource object identity, exact hashes and the runtime
+table across five source histories and thirty-eight events. Default callback
+owner integration and the three mutable-key engine cases remain open.

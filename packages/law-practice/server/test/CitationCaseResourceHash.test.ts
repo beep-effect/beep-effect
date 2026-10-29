@@ -1,5 +1,5 @@
 import { fileURLToPath } from "node:url";
-import { CitationComponents } from "@beep/law-practice-domain/values";
+import { CitationComponents, FullCaseCitation } from "@beep/law-practice-domain/values";
 import {
   CitationCaseResourceHash,
   CitationCaseResourceHashInput,
@@ -69,9 +69,12 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("exact source case r
       ).toBe("identity-unavailable");
       const baseline = A.getUnsafe(rows, 0).input;
       const components = yield* S.encodeEffect(CitationComponents)(baseline.citation.components);
-      const mutable = { ...baseline, citation: { ...baseline.citation, components: { ...components } } };
+      const mutable = { ...baseline };
       const one = yield* makeCitationCaseResourceHash(mutable);
-      mutable.citation.components.page = "2";
+      mutable.citation = FullCaseCitation.make({
+        ...baseline.citation,
+        components: yield* S.decodeEffect(CitationComponents)({ ...components, page: "2" }),
+      });
       const two = yield* makeCitationCaseResourceHash(mutable);
       expect(two).toEqual(A.getUnsafe(rows, 1).expected);
       expect(one.resourceHash).not.toBe(two.resourceHash);
