@@ -1,4 +1,5 @@
 import {
+  ClosedCompilerOptions,
   CompilerOptions,
   Jsx,
   Module,
@@ -8,8 +9,10 @@ import {
   Target,
 } from "@beep/tsconfig/CompilerOptions";
 import { assert, describe, it } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import * as SchemaAST from "effect/SchemaAST";
 
 describe("CompilerOptions", () => {
   it.effect("decodes a full realistic options object preserving every field", () =>
@@ -147,6 +150,41 @@ describe("CompilerOptions round-trip", () => {
       const encoded = yield* S.encodeUnknownEffect(CompilerOptions)(decoded);
       const redecoded = yield* S.decodeEffect(CompilerOptions)(encoded);
       assert.deepStrictEqual(redecoded, decoded);
+    })
+  );
+});
+
+describe("ClosedCompilerOptions", () => {
+  it("shares the passthrough schema's typed key universe", () => {
+    const names = (ast: SchemaAST.AST): ReadonlyArray<PropertyKey> =>
+      SchemaAST.isObjects(ast) ? A.map(ast.propertySignatures, (signature) => signature.name) : [];
+    assert.deepStrictEqual(names(ClosedCompilerOptions.ast), names(CompilerOptions.ast));
+    assert.isTrue(names(ClosedCompilerOptions.ast).length > 100);
+    // The closed view has no index signature; the passthrough view has one.
+    assert.isTrue(
+      SchemaAST.isObjects(ClosedCompilerOptions.ast) && ClosedCompilerOptions.ast.indexSignatures.length === 0
+    );
+    assert.isTrue(SchemaAST.isObjects(CompilerOptions.ast) && CompilerOptions.ast.indexSignatures.length === 1);
+  });
+
+  it.effect("rejects an unknown option under onExcessProperty=error and drops it by default", () =>
+    Effect.gen(function* () {
+      const input = { target: "ESNext", strict: true, futureOption: "kept" };
+      const error = yield* Effect.flip(S.decodeEffect(ClosedCompilerOptions)(input, { onExcessProperty: "error" }));
+      assert.include(error.message, '["futureOption"]');
+      const dropped = yield* S.decodeEffect(ClosedCompilerOptions)(input);
+      assert.deepStrictEqual(dropped, { target: "esnext", strict: true });
+      // The passthrough schema keeps it.
+      const kept = yield* S.decodeEffect(CompilerOptions)(input);
+      assert.strictEqual(kept.futureOption, "kept");
+    })
+  );
+
+  it.effect("rejects null and explicit undefined for an optional key", () =>
+    Effect.gen(function* () {
+      const strict = S.decodeUnknownEffect(ClosedCompilerOptions);
+      assert.include((yield* Effect.flip(strict({ strict: null }))).message, '["strict"]');
+      assert.include((yield* Effect.flip(strict({ strict: undefined }))).message, '["strict"]');
     })
   );
 });

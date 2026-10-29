@@ -4535,12 +4535,15 @@
           "@beep/config-file",
           "@beep/identity",
           "@beep/md",
+          "@beep/memfs",
           "@beep/package-json",
           "@beep/repo-docgen",
+          "@beep/repo-tsconfig",
           "@beep/repo-utils",
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/tsconfig",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -4548,12 +4551,15 @@
           "@beep/config-file",
           "@beep/identity",
           "@beep/md",
+          "@beep/memfs",
           "@beep/package-json",
           "@beep/repo-docgen",
+          "@beep/repo-tsconfig",
           "@beep/repo-utils",
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/tsconfig",
           "@beep/utils"
         ]
       },
