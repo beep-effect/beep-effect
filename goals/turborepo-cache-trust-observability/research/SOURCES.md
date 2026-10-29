@@ -384,3 +384,14 @@ artifact, signing activation, deployed grant or observation window changes.
   excerpts stay distinct from eighteen real synthetic native replay processes.
   Earlier observations keep their original driver identities and full goal
   acceptance remains open.
+
+
+## Signed supervisor launcher repair, 2026-10-29
+
+- [Source-bound checkpoint](signed-runtime-alias-checkpoint.json): exact private
+  runtime aliases repair discovery of a pinned executable named `bun.native`.
+  The actual isolated old/fixed topology probe exited127/0 respectively and
+  the fixed form reported the expected pinned runtime versions.
+- 18 supervisor tests pass in each runtime; package lint/check and the complete
+  package audit plus Docgen pass. This is launcher proof; current native task
+  qualification and production trust remain separate unfinished gates.

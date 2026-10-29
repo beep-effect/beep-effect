@@ -435,3 +435,16 @@ The local process report does not satisfy those deployment or observation gates.
   any trial consumers and destroy only this separate token stack using current
   approved management authorization. No bucket is removed. Actual revocation,
   epoch rollback and consumer requalification remain required before activation.
+
+
+### Signed supervisor runtime aliases, 2026-10-29
+
+- Bind the exact selected Bun and Node files at private `/tools/bun` and
+  `/tools/node` aliases, and search only `/tools:/usr/bin` in the outer signed
+  worker. The real Bun file may be named `bun.native`; mounting that file at
+  its original path does not provide the `bun` command used by tool discovery.
+  Preserve original-path mounts, private networking, explicit clean runtime
+  configuration and independent executable content checks. No host directory
+  or caller-supplied search path is shared.
+- Reversal leaves signed experiments disabled and reverts this launcher fix.
+  This repair grants no producer, qualification or signed production authority.

@@ -628,3 +628,22 @@ Use the test framework's scoped module pin and lift the dynamic import through
 Hosted policy found EV011 on the direct `vi` import from `vitest`. Import the
 same API through the pinned `@effect/vitest` export-star entrypoint and rerun
 the policy check; do not add a baseline finding or waive the detector.
+
+
+## Signed supervisor runtime discovery
+
+- While refreshing the real signed pilot, the unchanged supervisor exited1 at
+  toolchain discovery. A private observer retained only static error classes
+  and source locations. Its pinned Bun file was named `bun.native`, with no
+  `bun` command in the mounted search path. An actual private-network probe
+  failed127 with the original mounts and passed0 with exact private binary
+  aliases, reporting the expected Bun and Node versions. Keep aliases in the
+  supervisor and test their complete mount arguments; never share a host tools
+  directory or weaken the namespace. No current qualification was obtained.
+- The first added assertion used an unavailable Array helper. The installed
+  Effect declarations and canonical source expose `Array.window`; use that
+  primitive and retain the failed tests as introduced harness evidence.
+
+- The fixture's existing spy variable named `process` shadowed the runtime
+  process used by the new assertion. The compiler and runtime tests exposed it;
+  renaming the spy preserved the fixture API and restored the typed assertion.

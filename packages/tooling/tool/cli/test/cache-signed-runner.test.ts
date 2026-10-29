@@ -107,7 +107,7 @@ const fixture = Effect.fn("SignedRunnerTest.fixture")(function* (fault: typeof F
   vi.spyOn(Evidence, "hashCacheExperimentExecutable").mockReturnValue(
     Effect.succeed(fault === "pin" ? Sha256Hex.make(Str.repeat(64)("b")) : digest)
   );
-  const process = vi.spyOn(CacheRuntimeProcess, "runCapturedStreams").mockImplementation(
+  const capturedProcess = vi.spyOn(CacheRuntimeProcess, "runCapturedStreams").mockImplementation(
     Effect.fn("SignedRunnerTest.process")(function* (options) {
       if (options.command === "/usr/bin/git")
         return CacheRuntimeProcess.CapturedStreams.make({
@@ -120,6 +120,13 @@ const fixture = Effect.fn("SignedRunnerTest.fixture")(function* (fault: typeof F
       expect(options.extendEnv).toBe(false);
       expect(options.args).toContain("--unshare-all");
       expect(options.args).not.toContain(issuer);
+      expect(options.env?.PATH).toBe("/tools:/usr/bin");
+      expect(A.window(options.args ?? [], 3)).toContainEqual([
+        "--ro-bind",
+        yield* fs.realPath(process.execPath),
+        "/tools/bun",
+      ]);
+      expect(A.window(options.args ?? [], 3)).toContainEqual(["--ro-bind", tool, "/tools/node"]);
       const worker = O.getOrThrow(A.last(options.args ?? []));
       const directory = path.dirname(worker);
       const config = `--config=${path.join(directory, "bunfig.toml")}`;
@@ -156,7 +163,7 @@ const fixture = Effect.fn("SignedRunnerTest.fixture")(function* (fault: typeof F
       });
     }, Effect.orDie)
   );
-  return { root, issuer, request, admission, process };
+  return { root, issuer, request, admission, process: capturedProcess };
 });
 
 it.layer(
