@@ -277,6 +277,118 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
       }
     })
   );
+  it.effect("matches source set uniqueness and exact hooks through default short, supra and reference callbacks", () =>
+    Effect.gen(function* () {
+      const raw = yield* (yield* FileSystem.FileSystem).readFileString(
+        fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/runtime-set.json", import.meta.url))
+      );
+      expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
+        "58ca087e488c94d2db5b6dfef2dfe1d0280f18228b6088a61b14b227d536adfa"
+      );
+      const corpus = yield* S.decodeEffect(
+        S.fromJsonString(
+          S.Struct({
+            callbacks: S.Array(
+              S.Struct({
+                name: S.String,
+                kind: S.Literals(["short", "supra", "reference"]),
+                fullNames: S.Array(S.String),
+                antecedentGuess: S.NullOr(S.String),
+                hosts: S.Array(HostState),
+                returns: S.Array(S.Natural),
+                trace: S.Array(S.Json),
+                groups: S.Natural.pipe(S.Array, S.Array),
+              })
+            ),
+          })
+        )
+      )(raw);
+      expect(corpus.callbacks).toHaveLength(12);
+      const frozen = yield* makeCitationFrozenEditions((yield* loadCitationFrozenEditionFixtures()).bundle);
+      for (const row of corpus.callbacks) {
+        const host = harness(row.hosts, { "7": "7" });
+        const factory = yield* makeCitationCallbackRuntimeIndexFactory().pipe(
+          Effect.provideService(CitationFrozenEditions, frozen),
+          Effect.provideService(CitationHostResourceAdapterFactory, host.factory)
+        );
+        const input = yield* prepareCallbackObservation(
+          CitationCallbackObservation.make({
+            name: row.name,
+            kinds: ["case", "case", row.kind],
+            pages: {},
+            bindings: {},
+            events: [],
+            outcome: { status: "value", groups: [] },
+          })
+        );
+        const mentions = yield* Effect.forEach(input.mentions, (mention, index) =>
+          Effect.gen(function* () {
+            const wire = yield* S.encodeEffect(Citation)(mention.citation);
+            const citation = yield* S.decodeUnknownEffect(Citation)({
+              ...wire,
+              components:
+                wire.type === "case" || wire.type === "shortFormCase"
+                  ? { volume: "1", reporter: "U.S.", page: index === 0 ? "1" : "2" }
+                  : wire.components,
+              metadata: {
+                ...wire.metadata,
+                ...(wire.type === "case"
+                  ? { plaintiff: A.getUnsafe(row.fullNames, index) }
+                  : wire.type === "reference"
+                    ? { plaintiff: "Alpha" }
+                    : {}),
+                ...(wire.type === "shortFormCase" || wire.type === "supra"
+                  ? { antecedentGuess: row.antecedentGuess }
+                  : {}),
+                pinCite: index < 2 ? null : "2",
+              },
+            });
+            return CitationMention.make({ ...mention, citation });
+          })
+        );
+        const prepared = yield* prepareCitationResolution({ ...input, mentions });
+        const work = yield* makeCitationResolutionWork(prepared.limits);
+        const owner = yield* makeCitationCallbackDictionary(prepared).pipe(
+          Effect.provideService(CitationResolutionWork, work),
+          Effect.provideService(CitationCallbackRuntimeIndexFactory, factory)
+        );
+        const defaults = yield* makeDefaultCitationResolutionCallbacks(prepared).pipe(
+          Effect.provideService(CitationResolutionWork, work),
+          Effect.provideService(CitationCallbackDictionary, owner)
+        );
+        const callbacks = CitationResolutionCallbacks.of({
+          ...defaults,
+          full: Effect.fn("HostSetTest.full")(function* (mention: CitationMention) {
+            const index = O.getOrElse(
+              A.findFirstIndex(prepared.mentions, (candidate) => candidate.id === mention.id),
+              () => -1
+            );
+            return yield* owner.hostResource(A.getUnsafe(host.states, A.getUnsafe(row.returns, index)));
+          }),
+        });
+        const result = yield* runPreparedCitationCallbackSession(prepared).pipe(
+          Effect.provideService(CitationResolutionWork, work),
+          Effect.provideService(CitationCallbackDictionary, owner),
+          Effect.provideService(CitationResolutionCallbacks, callbacks)
+        );
+        expect(host.trace(), row.name).toEqual(row.trace);
+        expect(
+          A.map(result.groups, (group) =>
+            A.map(group.members, (member) =>
+              O.getOrElse(
+                A.findFirstIndex(
+                  prepared.mentions,
+                  (mention) => member._tag === "Mention" && mention.id === member.mentionId
+                ),
+                () => -1
+              )
+            )
+          ),
+          row.name
+        ).toEqual(row.groups);
+      }
+    })
+  );
   it.effect("matches all directional comparison, mutation, alias and error histories without observer hooks", () =>
     Effect.gen(function* () {
       const corpus = yield* load();

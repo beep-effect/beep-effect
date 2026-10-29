@@ -128,6 +128,15 @@ fresh replay remain pinned; attribution remains BSD-2-Clause and the existing
 CPython notice. Automatic native values, source set semantics and reentrancy
 remain open.
 
+The [candidate-set evidence](
+../history/evidence/2026-10-29-candidate-runtime-set.md) binds CPython 3.11.15
+setobject.c and its complete existing license notice. Eight histories and
+seventy-one operations preserve exact comparison/iteration behavior; twelve
+actual eyecite resolver scenes match host hook traces and final groups through
+default short/supra/reference callbacks. The add-only TypeScript adaptation
+preserves source hash-before-pointer checks and cached-hash growth order.
+Native-value normalization and reentrant mutation remain open.
+
 ## Incorporated-source discipline
 
 - A local clone is research state, not an incorporated dependency.

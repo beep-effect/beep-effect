@@ -57,7 +57,9 @@
       "id": "unordered-collections",
       "statement": "Canonicalize sets and unordered mappings by complete normalized values; preserve all elements and membership relationships.",
       "referencePaths": [
-        "goals/citation-extraction-engine/ops/export-operations.py"
+        "goals/citation-extraction-engine/ops/export-operations.py",
+        "goals/citation-extraction-engine/history/evidence/2026-10-29-candidate-runtime-set.md",
+        "packages/law-practice/server/test/CitationRuntimeSet.test.ts"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
@@ -123,7 +125,9 @@
         "goals/citation-extraction-engine/history/evidence/2026-10-29-registered-callback-dictionary.md",
         "packages/law-practice/server/test/CitationCallbackRuntimeIndex.test.ts",
         "goals/citation-extraction-engine/history/evidence/2026-10-29-host-resource-protocol.md",
-        "packages/law-practice/server/test/CitationHostResources.test.ts"
+        "packages/law-practice/server/test/CitationHostResources.test.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-10-29-candidate-runtime-set.md",
+        "packages/law-practice/server/test/CitationRuntimeSet.test.ts"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

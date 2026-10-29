@@ -282,6 +282,9 @@ export class CitationCallbackDictionary extends Context.Service<
     readonly canonicalResource: (
       reference: CitationGroupMember
     ) => Effect.Effect<CitationCallbackResource, CitationCallbackFailure>;
+    readonly uniqueResourceCount: (
+      resources: ReadonlyArray<CitationCallbackResource>
+    ) => Effect.Effect<number, CitationCallbackFailure>;
     readonly resourceKey: (resource: CitationCallbackResource) => Effect.Effect<string, CitationCallbackFailure>;
     readonly readListNodes: Effect.Effect<ReadonlyArray<ReadonlyArray<CitationGroupMember>>, CitationCallbackFailure>;
     readonly readList: (
@@ -752,6 +755,22 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
         value: { kind: "default", mentionId: reference.mentionId },
       });
     }),
+    uniqueResourceCount: Effect.fn("Citation.callbackUniqueResourceCount")(function* (
+      resources: ReadonlyArray<CitationCallbackResource>
+    ) {
+      yield* alive;
+      if (O.isSome(runtime)) return yield* runtime.value.uniqueCount(resources);
+      const keys = yield* Effect.forEach(
+        resources,
+        (resource) =>
+          work.step.pipe(
+            Effect.andThen(fingerprint(resource)),
+            Effect.map((value) => value.key)
+          ),
+        { concurrency: 1 }
+      );
+      return A.length(A.dedupe(keys));
+    }),
     resourceKey: Effect.fn("Citation.callbackResourceKey")(function* (resource: CitationCallbackResource) {
       yield* alive;
       if (O.isSome(runtime)) return yield* runtime.value.equalityKey(resource);
@@ -930,6 +949,9 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
     ),
     canonicalResource: Effect.fn("Citation.serialCanonicalResource")((reference: CitationGroupMember) =>
       mutex.withPermit(api.canonicalResource(reference))
+    ),
+    uniqueResourceCount: Effect.fn("Citation.serialUniqueResourceCount")(
+      (resources: ReadonlyArray<CitationCallbackResource>) => mutex.withPermit(api.uniqueResourceCount(resources))
     ),
     resourceKey: Effect.fn("Citation.serialResourceKey")((resource: CitationCallbackResource) =>
       mutex.withPermit(api.resourceKey(resource))

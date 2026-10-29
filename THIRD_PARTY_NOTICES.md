@@ -283,7 +283,7 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-## CPython 3.11.15 general-key dictionary behavior
+## CPython 3.11.15 dictionary and candidate-set behavior
 
 The private citation runtime table in
 `packages/law-practice/server/src/internal/Citation/RuntimeDictionary.ts`
@@ -292,6 +292,16 @@ resize behavior of CPython 3.11.15 `Objects/dictobject.c`:
 <https://github.com/python/cpython/blob/v3.11.15/Objects/dictobject.c>.
 Source SHA-256:
 `474b899187e73c5ec416b82e17346d2c17616b1b662e1c2fd1c7e53bb2bf19d8`.
+
+The add-only candidate set in
+`packages/law-practice/server/src/internal/Citation/RuntimeSet.ts` also adapts
+CPython 3.11.15 `Objects/setobject.c` insertion, linear/perturbation probing,
+stored-hash growth and bucket iteration:
+<https://github.com/python/cpython/blob/v3.11.15/Objects/setobject.c>.
+Source SHA-256:
+`01462829ff1e731582656adf49ef1d662a5f48002ac49114acdae1ea3674ce57`.
+Only the candidate-construction operations used by the resolver are exposed;
+set deletion and reentrant mutation are not implemented by this helper.
 
 Changes: the adaptation uses schema-owned TypeScript data, captured Effect
 comparison/work services, bounded probes and allocations, typed redacted

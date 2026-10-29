@@ -79,13 +79,9 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
       volume: O.getOrElse(R.get(groups, "volume"), () => null),
     });
   });
-  const key = dictionary.resourceKey;
-  const unique = Effect.fn("Citation.defaultUniqueResources")(function* (fulls: ReadonlyArray<CitationCallbackFull>) {
-    const keys = yield* Effect.forEach(fulls, (entry) => work.step.pipe(Effect.andThen(key(entry.resource))), {
-      concurrency: 1,
-    });
-    return A.length(A.dedupe(keys));
-  });
+  const unique = Effect.fn("Citation.defaultUniqueResources")((fulls: ReadonlyArray<CitationCallbackFull>) =>
+    dictionary.uniqueResourceCount(A.map(fulls, (entry) => entry.resource))
+  );
   const choose = Effect.fn("Citation.defaultChooseResource")(function* (fulls: ReadonlyArray<CitationCallbackFull>) {
     return (yield* unique(fulls)) === 1 ? A.getUnsafe(fulls, 0).resource : none();
   });
@@ -135,12 +131,15 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
           if (current.value === previous.value && current.volume === previous.volume)
             candidates = A.append(candidates, entry);
         }
-        if ((yield* unique(candidates)) !== 1 && O.exists(citation.metadata.antecedentGuess, Str.isNonEmpty))
+        if ((yield* unique(candidates)) === 1) return { resource: A.getUnsafe(candidates, 0).resource };
+        if (O.exists(citation.metadata.antecedentGuess, Str.isNonEmpty)) {
           candidates = yield* byParty(
             candidates,
             O.getOrElse(citation.metadata.antecedentGuess, () => "")
           );
-        return { resource: yield* choose(candidates) };
+          return { resource: yield* choose(candidates) };
+        }
+        return { resource: none() };
       },
       Effect.provideService(Crypto.Crypto, crypto)
     ),

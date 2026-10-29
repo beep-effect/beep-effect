@@ -8,6 +8,7 @@
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { FullCitation } from "@beep/law-practice-domain/values";
 import { Sha256HexFromBytes } from "@beep/schema";
+import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
@@ -34,6 +35,7 @@ import {
   CitationRuntimeDictionaryKey,
   makeCitationRuntimeDictionary,
 } from "./RuntimeDictionary.ts";
+import { makeCitationRuntimeSet } from "./RuntimeSet.ts";
 import type { Citation, CitationGroupMember } from "@beep/law-practice-domain/values";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationHostResourceAdapter } from "./HostResources.ts";
@@ -44,7 +46,7 @@ const Entry = S.Struct({ entryId: S.Natural, resource: CitationCallbackResource,
 const bad = () => CitationCallbackFailure.make({ reason: "identity-failed" });
 /**
  * Captured index operations, separate from member-list ownership. Custom resources require a captured host adapter; automatic primitive
- * normalization and source set semantics remain separate work.
+ * normalization and reentrant comparison remain separate work.
  * @internal
  * @category services
  * @since 0.0.0
@@ -72,6 +74,9 @@ export class CitationCallbackRuntimeIndexFactory extends Context.Service<
         readonly create: (
           reference: CitationGroupMember
         ) => Effect.Effect<CitationCallbackResource, CitationCallbackFailure>;
+        readonly uniqueCount: (
+          resources: ReadonlyArray<CitationCallbackResource>
+        ) => Effect.Effect<number, CitationCallbackFailure>;
         readonly equalityKey: (resource: CitationCallbackResource) => Effect.Effect<string, CitationCallbackFailure>;
         readonly get: (
           resource: CitationCallbackResource
@@ -297,6 +302,20 @@ export const makeCitationCallbackRuntimeIndexFactory = Effect.fn("Citation.makeC
             ).pipe(Effect.mapError(bad));
             registered = HashMap.set(registered, slot, { _tag: "Canonical", object, resource: captured });
             return resource;
+          }),
+          uniqueCount: Effect.fn("Citation.callbackRuntimeUniqueCount")(function* (
+            resources: ReadonlyArray<CitationCallbackResource>
+          ) {
+            if (closed) return yield* bad();
+            const set = yield* makeCitationRuntimeSet({
+              entries: owner.limits.authorities,
+              iterations: owner.limits.resolutionIterations,
+            }).pipe(Effect.provideService(CitationRuntimeDictionaryComparison, comparison), Effect.mapError(mapped));
+            for (const resource of resources) {
+              yield* owner.step;
+              yield* set.add(yield* key(resource)).pipe(Effect.mapError(mapped));
+            }
+            return A.length(yield* set.read);
           }),
           equalityKey: Effect.fn("Citation.callbackRuntimeEqualityKey")(function* (resource: CitationCallbackResource) {
             if ((yield* objectOf(resource)).record._tag !== "Canonical") return yield* bad();

@@ -217,5 +217,13 @@ The [captured host-resource protocol](
 mixed-key histories, forty-eight operations and three full/default-Id callback
 scenes, including exact bool/hash/equality traces. Host and canonical resources
 share one table while retaining their own object identities and current views.
-Automatic Python value normalization, source set uniqueness, reentrant mutation,
+Automatic Python value normalization, reentrant mutation,
 Layer cutover and final document projection remain open.
+
+The [candidate-set proof](
+./history/evidence/2026-10-29-candidate-runtime-set.md) matches eight source
+histories with seventy-one operations and twelve default short/supra/reference
+scenes. Registered callbacks now construct source-equivalent resource sets;
+short-form resolution avoids a redundant uniqueness pass. Native-value handling,
+reentrant comparison, unconditional Layer integration and final projection
+remain open.
