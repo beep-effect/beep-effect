@@ -164,6 +164,27 @@ export const observeAiMetricsGitRoot = Effect.fn("AiMetrics.observeGitRoot")(fun
           return O.some(GitProbeResult.make({ exitCode: yield* handle.exitCode, output }));
         })
       );
+    const observeIdentity = Effect.fnUntraced(function* (gitDir: string, commonDir: string) {
+      // --local limits this identity to repository configuration, rather than a
+      // globally configured fallback remote. A missing origin is local identity.
+      const remote = yield* readGit(["config", "--local", "--get", "remote.origin.url"]);
+      if (O.isNone(remote) || (remote.value.exitCode !== 0 && remote.value.exitCode !== 1))
+        return unknown("probe-failed");
+      const identity = remote.value.exitCode === 0 ? remoteIdentity(remote.value.output) : O.none<string>();
+      const owningCloneIdHash = yield* hashPrivateIdentifier(`owning-clone/v2:${commonDir}`, hashSalt);
+      const repositoryIdHash = O.isSome(identity)
+        ? yield* hashPublicTextSha256(`repository-remote/v2:${identity.value}`)
+        : yield* hashPrivateIdentifier(`repository-local/v2:${commonDir}`, hashSalt);
+      return AiMetricsGitRootEvidence.cases.Observed.make({
+        observedAtEpochMillis: yield* Clock.currentTimeMillis,
+        hashSaltNamespaceId: yield* hashPrivateIdentifier("ai-metrics-hash-salt-namespace/v1", hashSalt),
+        owningCloneIdHash,
+        worktreeIdHash: yield* hashPrivateIdentifier(`worktree/v2:${gitDir}`, hashSalt),
+        repositoryIdHash,
+        repositoryIdentityScope: O.isSome(identity) ? "remote" : "local-clone",
+        linkedWorktree: gitDir !== commonDir,
+      });
+    });
     const paths = yield* readGit([
       "-c",
       "core.fsmonitor=false",
@@ -181,25 +202,7 @@ export const observeAiMetricsGitRoot = Effect.fn("AiMetrics.observeGitRoot")(fun
     const [top, gitDir, commonDir] = yield* Effect.forEach(parsed.value, (value) => fs.realPath(value));
     if (top !== root) return unknown("not-a-checkout-root");
     if (gitDir === undefined || commonDir === undefined) return unknown("probe-failed");
-    // --local limits this identity to repository configuration, rather than a
-    // globally configured fallback remote. A missing origin is local identity.
-    const remote = yield* readGit(["config", "--local", "--get", "remote.origin.url"]);
-    if (O.isNone(remote) || (remote.value.exitCode !== 0 && remote.value.exitCode !== 1))
-      return unknown("probe-failed");
-    const identity = remote.value.exitCode === 0 ? remoteIdentity(remote.value.output) : O.none<string>();
-    const owningCloneIdHash = yield* hashPrivateIdentifier(`owning-clone/v2:${commonDir}`, hashSalt);
-    const repositoryIdHash = O.isSome(identity)
-      ? yield* hashPublicTextSha256(`repository-remote/v2:${identity.value}`)
-      : yield* hashPrivateIdentifier(`repository-local/v2:${commonDir}`, hashSalt);
-    return AiMetricsGitRootEvidence.cases.Observed.make({
-      observedAtEpochMillis: yield* Clock.currentTimeMillis,
-      hashSaltNamespaceId: yield* hashPrivateIdentifier("ai-metrics-hash-salt-namespace/v1", hashSalt),
-      owningCloneIdHash,
-      worktreeIdHash: yield* hashPrivateIdentifier(`worktree/v2:${gitDir}`, hashSalt),
-      repositoryIdHash,
-      repositoryIdentityScope: O.isSome(identity) ? "remote" : "local-clone",
-      linkedWorktree: gitDir !== commonDir,
-    });
+    return yield* observeIdentity(gitDir, commonDir);
   });
   return yield* probe.pipe(
     Effect.orElseSucceed(() => unknown("probe-failed")),

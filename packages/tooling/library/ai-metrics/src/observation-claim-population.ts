@@ -137,6 +137,23 @@ const encodeObservationClaimPopulationEvidenceJson = S.encodeEffect(
   S.fromJsonString(ObservationClaimPopulationEvidence)
 );
 
+const validateClaimIdentity = Effect.fnUntraced(function* (
+  state: ObservationLaunchOutbox,
+  request: ObservationClaimPopulationRequest
+) {
+  const prepared = state.claim.submission.fact;
+  if (prepared._tag !== "Prepared") return yield* fail("identity");
+  const route = A.findFirst(request.inventory.routes, (route) => route.routeId === prepared.identity.routeId);
+  if (
+    !A.contains(request.routeIds, prepared.identity.routeId) ||
+    O.isNone(route) ||
+    route.value.harness !== prepared.identity.harness ||
+    route.value.surface !== prepared.identity.surface ||
+    !S.toEquivalence(ObservationRootBinding)(route.value.root, prepared.identity.root)
+  )
+    return yield* fail("identity");
+});
+
 /**
  * Read one independent claim cohort without collector access or process-launch authority.
  * **Details** Two agreeing bounded scans must finish within ten seconds. A missing
@@ -189,17 +206,7 @@ export const readObservationClaimPopulation = Effect.fn("AiMetrics.readObservati
   const outboxes = A.filter(all, (state) => state.claim.claimedAt >= from && state.claim.claimedAt < until);
   // An undeclared route cannot silently disappear from this store's cohort.
   for (const state of outboxes) {
-    const prepared = state.claim.submission.fact;
-    if (prepared._tag !== "Prepared") return yield* fail("identity");
-    const route = A.findFirst(original.routes, (route) => route.routeId === prepared.identity.routeId);
-    if (
-      !A.contains(request.routeIds, prepared.identity.routeId) ||
-      O.isNone(route) ||
-      route.value.harness !== prepared.identity.harness ||
-      route.value.surface !== prepared.identity.surface ||
-      !S.toEquivalence(ObservationRootBinding)(route.value.root, prepared.identity.root)
-    )
-      return yield* fail("identity");
+    yield* validateClaimIdentity(state, request);
   }
   const evidence = ObservationClaimPopulationEvidence.make({
     anchor: policy.anchor,

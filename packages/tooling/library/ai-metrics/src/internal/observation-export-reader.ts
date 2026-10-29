@@ -64,19 +64,7 @@ export const makeObservationExportReader = Effect.fn("AiMetrics.makeObservationE
 ) {
   const sql = yield* SqlClient.SqlClient;
   const native = yield* makeNativeIntakeJournal(intake);
-  const read = Effect.fn("AiMetrics.observationExport.read")(function* (receiptId: Sha256Hex) {
-    const rows =
-      yield* sql`SELECT substr(payload,1,4194305) AS payload,source_key AS "sourceKey",receipt_id AS "receiptId",sequence,accepted_at AS "acceptedAt",payload_bytes AS "payloadBytes",frames,evidence_epoch AS "evidenceEpoch" FROM observation_intake_pages WHERE receipt_id=${receiptId}`.pipe(
-        Effect.flatMap(decodeRowRows)
-      );
-    const row = rows[0];
-    if (row === undefined) return O.none<typeof AcceptedPage.Type>();
-    if (Str.startsWith("native:")(row.sourceKey)) {
-      const receipt = yield* native.receipt(receiptId);
-      const spans = yield* native.readNewEvents(receiptId);
-      if (O.isNone(receipt) || O.isNone(spans)) return yield* failure();
-      return O.some(AcceptedPage.cases.Native.make({ receipt: receipt.value.page, spans: spans.value }));
-    }
+  const readReconstructed = Effect.fnUntraced(function* (row: typeof Row.Type, receiptId: Sha256Hex) {
     if (new TextEncoder().encode(row.payload).byteLength !== row.payloadBytes || row.payloadBytes > 4194304)
       return yield* failure();
     const digest = yield* hashPublicTextSha256(
@@ -93,6 +81,21 @@ export const makeObservationExportReader = Effect.fn("AiMetrics.makeObservationE
     )
       return yield* failure();
     return O.some(AcceptedPage.cases.Reconstructed.make({ receipt: TranscriptAcceptance.make(row), page }));
+  });
+  const read = Effect.fn("AiMetrics.observationExport.read")(function* (receiptId: Sha256Hex) {
+    const rows =
+      yield* sql`SELECT substr(payload,1,4194305) AS payload,source_key AS "sourceKey",receipt_id AS "receiptId",sequence,accepted_at AS "acceptedAt",payload_bytes AS "payloadBytes",frames,evidence_epoch AS "evidenceEpoch" FROM observation_intake_pages WHERE receipt_id=${receiptId}`.pipe(
+        Effect.flatMap(decodeRowRows)
+      );
+    const row = rows[0];
+    if (row === undefined) return O.none<typeof AcceptedPage.Type>();
+    if (Str.startsWith("native:")(row.sourceKey)) {
+      const receipt = yield* native.receipt(receiptId);
+      const spans = yield* native.readNewEvents(receiptId);
+      if (O.isNone(receipt) || O.isNone(spans)) return yield* failure();
+      return O.some(AcceptedPage.cases.Native.make({ receipt: receipt.value.page, spans: spans.value }));
+    }
+    return yield* readReconstructed(row, receiptId);
   }, Effect.mapError(failure));
   const eventIds = (page: typeof AcceptedPage.Type) =>
     page._tag === "Native"

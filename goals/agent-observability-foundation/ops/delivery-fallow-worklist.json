@@ -1,50 +1,10 @@
 {
   "basis": {
-    "report": ".beep/fallow/audit.repair-v16.json",
-    "rawArchive": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-discovery-structure-ylunim1x/audit.repair-v16.combined.txt",
-    "observedAt": "2026-10-29T19:42:33.582854+00:00"
+    "report": ".beep/fallow/audit.repair-v17.json",
+    "rawArchive": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-boundary-structure-c4jtwkoz/audit.repair-v17.combined.txt",
+    "observedAt": "2026-10-29T19:50:25.392469+00:00"
   },
   "complexity": [
-    {
-      "path": "packages/tooling/library/ai-metrics/src/git-root-evidence.ts",
-      "name": "probe",
-      "line": 136,
-      "cyclomatic": 13,
-      "cognitive": 12,
-      "line_count": 68,
-      "exceeded": "cognitive_crap",
-      "severity": "moderate"
-    },
-    {
-      "path": "packages/tooling/library/ai-metrics/src/native-export.ts",
-      "name": "usageAttributes",
-      "line": 103,
-      "cyclomatic": 13,
-      "cognitive": 9,
-      "line_count": 36,
-      "exceeded": "cognitive_crap",
-      "severity": "moderate"
-    },
-    {
-      "path": "packages/tooling/library/ai-metrics/src/observation-claim-population.ts",
-      "name": "readObservationClaimPopulation",
-      "line": 157,
-      "cyclomatic": 13,
-      "cognitive": 12,
-      "line_count": 104,
-      "exceeded": "cognitive",
-      "severity": "moderate"
-    },
-    {
-      "path": "packages/tooling/library/ai-metrics/src/internal/observation-export-reader.ts",
-      "name": "read",
-      "line": 67,
-      "cyclomatic": 12,
-      "cognitive": 11,
-      "line_count": 30,
-      "exceeded": "cognitive_crap",
-      "severity": "moderate"
-    },
     {
       "path": "packages/tooling/library/ai-metrics/src/transcript-discovery.ts",
       "name": "recordReads",
@@ -148,21 +108,11 @@
     {
       "path": "packages/tooling/library/ai-metrics/src/internal/observation-export-reader.ts",
       "name": "prepare",
-      "line": 104,
+      "line": 107,
       "cyclomatic": 10,
       "cognitive": 5,
       "line_count": 44,
       "exceeded": "crap",
-      "severity": "moderate"
-    },
-    {
-      "path": "packages/tooling/library/ai-metrics/src/native-export.ts",
-      "name": "spans",
-      "line": 157,
-      "cyclomatic": 10,
-      "cognitive": 10,
-      "line_count": 49,
-      "exceeded": "cognitive_crap",
       "severity": "moderate"
     },
     {

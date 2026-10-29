@@ -1,0 +1,84 @@
+{
+  "observedAt": "2026-10-29T19:50:25.392469+00:00",
+  "baseHead": "22af3ecdca9a3da0abf2f44bfc6660e92e235230",
+  "archive": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-boundary-structure-c4jtwkoz",
+  "sourceSha256": {
+    "packages/tooling/library/ai-metrics/src/native-export.ts": "184563134614b3b451cff4c43f9e9ff072f82fc12b02e931088c5e592a0c40ec",
+    "packages/tooling/library/ai-metrics/src/git-root-evidence.ts": "93bb52bb2108d1ac5b953856f8b5b98ed09c5176c90dd44e577046161f1e4cfb",
+    "packages/tooling/library/ai-metrics/src/observation-claim-population.ts": "9316435f8b972b0605d7a157d7890e3e0accb3d7b14f6b6814060a8ea460d407",
+    "packages/tooling/library/ai-metrics/src/internal/observation-export-reader.ts": "8f8afdf9ed9d345ccf6f502b06e4dd11b9c3028fc010e7aee70e5044ed9c7f12"
+  },
+  "artifacts": [
+    {
+      "file": "audit.repair-v17.combined.txt",
+      "sha256": "0ab9890039e48fd368476d8577da121c7188e24288dc96752175155345f4db01",
+      "bytes": 68864
+    },
+    {
+      "file": "audit.repair-v17.json",
+      "sha256": "cfc44d47a1ad1bb0a2cadd25ff0310ea107a642c44feac17e4ab11c5717bae9d",
+      "bytes": 6378
+    },
+    {
+      "file": "before/git-root-evidence.ts",
+      "sha256": "dee33f5627b0ac0f30af3d3669ae75d487aa20653e848181f660eda8104cf119",
+      "bytes": 9167
+    },
+    {
+      "file": "before/internal/observation-export-reader.ts",
+      "sha256": "547520d238941f72e75010b24fa3d263778055bc6dc030c71aadd1c6129fae5d",
+      "bytes": 7151
+    },
+    {
+      "file": "before/native-export.ts",
+      "sha256": "96d6727eccc6a8e0c3fe0948c5b4baba797728a7f114624eeb6d8ef645ec6f73",
+      "bytes": 10834
+    },
+    {
+      "file": "before/observation-claim-population.ts",
+      "sha256": "27c3a68886dfd71b530f30ed30ba134b9bd8f950adfe6fe2f73750df924ed10b",
+      "bytes": 10597
+    },
+    {
+      "file": "foundation-boundaries-fallow-v17-guard.json",
+      "sha256": "a72f9db136976bf3b1e9e8c2170150e4295a6efee39e2a9962c367b0ea52e85e",
+      "bytes": 425
+    },
+    {
+      "file": "foundation-boundaries-fallow-v17.log",
+      "sha256": "a7352632e727a73a2d9fe5a404dd35510b9d1434056da1d2a73ddab71e34fb9a",
+      "bytes": 6893
+    },
+    {
+      "file": "foundation-boundaries-quality-v1-guard.json",
+      "sha256": "e44bf6bcb5f08a0e3563c769bbe0530b06edcb7dd3c5e1e709ed7984ad406deb",
+      "bytes": 426
+    },
+    {
+      "file": "foundation-boundaries-quality-v1.log",
+      "sha256": "48aa4b5a26a635ff9a1d95ea1fbe83c6b36306caa436afda0b749a3a7d4a7c06",
+      "bytes": 597
+    },
+    {
+      "file": "foundation-phase-aware-job.py",
+      "sha256": "b600441dcd984d71e81ded2d3e2a970a8067db6519d6da92ea0c30859f6afec4",
+      "bytes": 8901
+    }
+  ],
+  "packageVerification": "Full AI-metrics audit133.4s/docgen13.1s passed",
+  "review": "Independent Astra accepted exact hashes; see BOUNDARY-STRUCTURE-REVIEW.md",
+  "staticAnalysis": {
+    "before": 26,
+    "after": 21,
+    "introducedDuplication": 0,
+    "inheritedAdjacentDuplication": 4,
+    "deadCode": 0,
+    "status": "Still failing; no threshold or baseline changes"
+  },
+  "limits": [
+    "Full CLI proof pending",
+    "Installed proof refresh pending",
+    "Recovery hold intact",
+    "Not final goal acceptance"
+  ]
+}

@@ -100,6 +100,12 @@ const sum = (values: ReadonlyArray<O.Option<number>>) => {
   const total = A.reduce(A.getSomes(values), 0, (a, b) => a + b);
   return Number.isSafeInteger(total) ? O.some(total) : O.none<number>();
 };
+const invalidUsageDetails = (u: NativeTraceMetadata["usage"], prompt: O.Option<number>) =>
+  u.convention === "openinference" &&
+  O.isSome(prompt) &&
+  ((O.isSome(u.cacheRead) && O.isSome(u.cacheWrite) && u.cacheRead.value > prompt.value - u.cacheWrite.value) ||
+    (O.isSome(u.cacheRead) && u.cacheRead.value > prompt.value) ||
+    (O.isSome(u.cacheWrite) && u.cacheWrite.value > prompt.value));
 const usageAttributes = (span: NativeTraceMetadata) => {
   const u = span.usage;
   const raw = [
@@ -116,13 +122,7 @@ const usageAttributes = (span: NativeTraceMetadata) => {
   ];
   if (span.kind !== "LLM" || u.convention === "unknown") return [...raw, flag("ai_metrics.usage.normalized", false)];
   const prompt = u.convention === "claude-code" ? sum([u.input, u.cacheRead, u.cacheWrite]) : u.input;
-  const invalidDetails =
-    u.convention === "openinference" &&
-    O.isSome(prompt) &&
-    ((O.isSome(u.cacheRead) && O.isSome(u.cacheWrite) && u.cacheRead.value > prompt.value - u.cacheWrite.value) ||
-      (O.isSome(u.cacheRead) && u.cacheRead.value > prompt.value) ||
-      (O.isSome(u.cacheWrite) && u.cacheWrite.value > prompt.value));
-  if (invalidDetails)
+  if (invalidUsageDetails(u, prompt))
     return [...raw, flag("ai_metrics.usage.normalized", false), flag("ai_metrics.usage.invalid", true)];
   const total = sum([prompt, u.output]);
   return [
@@ -136,6 +136,35 @@ const usageAttributes = (span: NativeTraceMetadata) => {
     ...O.toArray(O.map(u.cacheWrite, (value) => integer("llm.token_count.prompt_details.cache_write", value))),
   ];
 };
+const metadataAttributes = (span: NativeTraceMetadata, evidenceEpoch: number) => [
+  text("openinference.span.kind", span.kind),
+  text("ai_metrics.event_id", span.eventId),
+  text("ai_metrics.route_id", span.routeId),
+  text("ai_metrics.stream", "native"),
+  ...O.toArray(O.map(span.fixtureSurface, (surface) => text("ai_metrics.fixture.surface", surface))),
+  ...(O.isSome(span.fixtureSurface)
+    ? [flag("ai_metrics.synthetic", true), text("ai_metrics.fixture.provenance", "declared_synthetic_fixture")]
+    : []),
+  ...(evidenceEpoch > 0
+    ? [
+        integer("ai_metrics.local_evidence_epoch", evidenceEpoch),
+        text("ai_metrics.duplicate_detection_scope", "current_epoch"),
+        flag("ai_metrics.prior_local_history_retired", true),
+      ]
+    : []),
+  flag("ai_metrics.duration_known", span.durationKnown),
+  text(
+    "ai_metrics.time_basis",
+    O.isSome(span.startTimeUnixNano) || O.isSome(span.endTimeUnixNano) ? "source_event" : "intake_observation"
+  ),
+  ...O.toArray(O.map(span.startTimeUnixNano, (value) => text("ai_metrics.source_start_time_unix_nano", value))),
+  ...O.toArray(O.map(span.endTimeUnixNano, (value) => text("ai_metrics.source_end_time_unix_nano", value))),
+  ...O.toArray(O.map(span.nameHash, (value) => text("ai_metrics.source_name_hash", value))),
+  ...O.toArray(O.map(span.sessionHash, (value) => text("session.id", value))),
+  ...O.toArray(O.map(span.modelHash, (value) => text("ai_metrics.model_hash", value))),
+  ...O.toArray(O.map(span.modelName, (value) => text("llm.model_name", value))),
+  ...usageAttributes(span),
+];
 /**
  * Encode canonical native metadata, preserving source time and cache accounting.
  * **Example** (Inspecting the encoder)
@@ -172,35 +201,7 @@ export const encodeNativeTraceBatch = Effect.fn("AiMetrics.encodeNativeTraceBatc
         startTimeUnixNano: point,
         endTimeUnixNano: span.durationKnown ? O.getOrElse(span.endTimeUnixNano, () => point) : point,
         status: { code: span.status === "ok" ? 1 : span.status === "error" ? 2 : 0 },
-        attributes: [
-          text("openinference.span.kind", span.kind),
-          text("ai_metrics.event_id", span.eventId),
-          text("ai_metrics.route_id", span.routeId),
-          text("ai_metrics.stream", "native"),
-          ...O.toArray(O.map(span.fixtureSurface, (surface) => text("ai_metrics.fixture.surface", surface))),
-          ...(O.isSome(span.fixtureSurface)
-            ? [flag("ai_metrics.synthetic", true), text("ai_metrics.fixture.provenance", "declared_synthetic_fixture")]
-            : []),
-          ...(input.evidenceEpoch > 0
-            ? [
-                integer("ai_metrics.local_evidence_epoch", input.evidenceEpoch),
-                text("ai_metrics.duplicate_detection_scope", "current_epoch"),
-                flag("ai_metrics.prior_local_history_retired", true),
-              ]
-            : []),
-          flag("ai_metrics.duration_known", span.durationKnown),
-          text(
-            "ai_metrics.time_basis",
-            O.isSome(span.startTimeUnixNano) || O.isSome(span.endTimeUnixNano) ? "source_event" : "intake_observation"
-          ),
-          ...O.toArray(O.map(span.startTimeUnixNano, (value) => text("ai_metrics.source_start_time_unix_nano", value))),
-          ...O.toArray(O.map(span.endTimeUnixNano, (value) => text("ai_metrics.source_end_time_unix_nano", value))),
-          ...O.toArray(O.map(span.nameHash, (value) => text("ai_metrics.source_name_hash", value))),
-          ...O.toArray(O.map(span.sessionHash, (value) => text("session.id", value))),
-          ...O.toArray(O.map(span.modelHash, (value) => text("ai_metrics.model_hash", value))),
-          ...O.toArray(O.map(span.modelName, (value) => text("llm.model_name", value))),
-          ...usageAttributes(span),
-        ],
+        attributes: metadataAttributes(span, input.evidenceEpoch),
       };
     })
   ).pipe(Effect.mapError(() => NativeExportError.make({ reason: "encoding" })));
