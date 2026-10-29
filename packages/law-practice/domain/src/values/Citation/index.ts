@@ -19,7 +19,12 @@ export * from "./Citation.document.ts";
  * @category models
  * @since 0.0.0
  */
-export { CitationAuthorityId, CitationMentionId } from "./Citation.identity.ts";
+export {
+  CitationAuthorityId,
+  CitationDetachedId,
+  CitationMemberListId,
+  CitationMentionId,
+} from "./Citation.identity.ts";
 /**
  * Canonical journal semantics.
  * @category models
@@ -32,6 +37,12 @@ export { FullJournalCitation } from "./Citation.journal.ts";
  * @since 0.0.0
  */
 export { CitationLawMetadata, FullLawCitation } from "./Citation.law.ts";
+/**
+ * Ordered group membership, list alias identities and detached semantic objects.
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./Citation.membership.ts";
 /**
  * Runtime verified occurrences and their structural persistence receipts.
  * @category models

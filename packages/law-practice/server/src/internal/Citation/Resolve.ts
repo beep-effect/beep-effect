@@ -12,7 +12,11 @@ import {
   CitationAuthorityId,
   CitationComponents,
   CitationDocument,
+  CitationGroupMember,
+  CitationMemberList,
+  CitationMemberListId,
   CitationResolved,
+  CitationResourceGroup,
   CitationUnresolved,
   FullCitation,
 } from "@beep/law-practice-domain/values";
@@ -140,7 +144,13 @@ export const resolveCitationMentions = Effect.fn("Citation.resolveMentions")(fun
       if (!HashMap.has(representatives, id)) {
         if (Chunk.size(authorities) >= limits.authorities) return yield* exceeded();
         representatives = HashMap.set(representatives, id, citation);
-        authorities = Chunk.append(authorities, CitationAuthority.make({ id, representativeMentionId: mention.id }));
+        authorities = Chunk.append(
+          authorities,
+          CitationAuthority.make({
+            id,
+            representative: O.some(CitationGroupMember.cases.Mention.make({ mentionId: mention.id })),
+          })
+        );
       }
       const wire = yield* S.encodeEffect(FullCitation)(citation).pipe(Effect.mapError(invalid));
       const metadata = yield* S.decodeEffect(S.Record(S.String, S.Unknown))(wire.metadata).pipe(
@@ -253,5 +263,24 @@ export const resolveCitationMentions = Effect.fn("Citation.resolveMentions")(fun
     mentions,
     authorities: A.fromIterable(authorities),
     resolutions: A.fromIterable(resolutions),
+    detachedCitations: [],
+    groups: A.map(A.fromIterable(authorities), (authority) =>
+      CitationResourceGroup.make({
+        authorityId: authority.id,
+        memberListId: CitationMemberListId.make(`cl1:${Str.slice(4)(authority.id)}`),
+      })
+    ),
+    memberLists: A.map(A.fromIterable(authorities), (authority) =>
+      CitationMemberList.make({
+        id: CitationMemberListId.make(`cl1:${Str.slice(4)(authority.id)}`),
+        members: A.map(
+          A.filter(
+            A.fromIterable(resolutions),
+            (resolution) => resolution.status === "Resolved" && resolution.authorityId === authority.id
+          ),
+          (resolution) => CitationGroupMember.cases.Mention.make({ mentionId: resolution.mentionId })
+        ),
+      })
+    ),
   }).pipe(Effect.mapError(invalid));
 });

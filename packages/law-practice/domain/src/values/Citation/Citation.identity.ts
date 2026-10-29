@@ -85,3 +85,53 @@ export const CitationAuthorityId = S.TemplateLiteral(["ca1:", Sha256Hex]).pipe(
  * @since 0.0.0
  */
 export type CitationAuthorityId = typeof CitationAuthorityId.Type;
+
+/**
+ * Document-local detached object identity, distinct from source occurrences.
+ * This validates a token only and can never stand in for a verified anchor.
+ * **Example** (Inspect the schema)
+ * ```ts
+ * import { CitationDetachedId } from "@beep/law-practice-domain/values"
+ * console.log(CitationDetachedId !== undefined) // true
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export const CitationDetachedId = S.TemplateLiteral(["cd1:", Sha256Hex]).pipe(
+  S.brand("CitationDetachedId"),
+  $I.annoteSchema("CitationDetachedId", {
+    description:
+      "Document-local semantic object token; not a physical occurrence, persisted entity or evidence capability.",
+  })
+);
+/**
+ * Schema-derived detached object identity.
+ * @category models
+ * @since 0.0.0
+ */
+export type CitationDetachedId = typeof CitationDetachedId.Type;
+/**
+ * Document-local member-list identity. Equal contents do not imply equal IDs.
+ * The producing adapter must preserve alias relations rather than content-hash
+ * equal-but-distinct lists into one node.
+ * **Example** (Inspect the schema)
+ * ```ts
+ * import { CitationMemberListId } from "@beep/law-practice-domain/values"
+ * console.log(CitationMemberListId !== undefined) // true
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export const CitationMemberListId = S.TemplateLiteral(["cl1:", Sha256Hex]).pipe(
+  S.brand("CitationMemberListId"),
+  $I.annoteSchema("CitationMemberListId", {
+    description:
+      "Document-local list identity preserving shared versus merely equal member sequences; token validation alone does not attest aliases.",
+  })
+);
+/**
+ * Schema-derived member-list identity.
+ * @category models
+ * @since 0.0.0
+ */
+export type CitationMemberListId = typeof CitationMemberListId.Type;

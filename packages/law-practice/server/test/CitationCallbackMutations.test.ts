@@ -1,6 +1,20 @@
 import { fileURLToPath } from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
+  Citation,
+  CitationAuthority,
+  CitationDetached,
+  CitationDetachedId,
+  CitationDocument,
+  CitationDocumentReceipt,
+  CitationGroupMember,
+  CitationMemberList,
+  CitationMemberListId,
+  CitationResourceGroup,
+  CitationUnresolved,
+  citationAuthorityMembers,
+} from "@beep/law-practice-domain/values";
+import {
   CitationCallbackFailure,
   CitationIdCallbackOutput,
   CitationResolutionCallbacks,
@@ -9,7 +23,13 @@ import {
   runPreparedCitationCallbackSession,
 } from "@beep/law-practice-server/_test/Citation/CallbackSession";
 import { makeDefaultCitationResolutionCallbacks } from "@beep/law-practice-server/_test/Citation/DefaultCallbacks";
+import { projectCitationDocumentReceipt } from "@beep/law-practice-server/_test/Citation/Document";
 import { prepareCitationResolution } from "@beep/law-practice-server/_test/Citation/ResolutionInput";
+import {
+  CitationResourceBinding,
+  CitationResourceIdentity,
+  makeCitationResourceAuthorityId,
+} from "@beep/law-practice-server/_test/Citation/ResourceIdentity";
 import { LiteralKit, Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -24,6 +44,7 @@ import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import {
   CitationCallbackObservation,
@@ -75,7 +96,14 @@ const Row = S.Struct({
   family: S.Literals(["known-group", "alias", "detached-member", "detached-prior-full"]),
   kinds: S.Array(S.Literals(["case", "id", "supra"])),
   events: S.Array(S.Json),
-  detachedObjects: S.Array(S.Json),
+  detachedObjects: S.Array(
+    S.Struct({
+      slot: S.Natural,
+      citationType: S.Literal("FullCaseCitation"),
+      groups: S.Struct({ volume: S.String, reporter: S.String, page: S.String }),
+      metadata: S.Struct({ plaintiff: S.String }),
+    })
+  ),
   outcome: S.Struct({ status: S.tag("value"), groups: S.Array(Group) }),
 }).pipe(
   $I.annoteSchema("Row", { description: "Pinned source mutation scene; only the stated family is target-tested here." })
@@ -199,5 +227,106 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback mutatio
         );
       }
     })
+  );
+  it.effect(
+    "encodes all sixteen source group snapshots including list aliases and detached nodes without claiming callback execution",
+    () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const raw = yield* fs.readFileString(
+          fileURLToPath(
+            new URL("../../use-cases/test/fixtures/eyecite/callback-mutation-observations.json", import.meta.url)
+          )
+        );
+        const data = yield* S.decodeEffect(S.fromJsonString(Corpus))(raw);
+        expect(data.cases).toHaveLength(16);
+        for (const row of data.cases) {
+          const input = yield* prepareCallbackObservation(
+            CitationCallbackObservation.make({
+              name: `codec-${row.name}`,
+              kinds: row.kinds,
+              pages: {},
+              bindings: {},
+              events: [],
+              outcome: { status: "value", groups: [] },
+            })
+          );
+          const prepared = yield* prepareCitationResolution(input);
+          // IDs here encode source fixture slots, not a production alias issuer.
+          const listId = (slot: number) => CitationMemberListId.make(`cl1:${Str.padStart(64, "0")(`${slot}`)}`);
+          const detachedId = (slot: number) => CitationDetachedId.make(`cd1:${Str.padStart(64, "0")(`${slot}`)}`);
+          const toMember = (value: typeof Member.Type) =>
+            Member.match(value, {
+              input: (value) =>
+                CitationGroupMember.cases.Mention.make({ mentionId: A.getUnsafe(prepared.mentions, value.index).id }),
+              detached: (value) => CitationGroupMember.cases.Detached.make({ detachedId: detachedId(value.slot) }),
+            });
+          const detachedCitations = yield* Effect.forEach(row.detachedObjects, (object) =>
+            Effect.gen(function* () {
+              const wire = yield* S.encodeEffect(Citation)(A.getUnsafe(prepared.mentions, 0).citation);
+              if (wire.type !== "case") return yield* invalid();
+              const citation = yield* S.decodeEffect(Citation)({
+                ...wire,
+                components: object.groups,
+                metadata: { ...wire.metadata, plaintiff: object.metadata.plaintiff },
+              });
+              return CitationDetached.make({ id: detachedId(object.slot), citation });
+            })
+          );
+          const nodes = yield* Effect.forEach(row.outcome.groups, (group, index) =>
+            Effect.gen(function* () {
+              const key = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(`${row.name}:${index}`));
+              const identity = CitationResourceIdentity.cases.External.make({ scope: prepared.engineArtifact, key });
+              const id = yield* makeCitationResourceAuthorityId(identity);
+              const list = CitationMemberList.make({
+                id: listId(group.listSlot),
+                members: A.map(group.members, toMember),
+              });
+              return {
+                authority: CitationAuthority.make({ id, representative: O.none() }),
+                group: CitationResourceGroup.make({ authorityId: id, memberListId: list.id }),
+                list,
+                binding: CitationResourceBinding.make({ identity, decisions: [], group: O.some(list) }),
+              };
+            })
+          );
+          const document = CitationDocument.make({
+            source: prepared.source,
+            engineArtifact: prepared.engineArtifact,
+            mentions: prepared.mentions,
+            authorities: A.map(nodes, (node) => node.authority),
+            groups: A.map(nodes, (node) => node.group),
+            memberLists: A.dedupeWith(
+              A.map(nodes, (node) => node.list),
+              (left, right) => left.id === right.id
+            ),
+            detachedCitations,
+            resolutions: A.map(prepared.mentions, (mention) =>
+              CitationUnresolved.make({ mentionId: mention.id, reason: "unsupported-citation" })
+            ),
+          });
+          // Decisions are explicit placeholders: this lane proves representability,
+          // not resolution inference or live dictionary/list mutation fidelity.
+          const receipt = yield* projectCitationDocumentReceipt({
+            document,
+            editions: [],
+            resourceBindings: A.map(nodes, (node) => node.binding),
+          });
+          const codec = S.fromJsonString(CitationDocumentReceipt);
+          const restored = yield* S.decodeEffect(codec)(yield* S.encodeEffect(codec)(receipt));
+          expect(restored.groups, row.name).toEqual(document.groups);
+          expect(restored.memberLists, row.name).toEqual(document.memberLists);
+          expect(restored.detachedCitations, row.name).toEqual(detachedCitations);
+          for (const [index, node] of A.map(nodes, (node, index) => Tuple.make(index, node))) {
+            expect(citationAuthorityMembers(restored, node.authority.id), row.name).toEqual(
+              A.map(A.getUnsafe(row.outcome.groups, index).members, toMember)
+            );
+            expect(
+              citationAuthorityMembers({ ...restored, mentions: A.reverse(restored.mentions) }, node.authority.id),
+              row.name
+            ).toEqual(node.list.members);
+          }
+        }
+      })
   );
 });

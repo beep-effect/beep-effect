@@ -5,7 +5,14 @@
  * @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationDocument, CitationDocumentReceipt, FullCitation } from "@beep/law-practice-domain/values";
+import {
+  CitationDocument,
+  CitationDocumentReceipt,
+  CitationGroupMember,
+  CitationMemberList,
+  CitationMemberListId,
+  FullCitation,
+} from "@beep/law-practice-domain/values";
 import { CitationEngineAbsoluteMaxima } from "@beep/law-practice-use-cases/server";
 import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import {
@@ -20,6 +27,7 @@ import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import { CitationAuthorityEdition, makeCitationAuthorityId } from "./AuthorityIdentity.ts";
 import { restoreCitationMentionAgainstVerifiedSource } from "./Mention.ts";
@@ -74,11 +82,17 @@ const ResourceBindings = S.Array(CitationResourceBinding)
     S.isMaxLength(CitationEngineAbsoluteMaxima.authorities),
     S.makeFilter(
       (bindings) =>
-        A.reduce(bindings, 0, (total, binding) => total + A.length(binding.members)) <=
-        CitationEngineAbsoluteMaxima.mentions,
+        A.reduce(
+          bindings,
+          0,
+          (total, binding) =>
+            total +
+            A.length(binding.decisions) +
+            O.match(binding.group, { onNone: () => 0, onSome: (group) => A.length(group.members) })
+        ) <= CitationEngineAbsoluteMaxima.resolutionEdges,
       $I.annote("TotalResourceBindingMembers", {
         title: "Total Resource Binding Members",
-        description: "The total number of adapter-bound occurrence references cannot exceed the hard mention ceiling.",
+        description: "Adapter-bound decisions and group references share the hard resolution edge ceiling.",
         message: "Too many resource binding members.",
       })
     )
@@ -89,7 +103,22 @@ const ResourceBindings = S.Array(CitationResourceBinding)
     })
   );
 const Snapshot = S.Struct({
-  receipt: CitationDocumentReceipt,
+  receipt: CitationDocumentReceipt.check(
+    S.makeFilter(
+      (receipt) =>
+        A.length(receipt.mentions) + A.length(receipt.detachedCitations) <= CitationEngineAbsoluteMaxima.mentions &&
+        A.length(receipt.authorities) <= CitationEngineAbsoluteMaxima.authorities &&
+        A.length(receipt.memberLists) <= CitationEngineAbsoluteMaxima.authorities &&
+        A.reduce(receipt.memberLists, 0, (total, list) => total + A.length(list.members)) <=
+          CitationEngineAbsoluteMaxima.resolutionEdges,
+      $I.annote("DocumentGraphCeilings", {
+        title: "Document Graph Ceilings",
+        description:
+          "All occurrence/object nodes, catalog/list nodes and ordered membership edges fit hard engine maxima.",
+        message: "Document graph exceeds hard limits.",
+      })
+    )
+  ),
   editions: Editions,
   resourceBindings: ResourceBindings,
 }).pipe(
@@ -128,9 +157,15 @@ const verifyAuthorities = Effect.fn("Citation.verifyDocumentAuthorities")(functi
   const resolutions = HashMap.fromIterable(
     A.map(snapshot.receipt.resolutions, (resolution) => Tuple.make(resolution.mentionId, resolution))
   );
+  const groupByAuthority = HashMap.fromIterable(
+    A.map(snapshot.receipt.groups, (group) => Tuple.make(group.authorityId, group))
+  );
+  const listById = HashMap.fromIterable(A.map(snapshot.receipt.memberLists, (list) => Tuple.make(list.id, list)));
+  const listEquivalent = S.toEquivalence(CitationMemberList);
+  const memberEquivalent = S.toEquivalence(S.Array(CitationGroupMember));
   // Out-of-band bindings are trusted adapter expectations, never receipt data.
-  // Each binding must cover exactly one group's members; it may override a full
-  // member's default key only when that occurrence is explicitly bound.
+  // Each binding fixes decision ownership separately from optional group/list
+  // data. Only explicitly bound decisions may override a full default key.
   let custom = HashMap.empty<
     CitationDocumentReceipt["authorities"][number]["id"],
     HashSet.HashSet<CitationDocumentReceipt["mentions"][number]["id"]>
@@ -138,10 +173,20 @@ const verifyAuthorities = Effect.fn("Citation.verifyDocumentAuthorities")(functi
   for (const binding of snapshot.resourceBindings) {
     const id = yield* makeCitationResourceAuthorityId(binding.identity).pipe(Effect.mapError(identityFailure));
     if (HashMap.has(custom, id)) return yield* invalid();
-    const members = HashSet.fromIterable(binding.members);
-    for (const member of binding.members) {
+    if (!A.some(snapshot.receipt.authorities, (authority) => authority.id === id))
+      return yield* CitationDocumentFailure.make({ reason: "stale-authority" });
+    const members = HashSet.fromIterable(binding.decisions);
+    for (const member of binding.decisions) {
       const resolution = HashMap.get(resolutions, member);
       if (O.isNone(resolution) || resolution.value.status !== "Resolved" || resolution.value.authorityId !== id)
+        return yield* CitationDocumentFailure.make({ reason: "stale-authority" });
+    }
+    const group = HashMap.get(groupByAuthority, id);
+    if (O.isNone(binding.group)) {
+      if (O.isSome(group)) return yield* CitationDocumentFailure.make({ reason: "stale-authority" });
+    } else {
+      const list = O.flatMap(group, (value) => HashMap.get(listById, value.memberListId));
+      if (O.isNone(list) || !listEquivalent(list.value, binding.group.value))
         return yield* CitationDocumentFailure.make({ reason: "stale-authority" });
     }
     custom = HashMap.set(custom, id, members);
@@ -173,6 +218,36 @@ const verifyAuthorities = Effect.fn("Citation.verifyDocumentAuthorities")(functi
   );
   if (!A.every(snapshot.receipt.authorities, (authority) => HashSet.has(verified, authority.id)))
     return yield* CitationDocumentFailure.make({ reason: "authority-key-unavailable" });
+  // Unbound default groups must exactly reflect decisions in occurrence order.
+  // A callback-produced order, multiplicity, empty group or alias requires a binding.
+  for (const authority of snapshot.receipt.authorities) {
+    if (HashMap.has(custom, authority.id)) continue;
+    const expected = A.map(
+      A.filter(snapshot.receipt.mentions, (mention) =>
+        O.exists(
+          HashMap.get(resolutions, mention.id),
+          (resolution) => resolution.status === "Resolved" && resolution.authorityId === authority.id
+        )
+      ),
+      (mention) => CitationGroupMember.cases.Mention.make({ mentionId: mention.id })
+    );
+    const group = HashMap.get(groupByAuthority, authority.id);
+    const list = O.flatMap(group, (value) => HashMap.get(listById, value.memberListId));
+    const expectedListId = CitationMemberListId.make(`cl1:${Str.slice(4)(authority.id)}`);
+    if (
+      A.isArrayEmpty(expected)
+        ? O.isSome(group)
+        : O.isNone(list) || list.value.id !== expectedListId || !memberEquivalent(list.value.members, expected)
+    )
+      return yield* CitationDocumentFailure.make({ reason: "stale-authority" });
+  }
+  // Every persisted list must be attached to a verified or bound group.
+  if (
+    !A.every(snapshot.receipt.memberLists, (list) =>
+      A.some(snapshot.receipt.groups, (group) => group.memberListId === list.id)
+    )
+  )
+    return yield* invalid();
 });
 
 /**
@@ -195,7 +270,7 @@ export const projectCitationDocumentReceipt = Effect.fn("Citation.projectDocumen
     resourceBindings: decoded.resourceBindings,
     receipt: {
       ...decoded.document,
-      schemaVersion: "citation-document-receipt/v1",
+      schemaVersion: "citation-document-receipt/v2",
       mentions: A.map(decoded.document.mentions, (mention) => ({
         ...mention,
         schemaVersion: "citation-mention-receipt/v1",
@@ -228,7 +303,7 @@ export const projectCitationDocumentReceipt = Effect.fn("Citation.projectDocumen
     { concurrency: 1, discard: true }
   );
   yield* verifyAuthorities(snapshot);
-  return snapshot.receipt;
+  return CitationDocumentReceipt.make(snapshot.receipt);
 });
 
 /**

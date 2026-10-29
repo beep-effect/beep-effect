@@ -3,15 +3,21 @@ import {
   CitationAmbiguous,
   CitationAuthority,
   CitationAuthorityId,
+  CitationDetached,
+  CitationDetachedId,
   CitationDocument,
   CitationDocumentReceipt,
+  CitationGroupMember,
+  CitationMemberList,
+  CitationMemberListId,
   CitationMention,
   CitationMentionId,
   CitationMentionReceipt,
   CitationOverlapWarning,
   CitationResolved,
+  CitationResourceGroup,
   CitationUnresolved,
-  citationAuthorityMembers,
+  citationAuthorityMentionIds,
 } from "@beep/law-practice-domain/values";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import {
@@ -38,6 +44,13 @@ const a = CitationAuthorityId.make(`ca1:${Str.repeat(64)("a")}`);
 const b = CitationAuthorityId.make(`ca1:${Str.repeat(64)("b")}`);
 const missingAuthority = CitationAuthorityId.make(`ca1:${Str.repeat(64)("c")}`);
 const missingMention = CitationMentionId.make(`cm1:${Str.repeat(64)("f")}`);
+const listA = CitationMemberListId.make(`cl1:${Str.repeat(64)("a")}`);
+const listB = CitationMemberListId.make(`cl1:${Str.repeat(64)("b")}`);
+const member = (mentionId: CitationMentionId) => CitationGroupMember.cases.Mention.make({ mentionId });
+const groups = [
+  CitationResourceGroup.make({ authorityId: a, memberListId: listA }),
+  CitationResourceGroup.make({ authorityId: b, memberListId: listB }),
+];
 const text = "1 U.S. 1; 2 U.S. 2; Id.; § 2";
 const full = (volume: string) => ({
   type: "case",
@@ -109,8 +122,8 @@ const fixture = Effect.gen(function* () {
   const third = A.getUnsafe(mentions, 2);
   const fourth = A.getUnsafe(mentions, 3);
   const authorities = [
-    CitationAuthority.make({ id: a, representativeMentionId: first.id }),
-    CitationAuthority.make({ id: b, representativeMentionId: second.id }),
+    CitationAuthority.make({ id: a, representative: O.some(member(first.id)) }),
+    CitationAuthority.make({ id: b, representative: O.some(member(second.id)) }),
   ];
   const resolutions = [
     CitationResolved.make({ mentionId: first.id, authorityId: a, confidence: O.none() }),
@@ -118,10 +131,22 @@ const fixture = Effect.gen(function* () {
     CitationAmbiguous.make({ mentionId: third.id, candidateAuthorityIds: [a, b], confidence: O.none() }),
     CitationUnresolved.make({ mentionId: fourth.id, reason: "unsupported-citation" }),
   ];
-  const document = CitationDocument.make({ source, engineArtifact: artifact, mentions, authorities, resolutions });
+  const document = CitationDocument.make({
+    source,
+    engineArtifact: artifact,
+    mentions,
+    authorities,
+    resolutions,
+    groups,
+    memberLists: [
+      CitationMemberList.make({ id: listA, members: [member(first.id)] }),
+      CitationMemberList.make({ id: listB, members: [member(second.id)] }),
+    ],
+    detachedCitations: [],
+  });
   const receipt = CitationDocumentReceipt.make({
     ...document,
-    schemaVersion: "citation-document-receipt/v1",
+    schemaVersion: "citation-document-receipt/v2",
     mentions: A.map(mentions, (mention) =>
       CitationMentionReceipt.make({
         ...mention,
@@ -147,15 +172,15 @@ it.layer(TestCrypto)("citation document relationships", (it) => {
       expect(yield* S.encodeEffect(ReceiptJson)(restored)).toBe(json);
       expect(isDocument(document)).toBe(true);
       expect(isDocument(receipt)).toBe(false);
-      expect(citationAuthorityMembers(document, a)).toEqual([first.id]);
-      expect(citationAuthorityMembers(a)(restored)).toEqual([first.id]);
-      expect(citationAuthorityMembers(document, missingAuthority)).toEqual([]);
+      expect(citationAuthorityMentionIds(document, a)).toEqual([first.id]);
+      expect(citationAuthorityMentionIds(a)(restored)).toEqual([first.id]);
+      expect(citationAuthorityMentionIds(document, missingAuthority)).toEqual([]);
       expect("members" in A.getUnsafe(receipt.authorities, 0)).toBe(false);
       expect("authorityId" in first).toBe(false);
     })
   );
 
-  it.effect("derives members in mention order and keeps ambiguous candidates outside membership", () =>
+  it.effect("keeps exact group order independent of mention order and resolution decisions", () =>
     Effect.gen(function* () {
       const { document, first, third } = yield* fixture;
       const resolutions = A.map(document.resolutions, (resolution) =>
@@ -164,9 +189,9 @@ it.layer(TestCrypto)("citation document relationships", (it) => {
           : resolution
       );
       const changed = CitationDocument.make({ ...document, resolutions: A.reverse(resolutions) });
-      expect(citationAuthorityMembers(changed, a)).toEqual([first.id, third.id]);
+      expect(citationAuthorityMentionIds(changed, a)).toEqual([first.id]);
       const reordered = CitationDocument.make({ ...changed, mentions: A.reverse(changed.mentions) });
-      expect(citationAuthorityMembers(reordered, a)).toEqual([third.id, first.id]);
+      expect(citationAuthorityMentionIds(reordered, a)).toEqual([first.id]);
     })
   );
 
@@ -221,18 +246,18 @@ it.layer(TestCrypto)("citation document relationships", (it) => {
     })
   );
 
-  it.effect("requires a present representative resolved to its own authority", () =>
+  it.effect("requires a present representative without conflating it with a resolution decision", () =>
     Effect.gen(function* () {
       const { document, third, first } = yield* fixture;
       const withRepresentative = (id: CitationMentionId) => ({
         ...document,
         authorities: [
-          CitationAuthority.make({ id: a, representativeMentionId: id }),
+          CitationAuthority.make({ id: a, representative: O.some(member(id)) }),
           A.getUnsafe(document.authorities, 1),
         ],
       });
       expect(isDocument(withRepresentative(missingMention))).toBe(false);
-      expect(isDocument(withRepresentative(third.id))).toBe(false);
+      expect(isDocument(withRepresentative(third.id))).toBe(true);
       expect(
         isDocument({
           ...document,
@@ -242,7 +267,7 @@ it.layer(TestCrypto)("citation document relationships", (it) => {
               : resolution
           ),
         })
-      ).toBe(false);
+      ).toBe(true);
     })
   );
 
@@ -265,13 +290,21 @@ it.layer(TestCrypto)("citation document relationships", (it) => {
         // Graph tests deliberately use format-only occurrence/resource IDs.
         // Semantic classification and private digest production are separate.
         const mentions = [CitationMention.make({ ...third, citation }), CitationMention.make({ ...fourth, citation })];
-        const authorities = [CitationAuthority.make({ id: a, representativeMentionId: third.id })];
+        const authorities = [CitationAuthority.make({ id: a, representative: O.some(member(third.id)) })];
         const resolutions = A.map(mentions, (mention) =>
           CitationResolved.make({ mentionId: mention.id, authorityId: a, confidence: O.none() })
         );
-        const graph = CitationDocument.make({ ...document, mentions, authorities, resolutions });
+        const membership = {
+          groups: A.take(groups, 1),
+          memberLists: [
+            CitationMemberList.make({ id: listA, members: A.map(mentions, (mention) => member(mention.id)) }),
+          ],
+          detachedCitations: [],
+        };
+        const graph = CitationDocument.make({ ...document, ...membership, mentions, authorities, resolutions });
         const structural = CitationDocumentReceipt.make({
           ...receipt,
+          ...membership,
           authorities,
           resolutions,
           mentions: A.map(A.takeRight(receipt.mentions, 2), (mention) => ({ ...mention, citation })),
@@ -279,8 +312,8 @@ it.layer(TestCrypto)("citation document relationships", (it) => {
         const restored = yield* S.decodeEffect(ReceiptJson)(yield* S.encodeEffect(ReceiptJson)(structural));
         expect(isDocument(graph)).toBe(true);
         expect(isReceipt(restored)).toBe(true);
-        expect(citationAuthorityMembers(restored, a)).toEqual([third.id, fourth.id]);
-        expect(A.getUnsafe(restored.authorities, 0).representativeMentionId).toBe(third.id);
+        expect(citationAuthorityMentionIds(restored, a)).toEqual([third.id, fourth.id]);
+        expect(A.getUnsafe(restored.authorities, 0).representative).toEqual(O.some(member(third.id)));
         expect(A.every(restored.mentions, (mention) => mention.citation.type === citation.type)).toBe(true);
       }
     })
@@ -308,9 +341,74 @@ it.layer(TestCrypto)("citation document relationships", (it) => {
   it.effect("retains empty documents and explicit unresolved outcomes without inventing groups", () =>
     Effect.gen(function* () {
       const { document } = yield* fixture;
-      const empty = CitationDocument.make({ ...document, mentions: [], authorities: [], resolutions: [] });
+      const empty = CitationDocument.make({
+        ...document,
+        mentions: [],
+        authorities: [],
+        resolutions: [],
+        groups: [],
+        memberLists: [],
+        detachedCitations: [],
+      });
       expect(isDocument(empty)).toBe(true);
-      expect(citationAuthorityMembers(empty, a)).toEqual([]);
+      expect(citationAuthorityMentionIds(empty, a)).toEqual([]);
+    })
+  );
+
+  it.effect("preserves shared lists, repetitions, empty groups and detached semantics through the receipt codec", () =>
+    Effect.gen(function* () {
+      const { document, receipt, first, second } = yield* fixture;
+      const detachedId = CitationDetachedId.make(`cd1:${Str.repeat(64)("d")}`);
+      const detached = CitationDetached.make({ id: detachedId, citation: second.citation });
+      const reference = CitationGroupMember.cases.Detached.make({ detachedId });
+      const members = [reference, member(first.id), member(first.id)];
+      const shared = {
+        groups: [...groups, CitationResourceGroup.make({ authorityId: missingAuthority, memberListId: listB })],
+        memberLists: [
+          CitationMemberList.make({ id: listA, members }),
+          CitationMemberList.make({ id: listB, members: [] }),
+        ],
+        detachedCitations: [detached],
+        authorities: [
+          ...document.authorities,
+          CitationAuthority.make({ id: missingAuthority, representative: O.none() }),
+        ],
+      };
+      // Two resources can share the same sequence even though their decisions differ.
+      shared.groups[1] = CitationResourceGroup.make({ authorityId: b, memberListId: listA });
+      const graph = CitationDocument.make({ ...document, ...shared });
+      const restored = yield* S.decodeEffect(ReceiptJson)(
+        yield* S.encodeEffect(ReceiptJson)(CitationDocumentReceipt.make({ ...receipt, ...shared }))
+      );
+      expect(restored.memberLists).toEqual(graph.memberLists);
+      expect(restored.groups).toEqual(graph.groups);
+      expect(restored.detachedCitations).toEqual([detached]);
+      const equalLists = CitationDocumentReceipt.make({
+        ...restored,
+        memberLists: A.map(restored.memberLists, (list) => CitationMemberList.make({ ...list, members })),
+      });
+      const equalRestored = yield* S.decodeEffect(ReceiptJson)(yield* S.encodeEffect(ReceiptJson)(equalLists));
+      expect(equalRestored.memberLists).toHaveLength(2);
+      expect(A.getUnsafe(equalRestored.memberLists, 0).id).not.toBe(A.getUnsafe(equalRestored.memberLists, 1).id);
+      expect(A.getUnsafe(equalRestored.memberLists, 0).members).toEqual(
+        A.getUnsafe(equalRestored.memberLists, 1).members
+      );
+      expect(citationAuthorityMentionIds(restored, a)).toEqual([first.id, first.id]);
+      expect(isDocument({ ...graph, mentions: A.reverse(graph.mentions) })).toBe(true);
+      expect("anchor" in detached).toBe(false);
+      expect(isDocument({ ...graph, memberLists: A.append(graph.memberLists, graph.memberLists[0]!) })).toBe(false);
+      expect(isDocument({ ...graph, groups: A.append(graph.groups, graph.groups[0]!) })).toBe(false);
+      expect(isDocument({ ...graph, detachedCitations: [] })).toBe(false);
+      expect(isDocument({ ...graph, detachedCitations: [detached, detached] })).toBe(false);
+      expect(
+        isDocument({
+          ...graph,
+          memberLists: [
+            CitationMemberList.make({ id: listA, members: [member(missingMention)] }),
+            graph.memberLists[1]!,
+          ],
+        })
+      ).toBe(false);
     })
   );
 

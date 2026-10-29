@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationAuthorityId, CitationMentionId } from "@beep/law-practice-domain/values";
+import { CitationAuthorityId, CitationMemberList, CitationMentionId } from "@beep/law-practice-domain/values";
 import { CitationEngineAbsoluteMaxima } from "@beep/law-practice-use-cases/server";
 import { LiteralKit, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import * as A from "effect/Array";
@@ -45,8 +45,8 @@ export const CitationResourceIdentity = S.TaggedUnion({
 export type CitationResourceIdentity = typeof CitationResourceIdentity.Type;
 
 /**
- * Expected group membership supplied out of band by the trusted resource
- * adapter. Binding every member permits a callback to merge full citations
+ * Expected decisions and optional listed group supplied out of band by the trusted resource
+ * adapter. Binding every decision permits a callback to merge full citations
  * with different default keys without letting a receipt invent an override.
  * @internal
  * @category models
@@ -55,7 +55,8 @@ export type CitationResourceIdentity = typeof CitationResourceIdentity.Type;
 export class CitationResourceBinding extends S.Opaque<CitationResourceBinding, { readonly brand: unique symbol }>()(
   S.Struct({
     identity: CitationResourceIdentity,
-    members: S.NonEmptyArray(CitationMentionId).check(
+    group: S.OptionFromNullOr(CitationMemberList),
+    decisions: S.Array(CitationMentionId).check(
       S.isMaxLength(CitationEngineAbsoluteMaxima.mentions),
       S.makeFilter(
         (members) => A.length(A.dedupe(members)) === A.length(members),
@@ -68,7 +69,8 @@ export class CitationResourceBinding extends S.Opaque<CitationResourceBinding, {
     ),
   }).pipe(
     $I.annoteSchema("CitationResourceBinding", {
-      description: "Bounded trusted resource key and exact expected member set, absent from the persisted document.",
+      description:
+        "Bounded trusted resource key and exact expected decision set and ordered group/list identity, absent from the persisted document.",
     })
   )
 ) {}

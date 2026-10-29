@@ -150,3 +150,10 @@ The current forms remain the first internal vertical slice. The goal stays open
 until canonical parity, accepted extensions, schema transforms, corpus proof,
 and closeout all land in one implementation PR. Full Bluebook-manual compliance
 and later upstream drift are separate follow-ups.
+
+The current document model preserves ordered/repeated members, empty groups,
+shared list references and detached semantic objects separately from resolution
+decisions. See [ordered document membership evidence](
+./history/evidence/2026-10-29-ordered-document-membership.md). Structural codec
+proof covers all sixteen mutation snapshots; live alias/detached callback
+execution and final session projection remain open.

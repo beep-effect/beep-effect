@@ -1,5 +1,5 @@
 import { fileURLToPath } from "node:url";
-import { citationAuthorityMembers } from "@beep/law-practice-domain/values";
+import { citationAuthorityMentionIds } from "@beep/law-practice-domain/values";
 import {
   CitationResolutionCallbacks,
   CitationResolutionWork,
@@ -62,7 +62,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("production defau
           const document = yield* resolveCitationMentions(input);
           expect(
             A.map(document.authorities, (authority) =>
-              A.map(citationAuthorityMembers(document, authority.id), (id) =>
+              A.map(citationAuthorityMentionIds(document, authority.id), (id) =>
                 O.getOrElse(HashMap.get(indices, id), () => -1)
               )
             ),

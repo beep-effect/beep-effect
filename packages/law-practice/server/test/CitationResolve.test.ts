@@ -1,5 +1,5 @@
 import { fileURLToPath } from "node:url";
-import { Citation, CitationMention, citationAuthorityMembers } from "@beep/law-practice-domain/values";
+import { Citation, CitationMention, citationAuthorityMentionIds } from "@beep/law-practice-domain/values";
 import { resolveCitationMentions } from "@beep/law-practice-server/_test/Citation/Resolve";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -48,7 +48,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("canonical defaul
             A.map(document.mentions, (mention, index) => Tuple.make(mention.id, index))
           );
           const groups = A.map(document.authorities, (authority) =>
-            A.map(citationAuthorityMembers(document, authority.id), (id) =>
+            A.map(citationAuthorityMentionIds(document, authority.id), (id) =>
               O.getOrElse(HashMap.get(indices, id), () => -1)
             )
           );
@@ -79,7 +79,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("canonical defaul
             A.map(document.mentions, (mention, index) => Tuple.make(mention.id, index))
           );
           const groups = A.map(document.authorities, (authority) =>
-            A.map(citationAuthorityMembers(document, authority.id), (id) =>
+            A.map(citationAuthorityMentionIds(document, authority.id), (id) =>
               O.getOrElse(HashMap.get(indices, id), () => -1)
             )
           );
@@ -177,7 +177,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("canonical defaul
         mention.id === first.id ? CitationMention.make({ ...mention, citation }) : mention
       );
       const document = yield* resolveCitationMentions({ ...input, mentions });
-      expect(A.length(citationAuthorityMembers(document, A.getUnsafe(document.authorities, 0).id))).toBe(2);
+      expect(A.length(citationAuthorityMentionIds(document, A.getUnsafe(document.authorities, 0).id))).toBe(2);
     })
   );
 

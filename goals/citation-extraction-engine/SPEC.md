@@ -186,8 +186,10 @@ requires a reviewed schema.
   source anchor, exact matched text, component anchors, and typed warnings.
 - `CitationResolution`: tagged `Resolved | Ambiguous | Unresolved` outcomes
   using brand-separated IDs, never array positions.
-- `CitationDocument`: mentions, authority groups, references, and resolution
-  relationships. It is the sole encoded owner of group membership.
+- `CitationDocument`: verified mentions, detached semantic objects, authority
+  catalog, ordered resource groups, shared member-list nodes and per-mention
+  resolution decisions. Lists alone own ordered group membership, including
+  empty presence and repetitions; decisions do not imply final assignment.
 - `CitationEngineInput`: server-only source identity/text plus schema-defined
   operation options.
 - `CitationEngineReport`: deterministic counts/versions/safety decisions and
@@ -909,6 +911,24 @@ instead of silently splitting delivery or weakening scope.
   scenes remain open. No replacement graph or semantic waiver is approved by
   this source checkpoint. Reverse the probe/test/evidence checkpoint together;
   all sixteen scenes must enter final target proof before row promotion.
+
+- **2026-10-29 ordered document graph:** supersede the provisional v1 rule
+  deriving membership from decisions. Receipt v2 stores ordered resource
+  groups and separately identified member-list nodes. Multiple groups may
+  reference one list; repeated mention/detached references and empty listed
+  groups remain explicit. Detached citation objects use document-local object
+  tokens, never verified anchors or occurrence tokens. Authority examples are
+  optional references with no implied assignment. Structural closure does not
+  authenticate alias history, semantic classification or external equality.
+  Private persistence verifies exact trusted decision sets separately from
+  optional list identity/ordered members; unbound defaults require exact
+  default membership in mention order. Default list IDs substitute the cl1
+  namespace for their owning ca1 token within a document, without issuing any
+  source evidence. Structural codec tests preserve all sixteen frozen mutation
+  snapshots. This does not close live alias/detached execution, general host
+  normalization, production list/object identity issuers or final projection.
+  Reverse graph, persistence, tests and this checkpoint together if retired;
+  do not retain the v1 format as a competing public representation.
 
 ## Exception Ledger
 

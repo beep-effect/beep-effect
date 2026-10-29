@@ -38,9 +38,10 @@ now have semantic schemas in the same union. Verified mention composition and
 explicit persisted-receipt restoration pass local package gates. Private ca1
 authority production matches 169 focused oracle equality observations and 13
 independent protocol vectors. Artifact lookup and full grouping remain open.
-Stable-ID document/resolution schemas now enforce graph coherence, with one
-encoded membership edge per resolved mention and structural receipt round-trip
-proof. Private document projection/restoration now recomputes occurrence and
+Stable-ID document/resolution schemas now enforce graph coherence. Ordered
+member-list nodes own group membership independently of per-mention decisions;
+receipt v2 preserves repeated references, empty groups and shared list IDs.
+Detached semantic objects carry no source anchors or occurrence IDs. Private document projection/restoration now recomputes occurrence and
 default authority keys, sharing one canonical-source verification across all
 anchors. Private resolver text helpers preserve the pinned punctuation,
 Unicode digit/whitespace and arbitrary-precision Id. pin rules. The private
@@ -54,15 +55,17 @@ adaptation: valid resources can originate without a full mention. Falsy keys,
 key equality, callback order and mutable callback state also need explicit
 service-port treatment before custom resolution can be implemented. These
 source observations do not increase the 76 target-tested contexts.
-Authority representatives now refer to any resolved mention. Private
-persistence accepts exact expected membership from trusted canonical/external
-resource descriptors. A private callback session now matches 18 focused source
+Authority catalog entries have optional mention/detached example references.
+Private persistence accepts exact expected decisions and optional ordered
+group/list nodes from trusted canonical/external resource descriptors. A private callback session now matches 18 focused source
 contexts and all 53 callback events through captured custom adapters and
 production defaults. Production default callbacks also pass all 76 default
 contexts with shared, operation-local work accounting. General host/alias/model
 mutation and final document/service integration remain open. Sixteen new
 mutation observations expose provisional graph/alias restrictions; ten final
-group-value cases match the session, while identity/detached proof stays open.
+group-value cases match the session. All sixteen final snapshots now have
+structural codec representation proof, including alias references and detached
+objects. Live alias/detached execution and identity issuers stay open.
 Exhaustive resolver/custom-resource proof, live artifact integration,
 Bluebook codecs and extension adoption/schema proof stay open.
 The remaining 37 provisional contract directories are retired; their donor obligations

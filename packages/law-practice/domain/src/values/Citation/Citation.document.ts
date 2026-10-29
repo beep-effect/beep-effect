@@ -12,29 +12,37 @@ import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
-import { CitationAuthorityId, CitationMentionId } from "./Citation.identity.ts";
+import { CitationAuthorityId } from "./Citation.identity.ts";
+import {
+  CitationDetached,
+  CitationGroupMember,
+  CitationMemberList,
+  CitationResourceGroup,
+} from "./Citation.membership.ts";
 import { CitationMention, CitationMentionReceipt } from "./Citation.mention.ts";
 import { CitationResolution } from "./Citation.resolution.ts";
+import type { CitationMentionId } from "./Citation.identity.ts";
 
 const $I = $LawPracticeDomainId.create("values/Citation/Citation.document");
 const sourceEquivalent = S.toEquivalence(SourceTextIdentity);
 
 /**
- * Authority resource represented by a resolved mention already in the document.
- * Membership is derived from resolved edges, never duplicated here.
+ * Authority catalog entry with an optional example reference. The example is
+ * not an assertion of resolution or group membership. Empty listed groups and
+ * detached-only groups do not require a fabricated physical occurrence.
  * **Example** (Inspect the representative reference)
  * ```ts
  * import { CitationAuthority } from "@beep/law-practice-domain/values"
- * console.log(CitationAuthority.fields.representativeMentionId !== undefined) // true
+ * console.log(CitationAuthority.fields.representative !== undefined) // true
  * ```
  * @category models
  * @since 0.0.0
  */
 export class CitationAuthority extends S.Opaque<CitationAuthority, { readonly brand: unique symbol }>()(
-  S.Struct({ id: CitationAuthorityId, representativeMentionId: CitationMentionId }).pipe(
+  S.Struct({ id: CitationAuthorityId, representative: S.OptionFromNullOr(CitationGroupMember) }).pipe(
     $I.annoteSchema("CitationAuthority", {
       description:
-        "Document-local resource identity with a resolved occurrence representative; no embedded citation copy or membership array.",
+        "Document-local resource identity and optional example reference; no embedded citation copy or membership array.",
     })
   )
 ) {}
@@ -43,10 +51,13 @@ const Relationships = {
   engineArtifact: Sha256Hex,
   authorities: S.Array(CitationAuthority),
   resolutions: S.Array(CitationResolution),
+  groups: S.Array(CitationResourceGroup),
+  memberLists: S.Array(CitationMemberList),
+  detachedCitations: S.Array(CitationDetached),
 };
 const RuntimeShape = S.Struct({ ...Relationships, mentions: S.Array(CitationMention) });
 const ReceiptShape = S.Struct({
-  schemaVersion: S.tag("citation-document-receipt/v1"),
+  schemaVersion: S.tag("citation-document-receipt/v2"),
   ...Relationships,
   mentions: S.Array(CitationMentionReceipt),
 });
@@ -59,7 +70,20 @@ const coherent = (document: typeof RuntimeShape.Type | typeof ReceiptShape.Type)
   const byResolution = HashMap.fromIterable(
     A.map(document.resolutions, (resolution) => Tuple.make(resolution.mentionId, resolution))
   );
+  const byList = HashMap.fromIterable(A.map(document.memberLists, (list) => Tuple.make(list.id, list)));
+  const byDetached = HashMap.fromIterable(
+    A.map(document.detachedCitations, (citation) => Tuple.make(citation.id, citation))
+  );
+  const byGroup = HashMap.fromIterable(A.map(document.groups, (group) => Tuple.make(group.authorityId, group)));
+  const referenceExists = (reference: CitationGroupMember) =>
+    CitationGroupMember.match(reference, {
+      Mention: (value) => HashMap.has(byMention, value.mentionId),
+      Detached: (value) => HashMap.has(byDetached, value.detachedId),
+    });
   if (
+    HashMap.size(byList) !== A.length(document.memberLists) ||
+    HashMap.size(byDetached) !== A.length(document.detachedCitations) ||
+    HashMap.size(byGroup) !== A.length(document.groups) ||
     HashMap.size(byMention) !== A.length(mentions) ||
     HashMap.size(byAuthority) !== A.length(document.authorities) ||
     HashMap.size(byResolution) !== A.length(document.resolutions) ||
@@ -88,15 +112,14 @@ const coherent = (document: typeof RuntimeShape.Type | typeof ReceiptShape.Type)
           Unresolved: () => true,
         })
     ) &&
-    A.every(document.authorities, (authority) =>
-      O.match(HashMap.get(byMention, authority.representativeMentionId), {
-        onNone: () => false,
-        onSome: (mention) =>
-          O.match(HashMap.get(byResolution, mention.id), {
-            onNone: () => false,
-            onSome: (resolution) => resolution.status === "Resolved" && resolution.authorityId === authority.id,
-          }),
-      })
+    A.every(
+      document.groups,
+      (group) => HashMap.has(byAuthority, group.authorityId) && HashMap.has(byList, group.memberListId)
+    ) &&
+    A.every(document.memberLists, (list) => A.every(list.members, referenceExists)) &&
+    A.every(
+      document.authorities,
+      (authority) => O.isNone(authority.representative) || referenceExists(authority.representative.value)
     )
   );
 };
@@ -105,22 +128,21 @@ const graphCheck = S.makeFilter(
   $I.annote("DocumentRelationshipCoherence", {
     title: "Document Relationship Coherence",
     description:
-      "Unique IDs, exactly one resolution per mention, closed references, coherent source/engine identity and resolved authority representatives.",
+      "Unique IDs, exactly one resolution per mention, closed references, coherent source/engine identity and closed example/group/list/object references.",
     message: "Citation document relationships are incoherent.",
   })
 );
 
 /**
- * Ordered runtime mentions and the sole encoded authority membership edges.
+ * Runtime mentions, resource catalog, decisions and exact group/list data.
  *
- * Every mention has exactly one resolution. Authorities reference mentions
- * resolved to that authority. Warnings/candidates/targets stay within the same
- * document; mentions share its source and engine artifact. These checks prove
- * graph coherence, not legal classification, digest authenticity or resolution
- * correctness. Custom callbacks may introduce a resource from any citation kind.
- * Identity verification belongs to the engine and its resource adapter.
- * Parallel/string/history relationships need their separate proof.
- * Persist the explicit document receipt, never a JSON copy of runtime proofs.
+ * Every verified mention has one resolution decision. Group membership is
+ * owned only by member-list nodes, preserving independent order, repetitions,
+ * empty presence and shared-list identity. A decision is not an assignment.
+ * Detached semantic objects have no source capability and remain distinct from
+ * verified occurrences. Reference closure and source/engine coherence do not
+ * attest classification, resource-key authenticity or alias correctness.
+ * Persist the explicit receipt instead of JSON-copying runtime capabilities.
  * **Example** (Inspect relationship ownership)
  * ```ts
  * import { CitationDocument } from "@beep/law-practice-domain/values"
@@ -133,7 +155,7 @@ export class CitationDocument extends S.Opaque<CitationDocument, { readonly bran
   RuntimeShape.check(graphCheck).pipe(
     $I.annoteSchema("CitationDocument", {
       description:
-        "Runtime proof-bearing citation document with one canonical membership edge per resolved mention and no recursive citation copies.",
+        "Runtime proof-bearing mentions with separate decisions and ordered, identity-bearing group lists; detached semantics never issue evidence.",
     })
   )
 ) {}
@@ -161,9 +183,10 @@ export class CitationDocumentReceipt extends S.Opaque<CitationDocumentReceipt, {
 ) {}
 
 /**
- * Derive an authority's ordered member IDs from the document's resolved edges.
- * An absent authority has no members. Ambiguous candidates are not membership.
- * **Example** (Inspect the projection function)
+ * Read the exact listed member sequence, preserving order and repetitions.
+ * Catalog presence alone does not create a group; an absent group has no
+ * members. Detached references remain explicit rather than being dropped.
+ * **Example** (Inspect the projection)
  * ```ts
  * import { citationAuthorityMembers } from "@beep/law-practice-domain/values"
  * console.log(citationAuthorityMembers !== undefined) // true
@@ -172,6 +195,44 @@ export class CitationDocumentReceipt extends S.Opaque<CitationDocumentReceipt, {
  * @since 0.0.0
  */
 export const citationAuthorityMembers: {
+  (
+    authorityId: CitationAuthorityId
+  ): (document: CitationDocument | CitationDocumentReceipt) => ReadonlyArray<CitationGroupMember>;
+  (
+    document: CitationDocument | CitationDocumentReceipt,
+    authorityId: CitationAuthorityId
+  ): ReadonlyArray<CitationGroupMember>;
+} = dual(
+  2,
+  (
+    document: CitationDocument | CitationDocumentReceipt,
+    authorityId: CitationAuthorityId
+  ): ReadonlyArray<CitationGroupMember> =>
+    O.getOrElse(
+      O.flatMap(
+        A.findFirst(document.groups, (group) => group.authorityId === authorityId),
+        (group) =>
+          O.map(
+            A.findFirst(document.memberLists, (list) => list.id === group.memberListId),
+            (list) => list.members
+          )
+      ),
+      A.empty<CitationGroupMember>
+    )
+);
+/**
+ * Project only verified mention IDs from a listed sequence. This explicitly
+ * named view preserves their order/repetitions and excludes detached objects;
+ * use citationAuthorityMembers when every reference is required.
+ * **Example** (Inspect the physical-occurrence view)
+ * ```ts
+ * import { citationAuthorityMentionIds } from "@beep/law-practice-domain/values"
+ * console.log(citationAuthorityMentionIds !== undefined) // true
+ * ```
+ * @category getters
+ * @since 0.0.0
+ */
+export const citationAuthorityMentionIds: {
   (
     authorityId: CitationAuthorityId
   ): (document: CitationDocument | CitationDocumentReceipt) => ReadonlyArray<CitationMentionId>;
@@ -184,20 +245,9 @@ export const citationAuthorityMembers: {
   (
     document: CitationDocument | CitationDocumentReceipt,
     authorityId: CitationAuthorityId
-  ): ReadonlyArray<CitationMentionId> => {
-    const members = HashMap.fromIterable(
-      A.map(
-        A.filter(
-          document.resolutions,
-          (resolution) => resolution.status === "Resolved" && resolution.authorityId === authorityId
-        ),
-        (resolution) => Tuple.make(resolution.mentionId, true)
-      )
-    );
-    const mentions: ReadonlyArray<CitationMention | CitationMentionReceipt> = document.mentions;
-    return A.map(
-      A.filter(mentions, (mention) => HashMap.has(members, mention.id)),
-      (mention) => mention.id
-    );
-  }
+  ): ReadonlyArray<CitationMentionId> =>
+    A.map(
+      A.filter(citationAuthorityMembers(document, authorityId), CitationGroupMember.guards.Mention),
+      (member) => member.mentionId
+    )
 );
