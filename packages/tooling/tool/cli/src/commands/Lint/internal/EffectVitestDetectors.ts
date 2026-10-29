@@ -4481,14 +4481,20 @@ const detectRetryLoop = (loop: MorphNode, state: DetectorState): void => {
  *
  * ```ts
  * import { detectEffectVitestFindings } from "@beep/repo-cli/commands/Lint"
+ * import { NodeCrypto } from "@effect/platform-node"
  * import * as A from "effect/Array"
+ * import * as Effect from "effect/Effect"
  * import { Project } from "ts-morph"
  *
  * const source = new Project({ useInMemoryFileSystem: true }).createSourceFile(
  *   "runtime.test.ts",
  *   'import * as Effect from "effect/Effect"; import { it } from "@effect/vitest"; it("runs", () => Effect.runSync(program))'
  * )
- * const findings = detectEffectVitestFindings(source, "packages/example/test/runtime.test.ts", "@beep/example")
+ * const findings = await Effect.runPromise(
+ *   detectEffectVitestFindings(source, "packages/example/test/runtime.test.ts", "@beep/example").pipe(
+ *     Effect.provide(NodeCrypto.layer)
+ *   )
+ * )
  * console.log(A.map(findings, ({ ruleId }) => ruleId)) // ["EV001"]
  * ```
  *
