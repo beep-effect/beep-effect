@@ -87,7 +87,8 @@
         "productionPackageFilesChanged": false,
         "modelsTimeout": "Observed only in the original combined run; unchanged Models tests pass in both focused replays. Root cause beyond elapsed-time failure is not claimed.",
         "knowledgeComparison": "Commit contains the prepared goal manifests, so HEAD and the live manifest inputs now agree."
-      }
+      },
+      "freshWholePackageReplay": "pending on a clean committed manifest profile"
     },
     "fallow": {
       "auditIntroduced": 0,
@@ -141,8 +142,9 @@
   },
   "currentPopulation": {
     "sourcesVerified": 430,
-    "path": "../turborepo-quality-cache-adoption/research/current-population.json",
-    "sha256": "1f8b426d7af4fd601eadab872eaa6bc11d482e904ca6ae890b848d4bfac0325d"
+    "path": "goals/turborepo-quality-cache-adoption/research/current-population.json",
+    "sha256": "1f8b426d7af4fd601eadab872eaa6bc11d482e904ca6ae890b848d4bfac0325d",
+    "base": "repository-root"
   },
   "productionChanges": false,
   "qualified": false,

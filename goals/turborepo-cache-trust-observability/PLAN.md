@@ -423,8 +423,11 @@ missing/duplicate/foreign/faulted/ambiguous uploads and non-fresh or mismatched
 native tasks. Both pinned native clients physically produce the expected tagged
 PUT; their task hashes, complete archive bytes and digests join. Removing three
 guards fails the intended assertions and restores exact source. Node and Bun
-each pass 347 tests in seventeen files; fresh full package verification, Fallow
-and Effect/Vitest checks pass. See
+each pass 347 tests in seventeen files; Fallow and Effect/Vitest checks pass.
+The full package audit passed 8,093 tests and docgen but failed a Models timeout
+and a HEAD/live goal-manifest comparison. After committing the prepared
+manifests, both affected files pass all 35 tests without package-source changes.
+The original failed run remains explicit; a fresh whole-package result is pending. See
 [the source-bound checkpoint](research/native-upload-join-checkpoint.json).
 This remains a local component: closed protected execution/publication, deployed
 trust readiness, current task qualification and observation windows remain open.

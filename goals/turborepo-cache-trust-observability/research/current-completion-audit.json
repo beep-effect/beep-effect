@@ -232,7 +232,7 @@
   "priorSpecSha256AtUploadJoin": "cc3e2b7fa50d899586f3a1db1d8250253210fea0e9bbd42ffa7fe364106f55f7",
   "nativeUploadJoinCheckpoint": {
     "path": "goals/turborepo-cache-trust-observability/research/native-upload-join-checkpoint.json",
-    "sha256": "1a72e522a023770fb16e5b9dee64abcf030b3e4a46320411539dc91f70308288",
+    "sha256": "3caed76b81a86050607c752d8e167089ec16e9e280f253b746defc4329fcab68",
     "scope": "Current local component; whole-goal acceptance remains unproven."
   }
 }
