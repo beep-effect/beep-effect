@@ -71,7 +71,38 @@
       "fixed": true,
       "originalLogSha256": "aae88fb608c1262438e4e67d3c3d96e241f308ada2a586640a9a02af1e956f67"
     },
-    "wholePackage": "pending after the prepared source and manifest commit"
+    "wholePackage": {
+      "schemaVersion": "cache-current-runtime-whole-package/v1",
+      "recordedAt": "2026-10-29T10:42:25.811601+00:00",
+      "sourceHead": "2b295197c1866d56246f0bab52ea2cf2c0e67b08",
+      "command": "bun run beep quality package-verify @beep/repo-cli",
+      "exit": 0,
+      "auditSeconds": 1118.9,
+      "docgenSeconds": 36.4,
+      "logSha256": "34171751f61f5f022cfebc7838bc5387296c798719b7df0d8df81483daea0b47",
+      "frozenSourceFiles": [
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.schemas.ts",
+          "sha256": "9d003f173bb5181577ace15195d94ba4e4844580b2f81bdb11dd4e4841bc44ed"
+        },
+        {
+          "path": "packages/tooling/tool/cli/test/cache-census.test.ts",
+          "sha256": "1856ea93ec938b54a820d58725d62ebc0e786d6c08462286d9d3a71cf8e528cf"
+        },
+        {
+          "path": "goals/turborepo-quality-cache-adoption/research/current-runtime-profile-control.ts",
+          "sha256": "48bffbbb8e42191aac8908e33e052ca474bdbdbfff16d7fad86cf9e26cdc44c1"
+        },
+        {
+          "path": "goals/turborepo-quality-cache-adoption/research/actual-ignored-input-control.py",
+          "sha256": "a115441e1e5e095e2a8c3ec4713e0accfb3474a9880878f576cb15340c86d285"
+        }
+      ],
+      "goalManifestsMatchHead": true,
+      "qualified": false,
+      "signedTrialActivated": false,
+      "scope": "Whole CLI package verification at the frozen committed source; no qualification or deployment."
+    }
   },
   "population": {
     "path": "goals/turborepo-quality-cache-adoption/research/current-population.json",

@@ -256,3 +256,8 @@ binds changed runner source bytes. Historical claims above keep their dates.
   and [retained control](actual-ignored-input-control.py): both pinned clients,
   one real computation, no task execution/remote use, and exact baseline
   restoration after the scoped ignored fixture is removed.
+
+- The current-runtime checkpoint now retains the passing whole CLI package
+  replay at frozen head2b295197c1: audit1118.9seconds/docgen36.4seconds. Exact
+  source bytes and both goal manifests remained unchanged through execution.
+  Historical failed runs and their repairs remain in their original checkpoints.

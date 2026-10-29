@@ -125,7 +125,8 @@ retains190workspaces/2571computations/1621configured flags. See
 [the checkpoint](research/current-runtime-profile-checkpoint.json),
 [physical observation](research/current-runtime-profile-observation.json) and
 [retained control](research/current-runtime-profile-control.ts).
-Whole-package replay on the new committed source remains pending. No task is
+The frozen committed whole-package replay passes: audit1118.9seconds and
+docgen36.4seconds, with source and both goal manifests unchanged. No task is
 qualified or enabled by this observation support.
 
 

@@ -96,3 +96,13 @@ clients. No quality task executes and no remote cache is used. Root-wide
 metadata globs are a narrowing candidate, but exclusion still requires tracing
 the wrapper's real reads and proving actual output/verdict equivalence. The
 current task remains cache:false. Keep that work in this active adoption goal.
+
+
+### Current runtime whole replay and resume overhead
+
+- The committed Bun1.4.4 observation change passes the whole CLI package audit
+  in1118.9seconds and docgen in36.4seconds; frozen source and manifests match.
+- Resume friction: the scheduler status command emitted over two thousand
+  historical quarantine rows while inspecting live admission. Future status
+  consumption should request a bounded projection where supported. No runtime
+  or cache behavior was changed for this observation.

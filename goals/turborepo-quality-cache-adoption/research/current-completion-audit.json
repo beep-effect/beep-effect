@@ -166,7 +166,7 @@
   "priorSpecSha256AtRuntimeObservation": "9c2c1c88a7f13efab9252774f154d1e1e31e8d395695b2ab37dabc212af27e5c",
   "currentRuntimeProfileCheckpoint": {
     "path": "goals/turborepo-quality-cache-adoption/research/current-runtime-profile-checkpoint.json",
-    "sha256": "cf82796c23638de060dc7bf603de0e85091e188f9766bcb90c6cc33bec79416e",
-    "scope": "Runtime observation only; current whole-package proof and all qualification/rollout obligations remain open."
+    "sha256": "47580de524382f75ad09049b215f4302c16cc6e5fc31e2bc6bddc4061be5b5ac",
+    "scope": "Runtime observation and passing frozen whole-package verification only; all qualification and rollout obligations remain open."
   }
 }
