@@ -262,5 +262,8 @@ package lint/check pass. The full audit (1068.2 seconds) and docgen (275.4
 seconds) passed on their frozen recorded source. The later test-codec hoist and
 schema-catalog refresh have separate current-source checks in
 [the component checkpoint](research/backend-result-checkpoint.json).
+The corrected integrated source passes 236 tests across ten files, package
+lint/type checks, repository oxlint and the current 9,328-entry schema catalog.
+The census was refreshed and every recorded source digest verified.
 Protected producer integration, production event capture and representative
 observation remain open. No current adapter/service/cloud configuration changes.

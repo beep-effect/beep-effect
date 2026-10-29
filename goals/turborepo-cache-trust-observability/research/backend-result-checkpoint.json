@@ -58,15 +58,32 @@
     "No task qualification or whole-goal acceptance."
   ],
   "postAuditRepair": {
-    "status": "pending",
+    "status": "passed",
     "changedSourceFiles": [
       "packages/tooling/tool/cli/test/cache-conformance.test.ts"
     ],
     "changes": "Reuse the existing exchange codec and hoist historical JSON decoding to module scope; regenerate the canonical schema catalog. Production result-projection source is unchanged.",
     "schemaCatalog": {
+      "status": "current",
       "entries": 9328,
-      "shards": 173,
-      "status": "regenerated-check-pending"
+      "shards": 173
+    },
+    "sourceRevision": "41cfeecb0d78037eaba9531d096b2f8bffbea107",
+    "selectedFiles": 10,
+    "selectedTestsPassed": 236,
+    "seconds": 26.57,
+    "packageQuick": {
+      "status": "passed",
+      "lintSeconds": 6.1,
+      "checkSeconds": 13.1
+    },
+    "rootOxlint": "passed across the repository",
+    "mainIntegration": "Imported reviewed protocol and CLI doctrine; focused protocol/posture/conformance tests and package checks pass. All six production component source files match the frozen full audit.",
+    "census": {
+      "sourceBindingsVerified": 427,
+      "workspaces": 190,
+      "executableComputations": 2571,
+      "authority": "inventory only"
     }
   }
 }
