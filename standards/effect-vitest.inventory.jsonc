@@ -11907,7 +11907,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The owning `live account poller` block runs its tests serially on the shared test clock; the test forks the one poll it owns with forkChild, advances the clock only after the hung /me request has signalled through a Deferred that it is in flight, and joins the fiber before the test ends, so no other test sees the adjustment. Owner: @beep/repo-cli. Exit: retire when the Kimi profile timeout test owns its TestClock in a single-case it.layer(TestClock.layer()) block."
     },
     {
       "id": "EV015:packages/tooling/tool/cli/test/cache-acceptance.test.ts:532:TestClock.adjust@15#1",
