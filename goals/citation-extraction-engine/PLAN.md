@@ -97,6 +97,13 @@ origin capture preserves acquired identity integers into sealed projection.
 This supersedes earlier integration gaps above without completing production
 native identity allocation, live assets/Layer or exhaustive target parity.
 
+HTML safety/fidelity hold (2026-10-29): source depth-256 input of only 2,823
+UTF-16 units returns empty success after a fatal native parser depth error.
+SPEC.md requires closed limit failures. Source evidence and a scoped proposed
+failure are recorded in history/evidence/2026-10-29-html-safety-hold.md. Target
+HTML implementation is held for an explicit ruling under GOAL.md; recording
+the counterexample does not approve a behavior delta or waive parity.
+
 ## Delivery Rule
 
 This is one all-in implementation PR to control hosted CI cost. Work may use

@@ -195,6 +195,15 @@ controls and fresh replay pass. Existing non-HTML observations also match in
 helper compositions; HTML, custom pipeline and source-map proof stay open.
 Existing eyecite BSD-2-Clause attribution applies.
 
+The [HTML safety hold evidence](
+../history/evidence/2026-10-29-html-safety-hold.md) binds 69 source observations
+and 115 immutable strings to eyecite/lxml sources and exact parser versions.
+Depth-255/256 observations expose successful native truncation below the source
+ceiling. Eight corruption controls and fresh replay pass; target proof and
+approval remain absent. A separately cached matching-version WASI build is
+research only and has no HTML parity or runtime acceptance. Existing eyecite
+attribution covers the source-derived observations; no native asset is added.
+
 ## Incorporated-source discipline
 
 - A local clone is research state, not an incorporated dependency.

@@ -108,7 +108,11 @@
         "packages/law-practice/server/test/CitationLiteralCleaners.test.ts",
         "packages/law-practice/use-cases/test/fixtures/eyecite/literal-cleaners.json",
         "goals/citation-extraction-engine/ops/probe-literal-cleaners.py",
-        "goals/citation-extraction-engine/ops/verify-literal-cleaner-controls.py"
+        "goals/citation-extraction-engine/ops/verify-literal-cleaner-controls.py",
+        "goals/citation-extraction-engine/history/evidence/2026-10-29-html-safety-hold.md",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/html-cleaner-audit.json",
+        "goals/citation-extraction-engine/ops/probe-html-cleaner-audit.py",
+        "goals/citation-extraction-engine/ops/verify-html-cleaner-audit-controls.py"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

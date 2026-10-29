@@ -1102,6 +1102,14 @@ instead of silently splitting delivery or weakening scope.
   custom/named composition, source maps and full family safety remain open.
   No canonical capability is rejected and no completion row is promoted.
 
+- **2026-10-29 HTML safety/fidelity hold:** the pinned native parser returns
+  empty success at depth 256 while recording fatal resource exhaustion. The
+  2,823-unit input fits the frozen source ceiling, creating a concrete conflict
+  with nontruncating limit enforcement. Sixty-nine source observations and
+  eight corruption controls retain the counterexample. The proposed closed
+  failure awaits an explicit ruling under GOAL.md. No target implementation,
+  behavior exception or completed canonical row follows from this audit.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from

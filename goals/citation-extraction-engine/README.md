@@ -4,6 +4,11 @@
 
 Lifecycle: `active`
 
+Implementation hold (2026-10-29): the pinned HTML parser silently returns empty
+success at its native depth limit, conflicting with the nontruncating safety
+contract. The [source evidence and proposed ruling](./history/evidence/2026-10-29-html-safety-hold.md)
+await explicit direction under GOAL.md's stop condition. No divergence is approved.
+
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
 P0 source acquisition and public prerequisite compatibility are evidenced. The

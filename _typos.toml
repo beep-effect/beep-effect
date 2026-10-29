@@ -206,3 +206,10 @@ extend-glob = ["THIRD_PARTY_NOTICES.md"]
 [type.cpython-notice.extend-words]
 Stichting = "Stichting"
 Mathematisch = "Mathematisch"
+
+# Preserve libxml2's exact diagnostic enum in source-audit evidence only.
+[type.citation-html-audit]
+extend-glob = ["html-cleaner-audit.json"]
+
+[type.citation-html-audit.extend-words]
+STRUCURE = "STRUCURE"
