@@ -321,7 +321,7 @@
   },
   "population": {
     "path": "goals/turborepo-quality-cache-adoption/research/current-population.json",
-    "sha256": "0f1823c9d647ef62f6412230ec4ed6b25d56c1f6d25d22cdaf328be80f27ff10",
+    "sha256": "b869e63e32cbac1c52a4c1e22a943f55b782b98c94ad9696c0ff45729b9676b2",
     "sourcesVerified": 431,
     "counts": {
       "workspaces": 190,
@@ -358,5 +358,187 @@
     "jobUrl": "https://github.com/beep-effect/beep-effect/actions/runs/40875050244/job/123468307048",
     "sameTwoMissingPathsAsLocal": true,
     "scope": "Completed hosted red log read immediately; no additional failed path was found."
+  },
+  "sourceMapInterpretation": "The original sourceSha256 and observations above remain bound to the prepared repair at254962a496. guardHoist contains the current prepared source and fresh observations; no old proof is retagged.",
+  "guardHoist": {
+    "recordedAt": "2026-10-29T13:58:28.071330+00:00",
+    "sourceState": "working-tree-with-exact-file-digests",
+    "sourceSha256": {
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.ts": "319c2753046e614a8475ca164d4111066dae15ca797e39b046203bbdc3a8530f",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.upload.ts": "94ee2d848e168d0e3a84c77a6aadbfe8adf072695516a28ca2a0c38afd9166a6",
+      "packages/tooling/tool/cli/test/cache-hosted-producer.test.ts": "8fa4d5c830fd805dceaf412aba3514719c7d3673bfdb7f34d21ad6213f5556e4",
+      "packages/tooling/tool/cli/test/cache-producer-upload.test.ts": "64ac0fed7ab9f7333bb5f719d1e96f032423a9c5818c19deed8d6bf34ecbf506",
+      "standards/schema-catalog/@beep/repo-cli.generated.jsonc": "ab216dbad43c4598aa22239f61c01621eb475fb074187d1df7e52087b410059d",
+      "standards/instrumentation-catalog/@beep/repo-cli.generated.jsonc": "3ab985f4eb83c14646b9d4f51189f425b0040ff38cd23a8fa5830cce149ebd20"
+    },
+    "change": "Hoist named annotated SingleExchange and its compiled isSingleExchange guard to module scope; retain the exact singleton contract.",
+    "originalAttempt": {
+      "sourceHead": "254962a4964bba98783824f07d633ca2c04d1347",
+      "exit": 130,
+      "logSha256": "02bf037cbec14164c6de602aa9c66e4f258924c5ae97d1e5f8c5cff1df529851",
+      "finding": "beep(no-inline-schema-compile)",
+      "attribution": "Introduced inline tuple construction in Schema.is; stopped only owned pre-push publisher after finding. No head-install or push started."
+    },
+    "rootOxlint": {
+      "command": "bun run lint:oxlint",
+      "exit": 0,
+      "logSha256": "791d07af8cbc0f877891014d9d00510118c7e3e4edeeb1e1af342d7a78778d9b"
+    },
+    "focusedCoverage": {
+      "node": {
+        "passed": 28,
+        "files": 2,
+        "elapsedSeconds": 5.72,
+        "coveragePercent": {
+          "Cache.workflow.github.ts": {
+            "lines": 100,
+            "statements": 100,
+            "branches": 100,
+            "functions": 100
+          },
+          "Cache.workflow.upload.ts": {
+            "lines": 100,
+            "statements": 100,
+            "branches": 100,
+            "functions": 100
+          }
+        },
+        "coverageSummarySha256": "62f2b97091593f756072f3f0cf63e5ad146c7626b08dbee48dbd272adebd73df",
+        "logSha256": "9df532747e477e65bb018df07b31514e7e27b533b31921ab2ead9fe7a7c27eb4"
+      },
+      "bun": {
+        "passed": 28,
+        "files": 2,
+        "elapsedSeconds": 3.69,
+        "coveragePercent": {
+          "Cache.workflow.github.ts": {
+            "lines": 100,
+            "statements": 100,
+            "branches": 100,
+            "functions": 100
+          },
+          "Cache.workflow.upload.ts": {
+            "lines": 100,
+            "statements": 100,
+            "branches": 100,
+            "functions": 100
+          }
+        },
+        "coverageSummarySha256": "62f2b97091593f756072f3f0cf63e5ad146c7626b08dbee48dbd272adebd73df",
+        "logSha256": "21be9edb45d57566eafeaa11b1337bb17e5f63e5d28bf067c32198d8d0553cc9"
+      }
+    },
+    "integration": {
+      "node": {
+        "passed": 362,
+        "files": 18,
+        "elapsedSeconds": 36.47,
+        "logSha256": "f12862ec5b9322e707be611c1a3998019965fd4c1c79279e2c7a00bab6a06d2c"
+      },
+      "bun": {
+        "passed": 362,
+        "files": 18,
+        "elapsedSeconds": 27.47,
+        "logSha256": "f6fa855b685923bcef5c1c2be3add4f41f1ec15196647617ade0133875c18ec7"
+      }
+    },
+    "quickPackage": {
+      "lintSeconds": 5.7,
+      "checkSeconds": 11.9,
+      "logSha256": "ea9b519a2e90df34e7a333e381f629975eb65afdc0ca23c45616528c618def70"
+    },
+    "policyChecks": [
+      {
+        "check": "quick",
+        "exit": 0,
+        "logSha256": "ea9b519a2e90df34e7a333e381f629975eb65afdc0ca23c45616528c618def70"
+      },
+      {
+        "check": "instrumentation-write",
+        "exit": 0,
+        "logSha256": "f7ebd33c01e0418d05be4d6c00f46e3cbfbec89ba4ec8426ab795aac039259d1"
+      },
+      {
+        "check": "instrumentation-check",
+        "exit": 0,
+        "logSha256": "d7770de667f30929704958dff404bc534b83b19b15ef91f9642702770b499138"
+      },
+      {
+        "check": "schema-catalog-write",
+        "exit": 0,
+        "logSha256": "03f52a168b551bc2ecbf596f28b6c1ed54c8950afe9a3c91db40af87c74097d0"
+      },
+      {
+        "check": "schema-catalog-check",
+        "exit": 0,
+        "logSha256": "ef2d2e03d04a17db212002a223d6dc466b429acacead803804ca72fd83961536"
+      },
+      {
+        "check": "effect-vitest",
+        "exit": 0,
+        "logSha256": "e546c6685a9b0cc43e857ee265e43b970e6b366e01b93dc6c00f082db62d9f51"
+      },
+      {
+        "check": "schema-first",
+        "exit": 0,
+        "logSha256": "6018614402519e5a7408f7dcc108875b72f9f20aae2fd2d2c437d4e4386036cf"
+      }
+    ],
+    "guardRemovalControls": {
+      "results": [
+        {
+          "control": "empty-archive",
+          "expectedFailure": true,
+          "exit": 1,
+          "sourceSha256": "319c2753046e614a8475ca164d4111066dae15ca797e39b046203bbdc3a8530f",
+          "restoredSha256": "319c2753046e614a8475ca164d4111066dae15ca797e39b046203bbdc3a8530f",
+          "testSha256": "8fa4d5c830fd805dceaf412aba3514719c7d3673bfdb7f34d21ad6213f5556e4",
+          "logSha256": "ce9c56e63c7c4e3215a4ad330f5b723c7b87f9254b36720ad087af4a95f8263e"
+        },
+        {
+          "control": "oversized-archive",
+          "expectedFailure": true,
+          "exit": 1,
+          "sourceSha256": "319c2753046e614a8475ca164d4111066dae15ca797e39b046203bbdc3a8530f",
+          "restoredSha256": "319c2753046e614a8475ca164d4111066dae15ca797e39b046203bbdc3a8530f",
+          "testSha256": "8fa4d5c830fd805dceaf412aba3514719c7d3673bfdb7f34d21ad6213f5556e4",
+          "logSha256": "44528483c75688d5c4274535af7ddc0b2b92504ef6f4f8fafe50ee83b042bc79"
+        },
+        {
+          "control": "single-upload",
+          "expectedFailure": true,
+          "exit": 1,
+          "sourceSha256": "94ee2d848e168d0e3a84c77a6aadbfe8adf072695516a28ca2a0c38afd9166a6",
+          "restoredSha256": "94ee2d848e168d0e3a84c77a6aadbfe8adf072695516a28ca2a0c38afd9166a6",
+          "testSha256": "64ac0fed7ab9f7333bb5f719d1e96f032423a9c5818c19deed8d6bf34ecbf506",
+          "logSha256": "28d36368d0db72801cb1853b38089b2ae95e0f05b93de4630ec6ce6e77770cc9"
+        },
+        {
+          "control": "upload-hash",
+          "expectedFailure": true,
+          "exit": 1,
+          "sourceSha256": "94ee2d848e168d0e3a84c77a6aadbfe8adf072695516a28ca2a0c38afd9166a6",
+          "restoredSha256": "94ee2d848e168d0e3a84c77a6aadbfe8adf072695516a28ca2a0c38afd9166a6",
+          "testSha256": "64ac0fed7ab9f7333bb5f719d1e96f032423a9c5818c19deed8d6bf34ecbf506",
+          "logSha256": "7ed9d40839334ce0dcae4a84b9ee8926d60df06c72f97067eb7b2fdf7c39c44b"
+        },
+        {
+          "control": "hosted-artifact-id",
+          "expectedFailure": true,
+          "exit": 1,
+          "sourceSha256": "319c2753046e614a8475ca164d4111066dae15ca797e39b046203bbdc3a8530f",
+          "restoredSha256": "319c2753046e614a8475ca164d4111066dae15ca797e39b046203bbdc3a8530f",
+          "testSha256": "8fa4d5c830fd805dceaf412aba3514719c7d3673bfdb7f34d21ad6213f5556e4",
+          "logSha256": "1b3c954c6df3d8adb1ec1e1c2da85a1f2cc7d87f1803f14c91b44317fb7f40cd"
+        }
+      ],
+      "allSourceBytesRestored": true
+    },
+    "catalogs": {
+      "schemaEntries": 9339,
+      "schemaShards": 173,
+      "instrumentationDriftedShards": 0
+    },
+    "scope": "Current internal schema/guard placement and regression only; full final-check and hosted results remain separate gates."
   }
 }

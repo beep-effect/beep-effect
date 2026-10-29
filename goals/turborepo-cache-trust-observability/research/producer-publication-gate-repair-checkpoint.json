@@ -73,7 +73,7 @@
   },
   "population": {
     "path": "goals/turborepo-quality-cache-adoption/research/current-population.json",
-    "sha256": "0f1823c9d647ef62f6412230ec4ed6b25d56c1f6d25d22cdaf328be80f27ff10",
+    "sha256": "b869e63e32cbac1c52a4c1e22a943f55b782b98c94ad9696c0ff45729b9676b2",
     "sourcesVerified": 431,
     "counts": {
       "workspaces": 190,
@@ -95,7 +95,8 @@
       "observedInputsDigestRows": 45,
       "semanticReviewAndDispositionsUnchanged": true
     },
-    "priorPopulationBeforeCoverageRepair": "1f21cbd2ff7d0a539a02abfbae5ed74c60d679a20262b3b8a44a59a9ff9ec00b"
+    "priorPopulationBeforeCoverageRepair": "1f21cbd2ff7d0a539a02abfbae5ed74c60d679a20262b3b8a44a59a9ff9ec00b",
+    "priorPopulationBeforeGuardHoist": "0f1823c9d647ef62f6412230ec4ed6b25d56c1f6d25d22cdaf328be80f27ff10"
   },
   "qualificationLedgerSha256": "13067bf343f413b4cc99b4cefca3ce7d094a1f09247a54ffc20114e766d4d2bb",
   "runtimeImplementationChanged": false,
@@ -203,7 +204,7 @@
   },
   "coverageRepairCheckpoint": {
     "path": "goals/turborepo-cache-trust-observability/research/producer-coverage-repair-checkpoint.json",
-    "sha256": "e14ab5295e178ff9834fc0bbfee7e80d07224a238080342d9e750d0d3e98d150",
+    "sha256": "dba0c942aefb3c8ff0ce9185c75d3cb75a463656956e0f83fc4bf4983da40997",
     "scope": "Current producer cardinality/boundary repair; original failed full replay and current exact-file coverage remain distinct."
   }
 }

@@ -58,8 +58,14 @@ const ProducerUploadEvent = S.Struct({
 }).pipe(
   $I.annoteSchema("ProducerUploadEvent", { description: "The sole artifact PUT in a bounded producer capture." })
 );
+const SingleExchange = S.Tuple([CacheConformanceProxyEvent]).pipe(
+  $I.annoteSchema("SingleExchange", {
+    description: "Exactly one candidate artifact exchange after permitted metadata operations are filtered.",
+  })
+);
 const isProducerEvent = S.is(ProducerEvent);
 const isProducerUploadEvent = S.is(ProducerUploadEvent);
+const isSingleExchange = S.is(SingleExchange);
 const isSuccessStatus = S.is(CacheHostedProducerUpload.fields.status);
 const decodeUpload = S.decodeUnknownEffect(CacheHostedProducerUpload);
 
@@ -122,7 +128,7 @@ export const joinCacheProducerUpload = Effect.fn("CacheWorkflow.joinProducerUplo
   )
     return yield* CacheCommandError.new("Producer capture contains a failed, foreign or faulted exchange.");
   const uploads = A.filter(events, (event) => !isMetadataOperation(`${event.exchange.method} ${event.exchange.route}`));
-  if (!S.is(S.Tuple([CacheConformanceProxyEvent]))(uploads))
+  if (!isSingleExchange(uploads))
     return yield* CacheCommandError.new("Producer capture has no unambiguous single artifact upload.");
   const [selected] = uploads;
   if (!isProducerUploadEvent(selected) || O.isNone(selected.exchange.requestTagSha256))

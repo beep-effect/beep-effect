@@ -232,7 +232,7 @@
   "priorSpecSha256AtUploadJoin": "cc3e2b7fa50d899586f3a1db1d8250253210fea0e9bbd42ffa7fe364106f55f7",
   "nativeUploadJoinCheckpoint": {
     "path": "goals/turborepo-cache-trust-observability/research/native-upload-join-checkpoint.json",
-    "sha256": "367b4523bc89643ae979edfca38a6956ab4d9012d3d67de46a82af1ec0e78cea",
+    "sha256": "4e13a763105a27e1c4fd4177230197a5823311633feaef42f4b4546b9451843b",
     "scope": "Current local component; whole-goal acceptance remains unproven."
   },
   "signedCredentialReadinessCheckpoint": {
@@ -259,17 +259,17 @@
   "priorSpecSha256AtRoleDeployment": "47d95a38ee3ccd92b66b2eaf1cb31180246ddee1d3c059bc76ffedcf567cd25e",
   "currentRuntimeProfileCheckpoint": {
     "path": "goals/turborepo-quality-cache-adoption/research/current-runtime-profile-checkpoint.json",
-    "sha256": "aa1632762a0e237c0279524208c743a92f4ba4eaf52e2b4e433162bb93067f8e",
+    "sha256": "b120fc1bab3b11d5cc3eab57dfc775b602e5033705fbf738f686fa1828ea95ef",
     "scope": "Runtime observation and passing frozen whole-package verification only; all qualification and rollout obligations remain open."
   },
   "publicationGateRepair": {
     "path": "goals/turborepo-cache-trust-observability/research/producer-publication-gate-repair-checkpoint.json",
-    "sha256": "e8d69fc28fdfc7c5c49c78c75c0fb1b704ec17903e6911eaa7c361d6fac12e82",
+    "sha256": "ef5d83d08a083ca51cf059b26eb0a87a18aee2695d3d88459a08c07939560327",
     "scope": "Properties/catalog and current component checks; hosted publication and whole-goal acceptance remain pending."
   },
   "producerCoverageRepairCheckpoint": {
     "path": "goals/turborepo-cache-trust-observability/research/producer-coverage-repair-checkpoint.json",
-    "sha256": "e14ab5295e178ff9834fc0bbfee7e80d07224a238080342d9e750d0d3e98d150",
+    "sha256": "dba0c942aefb3c8ff0ce9185c75d3cb75a463656956e0f83fc4bf4983da40997",
     "scope": "Current focused coverage/regression only; whole-goal acceptance remains unproven."
   }
 }

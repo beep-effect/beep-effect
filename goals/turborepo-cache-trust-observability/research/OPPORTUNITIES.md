@@ -580,3 +580,14 @@ PR2358 was created through the already approved REST route and its canonical
 monitor is healthy. No repository environment file or global credential setup
 was changed. Preserve the original failure, doctor receipt and bounded child
 environment probe.
+
+
+### The root schema compiler rule is a separate gate
+
+The first cardinality repair constructed its tuple inside Schema.is in the
+upload function. The root linter correctly rejected that repeated compilation
+with `beep(no-inline-schema-compile)`, although package quick checks and the
+four focused policy/catalog checks passed. Hoist a named annotated tuple and
+its derived guard to module scope, then replay the root linter directly. The
+pre-push publisher was stopped with no push; retain its finding and source
+identity instead of treating the earlier partial checks as complete policy proof.
