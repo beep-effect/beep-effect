@@ -170,5 +170,20 @@ with tempfile.TemporaryDirectory(dir=parent) as directory:
     assert sorted(versions)==[1,2]
     assert (tool/'.alchemy.before-durable-state/state.json').read_text()=='{"version":1}'
     print('PASS: repeated Alchemy plans retain distinct pre-operation archives and the original recovery state; inert tool boundaries only.')
+    # Execute the actual source-bound exception guard against adversarial locks.
+    # The end-to-end OSV run separately verifies the positive scanner invocation.
+    marker="    if python3 - \"$run/Cargo.lock\" <<'PY'\n"
+    policy=(source/'policy.sh').read_text();assert policy.count(marker)==1
+    guard=policy.split(marker,1)[1].split('\nPY\n',1)[0]
+    reviewed={'name':'block-buffer','version':'0.10.4','checksum':'3078c7629b62d3f0439517fa394996acacc5cbc91c5a20d8c658e77abd503a71'}
+    guard_lock=base/'guard-Cargo.lock'
+    for packages,allowed in [([reviewed],True),([],False),
+        ([{**reviewed,'version':'0.11.0'}],False),
+        ([{**reviewed,'checksum':'0'*64}],False),
+        ([reviewed,{**reviewed,'version':'0.11.0'}],False)]:
+        guard_lock.write_text(''.join('[[package]]\n'+''.join(f'{k} = {json.dumps(v)}\n' for k,v in package.items()) for package in packages))
+        checked=subprocess.run([sys.executable,'-',str(guard_lock)],input=guard,text=True,capture_output=True,timeout=5)
+        assert (checked.returncode==0)==allowed,'Security exception admitted an unreviewed dependency'
+    print('PASS: exact-archive advisory guard; absent, changed-version, changed-checksum and mixed-version inputs get no exception.')
 print('PASS: enrollment/export-line rollback preservation, duplicate/raw-token refusal, occupied-port/startup fallback, secret isolation, runner tracking and exact-process cleanup.')
 PY

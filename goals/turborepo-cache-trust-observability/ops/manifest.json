@@ -57,7 +57,9 @@
     "research/current-completion-audit.json",
     "research/current-native-stable.json",
     "research/current-native-canary.json",
-    "research/current-native-checkpoint.json"
+    "research/current-native-checkpoint.json",
+    "research/adapter-policy-lab.json",
+    "research/adapter-dependency-review.json"
   ],
   "agentLaunchers": [
     {
