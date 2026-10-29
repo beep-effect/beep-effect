@@ -266,6 +266,9 @@ bytes to stable 2.11.10 and published canary 2.11.9-canary.1 runs. Each complete
 six signing/replay cases and three transport-failure cases over nine isolated
 roots and 23 wire events. Valid replay restored the expected 28 bytes; rejected
 cases materialized no outputs. The focused runner/protocol/producer/posture
-suite passed 136 tests. Wrong-team native proof, deployed R2/AWS capabilities,
-epoch rotation, production provenance and representative observation remain
-open. No whole acceptance criterion is closed by this checkpoint.
+suite originally passed 136 tests; that verification snapshot is retained
+separately. After signing-posture integration, the current combined suite passed
+240 tests with refreshed verification-source bindings. The native artifact bytes
+and protocol source hashes are unchanged. Wrong-team native proof, deployed
+R2/AWS capabilities, epoch rotation, production provenance and representative
+observation remain open. No whole acceptance criterion is closed by this checkpoint.
