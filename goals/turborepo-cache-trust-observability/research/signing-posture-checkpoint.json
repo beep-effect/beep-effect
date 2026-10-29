@@ -99,5 +99,17 @@
     "finding": "CLI cache directives outrank the inherited cache mode when inferring signing role.",
     "regression": "Red first; local equals-form, local split-form and read-only directives over an ambient upload mode now run locally without a key. Task arguments after -- do not change inference. Explicit writer/canary declarations retain their key requirement.",
     "nativeControlsPerChannel": 10
+  },
+  "postAdapterMainIntegration": {
+    "head": "cd4ec9fc416eb353077bd15463bd3088d4530363",
+    "componentSourceHashesUnchanged": true,
+    "selectedFiles": 3,
+    "selectedTestsPassed": 43,
+    "seconds": 17.35,
+    "packageQuick": {
+      "lintSeconds": 12.4,
+      "checkSeconds": 22.3,
+      "status": "passed"
+    }
   }
 }
