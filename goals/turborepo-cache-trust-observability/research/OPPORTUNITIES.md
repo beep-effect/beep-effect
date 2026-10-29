@@ -722,12 +722,13 @@ the policy check; do not add a baseline finding or waive the detector.
 
 ## Deterministic contained-directory error coverage
 
-- PR #2361's current final repeat passed8114 tests with5 skips but lost the
+- PR #2361's current final repeat passed 8,114 tests with 5 skips but lost the
   existing FsGuards file floors. Its implementation is identical to the passing
-  producer-capture lane; actual lcov shows the parent-creation error callback
-  hit0 versus an incidental1. A controlled filesystem creation failure now
-  proves the original platform cause, contained root/target/path, and refusal
-  before writing. Both runtime suites pass34 tests; targeted Node V8 reports
-  that exact callback hit1. Retain the floor and use a deliberate error-path
-  fixture rather than incidental concurrent filesystem behavior. The full package audit and documentation pass; fresh final and hosted
-  acceptance remain in progress.
+  producer-capture lane; actual lcov shows 0 executions of the parent-creation
+  error callback versus 1 incidental execution in the passing lane. A controlled
+  filesystem creation failure now proves the original platform cause, contained
+  root/target/path, and refusal before writing. Both runtime suites pass 34 tests;
+  targeted Node V8 records 1 execution of that callback. Retain the floor and use
+  a deliberate error-path fixture rather than incidental concurrent filesystem
+  behavior. The full package audit and documentation pass; fresh final and
+  hosted acceptance remain in progress.
