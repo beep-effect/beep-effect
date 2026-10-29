@@ -57,3 +57,20 @@ its result remains pending and must be recorded separately.
 
 Historical forwarder service/timer remain masked/inactive. No production harness
 enrollment, historical replay, all-harness coverage or hold release is implied.
+
+## Subsequent local delivery attempts
+
+The v3 full CLI command ended at its15-minute deadline during docgen, with no
+resource stop, task-limit rejection or wrapper error. It buffers results until the
+whole command returns, and continues to docgen even when audit fails, so stage
+progression does not prove an audit pass. All1421 pinned source files remained
+unchanged. See `../ops/whole-cli-timeout-attribution.json`.
+
+A streaming retry retained the dependency build's exit0 separately, then reached
+CLI build/check/test before the host fell below the unchanged16GiB reserve. The
+guard stopped only its owned job; there was no new kernel OOM. Its systemd exit0
+is not success: `stoppedFor=host pressure` and the missing audit terminal result
+make it incomplete. See `../ops/cli-audit-host-pressure-attribution.json`.
+No further heavy local retry is justified below admission headroom. Hosted gates
+remain the authoritative delivery path under the documented constrained-compute
+exception; no local full-CLI pass is claimed.

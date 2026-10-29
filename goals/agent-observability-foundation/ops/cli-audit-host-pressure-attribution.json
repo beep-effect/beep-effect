@@ -1,0 +1,47 @@
+{
+  "recordedAt": "2026-10-29T22:45:00.820998+00:00",
+  "result": "incomplete-controlled-host-pressure-stop",
+  "archive": "/home/elpresidank/.local/state/beep/observation-proof-archive/cli-audit-host-pressure-3_ph8rm8",
+  "sourceFilesChecked": 1421,
+  "sourceChangesDuringRun": [],
+  "durableSteps": [
+    {
+      "step": "dependency-build",
+      "exitCode": 0,
+      "finishedAt": "2026-10-29T22:40:05.946061+00:00"
+    }
+  ],
+  "guard": {
+    "ownedScopes": {},
+    "unit": "foundation-cli-audit-stream-v1.service",
+    "profile": "bounded",
+    "memoryStopBytes": 8589934592,
+    "hostAvailableFloorBytes": 17179869184,
+    "initialAvailableBytes": 35268608000,
+    "peakObservedBytes": 4076781568,
+    "minimumAvailableBytes": 16700088320,
+    "stoppedFor": "host pressure",
+    "tasksMax": 1024,
+    "peakObservedTasks": 188,
+    "pidsLimitEvents": 0,
+    "observedPhases": [
+      {
+        "phase": "beep:build",
+        "observedAtEpochSeconds": 1793313605.3887637
+      },
+      {
+        "phase": "beep:check",
+        "observedAtEpochSeconds": 1793313610.274984
+      },
+      {
+        "phase": "beep:test",
+        "observedAtEpochSeconds": 1793313620.7318397
+      }
+    ],
+    "exitCode": 0,
+    "orphanCleanup": []
+  },
+  "passingGate": false,
+  "importantInterpretation": "systemd-run returned0 after a deliberate TERM; stoppedFor=host pressure and missing audit terminal result make this incomplete, never passed.",
+  "next": "Use disclosed constrained-compute hosted gates; do not restart heavy local proof below initial24GiB headroom. Preserve all limits and unrelated applications."
+}

@@ -1,0 +1,72 @@
+{
+  "recordedAt": "2026-10-29T22:40:56.278716+00:00",
+  "result": "incomplete-timeout",
+  "command": "bun run beep quality package-verify @beep/repo-cli",
+  "archive": "/home/elpresidank/.local/state/beep/observation-proof-archive/whole-cli-timeout-xbdz1hz5",
+  "runtimeLimitSeconds": 900,
+  "sourceFilesChecked": 1421,
+  "sourceChangesDuringRun": [],
+  "sourceRuntimeCommit": "95711cb9df8f850c67aa16967567e5c7535e2801",
+  "endHead": "91b8bdaa0c6f4686bdec3b9caaa871bea0e02623",
+  "headChangeScope": "Documentation and evidence only; all1421 pinned source files unchanged",
+  "guard": {
+    "ownedScopes": {
+      "agent-run-50f2e1a4-f7ca-4915-9a1d-051c85ab93f7.scope": {
+        "group": "/user.slice/user-1000.slice/user@1000.service/agent.slice/agent-runs.slice/agent-run-50f2e1a4-f7ca-4915-9a1d-051c85ab93f7.scope",
+        "invocationId": "d34422d6196a4cdcb7472424e934a271",
+        "preGuardPeakBytes": 14622720,
+        "ownership": "live descendant of proof service MainPID",
+        "limitState": "constrained"
+      },
+      "agent-run-0085aefa-3b8a-4d1b-a3c6-b5589ac5e5a1.scope": {
+        "group": "/user.slice/user-1000.slice/user@1000.service/agent.slice/agent-runs.slice/agent-run-0085aefa-3b8a-4d1b-a3c6-b5589ac5e5a1.scope",
+        "invocationId": "bf2e3abb4a104e6fb41b97d93e383d8d",
+        "preGuardPeakBytes": 4341760,
+        "ownership": "live descendant of proof service MainPID",
+        "limitState": "constrained"
+      },
+      "agent-run-8076de89-5acc-48e4-88e4-f86d60ce9231.scope": {
+        "group": "/user.slice/user-1000.slice/user@1000.service/agent.slice/agent-runs.slice/agent-run-8076de89-5acc-48e4-88e4-f86d60ce9231.scope",
+        "invocationId": "d4546b90bb8e4d64b32d34f0d418552b",
+        "preGuardPeakBytes": 3260416,
+        "ownership": "live descendant of proof service MainPID",
+        "limitState": "constrained"
+      }
+    },
+    "unit": "foundation-whole-cli-final-v3.service",
+    "profile": "bounded",
+    "memoryStopBytes": 8589934592,
+    "hostAvailableFloorBytes": 17179869184,
+    "initialAvailableBytes": 39973556224,
+    "peakObservedBytes": 5158563840,
+    "minimumAvailableBytes": 32019214336,
+    "stoppedFor": null,
+    "tasksMax": 1024,
+    "peakObservedTasks": 288,
+    "pidsLimitEvents": 0,
+    "observedPhases": [
+      {
+        "phase": "beep:build",
+        "observedAtEpochSeconds": 1793312616.0807462
+      },
+      {
+        "phase": "beep:check",
+        "observedAtEpochSeconds": 1793312620.7395246
+      },
+      {
+        "phase": "beep:test",
+        "observedAtEpochSeconds": 1793312630.515558
+      },
+      {
+        "phase": "docgen",
+        "observedAtEpochSeconds": 1793313278.0462227
+      }
+    ],
+    "exitCode": 1,
+    "orphanCleanup": []
+  },
+  "passingGate": false,
+  "partialPassesClaimed": [],
+  "interpretation": "Reached docgen after audit returned, but wrapper continues after a failed audit and buffers results until whole command returns. Do not infer audit pass from phase progression.",
+  "next": "Stream dependency build and exact beep:audit separately with durable per-step exits, then qualify docgen independently; preserve original ceilings."
+}
