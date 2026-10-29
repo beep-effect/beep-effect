@@ -148,6 +148,7 @@ import {
   writeCoverageRegressionBaseline,
 } from "@beep/repo-cli/test/Quality";
 import {
+  clearTurboCacheSecretSessionVerdictsForTesting,
   hasRemoteTurboCacheArgs,
   isCiSync,
   localOnlyTurboCacheArgs,
@@ -396,6 +397,12 @@ const withoutCiEffect = <Out, E, R>(use: Effect.Effect<Out, E, R>): Effect.Effec
     undefined,
     withEnvVarEffect("GITHUB_ACTIONS", undefined, withEnvVarEffect("CONTINUOUS_INTEGRATION", undefined, use))
   );
+
+const withEnvVarsEffect = <Out, E, Req>(
+  values: Readonly<Record<string, string | undefined>>,
+  use: Effect.Effect<Out, E, Req>
+): Effect.Effect<Out, E, Req> =>
+  A.reduce(R.toEntries(values), use, (inner, [name, value]) => withEnvVarEffect(name, value, inner));
 
 const isTurboConcurrencyArg = (arg: string): boolean =>
   arg === "--concurrency" || Str.startsWith("--concurrency=")(arg);
@@ -8464,80 +8471,150 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       )
     );
 
+    // The aggregate lint lane opens a remote-cache secret session whenever the
+    // Turbo credentials are 1Password references, and the session verdict comes
+    // from spawning `op run -- true`. Each case pins the reference-backed
+    // posture, clears the cached verdicts and puts its own `op` first on PATH,
+    // so neither the host `op` nor the host's TURBO_* values decide the label.
+    const aggregateLintFailureWithOp = Effect.fnUntraced(function* (opScript: ReadonlyArray<string>) {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const tmpDir = process.cwd();
+      const binDir = path.join(tmpDir, "bin");
+      const commandLogPath = path.join(tmpDir, "quality-commands.log");
+      const fakeBunxPath = path.join(binDir, "bunx");
+      const fakeBunPath = path.join(binDir, "bun");
+      const fakeOpPath = path.join(binDir, "op");
+
+      yield* fs.makeDirectory(binDir, { recursive: true });
+      yield* fs.writeFileString(
+        fakeBunxPath,
+        A.join(
+          [
+            "#!/usr/bin/env sh",
+            "printf 'bunx %s\\n' \"$*\" >> quality-commands.log",
+            'if [ "$1" = "turbo" ] && [ "$2" = "run" ] && [ "$3" = "lint" ]; then',
+            "  exit 7",
+            "fi",
+            "exit 0",
+            "",
+          ],
+          "\n"
+        )
+      );
+      yield* fs.writeFileString(
+        fakeBunPath,
+        A.join(
+          [
+            "#!/usr/bin/env sh",
+            "printf 'bun %s\\n' \"$*\" >> quality-commands.log",
+            'case " $* " in *" cache execute -- run lint "*) exit 7 ;; esac',
+            "exit 0",
+            "",
+          ],
+          "\n"
+        )
+      );
+      yield* fs.writeFileString(fakeOpPath, A.join(opScript, "\n"));
+      yield* fs.chmod(fakeBunxPath, 0o755);
+      yield* fs.chmod(fakeBunPath, 0o755);
+      yield* fs.chmod(fakeOpPath, 0o755);
+      yield* Effect.sync(clearTurboCacheSecretSessionVerdictsForTesting);
+
+      const [exit, lintStepCount] = yield* withEnvVarsEffect(
+        {
+          PATH: `${binDir}:${Bun.env.PATH ?? ""}`,
+          TURBO_API: "http://127.0.0.1:9427",
+          TURBO_TOKEN: "op://fixture-vault/turbo/token",
+          TURBO_TEAM: "fixture-team",
+          TURBO_CACHE: "local:rw,remote:r",
+          BEEP_TURBO_TRUSTED_WRITER: undefined,
+        },
+        // The default ConfigProvider snapshots the environment on first use, so a
+        // worker started under CI=true would keep `isCi` true and skip the probe;
+        // a provider built inside the pinned scope reads the cleared CI signals.
+        // The step count is derived inside the same scope from the plan the
+        // runtime executes (aggregate lane plus every policy step), so a lint
+        // step added on another branch, or a CI-only step, never skews it.
+        withoutCiEffect(
+          runQualityTask(getInvocation(["lint"])).pipe(
+            Effect.exit,
+            Effect.zip(Effect.sync(() => A.length(rootQualityStepsForTesting(process.cwd(), getInvocation(["lint"]))))),
+            Effect.provideServiceEffect(
+              ConfigProvider.ConfigProvider,
+              Effect.sync(() => ConfigProvider.fromEnv())
+            )
+          )
+        )
+      );
+
+      assertTrue(exit._tag === "Failure");
+      const failure = Cause.squash(exit.cause);
+      expect(failure).toBeInstanceOf(QualityTaskGroupFailed);
+      assertTrue(isQualityTaskGroupFailed(failure));
+      expect(failure.exitCode).toBe(7);
+
+      const commandLog = yield* fs.readFileString(commandLogPath);
+      // The session probe reached the fixture `op`, never the host binary.
+      expect(commandLog).toContain("op run -- true");
+      // The aggregate fails first; ordered policy diagnostics still execute.
+      expect(commandLog).toContain("cache execute -- run lint");
+      expect(commandLog).toContain("lint:effect-imports");
+      expect(commandLog).toContain("lint:roadmap-refs");
+      expect(commandLog).toContain("lint:typos");
+
+      const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+      expect(logText).toContain(`[beep-cli] lint:policy: running ${lintStepCount} ordered step(s)`);
+
+      return {
+        failedLabels: A.map(failure.failures, (step) => step.label),
+        wrappedAggregate: pipe(commandLog, Str.includes("op run -- bun ")),
+      };
+    });
+
     it.effect("keeps running repo-wide root lint policy checks after aggregate lint fails", () =>
       Effect.andThen(
         temporaryRepository,
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const tmpDir = process.cwd();
-          const binDir = path.join(tmpDir, "bin");
-          const commandLogPath = path.join(tmpDir, "quality-commands.log");
-          const fakeBunxPath = path.join(binDir, "bunx");
-          const fakeBunPath = path.join(binDir, "bun");
+        // A missing, expired or denied 1Password session degrades the aggregate
+        // to an unwrapped local-only run, so its label carries no session suffix.
+        aggregateLintFailureWithOp([
+          "#!/usr/bin/env sh",
+          "printf 'op %s\\n' \"$*\" >> quality-commands.log",
+          "exit 78",
+          "",
+        ]).pipe(
+          Effect.map(({ failedLabels, wrappedAggregate }) => {
+            expect(failedLabels).toEqual(["lint"]);
+            expect(wrappedAggregate).toBe(false);
+          })
+        )
+      ).pipe(
+        Effect.provideServiceEffect(Console.Console, TestConsole.make),
+        Effect.provideServiceEffect(Console.Console, TestConsole.make),
+        TestClock.withLive
+      )
+    );
 
-          yield* fs.makeDirectory(binDir, { recursive: true });
-          yield* fs.writeFileString(
-            fakeBunxPath,
-            A.join(
-              [
-                "#!/usr/bin/env sh",
-                "printf 'bunx %s\\n' \"$*\" >> quality-commands.log",
-                'if [ "$1" = "turbo" ] && [ "$2" = "run" ] && [ "$3" = "lint" ]; then',
-                "  exit 7",
-                "fi",
-                "exit 0",
-                "",
-              ],
-              "\n"
-            )
-          );
-          yield* fs.writeFileString(
-            fakeBunPath,
-            A.join(
-              [
-                "#!/usr/bin/env sh",
-                "printf 'bun %s\\n' \"$*\" >> quality-commands.log",
-                'case " $* " in *" cache execute -- run lint "*) exit 7 ;; esac',
-                "exit 0",
-                "",
-              ],
-              "\n"
-            )
-          );
-          yield* fs.chmod(fakeBunxPath, 0o755);
-          yield* fs.chmod(fakeBunPath, 0o755);
-
-          const exit = yield* withEnvVarEffect(
-            "PATH",
-            `${binDir}:${Bun.env.PATH ?? ""}`,
-            Effect.exit(runQualityTask(getInvocation(["lint"])))
-          );
-
-          assertTrue(exit._tag === "Failure");
-          if (Exit.isFailure(exit)) {
-            const failure = Cause.squash(exit.cause);
-            expect(failure).toBeInstanceOf(QualityTaskGroupFailed);
-            if (isQualityTaskGroupFailed(failure)) {
-              expect(failure.exitCode).toBe(7);
-              expect(A.map(failure.failures, (step) => step.label)).toEqual(["lint"]);
-            }
-          }
-
-          const commandLog = yield* fs.readFileString(commandLogPath);
-          // The aggregate fails first; ordered policy diagnostics still execute.
-          expect(commandLog).toContain("cache execute -- run lint");
-          expect(commandLog).toContain("lint:effect-imports");
-          expect(commandLog).toContain("lint:roadmap-refs");
-          expect(commandLog).toContain("lint:typos");
-
-          const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
-          // Derived from the same plan the runtime executes (aggregate lane plus
-          // every policy step), so a lint step added on another branch does not
-          // break this assertion when the two land together in a merge.
-          const lintStepCount = A.length(rootQualityStepsForTesting(process.cwd(), getInvocation(["lint"])));
-          expect(logText).toContain(`[beep-cli] lint:policy: running ${lintStepCount} ordered step(s)`);
-        })
+    it.effect("labels the failed aggregate lint with its op run session when 1Password is usable", () =>
+      Effect.andThen(
+        temporaryRepository,
+        // A usable session wraps the aggregate in `op run --` and, by design
+        // (`turboSecretSessionStep`), suffixes its label with " (op run)".
+        aggregateLintFailureWithOp([
+          "#!/usr/bin/env sh",
+          "printf 'op %s\\n' \"$*\" >> quality-commands.log",
+          '[ "$1" = "run" ] || exit 0',
+          "shift",
+          'while [ "$#" -gt 0 ] && [ "$1" != "--" ]; do shift; done',
+          '[ "$#" -gt 0 ] && shift',
+          'exec "$@"',
+          "",
+        ]).pipe(
+          Effect.map(({ failedLabels, wrappedAggregate }) => {
+            expect(failedLabels).toEqual(["lint (op run)"]);
+            expect(wrappedAggregate).toBe(true);
+          })
+        )
       ).pipe(
         Effect.provideServiceEffect(Console.Console, TestConsole.make),
         Effect.provideServiceEffect(Console.Console, TestConsole.make),
