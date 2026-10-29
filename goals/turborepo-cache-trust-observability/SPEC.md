@@ -471,3 +471,16 @@ The local process report does not satisfy those deployment or observation gates.
   caller-supplied schema values alone remain untrusted. Reversal is to stop
   multi-task producer publication and restore the single-task profile. No
   signing, production configuration or qualification state changes here.
+
+
+### Private producer socket transport
+
+- 2026-10-29: Keep the signed worker's private network namespace. Reuse the
+  existing bounded conformance observer with a companion Unix listener and the
+  platform's Unix-capable HTTP client. Allocate a fresh owner-only temporary
+  directory/socket and redact its address; mount only the selected socket into
+  the worker. Preserve the existing TCP API and upstream role/tenant enforcement.
+- The socket is transport, not upload authority or producer attestation. Actual
+  backend results, native task/byte capture, the approved supervisor and immutable
+  protected publication remain required. Reversal leaves the companion unwired
+  and keeps the existing loopback observer. No live service or credential changes.

@@ -718,3 +718,17 @@ Use the test framework's scoped module pin and lift the dynamic import through
 Hosted policy found EV011 on the direct `vi` import from `vitest`. Import the
 same API through the pinned `@effect/vitest` export-star entrypoint and rerun
 the policy check; do not add a baseline finding or waive the detector.
+### Private socket test boundary attribution
+
+- The first real socket test reached the upstream and preserved its rejection,
+  but expected an absent result for a contradictory success header. The existing
+  classifier correctly preserves `invalid-evidence`; the assertion now checks
+  that finite failure rather than erasing its cause. The original failed run is
+  retained privately. A nested client layer also failed the strict provision
+  diagnostic; the fixture now acquires the platform agent in its own scope and
+  supplies the service value, preserving the lifecycle boundary.
+
+- The additional real-socket exhaustion assertion initially nested an Effect
+  result inside predicate/assertion calls. The compiler required the equivalent
+  Result pipe; the canonical helper form passed lint/check and the full package
+  replay. Keep runtime refusal and evidence-invalidity assertions together.

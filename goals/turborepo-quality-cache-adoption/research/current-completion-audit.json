@@ -202,5 +202,10 @@
     "path": "goals/turborepo-cache-trust-observability/research/producer-capture-checkpoint.json",
     "sha256": "80720e8a16af59057281fc433fd9d74a11b6c9a4aeb0349ef6d99d1086d60a25",
     "scope": "Latest native request capture and whole-graph component proof; previous evidence retains its recorded source."
+  },
+  "privateSocketCheckpoint": {
+    "path": "goals/turborepo-cache-trust-observability/research/private-socket-checkpoint.json",
+    "sha256": "a25822f0ef271dedb2b7ea045af6bf4db263535c5737e17c84e4234f43abbd54",
+    "authority": "Transport component only; no production or qualification authority."
   }
 }

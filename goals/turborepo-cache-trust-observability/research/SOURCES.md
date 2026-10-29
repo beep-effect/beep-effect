@@ -403,3 +403,15 @@ publication remain separate proof obligations.
 fixture source at `11c6a3dc9a8d`. The run completed in 1158.844 seconds (audit
 1117.9 seconds, Docgen 39.4 seconds). Prior failed and interrupted runs remain
 historical evidence; this pass grants neither live trust nor qualification.
+
+
+## Private socket transport component, 2026-10-29
+
+- [Source-bound checkpoint](private-socket-checkpoint.json): original TCP wrapper
+  shares the observer handler with a scoped owner-only Unix endpoint. Existing
+  Effect NetAddress and platform Unix HTTP agent are reused.
+- Actual Node and Bun focused runs passed48 tests in3 files each. Additional
+  real-socket controls prove request-budget refusal and invalid evidence after
+  exhaustion. The full package audit and documentation build passed in1244.41s.
+- These are component observations. They neither prove real R2 producer traffic
+  nor confer protected workflow, qualification or production signing authority.

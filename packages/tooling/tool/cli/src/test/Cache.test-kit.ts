@@ -28,6 +28,11 @@ export {
   runCacheWarmForTesting,
   runCacheWarmLaneForTesting,
 } from "../commands/Cache/Cache.command.ts";
+export {
+  CacheConformanceProxyOptions,
+  makeCacheConformanceSocketProxy,
+} from "../commands/Cache/Cache.conformance.proxy.ts";
+export { CacheConformanceProxyEvent } from "../commands/Cache/Cache.conformance.schemas.ts";
 export { inspectCacheDependencyTree } from "../commands/Cache/Cache.dependencies.ts";
 export {
   decodeCacheExperimentText,
@@ -81,6 +86,7 @@ export {
   verifyCacheIdentityLintProfile,
   writeCacheIdentityLintProfile,
 } from "../commands/Cache/Cache.profile.ts";
+export { serveCachePrivateSocket } from "../commands/Cache/Cache.protocol.fixture.ts";
 export {
   CacheHostedProducerApproval,
   CacheHostedProducerObservation,

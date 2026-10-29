@@ -1,0 +1,78 @@
+{
+  "schemaVersion": "cache-private-socket-checkpoint/v1",
+  "recordedAt": "2026-10-29T20:39:37.280982+00:00",
+  "authority": "Source-bound transport component observations only; no protected producer, qualification, deployed signing or observation-window authority.",
+  "sourceBaseRevision": "11c6a3dc9a8d42cfc4264290c89b5ca6e8adf86f",
+  "sourceFiles": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.fixture.ts": "ed56ccf23a727041b8c46a8d4992df9d435e6328cd72f929780ec7772ae479f3",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.proxy.ts": "c72ee0f1d1be185f333cadccdfda3a09adf6149dd65c233db2fc6099788204a6",
+    "packages/tooling/tool/cli/src/test/Cache.test-kit.ts": "a83e92ca5531dbd1cce86fd66c8145d4e000cf87ba88dc363a0991f30bf8fbd6",
+    "packages/tooling/tool/cli/test/cache-private-socket.test.ts": "0a7c016d544b2120de303488cdfa868c08c819534aa350b3ddcdce4bb014d50a"
+  },
+  "component": {
+    "existingOwner": "Cache conformance observer and protocol fixture roles",
+    "existingTransport": "Original loopback API and error boundary preserved",
+    "newTransport": "Scoped owner-only Unix endpoint with redacted upstream NetAddress value",
+    "lifetime": "Fresh directory0700, socket0600; scope closes server then removes endpoint and parent directory",
+    "publicSurface": "Source-only Cache test facade; no command facade expansion",
+    "runtime": "Listener runs in actual Bun; Node driver delegates the lifecycle assertion to that native runtime and clients use the existing platform HTTP agent",
+    "authorization": "Fixed upstream still enforces role and tenant; transport grants no role or producer identity"
+  },
+  "verification": {
+    "nodeFocused": {
+      "exit": 0,
+      "tests": 48,
+      "files": 3,
+      "seconds": 29.598
+    },
+    "bunFocused": {
+      "exit": 0,
+      "tests": 48,
+      "files": 3,
+      "seconds": 19.03
+    },
+    "addedRequestBudgetControl": {
+      "nodeExit": 0,
+      "nodeSeconds": 8.977,
+      "bunExit": 0,
+      "bunSeconds": 2.685,
+      "behavior": "Four requests are observed; later request returns503 and evidence read fails closed. A canonical Result assertion rewrite follows these focused runs and is included in the passing full package audit."
+    },
+    "quick": {
+      "exit": 0,
+      "seconds": 13.486,
+      "lintSeconds": 5.6,
+      "checkSeconds": 11.9
+    },
+    "fullPackage": {
+      "command": "bun run beep quality package-verify @beep/repo-cli",
+      "exit": 0,
+      "seconds": 1244.41,
+      "auditSeconds": 1191.0,
+      "docgenSeconds": 51.9
+    },
+    "physicalControls": [
+      "writer PUT200",
+      "reader GET200 exact body and opaque tag",
+      "reader PUT403 preserves contradictory-result invalid-evidence classification",
+      "request-body/tag SHA capture",
+      "encoded events omit bearer, tag, payload and socket path",
+      "directory/socket modes and redacted address",
+      "budget exhaustion refuses traffic and incomplete evidence",
+      "socket and parent directory removed after scope"
+    ]
+  },
+  "retainedFailures": [
+    "First new test expected absent result for a denied response with an inconsistent allowed header; existing invalid-evidence classifier was correct, so the assertion was fixed.",
+    "Test service wiring and nested pipeable assertions were corrected; no production classifier or baseline was weakened.",
+    "A copied documentation import line and duplicate test facade import were removed before the full package replay."
+  ],
+  "activationChanged": false,
+  "qualificationChanged": false,
+  "remaining": [
+    "Wire actual reviewed adapter and role-selected mounted sockets into the closed native producer.",
+    "Join actual complete native graph/bytes and explicit backend results to independent approval and immutable protected workflow publication.",
+    "Complete current real-computation qualification and all eligible computation dispositions/adoption.",
+    "Prove runtime credentials, signed epochs, rotation/rollback and actual7/7/14-day representative windows."
+  ]
+}

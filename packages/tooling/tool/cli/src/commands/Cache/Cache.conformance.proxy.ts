@@ -40,7 +40,12 @@ import {
   readCacheConformanceReply,
 } from "./Cache.conformance.wire.ts";
 import { CacheSyntheticRun } from "./Cache.experiment.schemas.ts";
-import { corruptCacheArtifactBody, serveCacheLoopback, tamperCacheArtifactTag } from "./Cache.protocol.fixture.ts";
+import {
+  corruptCacheArtifactBody,
+  serveCacheLoopback,
+  serveCachePrivateSocket,
+  tamperCacheArtifactTag,
+} from "./Cache.protocol.fixture.ts";
 import { CacheCommandError } from "./Cache.schemas.ts";
 import type { Sha256Hex } from "@beep/schema";
 import type {
@@ -345,33 +350,7 @@ const proxyExchange = Effect.fnUntraced(function* (input: {
   });
 });
 
-/**
- * Start a scoped loopback reverse proxy in front of a conformance target.
- *
- * **Details**
- * Requests are forwarded unchanged except for an explicit fault selected with
- * `setScenario`, which applies only to artifact `GET`/`HEAD` reads:
- * `missing-tag`, `tampered-tag` and `tampered-body` rewrite a successful
- * upstream response (tag and byte tampering reuse the protocol fixture's code);
- * `truncated-body` sends part of the body and then aborts the connection;
- * `wrong-team` replays a body and tag the proxy captured on an upload for the
- * same hash under a different team; `status-429` and `status-503` answer
- * without forwarding; `timeout` holds the response for `holdMs`; `reset`
- * aborts before any byte is sent. Events use the exchange receipt vocabulary
- * and describe what the client was delivered: never a URL, bearer, tag value
- * or body. A 404 is classed as a miss only when no upload of that hash in that
- * namespace passed through this proxy.
- *
- * **Example** (Scope a proxy)
- * ```ts
- * import { makeCacheConformanceFaultProxy } from "@beep/repo-cli/commands/Cache"
- * console.assert(typeof makeCacheConformanceFaultProxy === "function")
- * ```
- *
- * @category fixtures
- * @since 0.0.0
- */
-export const makeCacheConformanceFaultProxy = Effect.fn("CacheConformance.makeFaultProxy")(function* (
+const makeCacheConformanceProxyHandler = Effect.fn("CacheConformance.makeProxyHandler")(function* (
   options: CacheConformanceProxyOptions
 ) {
   const client = yield* HttpClient.HttpClient;
@@ -600,7 +579,7 @@ export const makeCacheConformanceFaultProxy = Effect.fn("CacheConformance.makeFa
     return (yield* capture.record(event)) ? delivered.response : HttpServerResponse.empty({ status: 503 });
   });
   return {
-    url: yield* serveCacheLoopback(app, 64 * 1024 * 1024),
+    app,
     events: capture.events,
     setScenario: (id: string, fault: CacheConformanceFault) =>
       decodeScenarioId(id).pipe(
@@ -608,4 +587,73 @@ export const makeCacheConformanceFaultProxy = Effect.fn("CacheConformance.makeFa
         Effect.flatMap((id) => Ref.set(scenario, { id, fault }))
       ),
   };
+});
+
+/**
+ * Start a scoped loopback reverse proxy in front of a conformance target.
+ *
+ * **Details**
+ * Requests are forwarded unchanged except for an explicit fault selected with
+ * `setScenario`, which applies only to artifact `GET`/`HEAD` reads:
+ * `missing-tag`, `tampered-tag` and `tampered-body` rewrite a successful
+ * upstream response (tag and byte tampering reuse the protocol fixture's code);
+ * `truncated-body` sends part of the body and then aborts the connection;
+ * `wrong-team` replays a body and tag the proxy captured on an upload for the
+ * same hash under a different team; `status-429` and `status-503` answer
+ * without forwarding; `timeout` holds the response for `holdMs`; `reset`
+ * aborts before any byte is sent. Events use the exchange receipt vocabulary
+ * and describe what the client was delivered: never a URL, bearer, tag value
+ * or body. A 404 is classed as a miss only when no upload of that hash in that
+ * namespace passed through this proxy.
+ *
+ * **Example** (Scope a proxy)
+ * ```ts
+ * import { makeCacheConformanceFaultProxy } from "@beep/repo-cli/commands/Cache"
+ * console.assert(typeof makeCacheConformanceFaultProxy === "function")
+ * ```
+ *
+ * @category fixtures
+ * @since 0.0.0
+ */
+export const makeCacheConformanceFaultProxy = Effect.fn("CacheConformance.makeFaultProxy")(function* (
+  options: CacheConformanceProxyOptions
+) {
+  const handler = yield* makeCacheConformanceProxyHandler(options);
+  return {
+    url: yield* serveCacheLoopback(handler.app, 64 * 1024 * 1024),
+    events: handler.events,
+    setScenario: handler.setScenario,
+  };
 }, CacheCommandError.mapError("Cannot run the conformance fault proxy."));
+
+/**
+ * Observe a fixed upstream through a scoped private Unix socket.
+ *
+ * **Details**
+ * Uses the same bounded capture, failure attribution and header/body limits as
+ * the loopback proxy. Only the address and listener differ. The supplied HTTP
+ * client still owns upstream transport. An owner-only socket lets a supervisor
+ * keep a worker's private network and mount only the chosen endpoint, without
+ * sharing host networking. This observer authenticates no producer and grants
+ * no role: the approved upstream still owns authorization and tenant policy.
+ *
+ * **Example** (Reference the private capture endpoint)
+ * ```ts
+ * import { makeCacheConformanceSocketProxy } from "@beep/repo-cli/test/Cache"
+ * console.assert(typeof makeCacheConformanceSocketProxy === "function")
+ * ```
+ *
+ * @internal
+ * @category fixtures
+ * @since 0.0.0
+ */
+export const makeCacheConformanceSocketProxy = Effect.fn("CacheConformance.makeSocketProxy")(function* (
+  options: CacheConformanceProxyOptions
+) {
+  const handler = yield* makeCacheConformanceProxyHandler(options);
+  return {
+    address: yield* serveCachePrivateSocket(handler.app, 64 * 1024 * 1024),
+    events: handler.events,
+    setScenario: handler.setScenario,
+  };
+}, CacheCommandError.mapError("Cannot run the private conformance socket proxy."));

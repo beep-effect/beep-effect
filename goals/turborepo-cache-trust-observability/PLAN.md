@@ -519,3 +519,15 @@ needs actual execution. The pure join now checks the whole independently reviewe
 closure before selecting its upload task. It has not yet been connected to the
 owned supervisor or actual backend-result capture. No protected publication,
 signed rollout, task qualification or representative window is claimed.
+
+
+### Private socket component, 2026-10-29
+
+The existing conformance observer now supports an owner-only Unix endpoint
+through the source-only test facade. The unchanged TCP wrapper shares its
+handler. Actual runtime controls cover upstream policy, exact bytes and tags,
+request-limit refusal, safe capture, permissions and scope cleanup. Focused
+Node/Bun tests, package lint/check and the complete package audit plus Docgen
+pass; see [the component checkpoint](research/private-socket-checkpoint.json).
+Protected producer integration, actual adapter capture, immutable publication,
+current qualification, rollout and representative windows remain unfinished.
