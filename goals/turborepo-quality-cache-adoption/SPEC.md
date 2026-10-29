@@ -224,3 +224,26 @@ do not purge a shared cache or relax inputs to conceal a regression.
 | 2026-10-28 | Resume in the dedicated `codex/turborepo-goals-completion` lane. Refresh current source, client pins and population before promoting anything; older qualification remains bound to its original tuple. | Retain the previous approved configuration and remove only this lane's changes through a reviewed revert. |
 | 2026-10-28 | Treat the already approved R2 fleet as the current consumer path and retain AWS as its rollback. The user approved named trusted workstation writers; this grants upload capability, not protected-workflow producer identity. Refresh both boundaries before claiming production trust. | Disable affected remote reuse, stop mixed writes and restore the prior approved endpoint and epoch through a rehearsed path. |
 | 2026-10-28 | Pin native experiment execution with `--skip-infer --single-package`; a zero-task fixture is a failure. Keep supervisor failures bounded to exit code or capture truncation without attaching private worker streams. | Revert the runner change through Yeet; keep promotion closed when exact native execution is unproven. |
+
+
+### Current pinned runtime observation, 2026-10-29
+
+Admit Bun1.4.4 as an observed Linux x64 toolchain identity because it is the
+current repository pin. Retain historical identities and reject a declared-pin
+mismatch. A current snapshot does not inherit qualification from either older
+profile; actual binary changes still alter the runtime digest. Leave task cache
+flags and the qualification ledger unchanged. Reversal removes this additional
+observation profile before any current-profile reuse is admitted; an activated
+profile would first need its own disable/rollback procedure.
+
+
+### Explicit current-runtime qualification baseline
+
+2026-10-29: Use the existing reviewed baseline writer to move observation scope
+from Bun1.4.2/qualification-v2 to Bun1.4.4/qualification-v3. The old public
+fingerprint refusal demonstrates its profile guard. Name only the root review
+subject and require unchanged effective configuration, cache flags, scope,
+carried package reviews and ledger. This creates no qualification or signed
+production epoch. Reversal uses the same compare-and-swap writer against the
+retained prior baseline after checking current-epoch state. The immutable
+review is `research/current-runtime-baseline-review.md`.

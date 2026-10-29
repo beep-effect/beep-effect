@@ -397,3 +397,113 @@ the supplemental Node/V8 observations with the downloaded exact-head shard
 coverage clears the reported floors locally; fresh hosted acceptance is still
 required. No baseline or production source changed. See
 [the coverage checkpoint](research/reply-error-coverage-checkpoint.json).
+
+### Immutable hosted producer verifier component
+
+A bounded internal verifier joins a transported ZIP to authenticated GitHub run,
+artifact and independently selected workflow/binding identities. Real ZIP and
+ASCII workflow controls pass; three removed guards each fail one intended
+assertion and restore exact source. The integrated suite passes 341 tests in
+sixteen files. The frozen package audit passes in 1,181.5 seconds. Its docgen
+step failed on an introduced unsupported category; the canonical category
+repair has identical executable syntax and current passing docgen, lint and
+type checking. The failed original unit remains recorded. See
+[the component checkpoint](research/hosted-producer-verifier-checkpoint.json).
+
+This is observation verification only. A closed protected producer still needs
+to join actual successful uploads to its owned native task summary. Deployment
+grants, current qualification, key/epoch rotation, rollback and representative
+windows remain open. No production service, credential or signing change.
+
+
+### Exact native task and upload-byte join
+
+Canonical task-hash projection and a bounded internal observation join now reject
+missing/duplicate/foreign/faulted/ambiguous uploads and non-fresh or mismatched
+native tasks. Both pinned native clients physically produce the expected tagged
+PUT; their task hashes, complete archive bytes and digests join. Removing three
+guards fails the intended assertions and restores exact source. Node and Bun
+each pass 347 tests in seventeen files; Fallow and Effect/Vitest checks pass.
+The full package audit passed 8,093 tests and docgen but failed a Models timeout
+and a HEAD/live goal-manifest comparison. After committing the prepared
+manifests, both affected files pass all 35 tests without package-source changes.
+The original failed run remains explicit; a fresh whole-package result is pending. See
+[the source-bound checkpoint](research/native-upload-join-checkpoint.json).
+This remains a local component: closed protected execution/publication, deployed
+trust readiness, current task qualification and observation windows remain open.
+
+
+### Alchemy credential and deployment preparation
+
+The authenticated ordinary bucket plan reports no changes. A separate credential
+stack previews exactly two bucket-scoped token resources and no bucket, Worker
+or compute resources. Five invalid bucket/expiry configurations fail before
+resource planning. The existing GitHub writer environment is restricted to main,
+and R2 remains enabled. No artifact-key assignment is present in the inspected
+workstation/client or CI secret metadata. See
+[the readiness checkpoint](research/signed-credential-readiness-checkpoint.json).
+This is a prepared plan, not deployed grants or an activated signed cohort.
+
+
+### Clean-run Git fixture repair
+
+The next whole-package run passes the prior Models and knowledge-doctor cases,
+then fails one negative workflow fixture before its assertion. The fixture now
+starts outside Git by construction and checks the actual Git-failure messages;
+twenty tests pass in each runtime, with an intended-failure guard control.
+[The repair checkpoint](research/workflow-git-fixture-checkpoint.json) preserves
+the original failed run. A new whole-package result remains pending.
+
+
+### Passing whole CLI replay and actual Alchemy storage roles
+
+The clean committed CLI package replay passes audit in1087.0seconds and docgen
+in41.5seconds. All frozen component and repaired workflow bytes still agree;
+both earlier audit failures and their attribution remain retained. The package
+operator acknowledges both audit inbox rows at the passing head. See
+[the replay checkpoint](research/producer-package-replay-checkpoint.json).
+
+Two bucket-scoped trial roles are now actually created by the separate pinned
+Alchemy stack through the existing approved Cloudflare CLI OAuth authorization.
+The older API token was denied; a fractional-second expiry was also rejected
+and repaired to whole-second UTC before success. Exact active policies, writer
+upload/deletion, reader exact bytes and reader PUT/DELETE denial all pass. Both
+probe keys are confirmed absent after cleanup; the subsequent plan has no
+changes. The roles remain unassigned. See
+[the deployment checkpoint](research/signed-credential-deployment-checkpoint.json).
+This supplies storage-role evidence only. Durable runtime/key handoff, signed
+adapter activation, protected publication, qualification, rotation/rollback and
+all representative windows remain open.
+
+
+### Current-runtime prerequisite and pending secret handoff
+
+The adoption-owned current-runtime control now observes the pinned Bun1.4.4
+without inheriting historical qualification. Durable secret handoff remains
+pending after an agent item-creation failure; the approved backend diagnostic
+passes and no item/reference files were created. A human-only resumable command
+is prepared. Signed runtime activation and protected publication remain closed.
+
+
+### Publication gate repair
+
+The collected publication check found two introduced failures before any push:
+missing schema-derived properties in the new tests and one stale generated
+instrumentation shard. Both are repaired without changing runtime behavior.
+Properties bind generated native hashes and run/artifact references; removing
+each matching production guard causes its property to fail, then exact source
+bytes are restored. Current Node and Bun integrations each pass 361 tests in
+18 files; quick package checks pass. Schema-first has no missing/stale entries
+and the canonical instrumentation catalog has zero drift. The original failed
+publication is retained in the gate-repair checkpoint. Hosted proof and the
+full goal obligations remain open.
+
+
+### Protected producer review repair
+
+The [review repair checkpoint](research/producer-review-repair-checkpoint.json)
+records startup refusal under both Python optimization routes and retention
+of typed verifier failure causes. Thirty focused tests pass per runtime; the
+prior mapper fails both new cause-preservation assertions. The census retains
+all executable rows and semantic obligations. Publication and full acceptance
+remain open.

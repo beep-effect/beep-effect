@@ -3,7 +3,7 @@
   "goal": "turborepo-cache-trust-observability",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "32bf10d431a81ecb290cc01f7fe79814b61b25eaec9e02a68745ea5f862d2358",
+  "specSha256": "511be224c49a558752eb531a086e571a1838bd38514359d049b59b621106fcdb",
   "acceptance": [
     {
       "id": "AC-01",
@@ -203,7 +203,8 @@
     "proxyCaptureBoundsComponent": "goals/turborepo-cache-trust-observability/research/proxy-capture-bounds-checkpoint.json",
     "adapterRuntimeComponent": "goals/turborepo-cache-trust-observability/research/adapter-runtime-checkpoint.json",
     "proxyRequestCompletionComponent": "goals/turborepo-cache-trust-observability/research/proxy-request-completion-checkpoint.json",
-    "proxyNodeRuntimeComponent": "goals/turborepo-cache-trust-observability/research/proxy-node-runtime-checkpoint.json"
+    "proxyNodeRuntimeComponent": "goals/turborepo-cache-trust-observability/research/proxy-node-runtime-checkpoint.json",
+    "hostedProducerVerifierComponent": "goals/turborepo-cache-trust-observability/research/hosted-producer-verifier-checkpoint.json"
   },
   "remainingExplicitGates": [
     "SPEC verification matrix commands on actual final changes",
@@ -222,9 +223,67 @@
     "scope": "Runtime-sensitive test correction only. Production proxy, native artifact bytes and earlier source-bound audits remain unchanged. New exact-head hosted acceptance and all deployment/qualification/window gates remain pending."
   },
   "priorSpecSha256AtNodeRuntimeRepair": "303691f34fcf85630f8c42857c85dae44fc5a0dab12553668e6572631111fd79",
+  "priorSpecSha256AtHostedProducerRefresh": "32bf10d431a81ecb290cc01f7fe79814b61b25eaec9e02a68745ea5f862d2358",
   "replyErrorCoverageCheckpoint": {
     "path": "goals/turborepo-cache-trust-observability/research/reply-error-coverage-checkpoint.json",
     "sha256": "e584ed096093741dc6324c4a4d619d427e6c7a1ded384fb418b8f2dfdbd7ad5c",
     "scope": "Tests-only repair; earlier implementation/runtime proofs retain their original source bindings."
+  },
+  "priorSpecSha256AtUploadJoin": "cc3e2b7fa50d899586f3a1db1d8250253210fea0e9bbd42ffa7fe364106f55f7",
+  "nativeUploadJoinCheckpoint": {
+    "path": "goals/turborepo-cache-trust-observability/research/native-upload-join-checkpoint.json",
+    "sha256": "85ccf161fdbba666191ef0256ecd48e6236f00f7e6087b33feac59424ec9deb9",
+    "scope": "Current local component; whole-goal acceptance remains unproven.",
+    "priorBeforeReviewRepair": "4e13a763105a27e1c4fd4177230197a5823311633feaef42f4b4546b9451843b"
+  },
+  "signedCredentialReadinessCheckpoint": {
+    "path": "goals/turborepo-cache-trust-observability/research/signed-credential-readiness-checkpoint.json",
+    "sha256": "a84904c3cd83ec311910778176fa31f4e386c78269cf28db44038a569bc9f6ce",
+    "scope": "Prepared plan/current metadata only; not deployed trust readiness."
+  },
+  "workflowGitFixtureCheckpoint": {
+    "path": "goals/turborepo-cache-trust-observability/research/workflow-git-fixture-checkpoint.json",
+    "sha256": "2d644f51d3c986807d5b2e0e80a69a32a75fb729a83eca79ce09bec0df0eb679",
+    "scope": "Current test setup/guard repair; original broad failures remain retained."
+  },
+  "priorSpecSha256AtRolePreparation": "639205887c0d7562eee13846657fd92083d866cb70f10be6718758373666894d",
+  "passingProducerPackageReplay": {
+    "path": "goals/turborepo-cache-trust-observability/research/producer-package-replay-checkpoint.json",
+    "sha256": "09061ef6e8825198ee9bba48cb1218bd29fef0261108077686dc70e873ec0ac4",
+    "scope": "Component progress only; whole-goal acceptance remains unproven."
+  },
+  "signedCredentialDeployment": {
+    "path": "goals/turborepo-cache-trust-observability/research/signed-credential-deployment-checkpoint.json",
+    "sha256": "f80c99e883d4ba37f3033bfac6dda453039df81af98c36c75cf22de07502b8d0",
+    "scope": "Component progress only; whole-goal acceptance remains unproven."
+  },
+  "priorSpecSha256AtRoleDeployment": "47d95a38ee3ccd92b66b2eaf1cb31180246ddee1d3c059bc76ffedcf567cd25e",
+  "currentRuntimeProfileCheckpoint": {
+    "path": "goals/turborepo-quality-cache-adoption/research/current-runtime-profile-checkpoint.json",
+    "sha256": "dc4fb8065cad72069b3fac057f689feea57b340f7a8c0289630cc38cbc4dbf66",
+    "scope": "Runtime observation and passing frozen whole-package verification only; all qualification and rollout obligations remain open.",
+    "priorBeforeReviewRepair": "b120fc1bab3b11d5cc3eab57dfc775b602e5033705fbf738f686fa1828ea95ef"
+  },
+  "publicationGateRepair": {
+    "path": "goals/turborepo-cache-trust-observability/research/producer-publication-gate-repair-checkpoint.json",
+    "sha256": "7d10fc4c50a2f086c7315912ddc981d23201bf5cece9c38b571d10d26d95b6e2",
+    "scope": "Properties/catalog and current component checks; hosted publication and whole-goal acceptance remain pending.",
+    "priorBeforeReviewRepair": "ef5d83d08a083ca51cf059b26eb0a87a18aee2695d3d88459a08c07939560327"
+  },
+  "producerCoverageRepairCheckpoint": {
+    "path": "goals/turborepo-cache-trust-observability/research/producer-coverage-repair-checkpoint.json",
+    "sha256": "7a37b77aef708c66b8480549569a47fa96496777a39b5f28fc423b2f71b506cd",
+    "scope": "Current focused coverage/regression only; whole-goal acceptance remains unproven.",
+    "priorBeforeReviewRepair": "dba0c942aefb3c8ff0ce9185c75d3cb75a463656956e0f83fc4bf4983da40997"
+  },
+  "producerReviewRepairCheckpoint": {
+    "path": "goals/turborepo-cache-trust-observability/research/producer-review-repair-checkpoint.json",
+    "sha256": "93b602012d54e57aa9559e5df8bd8b53ae864d9f015e9ba6e3b9a0d2bfcb3fce",
+    "scope": "Latest internal review repair and current census; earlier source-bound positive proofs keep their historical scope."
+  },
+  "producerPacketReviewCheckpoint": {
+    "path": "goals/turborepo-cache-trust-observability/research/producer-packet-review-checkpoint.json",
+    "sha256": "7974b7a10bb72a491e571b3aa1c01b431f9227a2d5f6bd9206e6d77411a264c5",
+    "scope": "Goal-packet control/historical-claim repair only; runtime CLI proof remains bound to c8c434026f."
   }
 }

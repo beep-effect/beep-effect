@@ -354,3 +354,84 @@ The local process report does not satisfy those deployment or observation gates.
   failure, longer streaming timeout or test retry substitutes for native proof.
   Removed guards must fail both the native test and the Node parent. Reversal
   keeps unproven evidence disabled; the production proxy is unchanged.
+
+### Hosted upload provenance preparation
+
+- 2026-10-29: Use existing authenticated GitHub client/content operations and
+  independently selected approval to verify an exact Actions artifact. Bind
+  repository database identity, same-repository non-fork main execution,
+  successful current attempt, approved workflow revision and ASCII bytes, immutable
+  archive digest, and the entire existing computation/client/profile/epoch
+  binding. A report cannot choose its own trust roots. Reusable workflows
+  remain refused until their resolved identities have independent approval.
+- The first cohort permits at most sixty-four KiB of ASCII workflow text. This
+  rejects Unicode replacement and lossy text decoding before hashing. Unicode
+  workflows require a raw-byte content route before this profile can widen.
+- Bound the component to a one-MiB ZIP containing only `cache-producer.json`,
+  sixty-four upload rows and sixty-four KiB of ASCII JSON, with a ten-second
+  parser child and a twenty-four-hour receipt lifetime. Retain only finite
+  status/result, canonical task/content hashes and byte counts. Read no tag,
+  bearer, artifact payload, source path or caller URL into the receipt.
+- This verifies an immutable hosted observation only. The actual closed
+  protected producer, deployed environment/credential controls, current source
+  qualification, semantic input closure, native HMAC checks and rollout remain
+  prerequisites. No existing live endpoint, writer policy or signing setting
+  changes. Reverse by removing the internal verifier and leaving reuse local
+  at this unqualified boundary.
+
+
+### Exact owned-task upload observation join
+
+- 2026-10-29: Reuse the canonical sixteen-lowercase-hex native task-hash schema
+  in optional exchange metadata; historical receipts decode absence. The first
+  producer join requires one successful fresh task at the approved client and
+  full computation identity, one exact matching artifact PUT and a settled
+  capture bounded to two hundred events. Writer/tenant attribution, unfaulted
+  complete outcomes, coherent successful upstream/delivered statuses, the finite
+  adapter result `allowed`, bounded complete archive bytes/digest and opaque tag
+  presence are mandatory. Only successful status/events metadata may accompany
+  that upload. This is observation validation, not caller authentication, native
+  HMAC verification, a qualification transition or protected producer issuance.
+  The closed supervisor still owns source/command/capture and GitHub publication.
+  Reversal leaves this preparatory component unwired; no live epoch changes.
+
+
+### Separate Alchemy credential lifecycle and bounded signed trial
+
+- 2026-10-29: Keep the existing private bucket in `BeepTurboR2Pilot` and place
+  two bucket-scoped account-token resources in the separate
+  `BeepTurboR2SignedCredentials` stack/stage. A normal bucket plan must neither
+  create nor revoke the trial grants. Use the pinned provider's typed permission
+  names and exact bucket resource shape; no Worker, bucket, VM or runner burst
+  is added. Reader gets object read; writer gets object read/write. Require an
+  explicit future expiry within thirty days, protect local state at mode0700,
+  and omit token values from stack outputs. The approved secret lane owns
+  consumer handoff; an artifact HMAC key is separate and never reaches storage.
+- The first signed trial remains this workstation plus one protected-main AWS
+  CI job, isolated writer19427/reader19428, namespace
+  `team_beep_signed_canary_v1`, at most50MiB aggregate synthetic artifacts,
+  200 Class A and2000 Class B operations, ten minutes of trial execution and
+  thirty-day artifact retention. These are execution ceilings, not evidence
+  the trial ran. Freeze current source/workflow and qualification approvals,
+  prove grants and key delivery, and prepare rollback before activation.
+  Existing ordinary cache services and prior-epoch recovery remain available.
+- Reversal removes only the separate trial token resources after stopping trial
+  consumers; it does not destroy the shared bucket or change ordinary grants.
+  Actual signed activation, rotation and representative windows remain pending.
+
+
+### Actual trial role creation, 2026-10-29
+
+- Apply only the two separately owned Alchemy trial roles through the existing
+  Cloudflare CLI OAuth authorization after the provisioning API token is denied.
+  Keep the OAuth value in memory; do not create a broader management credential.
+  Exact active policies and direct storage operations prove only those roles.
+  Keep them unassigned until runtime/key handoff and signed readiness pass.
+- Require whole-second UTC expiry at the API boundary. Accept an explicit
+  reviewed-deploy confirmation through the wrapper while plan/destruction reject
+  unattended confirmation. Preserve the original denied and invalid-date
+  requests rather than rewriting the earlier plan checkpoint.
+- Retain owner-only state and its private recovery archive. Reversal is to stop
+  any trial consumers and destroy only this separate token stack using current
+  approved management authorization. No bucket is removed. Actual revocation,
+  epoch rollback and consumer requalification remain required before activation.

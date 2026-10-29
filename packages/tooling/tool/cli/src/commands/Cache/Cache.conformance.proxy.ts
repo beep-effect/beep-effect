@@ -39,6 +39,7 @@ import {
   classifyCacheConformanceStatus,
   readCacheConformanceReply,
 } from "./Cache.conformance.wire.ts";
+import { CacheSyntheticRun } from "./Cache.experiment.schemas.ts";
 import { corruptCacheArtifactBody, serveCacheLoopback, tamperCacheArtifactTag } from "./Cache.protocol.fixture.ts";
 import { CacheCommandError } from "./Cache.schemas.ts";
 import type { Sha256Hex } from "@beep/schema";
@@ -95,6 +96,7 @@ export class CacheConformanceProxyOptions extends S.Opaque<
 ) {}
 
 const hashBytes = S.decodeEffect(Sha256HexFromBytes);
+const isNativeTaskHash = S.is(CacheSyntheticRun.fields.taskHash);
 const captureLimit = 64;
 const encodeEvent = S.encodeEffect(S.fromJsonString(CacheConformanceProxyEvent));
 const ScenarioId = S.NonEmptyString.check(S.isMaxLength(96), S.isPattern(/^[A-Za-z0-9._-]+$/)).pipe(
@@ -317,6 +319,7 @@ const proxyExchange = Effect.fnUntraced(function* (input: {
       onNone: () => "none",
       onSome: (value) => (isArtifactHash(value) ? "valid" : "non-hex"),
     }),
+    taskHash: O.filter(parsed.hash, isNativeTaskHash),
     outcome: O.getOrElse(delivered.outcome, () =>
       O.match(delivered.status, {
         onNone: (): CacheConformanceOutcome => "transport-error",

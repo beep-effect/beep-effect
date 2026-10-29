@@ -355,3 +355,254 @@ unchanged, but the recorded byte digest was wrong. Both pointers now hash the
 formatted report. Audit every path/digest reference in the current checkpoint
 and completion audit against committed bytes after hooks, not merely source
 file bindings or pre-format serialization. Preserve historical proof scopes.
+## 2026-10-29: immutable hosted upload provenance preparation
+
+The existing issuer authenticates owned isolated pilot bundles, but it does not
+join production uploads to independently approved GitHub workflow identity.
+The new bounded verifier is a component toward that join; no production
+producer, signing activation or qualification is installed by it.
+
+Local checks caught a complex orchestration function and a nested fixture
+response selector. Separate metadata/binding checks and simpler fixture
+responses restored zero Fallow findings without a suppression. The Effect
+compiler also caught default-boolean inference and a missing named Effect
+wrapper in the new test helper; both were fixed before publication.
+
+ZIP listing text is an unsuitable file-type boundary. The implementation now
+uses the standard ZIP parser with one literal member, regular-file metadata,
+a bounded stream, strict ASCII, a ten-second child deadline and no extraction.
+The parser normalizes embedded NULs in names, so original and normalized names
+must agree. Real ZIP controls cover a valid JSON symlink target, overflow,
+extra members and a NUL-normalized name. Prevent recurrence by retaining these
+controls and immutable-digest red-first tests in the upgrade gate.
+
+The existing GitHub text-content API decodes UTF-8 before returning text.
+An exact workflow-byte approval must refuse lossy decoding. The first cohort
+accepts only bounded ASCII workflow text. Even a matching hash over a
+replacement-character string is rejected; removing the ASCII guard makes that
+control fail. A Unicode profile requires raw-byte content verification.
+
+The full package audit passed, then docgen rejected an invented `verification`
+category. Use the canonical `validation` category already used by sibling
+verifiers. The repaired code has identical comment-free syntax; current docgen
+typechecks 3,551 CLI examples and package lint/type checking pass. Check the
+canonical category vocabulary before a long audit to catch this earlier.
+
+## 2026-10-29: preserve inherited decisions during unpublished replay
+
+A prior documentation conflict resolution dropped inherited request-completion
+and runtime section text while appending hosted-verifier notes. The code was
+unchanged, but the packet must retain the complete governing decisions. The
+unpublished replay now starts from the complete parent document and appends
+only the original feature section. Prefix checks for SPEC, PLAN, SOURCES and
+OPPORTUNITIES prove that no parent text is removed. Use explicit bounded
+section extraction for append conflicts; never a DOTALL conflict-marker pattern
+whose line wildcard can consume the body it is meant to preserve.
+
+
+## 2026-10-29: Physical upload controls corrected a prototype result label
+
+The unpublished hosted-upload model used `written`, but the adapter's actual
+finite success vocabulary is `allowed`. Real HTTP upload controls rejected the
+prototype rather than silently accepting a new label. Reuse the conformance
+result domain; both pinned native clients now join their successful PUT bytes
+to the exact executed task hash. Require a single settled upload, writer/tenant
+attribution, successful coherent statuses and opaque tag presence; removing
+three guards makes the intended negative assertions fail. A carried tag is
+not proof of native signature validity or protected producer identity.
+
+
+## 2026-10-29: Package audit also depends on committed goal manifests
+
+The full CLI audit passed 8,093 tests but failed a Models eligibility timeout
+and the knowledge-doctor HEAD/live manifest comparison; docgen passed. A focused
+replay passed all Models tests and retained only the manifest mismatch. The
+knowledge test compares committed HEAD with the live goal manifest, which was
+being prepared in this worktree. Freeze the whole repository input profile,
+commit the prepared manifests and replay both affected files without concurrent
+edits. Preserve the original failure and do not call it a successful full run.
+
+The clean-manifest replay passes all 35 tests in both affected files at the
+committed component head, with unchanged package source. The original full-run
+failure remains retained. The Models timeout did not recur in either isolated
+replay; its cause beyond the observed elapsed-time failure is not claimed.
+
+
+## 2026-10-29: Token ownership must not depend on an optional bucket-stack flag
+
+A first draft added optional token resources to the bucket stack. Omitting that
+flag on a later deployment could schedule their revocation. Before any deploy,
+separated the token stack/stage from the existing bucket owner. The normal
+plan still reports no changes; the explicit credential plan contains exactly
+two tokens. No Worker or replacement bucket is needed. Missing, malformed,
+past, excessive expiry and wildcard-bucket inputs fail before planning grants.
+The resumed shell also lacked user-bus variables: restoring them made the
+approved agent preflight pass without a desktop or human authentication path.
+
+
+## 2026-10-29: A negative Git case does not need to initialize then delete a repository
+
+The clean full CLI run passed 8,094 tests and docgen, including both earlier
+failures, but one workflow test failed before its assertion while removing a
+temporary `.git` directory that was already absent. Its disappearance is not
+attributed without evidence. Start directly in a fresh owned non-repository
+directory and require both real Git-backed checks to report the specific
+Git-inventory failure. All twenty file tests pass in Bun and Node; removing
+the production Git exit/truncation guard fails the intended assertion, and
+exact production bytes are restored. Preserve both original broad-run failures.
+
+
+The commit scanner treated public source/SPEC hashes as API keys when a JSON
+map key contained credential-related words. Retain the same independently
+computed hashes in explicit path/sha256 source records and name the prior SPEC
+snapshot for its role-preparation phase. No scanner suppression or security
+exception is added; post-hook verification still checks actual source bytes.
+
+
+## 2026-10-29: Preview and credential creation have different authority
+
+The bucket provisioning token can plan the bucket but Alchemy account-token
+creation is Unauthorized. Stop that credential path rather than infer authority
+from a successful plan. The existing authenticated Cloudflare CLI login has
+account_api_tokens:create and can inspect its own created tokens; its OAuth
+value reaches Alchemy only in memory. No new management token was requested.
+Alchemy's interactive prompt cannot pass through the agent secret wrapper.
+Retain default prompting, but accept an explicit reviewed-deploy --yes option;
+plan/destruction and unknown flag forms reject it.
+
+Cloudflare's live token API also rejects fractional-second expires_on values,
+even though the date parses locally. Require whole-second UTC at the schema
+boundary and keep the original failed requests. All six current configuration
+negatives reject before planning. The new storage probe continues both cleanup
+attempts after an injected delete or HEAD failure and never reports success for
+those controls. Success receipts are written only after both real keys are
+confirmed absent.
+
+The full laboratory requirements include an uncached package; the storage
+control needs only the already cached pinned boto3 dependency. Use that narrow
+invocation rather than expanding the install or spending a new environment.
+
+
+## 2026-10-29: Healthy vault reads do not establish item-creation authority
+
+The approved agent item-creation command failed. A single required op-doctor
+run passes on the service-account backend, and a fresh inventory confirms no
+trial item exists. An inert template dry-run passes; it proves input shape,
+not write authority. Stop that write path. The human-only bootstrap is prepared
+outside the repository, resumes a matching item, refuses changed reference
+files, and emits only a sanitized receipt. No desktop sign-in is attempted by
+the agent. The already created Alchemy roles remain unassigned.
+
+
+### Parent replay must stop on failed validation
+
+- While replaying the unpublished producer work after PR2352 merged, a JSON
+  union helper rejected an inserted parent report. The surrounding shell lacked
+  immediate-error handling and continued into an unpublished replay commit.
+- The rebase was aborted back to the saved clean tip; the complete patch backup
+  remained intact. Replayed again with immediate-error handling, explicit
+  preservation of all common reports and a staged conflict-marker check before
+  every continuation. Both parent/own report sets and appended sections agree.
+- Prevention: every mutation sequence must stop when its preceding validation
+  fails. This recovery changed no cloud resource, credential or published ref.
+
+
+### Reboot left the default GitHub credential route unavailable
+
+- Bounded `gh api` and saved-credential lookups timed out, while direct public
+  API reads succeeded. No credential value was emitted. An existing approved
+  reference-only agent token passed the exact secret wrapper and repository
+  push-permission query.
+- A private process-scoped `gh` wrapper applies that reference only to GitHub
+  children; raw credentials are not added to quality gates. The existing Yeet
+  identity selector receives the same reference. Persistent GitHub settings
+  remain unchanged. Remove the temporary PATH entry after its monitor ends.
+
+
+### Schema-heavy tests and generated spans are publication inputs
+
+- The collected cheap-gates run ended before pushing with two introduced reds:
+  missing schema-derived property coverage in the two new producer test files,
+  and a stale CLI instrumentation shard. Package audit and docgen alone do not
+  establish these repository-level checks.
+- Added generated hash/reference binding properties, proved each fails with
+  its corresponding production guard removed, restored exact source, and used
+  the canonical catalog writer. No schema-first inventory or baseline waiver.
+- Read red lines as the collected run emits them; a tail showing later green
+  steps is not evidence that earlier lanes passed. Retain all completed checks
+  and attribute each red before repeating the publish wave.
+
+
+### Base advancement during publication
+
+- Publication correctly refused a stale base after PR2356 changed the shared
+  CLI schema catalog. Merged current main, kept its Kimi account changes, and
+  regenerated/checked the catalog from combined source. No own cache source
+  or test byte changed. Package quick checks, instrumentation and cache audit
+  pass; the current census is refreshed. No stale-base bypass was used.
+
+
+### Effect property scopes and the collected publication gate
+
+The next collected run found EV004 in both newly added schema-derived properties.
+The first diagnosis incorrectly blamed their import; the exact detector identified
+redundant whole-body scopes supplied by it.effect.prop already. Removed only
+those wrappers, retained generated assertions, and verified both intended-failure
+controls after the repair. The full policy scan has zero introduced findings.
+Read the finding code before changing imports or weakening an inventory.
+
+The dependency snapshot waited 392 seconds behind the publication lease, then
+materialized and verified 213,133 files. Current code deliberately leases the
+cheap gates because the schema catalog can peak near 12.6 GiB; push-first prose
+does not justify deleting that memory guard. No admission bypass was added.
+
+
+### Fresh full coverage exposes boundary and unreachable-path gaps
+
+The final replay at `38415caaa5` passed every non-coverage gate and all
+coverage test producers, then the new-file ratchet found two local gaps:
+the hosted ZIP compressed-byte refusal was untested, and the upload join kept
+an unreachable Option fallback after an exact-one length check. Added empty/
+oversized archive refusals and use a tuple-schema guard to establish exactly
+one exchange before destructuring it. Preserve both original coverage maps
+and the complete failed receipt; do not add baseline rows to hide the gaps.
+
+
+### GitHub child environments must isolate their credential references
+
+The publication checks and push passed, then the private GitHub wrapper failed
+while creating the PR: Bun had loaded unrelated op:// references from the
+checkout, and op run attempted those references alongside the intended token.
+The agent diagnostic and exact minimal GitHub route both passed. Restricting
+the wrapper environment to the GitHub operation's required keys fixed the real
+Bun-parent invocation, including a synthetic unrelated-reference control.
+PR2358 was created through the already approved REST route and its canonical
+monitor is healthy. No repository environment file or global credential setup
+was changed. Preserve the original failure, doctor receipt and bounded child
+environment probe.
+
+
+### The root schema compiler rule is a separate gate
+
+The first cardinality repair constructed its tuple inside Schema.is in the
+upload function. The root linter correctly rejected that repeated compilation
+with `beep(no-inline-schema-compile)`, although package quick checks and the
+four focused policy/catalog checks passed. Hoist a named annotated tuple and
+its derived guard to module scope, then replay the root linter directly. The
+pre-push publisher was stopped with no push; retain its finding and source
+identity instead of treating the earlier partial checks as complete policy proof.
+
+
+### Assertion-dependent probes and internal verifier diagnostics
+
+Review found that optimized Python could remove every grant-proof assertion.
+The helper now refuses optimization before importing cloud clients. Hermetic
+import-sentinel probes cover normal execution, -O and PYTHONOPTIMIZE=2 without
+credential reads or network access. The verifier now uses the canonical error
+mapper to retain typed internal causes. Auth, missing-resource, rate-limit and
+identity-preservation tests cover it; runtime causes are not producer receipts.
+
+CI hit HTTP408 during checkout before lint ran. GitHub refused the exact-job
+retry while the workflow was running. This source repair will supersede that
+head; keep the environmental attribution and do not hide it by restarting an
+active proof.

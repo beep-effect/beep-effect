@@ -71,7 +71,18 @@
     "research/adapter-runtime-lab.json",
     "research/adapter-runtime-lab-before-cleanup-review.json",
     "research/proxy-node-runtime-checkpoint.json",
-    "research/reply-error-coverage-checkpoint.json"
+    "research/reply-error-coverage-checkpoint.json",
+    "research/hosted-producer-verifier-checkpoint.json",
+    "research/native-upload-join-checkpoint.json",
+    "research/native-upload-join-observations.json",
+    "research/signed-credential-readiness-checkpoint.json",
+    "research/workflow-git-fixture-checkpoint.json",
+    "research/producer-package-replay-checkpoint.json",
+    "research/signed-credential-deployment-checkpoint.json",
+    "research/producer-publication-gate-repair-checkpoint.json",
+    "research/producer-coverage-repair-checkpoint.json",
+    "research/producer-review-repair-checkpoint.json",
+    "research/producer-packet-review-checkpoint.json"
   ],
   "agentLaunchers": [
     {

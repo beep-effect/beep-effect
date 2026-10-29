@@ -82,6 +82,14 @@ export {
   writeCacheIdentityLintProfile,
 } from "../commands/Cache/Cache.profile.ts";
 export {
+  CacheHostedProducerApproval,
+  CacheHostedProducerObservation,
+  CacheHostedProducerReference,
+  CacheHostedProducerReport,
+  CacheHostedProducerUpload,
+} from "../commands/Cache/Cache.workflow.github.schemas.ts";
+export { verifyCacheHostedProducerUpload } from "../commands/Cache/Cache.workflow.github.ts";
+export {
   CacheProducerObservation,
   CacheProducerWorkflow,
   CacheProducerWorkflowFile,
@@ -94,6 +102,7 @@ export {
   inspectCacheProducerWorkflow,
   runCacheProducerWorkflow,
 } from "../commands/Cache/Cache.workflow.ts";
+export { joinCacheProducerUpload } from "../commands/Cache/Cache.workflow.upload.ts";
 export * as CacheRuntimeFileGuards from "../internal/cli/FsGuards.ts";
 export * as CacheRuntimeProcess from "../internal/process/StepExec.ts";
 export * as CacheRuntimeAdmission from "../internal/repo-run/QualityScheduler.ts";

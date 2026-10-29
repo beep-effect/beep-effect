@@ -3,7 +3,7 @@
   "goal": "turborepo-quality-cache-adoption",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "9c2c1c88a7f13efab9252774f154d1e1e31e8d395695b2ab37dabc212af27e5c",
+  "specSha256": "7e7bd28c21dc6ddb46b29e62aefcc0f0f8d49c99da7bab4f1fa6d4a372b64ed3",
   "acceptance": [
     {
       "id": "AC-01",
@@ -162,5 +162,40 @@
     "Representative observation cannot be replaced by synthetic samples",
     "Final PR readiness, reflection and lifecycle"
   ],
-  "referenceBase": "repository root"
+  "referenceBase": "repository root",
+  "priorSpecSha256AtRuntimeObservation": "9c2c1c88a7f13efab9252774f154d1e1e31e8d395695b2ab37dabc212af27e5c",
+  "currentRuntimeProfileCheckpoint": {
+    "path": "goals/turborepo-quality-cache-adoption/research/current-runtime-profile-checkpoint.json",
+    "sha256": "dc4fb8065cad72069b3fac057f689feea57b340f7a8c0289630cc38cbc4dbf66",
+    "scope": "Runtime observation and passing frozen whole-package verification only; all qualification and rollout obligations remain open.",
+    "priorBeforeReviewRepair": "b120fc1bab3b11d5cc3eab57dfc775b602e5033705fbf738f686fa1828ea95ef"
+  },
+  "priorSpecSha256AtCurrentRuntimeBaseline": "bf920216aed78bfef9065e4129e12ac08356e88307cf7fcb03f0395d6c5a88a6",
+  "currentRuntimeBaselineCheckpoint": {
+    "path": "goals/turborepo-quality-cache-adoption/research/current-runtime-baseline-checkpoint.json",
+    "sha256": "747dce251c43af011311b34831831bac76d8d0de914086c180c2e66196ecfacd",
+    "scope": "Explicit observation profile/epoch only; no qualification or signed deployment."
+  },
+  "publicationGateRepair": {
+    "path": "goals/turborepo-cache-trust-observability/research/producer-publication-gate-repair-checkpoint.json",
+    "sha256": "7d10fc4c50a2f086c7315912ddc981d23201bf5cece9c38b571d10d26d95b6e2",
+    "scope": "Properties/catalog and current component checks; hosted publication and whole-goal acceptance remain pending.",
+    "priorBeforeReviewRepair": "ef5d83d08a083ca51cf059b26eb0a87a18aee2695d3d88459a08c07939560327"
+  },
+  "producerCoverageRepairCheckpoint": {
+    "path": "goals/turborepo-cache-trust-observability/research/producer-coverage-repair-checkpoint.json",
+    "sha256": "7a37b77aef708c66b8480549569a47fa96496777a39b5f28fc423b2f71b506cd",
+    "scope": "Current focused coverage/regression only; whole-goal acceptance remains unproven.",
+    "priorBeforeReviewRepair": "dba0c942aefb3c8ff0ce9185c75d3cb75a463656956e0f83fc4bf4983da40997"
+  },
+  "producerReviewRepairCheckpoint": {
+    "path": "goals/turborepo-cache-trust-observability/research/producer-review-repair-checkpoint.json",
+    "sha256": "93b602012d54e57aa9559e5df8bd8b53ae864d9f015e9ba6e3b9a0d2bfcb3fce",
+    "scope": "Latest internal review repair and current census; earlier source-bound positive proofs keep their historical scope."
+  },
+  "producerPacketReviewCheckpoint": {
+    "path": "goals/turborepo-cache-trust-observability/research/producer-packet-review-checkpoint.json",
+    "sha256": "7974b7a10bb72a491e571b3aa1c01b431f9227a2d5f6bd9206e6d77411a264c5",
+    "scope": "Goal-packet control/historical-claim repair only; runtime CLI proof remains bound to c8c434026f."
+  }
 }

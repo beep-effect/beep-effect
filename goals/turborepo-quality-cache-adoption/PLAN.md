@@ -96,3 +96,73 @@ closeout to an unrelated state-only PR.
 Use SPEC's rollback at the affected boundary. Record the failed gate, remaining
 work and safe resume action. Retain paused state with explicit conditions when
 external evidence/authority is missing; do not label that pause complete.
+
+
+### Executed native input and restoration observations
+
+A retained local-only driver verifies current stable/canary executable digests
+and the actual pinned Bun executable, then runs eighteen isolated executions.
+Sixteen invariant controls pass: exact restoration and benign/unrelated changes
+reuse; declared input, semantic environment, global input and implementation
+bytes invalidate. Both description-only changes cause MISS with a changed hash,
+recorded as observations rather than a promised optimization. Output bytes
+agree after every run. All owned fixtures are removed before the bounded report
+is written. Seven matrix rows now link this partial evidence; all real
+computation qualification and acceptance statuses remain pending. See
+[the observations](research/native-input-controls.json) and
+[their reproducible driver](research/native-input-controls.py).
+
+
+### Actual current-runtime observation
+
+The real collector initially refused the repository-pinned Bun1.4.4 because
+its profile domain stopped at1.4.2. The current runtime is now observed with
+actual binary, dependency-tree and startup-linker identities. A wrong declared
+pin still fails, historical profile keys reject the new snapshot, and binary
+changes alter its digest. Both focused runtimes pass45tests; removing the new
+support produces the intended schema failure. The fresh430-source population
+retains190workspaces/2571computations/1621configured flags. See
+[the checkpoint](research/current-runtime-profile-checkpoint.json),
+[physical observation](research/current-runtime-profile-observation.json) and
+[retained control](research/current-runtime-profile-control.ts).
+The frozen committed whole-package replay passes: audit1118.9seconds and
+docgen36.4seconds, with source and both goal manifests unchanged. No task is
+qualified or enabled by this observation support.
+
+
+### Real computation input counterexample
+
+The [retained dry observation](research/actual-ignored-input-observation.json)
+and [control](research/actual-ignored-input-control.py) show that an ignored
+non-workspace manifest changes identity lint's native hash on both pinned
+clients. Cleanup restores each baseline. Inspect real wrapper reads, narrow
+the metadata boundary where justified, and prove actual lint-output/verdict
+equivalence before qualification. These dry plans prove no task result or
+speed improvement; the candidate stays disabled.
+
+
+### Integration after merged parent
+
+PR2352 merged atddcf09b480 and its lane is retired with private proofs retained.
+Nine unpublished commits were replayed onto that main revision. All fifteen
+owned implementation files are byte-identical to the passing frozen source;
+the conformance test also retains the parent's coverage controls. Node and Bun
+each pass359tests in18files; quick lint/check pass. The canonical inventory
+verifies431source digests and preserves all2571dispositions and130configuration
+records. Historical source-bound checkpoints keep their original scope.
+The operator clarified that the human credential helper has not yet run;
+completion remains pending. Signing and all affected qualification/rollout
+gates stay closed.
+
+
+### Reviewed current-runtime baseline and public observation
+
+The historical Bun 1.4.2 baseline correctly refused a Bun 1.4.4 fingerprint.
+The canonical reviewed writer now records Bun 1.4.4 / qualification-v3, stamping
+only the root subject and carrying all 188 package reviews. The effective
+projection, four-computation scope, cache flags and qualification ledger are
+unchanged. The real public fingerprint succeeds under its distinct current
+tuple; a stale compare-and-swap request fails without changing baseline or
+ledger. Cache audit reports zero blocking findings and 1,621 unassessed cached
+computations. See the immutable review and current-runtime baseline checkpoint.
+This is observation readiness; qualification and signed rollout remain open.

@@ -293,3 +293,94 @@ artifact, signing activation, deployed grant or observation window changes.
   exact test/wire digests, actual hosted regression attribution, Bun and Node/V8
   tests, and supplemental coverage scope. A locally combined observation is not
   a substitute for the fresh hosted comparison. Earlier evidence is preserved.
+
+### Hosted artifact provenance preparation, 2026-10-29
+
+- [GitHub artifact REST contract](https://docs.github.com/en/rest/actions/artifacts):
+  immutable artifact identity, SHA-256 archive digest and owning workflow-run
+  metadata. These API fields require independent workflow approval and exact
+  byte verification; a caller-provided digest is insufficient.
+- Current implementation: `Cache.workflow.github.schemas.ts` and
+  `Cache.workflow.github.ts` in the existing Cache command owner, with tests
+  in `cache-hosted-producer.test.ts`. The standard-library ZIP reader never
+  extracts paths and checks original names before accepting normalized names.
+  Workflow content is restricted to a bounded ASCII profile so text decoding
+  cannot silently substitute bytes before the independently approved hash.
+- Fixtures prove the verifier mechanism, not actual protected CI publication
+  or a production R2 upload. Current source-bound verification is being
+  collected; no acceptance criterion or observation window closes here.
+
+- [Hosted producer verifier checkpoint](hosted-producer-verifier-checkpoint.json):
+  exact implementation/test/content-decoder hashes, 101 focused and 341
+  integrated tests, three intended-failure guard controls, zero Fallow/test-style
+  findings and the frozen audit plus documentation-only repair. This is a local
+  verifier component; fixture API metadata is not actual CI publication.
+
+- [Native upload-join checkpoint](native-upload-join-checkpoint.json),
+  [bounded physical observations](native-upload-join-observations.json) and
+  [retained native control](native-upload-join-control.ts): exact source/runtime
+  digests, actual stable/canary upload bytes, cross-runtime integration, three
+  intended-failure guard controls and the original failed full package run with
+  its explicit attribution. After committing the prepared manifests, both
+  affected files pass 35 tests against unchanged package source. The original
+  failed full run remains explicit. Reproduce
+  with the pinned Bun using the retained control. No live R2, producer approval,
+  protected publication or real-computation qualification is inferred.
+
+- [Signed credential readiness checkpoint](signed-credential-readiness-checkpoint.json):
+  authenticated Alchemy previews, exact wrapper/template and pinned provider
+  provenance, five rejected configurations and current GitHub branch/secret
+  metadata. At that earlier snapshot, two account-token resources were planned;
+  none had been created, no key had been handed off and no signed cache had
+  been activated. The later deployment checkpoint records the actual grants.
+
+- [Git fixture repair checkpoint](workflow-git-fixture-checkpoint.json): original
+  clean whole-run failure, current Bun/Node tests and actual Git-guard removal.
+  Production workflow implementation bytes are unchanged.
+
+
+- [Passing CLI package replay](producer-package-replay-checkpoint.json): clean
+  committed source, audit1087.0seconds/docgen41.5seconds, original failures kept.
+- [Actual Alchemy role deployment](signed-credential-deployment-checkpoint.json)
+  and [retained storage control](../../../infra/r2-cache/trial-grants.py): two
+  scoped active roles, exact policies, reader denials, actual writer operations,
+  confirmed cleanup and unchanged follow-up plan. Roles are not assigned to
+  consumers, and no signed cache or qualification was activated.
+- [Cloudflare OAuth account-token provisioning](https://developers.cloudflare.com/changelog/post/2026-10-01-account-api-token-provisioning/)
+  and [account-token ownership](https://developers.cloudflare.com/fundamentals/api/get-started/account-owned-tokens/):
+  existing OAuth creation scope and creator-limited management.
+
+- [Publication gate repair](producer-publication-gate-repair-checkpoint.json):
+  introduced catalog/property findings, canonical regeneration, schema-derived
+  binding properties, two intended-failure controls, exact restoration and
+  current Node/Bun integration. Earlier full audits retain their exact scope.
+
+
+### Producer coverage repair
+
+- [Coverage repair checkpoint](producer-coverage-repair-checkpoint.json): the
+  original complete final-check receipt failed only the new-file coverage ratchet.
+  Both repaired files now have 100% coverage in Node/V8 and Bun/Istanbul,
+  five intended-failure guard controls and 362 integration tests per runtime.
+  Earlier frozen proofs remain separate; no coverage baseline, qualification
+  entry, deployed signing policy or whole-goal acceptance changes.
+
+
+### Producer review repair
+
+- [Review repair checkpoint](producer-review-repair-checkpoint.json): optimized
+  Python refusal before cloud-client imports, retained typed runtime error causes,
+  30 focused tests per runtime, full file coverage and intended-failure controls.
+  The refreshed census changes no semantic reviews, cache flags or qualification.
+  The earlier passing full replay stays historical; this repair needs fresh
+  publication and hosted acceptance.
+
+
+### Goal-packet review safety
+
+- [Packet review checkpoint](producer-packet-review-checkpoint.json): historical
+  package-replay scope, optimization refusals, explicit native dry-plan checks,
+  fresh report-directory creation and baseline chronology. Controlled unit
+  excerpts stay distinct from eighteen real synthetic native replay processes.
+  Earlier observations keep their original driver identities and full goal
+  acceptance remains open.
