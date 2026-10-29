@@ -1,7 +1,7 @@
 {
   "schemaVersion": "cache-adoption-population-refresh/v1",
   "authority": "Inventory and review queue only. Cache remains the qualification state writer.",
-  "sourceBaseRevision": "1f1632e1e2333f1379f6d21b8525967c61ec7275",
+  "sourceBaseRevision": "f94269cdf1ba96a6269c18357c9b78a526a6184f",
   "turboVersion": "2.11.10",
   "counts": {
     "workspaces": 190,
@@ -17,7 +17,7 @@
     }
   },
   "provenance": {
-    "censusSha256": "a02cab8545b9824e44f5577aabaef4ee07a0f63e9d660fdfb0100e40467dc712",
+    "censusSha256": "b73f14ab056ac550168343be8717fbb557b0c1b20224eddedf89770a23001ec8",
     "priorPopulationSha256": "7da50ea321ead15e45d1b59f20ef38125be241af44709f1cc9035c82c774bd80",
     "qualificationLedgerSha256": "13067bf343f413b4cc99b4cefca3ce7d094a1f09247a54ffc20114e766d4d2bb",
     "recipeSha256": "e0ae5adb9d1aed84dc64770825abd4eb67528d5326dd0c71fc8adee2cd1c3911",
@@ -6524,8 +6524,8 @@
       "dependencies": [
         "//#lint:policy-fingerprint"
       ],
-      "observedInputCount": 31441,
-      "observedInputsDigest": "5705e2f84e05151dd9630c634b2dd4859e6e9f2954ba8b51c703dd60c2908217",
+      "observedInputCount": 31450,
+      "observedInputsDigest": "c83218d9f15b1cdeb7f88aaa56b3e084777c5cf15e39796b4d81532f0d9e4c44",
       "priorCommandTextUnchanged": true,
       "priorSemanticProfileIdsForReview": [
         "shell-expression"
@@ -6544,8 +6544,8 @@
       "dependencies": [
         "//#lint:policy-fingerprint"
       ],
-      "observedInputCount": 31441,
-      "observedInputsDigest": "5705e2f84e05151dd9630c634b2dd4859e6e9f2954ba8b51c703dd60c2908217",
+      "observedInputCount": 31450,
+      "observedInputsDigest": "c83218d9f15b1cdeb7f88aaa56b3e084777c5cf15e39796b4d81532f0d9e4c44",
       "priorCommandTextUnchanged": true,
       "priorSemanticProfileIdsForReview": [
         "shell-expression"
@@ -6564,8 +6564,8 @@
       "dependencies": [
         "//#lint:policy-fingerprint"
       ],
-      "observedInputCount": 31135,
-      "observedInputsDigest": "312a8333096c864767db0ed968dab52a92f39b5dab7257966daddc2bd3d7872b",
+      "observedInputCount": 31144,
+      "observedInputsDigest": "3c7e2a871086cf0e180bb510919ff14770e31dc17b770dcf1a7199602679a4db",
       "priorCommandTextUnchanged": true,
       "priorSemanticProfileIdsForReview": [
         "repository-dispatch"
@@ -6584,8 +6584,8 @@
       "dependencies": [
         "//#lint:policy-fingerprint"
       ],
-      "observedInputCount": 31441,
-      "observedInputsDigest": "5705e2f84e05151dd9630c634b2dd4859e6e9f2954ba8b51c703dd60c2908217",
+      "observedInputCount": 31450,
+      "observedInputsDigest": "c83218d9f15b1cdeb7f88aaa56b3e084777c5cf15e39796b4d81532f0d9e4c44",
       "priorCommandTextUnchanged": true,
       "priorSemanticProfileIdsForReview": [
         "shell-expression"
@@ -6604,8 +6604,8 @@
       "dependencies": [
         "//#lint:policy-fingerprint"
       ],
-      "observedInputCount": 31441,
-      "observedInputsDigest": "5705e2f84e05151dd9630c634b2dd4859e6e9f2954ba8b51c703dd60c2908217",
+      "observedInputCount": 31450,
+      "observedInputsDigest": "c83218d9f15b1cdeb7f88aaa56b3e084777c5cf15e39796b4d81532f0d9e4c44",
       "priorCommandTextUnchanged": true,
       "priorSemanticProfileIdsForReview": [
         "shell-expression"
@@ -6624,8 +6624,8 @@
       "dependencies": [
         "//#lint:policy-fingerprint"
       ],
-      "observedInputCount": 31441,
-      "observedInputsDigest": "5705e2f84e05151dd9630c634b2dd4859e6e9f2954ba8b51c703dd60c2908217",
+      "observedInputCount": 31450,
+      "observedInputsDigest": "c83218d9f15b1cdeb7f88aaa56b3e084777c5cf15e39796b4d81532f0d9e4c44",
       "priorCommandTextUnchanged": true,
       "priorSemanticProfileIdsForReview": [
         "shell-expression"
@@ -6644,8 +6644,8 @@
       "dependencies": [
         "//#lint:policy-fingerprint"
       ],
-      "observedInputCount": 31441,
-      "observedInputsDigest": "5705e2f84e05151dd9630c634b2dd4859e6e9f2954ba8b51c703dd60c2908217",
+      "observedInputCount": 31450,
+      "observedInputsDigest": "c83218d9f15b1cdeb7f88aaa56b3e084777c5cf15e39796b4d81532f0d9e4c44",
       "priorCommandTextUnchanged": true,
       "priorSemanticProfileIdsForReview": [
         "shell-expression"
@@ -6664,8 +6664,8 @@
       "dependencies": [
         "//#lint:policy-fingerprint"
       ],
-      "observedInputCount": 31441,
-      "observedInputsDigest": "5705e2f84e05151dd9630c634b2dd4859e6e9f2954ba8b51c703dd60c2908217",
+      "observedInputCount": 31450,
+      "observedInputsDigest": "c83218d9f15b1cdeb7f88aaa56b3e084777c5cf15e39796b4d81532f0d9e4c44",
       "priorCommandTextUnchanged": true,
       "priorSemanticProfileIdsForReview": [
         "shell-expression"
@@ -6684,8 +6684,8 @@
       "dependencies": [
         "//#lint:policy-fingerprint"
       ],
-      "observedInputCount": 31441,
-      "observedInputsDigest": "5705e2f84e05151dd9630c634b2dd4859e6e9f2954ba8b51c703dd60c2908217",
+      "observedInputCount": 31450,
+      "observedInputsDigest": "c83218d9f15b1cdeb7f88aaa56b3e084777c5cf15e39796b4d81532f0d9e4c44",
       "priorCommandTextUnchanged": true,
       "priorSemanticProfileIdsForReview": [
         "shell-expression"
@@ -6704,8 +6704,8 @@
       "dependencies": [
         "//#lint:policy-fingerprint"
       ],
-      "observedInputCount": 26737,
-      "observedInputsDigest": "c3b86510b8c12b191dbf6607c43aeeccdde46ea6b3a24652d6854b3e45529a80",
+      "observedInputCount": 26739,
+      "observedInputsDigest": "f7ecd4f4f303d243fdb3f821f52c9e40080170eafae821ad618c46f7d6723935",
       "priorCommandTextUnchanged": true,
       "priorSemanticProfileIdsForReview": [
         "repository-dispatch"
@@ -6725,7 +6725,7 @@
         "//#lint:policy-fingerprint"
       ],
       "observedInputCount": 756,
-      "observedInputsDigest": "485b01882c7f9537ee9fe97ed1bd5cff10789f3aeb6722bf1cd296c8341efbb1",
+      "observedInputsDigest": "245d4360a172a9af54ca3213da1fd5ce074e13209223903a09c8ad43fe4b5484",
       "priorCommandTextUnchanged": true,
       "priorSemanticProfileIdsForReview": [
         "repository-dispatch"
@@ -6783,8 +6783,8 @@
       "dependencies": [
         "//#lint:policy-fingerprint"
       ],
-      "observedInputCount": 31891,
-      "observedInputsDigest": "03891322166e29e41b06d8811b20d575e058651f811a47e0b144a84023545498",
+      "observedInputCount": 31893,
+      "observedInputsDigest": "ac5f51438a34ed93075c87d6e16e879e876aa70fa30734facd5554d9dee79afb",
       "priorCommandTextUnchanged": true,
       "priorSemanticProfileIdsForReview": [
         "repository-dispatch"
@@ -6803,8 +6803,8 @@
       "dependencies": [
         "//#lint:policy-fingerprint"
       ],
-      "observedInputCount": 31891,
-      "observedInputsDigest": "03891322166e29e41b06d8811b20d575e058651f811a47e0b144a84023545498",
+      "observedInputCount": 31893,
+      "observedInputsDigest": "ac5f51438a34ed93075c87d6e16e879e876aa70fa30734facd5554d9dee79afb",
       "priorCommandTextUnchanged": true,
       "priorSemanticProfileIdsForReview": [
         "repository-dispatch"
@@ -6904,7 +6904,7 @@
         "//#lint:policy-fingerprint"
       ],
       "observedInputCount": 2603,
-      "observedInputsDigest": "456cf2e9495cbd526686423b603d144c6637fbe6ed376dcefec535f62f13777c",
+      "observedInputsDigest": "639183f31b5a22a0eb8851c7b8d0a9b86d793f887a260590cb7adfd9886f32c5",
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
@@ -7020,7 +7020,7 @@
         "//#lint:policy-fingerprint"
       ],
       "observedInputCount": 17897,
-      "observedInputsDigest": "a6085e28c6dad2cc6f14e976f1bd071dc375b0a43c5cde71f8ea3e6b5b69897d",
+      "observedInputsDigest": "f293d4614bbab2a587b79075bf08d23c8b0027ac47f0f39030e883d65c1edb4e",
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
@@ -7150,7 +7150,7 @@
         "//#lint:policy-fingerprint"
       ],
       "observedInputCount": 713,
-      "observedInputsDigest": "0c6952850619dfedbb04ca2f862ae940da1ff9c4c723e5f13568ee615c0d9c6a",
+      "observedInputsDigest": "de7803c74af90a94483d552b73ce8f430417ba84b67f60d6882fe06eefd6e9c3",
       "priorCommandTextUnchanged": true,
       "priorSemanticProfileIdsForReview": [
         "repository-dispatch"
@@ -7169,8 +7169,8 @@
       "dependencies": [
         "//#lint:policy-fingerprint"
       ],
-      "observedInputCount": 44124,
-      "observedInputsDigest": "2ccaaf686f26138e25742e303dedc5c7bd8ec201bf3f71498db1418d0117d0bf",
+      "observedInputCount": 44135,
+      "observedInputsDigest": "93a7c14b3a18d1bbeb584ed0c3cc216c912931d98b69248160bd74be773a13cb",
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
@@ -7187,8 +7187,8 @@
       "dependencies": [
         "//#lint:policy-fingerprint"
       ],
-      "observedInputCount": 44124,
-      "observedInputsDigest": "2ccaaf686f26138e25742e303dedc5c7bd8ec201bf3f71498db1418d0117d0bf",
+      "observedInputCount": 44135,
+      "observedInputsDigest": "93a7c14b3a18d1bbeb584ed0c3cc216c912931d98b69248160bd74be773a13cb",
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
@@ -7205,8 +7205,8 @@
       "dependencies": [
         "//#lint:policy-fingerprint"
       ],
-      "observedInputCount": 26738,
-      "observedInputsDigest": "487eecb03c462cdd26a9765dbe26e05cd5eb64a94af4ebf273f136f57dc327a5",
+      "observedInputCount": 26740,
+      "observedInputsDigest": "69a559f45d9ccc4cc96c0ffa0ad1c16786fd98ebe7c60d4c93f631f39b1fc4bc",
       "priorCommandTextUnchanged": true,
       "priorSemanticProfileIdsForReview": [
         "repository-dispatch"
@@ -7246,7 +7246,7 @@
         "//#lint:policy-fingerprint"
       ],
       "observedInputCount": 17884,
-      "observedInputsDigest": "d6333242fd546710245e21a8a6de349604898996f0b323375dd4c20e01b5b594",
+      "observedInputsDigest": "40a28b827ada0e55ffe0fca012e36abc37931886e23cfdfa514a39ca158bae99",
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
@@ -7317,8 +7317,8 @@
       "commandDigest": "890b7cdbfaa2a80879f365cd054a8568f91ae11f1fc6b9fc34b245f14452bbd4",
       "configurationId": "a3ab689bfa769fd04547d5d4d2d94e0fb3a53aa59bba897c599e5dd64107faa1",
       "dependencies": [],
-      "observedInputCount": 27767,
-      "observedInputsDigest": "f2687fc61128eb899a2f6d4dfaa30994eb5ef402df30fa1e5cbd87f305bace5f",
+      "observedInputCount": 27776,
+      "observedInputsDigest": "5f5f0d71bde83e4bf93348d36b9c5dcc1ce1d4d84f6dd594de98431ea1685dad",
       "priorCommandTextUnchanged": true,
       "priorSemanticProfileIdsForReview": [
         "external-tool"
@@ -30509,8 +30509,8 @@
         "@beep/test-utils#audit",
         "@beep/utils#audit"
       ],
-      "observedInputCount": 117,
-      "observedInputsDigest": "e384b3ec0e0852605ebb1bb158a09b2a6389187b39a0874fc2c4418bab15fd5b",
+      "observedInputCount": 126,
+      "observedInputsDigest": "64dc87a966fbd6d79e80b67a52eb1bf937ae661dd38891c030159b5bfe64ea29",
       "priorCommandTextUnchanged": true,
       "priorSemanticProfileIdsForReview": [
         "compiler",
@@ -30538,8 +30538,8 @@
         "@beep/test-utils#build",
         "@beep/utils#build"
       ],
-      "observedInputCount": 119,
-      "observedInputsDigest": "014af999da6eff55b35d90cec79ef99b008a4cfc6c839f42bb99e329aa21fd7a",
+      "observedInputCount": 128,
+      "observedInputsDigest": "ed2beb83f684f2c9fe55c94e5cbfbe79a0cf64220a1245bc777ec9829a365959",
       "priorCommandTextUnchanged": true,
       "priorSemanticProfileIdsForReview": [
         "shell-expression"
@@ -30564,8 +30564,8 @@
         "@beep/test-utils#build",
         "@beep/utils#build"
       ],
-      "observedInputCount": 119,
-      "observedInputsDigest": "014af999da6eff55b35d90cec79ef99b008a4cfc6c839f42bb99e329aa21fd7a",
+      "observedInputCount": 128,
+      "observedInputsDigest": "ed2beb83f684f2c9fe55c94e5cbfbe79a0cf64220a1245bc777ec9829a365959",
       "priorCommandTextUnchanged": true,
       "priorSemanticProfileIdsForReview": [
         "compiler"
@@ -30609,8 +30609,8 @@
         "@beep/infra#transit",
         "@beep/repo-docgen#transit"
       ],
-      "observedInputCount": 114,
-      "observedInputsDigest": "6149bef754a5139e5429d2fa1af1360dd128729b2e16ecd9ae4cac46551509bc",
+      "observedInputCount": 123,
+      "observedInputsDigest": "dbeba4bce2b9667e56a0eeb3391690aba2fca9fbd62e2285ba9f0a53e548ad65",
       "priorCommandTextUnchanged": true,
       "priorSemanticProfileIdsForReview": [
         "docgen"
@@ -30627,8 +30627,8 @@
       "commandDigest": "02bb548bb04c0e92f7c5eab9e4f0ab3bd6bf936b841d659cad86d4d3d0ce7a1e",
       "configurationId": "84f228e336ede1884a3dc93c5e75ba52bc4f907863bcb57e3267e4ef031d46c1",
       "dependencies": [],
-      "observedInputCount": 123,
-      "observedInputsDigest": "95a950b0c9102f748a662d407849a3f176d46579d65a65946426d2dca655919f",
+      "observedInputCount": 132,
+      "observedInputsDigest": "b77d9c7b74e09dfe43144ace8eb8d433c8a94c0e82e70371b48a2c24553abf6d",
       "priorCommandTextUnchanged": true,
       "priorSemanticProfileIdsForReview": [
         "source-check"
@@ -30672,8 +30672,8 @@
       "commandDigest": "02bb548bb04c0e92f7c5eab9e4f0ab3bd6bf936b841d659cad86d4d3d0ce7a1e",
       "configurationId": "062b7caa24c2ae82e8a4de98c66c795ea949108dc3a49365dd09f6c21e8392ed",
       "dependencies": [],
-      "observedInputCount": 112,
-      "observedInputsDigest": "a642f4a67e7799d92e33cebd8b8660bbca0abcd9bcc2076971216fe43dbc11c8",
+      "observedInputCount": 121,
+      "observedInputsDigest": "8663514df5b8ea12b8a90e7269e60a22fc025b1c8903c1df63e40f31a9c42d46",
       "priorCommandTextUnchanged": true,
       "priorSemanticProfileIdsForReview": [
         "source-fix"
@@ -30765,8 +30765,8 @@
         "@beep/utils#transit",
         "@beep/utils#transit"
       ],
-      "observedInputCount": 118,
-      "observedInputsDigest": "880e72878105dace0c6c432eb3fe15caf4b95091eb3e296a55a3cbd907257f72",
+      "observedInputCount": 127,
+      "observedInputsDigest": "d45834b306dcefadfba3d4cc263adbaee590e67ced4c848b37bb785f77b175de",
       "priorCommandTextUnchanged": true,
       "priorSemanticProfileIdsForReview": [
         "shell-expression",

@@ -165,6 +165,14 @@
           "status": "passed"
         },
         "nativeCheckpointSourceHashesUnchanged": true
+      },
+      "postAdapterMainIntegration": {
+        "head": "f94269cdf1ba96a6269c18357c9b78a526a6184f",
+        "componentSourceBindingsUnchanged": true,
+        "lintSeconds": 11.9,
+        "checkSeconds": 22.3,
+        "status": "passed",
+        "census": "Rerun after adapter main integration;190workspaces/2571executable computations. All raw native evidence, retained conformance, source/test and merged SPEC bindings verified."
       }
     }
   },
