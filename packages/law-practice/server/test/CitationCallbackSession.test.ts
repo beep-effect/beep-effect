@@ -1,5 +1,5 @@
 import { fileURLToPath } from "node:url";
-import { CitationMentionId } from "@beep/law-practice-domain/values";
+import { Citation, CitationDetachedId, CitationGroupMember, CitationMentionId } from "@beep/law-practice-domain/values";
 import {
   CitationCallbackDictionary,
   CitationCallbackFailure,
@@ -46,6 +46,7 @@ import type {
 } from "@beep/law-practice-server/_test/Citation/CallbackSession";
 
 const Corpus = S.Struct({ schemaVersion: S.tag("citation-custom-resolution-observations/v1"), cases: S.Array(Row) });
+const member = (mentionId: CitationMentionId) => CitationGroupMember.cases.Mention.make({ mentionId });
 const staleId = () => CitationMentionId.make(`cm1:${Str.repeat(64)("f")}`);
 const fail = () => CitationCallbackFailure.make({ reason: "callback-failed" });
 const emptyCallbacks = CitationResolutionCallbacks.of({
@@ -123,7 +124,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
       const callbacks = CitationResolutionCallbacks.of({
         ...emptyCallbacks,
         id: Effect.fn("CallbackTest.invalid")(function* () {
-          yield* dictionary.allocate([CitationMentionId.make(`cm1:${Str.repeat(64)("f")}`)]);
+          yield* dictionary.allocate([member(CitationMentionId.make(`cm1:${Str.repeat(64)("f")}`))]);
           return { resource: none() };
         }),
       });
@@ -144,8 +145,10 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
     Effect.gen(function* () {
       const prepared = yield* prepareCitationResolution(yield* controls());
       const work = yield* makeCitationResolutionWork(prepared.limits);
-      const first = A.getUnsafe(prepared.mentions, 0).id;
-      const second = A.getUnsafe(prepared.mentions, 1).id;
+      const firstId = A.getUnsafe(prepared.mentions, 0).id;
+      const first = member(firstId);
+      const secondId = A.getUnsafe(prepared.mentions, 1).id;
+      const second = member(secondId);
       const dictionary = yield* makeCitationCallbackDictionary(prepared).pipe(
         Effect.provideService(CitationResolutionWork, work)
       );
@@ -165,7 +168,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
       yield* dictionary.set(other, list);
       expect(yield* dictionary.get(other)).toBe(list);
       Reflect.set(list, "slot", 999);
-      yield* dictionary.appendCurrent(base, second);
+      yield* dictionary.appendCurrent(base, secondId);
       const snapshot = yield* dictionary.read;
       expect(A.map(snapshot, (group) => group.members)).toEqual([
         [first, second],
@@ -181,7 +184,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
       expect(A.getUnsafe(yield* dictionary.read, 0).members).toEqual([first, second]);
       const fresh = yield* dictionary.get(base);
       expect(fresh).not.toBe(list);
-      yield* Effect.all([dictionary.appendCurrent(base, first), dictionary.appendCurrent(base, second)], {
+      yield* Effect.all([dictionary.appendCurrent(base, firstId), dictionary.appendCurrent(base, secondId)], {
         concurrency: "unbounded",
       });
       expect(A.getUnsafe(yield* dictionary.read, 1).members).toEqual([first, second]);
@@ -203,7 +206,8 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
       );
       const base = yield* resource("base");
       const other = yield* resource("other");
-      const first = A.getUnsafe(prepared.mentions, 0).id;
+      const firstId = A.getUnsafe(prepared.mentions, 0).id;
+      const first = member(firstId);
       let calls = 0;
       const callbacks = CitationResolutionCallbacks.of({
         ...emptyCallbacks,
@@ -272,6 +276,96 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
     })
   );
 
+  it.effect("keeps detached object identity separate from semantic equality and snapshots before hashing", () =>
+    Effect.gen(function* () {
+      const input = yield* context(
+        Row.make({
+          name: "detached-ownership",
+          kinds: ["case", "id"],
+          pages: {},
+          bindings: {},
+          events: [],
+          outcome: { status: "value", groups: [] },
+        })
+      );
+      const prepared = yield* prepareCitationResolution(input);
+      const work = yield* makeCitationResolutionWork(prepared.limits);
+      const codec = S.fromJsonString(Citation);
+      const sourceCitation = A.getUnsafe(prepared.mentions, 0).citation;
+      const wire = yield* S.encodeEffect(codec)(sourceCitation);
+      const model = yield* S.decodeEffect(codec)(wire);
+      const equalModel = yield* S.decodeEffect(codec)(wire);
+      const crypto = yield* Crypto.Crypto;
+      let hashes = 0;
+      const dictionary = yield* makeCitationCallbackDictionary(prepared).pipe(
+        Effect.provideService(CitationResolutionWork, work),
+        Effect.provideService(
+          Crypto.Crypto,
+          Crypto.make({
+            randomBytes: (size) => new Uint8Array(size),
+            digest: (algorithm, bytes) =>
+              Effect.suspend(() => {
+                hashes += 1;
+                if (hashes === 1 && model.type === "case")
+                  Reflect.set(model.metadata, "plaintiff", O.some("changed during hash"));
+                return crypto.digest(algorithm, bytes);
+              }),
+          })
+        )
+      );
+      yield* dictionary.start;
+      const first = yield* dictionary.registerDetached(model);
+      const same = yield* dictionary.registerDetached(model);
+      const second = yield* dictionary.registerDetached(equalModel);
+      expect(first).toEqual(same);
+      expect(second).not.toEqual(first);
+      expect(hashes).toBe(2);
+      expect(yield* S.encodeEffect(codec)(yield* dictionary.citationOf(first))).toBe(wire);
+      expect(yield* S.encodeEffect(codec)(yield* dictionary.citationOf(second))).toBe(wire);
+      const objects = yield* dictionary.detachedCitations;
+      expect(objects).toHaveLength(2);
+      expect(A.map(objects, (object) => CitationGroupMember.cases.Detached.make({ detachedId: object.id }))).toEqual([
+        first,
+        second,
+      ]);
+      expect(A.every(objects, (object) => !("anchor" in object) && !("mentionId" in object))).toBe(true);
+      Reflect.set(A.getUnsafe(objects, 0), "citation", A.getUnsafe(prepared.mentions, 1).citation);
+      expect(yield* S.encodeEffect(codec)(yield* dictionary.citationOf(first))).toBe(wire);
+      const unknown = CitationGroupMember.cases.Detached.make({
+        detachedId: CitationDetachedId.make(`cd1:${Str.repeat(64)("f")}`),
+      });
+      expect((yield* Effect.flip(dictionary.citationOf(unknown))).reason).toBe("invalid-input");
+      expect((yield* Effect.flip(dictionary.allocate([unknown]))).reason).toBe("invalid-input");
+      yield* dictionary.close;
+      expect((yield* Effect.flip(dictionary.citationOf(first))).reason).toBe("invalid-input");
+      expect((yield* Effect.flip(dictionary.registerDetached(equalModel))).reason).toBe("invalid-input");
+    })
+  );
+
+  it.effect("charges detached objects against the shared node ceiling without fabricating physical mentions", () =>
+    Effect.gen(function* () {
+      const input = yield* controls();
+      const prepared = yield* prepareCitationResolution({ ...input, limits: { ...input.limits, mentions: 3 } });
+      const work = yield* makeCitationResolutionWork(prepared.limits);
+      const dictionary = yield* makeCitationCallbackDictionary(prepared).pipe(
+        Effect.provideService(CitationResolutionWork, work)
+      );
+      yield* dictionary.start;
+      const model = A.getUnsafe(prepared.mentions, 0).citation;
+      const codec = S.fromJsonString(Citation);
+      const copy = yield* S.decodeEffect(codec)(yield* S.encodeEffect(codec)(model));
+      const reference = yield* dictionary.registerDetached(model);
+      expect(yield* dictionary.registerDetached(model)).toEqual(reference);
+      expect((yield* Effect.flip(dictionary.registerDetached(copy))).reason).toBe("limit-exceeded");
+      expect(yield* dictionary.detachedCitations).toHaveLength(1);
+      expect(prepared.mentions).toHaveLength(2);
+      const resourceValue = yield* resource("detached");
+      yield* dictionary.set(resourceValue, yield* dictionary.allocate([reference, reference]));
+      expect(A.getUnsafe(yield* dictionary.read, 0).members).toEqual([reference, reference]);
+      yield* dictionary.close;
+    })
+  );
+
   it.effect(
     "matches all 18 source dispatch/state observations with production defaults and captured custom adapters",
     () =>
@@ -294,7 +388,11 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
           const input = yield* context(row);
           const prepared = yield* prepareCitationResolution(input);
           const work = yield* makeCitationResolutionWork(prepared.limits);
+          const dictionary = yield* makeCitationCallbackDictionary(prepared).pipe(
+            Effect.provideService(CitationResolutionWork, work)
+          );
           const defaults = yield* makeDefaultCitationResolutionCallbacks(prepared).pipe(
+            Effect.provideService(CitationCallbackDictionary, dictionary),
             Effect.provideService(CitationResolutionWork, work)
           );
           const crypto = yield* Crypto.Crypto;
@@ -308,7 +406,9 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
             );
           const groupValue = (group: CitationCallbackGroup): S.Json => ({
             resource: presentation(group.resource),
-            members: A.map(group.members, indexOf),
+            members: A.map(group.members, (reference) =>
+              reference._tag === "Mention" ? indexOf(reference.mentionId) : -1
+            ),
           });
           let events = A.empty<S.Json>();
           const behavior = Effect.fn("CallbackTest.behavior")(function* (
@@ -332,7 +432,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
                 slot,
                 mention: indexOf(arg.mention.id),
                 fulls: A.map(arg.fulls, (entry) => ({
-                  mention: indexOf(entry.mentionId),
+                  mention: entry.citation._tag === "Mention" ? indexOf(entry.citation.mentionId) : -1,
                   resource: presentation(entry.resource),
                 })),
               });
@@ -382,6 +482,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
           });
           const result = yield* runPreparedCitationCallbackSession(prepared).pipe(
             Effect.provideService(CitationResolutionWork, work),
+            Effect.provideService(CitationCallbackDictionary, dictionary),
             Effect.provideService(CitationResolutionCallbacks, callbacks),
             Effect.result
           );

@@ -948,6 +948,23 @@ instead of silently splitting delivery or weakening scope.
   Reverse runtime protocol, adapters, tests and this checkpoint together if
   retired; do not keep array replacement as a competing dictionary path.
 
+- **2026-10-29 detached callback objects:** prior-context entries and group
+  members use the domain's explicit mention/detached references. The operation
+  owner registers detached semantic objects, snapshots their values, reuses a
+  token for the same registered object and distinguishes equal-but-distinct
+  objects. Its private cd1 preimage is the versioned citation-detached/v1 tag,
+  captured source identity, engine artifact and allocation ordinal. It is
+  document-local object identity, not content equality, a persisted entity or
+  a source capability. Semantic objects never receive fake cm1 tokens/anchors.
+  Default short/supra/reference/Id. helpers resolve semantic references through
+  the same captured owner; metadata lookup accepts the existing Citation union.
+  All sixteen frozen mutation scenes now match all thirty-eight events and
+  final groups, including detached prior-full replacement/append and detached
+  returned membership. Structural receipt proof remains separate. Prior-full
+  state still uses explicit list transitions; its retained-list alias identity
+  and arbitrary model mutation need further source/target proof before final
+  projection/public port publication. No exhaustive row is promoted here.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from

@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationComponents, FullCitation } from "@beep/law-practice-domain/values";
+import { Citation, CitationComponents, FullCitation } from "@beep/law-practice-domain/values";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
@@ -19,17 +19,19 @@ import * as Struct from "effect/Struct";
 import * as Tuple from "effect/Tuple";
 import { CitationAuthorityIdentityInput } from "./AuthorityIdentity.ts";
 import {
+  CitationCallbackDictionary,
   CitationCallbackFailure,
   CitationCallbackResource,
   CitationResolutionCallbacks,
   CitationResolutionWork,
+  makeCitationCallbackDictionary,
   makeCitationResolutionWork,
   runPreparedCitationCallbackSession,
 } from "./CallbackSession.ts";
 import { prepareCitationResolution } from "./ResolutionInput.ts";
 import { hasInvalidCitationPinCite, stripCitationAntecedentPunctuation } from "./ResolverText.ts";
 import { CitationResourceIdentity, makeCitationResourceAuthorityId } from "./ResourceIdentity.ts";
-import type { Citation, CitationMention, CitationMentionId } from "@beep/law-practice-domain/values";
+import type { CitationMention } from "@beep/law-practice-domain/values";
 import type { CitationCallbackFull, CitationFullsCallbackInput, CitationIdCallbackInput } from "./CallbackSession.ts";
 import type { PreparedCitationResolution } from "./ResolutionInput.ts";
 
@@ -56,11 +58,10 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
 ) {
   const crypto = yield* Crypto.Crypto;
   const work = yield* CitationResolutionWork;
-  const byMention = HashMap.fromIterable(A.map(prepared.mentions, (mention) => Tuple.make(mention.id, mention)));
+  const dictionary = yield* CitationCallbackDictionary;
+  if (dictionary.owner !== prepared || dictionary.work !== work) return yield* invalid();
   const editions = HashMap.fromIterable(A.map(prepared.editions, (edition) => Tuple.make(edition.edition, edition)));
-  const mentionOf = Effect.fn("Citation.defaultMention")(function* (id: CitationMentionId) {
-    return yield* Effect.fromOption(HashMap.get(byMention, id), invalid);
-  });
+  const citationOf = dictionary.citationOf;
   const selected = Effect.fn("Citation.defaultSelectedEdition")(function* (citation: Citation) {
     if (!isFull(citation) && citation.type !== "shortFormCase") return O.none();
     const edition = O.flatMap(citation.publication.selectedEdition, (id) => HashMap.get(editions, id));
@@ -108,12 +109,12 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
     const stripped = stripCitationAntecedentPunctuation(guess);
     for (const entry of fulls) {
       yield* work.step;
-      if (partyMatches((yield* mentionOf(entry.mentionId)).citation, stripped)) found = A.append(found, entry);
+      if (partyMatches(yield* citationOf(entry.citation), stripped)) found = A.append(found, entry);
     }
     return found;
   });
-  const metadataValues = Effect.fn("Citation.defaultMetadataValues")(function* (citation: FullCitation) {
-    const wire = yield* S.encodeEffect(FullCitation)(citation);
+  const metadataValues = Effect.fn("Citation.defaultMetadataValues")(function* (citation: Citation) {
+    const wire = yield* S.encodeEffect(Citation)(citation);
     const metadata = yield* S.decodeEffect(S.Record(S.String, S.Unknown))(wire.metadata);
     let values = A.filter(R.values(metadata), S.is(S.NonEmptyString));
     if (citation.type === "case" && O.isSome(citation.metadata.court)) {
@@ -147,7 +148,7 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
         let candidates = A.empty<CitationCallbackFull>();
         for (const entry of input.fulls) {
           yield* work.step;
-          const prior = (yield* mentionOf(entry.mentionId)).citation;
+          const prior = yield* citationOf(entry.citation);
           if (prior.type !== "case") continue;
           const previous = yield* reporter(prior);
           if (!current.defined || !previous.defined) return yield* invalid();
@@ -192,8 +193,7 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
         if (A.length(names) > 0)
           for (const entry of input.fulls) {
             yield* work.step;
-            const prior = (yield* mentionOf(entry.mentionId)).citation;
-            if (!isFull(prior)) return yield* invalid();
+            const prior = yield* citationOf(entry.citation);
             const values = yield* metadataValues(prior);
             if (A.some(names, (name) => A.contains(values, name))) candidates = A.append(candidates, entry);
           }
@@ -210,9 +210,9 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
           yield* work.step;
           if ((yield* key(group.resource)) !== id) continue;
           const first = yield* Effect.fromOption(A.head(group.members), invalid);
-          const prior = yield* mentionOf(first);
+          const prior = yield* citationOf(first);
           const bad = yield* hasInvalidCitationPinCite({
-            fullCitation: prior.citation,
+            fullCitation: prior,
             idCitation: input.mention.citation,
           }).pipe(Effect.mapError(() => CitationCallbackFailure.make({ reason: "callback-failed" })));
           return { resource: bad ? none() : input.last };
@@ -239,11 +239,16 @@ export const runDefaultCitationCallbackSession = Effect.fn("Citation.runDefaultC
     Effect.mapError((error) => CitationCallbackFailure.make({ reason: error.reason }))
   );
   const work = yield* makeCitationResolutionWork(prepared.limits);
+  const dictionary = yield* makeCitationCallbackDictionary(prepared).pipe(
+    Effect.provideService(CitationResolutionWork, work)
+  );
   const callbacks = yield* makeDefaultCitationResolutionCallbacks(prepared).pipe(
+    Effect.provideService(CitationCallbackDictionary, dictionary),
     Effect.provideService(CitationResolutionWork, work)
   );
   return yield* runPreparedCitationCallbackSession(prepared).pipe(
     Effect.provideService(CitationResolutionCallbacks, callbacks),
+    Effect.provideService(CitationCallbackDictionary, dictionary),
     Effect.provideService(CitationResolutionWork, work)
   );
 });

@@ -1,8 +1,10 @@
 import { fileURLToPath } from "node:url";
 import { citationAuthorityMentionIds } from "@beep/law-practice-domain/values";
 import {
+  CitationCallbackDictionary,
   CitationResolutionCallbacks,
   CitationResolutionWork,
+  makeCitationCallbackDictionary,
   makeCitationResolutionWork,
   runPreparedCitationCallbackSession,
 } from "@beep/law-practice-server/_test/Citation/CallbackSession";
@@ -56,7 +58,9 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("production defau
             A.map(result.mentions, (mention, index) => Tuple.make(mention.id, index))
           );
           const groups = A.map(result.groups, (group) =>
-            A.map(group.members, (id) => O.getOrElse(HashMap.get(indices, id), () => -1))
+            A.map(group.members, (reference) =>
+              reference._tag === "Mention" ? O.getOrElse(HashMap.get(indices, reference.mentionId), () => -1) : -1
+            )
           );
           expect(groups, row.name).toEqual(row.outcome.groups);
           const document = yield* resolveCitationMentions(input);
@@ -87,7 +91,9 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("production defau
             A.map(result.mentions, (mention, index) => Tuple.make(mention.id, index))
           );
           const groups = A.map(result.groups, (group) =>
-            A.map(group.members, (id) => O.getOrElse(HashMap.get(indices, id), () => -1))
+            A.map(group.members, (reference) =>
+              reference._tag === "Mention" ? O.getOrElse(HashMap.get(indices, reference.mentionId), () => -1) : -1
+            )
           );
           if (row.context.outcome.status !== "value") return yield* Effect.die("Expected source groups");
           expect(groups, row.context.name).toEqual(row.context.outcome.groups);
@@ -131,12 +137,18 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("production defau
         ...prepared.limits,
         resolutionIterations: prepared.limits.resolutionIterations - 1,
       });
+      const goodWork = yield* makeCitationResolutionWork(prepared.limits);
+      const dictionary = yield* makeCitationCallbackDictionary(prepared).pipe(
+        Effect.provideService(CitationResolutionWork, goodWork)
+      );
       const callbacks = yield* makeDefaultCitationResolutionCallbacks(prepared).pipe(
-        Effect.provideService(CitationResolutionWork, mismatch)
+        Effect.provideService(CitationCallbackDictionary, dictionary),
+        Effect.provideService(CitationResolutionWork, goodWork)
       );
       const failed = yield* Effect.flip(
         runPreparedCitationCallbackSession(prepared).pipe(
           Effect.provideService(CitationResolutionWork, mismatch),
+          Effect.provideService(CitationCallbackDictionary, dictionary),
           Effect.provideService(CitationResolutionCallbacks, callbacks)
         )
       );

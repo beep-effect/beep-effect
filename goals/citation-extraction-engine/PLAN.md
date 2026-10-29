@@ -62,13 +62,13 @@ contexts and all 53 callback events through captured custom adapters and
 production defaults. Production default callbacks also pass all 76 default
 contexts with shared, operation-local work accounting. General host/alias/model
 mutation and final document/service integration remain open. Sixteen new
-mutation observations expose provisional graph/alias restrictions; ten final
-group-value cases and all three alias/retained-dictionary cases now match the
-session, including all 30 callback events and list identity slots across 13
-scenes. All sixteen final snapshots have
-structural codec representation proof, including alias references and detached
-objects. Detached execution, general host/model mutation, production identity issuers
-and final projection stay open.
+mutation observations now have complete focused target execution: all 16
+scenes, 38 input occurrences, 38 events and final groups match, including
+shared list slots, retained dictionaries and detached member/prior-full
+references. Structural codec proof also preserves every final snapshot.
+Detached objects use private scoped object tokens and carry no source anchors
+or occurrence IDs. Prior-full-list alias identity, general host/model mutation,
+production document identity integration and final projection stay open.
 Exhaustive resolver/custom-resource proof, live artifact integration,
 Bluebook codecs and extension adoption/schema proof stay open.
 The remaining 37 provisional contract directories are retired; their donor obligations

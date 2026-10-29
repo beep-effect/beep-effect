@@ -156,7 +156,9 @@ shared list references and detached semantic objects separately from resolution
 decisions. See [ordered document membership evidence](
 ./history/evidence/2026-10-29-ordered-document-membership.md). Structural codec
 proof covers all sixteen mutation snapshots. The private session now matches
-all thirteen known-input dictionary/list scenes and their thirty events; see
+all sixteen dictionary/list/detached scenes and their thirty-eight events; see
 [callback dictionary evidence](
-./history/evidence/2026-10-29-callback-dictionary.md). Detached callback execution,
-general host/model mutation and final session projection remain open.
+./history/evidence/2026-10-29-callback-dictionary.md) and
+[detached execution evidence](
+./history/evidence/2026-10-29-detached-callback-objects.md). Prior-full-list alias
+identity, general host/model mutation and final session projection remain open.
