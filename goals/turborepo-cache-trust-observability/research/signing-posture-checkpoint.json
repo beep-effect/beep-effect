@@ -7,7 +7,7 @@
     "packages/tooling/tool/cli/src/commands/Cache/Cache.fingerprint.ts": "36c69fa69e539bcacd74cd2bc72b6f601e821ff5c4567eecc0b7ff7c90f5a955",
     "packages/tooling/tool/cli/src/commands/Cache/Cache.runtime.ts": "169305ddc0277f3b330d7a33987111bf8cb4426dd5976cd029aa91865356887b",
     "packages/tooling/tool/cli/src/commands/Cache/Cache.schemas.ts": "0eae36411ca41a1efcff68d1496a64cc994f333aa47252a7150056a52a743a53",
-    "packages/tooling/tool/cli/src/commands/Cache/index.ts": "b13417b7f7c7e0310f3742572dad5d5d031a48f88a15df6ddef8cb215ceba593",
+    "packages/tooling/tool/cli/src/commands/Cache/index.ts": "20a98cb37799d61ac63e4849ea9c0f45b06b884d7a335686dc49ca4b91d96803",
     "packages/tooling/tool/cli/src/internal/cli/EnvConfig.ts": "1bc317fd8bf390eff0d784d386cff6a8c31b198c1e6be402dd5cff63e1f108bc",
     "packages/tooling/tool/cli/src/internal/cli/TurboCache.ts": "aa92ddde38c13cb296232176fc3244410d3f7dddd6a2025f5d6053b05165776e",
     "packages/tooling/tool/cli/src/test/Cache.test-kit.ts": "fb627283d37048b3d4ccdae4feb9c5b61c6f71c5368e923d828856eddd5f8e01",
@@ -111,5 +111,34 @@
       "checkSeconds": 22.3,
       "status": "passed"
     }
+  },
+  "postResponseSafetyMainIntegration": {
+    "head": "26741c0bf9cc8827a15c7bb7c51e15d16c09ee3b",
+    "sourceSha256": {
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts": "d443672935b5ae9c4bfacb9672180d3c70dfd2faa6b885e0bae06d91a67c2573",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.fingerprint.ts": "36c69fa69e539bcacd74cd2bc72b6f601e821ff5c4567eecc0b7ff7c90f5a955",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.runtime.ts": "169305ddc0277f3b330d7a33987111bf8cb4426dd5976cd029aa91865356887b",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.schemas.ts": "0eae36411ca41a1efcff68d1496a64cc994f333aa47252a7150056a52a743a53",
+      "packages/tooling/tool/cli/src/commands/Cache/index.ts": "20a98cb37799d61ac63e4849ea9c0f45b06b884d7a335686dc49ca4b91d96803",
+      "packages/tooling/tool/cli/src/internal/cli/EnvConfig.ts": "1bc317fd8bf390eff0d784d386cff6a8c31b198c1e6be402dd5cff63e1f108bc",
+      "packages/tooling/tool/cli/src/internal/cli/TurboCache.ts": "aa92ddde38c13cb296232176fc3244410d3f7dddd6a2025f5d6053b05165776e",
+      "packages/tooling/tool/cli/src/test/Cache.test-kit.ts": "fb627283d37048b3d4ccdae4feb9c5b61c6f71c5368e923d828856eddd5f8e01",
+      "packages/tooling/tool/cli/test/cache-runtime.test.ts": "51ed48a9451bdbe8b9c7b93db514e375af1eb8dc1a91dff3d2f8c91c07ed4b25",
+      "packages/tooling/tool/cli/test/shared-internals.test.ts": "46d73e193c0fbbd16ce01dcb784552d0f0b5e92df41b051a98877a8038f7e2c5",
+      "packages/tooling/tool/cli/test/turbo-cache.test.ts": "595b11dde0faf0261841f2168d169d6af80d7f1413bf9eeee0944cc7ea10b52e"
+    },
+    "changedSinceFullAudit": [
+      "packages/tooling/tool/cli/src/commands/Cache/index.ts"
+    ],
+    "change": "Main adds only the independently audited media-type classifier export to the Cache barrel; signing implementation and native-control source bytes are unchanged. The full audit above retains its original source map.",
+    "selectedFiles": 5,
+    "selectedTestsPassed": 156,
+    "seconds": 18.27,
+    "packageQuick": {
+      "lintSeconds": 5.2,
+      "checkSeconds": 12.2,
+      "status": "passed"
+    },
+    "scope": "Component integration only; no production trust or task qualification."
   }
 }
