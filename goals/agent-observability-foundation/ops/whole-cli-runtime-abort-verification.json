@@ -1442,5 +1442,11 @@
     "packages/tooling/tool/cli/vitest.config.ts": "6ee012f6e7ca10a5eabe54a232b5668dd57cdb63a909e3698c31ee4f8ed58561"
   },
   "passingGate": false,
-  "next": "Keep passed scoped checks; use canonical delivery gates and hosted verification. Attribute runtime crash before any repeat."
+  "next": "Keep passed scoped checks; use canonical delivery gates and hosted verification. Attribute runtime crash before any repeat.",
+  "resourceAttributionFollowup": {
+    "observedAt": "2026-10-29T19:34:12.183199+00:00",
+    "kernelEvidence": "2026-10-29 06:32:39 CDT: fork rejected by pids controller in exact foundation-review-whole-cli-quality.service",
+    "classification": "Process/thread limit exhaustion occurred during the failed whole-CLI run; not a kernel OOM",
+    "causalityLimit": "Same-service correlation does not independently prove the abort call site. Retry must capture phase and pids counters with an adequate bounded task allowance before attributing to Bun alone."
+  }
 }

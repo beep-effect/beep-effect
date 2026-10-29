@@ -274,6 +274,25 @@ export const makeTranscriptDiscovery = Effect.fn("AiMetrics.makeTranscriptDiscov
         read: { ...root.read, pending: root.candidates - root.read.assessed },
       })),
     });
+  const candidateFromFile = Effect.fnUntraced(function* (root: RootRuntime, relative: string) {
+    const candidate = path.resolve(root.path, relative);
+    if (!Str.startsWith(`${root.path}${path.sep}`)(candidate)) return yield* failure("changed");
+    const name = path.basename(candidate);
+    if (!Str.endsWith(".jsonl")(name) || (root.source !== "claude" && !Str.startsWith("rollout-")(name)))
+      return O.none();
+    root.candidates += 1;
+    const pathHash = yield* hashPrivateIdentifier(candidate, O.some(salt)).pipe(
+      Effect.mapError(() => failure("unavailable"))
+    );
+    const observation = {
+      root,
+      cycle: root.cycle,
+      sourceId: yield* hashPrivateIdentifier(`transcript-source/v1:${root.source}:${pathHash}`, O.some(salt)).pipe(
+        Effect.mapError(() => failure("unavailable"))
+      ),
+    };
+    return O.some({ observation, source: { path: candidate, source: root.source, retired: false } });
+  });
   const next = Effect.gen(function* () {
     if (closed) return yield* failure("closed");
     const eligible = A.filter(roots, (root) => root.state !== "retired");
@@ -318,23 +337,10 @@ export const makeTranscriptDiscovery = Effect.fn("AiMetrics.makeTranscriptDiscov
         if (event.kind !== "directory-end") root.entries += 1;
         if (event.kind === "link") root.excludedLinks += 1;
         if (event.kind === "file") {
-          const candidate = path.resolve(root.path, event.relative);
-          if (!Str.startsWith(`${root.path}${path.sep}`)(candidate)) return yield* failure("changed");
-          const name = path.basename(candidate);
-          if (Str.endsWith(".jsonl")(name) && (root.source === "claude" || Str.startsWith("rollout-")(name))) {
-            root.candidates += 1;
-            const pathHash = yield* hashPrivateIdentifier(candidate, O.some(salt)).pipe(
-              Effect.mapError(() => failure("unavailable"))
-            );
-            observations = A.append(observations, {
-              root,
-              cycle: root.cycle,
-              sourceId: yield* hashPrivateIdentifier(
-                `transcript-source/v1:${root.source}:${pathHash}`,
-                O.some(salt)
-              ).pipe(Effect.mapError(() => failure("unavailable"))),
-            });
-            sources = A.append(sources, { path: candidate, source: root.source, retired: false });
+          const candidate = yield* candidateFromFile(root, event.relative);
+          if (O.isSome(candidate)) {
+            observations = A.append(observations, candidate.value.observation);
+            sources = A.append(sources, candidate.value.source);
           }
         }
       });

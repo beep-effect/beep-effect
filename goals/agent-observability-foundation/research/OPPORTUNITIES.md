@@ -304,3 +304,15 @@ and use canonical delivery/hosted verification rather than repeatedly launching
 the same broad check. A runtime failure must not be classified as memory
 exhaustion merely because the diagnostic also prints memory statistics.
 Receipt: ops/whole-cli-runtime-abort-verification.json.
+
+## Verification process limits — 2026-10-29
+
+The temporary verification guard capped tasks at 256. Kernel evidence identifies
+`fork rejected by pids controller` in the corrective PR final-check service,
+followed by analyzer launch failures and invalid envelopes. The earlier whole-CLI
+abort also has an exact-service process-limit event. These are resource-envelope
+failures; they are not valid quality results or evidence of kernel OOM. The
+corrective retry retains the same memory, CPU, host-headroom and runtime limits,
+raises only the temporary proof task allowance to 1024, and records peak task
+count and pids-limit events. Future proof receipts should capture these counters
+alongside memory so spawn failures cannot masquerade as source defects.

@@ -1,0 +1,72 @@
+{
+  "observedAt": "2026-10-29T19:42:33.583164+00:00",
+  "headBeforeCommit": "829da07ec55f8957336a15b65e67c9c86471c617",
+  "archive": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-discovery-structure-ylunim1x",
+  "sourceSha256": {
+    "packages/tooling/library/ai-metrics/src/transcript-discovery.ts": "60f2cbc1b43099cb40f602fe91023ebab5be91eea1a55f4eff06df07d2938c5d"
+  },
+  "artifacts": [
+    {
+      "file": "audit.repair-v16.combined.txt",
+      "sha256": "65eff5a7ae094d19db03d87ad7cfd912375aac6c515146d52282872abd299b7c",
+      "bytes": 74767
+    },
+    {
+      "file": "audit.repair-v16.json",
+      "sha256": "f5478d51582513d189a0ce14626772052dcfb532d1c7af206d2e54733c2e4ea3",
+      "bytes": 7513
+    },
+    {
+      "file": "foundation-discovery-before-candidate.ts",
+      "sha256": "a36be4d37f9859a5094d18cdbcb2695f3a4ca9dac9c9bb520689c31cf7f1ad3f",
+      "bytes": 20106
+    },
+    {
+      "file": "foundation-discovery-fallow-v16-guard.json",
+      "sha256": "0bce13e6bb78b0503c3b2fcdd819d993deee36f1c40dc23065b70e1599b472e5",
+      "bytes": 424
+    },
+    {
+      "file": "foundation-discovery-fallow-v16.log",
+      "sha256": "80732b15834de4992f29b8bc8ef2759d6ea024ad413515c40120fb97da183a93",
+      "bytes": 8027
+    },
+    {
+      "file": "foundation-discovery-quality-v1-guard.json",
+      "sha256": "292b9bbc1e9dbc6173230c06be7e0f7f944553ae4201862c1a203fd6ff78e63f",
+      "bytes": 425
+    },
+    {
+      "file": "foundation-discovery-quality-v1.log",
+      "sha256": "c71b37633fdd418de7c252d1dd25fe6b20f358ff56fa09e3a85b4d1418165a8d",
+      "bytes": 596
+    },
+    {
+      "file": "foundation-process-aware-job.py",
+      "sha256": "f69e4c76c0aa97dcf0163ce7a7962d84b51661fcbb9f037f08882857d2d0d2a3",
+      "bytes": 8054
+    }
+  ],
+  "packageVerification": "Full AI-metrics audit134.1s/docgen11.7s passed",
+  "review": "Independent Astra exact-source acceptance; DISCOVERY-CANDIDATE-STRUCTURE-REVIEW.md",
+  "staticAnalysis": {
+    "introducedComplexityFindings": 26,
+    "introducedDuplication": 0,
+    "inheritedAdjacentDuplication": 4,
+    "deadCode": 0,
+    "traversalOperationBefore": {
+      "cyclomatic": 14,
+      "cognitive": 13
+    },
+    "traversalOperationAfter": {
+      "cyclomatic": 11,
+      "cognitive": 9
+    },
+    "result": "Gate still fails; extraction reduces traversal complexity but does not clear its remaining estimated-coverage finding"
+  },
+  "limits": [
+    "Not full delivery proof",
+    "No baseline or threshold change",
+    "Recovery hold preserved"
+  ]
+}

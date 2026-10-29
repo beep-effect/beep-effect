@@ -1,5 +1,27 @@
 # Memory notification investigation — 2026-10-28
 
+## Process-limit follow-up — October 29, 14:35 CDT
+
+Cross-boot kernel records still contain nine OOM decisions: eight service-limit
+kills and one whole-system exhaustion event. None occurred during the latest
+final-check attempts. The screenshot remains matched to the deliberate 512 MiB
+proof. Routine verification retains explicit opt-in for that destructive test.
+
+A separate resource restriction was confirmed: the temporary final-check guard's
+256-task allowance caused the kernel to reject new workers. The retry uses a
+1024-task allowance while keeping the same memory/CPU/headroom/time limits and
+records task peaks and rejection counts. It has already reached 260 tasks,
+confirming that the old allowance was too small for this nested tool chain.
+The earlier whole-CLI abort has an exact-service process-limit event too;
+its crash cause must not be attributed to Bun alone without further evidence.
+
+At 14:34:52, available RAM was 34.0 GiB of 125.1 GiB, with 45.7 GiB of 48 GiB
+swap occupied. Ten-second full-memory-stall average was 0.14%. These are
+point-in-time measurements, not sustained-health or leak proof. No unrelated
+application, swap setting, or notification preference was changed. Evidence:
+`../ops/memory-notification-followup-20261029-process-limit.json`.
+
+
 ## Fresh follow-up — October 29, 13:15 CDT
 
 The cross-boot kernel query still contains nine distinct OOM decisions; none is

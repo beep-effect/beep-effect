@@ -1,20 +1,10 @@
 {
   "basis": {
-    "report": ".beep/fallow/audit.repair-v15.json",
-    "rawArchive": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-client-readback-structure-e3uh_lwe/audit.repair-v15.combined.txt",
-    "observedAt": "2026-10-29T19:17:34.678730+00:00"
+    "report": ".beep/fallow/audit.repair-v16.json",
+    "rawArchive": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-discovery-structure-ylunim1x/audit.repair-v16.combined.txt",
+    "observedAt": "2026-10-29T19:42:33.582854+00:00"
   },
   "complexity": [
-    {
-      "path": "packages/tooling/library/ai-metrics/src/transcript-discovery.ts",
-      "name": "operation",
-      "line": 293,
-      "cyclomatic": 14,
-      "cognitive": 13,
-      "line_count": 48,
-      "exceeded": "cognitive_crap",
-      "severity": "high"
-    },
     {
       "path": "packages/tooling/library/ai-metrics/src/git-root-evidence.ts",
       "name": "probe",
@@ -58,7 +48,7 @@
     {
       "path": "packages/tooling/library/ai-metrics/src/transcript-discovery.ts",
       "name": "recordReads",
-      "line": 350,
+      "line": 356,
       "cyclomatic": 12,
       "cognitive": 14,
       "line_count": 29,
@@ -92,6 +82,16 @@
       "cyclomatic": 11,
       "cognitive": 10,
       "line_count": 29,
+      "exceeded": "cognitive_crap",
+      "severity": "moderate"
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics/src/transcript-discovery.ts",
+      "name": "operation",
+      "line": 312,
+      "cyclomatic": 11,
+      "cognitive": 9,
+      "line_count": 35,
       "exceeded": "cognitive_crap",
       "severity": "moderate"
     },
@@ -198,10 +198,10 @@
     {
       "path": "packages/tooling/library/ai-metrics/src/transcript-discovery.ts",
       "name": "next",
-      "line": 277,
+      "line": 296,
       "cyclomatic": 9,
       "cognitive": 11,
-      "line_count": 107,
+      "line_count": 94,
       "exceeded": "cognitive",
       "severity": "moderate"
     },

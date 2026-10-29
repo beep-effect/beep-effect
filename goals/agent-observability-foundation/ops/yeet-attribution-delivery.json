@@ -1,0 +1,45 @@
+{
+  "observedAt": "2026-10-29T19:38:55.708596+00:00",
+  "purpose": "Separate repair for false cheap-gate failure attribution discovered during foundation verification",
+  "pullRequest": "https://github.com/beep-effect/beep-effect/pull/2362",
+  "worktree": "/home/elpresidank/YeeBois/projects/beep-effect-worktrees/yeet-cheap-gate-attribution",
+  "branch": "fix/yeet-cheap-gate-attribution",
+  "head": "04b53e034eae00853daf80db24227d2293fac7c6",
+  "archive": "/home/elpresidank/.local/state/beep/observation-proof-archive/yeet-cheap-gate-attribution-52g_5q7e",
+  "review": "Independent Astra accepted five exact source/test hashes archived in receipt.json",
+  "verification": "271 focused tests plus CLI quick lint/check passed; full local publication safely stopped on host pressure",
+  "publication": "Standing constrained-compute route after local-capacity hold exceeded ten minutes; draft with ready-for-heavy label",
+  "status": "Ready for review; Yeet added an empty reviewer re-request commit with identical tree. Review window and refreshed hosted checks pending.",
+  "reviewThreads": {
+    "unresolved": 0,
+    "hasNextPage": false,
+    "readAt": "2026-10-29T19:22:00Z"
+  },
+  "appAttachment": "attach_artifact attempted; Codex app tool transport closed",
+  "dependency": "Merge main only after PR2362 lands; do not copy its fix into foundation or merge its unlanded branch",
+  "limits": "No readiness, merge or foundation completion claim",
+  "finalCheckGuard": {
+    "ownedScopes": {},
+    "unit": "yeet-attribution-final-check-v3.service",
+    "profile": "bounded",
+    "memoryStopBytes": 8589934592,
+    "hostAvailableFloorBytes": 17179869184,
+    "initialAvailableBytes": 34805563392,
+    "peakObservedBytes": 7516446720,
+    "minimumAvailableBytes": 19733700608,
+    "stoppedFor": null,
+    "tasksMax": 1024,
+    "peakObservedTasks": 286,
+    "pidsLimitEvents": 0,
+    "exitCode": 0,
+    "orphanCleanup": []
+  },
+  "resourceCorrection": "Kernel-confirmed 256-task cap rejected forks; retry allowance 1024, peak286, zero rejections, unchanged memory limits",
+  "verifiedSourceHead": "e84ba8519163a13ea68beddeab5f3237f9214ad7",
+  "reviewWindow": "At least 20 minutes after ready/last push; not merge-ready yet",
+  "monitor": {
+    "jobId": "24507487-b499-4be3-8be6-df5ea7278601",
+    "unit": "beep-proof-24507487-b499-4be3-8be6-df5ea7278601.service",
+    "state": "submitted"
+  }
+}
