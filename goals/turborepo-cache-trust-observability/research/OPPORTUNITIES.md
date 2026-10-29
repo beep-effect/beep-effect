@@ -162,3 +162,13 @@ compiler version. The corrected drivers use the tracked source preparation and
 pin the actual installed compiler bin in child PATH, rather than relying on
 RUSTUP_TOOLCHAIN across shim/default differences. Rust1.96.0 passes48tests and
 the exact static executable passes all33process controls.
+
+### Reuse state after base integration
+
+`yeet publish --push-only --reuse-verified` refused with “No reusable Yeet proof
+state found” after the reviewed main integration changed the run-context path.
+No push occurred. The retained full package proof, source bindings and current
+package replay remain independently recorded. Use the existing constrained-
+compute direct-push route after its ten-minute root-replay threshold, with exact
+final-check skips and hosted proof retained; never manufacture a reusable state
+file or copy an unrelated verdict into the new context.
