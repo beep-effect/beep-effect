@@ -321,6 +321,7 @@ artifact, signing activation, deployed grant or observation window changes.
   [retained native control](native-upload-join-control.ts): exact source/runtime
   digests, actual stable/canary upload bytes, cross-runtime integration, three
   intended-failure guard controls and the original failed full package run with its explicit attribution.
-  A clean-manifest replay is still pending in this prepared checkpoint. Reproduce
+  After committing the prepared manifests, both affected files pass 35 tests
+  against unchanged package source. The original failed full run remains explicit. Reproduce
   with the pinned Bun using the retained control. No live R2, producer approval,
   protected publication or real-computation qualification is inferred.

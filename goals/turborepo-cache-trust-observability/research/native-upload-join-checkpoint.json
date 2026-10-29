@@ -20,7 +20,7 @@
   "specSha256": "639205887c0d7562eee13846657fd92083d866cb70f10be6718758373666894d",
   "nativeObservation": {
     "path": "native-upload-join-observations.json",
-    "sha256": "b771aa1de20d4b5928e2fdc8c13772ddc4678ca962224d7687d54d1a299b4197",
+    "sha256": "8989212876517444742f46c6810601b77158c60b588c12f5909659441ebcd8ce",
     "scope": "Two pinned native clients produce one actual tagged PUT each against disposable loopback storage. The binding is synthetic, not independently approved protected CI."
   },
   "verification": {
@@ -65,7 +65,12 @@
         "seconds": 74.55,
         "modelTimeoutReproduced": false
       },
-      "remainingFailure": {
+      "productionSourceChangedDuringFullAudit": false,
+      "fullPackagePassed": false,
+      "auditSeconds": 1168.5,
+      "docgenSeconds": 37.8,
+      "result": "original-audit-failed; both affected files passed clean-manifest replay",
+      "initialRemainingFailure": {
         "test": "knowledge-doctor-evaluators: live filesystem agrees with HEAD snapshot",
         "cause": "The test intentionally reads makeKnowledgeDoctorTree(HEAD) and compares manifestText with live goal manifests. The current adoption manifest differs from HEAD; this is a dirty-checkout precondition, not a cache implementation mismatch.",
         "manifestPath": "goals/turborepo-quality-cache-adoption/ops/manifest.json",
@@ -73,11 +78,16 @@
         "workingTreeSha256": "8d6b8a4b40bd2a9c6342120a30c9e3b570486d79aeebb9eac7bde59a147fd771",
         "next": "Commit the full current goal manifests and replay both affected files without concurrent edits."
       },
-      "productionSourceChangedDuringFullAudit": false,
-      "fullPackagePassed": false,
-      "auditSeconds": 1168.5,
-      "docgenSeconds": 37.8,
-      "result": "failed-original-run; clean-manifest replay pending"
+      "cleanManifestReplay": {
+        "sourceHead": "ebb283fdc3529becf2f5cf9ed270f0fbd483fb06",
+        "passed": 35,
+        "failed": 0,
+        "files": 2,
+        "seconds": 74.14,
+        "productionPackageFilesChanged": false,
+        "modelsTimeout": "Observed only in the original combined run; unchanged Models tests pass in both focused replays. Root cause beyond elapsed-time failure is not claimed.",
+        "knowledgeComparison": "Commit contains the prepared goal manifests, so HEAD and the live manifest inputs now agree."
+      }
     },
     "fallow": {
       "auditIntroduced": 0,

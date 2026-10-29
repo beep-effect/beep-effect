@@ -421,3 +421,8 @@ knowledge test compares committed HEAD with the live goal manifest, which was
 being prepared in this worktree. Freeze the whole repository input profile,
 commit the prepared manifests and replay both affected files without concurrent
 edits. Preserve the original failure and do not call it a successful full run.
+
+The clean-manifest replay passes all 35 tests in both affected files at the
+committed component head, with unchanged package source. The original full-run
+failure remains retained. The Models timeout did not recur in either isolated
+replay; its cause beyond the observed elapsed-time failure is not claimed.
