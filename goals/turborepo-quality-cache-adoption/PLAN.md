@@ -209,3 +209,13 @@ All 186 current lint-fixer commands remain fresh, as do the two already
 reviewed persistent services. There are 2,383 final-disposition gaps; the 186
 separate read-only lint computations remain unqualified. This is source
 classification with unchanged configuration, not runtime or adoption proof.
+
+
+### Complete current persistent-service classification: 2026-10-29
+
+`research/remaining-persistent-service-disposition-review.json` reviews ten
+more exact Portless commands: Bun watchers, Vite development, Storybook
+development and Vite preview. All twelve configured persistent executable
+computations now have source-bound keep-fresh dispositions. Finite build
+counterparts remain unfinished. The current total is 198 reviewed fresh
+boundaries with 2,373 final-disposition gaps; no service was launched.

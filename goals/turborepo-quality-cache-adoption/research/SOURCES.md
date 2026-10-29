@@ -292,3 +292,9 @@ binds changed runner source bytes. Historical claims above keep their dates.
   additional whole-command keep-fresh dispositions. This completes source
   classification of all 186 `lint:fix` rows; their read-only counterparts and
   every other unfinished computation retain qualification obligations.
+
+
+- [Remaining persistent-service source review](remaining-persistent-service-disposition-review.json):
+  ten additional exact Portless watcher/server commands, completing source
+  classification of all twelve configured persistent executable computations.
+  Their finite build counterparts retain independent qualification duties.

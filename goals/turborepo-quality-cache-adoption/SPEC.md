@@ -287,3 +287,18 @@ review is `research/current-runtime-baseline-review.md`.
   their own qualification obligations; 2,383 population dispositions remain
   unfinished. This source review changes no script, task flag or qualification
   ledger. Reversal removes only these additional review/disposition records.
+
+
+### Remaining persistent service boundaries, 2026-10-29
+
+- Keep the ten additional exact current Portless service commands fresh: four
+  Bun watchers, four Vite development servers, Storybook development and Vite
+  static preview. This completes source review of all twelve configured
+  persistent executable computations; each already disables caching and has
+  no archived outputs. A restored cache result cannot supply a live service.
+- Bind each disposition to exact manifests, complete script maps and effective
+  configuration. Finite application/dependency builds and Storybook static
+  build keep their independent qualification obligations. The population now
+  has 198 reviewed fresh boundaries and 2,373 remaining disposition gaps.
+  No service is launched and no script, flag or ledger changes. Reversal
+  removes only these additional review/disposition records.
