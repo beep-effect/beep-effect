@@ -624,3 +624,7 @@ failed audit is retained and no diagnostic or hook is waived.
 A subsequent audit rejected an async mock factory (`effect(asyncFunction)`).
 Use the test framework's scoped module pin and lift the dynamic import through
 `Effect.promise`; keep both failed audits and rerun the complete package check.
+
+Hosted policy found EV011 on the direct `vi` import from `vitest`. Import the
+same API through the pinned `@effect/vitest` export-star entrypoint and rerun
+the policy check; do not add a baseline finding or waive the detector.

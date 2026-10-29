@@ -1,13 +1,12 @@
 import * as NodeModule from "node:module";
 import { it } from "@beep/test-runner";
 import * as HostProcess from "@beep/utils/HostProcess";
-import { describe, expect } from "@effect/vitest";
+import { describe, expect, vi } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
-import { vi } from "vitest";
 import {
   executableDirectory,
   isNativeAddonRequest,
