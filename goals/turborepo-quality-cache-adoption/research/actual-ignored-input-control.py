@@ -6,7 +6,12 @@ import json
 import os
 import pathlib
 import subprocess
+import sys
 import tempfile
+
+if sys.flags.optimize:
+    print("Ignored-input verification requires Python assertions; optimized execution is refused.")
+    raise SystemExit(64)
 
 r = pathlib.Path.cwd()
 base = pathlib.Path.home() / ".cache/beep/turbo-cache-lab/clients"
@@ -49,12 +54,14 @@ def plan(exe):
         text=True,
         timeout=40,
     )
-    assert p.returncode == 0, "Native dry plan failed; raw output suppressed"
+    if p.returncode != 0:
+        raise RuntimeError("Native dry plan failed; raw output suppressed")
     d = json.loads(p.stdout)
     tasks = [t for t in d["tasks"] if t["taskId"] == "@beep/identity#lint"]
-    assert len(tasks) == 1 and all(
-        "execution" not in t or t["execution"] is None for t in d["tasks"]
-    )
+    if len(tasks) != 1:
+        raise RuntimeError("Native dry plan returned an unexpected target-task count")
+    if any("execution" in t and t["execution"] is not None for t in d["tasks"]):
+        raise RuntimeError("Native dry plan reported task execution")
     return tasks[0]
 
 
@@ -116,6 +123,7 @@ finally:
         except OSError:
             pass
 out = r / ".beep/producer-upload/actual-ignored-input-observation.json"
+out.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
 out.write_text(
     json.dumps(
         {

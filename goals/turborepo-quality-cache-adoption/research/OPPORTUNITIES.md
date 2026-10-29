@@ -110,11 +110,23 @@ current task remains cache:false. Keep that work in this active adoption goal.
 
 ### Runtime observation and reviewed baseline must advance together
 
-- The real public fingerprint command refuses the current runtime while the
-  reviewed baseline still names Bun1.4.2. Collector support alone does not
-  authorize a new observation tuple. The guard is working as designed.
-- Prepare an explicit canonical baseline review for Bun1.4.4 and a separate
-  qualification epoch; do not weaken the profile comparison. Require no task
-  configuration, cache flag, scope or ledger change before continuing.
-- Publication was stopped in cheap gates, before a push stage, to incorporate
-  the reviewed current-runtime observation path in one complete wave.
+- Historical refusal: the public fingerprint command rejected Bun1.4.4 while
+  its reviewed baseline still named Bun1.4.2. Collector support alone did not
+  authorize that new tuple; the guard behaved as designed.
+- The [baseline checkpoint](current-runtime-baseline-checkpoint.json) records
+  the completed Bun1.4.4 review, qualification-v3 epoch and current-profile
+  public fingerprint. Effective configuration, cache flags, scope and ledger
+  stayed unchanged. Existing qualification remains bound to its original tuple.
+- Publication was stopped before its push stage while that review was prepared;
+  the reviewed observation path subsequently landed in this source wave.
+
+
+### Research controls must preserve evidence checks
+
+Review found assert-dependent plan and native-invariant checks that Python
+optimization could erase. Both drivers now refuse that mode before runtime
+state is created; the ignored plan also explicitly rejects nonzero exits,
+duplicate or missing targets and reported execution. A fresh report directory
+is created before writing. The new control receipt separates unit excerpts
+from actual synthetic stable/canary replay and retains all historical source
+bindings. Owner: the active Turbo goals. No qualification or rollout changed.

@@ -58,5 +58,5 @@
     "unacked": 0,
     "priorWholeAuditRows": "Both are acknowledged by the passing package replay at15ec49084f; original failed logs and attribution remain retained."
   },
-  "scope": "No CLI production or test bytes changed after the passing run. Later infrastructure changes have their separate package proof. No protected publication, task qualification or production signing is inferred."
+  "scope": "This whole-package replay covers only the sourceHead and sourceFiles bytes recorded in this checkpoint. Later producer-coverage-repair-checkpoint.json and producer-review-repair-checkpoint.json describe separate changed-source regression evidence. No current full-CLI replay, protected publication, task qualification or production signing is inferred."
 }

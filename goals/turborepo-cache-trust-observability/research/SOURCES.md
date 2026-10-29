@@ -374,3 +374,13 @@ artifact, signing activation, deployed grant or observation window changes.
   The refreshed census changes no semantic reviews, cache flags or qualification.
   The earlier passing full replay stays historical; this repair needs fresh
   publication and hosted acceptance.
+
+
+### Goal-packet review safety
+
+- [Packet review checkpoint](producer-packet-review-checkpoint.json): historical
+  package-replay scope, optimization refusals, explicit native dry-plan checks,
+  fresh report-directory creation and baseline chronology. Controlled unit
+  excerpts stay distinct from eighteen real synthetic native replay processes.
+  Earlier observations keep their original driver identities and full goal
+  acceptance remains open.

@@ -10,8 +10,13 @@ import hashlib
 import json
 import shutil
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
+
+if sys.flags.optimize:
+    print("Native input verification requires Python assertions; optimized execution is refused.")
+    raise SystemExit(64)
 
 repo = Path(__file__).resolve().parents[3]
 base = repo / ".beep/native-feature-controls"
