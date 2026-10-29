@@ -272,3 +272,10 @@ not treated as permanent qualification.
   truncated evidence from appearing complete. Seven actual controls and 256
   integrated tests pass. The proxy remains a lab tool, with production joining
   and transport-level completeness still outside this component's proof.
+
+- 2026-10-29 — Hosted Fallow found introduced request-handler complexity after
+  the capture controls were added (CC/cognitive14, CRAP56.3). A targeted current
+  audit would have caught it before the push. Budget admission and recording
+  now form a private local component, preserving transport behavior and all
+  seven controls. Current tests and the zero-finding Fallow audit pass; no
+  suppression or baseline waiver hides the finding.

@@ -122,7 +122,7 @@
   },
   "latestSourceCheckpoint": {
     "path": "goals/turborepo-cache-trust-observability/research/proxy-capture-bounds-checkpoint.json",
-    "sha256": "90adcc94948c24a7daff9a835df7a2e65119aa5ae8020346a752f75cd6c35c84",
+    "sha256": "a611b2fbb5b832aef4e3892548df52e56b449ddd643f6cf953328099c0330189",
     "scope": "Bounded capture and streamed reply repair. All earlier source maps and full audits remain historical; no full-audit transfer to these new bytes."
   }
 }

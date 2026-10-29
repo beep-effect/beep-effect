@@ -314,3 +314,13 @@ The 427 current census bindings verify. Historical full audits are not proof of
 this new implementation. See the source-bound
 [capture checkpoint](research/proxy-capture-bounds-checkpoint.json). The live
 R2 service, producer integration and all representative windows are unchanged.
+
+### Current capture seam and complexity repair
+
+CI attributed one new complexity finding to the request handler. Capture budget
+state and admission/recording now live in a private local component; transport
+orchestration keeps its existing options and controls. The current combined
+suite passes 256 tests in 29.20 seconds, package lint/check pass in 6.9/16.1
+seconds, and the exact-source Fallow audit has zero findings. No suppression or
+baseline waiver was added. The current source checkpoint retains the earlier
+functional proof separately; production and overall acceptance remain open.

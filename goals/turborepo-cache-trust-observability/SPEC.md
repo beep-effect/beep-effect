@@ -295,3 +295,11 @@ The local process report does not satisfy those deployment or observation gates.
   traffic proof, not production telemetry or producer authority. Reversal is to
   stop the candidate experiment and retain the incumbent; do not restore silent
   truncation or the empty-body fallback. No live service or cloud change.
+
+### Capture policy seam
+
+- 2026-10-29: Separate the existing capture budget policy from HTTP orchestration
+  in the same role file. CI found introduced handler complexity; fix its natural
+  admission/recording seam while retaining public options, bounds and controls.
+  No suppression or baseline change. Reversal is to halt candidate experiments;
+  the live incumbent is unaffected.

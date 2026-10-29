@@ -227,6 +227,47 @@ const readProxyBody = (request: HttpServerRequest.HttpServerRequest, method: Cac
     ? request.arrayBuffer.pipe(Effect.map((buffer) => new Uint8Array(buffer)))
     : Effect.succeed(empty);
 
+const makeProxyCapture = Effect.fnUntraced(function* (options: CacheConformanceProxyOptions) {
+  const events = yield* Ref.make(A.empty<CacheConformanceProxyEvent>());
+  const requests = yield* Ref.make(0);
+  const captureBytes = yield* Ref.make(0);
+  const invalid = yield* Ref.make(false);
+  const reserved = yield* Ref.make(HashSet.empty<string>());
+  return {
+    admit: Effect.gen(function* () {
+      if (yield* Ref.get(invalid)) return false;
+      return yield* Ref.modify(requests, (count) => (count < options.maxEvents ? [true, count + 1] : [false, count]));
+    }),
+    reserveUpload: Effect.fnUntraced(function* (parsed: ProxyRequest, body: Uint8Array, tag: O.Option<string>) {
+      if (parsed.method !== "PUT" || O.isNone(tag)) return true;
+      const slot = yield* Ref.modify(reserved, (keys) =>
+        HashSet.has(keys, parsed.key) || HashSet.size(keys) < captureLimit
+          ? [true, HashSet.add(keys, parsed.key)]
+          : [false, keys]
+      );
+      const bytes = body.byteLength + new TextEncoder().encode(tag.value).byteLength;
+      return yield* Ref.modify(captureBytes, (used) =>
+        bytes <= options.maxCaptureBytes - used ? [slot, used + bytes] : [false, used]
+      );
+    }),
+    record: Effect.fnUntraced(function* (event: CacheConformanceProxyEvent) {
+      const encoded = yield* encodeEvent(event).pipe(Effect.result);
+      if (Result.isFailure(encoded) || new TextEncoder().encode(encoded.success).byteLength > 4096) {
+        yield* Ref.set(invalid, true);
+        return false;
+      }
+      yield* Ref.update(events, A.append(event));
+      return !(yield* Ref.get(invalid));
+    }),
+    invalidate: Ref.set(invalid, true),
+    events: Effect.gen(function* () {
+      if (yield* Ref.get(invalid))
+        return yield* CacheCommandError.new("Conformance proxy capture is incomplete or exceeded its bounds.");
+      return yield* Ref.get(events);
+    }),
+  };
+});
+
 const digestOf = (bytes: Uint8Array, present: boolean) =>
   present ? hashBytes(bytes).pipe(Effect.asSome) : Effect.succeed(O.none<Sha256Hex>());
 const digestTag = (tag: O.Option<string>) =>
@@ -322,14 +363,10 @@ export const makeCacheConformanceFaultProxy = Effect.fn("CacheConformance.makeFa
     id: "initial",
     fault: "none",
   });
-  const events = yield* Ref.make(A.empty<CacheConformanceProxyEvent>());
-  const requests = yield* Ref.make(0);
-  const captureBytes = yield* Ref.make(0);
-  const invalid = yield* Ref.make(false);
-  const reject = (status: number) => Ref.set(invalid, true).pipe(Effect.as(HttpServerResponse.empty({ status })));
+  const capture = yield* makeProxyCapture(options);
+  const reject = (status: number) => capture.invalidate.pipe(Effect.as(HttpServerResponse.empty({ status })));
   const written = yield* Ref.make(HashSet.empty<string>());
   const captures = yield* Ref.make(HashMap.empty<string, Captured>());
-  const reservedCaptures = yield* Ref.make(HashSet.empty<string>());
   // Later entries win, so a single-token topology labels its bearer `writer`.
   const roles = HashMap.make<ReadonlyArray<readonly [string, CacheConformanceCredentialRole]>>(
     [`Bearer ${Redacted.value(bearers.unknown)}`, "unknown"],
@@ -367,7 +404,7 @@ export const makeCacheConformanceFaultProxy = Effect.fn("CacheConformance.makeFa
         : base;
     return yield* client.execute(outgoing).pipe(
       Effect.flatMap((response) => readCacheConformanceReply(response, options.maxBodyBytes)),
-      Effect.catchTag("CacheCommandError", (error) => Ref.set(invalid, true).pipe(Effect.andThen(Effect.fail(error)))),
+      Effect.catchTag("CacheCommandError", (error) => capture.invalidate.pipe(Effect.andThen(Effect.fail(error)))),
       Effect.timeoutOption(Duration.millis(target.requestTimeoutMs)),
       Effect.map(O.getOrElse(() => ({ status: O.none<number>(), headers: Headers.empty, body: empty }))),
       Effect.orElseSucceed(() => ({ status: O.none<number>(), headers: Headers.empty, body: empty }))
@@ -508,11 +545,7 @@ export const makeCacheConformanceFaultProxy = Effect.fn("CacheConformance.makeFa
   });
 
   const app = Effect.gen(function* () {
-    if (yield* Ref.get(invalid)) return HttpServerResponse.empty({ status: 503 });
-    const admitted = yield* Ref.modify(requests, (count) =>
-      count < options.maxEvents ? [true, count + 1] : [false, count]
-    );
-    if (!admitted) return yield* reject(503);
+    if (!(yield* capture.admit)) return yield* reject(503);
     const request = yield* HttpServerRequest.HttpServerRequest;
     const started = yield* Clock.currentTimeMillis;
     const current = yield* Ref.get(scenario);
@@ -522,19 +555,8 @@ export const makeCacheConformanceFaultProxy = Effect.fn("CacheConformance.makeFa
     if (Result.isFailure(received)) return yield* reject(413);
     const body = received.success;
     if (body.byteLength > options.maxBodyBytes) return yield* reject(413);
-    const tag = Headers.get(request.headers, "x-artifact-tag");
-    if (parsed.method === "PUT" && O.isSome(tag)) {
-      const slot = yield* Ref.modify(reservedCaptures, (keys) =>
-        HashSet.has(keys, parsed.key) || HashSet.size(keys) < captureLimit
-          ? [true, HashSet.add(keys, parsed.key)]
-          : [false, keys]
-      );
-      const bytes = body.byteLength + new TextEncoder().encode(tag.value).byteLength;
-      const retained = yield* Ref.modify(captureBytes, (used) =>
-        bytes <= options.maxCaptureBytes - used ? [true, used + bytes] : [false, used]
-      );
-      if (!slot || !retained) return yield* reject(503);
-    }
+    if (!(yield* capture.reserveUpload(parsed, body, Headers.get(request.headers, "x-artifact-tag"))))
+      return yield* reject(503);
     const delivered = yield* respond(request, fault, parsed.team, parsed.hash, body);
     yield* recordUpload(request, parsed, body, delivered);
     const neverWritten = !HashSet.has(yield* Ref.get(written), parsed.key);
@@ -557,19 +579,11 @@ export const makeCacheConformanceFaultProxy = Effect.fn("CacheConformance.makeFa
       upstreamStatus: HashSet.has(syntheticFaults, fault) ? O.none() : delivered.status,
       exchange,
     });
-    const encoded = yield* encodeEvent(event).pipe(Effect.result);
-    if (Result.isFailure(encoded) || new TextEncoder().encode(encoded.success).byteLength > 4096)
-      return yield* reject(503);
-    yield* Ref.update(events, A.append(event));
-    return (yield* Ref.get(invalid)) ? HttpServerResponse.empty({ status: 503 }) : delivered.response;
+    return (yield* capture.record(event)) ? delivered.response : HttpServerResponse.empty({ status: 503 });
   });
   return {
     url: yield* serveCacheLoopback(app, 64 * 1024 * 1024),
-    events: Effect.gen(function* () {
-      if (yield* Ref.get(invalid))
-        return yield* CacheCommandError.new("Conformance proxy capture is incomplete or exceeded its bounds.");
-      return yield* Ref.get(events);
-    }),
+    events: capture.events,
     setScenario: (id: string, fault: CacheConformanceFault) =>
       decodeScenarioId(id).pipe(
         Effect.mapError(() => CacheCommandError.make({ message: "Conformance proxy scenario label is invalid." })),

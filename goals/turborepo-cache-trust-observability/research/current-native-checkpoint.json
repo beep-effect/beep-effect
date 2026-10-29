@@ -38,7 +38,7 @@
     "command": "bun run --cwd packages/tooling/tool/cli beep:test test/cache-signed-runner.test.ts test/cache-protocol-runner.test.ts test/cache-protocol.test.ts test/cache-producer.test.ts test/turbo-cache.test.ts test/cache-runtime.test.ts test/shared-internals.test.ts test/cache-conformance.test.ts test/cache-conformance-lab.test.ts test/cache-conformance-command.test.ts",
     "files": 10,
     "passed": 256,
-    "seconds": 25.64,
+    "seconds": 29.2,
     "scope": "Current integrated signing/protocol/backend-result and bounded capture suite. Original native artifacts and protocol source maps remain historical and unchanged."
   },
   "limits": [
@@ -117,7 +117,7 @@
       "packages/tooling/tool/cli/test/turbo-cache.test.ts": "9c768c5dadd4968c6e278554f02867de0d99435677f06ab1942baa9ed0533a9d"
     }
   },
-  "verificationIntegrationRevision": "Bounded-capture repair after aa6e0e293bb8afc9f64192eefa71f55123e30969",
+  "verificationIntegrationRevision": "Capture component seam repair after018058f88fb907c479ac4a8b4135b002d4942b9d",
   "priorPostureIntegration": {
     "focusedVerification": {
       "command": "bun run --cwd packages/tooling/tool/cli beep:test test/cache-signed-runner.test.ts test/cache-protocol-runner.test.ts test/cache-protocol.test.ts test/cache-producer.test.ts test/turbo-cache.test.ts test/cache-runtime.test.ts test/shared-internals.test.ts test/cache-conformance.test.ts test/cache-conformance-lab.test.ts",
@@ -141,12 +141,13 @@
     "verificationIntegrationRevision": "e90ec4819e4d436f5e7a60f00a52b767e006e716"
   },
   "priorBackendResultIntegration": {
+    "revision": "aa6e0e293bb8afc9f64192eefa71f55123e30969",
     "focusedVerification": {
       "command": "bun run --cwd packages/tooling/tool/cli beep:test test/cache-signed-runner.test.ts test/cache-protocol-runner.test.ts test/cache-protocol.test.ts test/cache-producer.test.ts test/turbo-cache.test.ts test/cache-runtime.test.ts test/shared-internals.test.ts test/cache-conformance.test.ts test/cache-conformance-lab.test.ts test/cache-conformance-command.test.ts",
       "files": 10,
-      "passed": 256,
-      "seconds": 25.64,
-      "scope": "Current integrated signing/protocol/backend-result and bounded capture suite. Original native artifacts and protocol source maps remain historical and unchanged."
+      "passed": 249,
+      "seconds": 23.84,
+      "scope": "Current signing/protocol/backend-result integration. Original native artifact bytes and protocol source hashes unchanged; historical 136 and 240 test source snapshots retained separately."
     },
     "verificationSourceFiles": {
       "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts": "e03cc66fbc1ea4ed6ea3c0783b7070b3b757c879c71f355296642907d9c5e483",

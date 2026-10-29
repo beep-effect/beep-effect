@@ -4,7 +4,7 @@
   "authority": "component-preparation-only",
   "priorHead": "aa6e0e293bb8afc9f64192eefa71f55123e30969",
   "sourceSha256": {
-    "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.proxy.ts": "42bbdaf6bc2ade8878dea4e5b150d10f8322d690fd025464f578434daf870c5e",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.proxy.ts": "95ea77d648b98456c681dc9e64333d2a5179936f7f16b5c4afce4974250d2cf9",
     "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.wire.ts": "81574a9d79d8abfc34fddcfdcb59ace459997b24c4c4d96b0ced958002d2bf2b",
     "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.schemas.ts": "a0fb285cb74e23cfe34b7ceddaded03d8cd2b42982aa97f2e5c39d112ba3776f",
     "packages/tooling/tool/cli/test/cache-conformance-lab.test.ts": "2322f0514314b51acaf6186dc17521cbbeaef8e398952ccf003054d0f34189d1"
@@ -41,11 +41,11 @@
     "status": "passed",
     "files": 10,
     "testsPassed": 256,
-    "seconds": 25.64,
+    "seconds": 29.2,
     "packageQuick": {
       "status": "passed",
-      "lintSeconds": 5.7,
-      "checkSeconds": 12.2
+      "lintSeconds": 6.9,
+      "checkSeconds": 16.1
     },
     "schemaCatalog": {
       "status": "current",
@@ -61,5 +61,58 @@
     "Outer HTTP transport can refuse malformed or over64MiB requests before the application; these controls bind admitted app traffic. Production command/upload joining remains open.",
     "No current full-package audit is asserted for these new source bytes; earlier audit source maps remain historical. Hosted broad checks remain authoritative under the recorded over-ten-minute root-replay constraint.",
     "No R2 IAM, producer authority, key/epoch rotation, whole-task qualification or representative observation acceptance."
-  ]
+  ],
+  "priorFunctionalVerification": {
+    "revision": "018058f88fb907c479ac4a8b4135b002d4942b9d",
+    "sourceSha256": {
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.proxy.ts": "42bbdaf6bc2ade8878dea4e5b150d10f8322d690fd025464f578434daf870c5e",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.wire.ts": "81574a9d79d8abfc34fddcfdcb59ace459997b24c4c4d96b0ced958002d2bf2b",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.schemas.ts": "a0fb285cb74e23cfe34b7ceddaded03d8cd2b42982aa97f2e5c39d112ba3776f",
+      "packages/tooling/tool/cli/test/cache-conformance-lab.test.ts": "2322f0514314b51acaf6186dc17521cbbeaef8e398952ccf003054d0f34189d1"
+    },
+    "integratedVerification": {
+      "status": "passed",
+      "files": 10,
+      "testsPassed": 256,
+      "seconds": 25.64,
+      "packageQuick": {
+        "status": "passed",
+        "lintSeconds": 5.7,
+        "checkSeconds": 12.2
+      },
+      "schemaCatalog": {
+        "status": "current",
+        "entries": 9333,
+        "shards": 173
+      },
+      "rootOxlint": "passed",
+      "censusSourceBindingsVerified": 427
+    }
+  },
+  "postComplexityRepair": {
+    "baseHead": "018058f88fb907c479ac4a8b4135b002d4942b9d",
+    "ciFailure": {
+      "run": 40811907774,
+      "job": 123244380908,
+      "attribution": "introduced",
+      "function": "app",
+      "cyclomatic": 14,
+      "cognitive": 14,
+      "crap": 56.3
+    },
+    "repair": "Keep transport orchestration in app and collect request/replay/event budgets in one private file-local capture component. Public options and actual controls are unchanged.",
+    "currentFallowAudit": {
+      "status": "passed",
+      "exitCode": 0,
+      "findings": 0,
+      "source": "Current final source, including oversize-body invalidation through the capture component."
+    },
+    "currentFallowHealth": {
+      "status": "passed",
+      "exitCode": 0,
+      "findings": 0,
+      "scope": "Final current source"
+    },
+    "noSuppressionOrBaselineChange": true
+  }
 }
