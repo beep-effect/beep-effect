@@ -1,0 +1,96 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "epistemic-retention-policy-calibration",
+    "title": "Epistemic Retention Policy Calibration",
+    "status": "active",
+    "created": "2026-10-28",
+    "updated": "2026-10-29",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/epistemic-retention-policy-calibration",
+  "lifecycle": "active",
+  "mission": "Produce reproducible offline retention calibration evidence and an approval-ready recommendation; keep production inert pending evidence and separate explicit approval.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/agent-memory-tiers-bitemporal-edges",
+    "graduated": "2026-08-13"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Calibration completes only after exact-head hosted readiness, review/window gates, delivery PR merge and matching completion receipt; production activation is not a completion condition.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "standards/ARCHITECTURE.md",
+    "goals/epistemic-retention-policy-calibration/README.md",
+    "goals/epistemic-retention-policy-calibration/SPEC.md",
+    "goals/epistemic-retention-policy-calibration/PLAN.md",
+    "goals/epistemic-retention-policy-calibration/GOAL.md",
+    "goals/epistemic-retention-policy-calibration/ops/EVIDENCE.md",
+    "goals/epistemic-retention-policy-calibration/research/SOURCES.md",
+    "goals/epistemic-memory-retention-projections/ops/REPORT.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/epistemic-retention-policy-calibration/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Freeze baseline, authorized dataset and protocol",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Implement offline calibration workflow",
+      "status": "complete"
+    },
+    {
+      "id": "P2",
+      "name": "Evaluate, replay and review calibration evidence",
+      "status": "complete"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet calibration delivery through merge",
+      "status": "in-progress"
+    },
+    {
+      "id": "P4",
+      "name": "Reflect, verify completion and retire lane",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/epistemic-retention-policy-calibration/GOAL.md)\" -le 4000",
+    "jq . goals/epistemic-retention-policy-calibration/ops/manifest.json",
+    "rg -n \"epistemic-retention-policy-calibration|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/epistemic-retention-policy-calibration",
+    "git diff --check -- goals/epistemic-retention-policy-calibration",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Unauthorized product/private dataset access.",
+    "Production activation without accepted calibration evidence and separate explicit human approval.",
+    "Authority mutation, donor code/constants, external authority, operator-memory coupling or RRF integration.",
+    "Evidence or authentication cannot be verified; hold the affected path and retain inert policy.",
+    "New paid resources require explicit authorization."
+  ],
+  "statusNote": "P0-P2 complete: independent final-source review accepted G2 insufficient-evidence verdict. All production parameters unresolved; G3 not-requested and G4 excluded. P3/P4 exact-head delivery remains operative.",
+  "dependencies": [
+    "goals/epistemic-memory-retention-projections",
+    "goals/epistemic-bitemporal-edge-core"
+  ],
+  "blockedBy": []
+}

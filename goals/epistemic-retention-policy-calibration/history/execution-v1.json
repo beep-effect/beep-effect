@@ -1,0 +1,36 @@
+{
+  "kind": "offline-execution-receipt",
+  "head": "b87a1418e8b3ebeee4a1a8dcf521259a3ac84b32",
+  "dirtySourceHashes": {
+    "packages/epistemic/server/scripts/retention-calibrate.ts": "fd2e57bb3bc422e851ddf285430462f6588b346f70f4e14c5fa2231c6b01cfb0",
+    "packages/epistemic/domain/src/values/Retention/Retention.model.ts": "efaccca2c6732d923d0229950a9d20366787e046e6aedf885ba98a6b09f55179",
+    "packages/epistemic/domain/src/values/Retention/Retention.behavior.ts": "e7c6d58a7f14925a483d216725c5d53f24c864829258f5d8df36c9aafcd81795",
+    "packages/epistemic/use-cases/src/Retention/Retention.service.ts": "3b8972288bdb49210601fb9e706aef85b1fa9ef8b81b557ead37b1a4707c5de1",
+    "bun.lock": "de99074dff56a7afb2daf995d16308376b8e21b378985d4f87651f72ae531305"
+  },
+  "runtime": "1.4.4",
+  "command": [
+    "bun",
+    "run",
+    "packages/epistemic/server/scripts/retention-calibrate.ts",
+    "goals/epistemic-retention-policy-calibration",
+    "goals/epistemic-retention-policy-calibration/history/results/calibration-v1.json"
+  ],
+  "durationSeconds": 0.3439297999975679,
+  "exitCode": 0,
+  "outputSha256": "245df0b67475dd56133be9e5abb65d043dcdd122252b5f91bbb6c99c50b92e86",
+  "independentReplayByteIdentical": true,
+  "datasetDigest": "03b9b93a8a5a098d0df16da435a50d762b27e2bbcf48f5e983803cd8b51e0fbe",
+  "protocolDigest": "1b73974efbc1d36c39e039fc68fdd8629ff5bab80ef3330d6b293978a0f544e8",
+  "encoding": "SHA-256 exact UTF-8 artifact bytes including terminal newline",
+  "approvalState": "not-requested",
+  "productionEligible": false,
+  "finalRunnerSourceSha256": "90c21fa85661f0ad40e1f7d11d4e892a31be362adc2a6ced79454f5b1b991191",
+  "finalReplay": {
+    "command": "bun run packages/epistemic/server/scripts/retention-calibrate.ts <packet> <fresh-output>",
+    "exitCode": 0,
+    "durationSeconds": 0.2573704629976419,
+    "byteIdentical": true,
+    "outputSha256": "245df0b67475dd56133be9e5abb65d043dcdd122252b5f91bbb6c99c50b92e86"
+  }
+}
