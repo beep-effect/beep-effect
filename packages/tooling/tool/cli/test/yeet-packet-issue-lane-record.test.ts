@@ -5,12 +5,14 @@ import {
   failWithIssueArtifacts,
   firstRedLaneRun,
   INNER_LANE_REPORT_FILE_NAME,
+  knownSubLaneHintFromOutput,
   laneRunsForWrapper,
   QualityIssueIndex,
   qualityIssuesFromStepResult,
   RepoPlanStep,
   RepoRunContext,
   RepoStepRunResult,
+  routeForCategory,
   runArtifactPathForContext,
   TurboPlanSnapshot,
 } from "@beep/repo-cli/test/Yeet";
@@ -25,7 +27,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import type { QualityIssue } from "@beep/repo-cli/test/Yeet";
+import type { QualityIssue, QualityIssueCategory } from "@beep/repo-cli/test/Yeet";
 
 const PlatformLayer = Layer.mergeAll(MemoryFileSystem.layer, Path.layer, NodeCrypto.layer);
 
@@ -159,6 +161,28 @@ const cheapGatesLanes: ReadonlyArray<QualityTaskLaneRun> = [
 ];
 
 describe("yeet packet issue lane record", () => {
+  it.each<readonly [QualityIssueCategory, string, string]>([
+    ["parser-error", "quality-review-fix-loop", "Issue parser failed to classify output"],
+    ["unknown-raw", "quality-review-fix-loop", "Raw quality output needs classification"],
+    ["build", "quality-review-fix-loop", "Build failure"],
+    ["repo-export-policy", "quality-review-fix-loop", "Stale repo-export workflow reference"],
+    ["security-audit", "quality-review-fix-loop", "Security audit failure"],
+    ["pr-review", "github:gh-address-comments", "Actionable PR review thread"],
+    ["greptile-review", "quality-review-fix-loop", "Greptile closeout gate failure"],
+    ["bot-review", "quality-review-fix-loop", "Hosted review bot finding"],
+  ])("routes %s to its remediation skill with an actionable reason", (category, skill, reason) => {
+    expect(routeForCategory(category)).toEqual([{ skill, reason }]);
+  });
+
+  it("keeps an absent diagnostic unknown instead of inventing a remediation", () => {
+    assertNone(knownSubLaneHintFromOutput(undefined));
+  });
+
+  it("uses diagnostic order rather than catalog order within an uncollected lane", () => {
+    const hint = knownSubLaneHintFromOutput("typos finished\nlint:schema-first failed");
+    expect(O.getOrThrow(hint)).toMatchObject({ category: "schema-first-policy", subCategory: "schema-first" });
+  });
+
   it("does not infer a failed lane from passing siblings when the record is missing", () => {
     const coverage = rawIssue(fullProofStep, fullProofOutput, []);
     expect(coverage).toMatchObject({
