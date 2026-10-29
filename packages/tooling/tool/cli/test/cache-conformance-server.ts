@@ -46,6 +46,8 @@ export type ServerMode = {
   readonly hideUntagged: boolean;
   /** Untrusted artifact-response header used by receipt safety controls. */
   readonly responseContentType?: string;
+  /** Untrusted backend-result claim used by attribution and redaction controls. */
+  readonly responseCacheResult?: string;
 };
 export const goodMode: ServerMode = {
   putStatus: 200,
@@ -168,7 +170,16 @@ export const makeConformanceServer = Effect.fn("test.makeConformanceServer")(fun
     tags: yield* Ref.make(A.empty<string>()),
   };
   const server = yield* BunHttpServer.make({ hostname: "127.0.0.1", port: 0 });
-  yield* server.serve(handle(state));
+  yield* server.serve(
+    handle(state).pipe(
+      Effect.map((reply) =>
+        O.match(O.fromUndefinedOr(mode.responseCacheResult), {
+          onNone: () => reply,
+          onSome: (value) => HttpServerResponse.setHeader(reply, "x-beep-cache-result", value),
+        })
+      )
+    )
+  );
   return { url: HttpServer.formatAddress(server.address), tags: Ref.get(state.tags) };
 });
 

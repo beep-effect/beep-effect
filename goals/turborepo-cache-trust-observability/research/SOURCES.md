@@ -243,6 +243,37 @@ binds changed runner source bytes. Historical claims above keep their dates.
   applies to its original identity-lint computation, reuse layer, profile and
   epoch; it cannot promote the refreshed population.
 
+## 2026-10-29 backend-result projection
+
+The finite labels and status/method checks follow `Code::label`, `Code::status`
+and `Code::from_response` in the tracked pinned adapter policy patch. Its exact
+digest is retained in `backend-result-checkpoint.json`. Direct/proxy synthetic
+server controls supply capture and redaction evidence. These are observation-only
+labels: a response header does not establish a genuine miss, HMAC validity or a
+protected producer. The checkpoint separates the frozen full audit from later
+test-codec hoisting, canonical catalog refresh and main integration.
+
+- `proxy-capture-bounds-checkpoint.json`: current source bindings, intended-cause
+  budget/interrupted-upload failures and 256 passing integrated tests. It does
+  not transfer historical full audits or claim deployed production collection.
+
+- `reproduce-interrupted-upload-red-restore.patch`: a small byte reconstruction
+  from the later committed proxy to the uncommitted historical restoration
+  state. The checkpoint names the restored file and state; the base commit is
+  explicitly not presented as a revision of the restored state. Its digest was
+  reproduced by applying the patch in a disposable directory.
+
+### Hosted request-completion repair, 2026-10-29
+
+[The completion checkpoint](proxy-request-completion-checkpoint.json) binds
+the current capture and test bytes to 271 tests, package checks, full style
+scan, zero Fallow findings, two counterfactuals and three CPU-constrained
+loopback processes. The prior capture checkpoint remains byte-identical and
+retains its own historical source maps and full-audit scope. No native
+artifact, signing activation, deployed grant or observation window changes.
+
+## 2026-10-29 candidate adapter runtime
+
 - `adapter-runtime-checkpoint.json` and `adapter-runtime-lab.json`: exact candidate
   source/build bindings, 49 Cargo tests, synthetic wire/native controls and
   actual fixture worker/cgroup/environment observations. Local component proof
@@ -251,3 +282,14 @@ binds changed runner source bytes. Historical claims above keep their dates.
 - `adapter-runtime-lab-before-cleanup-review.json` retains the original runtime
   observation bytes. The current runtime report and checkpoint separately bind
   the cleanup review repair, three failure controls and fresh synthetic replay.
+
+- [Node runtime control checkpoint](proxy-node-runtime-checkpoint.json): source-
+  bound Node failure reproduction, actual Bun child propagation, Node/Bun
+  integrations, V8 instrumentation and CPU-constrained controls. The runtime
+  mismatch is grounded in `vitest.setup.ts`: `collectRequestBody` precedes
+  `respondToRequest`. Prior request-completion evidence is retained unchanged.
+
+- [Response error-path coverage checkpoint](reply-error-coverage-checkpoint.json):
+  exact test/wire digests, actual hosted regression attribution, Bun and Node/V8
+  tests, and supplemental coverage scope. A locally combined observation is not
+  a substitute for the fresh hosted comparison. Earlier evidence is preserved.

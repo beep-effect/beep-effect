@@ -739,6 +739,7 @@ export const CacheConformanceOutcome = LiteralKit([
   "timeout",
   "transport-error",
   "truncated-body",
+  "payload-rejected",
 ]).pipe(
   $I.annoteSchema("CacheConformanceOutcome", {
     description:
@@ -754,13 +755,56 @@ export const CacheConformanceOutcome = LiteralKit([
 export type CacheConformanceOutcome = typeof CacheConformanceOutcome.Type;
 
 /**
- * Sanitized exchange receipt: never a URL, bearer, tag value or body.
+ * Finite backend observations without retaining an untrusted header value.
  *
- * **Example** (Reject raw wire input)
+ * **Example** (Reject a claimed genuine miss)
+ * ```ts
+ * import { CacheConformanceBackendResult } from "@beep/repo-cli/commands/Cache"
+ * import * as S from "effect/Schema"
+ * console.assert(!S.is(CacheConformanceBackendResult)("genuine-miss"))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CacheConformanceBackendResult = LiteralKit([
+  "allowed",
+  "authentication-denied",
+  "write-denied",
+  "tenant-denied",
+  "selector-invalid",
+  "route-invalid",
+  "method-denied",
+  "signature-missing",
+  "metadata-invalid",
+  "not-found",
+  "throttled",
+  "backend-unavailable",
+  "write-ambiguous",
+  "payload-rejected",
+  "unexpected-status",
+  "invalid-evidence",
+]).pipe(
+  $I.annoteSchema("CacheConformanceBackendResult", {
+    description:
+      "Finite observation-only adapter result, or a static invalid claim; never producer or genuine-miss authority.",
+  })
+);
+/**
+ * A bounded adapter-result observation.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CacheConformanceBackendResult = typeof CacheConformanceBackendResult.Type;
+
+/**
+ * Sanitized HTTP exchange with optional observation-only backend attribution.
+ *
+ * **Example** (Inspect the finite attribution field)
  * ```ts
  * import { CacheConformanceExchange } from "@beep/repo-cli/commands/Cache"
- * import * as S from "effect/Schema"
- * console.assert(!S.is(CacheConformanceExchange)({ authorization: "Bearer value" }))
+ * console.assert("backendResult" in CacheConformanceExchange.fields)
  * ```
  *
  * @category schemas
@@ -778,6 +822,10 @@ export class CacheConformanceExchange extends S.Opaque<CacheConformanceExchange,
     hash: CacheConformanceHashShape,
     outcome: CacheConformanceOutcome,
     status: S.OptionFromNullOr(S.Int.check(S.isBetween({ minimum: 100, maximum: 599 }))),
+    backendResult: S.OptionFromNullOr(CacheConformanceBackendResult).pipe(
+      S.withDecodingDefaultKey(Effect.succeed(null)),
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
     contentType: S.OptionFromNullOr(S.String.check(S.isMaxLength(128))),
     requestBytes: S.Natural,
     requestSha256: S.OptionFromNullOr(Sha256Hex),

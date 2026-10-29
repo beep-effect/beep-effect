@@ -42,7 +42,8 @@
     "research/current-completion-audit.json",
     "research/current-population.json",
     "research/current-feature-matrix.json",
-    "research/current-client-pins.json"
+    "research/current-client-pins.json",
+    "research/population-source-refresh-checkpoint.json"
   ],
   "agentLaunchers": [
     {

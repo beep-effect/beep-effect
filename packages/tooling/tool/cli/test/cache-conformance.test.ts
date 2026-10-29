@@ -3,7 +3,10 @@ import {
   CacheConformanceExchange,
   CacheConformancePaths,
   CacheConformanceRun,
+  classifyCacheConformanceBackendResult,
   classifyCacheConformanceMediaType,
+  classifyCacheConformanceStatus,
+  readCacheConformanceReply,
   renderCacheConformanceCorpus,
   runCacheConformance,
   syncCacheConformanceCorpus,
@@ -15,6 +18,8 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -31,6 +36,7 @@ import {
   secrets,
   targetFor,
 } from "./cache-conformance-server.ts";
+import type { CacheConformanceBackendResult, CacheConformanceMethod } from "@beep/repo-cli/commands/Cache";
 import type { ServerMode } from "./cache-conformance-server.ts";
 
 const RunJson = S.fromJsonString(CacheConformanceRun, { space: 2 });
@@ -89,6 +95,41 @@ it.layer(Services, { timeout: "60 seconds", excludeTestServices: true })("cache 
 });
 
 it.layer(Services, { timeout: "120 seconds", excludeTestServices: true })("cache conformance wire runner", (it) => {
+  it.effect("retains finite backend causes independently of recomputation outcomes", () =>
+    Effect.gen(function* () {
+      const { report } = yield* runAgainst({
+        ...goodMode,
+        readFault: O.some(503),
+        responseCacheResult: "backend-unavailable",
+      });
+      const reads = A.filter(
+        A.flatMap(report.cases, (entry) => entry.exchanges),
+        (entry) => entry.method === "GET" && O.contains(entry.status, 503)
+      );
+      expect(reads.length).toBeGreaterThan(0);
+      for (const read of reads) assertSome(read.backendResult, "backend-unavailable");
+      const encoded = yield* S.encodeEffect(RunJson)(report);
+      expect(encoded).toContain("backend-unavailable");
+      expect(yield* S.encodeEffect(RunJson)(yield* S.decodeEffect(RunJson)(encoded))).toBe(encoded);
+    })
+  );
+
+  it.effect("records invalid backend claims without retaining private header text", () =>
+    Effect.gen(function* () {
+      const canary = `${secrets.reader} /fixture/private/result artifact-body-7729`;
+      const { report } = yield* runAgainst({ ...goodMode, responseCacheResult: canary });
+      const exchanges = A.filter(
+        A.flatMap(report.cases, (entry) => entry.exchanges),
+        (entry) => O.isSome(entry.status)
+      );
+      expect(exchanges.length).toBeGreaterThan(0);
+      for (const entry of exchanges) assertSome(entry.backendResult, "invalid-evidence");
+      const encoded = yield* S.encodeEffect(RunJson)(report);
+      for (const secret of [secrets.reader, "/fixture/private/result", "artifact-body-7729"])
+        expect(encoded).not.toContain(secret);
+    })
+  );
+
   it.effect("passes a policy-complete server and labels absent optional routes", () =>
     Effect.gen(function* () {
       const { report } = yield* runAgainst(goodMode);
@@ -213,6 +254,8 @@ it.layer(Services, { timeout: "120 seconds", excludeTestServices: true })("cache
 const ExchangeJson = S.fromJsonString(CacheConformanceExchange);
 const encodeExchange = S.encodeEffect(ExchangeJson);
 const decodeExchange = S.decodeEffect(ExchangeJson);
+const HistoricalExchangeJson = S.fromJsonString(S.Record(S.String, S.Unknown));
+const decodeHistoricalExchange = S.decodeEffect(HistoricalExchangeJson);
 
 it.effect.prop(
   "round trips schema-generated exchange receipts through JSON",
@@ -239,3 +282,123 @@ it("projects only registered parameter-free response media types", () => {
   ])
     header.pipe(classifyCacheConformanceMediaType, assertNone);
 });
+
+it("checks every backend label against method and status without inventing genuine misses", () => {
+  const controls: ReadonlyArray<readonly [CacheConformanceBackendResult, CacheConformanceMethod, number]> = [
+    ["allowed", "GET", 200],
+    ["authentication-denied", "GET", 401],
+    ["write-denied", "PUT", 403],
+    ["tenant-denied", "GET", 403],
+    ["selector-invalid", "GET", 400],
+    ["route-invalid", "GET", 404],
+    ["method-denied", "POST", 405],
+    ["signature-missing", "PUT", 400],
+    ["metadata-invalid", "GET", 400],
+    ["not-found", "GET", 404],
+    ["throttled", "GET", 429],
+    ["backend-unavailable", "GET", 503],
+    ["write-ambiguous", "PUT", 503],
+    ["payload-rejected", "PUT", 413],
+    ["unexpected-status", "GET", 302],
+  ];
+  for (const [label, method, status] of controls) {
+    assertSome(classifyCacheConformanceBackendResult(O.some(label), method, O.some(status)), label);
+    assertSome(O.some(label).pipe(classifyCacheConformanceBackendResult(method, O.some(status))), label);
+    assertSome(classifyCacheConformanceBackendResult(O.some(label), method, O.some(199)), "invalid-evidence");
+    assertSome(classifyCacheConformanceBackendResult(O.some(label), method, O.none()), "invalid-evidence");
+  }
+  assertNone(classifyCacheConformanceBackendResult(O.none(), "GET", O.some(404)));
+  for (const claim of [
+    "allowed,allowed",
+    "allowed ",
+    "genuine-miss",
+    "invalid-evidence",
+    "private-secret/path/artifact",
+  ]) {
+    assertSome(classifyCacheConformanceBackendResult(O.some(claim), "GET", O.some(200)), "invalid-evidence");
+  }
+  for (const claim of ["write-denied", "signature-missing", "write-ambiguous"]) {
+    assertSome(classifyCacheConformanceBackendResult(O.some(claim), "GET", O.some(503)), "invalid-evidence");
+  }
+  assertSome(
+    classifyCacheConformanceBackendResult(O.some("backend-unavailable"), "PUT", O.some(503)),
+    "invalid-evidence"
+  );
+});
+
+it.effect.prop(
+  "decodes historical exchanges without backend-result metadata",
+  { exchange: CacheConformanceExchange },
+  ({ exchange }) =>
+    Effect.gen(function* () {
+      const encoded = yield* encodeExchange(CacheConformanceExchange.make(exchange));
+      const historical = yield* decodeHistoricalExchange(encoded);
+      const decoded = yield* S.decodeUnknownEffect(CacheConformanceExchange)(R.remove(historical, "backendResult"));
+      assertNone(decoded.backendResult);
+    }),
+  { arbitrary: { runs: 25 } }
+);
+
+it("keeps unexpected HTTP status observations distinct from genuine misses", () => {
+  for (const status of [101, 199, 302, 600]) {
+    expect(classifyCacheConformanceStatus(true)(status)).toBe("unexpected-status");
+    expect(classifyCacheConformanceStatus(false)(status)).toBe("unexpected-status");
+  }
+  expect(classifyCacheConformanceStatus(true)(404)).toBe("miss");
+  expect(classifyCacheConformanceStatus(false)(404)).toBe("not-found");
+});
+
+it.effect("drains segmented replies up to the byte bound and refuses a partial oversized body", () =>
+  Effect.gen(function* () {
+    const response = () =>
+      HttpClientResponse.fromWeb(
+        HttpClientRequest.get("http://fixture.invalid/artifact"),
+        new Response(
+          new ReadableStream<Uint8Array>({
+            start(controller) {
+              controller.enqueue(new Uint8Array([1, 2]));
+              controller.enqueue(new Uint8Array([3, 4]));
+              controller.close();
+            },
+          })
+        )
+      );
+    const complete = yield* readCacheConformanceReply(response(), 4);
+    assertSome(complete.status, 200);
+    expect(complete.body).toEqual(new Uint8Array([1, 2, 3, 4]));
+    const oversized = yield* readCacheConformanceReply(response(), 3).pipe(Effect.result);
+    oversized.pipe(Result.isFailure, assertTrue);
+    if (Result.isFailure(oversized)) {
+      expect(oversized.failure._tag).toBe("CacheCommandError");
+      expect(oversized.failure.message).toContain("exceeded its byte bound");
+    }
+    const empty = HttpClientResponse.fromWeb(
+      HttpClientRequest.get("http://fixture.invalid/artifact"),
+      new Response(null)
+    );
+    expect((yield* readCacheConformanceReply(empty, 0)).body.byteLength).toBe(0);
+  })
+);
+
+it.effect("propagates a reply stream failure rather than returning its completed prefix", () =>
+  Effect.gen(function* () {
+    let started = false;
+    const response = HttpClientResponse.fromWeb(
+      HttpClientRequest.get("http://fixture.invalid/artifact"),
+      new Response(
+        new ReadableStream<Uint8Array>({
+          pull(controller) {
+            if (started) controller.error("synthetic interrupted response");
+            else {
+              started = true;
+              controller.enqueue(new Uint8Array([1, 2]));
+            }
+          },
+        })
+      )
+    );
+    const result = yield* readCacheConformanceReply(response).pipe(Effect.result);
+    result.pipe(Result.isFailure, assertTrue);
+    if (Result.isFailure(result)) expect(result.failure._tag).toBe("HttpClientError");
+  })
+);

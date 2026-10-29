@@ -64,9 +64,14 @@
     "research/receipt-media-type-checkpoint.json",
     "research/adapter-policy-lab.json",
     "research/adapter-dependency-review.json",
+    "research/backend-result-checkpoint.json",
+    "research/proxy-capture-bounds-checkpoint.json",
+    "research/proxy-request-completion-checkpoint.json",
     "research/adapter-runtime-checkpoint.json",
     "research/adapter-runtime-lab.json",
-    "research/adapter-runtime-lab-before-cleanup-review.json"
+    "research/adapter-runtime-lab-before-cleanup-review.json",
+    "research/proxy-node-runtime-checkpoint.json",
+    "research/reply-error-coverage-checkpoint.json"
   ],
   "agentLaunchers": [
     {

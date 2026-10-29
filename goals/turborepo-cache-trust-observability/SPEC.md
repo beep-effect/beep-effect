@@ -270,6 +270,54 @@ The local process report does not satisfy those deployment or observation gates.
   incumbent while repairing the candidate; do not restore the mixed-mode path.
   This component decision grants no deployment or broad qualification.
 
+### Finite backend-result capture
+
+- 2026-10-29: Preserve the pinned adapter’s finite result vocabulary in optional
+  conformance exchange metadata. Both direct and proxy capture validate the
+  method/status combination and replace unknown or inconsistent claims with a
+  static invalid-evidence label. Historical exchanges decode with absent metadata.
+  The field is an untrusted observation, grants no protected producer or HMAC
+  authority, and cannot classify a not-found response as a genuine miss. Actual
+  synthetic-secret and known-written-404 controls justify the boundary. Reversal:
+  disable the optional projection while retaining independent transport outcomes;
+  never retain raw header text as a fallback. No deployed collector is enabled.
+
+### Bounded lab capture repair
+
+- 2026-10-29: Retain the existing conformance proxy and finite backend-result
+  projection. Enforce its request cap before forwarding and reject incomplete
+  capture instead of silently dropping events. Defaults are 5,000 requests,
+  64 MiB per body, 64 MiB of tagged upload attempts, 64 reserved replay keys and
+  4 KiB per encoded record; schema-validated overrides only lower these bounds.
+  Invalid capture yields a static typed error and refuses further proxy traffic.
+  Interrupted request bodies cannot become empty upstream uploads; streamed
+  oversized replies retain a payload-rejected cause. This is admitted lab
+  traffic proof, not production telemetry or producer authority. Reversal is to
+  stop the candidate experiment and retain the incumbent; do not restore silent
+  truncation or the empty-body fallback. No live service or cloud change.
+
+### Capture policy seam
+
+- 2026-10-29: Separate the existing capture budget policy from HTTP orchestration
+  in the same role file. CI found introduced handler complexity; fix its natural
+  admission/recording seam while retaining public options, bounds and controls.
+  No suppression or baseline change. Reversal is to halt candidate experiments;
+  the live incumbent is unaffected.
+
+### Complete request capture and hosted repair
+
+- 2026-10-29: A capture is complete only when every admitted request has a
+  recorded outcome. Receipt reads allow deliberate in-flight timeout probes to
+  finish, polling through Effect Schedule every ten milliseconds for at most
+  the configured hold plus five seconds. Invalid capture fails immediately;
+  requests still unaccounted for at that bound refuse the receipt. This adds
+  no backend, signing, credential or qualification authority. Reversal keeps
+  affected evidence and reuse disabled rather than accepting a partial prefix.
+- Synchronize the native interrupted-upload control with actual body-read and
+  handler-completion signals. Preserve Boolean assertion polarity through
+  canonical helpers. No expected error payload, baseline waiver, fixed sleep
+  extension or test retry substitutes for those controls.
+
 ### Bounded adapter runtime component
 
 - 2026-10-29: Pin the candidate adapter to two Tokio core workers, two HTTP
@@ -292,3 +340,17 @@ The local process report does not satisfy those deployment or observation gates.
   and a combined stop/log failure control precede the full synthetic replay.
   The reviewed Rust patch and binary are unchanged; production stays inactive.
   Reversal is to halt candidate experiments while retaining the incumbent.
+
+
+### Native streaming control under Node CI
+
+- 2026-10-29: The Node compatibility server collects the entire request body
+  before handler dispatch. A streaming test that waits for that handler before
+  completing its body cannot run against this shim. The Node suite now runs
+  this same control through the installed Bun runtime and local Vitest entry,
+  with one worker, a forty-five-second child deadline and 16,384 captured
+  characters. Bun executes the original physical HTTP control directly. The
+  five-second body/handler bounds remain unchanged. No skip, fabricated body
+  failure, longer streaming timeout or test retry substitutes for native proof.
+  Removed guards must fail both the native test and the Node parent. Reversal
+  keeps unproven evidence disabled; the production proxy is unchanged.

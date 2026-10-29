@@ -14,7 +14,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Base64 from "effect/encoding/Base64";
 import * as Hex from "effect/encoding/Hex";
-import { flow } from "effect/Function";
+import { dual, flow } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Headers from "effect/http/Headers";
 import * as HttpClient from "effect/http/HttpClient";
@@ -29,6 +29,7 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { nearestRank } from "../../internal/stats/NearestRank.ts";
 import {
+  CacheConformanceBackendResult,
   CacheConformanceExchange,
   CacheConformanceMeasurement,
   CacheConformanceTarget,
@@ -238,6 +239,85 @@ export const classifyCacheConformanceMediaType = (header: O.Option<string>): O.O
     O.filter(isReceiptMediaType)
   );
 
+const isBackendResult = S.is(CacheConformanceBackendResult);
+const backendResultCompatible = (
+  result: CacheConformanceBackendResult,
+  method: CacheConformanceMethod,
+  status: number
+): boolean =>
+  Match.value(result).pipe(
+    Match.when("allowed", () => status >= 200 && status <= 299),
+    Match.when("authentication-denied", () => status === 401),
+    Match.when("write-denied", () => method === "PUT" && status === 403),
+    Match.when("tenant-denied", () => status === 403),
+    Match.when("selector-invalid", () => status === 400),
+    Match.when("route-invalid", () => status === 404),
+    Match.when("method-denied", () => status === 405),
+    Match.when("signature-missing", () => method === "PUT" && status === 400),
+    Match.when("metadata-invalid", () => status === 400),
+    Match.when("not-found", () => status === 404),
+    Match.when("throttled", () => status === 429),
+    Match.when("backend-unavailable", () => method !== "PUT" && status >= 500 && status <= 599),
+    Match.when("write-ambiguous", () => method === "PUT" && status >= 500 && status <= 599),
+    Match.when("payload-rejected", () => status === 400 || status === 413),
+    Match.when(
+      "unexpected-status",
+      () => status === 502 || (status >= 300 && status <= 499 && !A.contains([400, 401, 404, 413, 429], status))
+    ),
+    Match.when("invalid-evidence", () => false),
+    Match.exhaustive
+  );
+
+/**
+ * Project an untrusted adapter claim into a finite, method/status-checked label.
+ *
+ * **Details**
+ * Missing headers remain absent. Unknown, duplicate or inconsistent claims become
+ * a static invalid-evidence label. This preserves an observation alongside the
+ * independent transport outcome; it proves neither HMAC validity nor protected
+ * producer identity. A reported not-found never establishes a genuine miss.
+ *
+ * **Example** (Retain a read-side backend failure)
+ * ```ts
+ * import { classifyCacheConformanceBackendResult } from "@beep/repo-cli/commands/Cache"
+ * import * as O from "effect/Option"
+ * const result = O.some("backend-unavailable").pipe(classifyCacheConformanceBackendResult("GET", O.some(503)))
+ * console.assert(O.contains(result, "backend-unavailable"))
+ * ```
+ *
+ * @param method - Observed request method.
+ * @param status - Observed HTTP response status, when available.
+ * @param header - Optional untrusted backend-result header.
+ * @returns A bounded observation; no raw header text is retained.
+ * @category validation
+ * @since 0.0.0
+ */
+export const classifyCacheConformanceBackendResult: {
+  (
+    method: CacheConformanceMethod,
+    status: O.Option<number>
+  ): (header: O.Option<string>) => O.Option<CacheConformanceBackendResult>;
+  (
+    header: O.Option<string>,
+    method: CacheConformanceMethod,
+    status: O.Option<number>
+  ): O.Option<CacheConformanceBackendResult>;
+} = dual(
+  3,
+  (
+    header: O.Option<string>,
+    method: CacheConformanceMethod,
+    status: O.Option<number>
+  ): O.Option<CacheConformanceBackendResult> =>
+    O.map(header, (value) =>
+      O.some(value).pipe(
+        O.filter(isBackendResult),
+        O.filter((result) => O.exists(status, (code) => backendResultCompatible(result, method, code))),
+        O.getOrElse((): CacheConformanceBackendResult => "invalid-evidence")
+      )
+    )
+);
+
 const authorization = (bearers: CacheConformanceBearers, role: CacheConformanceCredentialRole) =>
   Match.value(role).pipe(
     Match.when("missing", O.none<string>),
@@ -304,18 +384,39 @@ const withWriterTag = Effect.fnUntraced(function* (step: WireStep) {
  *
  * @internal
  * @param response - Client response to drain.
+ * @param maximumBodyBytes - Maximum complete body retained; callers may lower the 64 MiB default.
  * @returns An effect yielding the status, headers and complete body bytes.
  * @category utilities
  * @since 0.0.0
  */
-export const readCacheConformanceReply = (response: HttpClientResponse.HttpClientResponse) =>
-  response.arrayBuffer.pipe(
-    Effect.map((buffer) => ({
-      status: O.some(response.status),
-      headers: response.headers,
-      body: new Uint8Array(buffer),
-    }))
+export const readCacheConformanceReply = Effect.fnUntraced(function* (
+  response: HttpClientResponse.HttpClientResponse,
+  maximumBodyBytes = 64 * 1024 * 1024
+) {
+  let size = 0;
+  const chunks = yield* response.stream.pipe(
+    Stream.catchTag("HttpClientError", (error) =>
+      Match.value(error.reason).pipe(
+        Match.tag("EmptyBodyError", () => Stream.empty),
+        Match.orElse(() => Stream.fail(error))
+      )
+    ),
+    Stream.tap((chunk) => {
+      if (chunk.byteLength > maximumBodyBytes - size)
+        return CacheCommandError.new("Conformance response body exceeded its byte bound.");
+      size += chunk.byteLength;
+      return Effect.void;
+    }),
+    Stream.runCollect
   );
+  const body = new Uint8Array(size);
+  let offset = 0;
+  for (const chunk of chunks) {
+    body.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return { status: O.some(response.status), headers: response.headers, body };
+});
 
 const send = Effect.fnUntraced(function* (context: WireContext, unsigned: WireStep) {
   const client = yield* HttpClient.HttpClient;
@@ -326,6 +427,14 @@ const send = Effect.fnUntraced(function* (context: WireContext, unsigned: WireSt
     Effect.flatMap((response) =>
       readCacheConformanceReply(response).pipe(
         Effect.map((reply) => ({ ...reply, fault: O.none<CacheConformanceOutcome>() })),
+        Effect.catchTag("CacheCommandError", () =>
+          Effect.succeed({
+            status: O.some(response.status),
+            headers: response.headers,
+            body: empty,
+            fault: O.some<CacheConformanceOutcome>("payload-rejected"),
+          })
+        ),
         Effect.orElseSucceed(() => ({
           status: O.some(response.status),
           headers: response.headers,
@@ -369,6 +478,11 @@ const send = Effect.fnUntraced(function* (context: WireContext, unsigned: WireSt
       })
     ),
     status: observed.status,
+    backendResult: classifyCacheConformanceBackendResult(
+      Headers.get(observed.headers, "x-beep-cache-result"),
+      step.method,
+      observed.status
+    ),
     contentType: classifyCacheConformanceMediaType(Headers.get(observed.headers, "content-type")),
     requestBytes: S.Natural.make(
       O.match(requestBody, {
@@ -1125,8 +1239,8 @@ const outcomeOf = (recorder: Recorder) =>
 
 type FaultProxy = {
   readonly url: string;
-  readonly events: Effect.Effect<ReadonlyArray<CacheConformanceProxyEvent>>;
-  readonly setScenario: (id: string, fault: CacheConformanceFault) => Effect.Effect<void>;
+  readonly events: Effect.Effect<ReadonlyArray<CacheConformanceProxyEvent>, CacheCommandError>;
+  readonly setScenario: (id: string, fault: CacheConformanceFault) => Effect.Effect<void, CacheCommandError>;
 };
 
 type LabCase = (
