@@ -5,6 +5,8 @@
   // files, Vite/Tauri main.tsx, proof-app index.ts, Storybook config) so app code is
   // reachable instead of invisible (goals/fallow-zero-dead-code).
   "entry": [
+    // Launched by verify-worker-entrypoint.py as a standalone synthetic process.
+    "packages/tooling/library/ai-metrics/test/fixtures/managed-observation-process.ts",
     "packages/**/src/*.ts",
     "packages/**/src/*/index.ts",
     // Standalone operator command invoked from the retention report runbook.
@@ -141,6 +143,8 @@
     // so nothing in the workspace import graph reaches it.
     "infra/lambda/**",
     "**/test/fixtures/**",
+    // Preserve dependency ownership for this externally launched proof fixture.
+    "!packages/tooling/library/ai-metrics/test/fixtures/managed-observation-process.ts",
     "**/examples/**",
     "**/postcss.config.*",
     // tools/tsgo-shim provides the repo `tsgo` bin (consumed via node_modules/.bin,

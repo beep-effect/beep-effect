@@ -3,6 +3,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
 import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
@@ -14,6 +15,7 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import * as Str from "effect/String";
+import { isPrivateObservationFile } from "./observation-file.ts";
 import {
   ObservationLaunchFact,
   ObservationLaunchReceipt,
@@ -193,7 +195,7 @@ const directoryIdentity = Effect.fn("ObservationClaims.directoryIdentity")(funct
   if (
     info.type !== "Directory" ||
     (info.mode & 0o777) !== 0o700 ||
-    O.getOrElse(info.uid, () => -1) !== uid ||
+    !O.contains(info.uid, uid) ||
     O.isNone(info.ino) ||
     (yield* fs.realPath(directory)) !== directory
   )
@@ -247,13 +249,7 @@ const readSlot = Effect.fn("ObservationClaims.readSlot")((file: string, uid: num
       if (O.isNone(opened)) return O.none<string>();
       const handle = opened.value;
       const info = yield* handle.stat;
-      if (
-        info.type !== "File" ||
-        (info.mode & 0o777) !== 0o600 ||
-        O.getOrElse(info.uid, () => -1) !== uid ||
-        O.getOrElse(info.nlink, () => BigInt(0)) !== BigInt(1)
-      )
-        return yield* fail("integrity");
+      if (!isPrivateObservationFile(info, uid)) return yield* fail("integrity");
       const bytes = new Uint8Array(8193);
       let offset = 0;
       while (offset < bytes.length) {

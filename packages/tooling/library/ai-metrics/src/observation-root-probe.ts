@@ -17,7 +17,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { AiMetricsGitRootEvidence, observeAiMetricsGitRoot } from "./git-root-evidence.ts";
 import { AiMetricsCanonicalRootInput } from "./identity-registry.ts";
-import { readBoundedMetadata } from "./internal/bounded-metadata.ts";
+import { readBoundedMetadata } from "./observation-file.ts";
 import {
   ObservationCapability,
   ObservationHarness,
@@ -42,7 +42,7 @@ const PrivateLabel = S.NonEmptyString.check(S.isMaxLength(4096)).pipe(
 /**
  * Explicit local scope for a metadata-only root probe.
  *
- * **Example**
+ * **Example** (Inspect observation root declaration)
  * ```ts
  * import { ObservationRootDeclaration } from "@beep/repo-ai-metrics/observation-root-probe"
  * import * as S from "effect/Schema"
@@ -100,7 +100,7 @@ const ReceiptBody = S.Struct({
 /**
  * Content-addressed, path-free evidence for one root observation.
  *
- * **Example**
+ * **Example** (Inspect observation root receipt)
  * ```ts
  * import { ObservationRootReceipt } from "@beep/repo-ai-metrics/observation-root-probe"
  * import * as S from "effect/Schema"
@@ -119,7 +119,7 @@ export class ObservationRootReceipt extends S.Opaque<ObservationRootReceipt, { r
 /**
  * Inventory and its root evidence from one bounded local probe.
  *
- * **Example**
+ * **Example** (Inspect observation root probe result)
  * ```ts
  * import { ObservationRootProbeResult } from "@beep/repo-ai-metrics/observation-root-probe"
  * import * as S from "effect/Schema"
@@ -144,11 +144,14 @@ export class ObservationRootProbeResult extends S.Opaque<
 ) {}
 
 const failure = (message: string) => ObservationInventoryError.make({ message });
+const decodeObservationRootDeclarationJson = S.decodeEffect(S.fromJsonString(ObservationRootDeclaration), {
+  onExcessProperty: "error",
+});
 
 /**
  * Read a private root declaration with strict UTF-8 and field validation.
  *
- * **Example**
+ * **Example** (Read declared roots)
  * ```ts
  * import { readObservationRootDeclaration } from "@beep/repo-ai-metrics/observation-root-probe"
  * console.log(readObservationRootDeclaration("/tmp/synthetic-declaration.json"))
@@ -163,15 +166,28 @@ export const readObservationRootDeclaration = Effect.fn("AiMetrics.readRootDecla
     oversize: failure("Root declaration exceeds its byte limit."),
     encodingFailed: failure("Invalid root declaration encoding."),
   });
-  return yield* S.decodeEffect(S.fromJsonString(ObservationRootDeclaration), { onExcessProperty: "error" })(text).pipe(
+  return yield* decodeObservationRootDeclarationJson(text).pipe(
     Effect.mapError(() => failure("Invalid root declaration."))
   );
 });
+const encodeReceiptBodyJson = S.encodeEffect(S.fromJsonString(ReceiptBody));
+const encodeVersionHostRecordJson = S.encodeEffect(
+  S.fromJsonString(
+    S.Struct({
+      version: S.tag("declared-root-probe/v1"),
+      host: ObservationHost,
+      populationWindowStart: S.DateTimeUtcFromString,
+      populationWindowEnd: S.DateTimeUtcFromString,
+      rootReceiptIds: S.Array(Sha256Hex),
+      requestedHarnesses: S.Array(ObservationHarness),
+    })
+  )
+);
 
 /**
  * Observe only explicitly declared checkout roots and build a safe host inventory.
  *
- * **Example**
+ * **Example** (Probe declared roots)
  * ```ts
  * import { probeObservationRoots } from "@beep/repo-ai-metrics/observation-root-probe"
  * console.log(typeof probeObservationRoots) // function
@@ -223,7 +239,7 @@ export const probeObservationRoots = Effect.fn("AiMetrics.probeObservationRoots"
             observedAt: yield* DateTime.now,
             git,
           });
-          const encoded = yield* S.encodeEffect(S.fromJsonString(ReceiptBody))(observation);
+          const encoded = yield* encodeReceiptBodyJson(observation);
           return ObservationRootReceipt.make({ evidenceId: yield* hashPublicTextSha256(encoded), observation });
         }),
       { concurrency: 4 }
@@ -264,18 +280,7 @@ export const probeObservationRoots = Effect.fn("AiMetrics.probeObservationRoots"
     );
     const observedAt = yield* DateTime.now;
     const boundaryEvidenceId = yield* hashPublicTextSha256(
-      yield* S.encodeEffect(
-        S.fromJsonString(
-          S.Struct({
-            version: S.Literal("declared-root-probe/v1"),
-            host: ObservationHost,
-            populationWindowStart: S.DateTimeUtcFromString,
-            populationWindowEnd: S.DateTimeUtcFromString,
-            rootReceiptIds: S.Array(Sha256Hex),
-            requestedHarnesses: S.Array(ObservationHarness),
-          })
-        )
-      )({
+      yield* encodeVersionHostRecordJson({
         version: "declared-root-probe/v1",
         host,
         populationWindowStart: declaration.populationWindowStart,

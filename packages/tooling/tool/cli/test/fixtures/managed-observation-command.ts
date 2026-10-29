@@ -52,10 +52,38 @@ import * as Str from "effect/String";
 const salt = "synthetic-launch-proof-salt";
 const hash = (value: string) => hashPrivateIdentifier(value, O.some(salt));
 const id = (digit: string) => Sha256Hex.make(Str.repeat(64)(digit));
+const decodeArguments = S.decodeUnknownEffect(
+  S.Tuple([S.String, Sha256Hex, Sha256Hex, S.String, S.String, S.Literals(["initialize", "recover", "hold"])])
+);
+const encodeAgentObservationOwnerJson = S.encodeEffect(S.fromJsonString(AgentObservationOwner));
+const encodeAgentObservationProvisioningJson = S.encodeEffect(S.fromJsonString(AgentObservationProvisioning));
+const decodeAgentObservationProvisionedJson = S.decodeEffect(S.fromJsonString(AgentObservationProvisioned));
+const decodeAgentObservationEnrollmentJson = S.decodeEffect(S.fromJsonString(AgentObservationEnrollment));
+const encodeManagedLaunchProfileJson = S.encodeEffect(S.fromJsonString(ManagedLaunchProfile));
+const encodeLaunchGrantJson = S.encodeEffect(S.fromJsonString(LaunchGrant));
+const encodeClaimIntegrityRefusalChildLaunchesRecordJson = S.encodeEffect(
+  S.fromJsonString(S.Struct({ claimIntegrityRefusal: S.Boolean, childLaunches: S.Natural }))
+);
+const decodeAgentObservationRecoveryJson = S.decodeEffect(S.fromJsonString(AgentObservationRecovery));
+const encodeObservationClaimPopulationRequestJson = S.encodeEffect(S.fromJsonString(ObservationClaimPopulationRequest));
+const decodeObservationClaimPopulationReportJson = S.decodeEffect(S.fromJsonString(ObservationClaimPopulationReport));
+const encodeReportPopulationRecordJson = S.encodeEffect(
+  S.fromJsonString(
+    S.Struct({
+      report: AgentObservationRecovery,
+      population: ObservationClaimPopulationReport,
+      populationDisplay: S.String,
+      childLaunches: S.Natural,
+      childStopped: S.Boolean,
+      relaunchRefused: S.Boolean,
+      syntheticOnly: S.tag(true),
+      explicitSetupCommands: S.Boolean,
+    })
+  )
+);
+
 const program = Effect.gen(function* () {
-  const [directory, hostId, namespaceId, peer, root, mode] = yield* S.decodeUnknownEffect(
-    S.Tuple([S.String, Sha256Hex, Sha256Hex, S.String, S.String, S.Literals(["initialize", "recover", "hold"])])
-  )(A.drop(process.argv, 2));
+  const [directory, hostId, namespaceId, peer, root, mode] = yield* decodeArguments(A.drop(process.argv, 2));
   const fs = yield* FileSystem.FileSystem;
   const enrollmentDirectory = `${root}/enrollment`;
   const profile = ManagedLaunchProfile.make({
@@ -77,7 +105,7 @@ const program = Effect.gen(function* () {
     provider: "codex",
   });
   const ownerBinding = yield* hash(
-    `agent-message-observation-owner/v1:${yield* S.encodeEffect(S.fromJsonString(AgentObservationOwner))(owner)}`
+    `agent-message-observation-owner/v1:${yield* encodeAgentObservationOwnerJson(owner)}`
   );
   const launchId = yield* hash(`agent-message-observation-attempt/v1:${ownerBinding}`);
   const policy = ObservationClaimPolicy.make({
@@ -121,11 +149,9 @@ const program = Effect.gen(function* () {
       evidenceEpoch: 0,
       identity: enrollment.submission.fact.identity,
     });
-    yield* fs.writeFileString(
-      `${root}/request/request.json`,
-      yield* S.encodeEffect(S.fromJsonString(AgentObservationProvisioning))(request),
-      { mode: 0o600 }
-    );
+    yield* fs.writeFileString(`${root}/request/request.json`, yield* encodeAgentObservationProvisioningJson(request), {
+      mode: 0o600,
+    });
     for (const operation of ["initialize-claims", "enroll"]) {
       const output = yield* Deferred.make<string>();
       yield* Command.runWith(agentMessageCommand, { version: "proof", renderErrors: false })([
@@ -145,22 +171,16 @@ const program = Effect.gen(function* () {
           })
         )
       );
-      const receipt = yield* S.decodeEffect(S.fromJsonString(AgentObservationProvisioned))(
-        yield* Deferred.await(output)
-      );
+      const receipt = yield* decodeAgentObservationProvisionedJson(yield* Deferred.await(output));
       if (receipt.launchId !== launchId || receipt.operation !== operation || receipt.fenceId !== policy.anchor.fenceId)
         return yield* Effect.die("Setup receipt differs from expected binding");
     }
-    const installed = yield* S.decodeEffect(S.fromJsonString(AgentObservationEnrollment))(
+    const installed = yield* decodeAgentObservationEnrollmentJson(
       yield* fs.readFileString(`${enrollmentDirectory}/enrollment.json`)
     );
     if (!S.toEquivalence(AgentObservationEnrollment)(installed, enrollment))
       return yield* Effect.die("Installed enrollment differs from expected metadata");
-    yield* fs.writeFileString(
-      `${root}/profile.json`,
-      yield* S.encodeEffect(S.fromJsonString(ManagedLaunchProfile))(profile),
-      { mode: 0o600 }
-    );
+    yield* fs.writeFileString(`${root}/profile.json`, yield* encodeManagedLaunchProfileJson(profile), { mode: 0o600 });
     // A deliberately stale, synthetic cold snapshot. Never install it as active claims.
     yield* fs.makeDirectory(`${root}/cold-claims-snapshot`, { mode: 0o700 });
     yield* fs.copyFile(`${policy.directory}/anchor.json`, `${root}/cold-claims-snapshot/anchor.json`);
@@ -177,7 +197,7 @@ const program = Effect.gen(function* () {
     expiresAt: (yield* Clock.currentTimeMillis) + 60000,
     maxMessages: 1,
   });
-  yield* fs.writeFileString(`${root}/grant.json`, yield* S.encodeEffect(S.fromJsonString(LaunchGrant))(grant), {
+  yield* fs.writeFileString(`${root}/grant.json`, yield* encodeLaunchGrantJson(grant), {
     mode: 0o600,
   });
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
@@ -226,9 +246,7 @@ const program = Effect.gen(function* () {
     }
     if ((yield* Ref.get(children)).length !== 0) return yield* Effect.die("Recovery hold spawned a child");
     return yield* Console.log(
-      yield* S.encodeEffect(S.fromJsonString(S.Struct({ claimIntegrityRefusal: S.Boolean, childLaunches: S.Natural })))(
-        { claimIntegrityRefusal: true, childLaunches: 0 }
-      )
+      yield* encodeClaimIntegrityRefusalChildLaunchesRecordJson({ claimIntegrityRefusal: true, childLaunches: 0 })
     );
   }
   const claims = yield* makeObservationClaims(policy, process.geteuid?.() ?? -1);
@@ -274,19 +292,9 @@ const program = Effect.gen(function* () {
       })
     )
   );
-  const report = yield* S.decodeEffect(S.fromJsonString(AgentObservationRecovery))(yield* Deferred.await(output));
+  const report = yield* decodeAgentObservationRecoveryJson(yield* Deferred.await(output));
   const state = yield* claims.readOutbox(launchId);
-  if (
-    !S.toEquivalence(AgentObservationRecovery)(
-      report,
-      AgentObservationRecovery.make({
-        operation,
-        outbox: state,
-        backendVisibility: "unknown",
-        processLiveness: "unknown",
-      })
-    )
-  )
+  if (!S.toEquivalence(AgentObservationRecovery)(report, AgentObservationRecovery.make({ operation, outbox: state })))
     return yield* Effect.die("Command report differs from retained evidence");
   if (state.submissions.length !== 4 || state.receipts.length !== (mode === "initialize" ? 0 : 4))
     return yield* Effect.die("Unexpected command lifecycle evidence");
@@ -319,7 +327,7 @@ const program = Effect.gen(function* () {
   });
   yield* fs.writeFileString(
     `${root}/request/population.json`,
-    yield* S.encodeEffect(S.fromJsonString(ObservationClaimPopulationRequest))(populationRequest),
+    yield* encodeObservationClaimPopulationRequestJson(populationRequest),
     { mode: 0o600 }
   );
   const populationOutput = yield* Deferred.make<string>();
@@ -342,9 +350,7 @@ const program = Effect.gen(function* () {
       })
     )
   );
-  const population = yield* S.decodeEffect(S.fromJsonString(ObservationClaimPopulationReport))(
-    yield* Deferred.await(populationOutput)
-  );
+  const population = yield* decodeObservationClaimPopulationReportJson(yield* Deferred.await(populationOutput));
   if (
     population.rows[0]?.started.length !== 1 ||
     population.rows[0]?.started[0] !== launchId ||
@@ -382,20 +388,7 @@ const program = Effect.gen(function* () {
   )
     return yield* Effect.die("Population display blurred boundaries");
   yield* Console.log(
-    yield* S.encodeEffect(
-      S.fromJsonString(
-        S.Struct({
-          report: AgentObservationRecovery,
-          population: ObservationClaimPopulationReport,
-          populationDisplay: S.String,
-          childLaunches: S.Natural,
-          childStopped: S.Boolean,
-          relaunchRefused: S.Boolean,
-          syntheticOnly: S.Literal(true),
-          explicitSetupCommands: S.Boolean,
-        })
-      )
-    )({
+    yield* encodeReportPopulationRecordJson({
       report,
       population,
       populationDisplay,

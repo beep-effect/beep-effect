@@ -1,0 +1,30 @@
+{
+  "recordedAt": "2026-10-29T12:56:53.783196+00:00",
+  "outerUnit": "foundation-cheap-gates-v2.service",
+  "ownedAdmissionScope": "agent-run-ea3f73ec-b7b9-430f-aed0-24b25a642629.scope",
+  "observedScopePeakBytes": 15691333632,
+  "observedScopeCurrentBytesBeforeContainment": 4510527488,
+  "originalScopeMemoryMax": "max",
+  "originalScopeMemoryHigh": "max",
+  "originalScopeSwapMax": "max",
+  "finding": "Yeet admission moves proof descendants into a sibling scope. The original outer-unit monitor did not include its memory. Earlier outer-unit peak receipts must not be interpreted as aggregate Yeet peak measurements.",
+  "action": "Applied runtime limits to the ancestry-proven owned scope, then deliberately stopped that scope and outer job after collected gates exposed known repairs. No source publication occurred.",
+  "nextGuard": "/tmp/foundation-bounded-job.py now discovers live descendant cgroups, applies limits only to owned agent-run scopes, sums nonoverlapping owned cgroups, and stops owned scopes on threshold breach. This revision still requires actual qualification.",
+  "remainingGateRepairs": [
+    "30 fixed literal fields should use constructor defaults",
+    "CanonicalOwnershipSummary needs a branded opaque schema",
+    "7 deterministic integration/regression files need schema advisory adjudication",
+    "2 TypeScript references and generated dependency boundaries",
+    "4 generated instrumentation catalog shards",
+    "JSDoc regenerated ratchet was interrupted, not passing"
+  ],
+  "correctedGuardArchive": {
+    "path": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-policy-brv5lg0f/foundation-bounded-job.py",
+    "sha256": "f4196e1558712d63daa6a5d24b3d7bb992e26bac9792259c6dbd98f549af9023"
+  },
+  "serializedCheapGates": "BEEP_QUALITY_CHEAP_GATE_CONCURRENCY=1, supported by Quality/internal/GithubChecks.ts",
+  "correctedGuardArchiveV2": {
+    "path": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-policy-brv5lg0f/foundation-bounded-job-v2.py",
+    "sha256": "ea52e029a1ac722694c3060b454e8f481cf733a888b2784d432a14c4362ca83c"
+  }
+}

@@ -136,6 +136,26 @@ const writeSynced = Effect.fn("ObservationBackup.writeSynced")(function* (file: 
   yield* handle.writeAll(bytes);
   yield* handle.sync;
 });
+const decodeNameRecordRows = S.decodeUnknownEffect(S.Array(S.Struct({ name: S.String })));
+const decodeArguments = S.decodeUnknownEffect(S.Tuple([S.Struct({ integrity_check: S.tag("ok") })]));
+const decodeArguments2 = S.decodeUnknownEffect(S.Tuple([S.Struct({ payload: S.String.check(S.isMaxLength(4096)) })]));
+const decodeTranscriptIntakeConfigJson = S.decodeEffect(S.fromJsonString(TranscriptIntakeConfig));
+
+const verifyJournalTables = Effect.fnUntraced(function* (
+  connection: SqlConnection.Connection,
+  query: string,
+  reason: ObservationBackupError["reason"]
+) {
+  const tables = yield* connection
+    .executeUnprepared(query, [observationJournalTables.length + 1], undefined)
+    .pipe(Effect.flatMap(decodeNameRecordRows));
+  if (
+    tables.length > observationJournalTables.length ||
+    A.some(tables, (row) => !A.contains(observationJournalTables, row.name))
+  )
+    return yield* failure(reason);
+});
+
 const inspectSnapshot = Effect.fn("ObservationBackup.inspectSnapshot")(function* (
   connection: SqlConnection.Connection,
   file: string,
@@ -147,31 +167,22 @@ const inspectSnapshot = Effect.fn("ObservationBackup.inspectSnapshot")(function*
     connection.executeUnprepared("ATTACH DATABASE ? AS observation_snapshot", [file], undefined),
     () =>
       Effect.gen(function* () {
-        const tables = yield* connection
-          .executeUnprepared(
-            "SELECT name FROM observation_snapshot.sqlite_master WHERE type='table' AND name NOT GLOB 'sqlite_*' LIMIT ?",
-            [observationJournalTables.length + 1],
-            undefined
-          )
-          .pipe(Effect.flatMap(S.decodeUnknownEffect(S.Array(S.Struct({ name: S.String })))));
-        if (
-          tables.length > observationJournalTables.length ||
-          A.some(tables, (row) => !A.contains(observationJournalTables, row.name))
-        )
-          return yield* failure("integrity");
+        yield* verifyJournalTables(
+          connection,
+          "SELECT name FROM observation_snapshot.sqlite_master WHERE type='table' AND name NOT GLOB 'sqlite_*' LIMIT ?",
+          "integrity"
+        );
         yield* connection
           .executeUnprepared("PRAGMA observation_snapshot.integrity_check(1)", [], undefined)
-          .pipe(Effect.flatMap(S.decodeUnknownEffect(S.Tuple([S.Struct({ integrity_check: S.Literal("ok") })]))));
+          .pipe(Effect.flatMap(decodeArguments));
         const rows = yield* connection
           .executeUnprepared(
             "SELECT substr(payload,1,4097) AS payload FROM observation_snapshot.observation_intake_config WHERE singleton=1",
             [],
             undefined
           )
-          .pipe(
-            Effect.flatMap(S.decodeUnknownEffect(S.Tuple([S.Struct({ payload: S.String.check(S.isMaxLength(4096)) })])))
-          );
-        const config = yield* S.decodeEffect(S.fromJsonString(TranscriptIntakeConfig))(rows[0].payload);
+          .pipe(Effect.flatMap(decodeArguments2));
+        const config = yield* decodeTranscriptIntakeConfigJson(rows[0].payload);
         if (config.hostId !== hostId || config.namespaceId !== namespaceId) return yield* failure("integrity");
         if ((yield* digest(new TextEncoder().encode(rows[0].payload))) !== configDigest)
           return yield* failure("integrity");
@@ -179,6 +190,14 @@ const inspectSnapshot = Effect.fn("ObservationBackup.inspectSnapshot")(function*
     () => connection.executeUnprepared("DETACH DATABASE observation_snapshot", [], undefined).pipe(Effect.orDie)
   );
 });
+const decodeArguments3 = S.decodeUnknownEffect(S.Tuple([S.Struct({ name: S.tag("main"), file: S.NonEmptyString })]));
+const encodeTranscriptIntakeConfigJson = S.encodeEffect(S.fromJsonString(TranscriptIntakeConfig));
+const decodeArguments4 = S.decodeUnknownEffect(S.Tuple([S.Struct({ journal_mode: S.tag("delete") })]));
+const decodeArguments5 = S.decodeUnknownEffect(S.Tuple([S.Struct({ synchronous: S.tag(3) })]));
+const decodeArguments6 = S.decodeUnknownEffect(S.Tuple([S.Struct({ page_count: S.Natural })]));
+const decodeArguments7 = S.decodeUnknownEffect(S.Tuple([S.Struct({ page_size: S.tag(4096) })]));
+const encodeObservationBackupManifestJson = S.encodeEffect(S.fromJsonString(ObservationBackupManifest));
+
 /**
  * Capture an owned, paused and drained journal into a newly created private directory.
  * **Example** (Inspecting capture)
@@ -198,11 +217,7 @@ export const captureObservationBackup = Effect.fn("AiMetrics.captureObservationB
       const connection = yield* sql.reserve;
       const databases = yield* connection
         .executeUnprepared("PRAGMA database_list", [], undefined)
-        .pipe(
-          Effect.flatMap(
-            S.decodeUnknownEffect(S.Tuple([S.Struct({ name: S.Literal("main"), file: S.NonEmptyString })]))
-          )
-        );
+        .pipe(Effect.flatMap(decodeArguments3));
       if (!Str.startsWith("/")(databases[0].file)) return yield* failure("configuration");
       const rows = yield* connection
         .executeUnprepared(
@@ -210,35 +225,20 @@ export const captureObservationBackup = Effect.fn("AiMetrics.captureObservationB
           [],
           undefined
         )
-        .pipe(
-          Effect.flatMap(S.decodeUnknownEffect(S.Tuple([S.Struct({ payload: S.String.check(S.isMaxLength(4096)) })])))
-        );
-      const tables = yield* connection
-        .executeUnprepared(
-          "SELECT name FROM sqlite_master WHERE type='table' AND name NOT GLOB 'sqlite_*' LIMIT ?",
-          [observationJournalTables.length + 1],
-          undefined
-        )
-        .pipe(Effect.flatMap(S.decodeUnknownEffect(S.Array(S.Struct({ name: S.String })))));
-      if (
-        tables.length > observationJournalTables.length ||
-        A.some(tables, (row) => !A.contains(observationJournalTables, row.name))
-      )
-        return yield* failure("configuration");
-      const expected = yield* S.encodeEffect(S.fromJsonString(TranscriptIntakeConfig))(config);
+        .pipe(Effect.flatMap(decodeArguments2));
+      yield* verifyJournalTables(
+        connection,
+        "SELECT name FROM sqlite_master WHERE type='table' AND name NOT GLOB 'sqlite_*' LIMIT ?",
+        "configuration"
+      );
+      const expected = yield* encodeTranscriptIntakeConfigJson(config);
       if (rows[0].payload !== expected) return yield* failure("configuration");
-      yield* connection
-        .executeUnprepared("PRAGMA journal_mode", [], undefined)
-        .pipe(Effect.flatMap(S.decodeUnknownEffect(S.Tuple([S.Struct({ journal_mode: S.Literal("delete") })]))));
-      yield* connection
-        .executeUnprepared("PRAGMA synchronous", [], undefined)
-        .pipe(Effect.flatMap(S.decodeUnknownEffect(S.Tuple([S.Struct({ synchronous: S.Literal(3) })]))));
+      yield* connection.executeUnprepared("PRAGMA journal_mode", [], undefined).pipe(Effect.flatMap(decodeArguments4));
+      yield* connection.executeUnprepared("PRAGMA synchronous", [], undefined).pipe(Effect.flatMap(decodeArguments5));
       const pages = yield* connection
         .executeUnprepared("PRAGMA page_count", [], undefined)
-        .pipe(Effect.flatMap(S.decodeUnknownEffect(S.Tuple([S.Struct({ page_count: S.Natural })]))));
-      yield* connection
-        .executeUnprepared("PRAGMA page_size", [], undefined)
-        .pipe(Effect.flatMap(S.decodeUnknownEffect(S.Tuple([S.Struct({ page_size: S.Literal(4096) })]))));
+        .pipe(Effect.flatMap(decodeArguments6));
+      yield* connection.executeUnprepared("PRAGMA page_size", [], undefined).pipe(Effect.flatMap(decodeArguments7));
       if (pages[0].page_count * 4096 > policy.maxBytes) return yield* failure("capacity");
       yield* newDestination(directory);
       const file = `${directory}/journal.sqlite`;
@@ -259,15 +259,17 @@ export const captureObservationBackup = Effect.fn("AiMetrics.captureObservationB
         bytes: bytes.length,
         createdAt: yield* Clock.currentTimeMillis,
       });
-      const encoded = new TextEncoder().encode(
-        yield* S.encodeEffect(S.fromJsonString(ObservationBackupManifest))(manifest)
-      );
+      const encoded = new TextEncoder().encode(yield* encodeObservationBackupManifestJson(manifest));
       yield* writeSynced(`${directory}/manifest.partial`, encoded);
       yield* fs.rename(`${directory}/manifest.partial`, `${directory}/manifest.json`);
       yield* syncDirectory(directory);
       return ObservationBackupReceipt.make({ manifest, manifestDigest: yield* digest(encoded) });
     }).pipe(Effect.scoped, safe)
 );
+const decodeObservationBackupManifestJson = S.decodeEffect(S.fromJsonString(ObservationBackupManifest));
+const decodeArguments8 = S.decodeUnknownEffect(S.Tuple([S.Struct({ name: S.tag("main"), file: S.tag("") })]));
+const encodeObservationBackupReceiptJson = S.encodeEffect(S.fromJsonString(ObservationBackupReceipt));
+
 /**
  * Restore a verified snapshot into a fresh directory, preserving every existing database.
  * **Example** (Inspecting restoration)
@@ -287,18 +289,15 @@ export const restoreObservationBackup = Effect.fn("AiMetrics.restoreObservationB
       if (receipt.manifest.bytes > policy.maxBytes) return yield* failure("capacity");
       const encoded = yield* readBounded(`${backupDirectory}/manifest.json`, 4096);
       if ((yield* digest(encoded)) !== receipt.manifestDigest) return yield* failure("integrity");
-      const manifest = yield* S.decodeEffect(S.fromJsonString(ObservationBackupManifest))(
-        new TextDecoder().decode(encoded)
-      );
-      const expected = yield* S.encodeEffect(S.fromJsonString(ObservationBackupManifest))(receipt.manifest);
-      if ((yield* S.encodeEffect(S.fromJsonString(ObservationBackupManifest))(manifest)) !== expected)
-        return yield* failure("integrity");
+      const manifest = yield* decodeObservationBackupManifestJson(new TextDecoder().decode(encoded));
+      const expected = yield* encodeObservationBackupManifestJson(receipt.manifest);
+      if ((yield* encodeObservationBackupManifestJson(manifest)) !== expected) return yield* failure("integrity");
       const bytes = yield* readBounded(`${backupDirectory}/journal.sqlite`, policy.maxBytes);
       if (bytes.length !== manifest.bytes || (yield* digest(bytes)) !== manifest.snapshotDigest)
         return yield* failure("integrity");
       const connection = yield* sql.reserve;
       yield* connection.executeUnprepared("PRAGMA database_list", [], undefined).pipe(
-        Effect.flatMap(S.decodeUnknownEffect(S.Tuple([S.Struct({ name: S.Literal("main"), file: S.Literal("") })]))),
+        Effect.flatMap(decodeArguments8),
         Effect.mapError(() => failure("configuration"))
       );
       yield* newDestination(directory);
@@ -307,9 +306,7 @@ export const restoreObservationBackup = Effect.fn("AiMetrics.restoreObservationB
       yield* inspectSnapshot(connection, file, manifest.configDigest, manifest.hostId, manifest.namespaceId).pipe(
         Effect.mapError(() => failure("integrity"))
       );
-      const marker = new TextEncoder().encode(
-        yield* S.encodeEffect(S.fromJsonString(ObservationBackupReceipt))(receipt)
-      );
+      const marker = new TextEncoder().encode(yield* encodeObservationBackupReceiptJson(receipt));
       yield* writeSynced(`${directory}/restore.partial`, marker);
       yield* fs.rename(`${directory}/restore.partial`, `${directory}/restore.json`);
       yield* syncDirectory(directory);

@@ -1,0 +1,165 @@
+{
+  "observedAt": "2026-10-29T16:41:36.463529+00:00",
+  "baseHead": "1ed9704cc640a24fe880a5b1dc161b009d1ca1ef",
+  "archive": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-reader-readback-mk5d3kq4",
+  "artifacts": [
+    {
+      "file": "foundation-bounded-job.py",
+      "bytes": 7421,
+      "sha256": "e7d72f286ed9cbb662eceaab93df404f8ecee8462f3998e320b6557eb828c4ee"
+    },
+    {
+      "file": "foundation-transcript-reader-before.ts",
+      "bytes": 25013,
+      "sha256": "81a32f4181e68a7cc55169ece72b937b78e5fb4ef1cf5d13fe1c85f6d1413369"
+    },
+    {
+      "file": "foundation-native-readback-before.ts",
+      "bytes": 12035,
+      "sha256": "f6aa9880a7e909bc278d98d71c34adb0763a103ee07dca3a5ca2bae020ae3f0d"
+    },
+    {
+      "file": "delivery-fallow-worklist.json",
+      "bytes": 17946,
+      "sha256": "136e1ec85db5f10e372284136858d8bece577fbc91b08a125c915325148c9960"
+    },
+    {
+      "file": "READER-READBACK-REFACTOR-REVIEW.md",
+      "bytes": 4013,
+      "sha256": "b9dd130d94ed574f782a681b5105573138fb5030fe2b0f87a4e3b257edeb3c85"
+    },
+    {
+      "file": "foundation-observation-http-body.ts.before",
+      "bytes": 2005,
+      "sha256": "ab77912fe98eacf0a7a992d9e2044f0a2a7f352cbc23530b3beef4a4999ae4c4"
+    },
+    {
+      "file": "foundation-observation-launch-http.ts.before",
+      "bytes": 10684,
+      "sha256": "9980f14f41539323d2f68838b29daed6b01972071c8501dcaa16a9bcab0d7d64"
+    },
+    {
+      "file": "foundation-observation-maintenance-http.ts.before",
+      "bytes": 10026,
+      "sha256": "64a72de25365722f610582db4e35f1c0e14b23a15a8a7c60e6dc8f95ccfa7f5c"
+    },
+    {
+      "file": "foundation-observation-backup.ts.before",
+      "bytes": 17203,
+      "sha256": "5e0f4f09a503d880be2eb8d89701b5a9e1c92d5bd1c922abc1bd470a69d36f83"
+    },
+    {
+      "file": "foundation-transcript-reader-v1.log",
+      "bytes": 2460,
+      "sha256": "d121e34f4c9d928f64eb84c3f05b908459861a282939b871794f25ee8871a7be"
+    },
+    {
+      "file": "foundation-transcript-reader-v1-guard.json",
+      "bytes": 352,
+      "sha256": "faddc86609acd942904a066b02279027b19c6df7a3ec830c5247195edb5b7cea"
+    },
+    {
+      "file": "foundation-transcript-reader-v2.log",
+      "bytes": 2214,
+      "sha256": "5cde9ff649874c774a74096111bef73c7bc211be68626382c15a4a4373d46abf"
+    },
+    {
+      "file": "foundation-transcript-reader-v2-guard.json",
+      "bytes": 352,
+      "sha256": "c1b7a5fe3d621b5596a9d2954bead3a28c700387b69cbc89698d63e6cdb7ee50"
+    },
+    {
+      "file": "foundation-reader-readback-v3.log",
+      "bytes": 2762,
+      "sha256": "72e53711ce792240c04041255027be14812ccfaaab31ca31cf6a74e0dfa21346"
+    },
+    {
+      "file": "foundation-reader-readback-v3-guard.json",
+      "bytes": 350,
+      "sha256": "2a93f2126a69280c1e9885812fc05c6c43f857b376799a9f8fc7a08e278884dd"
+    },
+    {
+      "file": "foundation-reader-readback-full-v4.log",
+      "bytes": 3574,
+      "sha256": "8208775c2ab584dbced13bb320755e280b043364e2e7880465b02aca366697b9"
+    },
+    {
+      "file": "foundation-reader-readback-full-v4-guard.json",
+      "bytes": 355,
+      "sha256": "c46cb715bec11970b38b30bd694671eadebd5e4dea4a4bc2c0e41b3fd10b6b6b"
+    },
+    {
+      "file": "foundation-fallow-repair-audit-v6.log",
+      "bytes": 14841,
+      "sha256": "5efcde404744527df3f01edfd6ea3648785b024459b620e6e5fceb61c25d7498"
+    },
+    {
+      "file": "foundation-fallow-repair-audit-v6-guard.json",
+      "bytes": 354,
+      "sha256": "a5896da0ca60488d246697f3c84ae29965d5a1158e511d881ee44a296e305b90"
+    },
+    {
+      "file": "foundation-transcript-reader-health-v1.json",
+      "bytes": 8917,
+      "sha256": "02704e974a57be0341887b827971c7083775ea6adaff21d85690042214928f61"
+    },
+    {
+      "file": "foundation-transcript-reader-health-v2.json",
+      "bytes": 6188,
+      "sha256": "8a06ddc4e1a271d0cc551467170a2025ce6b30c58ca84465904167e1a0f1b66d"
+    },
+    {
+      "file": "foundation-native-readback-health-v1.json",
+      "bytes": 6071,
+      "sha256": "d5eb1fdb28521b6c5fe7a0eecc1f8e9b8b42a7b2a90bb699cb27ab47efdf9253"
+    },
+    {
+      "file": "audit.repair-v6.json",
+      "bytes": 14326,
+      "sha256": "cfe9c878a5c8ea37ad3ba25fcf80ed516714acaea662a46b29b391a4e8c9d16a"
+    },
+    {
+      "file": "audit.repair-v6.combined.txt",
+      "bytes": 125944,
+      "sha256": "06b32c28aa887be6c22fc245db3728aaed9a2c84e3ccda77ed5a740f55aa55c5"
+    }
+  ],
+  "currentSourceSha256": {
+    "packages/tooling/library/ai-metrics/src/transcript-page.ts": "e7935add92ce2a3c47a0d9b70020dc978ae25c92667482c798409e3d68340169",
+    "packages/tooling/library/ai-metrics/src/native-readback.ts": "3eba0593261bc31771dc54583a04a5f44e0f6fe72c876cda85e44817f92a0a08",
+    "packages/tooling/library/ai-metrics/src/observation-backup.ts": "7c448d03aaa47fb681c030c897c027bebf80a87de23d725072edbd11ffdc466f",
+    "packages/tooling/library/ai-metrics/src/observation-launch-http.ts": "c173247d0ade3132c9a2a35cc3b433e6adbf94c21f06d3184d0817132059f2fe",
+    "packages/tooling/library/ai-metrics/src/observation-maintenance-http.ts": "a5613176a4f7f7e3e1749e7138ca0ac4be9de91a14179fa97abce5faa0b0418a",
+    "packages/tooling/library/ai-metrics/src/internal/observation-http-body.ts": "f8cad40500b97060f07087123db637d2e04ab8a7f14d0f23bdce050ed51d7fa7"
+  },
+  "verification": {
+    "focusedTests": 71,
+    "aiMetricsAudit": "passed",
+    "aiMetricsDocgen": "passed",
+    "scopedOxlint": "passed; zero warnings/errors",
+    "independentReview": "bounded acceptance at exact current hashes",
+    "fallowAudit": "failed: 50 introduced complexity, 6 introduced duplication, 4 inherited-adjacent duplication, zero dead-code issues",
+    "readerAndReadbackComplexity": 0,
+    "maximumRemainingCyclomatic": 31
+  },
+  "guard": {
+    "ownedScopes": {},
+    "unit": "foundation-reader-readback-full-v4.service",
+    "profile": "bounded",
+    "memoryStopBytes": 8589934592,
+    "hostAvailableFloorBytes": 8589934592,
+    "initialAvailableBytes": 47966666752,
+    "peakObservedBytes": 5320736768,
+    "minimumAvailableBytes": 44215922688,
+    "stoppedFor": null,
+    "exitCode": 0,
+    "orphanCleanup": []
+  },
+  "limitations": [
+    "Repository delivery remains incomplete. No thresholds, suppressions or allowances broadened.",
+    "Private launch handler still has a complexity finding. Current-source installed/canary proof and full CLI runtime-abort resolution remain pending.",
+    "Remaining policy/catalog checks, Beep publication, hosted checks/review/merge and reflection remain open.",
+    "Forwarder service/timer masked and inactive; no rollout, historical data removal or raw transcript collection."
+  ],
+  "intermediateEvidence": "v1 page/discovery/intake and quick lint/types passed but two reader helpers remained complex. v2 eliminated those findings. v3 44 focused cases and quick checks passed; native readback target health clean. Final v4 package verification passed; v6 repository audit remains red as stated."
+}

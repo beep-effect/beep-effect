@@ -16,10 +16,11 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { launchFixture } from "./observation-launch-config.ts";
 
+const decodeArguments = S.decodeUnknownEffect(S.Tuple([S.String, S.String, S.String]));
+const encodeObservationLaunchConfigJson = S.encodeEffect(S.fromJsonString(ObservationLaunchConfig));
+
 const program = Effect.gen(function* () {
-  const [directory, origin, sourceDirectory] = yield* S.decodeUnknownEffect(S.Tuple([S.String, S.String, S.String]))(
-    A.drop(process.argv, 2)
-  );
+  const [directory, origin, sourceDirectory] = yield* decodeArguments(A.drop(process.argv, 2));
   const fs = yield* FileSystem.FileSystem;
   const base = yield* launchFixture(origin);
   const config = ObservationLaunchConfig.make({
@@ -53,11 +54,9 @@ const program = Effect.gen(function* () {
             }),
           }),
   });
-  yield* fs.writeFileString(
-    `${directory}/worker.json`,
-    yield* S.encodeEffect(S.fromJsonString(ObservationLaunchConfig))(config),
-    { mode: 0o600 }
-  );
+  yield* fs.writeFileString(`${directory}/worker.json`, yield* encodeObservationLaunchConfigJson(config), {
+    mode: 0o600,
+  });
 });
 NodeRuntime.runMain(
   Layer.merge(NodeServices.layer, NodeCrypto.layer).pipe(

@@ -1,0 +1,310 @@
+{
+  "basis": {
+    "report": ".beep/fallow/audit.repair-v14.json",
+    "rawArchive": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-intake-boundaries-rs_lurab/audit.repair-v14.combined.txt",
+    "observedAt": "2026-10-29T18:04:24.499886+00:00"
+  },
+  "complexity": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.observation.ts",
+      "name": "<anonymous>",
+      "line": 361,
+      "cyclomatic": 15,
+      "cognitive": 11,
+      "line_count": 47,
+      "exceeded": "cognitive_crap",
+      "severity": "high"
+    },
+    {
+      "path": "packages/drivers/phoenix/src/Phoenix.span-readback.ts",
+      "name": "result",
+      "line": 142,
+      "cyclomatic": 14,
+      "cognitive": 12,
+      "line_count": 62,
+      "exceeded": "cognitive_crap",
+      "severity": "high"
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics/src/observation-launch-client.ts",
+      "name": "result",
+      "line": 146,
+      "cyclomatic": 14,
+      "cognitive": 19,
+      "line_count": 37,
+      "exceeded": "cognitive_crap",
+      "severity": "high"
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics/src/transcript-discovery.ts",
+      "name": "operation",
+      "line": 293,
+      "cyclomatic": 14,
+      "cognitive": 13,
+      "line_count": 48,
+      "exceeded": "cognitive_crap",
+      "severity": "high"
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics/src/git-root-evidence.ts",
+      "name": "probe",
+      "line": 136,
+      "cyclomatic": 13,
+      "cognitive": 12,
+      "line_count": 68,
+      "exceeded": "cognitive_crap",
+      "severity": "moderate"
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics/src/native-export.ts",
+      "name": "usageAttributes",
+      "line": 103,
+      "cyclomatic": 13,
+      "cognitive": 9,
+      "line_count": 36,
+      "exceeded": "cognitive_crap",
+      "severity": "moderate"
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics/src/observation-claim-population.ts",
+      "name": "readObservationClaimPopulation",
+      "line": 157,
+      "cyclomatic": 13,
+      "cognitive": 12,
+      "line_count": 104,
+      "exceeded": "cognitive",
+      "severity": "moderate"
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics/src/observation-launch-client.ts",
+      "name": "inspect",
+      "line": 102,
+      "cyclomatic": 13,
+      "cognitive": 4,
+      "line_count": 28,
+      "exceeded": "crap",
+      "severity": "moderate"
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics/src/internal/observation-export-reader.ts",
+      "name": "read",
+      "line": 67,
+      "cyclomatic": 12,
+      "cognitive": 11,
+      "line_count": 30,
+      "exceeded": "cognitive_crap",
+      "severity": "moderate"
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics/src/transcript-discovery.ts",
+      "name": "recordReads",
+      "line": 350,
+      "cyclomatic": 12,
+      "cognitive": 14,
+      "line_count": 29,
+      "exceeded": "cognitive_crap",
+      "severity": "moderate"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts",
+      "name": "runObservationWorkerProcess",
+      "line": 181,
+      "cyclomatic": 12,
+      "cognitive": 12,
+      "line_count": 145,
+      "exceeded": "cognitive_crap",
+      "severity": "critical"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts",
+      "name": "read",
+      "line": 214,
+      "cyclomatic": 12,
+      "cognitive": 4,
+      "line_count": 19,
+      "exceeded": "crap",
+      "severity": "critical"
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics/src/observation-launch-claims.ts",
+      "name": "accepted",
+      "line": 542,
+      "cyclomatic": 11,
+      "cognitive": 10,
+      "line_count": 29,
+      "exceeded": "cognitive_crap",
+      "severity": "moderate"
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics/test/observation-root-probe.test.ts",
+      "name": "it.effect(\"observes clones and worktrees with evide...\")",
+      "line": 81,
+      "cyclomatic": 11,
+      "cognitive": 6,
+      "line_count": 65,
+      "exceeded": "crap",
+      "severity": "moderate"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts",
+      "name": "secrets",
+      "line": 192,
+      "cyclomatic": 11,
+      "cognitive": 8,
+      "line_count": 46,
+      "exceeded": "crap",
+      "severity": "critical"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts",
+      "name": "handler",
+      "line": 298,
+      "cyclomatic": 11,
+      "cognitive": 11,
+      "line_count": 23,
+      "exceeded": "cognitive_crap",
+      "severity": "critical"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.observation.ts",
+      "name": "readPrivateDocument",
+      "line": 141,
+      "cyclomatic": 11,
+      "cognitive": 6,
+      "line_count": 49,
+      "exceeded": "crap",
+      "severity": "moderate"
+    },
+    {
+      "path": "packages/drivers/ai-provider-cli/test/AiProviderCliSession.test.ts",
+      "name": "<arrow>",
+      "line": 62,
+      "cyclomatic": 10,
+      "cognitive": 9,
+      "line_count": 953,
+      "exceeded": "cognitive_crap",
+      "severity": "moderate"
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics/src/internal/observation-export-reader.ts",
+      "name": "prepare",
+      "line": 104,
+      "cyclomatic": 10,
+      "cognitive": 5,
+      "line_count": 44,
+      "exceeded": "crap",
+      "severity": "moderate"
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics/src/native-export.ts",
+      "name": "spans",
+      "line": 157,
+      "cyclomatic": 10,
+      "cognitive": 10,
+      "line_count": 49,
+      "exceeded": "cognitive_crap",
+      "severity": "moderate"
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics/test/native-http-crash.test.ts",
+      "name": "start",
+      "line": 62,
+      "cyclomatic": 10,
+      "cognitive": 10,
+      "line_count": 109,
+      "exceeded": "cognitive_crap",
+      "severity": "moderate"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.observation.ts",
+      "name": "body",
+      "line": 163,
+      "cyclomatic": 10,
+      "cognitive": 7,
+      "line_count": 24,
+      "exceeded": "crap",
+      "severity": "moderate"
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics/src/observation-launch-claims.ts",
+      "name": "<anonymous>",
+      "line": 231,
+      "cyclomatic": 9,
+      "cognitive": 9,
+      "line_count": 37,
+      "exceeded": "cognitive",
+      "severity": "moderate"
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics/src/transcript-discovery.ts",
+      "name": "next",
+      "line": 277,
+      "cyclomatic": 9,
+      "cognitive": 11,
+      "line_count": 107,
+      "exceeded": "cognitive",
+      "severity": "moderate"
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics/test/evidence-retention.test.ts",
+      "name": "it.effect(\"retains all five retired state counts an...\")",
+      "line": 203,
+      "cyclomatic": 8,
+      "cognitive": 15,
+      "line_count": 51,
+      "exceeded": "cognitive",
+      "severity": "moderate"
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics/test/transcript-export.test.ts",
+      "name": "<anonymous>",
+      "line": 170,
+      "cyclomatic": 8,
+      "cognitive": 9,
+      "line_count": 58,
+      "exceeded": "cognitive",
+      "severity": "moderate"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts",
+      "name": "<anonymous>",
+      "line": 278,
+      "cyclomatic": 8,
+      "cognitive": 3,
+      "line_count": 13,
+      "exceeded": "crap",
+      "severity": "high"
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics/test/fixtures/managed-observation-process.ts",
+      "name": "program",
+      "line": 61,
+      "cyclomatic": 7,
+      "cognitive": 4,
+      "line_count": 145,
+      "exceeded": "crap",
+      "severity": "high"
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics/test/payload-reclamation.test.ts",
+      "name": "it.effect(\"expires mixed delivery states without ch...\")",
+      "line": 325,
+      "cyclomatic": 7,
+      "cognitive": 10,
+      "line_count": 53,
+      "exceeded": "cognitive",
+      "severity": "moderate"
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics/src/observation-launch-claims.ts",
+      "name": "result",
+      "line": 581,
+      "cyclomatic": 5,
+      "cognitive": 9,
+      "line_count": 24,
+      "exceeded": "cognitive",
+      "severity": "moderate"
+    }
+  ],
+  "introducedDuplication": []
+}

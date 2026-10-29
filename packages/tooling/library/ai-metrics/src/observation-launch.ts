@@ -13,11 +13,11 @@ import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import { DeliveryLedgerConfig } from "./delivery-ledger.ts";
 import { EvidenceRetentionPolicy } from "./evidence-retention.ts";
-import { readBoundedMetadata } from "./internal/bounded-metadata.ts";
 import { NativeDeliveryPolicy, nativeDeliveryTargetId } from "./native-delivery.ts";
 import { NativeHttpPolicy } from "./native-http.ts";
 import { NativeSchedulePolicy } from "./native-schedule.ts";
 import { ObservationControlPolicy } from "./observation-control.ts";
+import { isPrivateObservationFile, readBoundedMetadata } from "./observation-file.ts";
 import { ObservationLaunchHttpPolicy } from "./observation-launch-http.ts";
 import { ObservationRuntimePolicy } from "./observation-runtime.ts";
 import { ObservationWorkerConfig } from "./observation-worker.ts";
@@ -114,6 +114,8 @@ export class ObservationLaunchError extends S.TaggedError<ObservationLaunchError
   $I.annote("ObservationLaunchError", { description: "Safe configuration boundary refusal without private details." })
 ) {}
 const failure = (reason: ObservationLaunchError["reason"]) => ObservationLaunchError.make({ reason });
+const decodeObservationLaunchConfigJson = S.decodeEffect(S.fromJsonString(ObservationLaunchConfig));
+
 /**
  * Verify and read a bounded private launch file from a pre-created state directory.
  * **Example** (Inspecting the configuration reader)
@@ -151,15 +153,7 @@ export const readObservationLaunchConfig = Effect.fn("AiMetrics.readObservationL
   const file = path.join(directory, "worker.json");
   const body = yield* Effect.gen(function* () {
     const info = yield* fs.lstat(file);
-    if (
-      info.type !== "File" ||
-      (info.mode & 0o777) !== 0o600 ||
-      O.isNone(info.uid) ||
-      info.uid.value !== uid ||
-      O.isNone(info.nlink) ||
-      info.nlink.value !== BigInt(1) ||
-      (yield* fs.realPath(file)) !== file
-    )
+    if (!isPrivateObservationFile(info, uid) || (yield* fs.realPath(file)) !== file)
       return yield* failure("configuration");
     return yield* readBoundedMetadata(file, 65536, {
       readFailed: failure("configuration"),
@@ -167,9 +161,7 @@ export const readObservationLaunchConfig = Effect.fn("AiMetrics.readObservationL
       encodingFailed: failure("configuration"),
     });
   }).pipe(Effect.mapError(() => failure("configuration")));
-  return yield* S.decodeEffect(S.fromJsonString(ObservationLaunchConfig))(body).pipe(
-    Effect.mapError(() => failure("configuration"))
-  );
+  return yield* decodeObservationLaunchConfigJson(body).pipe(Effect.mapError(() => failure("configuration")));
 });
 /**
  * Bind launch declarations to redacted environment secrets and exact target identity.

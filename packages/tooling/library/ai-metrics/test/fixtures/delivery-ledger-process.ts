@@ -24,14 +24,18 @@ import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
 
 const id = (char: string) => Sha256Hex.make(Str.repeat(64)(char));
+const decodeArguments = S.decodeUnknownEffect(
+  S.Tuple([S.Literals(["inspect", "accept", "before-result", "after-result"]), S.String, S.String, S.String])
+);
+const encodeJsonValue = S.encodeEffect(S.fromJsonString(S.Unknown));
+const isStringRows = S.is(S.Array(S.String));
+
 const program = Effect.gen(function* () {
-  const [mode, databasePath, output, marker] = yield* S.decodeUnknownEffect(
-    S.Tuple([S.Literals(["inspect", "accept", "before-result", "after-result"]), S.String, S.String, S.String])
-  )(A.drop(process.argv, 2));
+  const [mode, databasePath, output, marker] = yield* decodeArguments(A.drop(process.argv, 2));
   const fs = yield* FileSystem.FileSystem;
   const client = yield* SqliteClient.make({ filename: databasePath });
   const writeJson = (path: string, value: unknown) =>
-    S.encodeEffect(S.fromJsonString(S.Unknown))(value).pipe(
+    encodeJsonValue(value).pipe(
       Effect.flatMap((value) => fs.writeFileString(`${path}.partial`, value, { mode: 0o600 })),
       Effect.andThen(fs.rename(`${path}.partial`, path))
     );
@@ -40,7 +44,7 @@ const program = Effect.gen(function* () {
       const fragments: unknown = parameters[0];
       if (
         mode === "before-result" &&
-        S.is(S.Array(S.String))(fragments) &&
+        isStringRows(fragments) &&
         Str.includes("INSERT INTO observation_delivery_results")(fragments[0] ?? "")
       ) {
         return Effect.gen(function* () {
@@ -69,7 +73,7 @@ const program = Effect.gen(function* () {
     maxAttempts: 16,
     maxAttemptsPerEvent: 8,
   });
-  const body = yield* S.encodeEffect(S.fromJsonString(S.Unknown))({
+  const body = yield* encodeJsonValue({
     resourceSpans: [
       {
         scopeSpans: [

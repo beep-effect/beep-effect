@@ -46,7 +46,7 @@ it.effect("starts paused, caps active work without queuing and drains exactly th
     yield* control.resume;
     yield* control.run(Ref.update(calls, (n) => n + 1));
     expect(yield* Ref.get(calls)).toBe(1);
-  }).pipe(Effect.scoped)
+  })
 );
 
 it.effect("keeps admission closed after drain timeout and refuses resume until accepted work finishes", () =>
@@ -70,7 +70,7 @@ it.effect("keeps admission closed after drain timeout and refuses resume until a
     yield* Fiber.join(running);
     expect(yield* control.pause).toMatchObject({ active: 0, accepting: false });
     expect(yield* control.resume).toMatchObject({ accepting: true });
-  }).pipe(Effect.scoped)
+  })
 );
 
 it.effect("releases activity after failures and interruption without reopening admission", () =>
@@ -91,7 +91,7 @@ it.effect("releases activity after failures and interruption without reopening a
     expect(yield* control.pause).toMatchObject({ accepting: false, active: 0 });
     yield* control.resume;
     expect(yield* control.run(Effect.succeed("next-generation"))).toBe("next-generation");
-  }).pipe(Effect.scoped)
+  })
 );
 
 it.effect("serializes maintenance, refuses admission and resume, and stays paused after maintenance failure", () =>
@@ -120,7 +120,7 @@ it.effect("serializes maintenance, refuses admission and resume, and stays pause
     expect(yield* control.status).toMatchObject({ accepting: false, active: 0, maintenance: false });
     expect(yield* control.maintain(Effect.succeed("restored"))).toBe("restored");
     expect(yield* control.status).toMatchObject({ accepting: false });
-  }).pipe(Effect.scoped)
+  })
 );
 
 it.effect("permanently closes a controller when its owning scope is released", () =>
@@ -164,5 +164,5 @@ it.effect("keeps pause exclusive through scanner suspension and leaves admission
     expect(yield* control.status).toMatchObject({ accepting: false, active: 0 });
     expect(yield* control.pauseWith(Effect.void)).toMatchObject({ accepting: false, active: 0 });
     expect(yield* control.resume).toMatchObject({ accepting: true });
-  }).pipe(Effect.scoped)
+  })
 );

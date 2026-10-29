@@ -34,6 +34,9 @@
     {"file":"packages/drivers/phoenix/src/Phoenix.models.ts","symbol":"PhoenixPromptReadResult","kind":"struct-const","owner":"@beep/phoenix","identity":"PhoenixPromptReadResult","description":"Readback result for a Phoenix prompt selector."},
     {"file":"packages/drivers/phoenix/src/Phoenix.models.ts","symbol":"PhoenixPromptSelector","kind":"struct-const","owner":"@beep/phoenix","identity":"PhoenixPromptSelector","description":"Phoenix prompt selector by prompt id, name, version id, or name plus tag."},
     {"file":"packages/drivers/phoenix/src/Phoenix.models.ts","symbol":"PhoenixPromptTemplateFormat","kind":"literal-kit","owner":"@beep/phoenix","identity":"PhoenixPromptTemplateFormat","description":"Prompt template formats accepted by repo-owned Phoenix prompt templates."},
-    {"file":"packages/drivers/phoenix/src/Phoenix.models.ts","symbol":"PhoenixPromptWriteResult","kind":"struct-const","owner":"@beep/phoenix","identity":"PhoenixPromptWriteResult","description":"Result from creating a Phoenix prompt version."}
+    {"file":"packages/drivers/phoenix/src/Phoenix.models.ts","symbol":"PhoenixPromptWriteResult","kind":"struct-const","owner":"@beep/phoenix","identity":"PhoenixPromptWriteResult","description":"Result from creating a Phoenix prompt version."},
+    {"file":"packages/drivers/phoenix/src/Phoenix.span-readback.ts","symbol":"PhoenixSpanLookup","kind":"struct-const","owner":"@beep/phoenix","identity":"PhoenixSpanLookup","description":"Bounded exact span lookup and projection allowlist."},
+    {"file":"packages/drivers/phoenix/src/Phoenix.span-readback.ts","symbol":"PhoenixSpanReadError","kind":"tagged-error","owner":"@beep/phoenix","identity":"PhoenixSpanReadError","description":"Safe bounded-query failure."},
+    {"file":"packages/drivers/phoenix/src/Phoenix.span-readback.ts","symbol":"PhoenixStoredSpan","kind":"struct-const","owner":"@beep/phoenix","identity":"PhoenixStoredSpan","description":"Requested scalar metadata and structural span identity."}
   ]
 }

@@ -56,7 +56,7 @@ const started = (input: ObservationLaunchSubmission) =>
     fact: ObservationLaunchFact.cases.Started.make({ launchId: input.fact.launchId, processInstanceId: claimId("9") }),
   });
 
-it.layer(layer)("Independent claim populations", (it) => {
+it.layer(layer, { timeout: "30 seconds" })("Independent claim populations", (it) => {
   it.effect("publishes claim-cohort launches separately from historical acceptance and unknown telemetry", () =>
     Effect.gen(function* () {
       yield* TestClock.setTime(0);

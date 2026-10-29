@@ -12,14 +12,14 @@ import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { readBoundedMetadata } from "./internal/bounded-metadata.ts";
+import { readBoundedMetadata } from "./observation-file.ts";
 
 const $I = $RepoAiMetricsId.create("observation-inventory");
 
 /**
  * Requested harnesses, independent of their supported collection routes.
  *
- * **Example**
+ * **Example** (Inspect observation harness)
  * ```ts
  * import { ObservationHarness } from "@beep/repo-ai-metrics/observation-inventory"
  * console.log(ObservationHarness.Enum.grok)
@@ -42,7 +42,7 @@ export const ObservationHarness = LiteralKit([
 /**
  * Runtime type of {@link ObservationHarness}.
  *
- * **Example**
+ * **Example** (Inspect observation harness)
  * ```ts
  * import type { ObservationHarness } from "@beep/repo-ai-metrics/observation-inventory"
  * const value: ObservationHarness | undefined = undefined
@@ -57,7 +57,7 @@ export type ObservationHarness = typeof ObservationHarness.Type;
 /**
  * Signal capabilities established by adapter evidence.
  *
- * **Example**
+ * **Example** (Inspect observation signal)
  * ```ts
  * import { ObservationSignal } from "@beep/repo-ai-metrics/observation-inventory"
  * console.log(ObservationSignal.Enum.traces)
@@ -72,7 +72,7 @@ export const ObservationSignal = LiteralKit(["launches", "traces", "metrics", "o
 /**
  * Runtime type of {@link ObservationSignal}.
  *
- * **Example**
+ * **Example** (Inspect observation signal)
  * ```ts
  * import type { ObservationSignal } from "@beep/repo-ai-metrics/observation-inventory"
  * const value: ObservationSignal | undefined = undefined
@@ -91,7 +91,7 @@ const PopulationIds = S.Array(Sha256Hex)
 /**
  * Explicitly enumerated population or a population whose size is unknown.
  *
- * **Example**
+ * **Example** (Inspect observation population)
  * ```ts
  * import { ObservationPopulation } from "@beep/repo-ai-metrics/observation-inventory"
  * console.log(ObservationPopulation.cases.Unknown.make({})._tag)
@@ -109,7 +109,7 @@ export const ObservationPopulation = S.TaggedUnion({
 /**
  * Runtime type of {@link ObservationPopulation}.
  *
- * **Example**
+ * **Example** (Inspect observation population)
  * ```ts
  * import type { ObservationPopulation } from "@beep/repo-ai-metrics/observation-inventory"
  * const value: ObservationPopulation | undefined = undefined
@@ -124,7 +124,7 @@ export type ObservationPopulation = typeof ObservationPopulation.Type;
 /**
  * Qualified capability, explicit lack of support, or an uninvestigated route.
  *
- * **Example**
+ * **Example** (Inspect observation capability)
  * ```ts
  * import { ObservationCapability } from "@beep/repo-ai-metrics/observation-inventory"
  * console.log(ObservationCapability.cases.Unknown.make({})._tag)
@@ -148,7 +148,7 @@ export const ObservationCapability = S.TaggedUnion({
 /**
  * Runtime type of {@link ObservationCapability}.
  *
- * **Example**
+ * **Example** (Inspect observation capability)
  * ```ts
  * import type { ObservationCapability } from "@beep/repo-ai-metrics/observation-inventory"
  * const value: ObservationCapability | undefined = undefined
@@ -163,7 +163,7 @@ export type ObservationCapability = typeof ObservationCapability.Type;
 /**
  * Deliberate collection policy, separate from missing capability or failure.
  *
- * **Example**
+ * **Example** (Inspect observation policy)
  * ```ts
  * import { ObservationPolicy } from "@beep/repo-ai-metrics/observation-inventory"
  * console.log(ObservationPolicy.cases.Included.make({})._tag)
@@ -178,7 +178,7 @@ export const ObservationPolicy = S.TaggedUnion({ Included: {}, Excluded: { evide
 /**
  * Runtime type of {@link ObservationPolicy}.
  *
- * **Example**
+ * **Example** (Inspect observation policy)
  * ```ts
  * import type { ObservationPolicy } from "@beep/repo-ai-metrics/observation-inventory"
  * const value: ObservationPolicy | undefined = undefined
@@ -197,7 +197,7 @@ const ProducerActivity = LiteralKit(["active", "idle", "failed"]).pipe(
 /**
  * A route health observation with a finite validity window, or no observation.
  *
- * **Example**
+ * **Example** (Inspect observation heartbeat)
  * ```ts
  * import { ObservationHeartbeat } from "@beep/repo-ai-metrics/observation-inventory"
  * console.log(ObservationHeartbeat.cases.Unknown.make({})._tag)
@@ -233,7 +233,7 @@ export const ObservationHeartbeat = S.TaggedUnion({
 /**
  * Runtime type of {@link ObservationHeartbeat}.
  *
- * **Example**
+ * **Example** (Inspect observation heartbeat)
  * ```ts
  * import type { ObservationHeartbeat } from "@beep/repo-ai-metrics/observation-inventory"
  * const value: ObservationHeartbeat | undefined = undefined
@@ -252,7 +252,7 @@ const RootId = S.String.check(S.isPattern(/^root-[a-f0-9]{64}$/u)).pipe(
 /**
  * Binding supported by source evidence, or an explicitly unattributed route.
  *
- * **Example**
+ * **Example** (Inspect observation root binding)
  * ```ts
  * import { ObservationRootBinding } from "@beep/repo-ai-metrics/observation-inventory"
  * console.log(ObservationRootBinding.cases.Unknown.make({})._tag)
@@ -270,7 +270,7 @@ export const ObservationRootBinding = S.TaggedUnion({
 /**
  * Runtime type of {@link ObservationRootBinding}.
  *
- * **Example**
+ * **Example** (Inspect observation root binding)
  * ```ts
  * import type { ObservationRootBinding } from "@beep/repo-ai-metrics/observation-inventory"
  * const value: ObservationRootBinding | undefined = undefined
@@ -285,7 +285,7 @@ export type ObservationRootBinding = typeof ObservationRootBinding.Type;
 /**
  * Privacy-safe host identity in one operator-defined identity namespace.
  *
- * **Example**
+ * **Example** (Inspect observation host)
  * ```ts
  * import { ObservationHost } from "@beep/repo-ai-metrics/observation-inventory"
  * import * as S from "effect/Schema"
@@ -304,7 +304,7 @@ export class ObservationHost extends S.Opaque<ObservationHost, { readonly brand:
 /**
  * Evidenced identity component or an explicitly unresolved component.
  *
- * **Example**
+ * **Example** (Inspect observation identity)
  * ```ts
  * import { ObservationIdentity } from "@beep/repo-ai-metrics/observation-inventory"
  * console.log(ObservationIdentity.cases.Unknown.make({})._tag)
@@ -325,7 +325,7 @@ export const ObservationIdentity = S.TaggedUnion({
 /**
  * Repository, clone and worktree identities kept as separate fields.
  *
- * **Example**
+ * **Example** (Inspect observation root)
  * ```ts
  * import { ObservationRoot } from "@beep/repo-ai-metrics/observation-inventory"
  * import * as S from "effect/Schema"
@@ -352,7 +352,7 @@ export class ObservationRoot extends S.Opaque<ObservationRoot, { readonly brand:
 /**
  * One declared harness route with independent capability and population evidence.
  *
- * **Example**
+ * **Example** (Inspect observation route)
  * ```ts
  * import { ObservationRoute } from "@beep/repo-ai-metrics/observation-inventory"
  * import * as S from "effect/Schema"
@@ -385,7 +385,7 @@ export class ObservationRoute extends S.Opaque<ObservationRoute, { readonly bran
 /**
  * Bounded host/root/route manifest with referential integrity checks.
  *
- * **Example**
+ * **Example** (Inspect observation inventory)
  * ```ts
  * import { ObservationInventory } from "@beep/repo-ai-metrics/observation-inventory"
  * import * as S from "effect/Schema"
@@ -465,7 +465,7 @@ export class ObservationInventory extends S.Opaque<ObservationInventory, { reado
 /**
  * Route state, separate from whether launch/event populations are known.
  *
- * **Example**
+ * **Example** (Inspect observation route status)
  * ```ts
  * import { ObservationRouteStatus } from "@beep/repo-ai-metrics/observation-inventory"
  * console.log(ObservationRouteStatus.Enum.stale)
@@ -490,7 +490,7 @@ export const ObservationRouteStatus = LiteralKit([
 /**
  * Runtime type of {@link ObservationRouteStatus}.
  *
- * **Example**
+ * **Example** (Inspect observation route status)
  * ```ts
  * import type { ObservationRouteStatus } from "@beep/repo-ai-metrics/observation-inventory"
  * const value: ObservationRouteStatus | undefined = undefined
@@ -505,7 +505,7 @@ export type ObservationRouteStatus = typeof ObservationRouteStatus.Type;
 /**
  * Interpret route state at a supplied clock instant.
  *
- * **Example**
+ * **Example** (Classify a declared route)
  * ```ts
  * import { observationRouteStatus } from "@beep/repo-ai-metrics/observation-inventory"
  * console.log(observationRouteStatus.length)
@@ -535,7 +535,7 @@ export const observationRouteStatus: {
 /**
  * Counts for declared capabilities, known launches and expected events.
  *
- * **Example**
+ * **Example** (Inspect observation inventory summary)
  * ```ts
  * import { ObservationInventorySummary } from "@beep/repo-ai-metrics/observation-inventory"
  * import * as S from "effect/Schema"
@@ -576,7 +576,7 @@ const populationIds = ObservationPopulation.match({
 /**
  * Count declared route capabilities and deduplicate known launch/event identities.
  *
- * **Example**
+ * **Example** (Summarize declared coverage)
  * ```ts
  * import { summarizeObservationInventory } from "@beep/repo-ai-metrics/observation-inventory"
  * console.log(summarizeObservationInventory.length)
@@ -619,7 +619,7 @@ export const summarizeObservationInventory = (inventory: ObservationInventory): 
 /**
  * A safe inventory boundary error that never includes the rejected payload.
  *
- * **Example**
+ * **Example** (Inspect observation inventory error)
  * ```ts
  * import { ObservationInventoryError } from "@beep/repo-ai-metrics/observation-inventory"
  * console.log(ObservationInventoryError.make({ message: "Invalid observation inventory." })._tag)
@@ -636,11 +636,14 @@ export class ObservationInventoryError extends S.TaggedError<
   { message: S.String },
   $I.annote("ObservationInventoryError", { description: "Payload-free failure at the inventory JSON boundary." })
 ) {}
+const decodeObservationInventoryJson = S.decodeEffect(S.fromJsonString(ObservationInventory), {
+  onExcessProperty: "error",
+});
 
 /**
  * Decode a bounded inventory, rejecting unexpected fields and masking input-bearing schema errors.
  *
- * **Example**
+ * **Example** (Decode an inventory declaration)
  * ```ts
  * import { decodeObservationInventory } from "@beep/repo-ai-metrics/observation-inventory"
  * import * as Effect from "effect/Effect"
@@ -655,7 +658,7 @@ export const decodeObservationInventory = Effect.fn("AiMetrics.decodeObservation
   if (json.length > 4_194_304) {
     return yield* ObservationInventoryError.make({ message: "Observation inventory exceeds its parsing limit." });
   }
-  return yield* S.decodeEffect(S.fromJsonString(ObservationInventory), { onExcessProperty: "error" })(json).pipe(
+  return yield* decodeObservationInventoryJson(json).pipe(
     Effect.mapError(() => ObservationInventoryError.make({ message: "Invalid observation inventory." }))
   );
 });
@@ -663,7 +666,7 @@ export const decodeObservationInventory = Effect.fn("AiMetrics.decodeObservation
 /**
  * Read a declared inventory with a hard byte ceiling before JSON parsing.
  *
- * **Example**
+ * **Example** (Read an inventory declaration)
  * ```ts
  * import { readObservationInventory } from "@beep/repo-ai-metrics/observation-inventory"
  * const program = readObservationInventory("/tmp/synthetic-inventory.json")
@@ -685,7 +688,7 @@ export const readObservationInventory = Effect.fn("AiMetrics.readObservationInve
 /**
  * Snapshot of the declared inventory and health interpretation at a supplied time.
  *
- * **Example**
+ * **Example** (Inspect observation inventory report)
  * ```ts
  * import { ObservationInventoryReport } from "@beep/repo-ai-metrics/observation-inventory"
  * import * as S from "effect/Schema"
@@ -714,7 +717,7 @@ export class ObservationInventoryReport extends S.Opaque<
 /**
  * Build a report without probing applications or inferring undeclared coverage.
  *
- * **Example**
+ * **Example** (Report declared coverage)
  * ```ts
  * import { reportObservationInventory } from "@beep/repo-ai-metrics/observation-inventory"
  * console.log(reportObservationInventory.length)

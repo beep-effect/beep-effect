@@ -3,12 +3,14 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
 import { AiProviderCliSession, ManagedLaunchProfile, ManagedSessionError } from "@beep/ai-provider-cli";
 import { $RepoCliId } from "@beep/identity/packages";
 import {
   ObservationClaimPopulationRequest,
   readObservationClaimPopulation,
 } from "@beep/repo-ai-metrics/observation-claim-population";
+import { isPrivateObservationFile } from "@beep/repo-ai-metrics/observation-file";
 import {
   initializeObservationClaims,
   makeObservationClaims,
@@ -150,7 +152,7 @@ const readPrivateDocument = Effect.fn("AgentObservation.readPrivateDocument")(
     if (
       root.type !== "Directory" ||
       (root.mode & 0o777) !== 0o700 ||
-      O.getOrElse(root.uid, () => -1) !== uid ||
+      !O.contains(root.uid, uid) ||
       (yield* fs.realPath(directory)) !== directory
     )
       return yield* failure("configuration");
@@ -162,10 +164,7 @@ const readPrivateDocument = Effect.fn("AgentObservation.readPrivateDocument")(
         const file = yield* fs.open(filename, { flag: "r", noFollow: true });
         const info = yield* file.stat;
         if (
-          info.type !== "File" ||
-          (info.mode & 0o777) !== 0o600 ||
-          O.getOrElse(info.uid, () => -1) !== uid ||
-          O.getOrElse(info.nlink, () => BigInt(0)) !== BigInt(1) ||
+          !isPrivateObservationFile(info, uid) ||
           info.dev !== before.dev ||
           !O.isSome(info.ino) ||
           !O.isSome(before.ino) ||
@@ -270,6 +269,8 @@ export class AgentObservationProvisioned extends S.Opaque<
     })
   )
 ) {}
+const encodeAgentObservationOwnerJson = S.encodeEffect(S.fromJsonString(AgentObservationOwner));
+
 const prepareEnrollment = Effect.fn("AgentObservation.prepareEnrollment")(function* (directory: string) {
   const request = yield* readPrivateDocument(directory, "request.json", AgentObservationProvisioning);
   const hash = yield* privateHasher;
@@ -287,7 +288,7 @@ const prepareEnrollment = Effect.fn("AgentObservation.prepareEnrollment")(functi
   )
     return yield* failure("identity");
   const ownerBinding = yield* hash(
-    `agent-message-observation-owner/v1:${yield* S.encodeEffect(S.fromJsonString(AgentObservationOwner))(request.owner)}`
+    `agent-message-observation-owner/v1:${yield* encodeAgentObservationOwnerJson(request.owner)}`
   );
   const launchId = yield* hash(`agent-message-observation-attempt/v1:${ownerBinding}`);
   return AgentObservationEnrollment.make({
@@ -333,6 +334,7 @@ export const initializeAgentObservationClaims = Effect.fn("AgentObservation.init
   );
   return provisioned(enrollment, "initialize-claims");
 });
+const encodeAgentObservationEnrollmentJson = S.encodeEffect(S.fromJsonString(AgentObservationEnrollment));
 
 /**
  * Durably create a new private enrollment against an existing independent store.
@@ -374,13 +376,11 @@ export const enrollAgentObservation = Effect.fn("AgentObservation.enroll")(funct
     if (
       parentInfo.type !== "Directory" ||
       (parentInfo.mode & 0o777) !== 0o700 ||
-      O.getOrElse(parentInfo.uid, () => -1) !== uid ||
+      !O.contains(parentInfo.uid, uid) ||
       (yield* fs.realPath(parent)) !== parent
     )
       return yield* failure("configuration");
-    const body = new TextEncoder().encode(
-      yield* S.encodeEffect(S.fromJsonString(AgentObservationEnrollment))(enrollment)
-    );
+    const body = new TextEncoder().encode(yield* encodeAgentObservationEnrollmentJson(enrollment));
     if (body.byteLength > 32768) return yield* failure("configuration");
     yield* fs.makeDirectory(directory, { mode: 0o700 });
     yield* Effect.scoped(
@@ -456,8 +456,8 @@ export class AgentObservationRecovery extends S.Opaque<AgentObservationRecovery,
     version: S.tag("agent-message-observation-recovery/v1"),
     operation: S.Literals(["status", "reconcile"]),
     outbox: ObservationLaunchOutbox,
-    backendVisibility: S.Literal("unknown"),
-    processLiveness: S.Literal("unknown"),
+    backendVisibility: S.tag("unknown"),
+    processLiveness: S.tag("unknown"),
   }).pipe(
     $I.annoteSchema("AgentObservationRecovery", {
       description: "Original durable facts and receipts without inferred process or backend state.",
@@ -508,7 +508,7 @@ export const recoverAgentObservation = Effect.fn("AgentObservation.recover")(fun
     ).pipe(Effect.mapError(() => failure("recovery")));
   }
   const outbox = yield* claims.readOutbox(submission.fact.launchId).pipe(Effect.mapError(() => failure("claim")));
-  return AgentObservationRecovery.make({ operation, outbox, backendVisibility: "unknown", processLiveness: "unknown" });
+  return AgentObservationRecovery.make({ operation, outbox });
 });
 
 /**
@@ -539,7 +539,7 @@ export const openAgentMessageSession = Effect.fn("AgentObservation.open")(functi
   if (request.owner.provider !== request.profile.provider || request.owner.workspace !== canonicalWorkspace)
     return yield* failure("identity");
   const ownerBinding = yield* hash(
-    `agent-message-observation-owner/v1:${yield* S.encodeEffect(S.fromJsonString(AgentObservationOwner))(request.owner)}`
+    `agent-message-observation-owner/v1:${yield* encodeAgentObservationOwnerJson(request.owner)}`
   );
   const launchId = yield* hash(`agent-message-observation-attempt/v1:${ownerBinding}`);
   const namespace = yield* hash("ai-metrics-hash-salt-namespace/v1");

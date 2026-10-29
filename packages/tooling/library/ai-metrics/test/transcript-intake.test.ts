@@ -5,6 +5,7 @@ import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { BunSqliteTestDriver, makeSqlTestLayer } from "@beep/test-utils/SqlTest";
 import { expect } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -42,6 +43,7 @@ const fixture = Effect.fn("TranscriptIntakeTest.fixture")(function* (maxPages = 
   const journal = yield* makeTranscriptIntakeJournal(config);
   return { fs, path, config, input, page, journal };
 });
+const encodeJsonValue = S.encodeEffect(S.fromJsonString(S.Unknown));
 
 it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("commits a sanitized page and its cursor together, then returns the original receipt on replay", () =>
@@ -50,15 +52,15 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       const receipt = yield* journal.acceptPage(page, O.none());
       expect(receipt.sequence).toBe(1);
       expect(receipt.frames).toBe(1);
-      expect(yield* journal.readCursor(page.cursor.source, page.cursor.pathHash)).toEqual(O.some(page.cursor));
+      assertSome(yield* journal.readCursor(page.cursor.source, page.cursor.pathHash), page.cursor);
       expect(yield* journal.acceptPage(page, O.none())).toEqual(receipt);
       expect(yield* journal.stats).toMatchObject({ pages: 1, frames: 1 });
       const reinitialized = yield* makeTranscriptIntakeJournal(config);
-      expect(yield* reinitialized.readCursor(page.cursor.source, page.cursor.pathHash)).toEqual(O.some(page.cursor));
+      assertSome(yield* reinitialized.readCursor(page.cursor.source, page.cursor.pathHash), page.cursor);
       expect(yield* reinitialized.acceptPage(page, O.none())).toEqual(receipt);
       const sql = yield* SqlClient.SqlClient;
       const rows = yield* sql`SELECT payload FROM observation_intake_pages`;
-      const text = yield* S.encodeEffect(S.fromJsonString(S.Unknown))(rows);
+      const text = yield* encodeJsonValue(rows);
       expect(text).not.toContain("private-synthetic-prompt");
       expect(text).not.toContain("synthetic-intake-salt");
       expect(text).not.toContain(path);
@@ -74,7 +76,7 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       yield* sql`CREATE TRIGGER synthetic_cursor_failure BEFORE INSERT ON observation_source_cursors BEGIN SELECT RAISE(ABORT,'synthetic failure'); END`;
       expect((yield* journal.acceptPage(page, O.none()).pipe(Effect.flip)).reason).toBe("storage");
       expect(yield* journal.stats).toEqual({ pages: 0, payloadBytes: 0, frames: 0 });
-      expect(yield* journal.readCursor(page.cursor.source, page.cursor.pathHash)).toEqual(O.none());
+      assertNone(yield* journal.readCursor(page.cursor.source, page.cursor.pathHash));
       yield* sql`DROP TRIGGER synthetic_cursor_failure`;
       expect((yield* journal.acceptPage(page, O.none())).sequence).toBe(1);
     })
@@ -89,7 +91,7 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       yield* fs.writeFileString(path, line, { flag: "a" });
       const next = yield* readTranscriptPage(TranscriptPageInput.make({ ...input, cursor: O.some(page.cursor) }));
       expect((yield* journal.acceptPage(next, O.some(page.cursor)).pipe(Effect.flip)).reason).toBe("capacity");
-      expect(yield* journal.readCursor(page.cursor.source, page.cursor.pathHash)).toEqual(O.some(page.cursor));
+      assertSome(yield* journal.readCursor(page.cursor.source, page.cursor.pathHash), page.cursor);
       expect(yield* journal.acceptPage(page, O.none())).toEqual(first);
       expect((yield* journal.stats).pages).toBe(1);
     })
@@ -139,7 +141,7 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       expect(page.frames).toHaveLength(4096);
       expect((yield* journal.acceptPage(page, O.none()).pipe(Effect.flip)).reason).toBe("storage");
       expect(yield* journal.stats).toEqual({ pages: 0, payloadBytes: 0, frames: 0 });
-      expect(yield* journal.readCursor(page.cursor.source, page.cursor.pathHash)).toEqual(O.none());
+      assertNone(yield* journal.readCursor(page.cursor.source, page.cursor.pathHash));
     })
   )
 );

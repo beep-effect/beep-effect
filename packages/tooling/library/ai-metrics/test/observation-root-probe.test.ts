@@ -70,6 +70,11 @@ const init = Effect.fn("RootProbeTest.init")(function* (root: string) {
 });
 const failureText = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
   effect.pipe(Effect.matchCause({ onFailure: Cause.pretty, onSuccess: () => "unexpected success" }));
+const encodeJsonValue = S.encodeEffect(S.fromJsonString(S.Unknown));
+const encodeObservationRootProbeResultJson = S.encodeEffect(S.fromJsonString(ObservationRootProbeResult));
+const decodeObservationInventoryJson = S.decodeEffect(S.fromJsonString(ObservationInventory));
+const encodeObservationInventoryJson = S.encodeEffect(S.fromJsonString(ObservationInventory));
+const encodeObservationRootDeclarationJson = S.encodeEffect(S.fromJsonString(ObservationRootDeclaration));
 
 it.layer(NodeServices.layer, { concurrent: false, timeout: "20 seconds" })("declared root inventory producer", (it) => {
   it.effect("observes clones and worktrees with evidence while all harness populations stay unknown", () =>
@@ -109,7 +114,7 @@ it.layer(NodeServices.layer, { concurrent: false, timeout: "20 seconds" })("decl
       expect(retired?.cloneId._tag).toBe("Unknown");
       expect(missing?.cloneId._tag).toBe("Unknown");
       for (const receipt of result.rootReceipts) {
-        const encoded = yield* S.encodeEffect(S.fromJsonString(S.Unknown))(receipt.observation);
+        const encoded = yield* encodeJsonValue(receipt.observation);
         expect(receipt.evidenceId).toBe(yield* hashPublicTextSha256(encoded));
       }
       const counts = summarizeObservationInventory(result.inventory);
@@ -126,7 +131,7 @@ it.layer(NodeServices.layer, { concurrent: false, timeout: "20 seconds" })("decl
       expect(
         A.every(result.inventory.routes, (route) => route.transport === "unknown" && route.root._tag === "Unknown")
       ).toBe(true);
-      const encoded = yield* S.encodeEffect(S.fromJsonString(ObservationRootProbeResult))(result);
+      const encoded = yield* encodeObservationRootProbeResultJson(result);
       for (const privateValue of [
         directory,
         "synthetic-host-private-label",
@@ -136,9 +141,7 @@ it.layer(NodeServices.layer, { concurrent: false, timeout: "20 seconds" })("decl
         "example.invalid",
       ])
         expect(encoded).not.toContain(privateValue);
-      yield* S.decodeEffect(S.fromJsonString(ObservationInventory))(
-        yield* S.encodeEffect(S.fromJsonString(ObservationInventory))(result.inventory)
-      );
+      yield* decodeObservationInventoryJson(yield* encodeObservationInventoryJson(result.inventory));
     })
   );
   it.effect("never accesses retired paths and keeps non-Git and permission failures explicit", () =>
@@ -228,7 +231,7 @@ it.layer(NodeServices.layer, { concurrent: false, timeout: "20 seconds" })("decl
       expect(yield* failureText(readObservationRootDeclaration(path))).toContain("exceeds its byte limit");
       yield* fs.writeFile(path, new Uint8Array([0xff]));
       expect(yield* failureText(readObservationRootDeclaration(path))).toContain("Invalid root declaration encoding");
-      const original = yield* S.encodeEffect(S.fromJsonString(ObservationRootDeclaration))(declaration([]));
+      const original = yield* encodeObservationRootDeclarationJson(declaration([]));
       yield* fs.writeFileString(path, Str.replace('"roots":[]', '"roots":[],"private":"synthetic-secret"')(original));
       const rejected = yield* failureText(readObservationRootDeclaration(path));
       expect(rejected).toContain("Invalid root declaration");

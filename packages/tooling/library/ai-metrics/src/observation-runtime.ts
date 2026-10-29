@@ -11,7 +11,7 @@ import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
-import { ObservationLagSummary } from "./native-schedule.ts";
+import { NativeScheduleOutcome, ObservationLagSummary } from "./native-schedule.ts";
 import { ObservationControlError } from "./observation-control.ts";
 import {
   ObservationSourceCycle,
@@ -21,6 +21,7 @@ import {
 } from "./observation-source-health.ts";
 import { TranscriptIntakeStats } from "./transcript-intake.ts";
 import type { NativeScheduleTick } from "./native-schedule.ts";
+import type { ObservationSourceSummary } from "./observation-source-health.ts";
 import type { makeObservationWorker } from "./observation-worker.ts";
 import type { runDiscoveredTranscriptSweep } from "./transcript-discovery.ts";
 
@@ -129,7 +130,7 @@ export class ObservationRuntimeHealth extends S.Opaque<ObservationRuntimeHealth,
     ]),
     lastCycle: S.Option(Cycle),
     lastCycleAgeMillis: S.Option(S.Natural),
-    sourceCoverage: S.Literal("unknown"),
+    sourceCoverage: S.tag("unknown"),
     sources: ObservationSourceHealth.pipe(
       S.withConstructorDefault(Effect.succeed(ObservationSourceHealth.cases.NotConfigured.make({})))
     ),
@@ -153,9 +154,15 @@ export class ObservationRuntimeError extends S.TaggedError<ObservationRuntimeErr
   $I`ObservationRuntimeError`
 )(
   "ObservationRuntimeError",
-  { reason: S.Literal("busy") },
+  { reason: S.tag("busy") },
   $I.annote("ObservationRuntimeError", { description: "A scheduling loop already owns this runtime." })
 ) {}
+const unhealthyOutcome = NativeScheduleOutcome.match({
+  Failed: () => true,
+  Reconciled: ({ result }) => result._tag !== "Visible",
+  Sent: ({ result }) => result._tag !== "Recorded" || result.outcome._tag !== "Accepted",
+  Held: ({ reason }) => reason === "permanent-refusal" || reason === "attempt-limit" || reason === "clock-regression",
+});
 const summarize = (tick: typeof NativeScheduleTick.cases.Complete.Type) =>
   ObservationPassSummary.make({
     lag: tick.lag,
@@ -166,16 +173,93 @@ const summarize = (tick: typeof NativeScheduleTick.cases.Complete.Type) =>
     mismatch: A.filter(tick.outcomes, (o) => o._tag === "Reconciled" && o.result._tag === "Mismatch").length,
     held: A.filter(tick.outcomes, (o) => o._tag === "Held").length,
     failed: A.filter(tick.outcomes, (o) => o._tag === "Failed").length,
-    unhealthy: A.some(
-      tick.outcomes,
-      (o) =>
-        o._tag === "Failed" ||
-        (o._tag === "Reconciled" && o.result._tag !== "Visible") ||
-        (o._tag === "Sent" && (o.result._tag !== "Recorded" || o.result.outcome._tag !== "Accepted")) ||
-        (o._tag === "Held" &&
-          (o.reason === "permanent-refusal" || o.reason === "attempt-limit" || o.reason === "clock-regression"))
-    ),
+    unhealthy: A.some(tick.outcomes, unhealthyOutcome),
   });
+const RuntimeState = S.Struct({ running: S.Boolean, startedAt: S.Natural, lastCycle: S.Option(Cycle) }).pipe(
+  $I.annoteSchema("RuntimeState", { description: "Volatile delivery loop ownership and latest cycle observation." })
+);
+const cycleTiming = (
+  now: number,
+  startedAt: number,
+  lastCycle: O.Option<Pick<typeof Cycle.Type, "startedAt" | "completedAt">>
+) => {
+  const reference = O.match(lastCycle, { onNone: () => startedAt, onSome: (cycle) => cycle.completedAt });
+  const regression = now < reference || O.exists(lastCycle, (cycle) => cycle.completedAt < cycle.startedAt);
+  return {
+    elapsed: now - reference,
+    regression,
+    age: O.isSome(lastCycle) && !regression ? O.some(now - reference) : O.none<number>(),
+  };
+};
+const temporalPhase = (
+  running: boolean,
+  timing: ReturnType<typeof cycleTiming>,
+  staleAfterMillis: number,
+  hasCycle: boolean
+): O.Option<ObservationRuntimeHealth["phase"]> => {
+  if (!running) return O.some("stopped");
+  if (timing.regression) return O.some("clock-regression");
+  if (timing.elapsed > staleAfterMillis) return O.some("stale");
+  if (!hasCycle) return O.some("starting");
+  return O.none();
+};
+const completedDeliveryPhase = (
+  result: typeof ObservationCycleResult.cases.Completed.Type
+): ObservationRuntimeHealth["phase"] => {
+  if (result.summary.unhealthy) return "degraded";
+  if (result.summary.examined > 0) return "active";
+  return result.retained.pages > 0 ? "scanning" : "idle";
+};
+const deliveryResultPhase = ObservationCycleResult.match({
+  Completed: completedDeliveryPhase,
+  Paused: (): ObservationRuntimeHealth["phase"] => "paused",
+  Deadline: (): ObservationRuntimeHealth["phase"] => "degraded",
+  Failed: (): ObservationRuntimeHealth["phase"] => "degraded",
+});
+const degradedSources = (summary: ObservationSourceSummary) =>
+  summary.failedFiles > 0 ||
+  A.some(summary.discovery.roots, (root) => root.read.failed > 0) ||
+  A.some(
+    summary.discovery.roots,
+    (root) => root.state === "unavailable" || root.state === "changed" || root.state === "overflow"
+  );
+const completedSourcePhase = (
+  summary: ObservationSourceSummary
+): typeof ObservationSourceHealth.cases.Configured.Type.phase => {
+  const roots = summary.discovery.roots;
+  if (degradedSources(summary)) return "degraded";
+  if (A.every(roots, (root) => root.state === "retired")) return "excluded";
+  if (A.some(roots, (root) => root.state === "scanning" || root.state === "pending" || root.read.pending > 0))
+    return "scanning";
+  if (A.some(roots, (root) => root.read.partial > 0)) return "waiting";
+  if (A.some(roots, (root) => root.read.backlogged > 0)) return "backlogged";
+  if (A.some(roots, (root) => root.read.accepted > 0)) return "active";
+  return "idle";
+};
+const sourceResultPhase = ObservationSourceCycle.match({
+  Completed: ({ summary }) => completedSourcePhase(summary),
+  Paused: (): typeof ObservationSourceHealth.cases.Configured.Type.phase => "paused",
+  Deadline: (): typeof ObservationSourceHealth.cases.Configured.Type.phase => "degraded",
+  Failed: (): typeof ObservationSourceHealth.cases.Configured.Type.phase => "degraded",
+});
+const configuredSourceHealth = (
+  now: number,
+  current: typeof RuntimeState.Type,
+  policy: ObservationRuntimePolicy,
+  lastCycle: typeof ObservationSourceHealth.cases.Configured.Type.lastCycle
+) => {
+  const timing = cycleTiming(now, current.startedAt, lastCycle);
+  const phase = O.getOrElse(temporalPhase(current.running, timing, policy.staleAfterMillis, O.isSome(lastCycle)), () =>
+    O.match(lastCycle, { onNone: (): "starting" => "starting", onSome: (cycle) => sourceResultPhase(cycle.result) })
+  );
+  return ObservationSourceHealth.cases.Configured.make({
+    observedAt: now,
+    running: current.running,
+    phase,
+    lastCycle,
+    lastCycleAgeMillis: timing.age,
+  });
+};
 /**
  * Construct a sequential scoped scheduling loop without implicitly resuming intake.
  * **Example** (Inspecting the runtime factory)
@@ -196,7 +280,7 @@ export const makeObservationRuntime = Effect.fn("AiMetrics.makeObservationRuntim
   }> = O.none()
 ) {
   const owner = yield* Semaphore.make(1);
-  const state = yield* Ref.make({ running: false, startedAt: 0, lastCycle: O.none<typeof Cycle.Type>() });
+  const state = yield* Ref.make(RuntimeState.make({ running: false, startedAt: 0, lastCycle: O.none() }));
   const sourceState = yield* Ref.make<
     O.Option<{ readonly startedAt: number; readonly completedAt: number; readonly result: ObservationSourceCycle }>
   >(O.none());
@@ -270,91 +354,107 @@ export const makeObservationRuntime = Effect.fn("AiMetrics.makeObservationRuntim
         () => Ref.update(state, (s) => ({ ...s, running: false })).pipe(Effect.andThen(worker.pause), Effect.orDie)
       )
     )
-    .pipe(Effect.flatMap(() => Effect.fail(ObservationRuntimeError.make({ reason: "busy" }))));
+    .pipe(Effect.flatMap(() => Effect.fail(ObservationRuntimeError.make({}))));
   const health = Effect.gen(function* () {
     const current = yield* Ref.get(state);
     const now = yield* Clock.currentTimeMillis;
-    const reference = O.isSome(current.lastCycle) ? current.lastCycle.value.completedAt : current.startedAt;
-    const regression =
-      now < reference ||
-      (O.isSome(current.lastCycle) && current.lastCycle.value.completedAt < current.lastCycle.value.startedAt);
-    const age = O.isSome(current.lastCycle) && !regression ? O.some(now - reference) : O.none<number>();
-    const phase = !current.running
-      ? "stopped"
-      : regression
-        ? "clock-regression"
-        : now - reference > policy.staleAfterMillis
-          ? "stale"
-          : O.isNone(current.lastCycle)
-            ? "starting"
-            : current.lastCycle.value.result._tag === "Paused"
-              ? "paused"
-              : current.lastCycle.value.result._tag !== "Completed"
-                ? "degraded"
-                : current.lastCycle.value.result.summary.unhealthy
-                  ? "degraded"
-                  : current.lastCycle.value.result.summary.examined === 0
-                    ? current.lastCycle.value.result.retained.pages > 0
-                      ? "scanning"
-                      : "idle"
-                    : "active";
-    let sources: ObservationSourceHealth = ObservationSourceHealth.cases.NotConfigured.make({});
-    if (O.isSome(sourceWork)) {
-      const lastCycle = yield* Ref.get(sourceState);
-      const sourceReference = O.isSome(lastCycle) ? lastCycle.value.completedAt : current.startedAt;
-      const sourceRegression =
-        now < sourceReference || (O.isSome(lastCycle) && lastCycle.value.completedAt < lastCycle.value.startedAt);
-      const result = O.isSome(lastCycle) ? O.some(lastCycle.value.result) : O.none();
-      const summary = O.isSome(result) && result.value._tag === "Completed" ? O.some(result.value.summary) : O.none();
-      const roots = O.isSome(summary) ? summary.value.discovery.roots : [];
-      const sourcePhase = !current.running
-        ? "stopped"
-        : sourceRegression
-          ? "clock-regression"
-          : now - sourceReference > sourceWork.value.policy.staleAfterMillis
-            ? "stale"
-            : O.isNone(result)
-              ? "starting"
-              : result.value._tag === "Paused"
-                ? "paused"
-                : O.isNone(summary)
-                  ? "degraded"
-                  : summary.value.failedFiles > 0 ||
-                      A.some(roots, (r) => r.read.failed > 0) ||
-                      A.some(roots, (r) => r.state === "unavailable" || r.state === "changed" || r.state === "overflow")
-                    ? "degraded"
-                    : A.every(roots, (r) => r.state === "retired")
-                      ? "excluded"
-                      : A.some(roots, (r) => r.state === "scanning" || r.state === "pending" || r.read.pending > 0)
-                        ? "scanning"
-                        : A.some(roots, (r) => r.read.partial > 0)
-                          ? "waiting"
-                          : A.some(roots, (r) => r.read.backlogged > 0)
-                            ? "backlogged"
-                            : A.some(roots, (r) => r.read.accepted > 0)
-                              ? "active"
-                              : "idle";
-      sources = ObservationSourceHealth.cases.Configured.make({
-        observedAt: now,
-        running: current.running,
-        phase: sourcePhase,
-        lastCycle,
-        lastCycleAgeMillis: O.isSome(lastCycle) && !sourceRegression ? O.some(now - sourceReference) : O.none(),
-      });
-    }
+    const timing = cycleTiming(now, current.startedAt, current.lastCycle);
+    const phase = O.getOrElse(
+      temporalPhase(current.running, timing, policy.staleAfterMillis, O.isSome(current.lastCycle)),
+      () =>
+        O.match(current.lastCycle, {
+          onNone: (): "starting" => "starting",
+          onSome: (cycle) => deliveryResultPhase(cycle.result),
+        })
+    );
+    const sources = O.isSome(sourceWork)
+      ? configuredSourceHealth(now, current, sourceWork.value.policy, yield* Ref.get(sourceState))
+      : ObservationSourceHealth.cases.NotConfigured.make({});
     return ObservationRuntimeHealth.make({
       observedAt: now,
       running: current.running,
       phase,
       lastCycle: current.lastCycle,
-      lastCycleAgeMillis: age,
-      sourceCoverage: "unknown",
+      lastCycleAgeMillis: timing.age,
       sources,
     });
   });
   return { run, health };
 });
 
+const gauge = (name: string, description: string, value: number) =>
+  `# HELP beep_observation_${name} ${description}\n# TYPE beep_observation_${name} gauge\nbeep_observation_${name} ${value}`;
+const lagMetrics = (lag: ObservationLagSummary) => {
+  let lines = [
+    gauge(
+      "delivery_pass_age_sampled_events",
+      "Unresolved events aged before their operation in this pass, not a fleet denominator.",
+      lag.sampledEvents
+    ),
+    gauge(
+      "delivery_pass_unknown_source_times",
+      "Age samples without a known source timestamp.",
+      lag.unknownSourceTimes
+    ),
+    gauge(
+      "delivery_pass_accepted_clock_regressions",
+      "Sampled acceptance times later than observation time.",
+      lag.acceptedClockRegressions
+    ),
+    gauge(
+      "delivery_pass_source_clock_regressions",
+      "Sampled source times later than observation time.",
+      lag.sourceClockRegressions
+    ),
+  ];
+  if (O.isSome(lag.maxAcceptedAgeMillis))
+    lines = A.append(
+      lines,
+      gauge(
+        "delivery_pass_max_accepted_age_seconds",
+        "Maximum sampled unresolved age since local acceptance, not whole-journal oldest age.",
+        lag.maxAcceptedAgeMillis.value / 1000
+      )
+    );
+  if (O.isSome(lag.maxSourceAgeMillis))
+    lines = A.append(
+      lines,
+      gauge(
+        "delivery_pass_max_source_age_seconds",
+        "Maximum sampled unresolved source age; includes historical replay and is not fleet lag.",
+        lag.maxSourceAgeMillis.value / 1000
+      )
+    );
+  return lines;
+};
+const completedCycleMetrics = ({ summary, retained }: typeof ObservationCycleResult.cases.Completed.Type) => {
+  let lines = [
+    gauge(
+      "retained_pages",
+      "Pages retained at the start of this completed pass, not undelivered events.",
+      retained.pages
+    ),
+    gauge(
+      "retained_payload_bytes",
+      "Metadata payload bytes retained at the start of this completed pass.",
+      retained.payloadBytes
+    ),
+    gauge("retained_occurrences", "Retained occurrences including duplicates, not unique events.", retained.frames),
+    gauge("delivery_pass_examined", "Events examined in the latest completed pass.", summary.examined),
+    gauge(
+      "delivery_pass_send_calls",
+      "Send calls observed in the latest pass, not confirmed deliveries.",
+      summary.sent
+    ),
+    gauge("delivery_pass_visible", "Positive read-back results in the latest pass.", summary.visible),
+    gauge("delivery_pass_missing", "Missing read-back results in the latest pass.", summary.missing),
+    gauge("delivery_pass_mismatch", "Mismatched read-back results in the latest pass.", summary.mismatch),
+    gauge("delivery_pass_held", "Held events observed in the latest pass.", summary.held),
+    gauge("delivery_pass_failed", "Failed operations observed in the latest pass.", summary.failed),
+  ];
+  if (O.isSome(summary.lag)) lines = A.appendAll(lines, lagMetrics(summary.lag.value));
+  return lines;
+};
 /**
  * Render bounded metadata-only gauges for one runtime observation.
  * **Example** (Inspecting the renderer)
@@ -367,8 +467,6 @@ export const makeObservationRuntime = Effect.fn("AiMetrics.makeObservationRuntim
  * @since 0.0.0
  */
 export const renderObservationRuntimeMetrics = (health: ObservationRuntimeHealth): string => {
-  const gauge = (name: string, description: string, value: number) =>
-    `# HELP beep_observation_${name} ${description}\n# TYPE beep_observation_${name} gauge\nbeep_observation_${name} ${value}`;
   let lines = [
     gauge("runtime_running", "Whether this observation reports an owned runtime loop.", health.running ? 1 : 0),
     gauge(
@@ -389,76 +487,7 @@ export const renderObservationRuntimeMetrics = (health: ObservationRuntimeHealth
         cycle.completedAt / 1000
       )
     );
-    if (cycle.result._tag === "Completed") {
-      const { summary, retained } = cycle.result;
-      lines = A.appendAll(lines, [
-        gauge(
-          "retained_pages",
-          "Pages retained at the start of this completed pass, not undelivered events.",
-          retained.pages
-        ),
-        gauge(
-          "retained_payload_bytes",
-          "Metadata payload bytes retained at the start of this completed pass.",
-          retained.payloadBytes
-        ),
-        gauge("retained_occurrences", "Retained occurrences including duplicates, not unique events.", retained.frames),
-        gauge("delivery_pass_examined", "Events examined in the latest completed pass.", summary.examined),
-        gauge(
-          "delivery_pass_send_calls",
-          "Send calls observed in the latest pass, not confirmed deliveries.",
-          summary.sent
-        ),
-        gauge("delivery_pass_visible", "Positive read-back results in the latest pass.", summary.visible),
-        gauge("delivery_pass_missing", "Missing read-back results in the latest pass.", summary.missing),
-        gauge("delivery_pass_mismatch", "Mismatched read-back results in the latest pass.", summary.mismatch),
-        gauge("delivery_pass_held", "Held events observed in the latest pass.", summary.held),
-        gauge("delivery_pass_failed", "Failed operations observed in the latest pass.", summary.failed),
-      ]);
-      if (O.isSome(summary.lag)) {
-        const lag = summary.lag.value;
-        lines = A.appendAll(lines, [
-          gauge(
-            "delivery_pass_age_sampled_events",
-            "Unresolved events aged before their operation in this pass, not a fleet denominator.",
-            lag.sampledEvents
-          ),
-          gauge(
-            "delivery_pass_unknown_source_times",
-            "Age samples without a known source timestamp.",
-            lag.unknownSourceTimes
-          ),
-          gauge(
-            "delivery_pass_accepted_clock_regressions",
-            "Sampled acceptance times later than observation time.",
-            lag.acceptedClockRegressions
-          ),
-          gauge(
-            "delivery_pass_source_clock_regressions",
-            "Sampled source times later than observation time.",
-            lag.sourceClockRegressions
-          ),
-        ]);
-        if (O.isSome(lag.maxAcceptedAgeMillis))
-          lines = A.append(
-            lines,
-            gauge(
-              "delivery_pass_max_accepted_age_seconds",
-              "Maximum sampled unresolved age since local acceptance, not whole-journal oldest age.",
-              lag.maxAcceptedAgeMillis.value / 1000
-            )
-          );
-        if (O.isSome(lag.maxSourceAgeMillis))
-          lines = A.append(
-            lines,
-            gauge(
-              "delivery_pass_max_source_age_seconds",
-              "Maximum sampled unresolved source age; includes historical replay and is not fleet lag.",
-              lag.maxSourceAgeMillis.value / 1000
-            )
-          );
-      }
-    }
+    if (cycle.result._tag === "Completed") lines = A.appendAll(lines, completedCycleMetrics(cycle.result));
   }
   return `${A.join(lines, "\n")}\n${renderObservationSourceMetrics(health.sources)}`;
 };

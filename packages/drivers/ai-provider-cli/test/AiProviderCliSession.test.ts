@@ -139,35 +139,6 @@ it.layer(TestLayer, { timeout: "20 seconds", concurrent: false })("managed nativ
     })
   );
 
-  for (const stop of ["timeout", "interrupt"] as const) {
-    it.effect(`cleans up an acquired child on observer ${stop} without a second launch`, () =>
-      Effect.gen(function* () {
-        const sessions = yield* AiProviderCliSession;
-        const spawned = yield* Deferred.make<ManagedSessionProcess>();
-        const count = yield* Ref.make(0);
-        const opening = yield* sessions
-          .open(yield* syntheticProfile("codex"), {
-            started: (process) =>
-              Deferred.succeed(spawned, process).pipe(
-                Effect.andThen(Ref.update(count, (n) => n + 1)),
-                Effect.andThen(Effect.never)
-              ),
-            bound: () => Effect.die("Unexpected bound observation"),
-          })
-          .pipe(Effect.flip, Effect.forkChild);
-        const process = yield* Deferred.await(spawned);
-        if (stop === "timeout") {
-          yield* TestClock.adjust("5 seconds");
-          const error = yield* Fiber.join(opening);
-          assert.equal(error.reason, "timeout");
-          assert.equal(error.operation, "observe-started");
-        } else yield* Fiber.interrupt(opening);
-        assert.equal(yield* Ref.get(count), 1);
-        assert.isFalse(yield* process.isRunning);
-      })
-    );
-  }
-
   it.effect("rejects unreviewed environment keys before creating a process or provider home", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -1041,3 +1012,34 @@ it.layer(TestLayer, { timeout: "20 seconds", concurrent: false })("managed nativ
     );
   }
 });
+
+for (const stop of ["timeout", "interrupt"] as const) {
+  it.layer(TestLayer, { timeout: "20 seconds", concurrent: false })((it) =>
+    it.effect(`cleans up an acquired child on observer ${stop} without a second launch`, () =>
+      Effect.gen(function* () {
+        const sessions = yield* AiProviderCliSession;
+        const spawned = yield* Deferred.make<ManagedSessionProcess>();
+        const count = yield* Ref.make(0);
+        const opening = yield* sessions
+          .open(yield* syntheticProfile("codex"), {
+            started: (process) =>
+              Deferred.succeed(spawned, process).pipe(
+                Effect.andThen(Ref.update(count, (n) => n + 1)),
+                Effect.andThen(Effect.never)
+              ),
+            bound: () => Effect.die("Unexpected bound observation"),
+          })
+          .pipe(Effect.flip, Effect.forkChild);
+        const process = yield* Deferred.await(spawned);
+        if (stop === "timeout") {
+          yield* TestClock.adjust("5 seconds");
+          const error = yield* Fiber.join(opening);
+          assert.equal(error.reason, "timeout");
+          assert.equal(error.operation, "observe-started");
+        } else yield* Fiber.interrupt(opening);
+        assert.equal(yield* Ref.get(count), 1);
+        assert.isFalse(yield* process.isRunning);
+      })
+    )
+  );
+}

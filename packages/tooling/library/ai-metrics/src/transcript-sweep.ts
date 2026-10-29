@@ -27,7 +27,7 @@ const $I = $RepoAiMetricsId.create("transcript-sweep");
 /**
  * Private candidate declaration and per-sweep resource limits.
  *
- * **Example**
+ * **Example** (Inspect transcript sweep input)
  * ```ts
  * import { TranscriptSweepInput } from "@beep/repo-ai-metrics/transcript-sweep"
  * console.log(typeof TranscriptSweepInput.make)
@@ -65,7 +65,7 @@ export class TranscriptSweepInput extends S.Opaque<TranscriptSweepInput, { reado
 /**
  * Metadata-only result for one selected source.
  *
- * **Example**
+ * **Example** (Inspect transcript sweep outcome)
  * ```ts
  * import { TranscriptSweepOutcome } from "@beep/repo-ai-metrics/transcript-sweep"
  * console.log(TranscriptSweepOutcome.cases.Accepted)
@@ -90,7 +90,7 @@ export const TranscriptSweepOutcome = S.TaggedUnion({
 /**
  * Bounded sweep counts over a declared candidate set.
  *
- * **Example**
+ * **Example** (Inspect transcript sweep report)
  * ```ts
  * import { TranscriptSweepReport } from "@beep/repo-ai-metrics/transcript-sweep"
  * console.log(typeof TranscriptSweepReport.make)
@@ -115,7 +115,7 @@ export class TranscriptSweepReport extends S.Opaque<TranscriptSweepReport, { rea
 /**
  * Reserve a fair source slice, then atomically accept each bounded metadata page.
  *
- * **Example**
+ * **Example** (Run a bounded transcript sweep)
  * ```ts
  * import { runTranscriptSweep } from "@beep/repo-ai-metrics/transcript-sweep"
  * console.log(typeof runTranscriptSweep)

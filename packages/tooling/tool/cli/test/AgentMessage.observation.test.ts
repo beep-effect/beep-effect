@@ -47,6 +47,9 @@ import * as TestClock from "effect/testing/TestClock";
 const salt = "synthetic-observation-owner-salt";
 const hash = (value: string) => hashPrivateIdentifier(value, O.some(salt));
 const id = (digit: string) => Sha256Hex.make(Str.repeat(64)(digit));
+const encodeAgentObservationOwnerJson = S.encodeEffect(S.fromJsonString(AgentObservationOwner));
+const encodeAgentObservationEnrollmentJson = S.encodeEffect(S.fromJsonString(AgentObservationEnrollment));
+
 const fixture = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -75,7 +78,7 @@ const fixture = Effect.gen(function* () {
     provider: profile.provider,
   });
   const ownerBinding = yield* hash(
-    `agent-message-observation-owner/v1:${yield* S.encodeEffect(S.fromJsonString(AgentObservationOwner))(owner)}`
+    `agent-message-observation-owner/v1:${yield* encodeAgentObservationOwnerJson(owner)}`
   );
   const launchId = yield* hash(`agent-message-observation-attempt/v1:${ownerBinding}`);
   const namespaceId = yield* hash("ai-metrics-hash-salt-namespace/v1");
@@ -116,7 +119,7 @@ const fixture = Effect.gen(function* () {
     submission,
   });
   const write = (value: AgentObservationEnrollment) =>
-    S.encodeEffect(S.fromJsonString(AgentObservationEnrollment))(value).pipe(
+    encodeAgentObservationEnrollmentJson(value).pipe(
       Effect.flatMap((text) => fs.writeFileString(`${root}/enrollment/enrollment.json`, text, { mode: 0o600 }))
     );
   yield* write(enrollment);
@@ -132,6 +135,9 @@ const layer = Layer.mergeAll(
   Reactivity.layer,
   Layer.succeed(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_AI_METRICS_HASH_SALT: salt }))
 );
+const encodeAgentObservationProvisioningJson = S.encodeEffect(S.fromJsonString(AgentObservationProvisioning));
+const encodeManagedLaunchProfileJson = S.encodeEffect(S.fromJsonString(ManagedLaunchProfile));
+const encodeLaunchGrantJson = S.encodeEffect(S.fromJsonString(LaunchGrant));
 
 it.layer(layer, { timeout: "20 seconds" })("Managed observation owner", (it) => {
   it.effect("records a real child locally while the collector is absent, closes it, and refuses another launch", () =>
@@ -179,7 +185,7 @@ it.layer(layer, { timeout: "20 seconds" })("Managed observation owner", (it) => 
           identity: f.enrollment.submission.fact.identity,
         });
         const writeRequest = (value: AgentObservationProvisioning) =>
-          S.encodeEffect(S.fromJsonString(AgentObservationProvisioning))(value).pipe(
+          encodeAgentObservationProvisioningJson(value).pipe(
             Effect.flatMap((text) => f.fs.writeFileString(`${requestDirectory}/request.json`, text, { mode: 0o600 }))
           );
         yield* writeRequest(request);
@@ -367,11 +373,7 @@ it.layer(layer, { timeout: "20 seconds" })("Managed observation owner", (it) => 
       const f = yield* fixture;
       const profileFile = `${f.root}/profile.json`;
       const grantFile = `${f.root}/grant.json`;
-      yield* f.fs.writeFileString(
-        profileFile,
-        yield* S.encodeEffect(S.fromJsonString(ManagedLaunchProfile))(f.profile),
-        { mode: 0o600 }
-      );
+      yield* f.fs.writeFileString(profileFile, yield* encodeManagedLaunchProfileJson(f.profile), { mode: 0o600 });
       const grant = LaunchGrant.make({
         grantId: "synthetic-grant",
         endpointId: f.owner.endpointId,
@@ -383,7 +385,7 @@ it.layer(layer, { timeout: "20 seconds" })("Managed observation owner", (it) => 
         expiresAt: (yield* Clock.currentTimeMillis) + 60000,
         maxMessages: 1,
       });
-      yield* f.fs.writeFileString(grantFile, yield* S.encodeEffect(S.fromJsonString(LaunchGrant))(grant), {
+      yield* f.fs.writeFileString(grantFile, yield* encodeLaunchGrantJson(grant), {
         mode: 0o600,
       });
       const ready = yield* Deferred.make<void>();

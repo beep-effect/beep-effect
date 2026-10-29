@@ -86,6 +86,8 @@
     "packages/foundation/modeling/identity/src/**",
     "packages/foundation/modeling/jsonc/package.json",
     "packages/foundation/modeling/jsonc/src/**",
+    "packages/foundation/modeling/jsonl/package.json",
+    "packages/foundation/modeling/jsonl/src/**",
     "packages/foundation/modeling/lockfiles/package.json",
     "packages/foundation/modeling/lockfiles/src/**",
     "packages/foundation/modeling/managed-section/package.json",

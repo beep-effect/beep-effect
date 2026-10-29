@@ -34,7 +34,7 @@ const UnknownReason = LiteralKit([
 /**
  * Current Git identity evidence, separate from the legacy checkout-path IDs.
  *
- * **Example**
+ * **Example** (Inspect ai metrics git root evidence)
  * ```ts
  * import { AiMetricsGitRootEvidence } from "@beep/repo-ai-metrics/git-root-evidence"
  * console.log(AiMetricsGitRootEvidence.cases.Unknown.make({ reason: "not-observed" })._tag)
@@ -64,7 +64,7 @@ export const AiMetricsGitRootEvidence = S.TaggedUnion({
 /**
  * Runtime type of {@link AiMetricsGitRootEvidence}.
  *
- * **Example**
+ * **Example** (Inspect ai metrics git root evidence)
  * ```ts
  * import type { AiMetricsGitRootEvidence } from "@beep/repo-ai-metrics/git-root-evidence"
  * const value: AiMetricsGitRootEvidence | undefined = undefined
@@ -110,11 +110,12 @@ const remoteIdentity = (remote: string): O.Option<string> => {
     )
   );
 };
+const decodeArgumentsOption = S.decodeUnknownOption(S.Tuple([S.String, S.String, S.String]));
 
 /**
  * Observe root identity without changing historical registry or event IDs.
  *
- * **Example**
+ * **Example** (Observe a declared Git root)
  * ```ts
  * import { observeAiMetricsGitRoot } from "@beep/repo-ai-metrics/git-root-evidence"
  * import { AiMetricsCanonicalRootInput } from "@beep/repo-ai-metrics/identity-registry"
@@ -175,7 +176,7 @@ export const observeAiMetricsGitRoot = Effect.fn("AiMetrics.observeGitRoot")(fun
     if (O.isNone(paths) || paths.value.exitCode !== 0) return unknown("probe-failed");
     const output = paths.value.output;
     const lines = Str.split(Str.replace(/\r?\n$/u, "")(output), "\n");
-    const parsed = S.decodeUnknownOption(S.Tuple([S.String, S.String, S.String]))(lines);
+    const parsed = decodeArgumentsOption(lines);
     if (O.isNone(parsed)) return unknown("probe-failed");
     const [top, gitDir, commonDir] = yield* Effect.forEach(parsed.value, (value) => fs.realPath(value));
     if (top !== root) return unknown("not-a-checkout-root");

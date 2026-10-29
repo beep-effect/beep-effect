@@ -10,15 +10,20 @@ import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import { claimFileFault } from "./claim-file-fault.ts";
 
+const decodeArguments = S.decodeUnknownEffect(S.Tuple([S.String, S.String, S.String, S.String, S.String, S.String]));
+const decodeObservationClaimPolicyJson = S.decodeEffect(S.fromJsonString(ObservationClaimPolicy));
+const decodeObservationLaunchSubmissionJson = S.decodeEffect(S.fromJsonString(ObservationLaunchSubmission));
+const encodeExecutedReasonRecordJson = S.encodeEffect(
+  S.fromJsonString(S.Struct({ executed: S.Boolean, reason: S.String }))
+);
+
 const program = Effect.gen(function* () {
-  const [policyFile, submissionFile, mode, output, marker, operationFile] = yield* S.decodeUnknownEffect(
-    S.Tuple([S.String, S.String, S.String, S.String, S.String, S.String])
-  )(A.drop(process.argv, 2));
-  const fs = yield* FileSystem.FileSystem;
-  const policy = yield* S.decodeEffect(S.fromJsonString(ObservationClaimPolicy))(yield* fs.readFileString(policyFile));
-  const submission = yield* S.decodeEffect(S.fromJsonString(ObservationLaunchSubmission))(
-    yield* fs.readFileString(submissionFile)
+  const [policyFile, submissionFile, mode, output, marker, operationFile] = yield* decodeArguments(
+    A.drop(process.argv, 2)
   );
+  const fs = yield* FileSystem.FileSystem;
+  const policy = yield* decodeObservationClaimPolicyJson(yield* fs.readFileString(policyFile));
+  const submission = yield* decodeObservationLaunchSubmissionJson(yield* fs.readFileString(submissionFile));
   const boundary = fs.writeFileString(marker, mode, { mode: 0o600 }).pipe(Effect.andThen(Effect.never));
   const injected: FileSystem.FileSystem = {
     ...fs,
@@ -62,11 +67,7 @@ const program = Effect.gen(function* () {
     .pipe(
       Effect.catchTag("ObservationClaimError", (error) => Effect.succeed({ executed: false, reason: error.reason }))
     );
-  yield* fs.writeFileString(
-    output,
-    yield* S.encodeEffect(S.fromJsonString(S.Struct({ executed: S.Boolean, reason: S.String })))(result),
-    { mode: 0o600 }
-  );
+  yield* fs.writeFileString(output, yield* encodeExecutedReasonRecordJson(result), { mode: 0o600 });
 });
 NodeRuntime.runMain(
   NodeServices.layer.pipe(

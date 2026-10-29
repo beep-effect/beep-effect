@@ -54,6 +54,8 @@ const wire = Protobuf.Root.fromJSON({
   },
 }).lookupType("ExportTraceServiceResponse");
 const invalid = DeliveryOutcome.cases.Unknown.make({ reason: "invalid-response" });
+const decodeResponseJson = S.decodeEffect(S.fromJsonString(response));
+
 /**
  * Interpret one trace reply without losing partial-success semantics.
  * **Example** (Inspecting the decoder)
@@ -76,7 +78,7 @@ export const interpretDeliveryHttpReply = Effect.fn("AiMetrics.interpretDelivery
     const decoded =
       reply.responseContentType === "application/json"
         ? yield* Effect.try(() => new TextDecoder("utf-8", { fatal: true }).decode(reply.body)).pipe(
-            Effect.flatMap(S.decodeEffect(S.fromJsonString(response)))
+            Effect.flatMap(decodeResponseJson)
           )
         : yield* Effect.try(() => wire.toObject(wire.decode(reply.body), { longs: String })).pipe(
             Effect.flatMap(S.decodeUnknownEffect(response))

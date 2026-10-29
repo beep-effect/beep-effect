@@ -89,6 +89,7 @@ const refusal = () =>
     message: "Observation deployment requires distinct canonical absolute paths and bounded explicit settings.",
     cause: "Invalid observation deployment request",
   });
+const encodeJsonValue = S.encodeEffect(S.fromJsonString(S.Unknown));
 
 /**
  * Render paused worker and intake-only frontend units with enforced ceilings.
@@ -188,7 +189,7 @@ export const renderObservationDeployment = Effect.fn("AIMetrics.renderObservatio
     ],
     "\n"
   );
-  const intakeConfig = yield* S.encodeEffect(S.fromJsonString(S.Unknown))({
+  const intakeConfig = yield* encodeJsonValue({
     admin: { disabled: true, config: { persist: false } },
     logging: { logs: { default: { writer: { output: "discard" } } } },
     apps: {
@@ -245,6 +246,10 @@ export const renderObservationDeployment = Effect.fn("AIMetrics.renderObservatio
   }).pipe(Effect.mapError(refusal));
   return ObservationDeploymentPlan.make({ workerUnitName, intakeUnitName, workerUnit, intakeUnit, intakeConfig });
 });
+const decodeObservationDeploymentRequestJson = S.decodeEffect(S.fromJsonString(ObservationDeploymentRequest), {
+  onExcessProperty: "error",
+});
+const encodeObservationDeploymentPlanJson = S.encodeEffect(S.fromJsonString(ObservationDeploymentPlan));
 
 /**
  * Print a strict bounded deployment plan without modifying files or services.
@@ -271,11 +276,7 @@ export const makeObservationDeploymentProgram = Effect.fn("AIMetrics.observation
     try: () => new TextDecoder("utf-8", { fatal: true }).decode(bytes),
     catch: refusal,
   });
-  const request = yield* S.decodeEffect(S.fromJsonString(ObservationDeploymentRequest), { onExcessProperty: "error" })(
-    text
-  ).pipe(Effect.mapError(refusal));
+  const request = yield* decodeObservationDeploymentRequestJson(text).pipe(Effect.mapError(refusal));
   const plan = yield* renderObservationDeployment(request);
-  yield* Console.log(
-    yield* S.encodeEffect(S.fromJsonString(ObservationDeploymentPlan))(plan).pipe(Effect.mapError(refusal))
-  );
+  yield* Console.log(yield* encodeObservationDeploymentPlanJson(plan).pipe(Effect.mapError(refusal)));
 });

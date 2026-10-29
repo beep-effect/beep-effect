@@ -1,0 +1,228 @@
+{
+  "observedAt": "2026-10-29T18:04:24.499886+00:00",
+  "baseHead": "1ed9704cc640a24fe880a5b1dc161b009d1ca1ef",
+  "archive": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-intake-boundaries-rs_lurab",
+  "artifacts": [
+    {
+      "file": "audit.repair-v14.combined.txt",
+      "bytes": 79816,
+      "sha256": "3f216606bb070c41a2e84c679255b30bce1f10cb18e76ff6ceaa379733bd2bcb"
+    },
+    {
+      "file": "audit.repair-v14.json",
+      "bytes": 8421,
+      "sha256": "639394a18fd38c1b6419bf0c49566797b36afc8ec3318edc3657acc453b0d34c"
+    },
+    {
+      "file": "audit.repair-v13.combined.txt",
+      "bytes": 93191,
+      "sha256": "442858ffc13a61bd022b475135da404ddf166d6b587337a183a6b72ecbdbd560"
+    },
+    {
+      "file": "audit.repair-v13.json",
+      "bytes": 9332,
+      "sha256": "d4e970066f516bb66568bbb4b9798ac6da617a98693fd3d93fd90f64d7792254"
+    },
+    {
+      "file": "delivery-fallow-worklist.json",
+      "bytes": 8796,
+      "sha256": "47f44009456ebf5e0276813d5874dccf9bc4d981e01c063f5ec84f68e4e58dd4"
+    },
+    {
+      "file": "INTAKE-BOUNDARIES-REVIEW.md",
+      "bytes": 4683,
+      "sha256": "af9fce7d5e004892e468a4168e28b79a72175300dc89958f05b10cb1b9d15fdd"
+    },
+    {
+      "file": "foundation-bounded-job.py",
+      "bytes": 7421,
+      "sha256": "e7d72f286ed9cbb662eceaab93df404f8ecee8462f3998e320b6557eb828c4ee"
+    },
+    {
+      "file": "foundation-transcript-init-before.ts",
+      "bytes": 28167,
+      "sha256": "4dd8c0f0602d51118dc299e72a77684e57f69def52398828860dc100aa7d03e7"
+    },
+    {
+      "file": "foundation-native-intake-before-error-sharing.ts",
+      "bytes": 18091,
+      "sha256": "9501fabf3f3962de64d4851a9cc765b2c1cdafef6bb61ec371ee0d9cca873efe"
+    },
+    {
+      "file": "foundation-delivery-ledger-before-codecs.ts",
+      "bytes": 29477,
+      "sha256": "796f8afe623bf0c0191fd6bc598a26d3c77e68d5f02fa24648931f1c1ddc1bc3"
+    },
+    {
+      "file": "foundation-payload-reclamation-before-codecs.ts",
+      "bytes": 23511,
+      "sha256": "84b6c559057a7fae9e04ecb829123889657fc696ffcd184fec9e06a69aa439fb"
+    },
+    {
+      "file": "foundation-managed-lifecycle-before.ts",
+      "bytes": 3118,
+      "sha256": "6e67e6a4bb1f5740a8d6ade5327254bc71b9d788682f8e5c1bd62fe147b455af"
+    },
+    {
+      "file": "foundation-managed-claude-before.ts",
+      "bytes": 13644,
+      "sha256": "ed1e0fa4233ce08f5499282276a1d8423c775b7855f05a33b19adff4da8ef25d"
+    },
+    {
+      "file": "foundation-managed-stdio-before.ts",
+      "bytes": 19364,
+      "sha256": "2bf2154d56b9a1b9092e5e22f966be7ff3ea8d09b18b88d6bb1c2a9634c50fa8"
+    },
+    {
+      "file": "foundation-transcript-init-health-v1.json",
+      "bytes": 6449,
+      "sha256": "bdffdc1099ef812fb5e7fc0867e6d089c808080fa596804e062ec02a75a7dc9a"
+    },
+    {
+      "file": "foundation-managed-start-v1-guard.json",
+      "bytes": 325,
+      "sha256": "3b18935e49f9b3d9d8fe8396c9f8c26862045ee17b496fe66f9be3e3fd2a41f4"
+    },
+    {
+      "file": "observation-metadata-codecs.ts",
+      "bytes": 2114,
+      "sha256": "c680e2b9d6eeef1f349589215904784c36bcc171dbf02cbc2dec4f789a73b9ae"
+    },
+    {
+      "file": "foundation-transcript-init-v1.log",
+      "bytes": 2601,
+      "sha256": "3d3e9b6174fe0b672d38caf5494e19a428843eb21796a5fc2018d32c7a68a98d"
+    },
+    {
+      "file": "foundation-transcript-init-v1-guard.json",
+      "bytes": 350,
+      "sha256": "93b49306483a15832467b9634eae58ba2235cfc5ea9cd6ebe8d0b663d3f90155"
+    },
+    {
+      "file": "foundation-intake-codecs-v1.log",
+      "bytes": 3571,
+      "sha256": "1bf1d6d1b92ea5010f53527688ee76184831f0d42489d1f22c7c3fe8f7f86118"
+    },
+    {
+      "file": "foundation-intake-codecs-v1-guard.json",
+      "bytes": 348,
+      "sha256": "868a72a1ef131d086a2f561cede47a98942e3d7ed8a6f763cf475ce42bb401a9"
+    },
+    {
+      "file": "foundation-managed-start-v2.log",
+      "bytes": 2241,
+      "sha256": "564a622128499ffcfc0bd6043bc04d4a1d9535f971b0bd1c830fbb97ba10f247"
+    },
+    {
+      "file": "foundation-managed-start-v2-guard.json",
+      "bytes": 348,
+      "sha256": "fb159a3e2973a6ebd94f6252c20e507d56a7cb3430e57c093cf872a3a99b7093"
+    },
+    {
+      "file": "foundation-intake-boundaries-final.log",
+      "bytes": 9541,
+      "sha256": "6a250d4b5ca358ab29753f05e78c0c1fce7f407c7b8585ca830508edc6092647"
+    },
+    {
+      "file": "foundation-intake-boundaries-final-guard.json",
+      "bytes": 355,
+      "sha256": "ccf247fd27e73731fafbc4bc5d177ae1156d2bc6317822a3616da340e4d970f0"
+    }
+  ],
+  "currentSourceSha256": {
+    "packages/tooling/library/ai-metrics/src/delivery-ledger.ts": "a5ee5965ca6eae8ab4bd6012c7a601547899f5c46e798ef638be56756ea030a1",
+    "packages/tooling/library/ai-metrics/src/native-intake.ts": "9ba382a391631dbd14c854c3dc3c6a86652216453c8136fa744e06b75eaedd6c",
+    "packages/tooling/library/ai-metrics/src/payload-reclamation.ts": "20d52585b44f7210867bf0c443b4d42d5bb9cf23e79e9ab79eb4b8bddb0f906c",
+    "packages/tooling/library/ai-metrics/src/transcript-intake.ts": "e14066207a7f97dfa0d020376bf1bff77a63628806f4990f40640325e258fb4a",
+    "packages/tooling/library/ai-metrics/src/internal/observation-metadata-codecs.ts": "c680e2b9d6eeef1f349589215904784c36bcc171dbf02cbc2dec4f789a73b9ae",
+    "packages/drivers/ai-provider-cli/src/AiProviderCliSession.claude.service.ts": "f16338716c1f42444e1fb736e6976f2121c06776469524554cc192630cb2206a",
+    "packages/drivers/ai-provider-cli/src/AiProviderCliSession.lifecycle.ts": "2b9da29fd01355e3af972a60195e6ff8ec60b06eb8930c4a6d2f3528fa23c79f",
+    "packages/drivers/ai-provider-cli/src/AiProviderCliSession.stdio.service.ts": "184baa3bdd69d391b178ae955302a2721e7fac526f9d4623390edfdf80d3bb09"
+  },
+  "verification": {
+    "distinctFocusedCasesAcrossWave": 113,
+    "finalIntakeCases": 58,
+    "finalManagedSessionCases": 55,
+    "finalAiMetricsAudit": "passed",
+    "finalAiMetricsDocgen": "passed",
+    "finalProviderCliAudit": "passed",
+    "finalProviderCliDocgen": "passed",
+    "targetedComplexityFindings": 0,
+    "independentReview": "accepted all eight exact current source hashes",
+    "fallowAttribution": {
+      "gate": "new-only",
+      "dead_code_introduced": 0,
+      "dead_code_inherited": 0,
+      "complexity_introduced": 30,
+      "complexity_inherited": 0,
+      "duplication_introduced": 0,
+      "duplication_inherited": 4,
+      "styling_introduced": 0,
+      "styling_inherited": 0,
+      "duplication_demoted": 0,
+      "diff_risk_introduced": 0
+    },
+    "maximumRemainingCyclomatic": 15
+  },
+  "guards": {
+    "foundation-transcript-init-v1": {
+      "ownedScopes": {},
+      "unit": "foundation-transcript-init-v1.service",
+      "profile": "bounded",
+      "memoryStopBytes": 8589934592,
+      "hostAvailableFloorBytes": 8589934592,
+      "initialAvailableBytes": 19070767104,
+      "peakObservedBytes": 5282095104,
+      "minimumAvailableBytes": 14842044416,
+      "stoppedFor": null,
+      "exitCode": 0,
+      "orphanCleanup": []
+    },
+    "foundation-intake-codecs-v1": {
+      "ownedScopes": {},
+      "unit": "foundation-intake-codecs-v1.service",
+      "profile": "bounded",
+      "memoryStopBytes": 8589934592,
+      "hostAvailableFloorBytes": 8589934592,
+      "initialAvailableBytes": 19337347072,
+      "peakObservedBytes": 5299666944,
+      "minimumAvailableBytes": 14600065024,
+      "stoppedFor": null,
+      "exitCode": 0,
+      "orphanCleanup": []
+    },
+    "foundation-managed-start-v2": {
+      "ownedScopes": {},
+      "unit": "foundation-managed-start-v2.service",
+      "profile": "bounded",
+      "memoryStopBytes": 8589934592,
+      "hostAvailableFloorBytes": 8589934592,
+      "initialAvailableBytes": 19963969536,
+      "peakObservedBytes": 5553451008,
+      "minimumAvailableBytes": 17059098624,
+      "stoppedFor": null,
+      "exitCode": 0,
+      "orphanCleanup": []
+    },
+    "foundation-intake-boundaries-final": {
+      "ownedScopes": {},
+      "unit": "foundation-intake-boundaries-final.service",
+      "profile": "bounded",
+      "memoryStopBytes": 8589934592,
+      "hostAvailableFloorBytes": 8589934592,
+      "initialAvailableBytes": 21634441216,
+      "peakObservedBytes": 6145736704,
+      "minimumAvailableBytes": 17349992448,
+      "stoppedFor": null,
+      "exitCode": 1,
+      "orphanCleanup": []
+    }
+  },
+  "limitations": [
+    "Final combined command exits 1 for remaining Fallow findings after focused tests and both full package audits/docgen pass. No quality thresholds or allowances changed.",
+    "First managed-session run was refused before execution due to insufficient initial host memory. Retry was admitted only after a fresh recovered-headroom observation; no limits weakened.",
+    "No synthetic case replaces real harness coverage evidence. Installed canary/entrypoint proof must refresh against final source before delivery.",
+    "Whole CLI runtime abort remains unresolved. Remaining policy/catalog, publication and hosted review/merge remain open.",
+    "Recovery hold and historical data preserved; no production rollout or deliberate OOM."
+  ]
+}

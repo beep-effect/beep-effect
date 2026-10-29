@@ -50,6 +50,7 @@ export class InventoryReportOptions extends S.Opaque<InventoryReportOptions, { r
     $I.annoteSchema("InventoryReportOptions", { description: "Declared inventory file and output format." })
   )
 ) {}
+const encodeObservationInventoryReportJson = S.encodeEffect(S.fromJsonString(ObservationInventoryReport));
 
 /**
  * Print evidence-scoped denominators and current route health from a declared inventory.
@@ -73,7 +74,7 @@ export const makeInventoryReportProgram = Effect.fn("AIMetrics.makeInventoryRepo
   const now = yield* DateTime.now;
   const report = reportObservationInventory(inventory, now);
   if (options.json) {
-    const json = yield* S.encodeEffect(S.fromJsonString(ObservationInventoryReport))(report).pipe(
+    const json = yield* encodeObservationInventoryReportJson(report).pipe(
       Effect.mapError(() =>
         AiMetricsCommandError.make({
           message: "Unable to encode observation inventory report.",
@@ -108,6 +109,7 @@ export const makeInventoryReportProgram = Effect.fn("AIMetrics.makeInventoryRepo
     );
   }
 });
+const encodeObservationRootProbeResultJson = S.encodeEffect(S.fromJsonString(ObservationRootProbeResult));
 
 /**
  * Inspect declared roots without starting AI metrics collection.
@@ -134,7 +136,7 @@ export const makeInventoryProbeProgram = Effect.fn("AIMetrics.makeInventoryProbe
   const result = yield* probeObservationRoots(declaration, salt).pipe(Effect.mapError((cause) => error(cause.message)));
   if (options.json) {
     return yield* Console.log(
-      yield* S.encodeEffect(S.fromJsonString(ObservationRootProbeResult))(result).pipe(
+      yield* encodeObservationRootProbeResultJson(result).pipe(
         Effect.mapError(() => error("Unable to encode root probe result."))
       )
     );
@@ -150,6 +152,15 @@ export const makeInventoryProbeProgram = Effect.fn("AIMetrics.makeInventoryProbe
   yield* Console.log(
     "Harness capabilities, launch populations and expected events remain unknown. Collection is unchanged."
   );
+});
+const encodeObservationCoverageReportJson = S.encodeEffect(S.fromJsonString(ObservationCoverageReport));
+const formatCoverageComparison = ObservationCoverageReport.fields.routes.value.fields.launches.match({
+  Unassessed: () => "denominator and observations unknown",
+  DenominatorUnknown: (value) =>
+    `${value.observed} observed; denominator unknown; snapshot ${value.exhaustive ? "complete" : "partial"}`,
+  ObservationUnknown: (value) => `${value.expected} expected; observations unknown`,
+  Compared: (value) =>
+    `${value.matched}/${value.expected} expected IDs observed, ${value.notObserved} not observed, ${value.unexpected} outside expected set; snapshot ${value.exhaustive ? "complete" : "partial"}`,
 });
 
 /**
@@ -173,7 +184,7 @@ export const makeInventoryCoverageProgram = Effect.fn("AIMetrics.makeInventoryCo
   const report = reconcileObservationCoverage(input);
   if (options.json) {
     return yield* Console.log(
-      yield* S.encodeEffect(S.fromJsonString(ObservationCoverageReport))(report).pipe(
+      yield* encodeObservationCoverageReportJson(report).pipe(
         Effect.mapError(() =>
           AiMetricsCommandError.make({
             message: "Unable to encode coverage report.",
@@ -189,26 +200,11 @@ export const makeInventoryCoverageProgram = Effect.fn("AIMetrics.makeInventoryCo
   );
   for (const [declared, route] of A.zip(input.inventory.routes, report.routes)) {
     yield* Console.log(`${declared.harness} / ${declared.surface} / ${declared.transport} (route ${route.routeId})`);
-    for (const label of ["launches", "acceptedEvents", "visibleEvents"] as const) {
-      const value = route[label];
-      switch (value._tag) {
-        case "Unassessed":
-          yield* Console.log(`  ${label}: denominator and observations unknown`);
-          break;
-        case "DenominatorUnknown":
-          yield* Console.log(
-            `  ${label}: ${value.observed} observed; denominator unknown; snapshot ${value.exhaustive ? "complete" : "partial"}`
-          );
-          break;
-        case "ObservationUnknown":
-          yield* Console.log(`  ${label}: ${value.expected} expected; observations unknown`);
-          break;
-        case "Compared":
-          yield* Console.log(
-            `  ${label}: ${value.matched}/${value.expected} expected IDs observed, ${value.notObserved} not observed, ${value.unexpected} outside expected set; snapshot ${value.exhaustive ? "complete" : "partial"}`
-          );
-          break;
-      }
+    for (const [label, value] of A.zip(
+      ["launches", "acceptedEvents", "visibleEvents"],
+      [route.launches, route.acceptedEvents, route.visibleEvents]
+    )) {
+      yield* Console.log(`  ${label}: ${formatCoverageComparison(value)}`);
     }
   }
   yield* Console.log(

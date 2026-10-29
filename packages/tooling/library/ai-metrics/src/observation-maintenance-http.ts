@@ -13,7 +13,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import { EvidenceRetirement, EvidenceWindow } from "./evidence-window.ts";
-import { observationHttpBodyFailure, readObservationHttpBytes } from "./internal/observation-http-body.ts";
+import { observationHttpBodyFailure, readObservationHttpText } from "./internal/observation-http-body.ts";
 import { ObservationBackupPolicy, ObservationBackupReceipt } from "./observation-backup.ts";
 import { PageDisposition, TranscriptAcceptance } from "./transcript-intake.ts";
 import type { makeObservationWorker, ObservationWorkerConfig } from "./observation-worker.ts";
@@ -151,13 +151,7 @@ export const makeObservationMaintenanceHttp = Effect.fn("AiMetrics.makeObservati
       return refused(415);
     const admitted = yield* permit.withPermitsIfAvailable(1)(
       Effect.gen(function* () {
-        const bytes = yield* readObservationHttpBytes(request.stream, 4096).pipe(
-          Effect.timeoutOrElse({ duration: 1000, orElse: () => Effect.fail(observationHttpBodyFailure("timed-out")) })
-        );
-        const text = yield* Effect.try({
-          try: () => new TextDecoder("utf-8", { fatal: true }).decode(bytes),
-          catch: () => observationHttpBodyFailure("malformed"),
-        });
+        const text = yield* readObservationHttpText(request.stream, 4096, 1000);
         const input = yield* decode(text).pipe(Effect.mapError(() => observationHttpBodyFailure("malformed")));
         if (
           input.hostId !== context.hostId ||

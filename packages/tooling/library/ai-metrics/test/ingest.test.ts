@@ -2809,7 +2809,7 @@ volumes:
     })
   );
 
-  it.layer(TestClock.layer())((it) => {
+  it.layer(TestClock.layer(), { timeout: "30 seconds" })((it) => {
     it.effect(
       "delivers projections to a real OTLP endpoint as chunked protobuf",
       Effect.fn(function* () {

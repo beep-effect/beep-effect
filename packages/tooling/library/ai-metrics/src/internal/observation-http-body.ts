@@ -1,7 +1,9 @@
 /** Bounded streaming HTTP body reader shared by private observation routes. */
+
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
+import type * as Duration from "effect/Duration";
 
 /**
  * Payload-free refusal while reading an observation request.
@@ -61,4 +63,29 @@ export const readObservationHttpBytes = Effect.fn("AiMetrics.readObservationHttp
     )
   );
   return buffer.slice(0, offset);
+});
+
+/**
+ * Decode strict UTF-8 after a bounded request-body read with its own deadline.
+ * **Example** (Choose a body deadline)
+ * ```ts
+ * const timeoutMillis = 1000
+ * console.log(timeoutMillis)
+ * ```
+ * **Details** The deadline covers streaming only, matching the private routes' existing contract. Decode failures retain neither input bytes nor causes. Admission and schema validation remain with the caller.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const readObservationHttpText = Effect.fn("AiMetrics.readObservationHttpText")(function* <E, R>(
+  stream: Stream.Stream<Uint8Array, E, R>,
+  byteLimit: number,
+  timeout: Duration.Input
+) {
+  const bytes = yield* readObservationHttpBytes(stream, byteLimit).pipe(
+    Effect.timeoutOrElse({ duration: timeout, orElse: () => Effect.fail(observationHttpBodyFailure("timed-out")) })
+  );
+  return yield* Effect.try({
+    try: () => new TextDecoder("utf-8", { fatal: true }).decode(bytes),
+    catch: () => observationHttpBodyFailure("malformed"),
+  });
 });

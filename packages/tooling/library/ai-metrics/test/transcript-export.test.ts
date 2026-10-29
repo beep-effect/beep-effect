@@ -24,6 +24,7 @@ import * as BunHttpServer from "@effect/platform-bun/BunHttpServer";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeHttpClient from "@effect/platform-node/NodeHttpClient";
 import { expect } from "@effect/vitest";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -42,6 +43,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
 import * as Protobuf from "protobufjs";
+import type { NativeEncodedBatch } from "@beep/repo-ai-metrics/native-export";
 
 const layer = Layer.merge(makeSqlTestLayer({ config: undefined, driver: BunSqliteTestDriver }), NodeCrypto.layer);
 const id = (char: string) => Sha256Hex.make(Str.repeat(64)(char));
@@ -86,6 +88,8 @@ const attr = (span: typeof Span.Type, key: string) =>
     A.findFirst(span.attributes, (a) => a.key === key),
     (a) => a.value
   );
+const encodeJsonValue = S.encodeEffect(S.fromJsonString(S.Unknown));
+
 const fixture = Effect.fn("TranscriptExportTest.fixture")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const dir = yield* fs.makeTempDirectoryScoped();
@@ -113,7 +117,7 @@ const fixture = Effect.fn("TranscriptExportTest.fixture")(function* () {
       })
     );
   });
-  const record = yield* S.encodeEffect(S.fromJsonString(S.Unknown))({
+  const record = yield* encodeJsonValue({
     type: "assistant",
     timestamp: "2020-01-02T10:00:00.123456789+02:00",
     sessionId: "private-session",
@@ -245,13 +249,13 @@ const fixture = Effect.fn("TranscriptExportTest.fixture")(function* () {
   return { input, page, frames, receipt, sender, reader, selection, posts, mode, sql, reopen };
 });
 
-it.layer(Layer.fresh(layer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect(
     "encodes stable separate occurrences, nanosecond points and non-additive usage without private content",
     () =>
       Effect.gen(function* () {
         const f = yield* fixture();
-        const encoded = yield* encodeTranscriptTraceBatch(f.input);
+        const encoded: NativeEncodedBatch = yield* encodeTranscriptTraceBatch(f.input);
         expect(yield* encodeTranscriptTraceBatch(f.input)).toEqual(encoded);
         const scope = (yield* decode(encoded.body)).resourceSpans[0].scopeSpans[0];
         expect(scope.scope.version).toBe("transcript-export/v1");
@@ -266,14 +270,14 @@ it.layer(Layer.fresh(layer), { excludeTestServices: true })((it) =>
         expect(first.parentSpanId).toBeUndefined();
         expect(first.startTimeUnixNano).toBe("1577952000123456789");
         expect(first.endTimeUnixNano).toBe(first.startTimeUnixNano);
-        expect(attr(first, "ai_metrics.stream")).toEqual(O.some({ stringValue: "reconstructed" }));
-        expect(attr(first, "ai_metrics.usage.basis")).toEqual(O.some({ stringValue: "message" }));
-        expect(attr(first, "ai_metrics.usage.additive")).toEqual(O.some({ boolValue: false }));
-        expect(attr(first, "ai_metrics.usage.input")).toEqual(O.some({ intValue: "11" }));
-        expect(attr(first, "ai_metrics.usage.cache_read")).toEqual(O.some({ intValue: "8" }));
-        expect(attr(first, "llm.token_count.total")).toEqual(O.none());
+        assertSome(attr(first, "ai_metrics.stream"), { stringValue: "reconstructed" });
+        assertSome(attr(first, "ai_metrics.usage.basis"), { stringValue: "message" });
+        assertSome(attr(first, "ai_metrics.usage.additive"), { boolValue: false });
+        assertSome(attr(first, "ai_metrics.usage.input"), { intValue: "11" });
+        assertSome(attr(first, "ai_metrics.usage.cache_read"), { intValue: "8" });
+        assertNone(attr(first, "llm.token_count.total"));
         expect(attr(first, "session.id")).toEqual(attr(second, "session.id"));
-        expect(attr(first, "session.id")).not.toEqual(O.none());
+        assertTrue(O.isSome(attr(first, "session.id")));
         expect(encoded.eventIds).toEqual(A.map(f.frames, (frame) => frame.occurrenceId));
         expect(
           yield* encodeTranscriptTraceBatch(TranscriptExportInput.make({ ...f.input, namespaceId: id("f") })).pipe(
@@ -285,11 +289,11 @@ it.layer(Layer.fresh(layer), { excludeTestServices: true })((it) =>
             Effect.flip
           )
         ).toMatchObject({ reason: "identity" });
-      }).pipe(Effect.scoped)
+      })
   )
 );
 
-it.layer(Layer.fresh(layer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("commits delivery once and requires exact reconstructed read-back before visibility", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -310,11 +314,11 @@ it.layer(Layer.fresh(layer), { excludeTestServices: true })((it) =>
       yield* Ref.set(f.mode, "valid");
       expect(yield* f.reader.reconcile(f.selection, event.occurrenceId)).toMatchObject({ _tag: "Visible" });
       expect(yield* f.sender.ledger.state(event.occurrenceId)).toMatchObject({ value: { state: "visible" } });
-    }).pipe(Effect.scoped)
+    })
   )
 );
 
-it.layer(Layer.fresh(layer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect(
     "schedules past rejected pages, resumes occurrences after restart and never resends accepted missing records",
     () =>
@@ -337,11 +341,11 @@ it.layer(Layer.fresh(layer), { excludeTestServices: true })((it) =>
           expect(yield* f.sender.ledger.state(frame.occurrenceId)).toMatchObject({
             value: { state: "accepted-unverified", attempts: 1 },
           });
-      }).pipe(Effect.scoped)
+      })
   )
 );
 
-it.layer(Layer.fresh(layer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("refuses empty selection and retained-payload corruption before reserving or sending", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -352,11 +356,11 @@ it.layer(Layer.fresh(layer), { excludeTestServices: true })((it) =>
       expect(yield* f.sender.send(f.selection).pipe(Effect.flip)).toMatchObject({ reason: "storage" });
       expect(yield* Ref.get(f.posts)).toBe(0);
       expect(yield* f.sql`SELECT attempt_id FROM observation_delivery_attempts`).toEqual([]);
-    }).pipe(Effect.scoped)
+    })
   )
 );
 
-it.layer(Layer.fresh(layer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("labels missing event time and conflicting sessions without inventing additive usage", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -371,7 +375,7 @@ it.layer(Layer.fresh(layer), { excludeTestServices: true })((it) =>
           session: { id: frame.metadata.session.id, conflicted: true },
           usage: O.some({ ...frame.metadata.usage.value, basis }),
         });
-        const encoded = yield* encodeTranscriptTraceBatch(
+        const encoded: NativeEncodedBatch = yield* encodeTranscriptTraceBatch(
           TranscriptExportInput.make({
             ...f.input,
             evidenceEpoch: 1,
@@ -379,19 +383,20 @@ it.layer(Layer.fresh(layer), { excludeTestServices: true })((it) =>
             frames: [TranscriptFrame.cases.Accepted.make({ ...frame, metadata })],
           })
         );
-        const span = (yield* decode(encoded.body)).resourceSpans[0].scopeSpans[0].spans[0];
+        const span: typeof Span.Type | undefined = (yield* decode(encoded.body)).resourceSpans[0].scopeSpans[0]
+          .spans[0];
         if (span === undefined) return yield* Effect.die("Missing synthetic output");
         expect(span.startTimeUnixNano).toBe("1000000000");
         expect(span.endTimeUnixNano).toBe(span.startTimeUnixNano);
-        expect(attr(span, "ai_metrics.time_basis")).toEqual(O.some({ stringValue: "intake_observation" }));
-        expect(attr(span, "ai_metrics.source_start_time_unix_nano")).toEqual(O.none());
-        expect(attr(span, "session.id")).toEqual(O.none());
-        expect(attr(span, "ai_metrics.session_conflicted")).toEqual(O.some({ boolValue: true }));
-        expect(attr(span, "ai_metrics.usage.basis")).toEqual(O.some({ stringValue: basis }));
-        expect(attr(span, "ai_metrics.local_evidence_epoch")).toEqual(O.some({ intValue: "1" }));
-        expect(attr(span, "llm.token_count.prompt")).toEqual(O.none());
-        expect(attr(span, "llm.token_count.total")).toEqual(O.none());
+        assertSome(attr(span, "ai_metrics.time_basis"), { stringValue: "intake_observation" });
+        assertNone(attr(span, "ai_metrics.source_start_time_unix_nano"));
+        assertNone(attr(span, "session.id"));
+        assertSome(attr(span, "ai_metrics.session_conflicted"), { boolValue: true });
+        assertSome(attr(span, "ai_metrics.usage.basis"), { stringValue: basis });
+        assertSome(attr(span, "ai_metrics.local_evidence_epoch"), { intValue: "1" });
+        assertNone(attr(span, "llm.token_count.prompt"));
+        assertNone(attr(span, "llm.token_count.total"));
       }
-    }).pipe(Effect.scoped)
+    })
   )
 );

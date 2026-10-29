@@ -23,7 +23,7 @@ import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-import { observeManagedSession } from "./AiProviderCliSession.lifecycle.ts";
+import { observeStartedManagedProcess } from "./AiProviderCliSession.lifecycle.ts";
 import {
   ManagedSessionEvent,
   ManagedSessionIdentity,
@@ -161,12 +161,7 @@ export const openClaude = Effect.fn("AiProviderCliSession.openClaude")(function*
       forceKillAfter: Duration.seconds(3),
     }
   ).pipe(transportFailure("spawn"));
-  const process = { pid: handle.pid, exitCode: handle.exitCode, isRunning: handle.isRunning };
-  if (observer !== undefined)
-    yield* observeManagedSession(
-      "observe-started",
-      Effect.suspend(() => observer.started(process))
-    );
+  const process = yield* observeStartedManagedProcess(handle, observer);
   const outbound = yield* Queue.bounded<string>(16);
   const events = yield* PubSub.sliding<ManagedSessionEvent>(128);
   const ready = yield* Deferred.make<void, ManagedSessionError>();

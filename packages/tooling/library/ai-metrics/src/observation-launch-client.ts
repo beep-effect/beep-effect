@@ -112,10 +112,10 @@ export const makeObservationLaunchClient = Effect.fn("AiMetrics.makeObservationL
     if (
       directory.type !== "Directory" ||
       (directory.mode & 0o777) !== 0o700 ||
-      directory.uid.pipe(O.getOrElse(() => -1)) !== uid ||
+      !O.contains(directory.uid, uid) ||
       socket.type !== "Socket" ||
       (socket.mode & 0o777) !== 0o600 ||
-      socket.uid.pipe(O.getOrElse(() => -1)) !== uid ||
+      !O.contains(socket.uid, uid) ||
       O.isNone(directory.ino) ||
       O.isNone(socket.ino)
     )

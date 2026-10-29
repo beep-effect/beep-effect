@@ -1,5 +1,68 @@
 # Memory notification investigation — 2026-10-28
 
+## Fresh follow-up — October 29, 13:15 CDT
+
+The cross-boot kernel query still contains nine distinct OOM decisions; none is
+newer than the 10:56 restricted-runtime event. The screenshot remains exactly
+matched to the deliberate 512 MiB proof. Source inspection confirms routine runs
+use controlled stop; deliberate exhaustion requires `--exercise-oom`.
+
+Available RAM briefly fell to about 6.8 GiB with swap effectively full. A later
+sample recovered to about 19 GiB after two large Bun/TypeScript processes exited;
+that sequence is an observation, not exclusive causal attribution. ComfyUI held
+about 36.8 GiB RSS and 9.4 GiB swapped. Dolphin PID 348619 held about 22.3 GiB RSS
+and 9.8 GiB swapped, with the same invocation identity as the earlier sample.
+No application was stopped. The active Dolphin operation remains unknown.
+`ShowToolTips=false` is already configured; the historical thumbnail workaround
+is not a newly available fix or proof of the current memory-growth cause.
+
+The historical forwarder hold was refreshed. Raw evidence is in
+`../ops/memory-notification-followup-20261029-1315.json`. No heavy proof was
+launched during the low-headroom inspection, and no notification or swap setting
+was changed.
+
+## Current evidence digest — October 29, 12:38 CDT
+
+The exact screenshot is a deliberate 512 MiB service-limit test from this chat,
+not a global memory shortage. Its default is now controlled stop/restart;
+`--exercise-oom` is explicit opt-in and warns of desktop notifications.
+
+A fresh cross-boot query still identifies nine distinct decisions since October
+27: five observability proof-service limits, one compiler limit, two separate
+AI-hub qualification-service limits, and one global OOM that killed ComfyUI.
+The exact case receipts for the two AI-hub events remain unconfirmed. The original
+Dolphin process peaked at 45.6 GiB and exited without intervention; no new kernel
+OOM appeared. Do not dismiss all notifications as tests.
+
+A different Dolphin invocation started at 12:20:52, PID 348619, service
+`app-org.kde.dolphin@e59e6286f3544567a0e1b153ebacab42.service`, invocation
+`7153b614f8494b15bb22d9edb558f6d5`. It initially held roughly 11–12 GiB resident
+and 6 GiB swapped, then rose to about 18 GiB resident during this follow-up.
+Memory was predominantly private anonymous allocation. Its journal contains
+portal Invalid transfer errors; those do not establish the cause. There were
+no `dolphin-*` or `dolphin_*` temporary entries in the bounded top-level `/tmp`
+check. Installed Dolphin and kio-extras are 26.08.2; KIO is 6.31.0. No root cause
+or fixed-version recommendation has been established.
+
+The saved host sample had 37.16 GiB available of 125.13 GiB RAM and only 2.99 GiB
+free of 48 GiB swap. Two brief vmstat intervals showed roughly 176–204 MiB/s
+swap-out. This is real paging activity even without a new global OOM. It is a
+snapshot, not a forecast or proof of a leak. The operator was asked about the
+active Dolphin folder/activity; no close action is pending or authorized from
+the earlier, already-exited process.
+
+At 12:42:22, available RAM was about 28.5 GiB, swap free was only 168 MiB,
+and Dolphin remained about 18.7 GiB resident. No new kernel OOM appeared
+since 12:20. The current package verification had finished; no additional
+heavy verification was launched during the unexplained desktop growth.
+
+Both historical forwarder units are freshly masked/inactive, service MainPID=0.
+No unrelated application, notification preference or swap setting was changed.
+The current full AI-metrics audit/docgen passed under the separate bounded guard;
+no memory stress was run. Exact host/event evidence is in
+`../ops/memory-notification-followup-20261029-midday.json`. Older sections below
+are historical observations and must not be read as current memory totals.
+
 ## Cross-boot correction and refreshed findings — 2026-10-29 00:18 CDT
 
 The latest investigation queried retained kernel messages across all boots with
@@ -359,3 +422,133 @@ The historical forwarder service and timer remain masked/inactive, and no
 beep-observation proof unit is loaded. The explicit --exercise-oom option is
 still required for deliberate exhaustion. No unrelated application, swap setting,
 or desktop notification was changed.
+
+## Delivery guard correction — 2026-10-29
+
+The collected Yeet cheap-gate run moved its admitted descendants into `agent-run-ea3f73ec-b7b9-430f-aed0-24b25a642629.scope`, a sibling of the outer proof service. The old outer-service monitor therefore did not measure aggregate proof memory. The admitted scope retained a peak of 15,691,333,632 bytes (about 14.6 GiB), with no own memory/swap limits; its observed current use was 4,510,527,488 bytes when this was discovered. The outer service reported only 605,114,368 bytes peak. Earlier outer-service Yeet peaks cannot establish aggregate bounds. This observation does not establish a new kernel OOM event.
+
+The exact owned scope was verified through live process ancestry, given runtime limits, and deliberately stopped together with the outer job after the collected checks had exposed repairable failures. The revised guard follows live descendants into admitted scopes, sums nonoverlapping owned cgroup usage, applies limits only to ancestry-proven owned scopes, and stops those scopes before the outer service on threshold breach. The supported `BEEP_QUALITY_CHEAP_GATE_CONCURRENCY=1` setting now serializes the next collected run. No other agent's service or user application was stopped. The guard revision and before/after evidence are retained by `ops/delivery-guard-correction.json`; aggregate qualification remains pending its next admitted run.
+
+## Refreshed cross-boot check — 2026-10-29 08:55 CDT
+
+The retained kernel journal now contains **eight distinct OOM decisions** since
+October 27: the seven listed above plus a service-local event at October 29
+07:54:53. The newer unit is
+`restricted-runtime-qual-35bd64e246d2427c9ccfdf60344ace7c.service`.
+Its kernel record says `CONSTRAINT_MEMCG`, memory usage and limit both
+786,432 KiB (768 MiB), and zero allowed swap. The unit journal confirms
+`oom-kill`, Python PID 3993553, and a 768 MiB peak. Duplicate victim lines in
+the same event are not counted as separate OOM decisions.
+
+Read-only source inspection found the matching unit prefix and exact 768 MiB
+limit in `/home/elpresidank/ai/lib/review/restricted_runtime_aggregate.py`.
+That implementation has an explicit `memory-pressure` stress case whose intended
+result is a bounded group OOM kill. A receipt tying this exact unit to that case
+was not recovered, so deliberate stress is a plausible source attribution, not
+an independently confirmed per-run conclusion. This belongs to the AI hub
+runtime qualification family, not the observability worker. No source or service
+in that other workstream was modified or re-run.
+
+The workstation snapshot had approximately 48 GiB RAM available of 125 GiB,
+with 35 GiB swap occupied of 47 GiB. Ten-second memory stalls were 0.38 percent;
+two subsequent one-second vmstat samples showed 104 and 4,864 KiB/s swap-in
+and zero swap-out. This does not indicate immediate global exhaustion at the
+sample time, nor does it establish sustained health. The largest resident
+process was ComfyUI Python PID 537468 at about 38.5 GiB RSS, running under a
+Ghostty application scope. RSS is not a precise additive ownership total or a
+memory leak diagnosis. The application slice remained uncapped and the separate
+agent-runs slice retained 88 GiB soft / 96 GiB hard / 8 GiB swap limits.
+
+No foundation or observation-proof service was running. Old failed unit records
+remain visible; they are not live consumers. The historical metrics forwarder
+service and timer remain masked. Routine resource proof still uses controlled
+stop/restart, with intentional exhaustion requiring explicit `--exercise-oom`.
+No notification setting, swap configuration, unrelated application or service
+was changed by this investigation.
+
+The latest source verification ended with exit 1 due to two schema test policy
+advisories, not OOM. Its guard observed 7,150,952,448 bytes peak and at least
+35,061,673,984 bytes host headroom, with no admission-scope escape recorded.
+AI-metrics audit/docgen, CLI lint/typecheck, and fixed-field schema checks passed
+within that run. The combined run remains failed until the two remaining
+advisories are independently adjudicated and the policy gate passes.
+
+A small synthetic sibling-scope proof then passed without exhaustion. A child
+allocated only 16 MiB, moved into its own agent-run scope, and independently
+read back the guard-applied 7 GiB soft / 12 GiB hard / zero-swap limits. The
+guard found its live ancestry and accounted about 26.8 MiB total while the
+outer service alone reported 2.4 MiB. Both processes exited normally. This
+qualifies the specific accounting/limit-application repair; it does not exercise
+threshold termination or establish full Yeet workload qualification. Evidence:
+`ops/delivery-guard-sibling-verification.json`.
+
+## Read-only follow-up on October 29 at 10:27 CDT
+
+The retained journal still contains eight distinct kernel OOM decisions since
+October 27. The latest is the separate 07:54 restricted-runtime unit; no newer
+decision appeared during this check. The screenshot's exact unit remains tied
+to the deliberate 512 MiB proof by both the journal and the original receipt.
+Repeated log lines for one kill are not additional OOM decisions.
+
+The workstation sample recorded 125.13 GiB total RAM, 39.00 GiB available,
+and 48.00 GiB total swap with 7.18 GiB free. An earlier sample in this turn
+had about 44 GiB available. A ComfyUI Python process was the largest resident
+consumer, around 39–41 GiB RSS, running under a Ghostty application scope.
+That is workload attribution, not evidence of a leak or grounds to stop it.
+No unrelated application was interrupted and no swap setting was changed.
+
+Both historical forwarder units were freshly verified masked and inactive.
+Routine verification continues to use controlled shutdown and an early-stop
+memory guard. The schema catalog has a separate documented larger memory
+profile: its completed regeneration used about 12.5 GiB, zero swap, and retained
+at least 35 GiB host headroom. It produced no OOM event; the combined command's
+failure was the subsequently detected dependency/cache-policy drift.
+
+The exact read-only host sample and retained decision lines are in
+`ops/memory-notification-followup-20261029.json`. This is an instantaneous
+observation, not a guarantee against future pressure from concurrent jobs.
+
+## Refreshed cross-boot check — 2026-10-29 11:28 CDT
+
+The retained kernel journal now has **nine distinct OOM decisions** since
+October 27. The additional event occurred at 10:56:06 CDT in
+`restricted-runtime-qual-41a0eb0cc1ac45b8b27e82a47e7e20dc.service`.
+The kernel identifies `CONSTRAINT_MEMCG`; the unit journal reports Python PID
+2787027, a 768 MiB peak, and `oom-kill`. Duplicate victim messages were not
+counted as additional decisions. This is another AI-hub restricted-runtime
+qualification service event, not a new observability-worker or global OOM.
+The current candidate source still contains the matching service prefix,
+768 MiB ceiling and explicit `memory-pressure` case. An exact case receipt
+was not recovered, so intentional stress remains an inference for this run.
+
+The host had about 40 GiB available RAM when first sampled in this continuation,
+and about 34 GiB of occupied swap. A later pressure sample reported zero
+10-second stalls, with small nonzero longer averages. Neither snapshot proves
+sustained health or a leak. Fresh raw attribution and host values are retained
+in `ops/memory-notification-followup-20261029-late.json`.
+The historical forwarder is still masked/inactive. No unrelated workload,
+notification preference or swap setting was changed; foundation verification
+continues with the owned-job memory guard and controlled-stop default.
+
+## Live Dolphin growth observed 2026-10-29, 12:18–12:21 CDT
+
+While the final observability verification completed, Dolphin PID 164671 grew
+from about 30 GiB RSS to 35 GiB and then 42 GiB RSS. The last smaps observation
+was mostly private anonymous memory, rather than reclaimable file cache. Host
+available RAM fell to about 6 GiB and swap was almost full. The proof's own
+service peaked near 5 GiB and completed; Dolphin was in a separate application
+service started at 12:08:38. Its original launcher/workload is not established.
+
+Before closing anything, the agent asked whether the file manager owned active
+work. The process exited at 12:20:47 without agent intervention. No new kernel
+OOM was recorded. Its service summary reports 45.6 GiB memory peak and 5.8 GiB
+swap peak over 12 minutes 9 seconds. Available RAM then recovered to about
+48 GiB. Repeated PNG decoding errors and a portal transfer error are diagnostic
+leads, not proof of the cause. No other application, notification or swap setting
+was changed. The pending close question no longer requires action.
+
+This is separate from the earlier deliberate proof-limit kills and demonstrates
+that other desktop workloads can create substantial real memory pressure. See
+`../ops/memory-dolphin-growth-20261029.json` for the process/service binding and
+ordered observations. Do not label the process a proven memory leak or attribute
+it to this packet without further evidence.

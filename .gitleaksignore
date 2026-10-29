@@ -150,3 +150,7 @@ goals/agent-observability-foundation/ops/whole-cli-runtime-abort-verification.js
 goals/agent-observability-foundation/ops/whole-cli-runtime-abort-verification.json:generic-api-key:831
 goals/agent-observability-foundation/ops/whole-cli-runtime-abort-verification.json:generic-api-key:972
 goals/agent-observability-foundation/ops/whole-cli-runtime-abort-verification.json:generic-api-key:1333
+
+# SHA-256 of packages/tooling/library/ai-metrics/test/CredentialBank.test.ts;
+# independently verified against staged bytes, not an API credential.
+goals/agent-observability-foundation/ops/delivery-policy-verification.json:generic-api-key:136

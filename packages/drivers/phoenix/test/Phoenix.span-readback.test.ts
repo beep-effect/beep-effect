@@ -1,13 +1,13 @@
 import { makePhoenixSpanReader, PhoenixConfigInput, PhoenixSpanLookup } from "@beep/phoenix";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as UrlParams from "effect/http/UrlParams";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
@@ -31,8 +31,10 @@ const row = {
   attributes: { "ai_metrics.event_id": "synthetic-id", "input.value": "private-content" },
   events: [{ private: "event" }],
 };
+const encodeJsonValue = S.encodeEffect(S.fromJsonString(S.Unknown));
+
 const run = Effect.fn("PhoenixSpanReadTest.run")(function* (body: unknown, status = 200) {
-  const json = yield* S.encodeEffect(S.fromJsonString(S.Unknown))(body);
+  const json = yield* encodeJsonValue(body);
   const client = HttpClient.make((request) =>
     Effect.sync(() => {
       expect(request.url).toBe("http://127.0.0.1:6006/v1/projects/synthetic/spans");
@@ -53,10 +55,10 @@ it.effect("returns only requested scalar metadata for an exact unpaginated ident
     expect(yield* run({ data: [row], next_cursor: null })).toMatchObject({
       value: { attributes: { "ai_metrics.event_id": "synthetic-id" } },
     });
-    const text = yield* S.encodeEffect(S.fromJsonString(S.Unknown))(yield* run({ data: [row], next_cursor: null }));
+    const text = yield* encodeJsonValue(yield* run({ data: [row], next_cursor: null }));
     expect(text).not.toContain("private-content");
     expect(text).not.toContain("private-content");
-    expect(yield* run({ data: [], next_cursor: null })).toEqual(O.none());
+    assertNone(yield* run({ data: [], next_cursor: null }));
   })
 );
 it.effect("refuses duplicates, pagination, wrong identities and malformed requested attributes", () =>
@@ -79,7 +81,7 @@ it.effect("keeps an unqueryable new project distinct from an empty successful qu
     expect(yield* run({ detail: "private-server-content" }, 404).pipe(Effect.flip)).toMatchObject({
       reason: "not-found",
     });
-    expect(yield* run({ data: [], next_cursor: null })).toEqual(O.none());
+    assertNone(yield* run({ data: [], next_cursor: null }));
   })
 );
 it.effect("bounds response bytes before JSON parsing", () =>

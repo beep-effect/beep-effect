@@ -7,7 +7,7 @@ Execution: **active**, explicitly launched 2026-10-27. Preserve the recovery hol
 | P0 Research | in-progress | Refresh audit, dependencies and exact source; reproduce assigned failure mechanics | Bounded plan and synthetic regression receipts |
 | P1 Implement | in-progress | Implement the smallest legal changes in SPEC, reuse existing components | Acceptance implementation and rollback ready |
 | P2 Verify | in-progress | Fixture, integration, privacy, interpretation and route proof | Required checks and explicit residual limitations |
-| P3 Yeet: PR to mergeable | pending | Publish through current Yeet policy, answer reviews, hosted readiness and merge gate | Current exact-head delivery evidence |
+| P3 Yeet: PR to mergeable | in-progress | Publish through current Yeet policy, answer reviews, hosted readiness and merge gate | Current exact-head delivery evidence |
 | P4 Close | pending | Reflection, source/goal status and operational handoff | Merged delivery and accepted closeout; then completed-retained |
 
 ## First actions on explicit launch

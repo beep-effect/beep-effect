@@ -76,8 +76,10 @@ const fixture = Effect.fn("NativeHttpTest.fixture")(function* (maxPages = 16, bo
   });
   return { ...intake, config, url, post, client };
 });
+const encodeJsonValue = S.encodeEffect(S.fromJsonString(S.Unknown));
+
 const spanBody = (invalid = false) =>
-  S.encodeEffect(S.fromJsonString(S.Unknown))({
+  encodeJsonValue({
     resourceSpans: [
       {
         scopeSpans: [
@@ -107,7 +109,7 @@ message ResourceSpans { repeated ScopeSpans scope_spans = 2; }
 message ScopeSpans { repeated Span spans = 2; }
 message Span { bytes trace_id = 1; bytes span_id = 2; string name = 5; }`).root.lookupType("ExportTraceServiceRequest");
 
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("acknowledges committed JSON metadata, partial rejection and exact retry over a real socket", () =>
     Effect.gen(function* () {
       const { post, journal, health } = yield* fixture(1);
@@ -136,11 +138,11 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
       expect(metrics).toContain('beep_observation_intake_responses_total{outcome="capacity"} 1');
       expect(metrics).not.toContain(receiptId);
       expect(metrics).not.toContain("private");
-    }).pipe(Effect.scoped)
+    })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("supports gzip and protobuf with matching full and partial wire responses", () =>
     Effect.gen(function* () {
       const { post, journal } = yield* fixture();
@@ -177,11 +179,11 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
       expect(json.status).toBe(200);
       expect(json.text).toBe("{}");
       expect(yield* journal.stats).toMatchObject({ pages: 2, frames: 2 });
-    }).pipe(Effect.scoped)
+    })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("refuses malformed, unsupported and compressed oversized bodies without persistence", () =>
     Effect.gen(function* () {
       const { post, journal, url, health } = yield* fixture();
@@ -202,11 +204,11 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
         message: "Local intake refused the request",
       });
       expect(yield* journal.stats).toEqual({ pages: 0, frames: 0, payloadBytes: 0 });
-    }).pipe(Effect.scoped)
+    })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("returns retryable refusal when the atomic receipt write fails and recovers on retry", () =>
     Effect.gen(function* () {
       const { post, journal, health } = yield* fixture();
@@ -222,7 +224,7 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
       yield* sql`DROP TRIGGER synthetic_receipt_failure`;
       expect((yield* post(yield* spanBody())).status).toBe(200);
       expect(yield* journal.stats).toMatchObject({ pages: 1, frames: 1 });
-    }).pipe(Effect.scoped)
+    })
   )
 );
 
@@ -244,7 +246,7 @@ const openChunked = Effect.fn("NativeHttpTest.openChunked")(function* (url: stri
   };
 });
 
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("refuses concurrent admission immediately and enforces streaming size without Content-Length", () =>
     Effect.gen(function* () {
       const { post, journal, url, client, health } = yield* fixture();
@@ -261,11 +263,11 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
       expect(yield* pending.status).toBe(413);
       expect((yield* post()).status).toBe(200);
       expect(yield* journal.stats).toEqual({ pages: 0, frames: 0, payloadBytes: 0 });
-    }).pipe(Effect.scoped)
+    })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("expires an unfinished upload with no acknowledgment or journal page and releases admission", () =>
     Effect.gen(function* () {
       const { post, journal, url, client, health } = yield* fixture(16, 100);
@@ -275,11 +277,12 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
       expect(yield* journal.stats).toEqual({ pages: 0, frames: 0, payloadBytes: 0 });
       expect((yield* post(yield* spanBody())).status).toBe(200);
       expect(yield* journal.stats).toMatchObject({ pages: 1, frames: 1 });
-    }).pipe(Effect.scoped, Effect.timeout("3 seconds"))
+    }).pipe(Effect.timeout("3 seconds"))
   )
 );
+const decodeJsonValue = S.decodeEffect(S.fromJsonString(S.Unknown));
 
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("returns permanent expiry refusal and precise partial success for mixed expired and new spans", () =>
     Effect.gen(function* () {
       const { config, post, journal } = yield* fixture();
@@ -321,7 +324,7 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
       expect(expired.status).toBe(410);
       expect(expired.headers.has("retry-after")).toBe(false);
       expect(expired.headers.has("x-observation-receipt")).toBe(false);
-      const mixed = yield* S.encodeEffect(S.fromJsonString(S.Unknown))({
+      const mixed = yield* encodeJsonValue({
         resourceSpans: [
           {
             scopeSpans: [
@@ -339,7 +342,7 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
       });
       const partial = yield* post(mixed);
       expect(partial.status).toBe(200);
-      expect(yield* S.decodeEffect(S.fromJsonString(S.Unknown))(partial.text)).toMatchObject({
+      expect(yield* decodeJsonValue(partial.text)).toMatchObject({
         partialSuccess: { rejectedSpans: "1" },
       });
       const mixedId = yield* S.decodeUnknownEffect(Sha256Hex)(partial.headers.get("x-observation-receipt"));
@@ -349,6 +352,6 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
       });
       expect((yield* post(mixed)).status).toBe(200);
       expect((yield* journal.stats).pages).toBe(1);
-    }).pipe(Effect.scoped)
+    })
   )
 );

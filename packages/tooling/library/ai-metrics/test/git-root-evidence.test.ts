@@ -62,8 +62,9 @@ const observed = (value: AiMetricsGitRootEvidence) => {
     throw new Error(`Expected observed identity, received ${value._tag}`);
   return value;
 };
+const encodeAiMetricsGitRootEvidenceJson = S.encodeEffect(S.fromJsonString(AiMetricsGitRootEvidence));
 
-it.layer(NodeServices.layer, { concurrent: false })("Git root identity evidence", (it) => {
+it.layer(NodeServices.layer, { timeout: "30 seconds", concurrent: false })("Git root identity evidence", (it) => {
   it.effect("joins linked worktrees to their owning clone while preserving legacy IDs", () =>
     Effect.gen(function* () {
       const directory = yield* temporaryDirectory;
@@ -106,7 +107,7 @@ it.layer(NodeServices.layer, { concurrent: false })("Git root identity evidence"
       expect(a.repositoryIdHash).toBe(b.repositoryIdHash);
       expect(a.owningCloneIdHash).not.toBe(b.owningCloneIdHash);
       expect(a.worktreeIdHash).not.toBe(b.worktreeIdHash);
-      const encoded = yield* S.encodeEffect(S.fromJsonString(AiMetricsGitRootEvidence))(b);
+      const encoded = yield* encodeAiMetricsGitRootEvidenceJson(b);
       expect(encoded).not.toContain(directory);
       expect(encoded).not.toContain("synthetic-secret");
       expect(encoded).not.toContain("synthetic-token");
@@ -145,7 +146,7 @@ it.layer(NodeServices.layer, { concurrent: false })("Git root identity evidence"
   );
 });
 
-it.layer(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer))((it) =>
+it.layer(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer), { timeout: "30 seconds" })((it) =>
   it.effect("does not require a process service just to read legacy identities", () =>
     Effect.gen(function* () {
       const legacy = {
@@ -192,35 +193,44 @@ const probeSpawner = (stdout: Stream.Stream<Uint8Array>, released: Ref.Ref<numbe
     )
   );
 
-it.layer(Layer.mergeAll(NodeServices.layer, TestClock.layer()))("bounded Git probes", (it) => {
-  it.effect("refuses oversized Git output and releases the process scope", () =>
-    Effect.gen(function* () {
-      const root = yield* temporaryDirectory;
-      const released = yield* Ref.make(0);
-      const started = yield* Deferred.make<void>();
-      const result = yield* observeAiMetricsGitRoot(input(root)).pipe(
-        Effect.provideService(
-          ChildProcessSpawner.ChildProcessSpawner,
-          probeSpawner(Stream.make(new Uint8Array(16385)), released, started)
-        )
-      );
-      expect(result).toEqual({ _tag: "Unknown", reason: "probe-failed" });
-      expect(yield* Ref.get(released)).toBe(1);
-    })
-  );
-  it.effect("expires an unresponsive Git probe and releases its scope", () =>
-    Effect.gen(function* () {
-      const root = yield* temporaryDirectory;
-      const released = yield* Ref.make(0);
-      const started = yield* Deferred.make<void>();
-      const fiber = yield* observeAiMetricsGitRoot(input(root)).pipe(
-        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, probeSpawner(Stream.never, released, started)),
-        Effect.forkChild
-      );
-      yield* Deferred.await(started);
-      yield* TestClock.adjust("5 seconds");
-      expect(yield* Fiber.join(fiber)).toEqual({ _tag: "Unknown", reason: "timed-out" });
-      expect(yield* Ref.get(released)).toBe(1);
-    })
-  );
-});
+it.layer(Layer.mergeAll(NodeServices.layer, TestClock.layer()), { timeout: "30 seconds" })(
+  "bounded Git probes",
+  (it) => {
+    it.effect("refuses oversized Git output and releases the process scope", () =>
+      Effect.gen(function* () {
+        const root = yield* temporaryDirectory;
+        const released = yield* Ref.make(0);
+        const started = yield* Deferred.make<void>();
+        const result = yield* observeAiMetricsGitRoot(input(root)).pipe(
+          Effect.provideService(
+            ChildProcessSpawner.ChildProcessSpawner,
+            probeSpawner(Stream.make(new Uint8Array(16385)), released, started)
+          )
+        );
+        expect(result).toEqual({ _tag: "Unknown", reason: "probe-failed" });
+        expect(yield* Ref.get(released)).toBe(1);
+      })
+    );
+  }
+);
+
+it.layer(Layer.mergeAll(NodeServices.layer, TestClock.layer()), { timeout: "30 seconds" })(
+  "isolated Git probe timeout",
+  (it) => {
+    it.effect("expires an unresponsive Git probe and releases its scope", () =>
+      Effect.gen(function* () {
+        const root = yield* temporaryDirectory;
+        const released = yield* Ref.make(0);
+        const started = yield* Deferred.make<void>();
+        const fiber = yield* observeAiMetricsGitRoot(input(root)).pipe(
+          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, probeSpawner(Stream.never, released, started)),
+          Effect.forkChild
+        );
+        yield* Deferred.await(started);
+        yield* TestClock.adjust("5 seconds");
+        expect(yield* Fiber.join(fiber)).toEqual({ _tag: "Unknown", reason: "timed-out" });
+        expect(yield* Ref.get(released)).toBe(1);
+      })
+    );
+  }
+);

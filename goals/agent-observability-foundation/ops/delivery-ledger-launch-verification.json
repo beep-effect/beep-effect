@@ -1,0 +1,251 @@
+{
+  "observedAt": "2026-10-29T17:41:49.719979+00:00",
+  "baseHead": "1ed9704cc640a24fe880a5b1dc161b009d1ca1ef",
+  "archive": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-ledger-launch-7bl332k4",
+  "artifacts": [
+    {
+      "file": "audit.repair-v12.combined.txt",
+      "bytes": 97088,
+      "sha256": "7f4984a1187268427e06f6fb445edfaf5e480f1c1b6741840f365b50a9254f3e"
+    },
+    {
+      "file": "audit.repair-v12.json",
+      "bytes": 10013,
+      "sha256": "2f2d0b518be83193d313cbba0830a04c3b0895477b3fc22b132db833291f66f7"
+    },
+    {
+      "file": "audit.repair-v11.combined.txt",
+      "bytes": 101102,
+      "sha256": "fe28f7c27e00068de55d0f421c655c85fdc273e4de88a318ea2946cda51d0e33"
+    },
+    {
+      "file": "audit.repair-v11.json",
+      "bytes": 10241,
+      "sha256": "905542a4a5553e7fb19db13be41f85c4a48540e0c9914a87da8d1a995ba1d15c"
+    },
+    {
+      "file": "delivery-fallow-worklist.json",
+      "bytes": 11070,
+      "sha256": "7a5474b6d83dc3fbe36b17287476d2e880e3c0048c1f3b0d1cacf22a7aae340f"
+    },
+    {
+      "file": "LEDGER-LAUNCH-REFACTOR-REVIEW.md",
+      "bytes": 4093,
+      "sha256": "850f20417dd1c3589a0427782e19a7347734d58d03209fb8470b4b743354571b"
+    },
+    {
+      "file": "foundation-bounded-job.py",
+      "bytes": 7421,
+      "sha256": "e7d72f286ed9cbb662eceaab93df404f8ecee8462f3998e320b6557eb828c4ee"
+    },
+    {
+      "file": "foundation-delivery-ledger-before.ts",
+      "bytes": 29007,
+      "sha256": "2851683ef96997ae3995c892002fb4a9384c227938394309b65b4bdd22d73244"
+    },
+    {
+      "file": "foundation-delivery-ledger-before-dedup.ts",
+      "bytes": 29802,
+      "sha256": "7831edb8fad2b9b6006b087fc73ef3aed3ad709ead0526bed5ae7badb49db1d4"
+    },
+    {
+      "file": "foundation-launch-facts-before.ts",
+      "bytes": 13347,
+      "sha256": "775f221abd1ab56e947227bc02b55c7264489917158c0fc0cf1a231b1a2a640a"
+    },
+    {
+      "file": "foundation-native-readback-test-before.ts",
+      "bytes": 15813,
+      "sha256": "81a53c94da63307ff321d1125b8847efb3010edfcf286e15a914a217a4db4722"
+    },
+    {
+      "file": "foundation-delivery-ledger-health-v1.json",
+      "bytes": 6192,
+      "sha256": "61f1a3a27938c96bcedcc0e944aebb9ebac2ddb8e76fa3e75f28e1ba210b9750"
+    },
+    {
+      "file": "foundation-launch-facts-health-v1.json",
+      "bytes": 6091,
+      "sha256": "795c2e7428279426dd5754bde9337a243e6ec0e09571e0dda01691727fdac9bc"
+    },
+    {
+      "file": "foundation-native-readback-test-health-v1.json",
+      "bytes": 5926,
+      "sha256": "d0d3c04cc047ec66f132e540deecb1407b6652debc1c7cf585ba028e385850db"
+    },
+    {
+      "file": "foundation-ledger-refactor-v1.log",
+      "bytes": 2919,
+      "sha256": "8f20c2aeeb5748297dbf1a9e442e946bc70db95f0ddd7798832414849a549728"
+    },
+    {
+      "file": "foundation-ledger-refactor-v1-guard.json",
+      "bytes": 350,
+      "sha256": "3089da8e1441bec5ba0a195c95722cacd66f4441004eb3b35461ccace8a1a7b9"
+    },
+    {
+      "file": "foundation-ledger-readback-v2.log",
+      "bytes": 3055,
+      "sha256": "7d2d0742da949a61bf1568927f9c6c554a2e1b354c7f61625745aa469ebc46b7"
+    },
+    {
+      "file": "foundation-ledger-readback-v2-guard.json",
+      "bytes": 350,
+      "sha256": "462792b34b46095e27e8fd8946a8f06eaf07147f46b20dd47669d5b19cae8e0e"
+    },
+    {
+      "file": "foundation-launch-facts-v1.log",
+      "bytes": 1509,
+      "sha256": "b80e07ca7aa9512d0c879fceb0a3b47af97a106921ceb33729227a279b555d91"
+    },
+    {
+      "file": "foundation-launch-facts-v1-guard.json",
+      "bytes": 347,
+      "sha256": "dd27087d7c0e6b2cfbfaed1e6d9b780605ff1ba4b9cde6a968db2a6c5bc39c86"
+    },
+    {
+      "file": "foundation-ledger-launch-final.log",
+      "bytes": 11062,
+      "sha256": "0996c09f66780c15d72c3f2a804634c02085f16f8201c2e28fbae1f7cb7b6720"
+    },
+    {
+      "file": "foundation-ledger-launch-final-guard.json",
+      "bytes": 351,
+      "sha256": "3dffcf74cbd2c377369f17fb78589a2ebaf3ae1d4c868a91c6ed868ee7810520"
+    },
+    {
+      "file": "foundation-ledger-dedup-final.log",
+      "bytes": 68692,
+      "sha256": "4147d4a9678e98a19fc41eb05eca02f25ffe5e62b19ba7d6cb651f284ee54d0c"
+    },
+    {
+      "file": "foundation-ledger-dedup-final-guard.json",
+      "bytes": 349,
+      "sha256": "cac0264c28bc8b61393306d2e0cedb0c19746903f0f27db78887c256555d6b23"
+    },
+    {
+      "file": "foundation-ledger-dedup-v2.log",
+      "bytes": 13153,
+      "sha256": "eca6a15343ae0c9298569404fe11aa730a3bb4954485cfaa6e6c75fb1c52b02e"
+    },
+    {
+      "file": "foundation-ledger-dedup-v2-guard.json",
+      "bytes": 347,
+      "sha256": "8ae8f5fb8a67fa3d63c242eadfc20992e4ecddc36c8d09837ef326c01b695e41"
+    }
+  ],
+  "currentSourceSha256": {
+    "packages/tooling/library/ai-metrics/src/delivery-ledger.ts": "796f8afe623bf0c0191fd6bc598a26d3c77e68d5f02fa24648931f1c1ddc1bc3",
+    "packages/tooling/library/ai-metrics/src/observation-launch-facts.ts": "95a792708cc5858115577f2e272227d7e68b420067b7abe4edfdfd5e5d6d7cac",
+    "packages/tooling/library/ai-metrics/test/native-readback.test.ts": "1e2a3d794c1d738d4ea8f847f8acb9d3041e1af7f3c456c77d5770ed1b00640e"
+  },
+  "verification": {
+    "distinctFocusedCasesAcrossWave": 95,
+    "finalLedgerRegressionCases": 52,
+    "finalAiMetricsAudit": "passed",
+    "finalAiMetricsDocgen": "passed",
+    "targetedComplexityFindings": 0,
+    "independentReview": "accepted all three current source hashes, including generator correction after a failed intermediate extraction",
+    "fallowAttribution": {
+      "gate": "new-only",
+      "dead_code_introduced": 0,
+      "dead_code_inherited": 0,
+      "complexity_introduced": 34,
+      "complexity_inherited": 0,
+      "duplication_introduced": 3,
+      "duplication_inherited": 4,
+      "styling_introduced": 0,
+      "styling_inherited": 0,
+      "duplication_demoted": 0,
+      "diff_risk_introduced": 0
+    },
+    "maximumRemainingCyclomatic": 16
+  },
+  "guards": {
+    "foundation-ledger-refactor-v1": {
+      "ownedScopes": {},
+      "unit": "foundation-ledger-refactor-v1.service",
+      "profile": "bounded",
+      "memoryStopBytes": 8589934592,
+      "hostAvailableFloorBytes": 8589934592,
+      "initialAvailableBytes": 46459592704,
+      "peakObservedBytes": 5540036608,
+      "minimumAvailableBytes": 42264297472,
+      "stoppedFor": null,
+      "exitCode": 0,
+      "orphanCleanup": []
+    },
+    "foundation-ledger-readback-v2": {
+      "ownedScopes": {},
+      "unit": "foundation-ledger-readback-v2.service",
+      "profile": "bounded",
+      "memoryStopBytes": 8589934592,
+      "hostAvailableFloorBytes": 8589934592,
+      "initialAvailableBytes": 46556405760,
+      "peakObservedBytes": 5517824000,
+      "minimumAvailableBytes": 41070284800,
+      "stoppedFor": null,
+      "exitCode": 0,
+      "orphanCleanup": []
+    },
+    "foundation-launch-facts-v1": {
+      "ownedScopes": {},
+      "unit": "foundation-launch-facts-v1.service",
+      "profile": "bounded",
+      "memoryStopBytes": 8589934592,
+      "hostAvailableFloorBytes": 8589934592,
+      "initialAvailableBytes": 45032611840,
+      "peakObservedBytes": 5808214016,
+      "minimumAvailableBytes": 39808077824,
+      "stoppedFor": null,
+      "exitCode": 0,
+      "orphanCleanup": []
+    },
+    "foundation-ledger-launch-final": {
+      "ownedScopes": {},
+      "unit": "foundation-ledger-launch-final.service",
+      "profile": "bounded",
+      "memoryStopBytes": 8589934592,
+      "hostAvailableFloorBytes": 8589934592,
+      "initialAvailableBytes": 38724718592,
+      "peakObservedBytes": 6010748928,
+      "minimumAvailableBytes": 29344002048,
+      "stoppedFor": null,
+      "exitCode": 1,
+      "orphanCleanup": []
+    },
+    "foundation-ledger-dedup-final": {
+      "ownedScopes": {},
+      "unit": "foundation-ledger-dedup-final.service",
+      "profile": "bounded",
+      "memoryStopBytes": 8589934592,
+      "hostAvailableFloorBytes": 8589934592,
+      "initialAvailableBytes": 30438535168,
+      "peakObservedBytes": 521981952,
+      "minimumAvailableBytes": 29790248960,
+      "stoppedFor": null,
+      "exitCode": 1,
+      "orphanCleanup": []
+    },
+    "foundation-ledger-dedup-v2": {
+      "ownedScopes": {},
+      "unit": "foundation-ledger-dedup-v2.service",
+      "profile": "bounded",
+      "memoryStopBytes": 8589934592,
+      "hostAvailableFloorBytes": 8589934592,
+      "initialAvailableBytes": 32099467264,
+      "peakObservedBytes": 5581905920,
+      "minimumAvailableBytes": 18373091328,
+      "stoppedFor": null,
+      "exitCode": 1,
+      "orphanCleanup": []
+    }
+  },
+  "limitations": [
+    "Final combined command exits 1 for remaining Fallow findings after focused tests and full package audit/docgen pass. No quality thresholds or allowances changed.",
+    "Intermediate outcome-reader extraction failed39 of52 tests due to a non-generator fnUntraced callback; corrected to a generator and all52 passed. Prior source-only review missed API compatibility; corrected source independently re-reviewed.",
+    "No synthetic case replaces real harness coverage evidence. Installed canary/entrypoint proof must refresh against final source before delivery.",
+    "Whole CLI runtime abort remains unresolved. Remaining policy/catalog, publication and hosted review/merge remain open.",
+    "Recovery hold and historical data preserved; no production rollout or deliberate OOM."
+  ]
+}

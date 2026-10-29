@@ -14,6 +14,7 @@ import { provideScopedLayer } from "@beep/test-utils/Layer";
 import { BunSqliteTestDriver, makeSqlTestLayer } from "@beep/test-utils/SqlTest";
 import * as SqliteClient from "@effect/sql-sqlite-bun/SqliteClient";
 import { expect } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -26,6 +27,8 @@ import * as SqlClient from "effect/sql/SqlClient";
 
 const sqlLayer = makeSqlTestLayer({ config: undefined, driver: BunSqliteTestDriver });
 const salt = "synthetic-native-intake-salt";
+const encodeJsonValue = S.encodeEffect(S.fromJsonString(S.Unknown));
+
 const fixture = Effect.fn("NativeIntakeTest.fixture")(function* (maxPages = 16) {
   const config = TranscriptIntakeConfig.make({
     hostId: Sha256Hex.make(Str.repeat(64)("a")),
@@ -43,7 +46,7 @@ const fixture = Effect.fn("NativeIntakeTest.fixture")(function* (maxPages = 16) 
         { key: "input.value", value: { stringValue: `private-prompt${suffix}` } },
       ],
     };
-    const body = yield* S.encodeEffect(S.fromJsonString(S.Unknown))({
+    const body = yield* encodeJsonValue({
       resourceSpans: [
         { scopeSpans: [{ spans: invalid === true ? [span, { traceId: "private-invalid-id" }] : [span] }] },
       ],
@@ -62,7 +65,7 @@ const fixture = Effect.fn("NativeIntakeTest.fixture")(function* (maxPages = 16) 
   return { config, batch, journal: yield* makeNativeIntakeJournal(config) };
 });
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("deduplicates occurrences inside one batch and excludes conflicts from canonical export candidates", () =>
     Effect.gen(function* () {
       const { batch, journal } = yield* fixture();
@@ -75,12 +78,12 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
         NativeTraceBatch.make({ ...first, spans: [metadata, metadata, conflict] })
       );
       expect(accepted).toMatchObject({ accepted: 2, rejected: 1, newEvents: 1, duplicates: 1, conflictIndices: [2] });
-      expect(yield* journal.readNewEvents(accepted.page.receiptId)).toEqual(O.some([metadata]));
+      assertSome(yield* journal.readNewEvents(accepted.page.receiptId), [metadata]);
     })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("refuses altered stored payloads before returning native export candidates", () =>
     Effect.gen(function* () {
       const { batch, journal } = yield* fixture();
@@ -89,7 +92,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
       yield* sql`UPDATE observation_intake_pages SET payload = payload || ' ' WHERE receipt_id=${accepted.page.receiptId}`;
       expect((yield* journal.readBatch(accepted.page.receiptId).pipe(Effect.flip)).reason).toBe("storage");
       expect((yield* journal.readNewEvents(accepted.page.receiptId).pipe(Effect.flip)).reason).toBe("storage");
-      expect(yield* journal.receipt(accepted.page.receiptId)).toEqual(O.some(accepted));
+      assertSome(yield* journal.receipt(accepted.page.receiptId), accepted);
       expect((yield* journal.acceptBatch(yield* batch()).pipe(Effect.flip)).reason).toBe("storage");
       yield* sql`UPDATE observation_native_receipts SET payload = payload || ' ' WHERE receipt_id=${accepted.page.receiptId}`;
       expect((yield* journal.receipt(accepted.page.receiptId).pipe(Effect.flip)).reason).toBe("storage");
@@ -98,7 +101,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("commits a sanitized native batch, unique identity and receipt atomically and replays exactly", () =>
     Effect.gen(function* () {
       const { config, batch, journal } = yield* fixture();
@@ -112,14 +115,14 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
         page: { sequence: 1, frames: 1 },
       });
       expect(yield* journal.acceptBatch(projected)).toEqual(receipt);
-      expect(yield* journal.readBatch(receipt.page.receiptId)).toEqual(O.some(projected));
-      expect(yield* journal.readNewEvents(receipt.page.receiptId)).toEqual(O.some(projected.spans));
+      assertSome(yield* journal.readBatch(receipt.page.receiptId), projected);
+      assertSome(yield* journal.readNewEvents(receipt.page.receiptId), projected.spans);
       const reopened = yield* makeNativeIntakeJournal(config);
-      expect(yield* reopened.receipt(receipt.page.receiptId)).toEqual(O.some(receipt));
+      assertSome(yield* reopened.receipt(receipt.page.receiptId), receipt);
       const sql = yield* SqlClient.SqlClient;
       const stored =
         yield* sql`SELECT payload FROM observation_intake_pages UNION ALL SELECT payload FROM observation_native_receipts`;
-      const encoded = yield* S.encodeEffect(S.fromJsonString(S.Unknown))(stored);
+      const encoded = yield* encodeJsonValue(stored);
       expect(encoded).not.toContain("private-");
       expect(encoded).not.toContain(salt);
       expect((yield* journal.stats).pages).toBe(1);
@@ -127,7 +130,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("records duplicates separately from identity conflicts without replacing canonical metadata", () =>
     Effect.gen(function* () {
       const { batch, journal } = yield* fixture();
@@ -137,29 +140,29 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
       expect(duplicate).toMatchObject({ accepted: 1, newEvents: 0, duplicates: 1, rejected: 0 });
       const conflict = yield* journal.acceptBatch(yield* batch(3));
       expect(conflict).toMatchObject({ accepted: 0, rejected: 1, newEvents: 0, duplicates: 0, conflictIndices: [0] });
-      expect(yield* journal.readBatch(first.page.receiptId)).toEqual(O.some(firstBatch));
-      expect(yield* journal.readNewEvents(first.page.receiptId)).toEqual(O.some(firstBatch.spans));
-      expect(yield* journal.readNewEvents(duplicate.page.receiptId)).toEqual(O.some([]));
-      expect(yield* journal.readNewEvents(conflict.page.receiptId)).toEqual(O.some([]));
+      assertSome(yield* journal.readBatch(first.page.receiptId), firstBatch);
+      assertSome(yield* journal.readNewEvents(first.page.receiptId), firstBatch.spans);
+      assertSome(yield* journal.readNewEvents(duplicate.page.receiptId), []);
+      assertSome(yield* journal.readNewEvents(conflict.page.receiptId), []);
       const sql = yield* SqlClient.SqlClient;
       expect(yield* sql`SELECT COUNT(*) AS count FROM observation_native_events`).toEqual([{ count: 1 }]);
     })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("durably records malformed-span rejection counts beside valid native metadata", () =>
     Effect.gen(function* () {
       const { batch, journal } = yield* fixture();
       const projected = yield* batch(2, "", true);
       const accepted = yield* journal.acceptBatch(projected);
       expect(accepted).toMatchObject({ accepted: 1, rejected: 1, newEvents: 1 });
-      expect(yield* journal.readBatch(accepted.page.receiptId)).toEqual(O.some(projected));
+      assertSome(yield* journal.readBatch(accepted.page.receiptId), projected);
     })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("rolls back native index and page if the durable receipt write fails", () =>
     Effect.gen(function* () {
       const { batch, journal } = yield* fixture();
@@ -175,7 +178,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("shares capacity with transcript pages and still acknowledges exact native replays at capacity", () =>
     Effect.gen(function* () {
       const { config, batch, journal } = yield* fixture(1);
@@ -200,18 +203,18 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
       );
       const transcripts = yield* makeTranscriptIntakeJournal(config);
       expect((yield* transcripts.acceptPage(page, O.none()).pipe(Effect.flip)).reason).toBe("capacity");
-      expect(yield* transcripts.readCursor("codex", page.cursor.pathHash)).toEqual(O.none());
+      assertNone(yield* transcripts.readCursor("codex", page.cursor.pathHash));
     })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("reads earlier receipt encoding without expiry indices and preserves exact replay", () =>
     Effect.gen(function* () {
       const { batch, journal } = yield* fixture();
       const projected = yield* batch();
       const accepted = yield* journal.acceptBatch(projected);
-      const payload = yield* S.encodeEffect(S.fromJsonString(S.Unknown))({
+      const payload = yield* encodeJsonValue({
         version: accepted.version,
         page: {
           receiptId: accepted.page.receiptId,
@@ -229,13 +232,14 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
       const digest = yield* hashPublicTextSha256(payload);
       const sql = yield* SqlClient.SqlClient;
       yield* sql`UPDATE observation_native_receipts SET payload=${payload},payload_hash=${digest} WHERE receipt_id=${accepted.page.receiptId}`;
-      expect(yield* journal.receipt(accepted.page.receiptId)).toEqual(O.some(accepted));
+      assertSome(yield* journal.receipt(accepted.page.receiptId), accepted);
       expect(yield* journal.acceptBatch(projected)).toEqual(accepted);
     })
   )
 );
+const decodeArguments = S.decodeUnknownEffect(S.Tuple([S.Struct({ file: S.String })]));
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("adds epoch zero to an earlier owned page table without changing its receipt or payload", () =>
     Effect.gen(function* () {
       const { config, batch, journal } = yield* fixture();
@@ -244,7 +248,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
       const sql = yield* SqlClient.SqlClient;
       yield* sql`ALTER TABLE observation_intake_pages DROP COLUMN evidence_epoch`;
       const files = yield* sql`SELECT file FROM pragma_database_list WHERE name='main'`.pipe(
-        Effect.flatMap(S.decodeUnknownEffect(S.Tuple([S.Struct({ file: S.String })])))
+        Effect.flatMap(decodeArguments)
       );
       // DROP COLUMN creates a temporary SQLite schema on the fixture connection.
       // A real service restart opens a fresh connection to the earlier file.
@@ -252,7 +256,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
         const reopened = yield* makeNativeIntakeJournal(config);
         const reopenedSql = yield* SqlClient.SqlClient;
         expect(yield* reopened.acceptBatch(projected)).toEqual(original);
-        expect(yield* reopened.readBatch(original.page.receiptId)).toEqual(O.some(projected));
+        assertSome(yield* reopened.readBatch(original.page.receiptId), projected);
         expect(yield* reopenedSql`SELECT evidence_epoch FROM observation_intake_pages`).toEqual([
           { evidence_epoch: 0 },
         ]);

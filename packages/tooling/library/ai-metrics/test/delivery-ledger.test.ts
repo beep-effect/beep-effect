@@ -14,6 +14,7 @@ import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { BunSqliteTestDriver, makeSqlTestLayer } from "@beep/test-utils/SqlTest";
 import { expect } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -26,6 +27,8 @@ import * as SqlClient from "effect/sql/SqlClient";
 
 const sqlLayer = makeSqlTestLayer({ config: undefined, driver: BunSqliteTestDriver });
 const id = (char: string) => Sha256Hex.make(Str.repeat(64)(char));
+const encodeJsonValue = S.encodeEffect(S.fromJsonString(S.Unknown));
+
 const fixture = Effect.fn("DeliveryLedgerTest.fixture")(function* (
   maxEvents = 16,
   maxAttempts = 16,
@@ -41,7 +44,7 @@ const fixture = Effect.fn("DeliveryLedgerTest.fixture")(function* (
   });
   const config = DeliveryLedgerConfig.make({ targetId: id("b"), maxEvents, maxAttempts, maxAttemptsPerEvent });
   const native = yield* makeNativeIntakeJournal(intakeConfig);
-  const body = yield* S.encodeEffect(S.fromJsonString(S.Unknown))({
+  const body = yield* encodeJsonValue({
     resourceSpans: [
       {
         scopeSpans: [
@@ -81,11 +84,11 @@ const retryable = DeliveryOutcome.cases.Retryable.make({ status: 503 });
 const rejected = DeliveryOutcome.cases.Rejected.make({ status: 400 });
 const unknown = DeliveryOutcome.cases.Unknown.make({ reason: "timed-out" });
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("registers verified canonical native and transcript events while excluding malformed frames", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
-      expect(yield* f.ledger.state(f.first)).toEqual(O.none());
+      assertNone(yield* f.ledger.state(f.first));
       expect(yield* f.ledger.unregisteredPages).toEqual([f.accepted.page.receiptId]);
       expect(yield* f.ledger.registerPage(f.accepted.page.receiptId)).toBe(2);
       expect(yield* f.ledger.registerPage(f.accepted.page.receiptId)).toBe(2);
@@ -114,7 +117,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
       const sql = yield* SqlClient.SqlClient;
       const events = yield* sql`SELECT event_id,receipt_id,payload_hash FROM observation_delivery_events`;
       expect(events).toHaveLength(3);
-      const json = yield* S.encodeEffect(S.fromJsonString(S.Unknown))(events);
+      const json = yield* encodeJsonValue(events);
       expect(json).not.toContain("private");
       expect(json).not.toContain(path);
       expect((yield* f.ledger.registerPage(id("f")).pipe(Effect.flip)).reason).toBe("unknown-page");
@@ -122,7 +125,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("keeps every partially acknowledged event unresolved and resolves only positively evidenced events", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -155,7 +158,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("does not erase a lost acknowledgment or unfinished attempt with a later rejection", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -180,7 +183,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("deduplicates exact attempt and outcome writes but rejects contradictory evidence", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -214,7 +217,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("refuses bounded event enrollment atomically and preserves durable input for later reconciliation", () =>
     Effect.gen(function* () {
       const f = yield* fixture(1);
@@ -223,12 +226,12 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
       expect(yield* sql`SELECT count(*) AS n FROM observation_delivery_events`).toEqual([{ n: 0 }]);
       expect(yield* sql`SELECT count(*) AS n FROM observation_delivery_pages`).toEqual([{ n: 0 }]);
       expect(yield* sql`SELECT count(*) AS n FROM observation_intake_pages`).toEqual([{ n: 1 }]);
-      expect(yield* f.ledger.state(f.first)).toEqual(O.none());
+      assertNone(yield* f.ledger.state(f.first));
     })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("bounds attempts globally and per event while exact retries remain readable at capacity", () =>
     Effect.gen(function* () {
       const f = yield* fixture(16, 2, 1);
@@ -246,7 +249,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("rolls back failed page enrollment and failed attempt membership without losing the original intake", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -271,7 +274,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("fails closed on altered receipt evidence and on target or bound drift", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -296,7 +299,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("grants exactly one send reservation and refuses conflicting reuse", () =>
     Effect.gen(function* () {
       const f = yield* fixture();

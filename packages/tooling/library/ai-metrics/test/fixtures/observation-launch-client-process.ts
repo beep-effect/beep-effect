@@ -14,10 +14,19 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 
+const decodeArguments = S.decodeUnknownEffect(S.Tuple([S.String, Sha256Hex, Sha256Hex, S.String]));
+const decodeObservationLaunchSubmissionRowsJson = S.decodeEffect(
+  S.fromJsonString(S.Array(ObservationLaunchSubmission).check(S.isMaxLength(12))),
+  {
+    onExcessProperty: "error",
+  }
+);
+const encodeContextReceiptsRecordJson = S.encodeEffect(
+  S.fromJsonString(S.Struct({ context: ObservationLaunchContext, receipts: S.Array(ObservationLaunchReceipt) }))
+);
+
 const program = Effect.gen(function* () {
-  const [directory, hostId, namespaceId, input] = yield* S.decodeUnknownEffect(
-    S.Tuple([S.String, Sha256Hex, Sha256Hex, S.String])
-  )(A.drop(process.argv, 2));
+  const [directory, hostId, namespaceId, input] = yield* decodeArguments(A.drop(process.argv, 2));
   const client = yield* makeObservationLaunchClient(
     ObservationLaunchClientPolicy.make({ directory, hostId, namespaceId, timeoutMillis: 2000 }),
     process.geteuid?.() ?? -1
@@ -28,17 +37,10 @@ const program = Effect.gen(function* () {
   if (input !== "-") {
     const stat = yield* fs.stat(input);
     if (stat.size > 65536) return yield* Effect.die("Synthetic client input exceeded its bound");
-    submissions = yield* S.decodeEffect(
-      S.fromJsonString(S.Array(ObservationLaunchSubmission).check(S.isMaxLength(12))),
-      {
-        onExcessProperty: "error",
-      }
-    )(yield* fs.readFileString(input));
+    submissions = yield* decodeObservationLaunchSubmissionRowsJson(yield* fs.readFileString(input));
   }
   const receipts = yield* Effect.forEach(submissions, client.submit, { concurrency: 1 });
-  const encode = S.encodeEffect(
-    S.fromJsonString(S.Struct({ context: ObservationLaunchContext, receipts: S.Array(ObservationLaunchReceipt) }))
-  );
+  const encode = encodeContextReceiptsRecordJson;
   yield* Console.log(yield* encode({ context, receipts }));
 });
 NodeRuntime.runMain(

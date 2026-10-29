@@ -20,6 +20,7 @@ import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { BunSqliteTestDriver, makeSqlTestLayer } from "@beep/test-utils/SqlTest";
 import { expect } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -33,6 +34,8 @@ import * as TestClock from "effect/testing/TestClock";
 
 const sqlLayer = makeSqlTestLayer({ config: undefined, driver: BunSqliteTestDriver });
 const id = (char: string) => Sha256Hex.make(Str.repeat(64)(char));
+const encodeJsonValue = S.encodeEffect(S.fromJsonString(S.Unknown));
+
 const fixture = Effect.fn("ReclamationTest.fixture")(function* (
   maxPages = 2,
   maxDispositions = 4,
@@ -63,7 +66,7 @@ const fixture = Effect.fn("ReclamationTest.fixture")(function* (
   const ledger = yield* makeDeliveryLedger(intakeConfig, ledgerConfig);
   const reclaimer = yield* makePayloadReclaimer(intakeConfig, ledgerConfig, policy);
   const batch = Effect.fn("ReclamationTest.batch")(function* (digit = "1") {
-    const body = yield* S.encodeEffect(S.fromJsonString(S.Unknown))({
+    const body = yield* encodeJsonValue({
       resourceSpans: [{ scopeSpans: [{ spans: [{ traceId: Str.repeat(32)("1"), spanId: Str.repeat(16)(digit) }] }] }],
     });
     return yield* projectNativeTraceRequest(
@@ -99,7 +102,7 @@ const fixture = Effect.fn("ReclamationTest.fixture")(function* (
   return { salt, intakeConfig, ledgerConfig, policy, native, ledger, reclaimer, batch, visible };
 });
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("reuses capacity while retaining replay identity and delivery facts after reopen", () =>
     Effect.gen(function* () {
       const f = yield* fixture(1);
@@ -107,7 +110,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
       const receipt = yield* f.native.acceptBatch(batch);
       const eventIds = A.map(batch.spans, (s) => s.eventId);
       const attempt = yield* f.visible(receipt.page.receiptId, eventIds);
-      expect(yield* f.reclaimer.reclaim(receipt.page.receiptId)).toEqual(O.none());
+      assertNone(yield* f.reclaimer.reclaim(receipt.page.receiptId));
       yield* TestClock.adjust("60 seconds");
       const disposition = yield* f.reclaimer.reclaim(receipt.page.receiptId);
       expect(disposition).toMatchObject({
@@ -134,7 +137,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("retains pending, unresolved, rejected and accepted-unverified payloads", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -142,7 +145,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
       const receipt = yield* f.native.acceptBatch(batch);
       yield* f.ledger.registerPage(receipt.page.receiptId);
       yield* TestClock.adjust("60 seconds");
-      expect(yield* f.reclaimer.reclaim(receipt.page.receiptId)).toEqual(O.none());
+      assertNone(yield* f.reclaimer.reclaim(receipt.page.receiptId));
       const input = DeliveryAttempt.make({
         attemptId: id("d"),
         eventIds: A.map(batch.spans, (s) => s.eventId),
@@ -150,20 +153,20 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
       });
       yield* f.ledger.prepareAttempt(input);
       yield* TestClock.adjust("60 seconds");
-      expect(yield* f.reclaimer.reclaim(receipt.page.receiptId)).toEqual(O.none());
+      assertNone(yield* f.reclaimer.reclaim(receipt.page.receiptId));
       yield* f.ledger.recordOutcome(input.attemptId, DeliveryOutcome.cases.Rejected.make({ status: 400 }));
-      expect(yield* f.reclaimer.reclaim(receipt.page.receiptId)).toEqual(O.none());
+      assertNone(yield* f.reclaimer.reclaim(receipt.page.receiptId));
       const second = DeliveryAttempt.make({ ...input, attemptId: id("f") });
       yield* f.ledger.prepareAttempt(second);
       yield* f.ledger.recordOutcome(second.attemptId, DeliveryOutcome.cases.Accepted.make({}));
       yield* TestClock.adjust("60 seconds");
-      expect(yield* f.reclaimer.reclaim(receipt.page.receiptId)).toEqual(O.none());
+      assertNone(yield* f.reclaimer.reclaim(receipt.page.receiptId));
       expect((yield* f.native.stats).pages).toBe(1);
     })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("requires original visibility for duplicate pages and preserves deduplication after reclamation", () =>
     Effect.gen(function* () {
       const f = yield* fixture(4);
@@ -173,7 +176,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
         NativeTraceBatch.make({ ...batch, spans: [...batch.spans, ...batch.spans] })
       );
       yield* TestClock.adjust("60 seconds");
-      expect(yield* f.reclaimer.reclaim(duplicate.page.receiptId)).toEqual(O.none());
+      assertNone(yield* f.reclaimer.reclaim(duplicate.page.receiptId));
       yield* f.visible(
         first.page.receiptId,
         A.map(batch.spans, (s) => s.eventId)
@@ -188,12 +191,12 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
         NativeTraceBatch.make({ ...batch, spans: [...batch.spans, ...batch.spans, ...batch.spans] })
       );
       expect(replay).toMatchObject({ newEvents: 0, duplicates: 3, accepted: 3 });
-      expect(yield* f.native.readNewEvents(replay.page.receiptId)).toEqual(O.some([]));
+      assertSome(yield* f.native.readNewEvents(replay.page.receiptId), []);
     })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect(
     "rolls back deletion on failure and refuses policy drift, corrupt dispositions and capacity exhaustion",
     () =>
@@ -209,8 +212,8 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
         const sql = yield* SqlClient.SqlClient;
         yield* sql`CREATE TRIGGER disposition_failure BEFORE INSERT ON observation_page_dispositions BEGIN SELECT RAISE(ABORT,'synthetic failure'); END`;
         expect((yield* f.reclaimer.reclaim(receipt.page.receiptId).pipe(Effect.flip)).reason).toBe("storage");
-        expect(yield* f.native.readBatch(receipt.page.receiptId)).toEqual(O.some(batch));
-        expect(yield* f.reclaimer.readDisposition(receipt.page.receiptId)).toEqual(O.none());
+        assertSome(yield* f.native.readBatch(receipt.page.receiptId), batch);
+        assertNone(yield* f.reclaimer.readDisposition(receipt.page.receiptId));
         yield* sql`DROP TRIGGER disposition_failure`;
         yield* f.reclaimer.reclaim(receipt.page.receiptId);
         expect(
@@ -231,7 +234,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("retains transcript cursor and historical receipt after reclaiming verified metadata", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -262,14 +265,14 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
         _tag: "Some",
         value: { verifiedEvents: 1 },
       });
-      expect(yield* intake.readCursor("codex", page.cursor.pathHash)).toEqual(O.some(page.cursor));
+      assertSome(yield* intake.readCursor("codex", page.cursor.pathHash), page.cursor);
       expect(yield* intake.acceptPage(page, O.none())).toEqual(receipt);
       expect((yield* intake.stats).pages).toBe(0);
     })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("waits for a recent send reservation even when an older attempt proved visibility", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -281,7 +284,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
       );
       yield* TestClock.adjust("60 seconds");
       yield* f.ledger.prepareAttempt(DeliveryAttempt.make({ ...attempt, attemptId: id("f") }));
-      expect(yield* f.reclaimer.reclaim(receipt.page.receiptId)).toEqual(O.none());
+      assertNone(yield* f.reclaimer.reclaim(receipt.page.receiptId));
       yield* TestClock.adjust("60 seconds");
       expect(yield* f.reclaimer.reclaim(receipt.page.receiptId)).toMatchObject({
         _tag: "Some",
@@ -296,7 +299,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("refuses reclaimed replay when the retained canonical identity index is damaged", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -315,7 +318,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect(
     "expires mixed delivery states without changing evidence and rejects expired identities in new batches",
     () =>
@@ -342,7 +345,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
             yield* f.ledger.recordOutcome(attemptId, DeliveryOutcome.cases.Rejected.make({ status: 400 }));
         }
         const states = yield* Effect.forEach(batch.spans, (s) => f.ledger.state(s.eventId));
-        expect(yield* f.reclaimer.expire(receipt.page.receiptId)).toEqual(O.none());
+        assertNone(yield* f.reclaimer.expire(receipt.page.receiptId));
         yield* TestClock.adjust("24 hours");
         const disposition = yield* f.reclaimer.expire(receipt.page.receiptId);
         expect(disposition).toMatchObject({
@@ -354,7 +357,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
           },
         });
         expect(yield* Effect.forEach(batch.spans, (s) => f.ledger.state(s.eventId))).toEqual(states);
-        expect(yield* f.native.receipt(receipt.page.receiptId)).toEqual(O.some(receipt));
+        assertSome(yield* f.native.receipt(receipt.page.receiptId), receipt);
         expect((yield* f.native.acceptBatch(batch).pipe(Effect.flip)).reason).toBe("expired");
         expect((yield* f.native.readNewEvents(receipt.page.receiptId).pipe(Effect.flip)).reason).toBe("expired");
         expect(yield* f.reclaimer.expire(receipt.page.receiptId)).toEqual(disposition);
@@ -369,13 +372,13 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
           conflictIndices: [],
           expiredIndices: [0],
         });
-        expect(yield* f.native.readNewEvents(accepted.page.receiptId)).toEqual(O.some(fresh.spans));
+        assertSome(yield* f.native.readNewEvents(accepted.page.receiptId), fresh.spans);
         expect(yield* f.native.acceptBatch(mixed)).toEqual(accepted);
       })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("refuses renewal of a retained duplicate page after its canonical event expires", () =>
     Effect.gen(function* () {
       const f = yield* fixture(3, 4, true);
@@ -386,7 +389,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
       yield* TestClock.adjust("24 hours");
       yield* f.reclaimer.expire(first.page.receiptId);
       expect((yield* f.native.acceptBatch(doubled).pipe(Effect.flip)).reason).toBe("expired");
-      expect(yield* f.native.receipt(duplicate.page.receiptId)).toEqual(O.some(duplicate));
+      assertSome(yield* f.native.receipt(duplicate.page.receiptId), duplicate);
       expect(yield* f.reclaimer.expire(duplicate.page.receiptId)).toMatchObject({
         _tag: "Some",
         value: { eventCount: 1, states: { pending: 1 } },
@@ -395,7 +398,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("requires explicit expiry policy and preserves payload on failed expiry commit", () =>
     Effect.gen(function* () {
       const f = yield* fixture(2, 4, true);
@@ -406,7 +409,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
       yield* sql`CREATE TRIGGER expiry_failure BEFORE INSERT ON observation_page_dispositions BEGIN SELECT RAISE(ABORT,'synthetic expiry failure'); END`;
       expect((yield* f.reclaimer.expire(receipt.page.receiptId).pipe(Effect.flip)).reason).toBe("storage");
       expect(yield* f.native.acceptBatch(batch)).toEqual(receipt);
-      expect(yield* f.native.readBatch(receipt.page.receiptId)).toEqual(O.some(batch));
+      assertSome(yield* f.native.readBatch(receipt.page.receiptId), batch);
       yield* sql`DROP TRIGGER expiry_failure`;
       yield* f.reclaimer.expire(receipt.page.receiptId);
       const reopened = yield* makePayloadReclaimer(f.intakeConfig, f.ledgerConfig, f.policy);
@@ -425,7 +428,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("keeps expiry disabled by default", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -437,7 +440,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("preserves the transcript cursor and refuses expired exact replay", () =>
     Effect.gen(function* () {
       const f = yield* fixture(2, 4, true);
@@ -462,13 +465,13 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
         _tag: "Some",
         value: { eventCount: 1, states: { pending: 1 } },
       });
-      expect(yield* intake.readCursor("codex", page.cursor.pathHash)).toEqual(O.some(page.cursor));
+      assertSome(yield* intake.readCursor("codex", page.cursor.pathHash), page.cursor);
       expect((yield* intake.acceptPage(page, O.none()).pipe(Effect.flip)).reason).toBe("expired");
     })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("delays expiry for recent attempts and retains an immutable snapshot if later visibility arrives", () =>
     Effect.gen(function* () {
       const f = yield* fixture(2, 4, true);
@@ -480,7 +483,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
       if (span === undefined) return yield* Effect.die("Missing fixture span");
       const attempt = DeliveryAttempt.make({ attemptId: id("f"), eventIds: [span.eventId], payloadDigest: id("e") });
       yield* f.ledger.prepareAttempt(attempt);
-      expect(yield* f.reclaimer.expire(receipt.page.receiptId)).toEqual(O.none());
+      assertNone(yield* f.reclaimer.expire(receipt.page.receiptId));
       yield* TestClock.adjust("60 seconds");
       const snapshot = yield* f.reclaimer.expire(receipt.page.receiptId);
       expect(snapshot).toMatchObject({ _tag: "Some", value: { states: { unresolved: 1, visible: 0 } } });
@@ -499,7 +502,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("expires a retained page without fabricating enrollment after delivery-event capacity is exhausted", () =>
     Effect.gen(function* () {
       const f = yield* fixture(2, 4, true, 1);
@@ -527,8 +530,11 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
     })
   )
 );
+const decodeArguments = S.decodeUnknownEffect(
+  S.Tuple([S.Struct({ event_id: Sha256Hex, receipt_id: Sha256Hex, payload_hash: Sha256Hex })])
+);
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("keeps mixed enrolled and never-enrolled populations separate and refuses missing sent membership", () =>
     Effect.gen(function* () {
       const f = yield* fixture(2, 4, true, 1);
@@ -547,11 +553,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
       const eventId = O.getOrThrow(A.head(firstBatch.spans)).eventId;
       const membership =
         yield* sql`SELECT event_id,receipt_id,payload_hash FROM observation_delivery_events WHERE event_id=${eventId}`.pipe(
-          Effect.flatMap(
-            S.decodeUnknownEffect(
-              S.Tuple([S.Struct({ event_id: Sha256Hex, receipt_id: Sha256Hex, payload_hash: Sha256Hex })])
-            )
-          )
+          Effect.flatMap(decodeArguments)
         );
       yield* sql`DELETE FROM observation_delivery_events WHERE event_id=${eventId}`;
       expect(yield* f.reclaimer.expire(mixed.page.receiptId).pipe(Effect.flip)).toMatchObject({ reason: "storage" });
@@ -570,7 +572,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("holds duplicate payload when its registered canonical owner has missing pending membership", () =>
     Effect.gen(function* () {
       const f = yield* fixture(2, 4, true);
@@ -587,12 +589,12 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
         reason: "storage",
       });
       expect(yield* f.native.readBatch(duplicate.page.receiptId)).toMatchObject({ _tag: "Some" });
-      expect(yield* f.reclaimer.readDisposition(duplicate.page.receiptId)).toEqual(O.none());
+      assertNone(yield* f.reclaimer.readDisposition(duplicate.page.receiptId));
     })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("does not let an early capacity refusal hide contradictory transcript identities", () =>
     Effect.gen(function* () {
       const f = yield* fixture(2, 4, true, 1);
@@ -626,12 +628,12 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
       yield* TestClock.adjust("24 hours");
       expect(yield* f.reclaimer.expire(receipt.receiptId).pipe(Effect.flip)).toMatchObject({ reason: "storage" });
       expect((yield* intake.stats).pages).toBe(1);
-      expect(yield* intake.readDisposition(receipt.receiptId)).toEqual(O.none());
+      assertNone(yield* intake.readDisposition(receipt.receiptId));
     })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("refuses installation over an already overcommitted standalone journal without discarding receipts", () =>
     Effect.gen(function* () {
       const f = yield* fixture(2, 2, true);

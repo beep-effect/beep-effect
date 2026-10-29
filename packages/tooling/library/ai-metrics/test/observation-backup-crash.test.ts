@@ -5,7 +5,6 @@ import {
   restoreObservationBackup,
 } from "@beep/repo-ai-metrics/observation-backup";
 import { it } from "@beep/test-runner";
-import { provideScopedLayer } from "@beep/test-utils/Layer";
 import { NodeServices } from "@effect/platform-node";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as SqliteClient from "@effect/sql-sqlite-bun/SqliteClient";
@@ -55,45 +54,55 @@ const inspect = Effect.fn("ObservationBackupCrashTest.inspect")(function* (file:
   expect(yield* sql`SELECT count(*) AS n FROM observation_intake_pages`).toEqual([{ n: 1 }]);
   expect(yield* sql`SELECT count(*) AS n FROM observation_source_cursors`).toEqual([{ n: 1 }]);
 });
-it.live("does not publish a snapshot killed before manifest publication and retains the source", () =>
-  Effect.gen(function* () {
-    const f = yield* run("capture-before");
-    expect(yield* f.fs.exists(`${f.directory}/backup/manifest.json`)).toBe(false);
-    expect(yield* f.fs.exists(`${f.directory}/backup/manifest.partial`)).toBe(true);
-    yield* inspect(`${f.directory}/source.sqlite`);
-  }).pipe(Effect.scoped, provideScopedLayer(layer), Effect.timeout("20 seconds"))
+it.layer(layer, { timeout: "30 seconds", excludeTestServices: true })((it) =>
+  it.effect("does not publish a snapshot killed before manifest publication and retains the source", () =>
+    Effect.gen(function* () {
+      const f = yield* run("capture-before");
+      expect(yield* f.fs.exists(`${f.directory}/backup/manifest.json`)).toBe(false);
+      expect(yield* f.fs.exists(`${f.directory}/backup/manifest.partial`)).toBe(true);
+      yield* inspect(`${f.directory}/source.sqlite`);
+    }).pipe(Effect.timeout("20 seconds"))
+  )
 );
-it.live("restores a completed snapshot after process death with its independently retained receipt", () =>
-  Effect.gen(function* () {
-    const f = yield* run("capture-after");
-    const receipt = yield* f.fs
-      .readFileString(`${f.directory}/receipt.json`)
-      .pipe(Effect.flatMap(S.decodeEffect(S.fromJsonString(ObservationBackupReceipt))));
-    const verifier = yield* SqliteClient.make({ filename: ":memory:" });
-    yield* restoreObservationBackup(
-      ObservationBackupPolicy.make({ maxBytes: 1048576 }),
-      `${f.directory}/backup`,
-      `${f.directory}/restored`,
-      receipt
-    ).pipe(Effect.provideService(SqlClient.SqlClient, verifier));
-    yield* inspect(`${f.directory}/restored/journal.sqlite`);
-    yield* inspect(`${f.directory}/source.sqlite`);
-  }).pipe(Effect.scoped, provideScopedLayer(layer), Effect.timeout("20 seconds"))
+const decodeObservationBackupReceiptJson = S.decodeEffect(S.fromJsonString(ObservationBackupReceipt));
+
+it.layer(layer, { timeout: "30 seconds", excludeTestServices: true })((it) =>
+  it.effect("restores a completed snapshot after process death with its independently retained receipt", () =>
+    Effect.gen(function* () {
+      const f = yield* run("capture-after");
+      const receipt = yield* f.fs
+        .readFileString(`${f.directory}/receipt.json`)
+        .pipe(Effect.flatMap(decodeObservationBackupReceiptJson));
+      const verifier = yield* SqliteClient.make({ filename: ":memory:" });
+      yield* restoreObservationBackup(
+        ObservationBackupPolicy.make({ maxBytes: 1048576 }),
+        `${f.directory}/backup`,
+        `${f.directory}/restored`,
+        receipt
+      ).pipe(Effect.provideService(SqlClient.SqlClient, verifier));
+      yield* inspect(`${f.directory}/restored/journal.sqlite`);
+      yield* inspect(`${f.directory}/source.sqlite`);
+    }).pipe(Effect.timeout("20 seconds"))
+  )
 );
-it.live("retains the backup and refuses to present an interrupted restoration as complete", () =>
-  Effect.gen(function* () {
-    const f = yield* run("restore-before");
-    expect(yield* f.fs.exists(`${f.directory}/restored/restore.json`)).toBe(false);
-    expect(yield* f.fs.exists(`${f.directory}/restored/restore.partial`)).toBe(true);
-    yield* inspect(`${f.directory}/backup/journal.sqlite`);
-    expect(yield* f.fs.readFileString(`${f.directory}/source.sqlite`)).toBe("synthetic database corruption");
-  }).pipe(Effect.scoped, provideScopedLayer(layer), Effect.timeout("20 seconds"))
+it.layer(layer, { timeout: "30 seconds", excludeTestServices: true })((it) =>
+  it.effect("retains the backup and refuses to present an interrupted restoration as complete", () =>
+    Effect.gen(function* () {
+      const f = yield* run("restore-before");
+      expect(yield* f.fs.exists(`${f.directory}/restored/restore.json`)).toBe(false);
+      expect(yield* f.fs.exists(`${f.directory}/restored/restore.partial`)).toBe(true);
+      yield* inspect(`${f.directory}/backup/journal.sqlite`);
+      expect(yield* f.fs.readFileString(`${f.directory}/source.sqlite`)).toBe("synthetic database corruption");
+    }).pipe(Effect.timeout("20 seconds"))
+  )
 );
-it.live("reopens a completed restoration after process death despite an unusable original database", () =>
-  Effect.gen(function* () {
-    const f = yield* run("restore-after");
-    expect(yield* f.fs.exists(`${f.directory}/restored/restore.json`)).toBe(true);
-    yield* inspect(`${f.directory}/restored/journal.sqlite`);
-    expect(yield* f.fs.readFileString(`${f.directory}/source.sqlite`)).toBe("synthetic database corruption");
-  }).pipe(Effect.scoped, provideScopedLayer(layer), Effect.timeout("20 seconds"))
+it.layer(layer, { timeout: "30 seconds", excludeTestServices: true })((it) =>
+  it.effect("reopens a completed restoration after process death despite an unusable original database", () =>
+    Effect.gen(function* () {
+      const f = yield* run("restore-after");
+      expect(yield* f.fs.exists(`${f.directory}/restored/restore.json`)).toBe(true);
+      yield* inspect(`${f.directory}/restored/journal.sqlite`);
+      expect(yield* f.fs.readFileString(`${f.directory}/source.sqlite`)).toBe("synthetic database corruption");
+    }).pipe(Effect.timeout("20 seconds"))
+  )
 );

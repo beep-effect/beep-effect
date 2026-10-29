@@ -16,6 +16,7 @@ import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { BunSqliteTestDriver, makeSqlTestLayer } from "@beep/test-utils/SqlTest";
 import { expect } from "@effect/vitest";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
@@ -31,6 +32,8 @@ import * as TestClock from "effect/testing/TestClock";
 
 const sqlLayer = makeSqlTestLayer({ config: undefined, driver: BunSqliteTestDriver });
 const id = (char: string) => Sha256Hex.make(Str.repeat(64)(char));
+const encodeJsonValue = S.encodeEffect(S.fromJsonString(S.Unknown));
+
 const fixture = Effect.fn("EvidenceRetentionTest.fixture")(function* (
   maxPages = 2,
   maxDispositions = 4,
@@ -64,7 +67,7 @@ const fixture = Effect.fn("EvidenceRetentionTest.fixture")(function* (
   const ledger = yield* makeDeliveryLedger(intakeConfig, ledgerConfig);
   const reclaimer = yield* makePayloadReclaimer(intakeConfig, ledgerConfig, policy);
   const batch = Effect.fn("EvidenceRetentionTest.batch")(function* (digit = "1") {
-    const body = yield* S.encodeEffect(S.fromJsonString(S.Unknown))({
+    const body = yield* encodeJsonValue({
       resourceSpans: [
         {
           scopeSpans: [
@@ -127,7 +130,7 @@ const fixture = Effect.fn("EvidenceRetentionTest.fixture")(function* (
   };
 });
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect(
     "retires verified evidence atomically, reuses ledger capacity and explicitly scopes native replay to a new epoch",
     () =>
@@ -139,9 +142,9 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
           original.page.receiptId,
           A.map(batch.spans, (s) => s.eventId)
         );
-        expect(yield* f.retention.seal(0)).toEqual(O.none());
+        assertNone(yield* f.retention.seal(0));
         yield* TestClock.adjust("60 seconds");
-        expect(yield* f.retention.seal(0)).toEqual(O.none());
+        assertNone(yield* f.retention.seal(0));
         yield* f.reclaimer.reclaim(original.page.receiptId);
         const sealed = yield* f.retention.seal(0);
         expect(sealed).toMatchObject({
@@ -162,13 +165,13 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
           },
         });
         expect(yield* f.retention.seal(0)).toEqual(sealed);
-        expect(yield* f.native.receipt(original.page.receiptId)).toEqual(O.none());
+        assertNone(yield* f.native.receipt(original.page.receiptId));
         const current = yield* f.retention.window;
         expect(current).toMatchObject({ epoch: 1, totals: { visible: 1, eventObservations: 1 } });
         const observedAgain = yield* f.native.acceptBatch(batch);
         expect(observedAgain.page.receiptId).not.toBe(original.page.receiptId);
         expect(observedAgain.page.evidenceEpoch).toBe(1);
-        expect(yield* f.native.readNewEvents(observedAgain.page.receiptId)).toEqual(O.some(batch.spans));
+        assertSome(yield* f.native.readNewEvents(observedAgain.page.receiptId), batch.spans);
         const reopened = yield* makeNativeIntakeJournal(f.intakeConfig);
         expect(yield* reopened.acceptBatch(batch)).toEqual(observedAgain);
         yield* f.visible(
@@ -178,10 +181,10 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
         yield* TestClock.adjust("60 seconds");
         yield* f.reclaimer.reclaim(observedAgain.page.receiptId);
         const next = yield* f.retention.seal(1);
-        expect(next).toMatchObject({
-          _tag: "Some",
-          value: { record: { epoch: 1, previousDigest: O.map(sealed, (s) => s.digest) } },
-        });
+        assertTrue(O.isSome(next));
+        expect(next.value.record.epoch).toBe(1);
+        assertTrue(O.isSome(sealed));
+        assertSome(next.value.record.previousDigest, sealed.value.digest);
         expect(yield* f.retention.window).toMatchObject({
           epoch: 2,
           totals: { visible: 2, eventObservations: 2, pages: 2 },
@@ -193,8 +196,9 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
       })
   )
 );
+const decodeIdRecordRows = S.decodeUnknownEffect(S.Array(S.Struct({ id: Sha256Hex })));
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("retains all five retired state counts and keeps current absence distinct from prior evidence", () =>
     Effect.gen(function* () {
       const f = yield* fixture(8, 8, true);
@@ -221,7 +225,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
       yield* TestClock.adjust("24 hours");
       const sql = yield* SqlClient.SqlClient;
       const pages = yield* sql`SELECT receipt_id AS id FROM observation_intake_pages`.pipe(
-        Effect.flatMap(S.decodeUnknownEffect(S.Array(S.Struct({ id: Sha256Hex }))))
+        Effect.flatMap(decodeIdRecordRows)
       );
       for (const page of pages) yield* f.reclaimer.expire(page.id);
       expect(yield* f.retention.seal(0)).toMatchObject({
@@ -250,7 +254,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("restores detailed evidence if the window checkpoint write fails", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -275,7 +279,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("preserves transcript progress and verifies content addresses after a window transition", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -303,7 +307,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
       yield* TestClock.adjust("60 seconds");
       yield* f.reclaimer.reclaim(receipt.receiptId);
       yield* f.retention.seal(0);
-      expect(yield* intake.readCursor("codex", page.cursor.pathHash)).toEqual(O.some(page.cursor));
+      assertSome(yield* intake.readCursor("codex", page.cursor.pathHash), page.cursor);
       expect((yield* intake.acceptPage(page, O.none()).pipe(Effect.flip)).reason).toBe("stale-cursor");
       yield* fs.writeFileString(path, line + line);
       const second = yield* readTranscriptPage(TranscriptPageInput.make({ ...input, cursor: O.some(page.cursor) }));
@@ -315,7 +319,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("refuses corrupt checkpoints and immutable retention-policy drift", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -335,7 +339,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("accounts for N+1 records across bounded query pages", () =>
     Effect.gen(function* () {
       const f = yield* fixture(40, 40, true);
@@ -352,12 +356,12 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
         value: { record: { totals: { pages: 33, pending: 33, eventObservations: 33, nativeAcceptedOccurrences: 33 } } },
       });
       expect(yield* f.retention.restore(O.getOrThrow(sealed).digest)).toBe("restored");
-      for (const receipt of receipts) expect(yield* f.native.receipt(receipt.page.receiptId)).toEqual(O.some(receipt));
+      for (const receipt of receipts) assertSome(yield* f.native.receipt(receipt.page.receiptId), receipt);
     })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("refuses a retirement above its work bound without deleting evidence", () =>
     Effect.gen(function* () {
       const f = yield* fixture(2, 4, true, 1);
@@ -367,13 +371,14 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
       yield* f.reclaimer.expire(first.page.receiptId);
       yield* f.reclaimer.expire(second.page.receiptId);
       expect((yield* f.retention.seal(0).pipe(Effect.flip)).reason).toBe("capacity");
-      expect(yield* f.native.receipt(first.page.receiptId)).toEqual(O.some(first));
+      assertSome(yield* f.native.receipt(first.page.receiptId), first);
       expect((yield* f.retention.window).epoch).toBe(0);
     })
   )
 );
+const isStringRows = S.is(S.Array(S.String));
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("rolls back an interrupted retirement at its bounded deadline", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -391,7 +396,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
         apply(target, receiver, parameters) {
           const fragments: unknown = parameters[0];
           if (
-            S.is(S.Array(S.String))(fragments) &&
+            isStringRows(fragments) &&
             Str.includes("DELETE FROM observation_delivery_visibility")(fragments[0] ?? "")
           )
             return Deferred.succeed(boundary, undefined).pipe(Effect.andThen(Effect.never));
@@ -413,7 +418,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("restores all compact facts and the predecessor window after reopening, with idempotent recovery", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -444,7 +449,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
       expect(yield* reopened.restore(sealed.digest)).toBe("restored");
       expect(yield* sql`SELECT * FROM observation_delivery_queries`).toEqual(queries);
       expect(yield* reopened.window).toEqual(before);
-      expect(yield* f.native.receipt(receipt.page.receiptId)).toEqual(O.some(receipt));
+      assertSome(yield* f.native.receipt(receipt.page.receiptId), receipt);
       expect(yield* base.readDisposition(receipt.page.receiptId)).toEqual(disposition);
       expect(yield* f.ledger.state(O.getOrThrow(A.head(batch.spans)).eventId)).toMatchObject({
         _tag: "Some",
@@ -455,14 +460,14 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
       expect(yield* sql`SELECT * FROM observation_delivery_attempts`).toEqual(reservations);
       const newer = yield* f.native.acceptBatch(yield* f.batch("2"));
       expect(yield* reopened.restore(sealed.digest)).toBe("already-restored");
-      expect(yield* f.native.receipt(newer.page.receiptId)).toEqual(O.some(newer));
+      assertSome(yield* f.native.receipt(newer.page.receiptId), newer);
       expect((yield* reopened.restore(id("f")).pipe(Effect.flip)).reason).toBe("conflict");
       expect(yield* sql`PRAGMA integrity_check`).toEqual([{ integrity_check: "ok" }]);
     })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("refuses restore after newer admission and preserves the new receipt and recovery copy", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -477,7 +482,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
       const sealed = O.getOrThrow(yield* f.retention.seal(0));
       const newer = yield* f.native.acceptBatch(yield* f.batch("2"));
       expect((yield* f.retention.restore(sealed.digest).pipe(Effect.flip)).reason).toBe("conflict");
-      expect(yield* f.native.receipt(newer.page.receiptId)).toEqual(O.some(newer));
+      assertSome(yield* f.native.receipt(newer.page.receiptId), newer);
       expect(yield* f.retention.window).toMatchObject({ epoch: 1 });
       const sql = yield* SqlClient.SqlClient;
       const snapshot = yield* sql`SELECT payload,digest FROM observation_evidence_recovery`;
@@ -491,7 +496,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("rolls back a partially restored copy when the final row checksum is damaged", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -509,12 +514,12 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
       expect((yield* f.retention.restore(sealed.digest).pipe(Effect.flip)).reason).toBe("storage");
       expect(yield* f.retention.window).toMatchObject({ epoch: 1 });
       expect(yield* sql`SELECT count(*) AS n FROM observation_delivery_visibility`).toEqual([{ n: 0 }]);
-      expect(yield* f.native.receipt(receipt.page.receiptId)).toEqual(O.none());
+      assertNone(yield* f.native.receipt(receipt.page.receiptId));
     })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("refuses retirement when the recovery row budget cannot retain all facts", () =>
     Effect.gen(function* () {
       const f = yield* fixture(2, 4, false, 64, 1);
@@ -527,7 +532,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
       yield* TestClock.adjust("60 seconds");
       yield* f.reclaimer.reclaim(receipt.page.receiptId);
       expect((yield* f.retention.seal(0).pipe(Effect.flip)).reason).toBe("capacity");
-      expect(yield* f.native.receipt(receipt.page.receiptId)).toEqual(O.some(receipt));
+      assertSome(yield* f.native.receipt(receipt.page.receiptId), receipt);
       expect(yield* f.retention.window).toMatchObject({ epoch: 0 });
       const sql = yield* SqlClient.SqlClient;
       expect(yield* sql`SELECT count(*) AS n FROM observation_evidence_recovery_rows`).toEqual([{ n: 0 }]);
@@ -535,7 +540,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("preserves the previous recovery generation when the next snapshot exceeds its bound", () =>
     Effect.gen(function* () {
       const f = yield* fixture(4, 4, true, 64, 8);
@@ -555,13 +560,13 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
       expect(yield* f.retention.window).toMatchObject({ epoch: 1 });
       expect(yield* sql`SELECT payload,digest FROM observation_evidence_recovery`).toEqual(snapshot);
       expect(yield* sql`SELECT * FROM observation_evidence_recovery_rows ORDER BY ordinal`).toEqual(rows);
-      expect(yield* f.native.receipt(second.page.receiptId)).toEqual(O.some(second));
-      expect(yield* f.native.receipt(third.page.receiptId)).toEqual(O.some(third));
+      assertSome(yield* f.native.receipt(second.page.receiptId), second);
+      assertSome(yield* f.native.receipt(third.page.receiptId), third);
     })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("refuses retirement when the recovery byte budget is exhausted", () =>
     Effect.gen(function* () {
       const f = yield* fixture(8, 8, true, 64, 4096, 4096);
@@ -571,12 +576,12 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
       for (const receipt of receipts) yield* f.reclaimer.expire(receipt.page.receiptId);
       expect((yield* f.retention.seal(0).pipe(Effect.flip)).reason).toBe("capacity");
       expect(yield* f.retention.window).toMatchObject({ epoch: 0 });
-      for (const receipt of receipts) expect(yield* f.native.receipt(receipt.page.receiptId)).toEqual(O.some(receipt));
+      for (const receipt of receipts) assertSome(yield* f.native.receipt(receipt.page.receiptId), receipt);
     })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("rolls back a restore deadline after rows have been inserted and permits retry", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -594,10 +599,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
       const proxy = new Proxy(sql, {
         apply(target, receiver, parameters) {
           const fragments: unknown = parameters[0];
-          if (
-            S.is(S.Array(S.String))(fragments) &&
-            Str.includes("UPDATE observation_evidence_window")(fragments[0] ?? "")
-          )
+          if (isStringRows(fragments) && Str.includes("UPDATE observation_evidence_window")(fragments[0] ?? ""))
             return Deferred.succeed(boundary, undefined).pipe(Effect.andThen(Effect.never));
           return Reflect.apply(target, receiver, parameters);
         },
@@ -612,12 +614,13 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
       expect(yield* f.retention.window).toMatchObject({ epoch: 1 });
       expect(yield* sql`SELECT count(*) AS n FROM observation_delivery_events`).toEqual([{ n: 0 }]);
       expect(yield* f.retention.restore(sealed.digest)).toBe("restored");
-      expect(yield* f.native.receipt(receipt.page.receiptId)).toEqual(O.some(receipt));
+      assertSome(yield* f.native.receipt(receipt.page.receiptId), receipt);
     })
   )
 );
+const decodeArguments = S.decodeUnknownEffect(S.Tuple([S.Struct({ page_count: S.Natural })]));
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("refuses retirement atomically when SQLite cannot allocate the recovery copy", () =>
     Effect.gen(function* () {
       const f = yield* fixture(40, 40, true);
@@ -629,20 +632,18 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
       const sql = yield* SqlClient.SqlClient;
       // Remove free pages and inject a physical allocation ceiling at current size.
       yield* sql`VACUUM`;
-      const count = yield* sql`PRAGMA page_count`.pipe(
-        Effect.flatMap(S.decodeUnknownEffect(S.Tuple([S.Struct({ page_count: S.Natural })])))
-      );
+      const count = yield* sql`PRAGMA page_count`.pipe(Effect.flatMap(decodeArguments));
       yield* sql.unsafe(`PRAGMA max_page_count = ${count[0].page_count}`);
       expect((yield* f.retention.seal(0).pipe(Effect.flip)).reason).toBe("storage");
       expect(yield* f.retention.window).toMatchObject({ epoch: 0 });
-      for (const receipt of receipts) expect(yield* f.native.receipt(receipt.page.receiptId)).toEqual(O.some(receipt));
+      for (const receipt of receipts) assertSome(yield* f.native.receipt(receipt.page.receiptId), receipt);
       expect(yield* sql`SELECT count(*) AS n FROM observation_evidence_recovery_rows`).toEqual([{ n: 0 }]);
       expect(yield* sql`PRAGMA integrity_check`).toEqual([{ integrity_check: "ok" }]);
     })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect(
     "expires an oversized first batch, retires never-enrolled ownership and restores exact compact evidence",
     () =>
@@ -679,8 +680,9 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
       })
   )
 );
+const decodeArguments2 = S.decodeUnknownEffect(S.Tuple([S.Struct({ hash: Sha256Hex })]));
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("counts duplicate never-enrolled references separately and refuses index corruption before seal", () =>
     Effect.gen(function* () {
       const f = yield* fixture(3, 4, true, 64, 4096, 16777216, 1);
@@ -701,7 +703,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
       const sql = yield* SqlClient.SqlClient;
       const original =
         yield* sql`SELECT payload_hash AS hash FROM observation_native_events WHERE receipt_id=${owner.page.receiptId}`.pipe(
-          Effect.flatMap(S.decodeUnknownEffect(S.Tuple([S.Struct({ hash: Sha256Hex })])))
+          Effect.flatMap(decodeArguments2)
         );
       yield* sql`UPDATE observation_native_events SET payload_hash=${id("f")} WHERE receipt_id=${owner.page.receiptId}`;
       expect(yield* f.retention.seal(0).pipe(Effect.flip)).toMatchObject({ reason: "storage" });
@@ -725,7 +727,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("reserves disposition capacity before native admission and releases it only after seal", () =>
     Effect.gen(function* () {
       const f = yield* fixture(1, 1, true);
@@ -740,7 +742,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("expires never-enrolled transcript references and preserves the accepted source cursor", () =>
     Effect.gen(function* () {
       const f = yield* fixture(2, 4, true, 64, 4096, 16777216, 1);
@@ -781,12 +783,12 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
           },
         },
       });
-      expect(yield* intake.readCursor("codex", page.cursor.pathHash)).toEqual(O.some(page.cursor));
+      assertSome(yield* intake.readCursor("codex", page.cursor.pathHash), page.cursor);
     })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("refuses transcript admission without advancing its cursor when terminal capacity is full", () =>
     Effect.gen(function* () {
       const f = yield* fixture(2, 1, true);
@@ -807,7 +809,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
       );
       const intake = yield* makeTranscriptIntakeJournal(f.intakeConfig);
       expect(yield* intake.acceptPage(page, O.none()).pipe(Effect.flip)).toMatchObject({ reason: "capacity" });
-      expect(yield* intake.readCursor("codex", page.cursor.pathHash)).toEqual(O.none());
+      assertNone(yield* intake.readCursor("codex", page.cursor.pathHash));
       yield* TestClock.adjust("24 hours");
       yield* f.reclaimer.expire(first.page.receiptId);
       yield* f.retention.seal(0);
@@ -816,7 +818,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("holds retired payload evidence if registered membership is corrupted after expiry", () =>
     Effect.gen(function* () {
       const f = yield* fixture(1, 2, true);
@@ -828,12 +830,16 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
       yield* sql`DELETE FROM observation_delivery_events`;
       expect(yield* f.retention.seal(0).pipe(Effect.flip)).toMatchObject({ reason: "storage" });
       expect((yield* f.retention.window).epoch).toBe(0);
-      expect(yield* f.native.receipt(receipt.page.receiptId)).toEqual(O.some(receipt));
+      assertSome(yield* f.native.receipt(receipt.page.receiptId), receipt);
     })
   )
 );
+const decodeArguments3 = S.decodeUnknownEffect(
+  S.Tuple([S.Struct({ event_id: Sha256Hex, receipt_id: Sha256Hex, payload_hash: Sha256Hex })])
+);
+const decodeArguments4 = S.decodeUnknownEffect(S.Tuple([S.Struct({ payload: S.String })]));
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect(
     "detects lost pending transcript membership after disposal and preserves readable legacy dispositions",
     () =>
@@ -860,11 +866,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
         yield* f.reclaimer.expire(receipt.receiptId);
         const sql = yield* SqlClient.SqlClient;
         const [member] = yield* sql`SELECT event_id,receipt_id,payload_hash FROM observation_delivery_events`.pipe(
-          Effect.flatMap(
-            S.decodeUnknownEffect(
-              S.Tuple([S.Struct({ event_id: Sha256Hex, receipt_id: Sha256Hex, payload_hash: Sha256Hex })])
-            )
-          )
+          Effect.flatMap(decodeArguments3)
         );
         yield* sql`DELETE FROM observation_delivery_events`;
         expect(yield* f.retention.seal(0).pipe(Effect.flip)).toMatchObject({ reason: "storage" });
@@ -872,7 +874,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
         yield* sql`INSERT INTO observation_delivery_events(event_id,receipt_id,payload_hash) VALUES(${member.event_id},${member.receipt_id},${member.payload_hash})`;
         const [legacy] =
           yield* sql`SELECT json_remove(payload,'$.enrolledOwnership') AS payload FROM observation_page_dispositions WHERE receipt_id=${receipt.receiptId}`.pipe(
-            Effect.flatMap(S.decodeUnknownEffect(S.Tuple([S.Struct({ payload: S.String })])))
+            Effect.flatMap(decodeArguments4)
           );
         yield* sql`UPDATE observation_page_dispositions SET payload=${legacy.payload},digest=${yield* hashPublicTextSha256(legacy.payload)} WHERE receipt_id=${receipt.receiptId}`;
         expect(yield* intake.readDisposition(receipt.receiptId)).toMatchObject({
@@ -885,7 +887,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("attempts registration once per owner while expiring a larger un-enrollable batch", () =>
     Effect.gen(function* () {
       const f = yield* fixture(1, 2, true, 64, 4096, 16777216, 1);
@@ -901,7 +903,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
         apply(target, receiver, parameters) {
           const fragments: unknown = parameters[0];
           if (
-            S.is(S.Array(S.String))(fragments) &&
+            isStringRows(fragments) &&
             Str.startsWith("SELECT events FROM observation_delivery_pages WHERE receipt_id=")(fragments[0] ?? "")
           )
             registrationReads += 1;

@@ -34,16 +34,20 @@ import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
 
 const id = (char: string) => Sha256Hex.make(Str.repeat(64)(char));
+const decodeUnionValue = S.decodeUnknownEffect(
+  S.Union([
+    S.Tuple([S.String, S.String, S.String]),
+    S.Tuple([S.String, S.String, S.String, S.String]),
+    S.Tuple([S.String, S.String, S.String, S.String, S.Literal("reconstructed")]),
+    S.Tuple([S.String, S.String, S.String, S.String, S.Literals(["native", "reconstructed"]), Sha256Hex]),
+  ])
+);
+const encodeJsonValue = S.encodeEffect(S.fromJsonString(S.Unknown));
+
 const program = Effect.gen(function* () {
-  const [databasePath, endpoint, output, exportEndpoint, reconstruction, qualificationDigest] =
-    yield* S.decodeUnknownEffect(
-      S.Union([
-        S.Tuple([S.String, S.String, S.String]),
-        S.Tuple([S.String, S.String, S.String, S.String]),
-        S.Tuple([S.String, S.String, S.String, S.String, S.Literal("reconstructed")]),
-        S.Tuple([S.String, S.String, S.String, S.String, S.Literals(["native", "reconstructed"]), Sha256Hex]),
-      ])
-    )(A.drop(process.argv, 2));
+  const [databasePath, endpoint, output, exportEndpoint, reconstruction, qualificationDigest] = yield* decodeUnionValue(
+    A.drop(process.argv, 2)
+  );
   const address = yield* S.decodeEffect(S.URLFromString)(endpoint);
   if (address.protocol !== "http:" || address.hostname !== "127.0.0.1")
     return yield* Effect.die("Fixture requires disposable loopback HTTP");
@@ -125,7 +129,7 @@ const program = Effect.gen(function* () {
                   ]
                 : []),
             ];
-        const body = yield* S.encodeEffect(S.fromJsonString(S.Unknown))({
+        const body = yield* encodeJsonValue({
           resourceSpans: [
             {
               schemaUrl: "https://synthetic-private-resource.invalid",
@@ -312,7 +316,7 @@ const program = Effect.gen(function* () {
   const reconstruct = Effect.fn("NativePhoenixProof.reconstruct")(function* () {
     const transcript = yield* makeTranscriptIntakeJournal(intake).pipe(Effect.provideService(SqlClient.SqlClient, sql));
     const directory = yield* fs.makeTempDirectoryScoped();
-    const encode = S.encodeEffect(S.fromJsonString(S.Unknown));
+    const encode = encodeJsonValue;
     const message = yield* encode({
       type: "assistant",
       timestamp: "2026-10-26T09:33:20.000000001+02:00",
@@ -436,7 +440,7 @@ const program = Effect.gen(function* () {
   const reconstructedObservations = reconstruction === "reconstructed" ? yield* reconstruct() : [];
   yield* fs.writeFileString(
     output,
-    yield* S.encodeEffect(S.fromJsonString(S.Unknown))({
+    yield* encodeJsonValue({
       project: policy.project,
       observations,
       reconstructedObservations,

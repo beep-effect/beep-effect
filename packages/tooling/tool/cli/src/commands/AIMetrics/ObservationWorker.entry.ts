@@ -16,8 +16,10 @@ import * as Reactivity from "effect/reactivity/Reactivity";
 import * as S from "effect/Schema";
 import { ObservationProcessError, runObservationWorkerProcess } from "./internal/ObservationWorker.ts";
 
+const decodeArguments = S.decodeUnknownEffect(S.Tuple([S.String]));
+
 const program = Effect.gen(function* () {
-  const [directory] = yield* S.decodeUnknownEffect(S.Tuple([S.String]))(A.drop(process.argv, 2)).pipe(
+  const [directory] = yield* decodeArguments(A.drop(process.argv, 2)).pipe(
     Effect.mapError(() => ObservationProcessError.make({ reason: "configuration" }))
   );
   return yield* runObservationWorkerProcess(directory);

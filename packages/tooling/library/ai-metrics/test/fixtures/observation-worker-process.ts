@@ -38,10 +38,12 @@ import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
 
 const id = (char: string) => Sha256Hex.make(Str.repeat(64)(char));
+const decodeArguments = S.decodeUnknownEffect(S.Tuple([S.String, S.String]));
+const isCodeRecord = S.is(S.Struct({ code: S.tag("EMFILE") }));
+const encodeJsonValue = S.encodeEffect(S.fromJsonString(S.Unknown));
+
 const program = Effect.gen(function* () {
-  const [databasePath, outputPath] = yield* S.decodeUnknownEffect(S.Tuple([S.String, S.String]))(
-    A.drop(process.argv, 2)
-  );
+  const [databasePath, outputPath] = yield* decodeArguments(A.drop(process.argv, 2));
   const fs = yield* FileSystem.FileSystem;
   const sql = yield* SqliteClient.make({ filename: databasePath });
   const salt = "synthetic-resource-worker-salt";
@@ -140,8 +142,7 @@ const program = Effect.gen(function* () {
         Effect.gen(function* () {
           for (let opened = 0; opened < 512; opened += 1) {
             const handle = yield* Effect.result(fs.open("/dev/null", { flag: "r" }));
-            if (Result.isFailure(handle))
-              return { opened, exhausted: S.is(S.Struct({ code: S.Literal("EMFILE") }))(handle.failure.reason.cause) };
+            if (Result.isFailure(handle)) return { opened, exhausted: isCodeRecord(handle.failure.reason.cause) };
           }
           return { opened: 512, exhausted: false };
         })
@@ -170,7 +171,7 @@ const program = Effect.gen(function* () {
   });
   yield* server.serve(handler);
   yield* fs.chmod(socketPath, 0o600);
-  const ready = yield* S.encodeEffect(S.fromJsonString(S.Unknown))({
+  const ready = yield* encodeJsonValue({
     socketPath,
     pid: process.pid,
     control: yield* worker.status,

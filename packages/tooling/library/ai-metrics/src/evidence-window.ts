@@ -112,6 +112,10 @@ export class EvidenceWindow extends S.Opaque<EvidenceWindow, { readonly brand: u
       })
     )
 ) {}
+const decodeArguments = S.decodeUnknownEffect(S.Tuple([S.Struct({ payload: S.String, digest: Sha256Hex })]));
+const decodeEvidenceWindowJson = S.decodeEffect(S.fromJsonString(EvidenceWindow), { onExcessProperty: "error" });
+const encodeEvidenceRetirementJson = S.encodeEffect(S.fromJsonString(EvidenceRetirement));
+
 /**
  * Read and checksum-verify the owned bounded evidence window.
  * **Example** (Inspecting the reader)
@@ -127,14 +131,12 @@ export const readEvidenceWindow = Effect.fn("AiMetrics.readEvidenceWindow")(func
   const sql = yield* SqlClient.SqlClient;
   const rows =
     yield* sql`SELECT substr(payload,1,8193) AS payload,digest FROM observation_evidence_window WHERE singleton=1`.pipe(
-      Effect.flatMap(S.decodeUnknownEffect(S.Tuple([S.Struct({ payload: S.String, digest: Sha256Hex })])))
+      Effect.flatMap(decodeArguments)
     );
   if ((yield* hashPublicTextSha256(rows[0].payload)) !== rows[0].digest) return yield* Effect.fail("evidence-checksum");
-  const window = yield* S.decodeEffect(S.fromJsonString(EvidenceWindow), { onExcessProperty: "error" })(
-    rows[0].payload
-  );
+  const window = yield* decodeEvidenceWindowJson(rows[0].payload);
   if (O.isSome(window.latest)) {
-    const payload = yield* S.encodeEffect(S.fromJsonString(EvidenceRetirement))(window.latest.value.record);
+    const payload = yield* encodeEvidenceRetirementJson(window.latest.value.record);
     if ((yield* hashPublicTextSha256(payload)) !== window.latest.value.digest)
       return yield* Effect.fail("retirement-checksum");
   }

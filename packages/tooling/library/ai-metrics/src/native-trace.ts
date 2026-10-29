@@ -8,6 +8,7 @@ import { Fixed64, LiteralKit, Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import * as Result from "effect/Result";
@@ -54,12 +55,12 @@ const FixtureSurface = LiteralKit(["cli", "desktop"]).pipe(
   $I.annoteSchema("FixtureSurface", { description: "Declared synthetic fixture surface, never real harness coverage." })
 );
 const optionalHash = S.OptionFromOptionalKey(Sha256Hex);
-const Rejection = S.Struct({ ordinal: S.Natural, reason: S.Literal("invalid-span") });
+const Rejection = S.Struct({ ordinal: S.Natural, reason: S.tag("invalid-span") });
 
 /**
  * Owned route policy and bounded native request bytes.
  *
- * **Example**
+ * **Example** (Inspect native trace request)
  * ```ts
  * import { NativeTraceRequest } from "@beep/repo-ai-metrics/native-trace"
  * console.log(typeof NativeTraceRequest.make)
@@ -90,7 +91,7 @@ export class NativeTraceRequest extends S.Opaque<NativeTraceRequest, { readonly 
 /**
  * Content-free native span metadata preserving source identity and measured time.
  *
- * **Example**
+ * **Example** (Inspect native trace metadata)
  * ```ts
  * import { NativeTraceMetadata } from "@beep/repo-ai-metrics/native-trace"
  * console.log(typeof NativeTraceMetadata.make)
@@ -153,7 +154,7 @@ export class NativeTraceMetadata extends S.Opaque<NativeTraceMetadata, { readonl
 /**
  * Safe metadata batch with explicit rejected occurrence ordinals.
  *
- * **Example**
+ * **Example** (Inspect native trace batch)
  * ```ts
  * import { NativeTraceBatch } from "@beep/repo-ai-metrics/native-trace"
  * console.log(typeof NativeTraceBatch.make)
@@ -193,7 +194,7 @@ export class NativeTraceBatch extends S.Opaque<NativeTraceBatch, { readonly bran
 /**
  * Payload-free native projection refusal.
  *
- * **Example**
+ * **Example** (Inspect native trace error)
  * ```ts
  * import { NativeTraceError } from "@beep/repo-ai-metrics/native-trace"
  * console.log(NativeTraceError.make({ reason: "invalid-envelope" }).message)
@@ -313,11 +314,106 @@ const countAttribute = Effect.fnUntraced(function* (attributes: typeof Attribute
   if (distinct.length > 1) return yield* failure("invalid-envelope");
   return A.head(distinct);
 });
+const decodeRawEnvelopeJson = S.decodeEffect(S.fromJsonString(RawEnvelope));
+const decodeBoundaryValue = S.decodeUnknownEffect(S.Option(FixtureSurface));
+
+const parentIdentity = Effect.fnUntraced(function* (parent: unknown, protobuf: boolean) {
+  if (parent === undefined || parent === "") return O.none<string>();
+  if (S.is(S.Uint8Array)(parent) && parent.byteLength === 0) return O.none<string>();
+  return O.some(yield* id(parent, 16, protobuf));
+});
+const claudeSpanKind = Match.type<string | undefined>().pipe(
+  Match.when("claude_code.llm_request", (): typeof SpanKind.Type => "LLM"),
+  Match.when("claude_code.interaction", (): typeof SpanKind.Type => "AGENT"),
+  Match.when(Match.is("claude_code.tool", "claude_code.tool.execution"), (): typeof SpanKind.Type => "TOOL"),
+  Match.orElse((): typeof SpanKind.Type => "UNKNOWN")
+);
+const projectedKind = (kind: O.Option<string>, name: string | undefined, convention: typeof UsageConvention.Type) => {
+  const nativeKind = convention === "claude-code" ? claudeSpanKind(name) : "UNKNOWN";
+  return O.isSome(kind) && S.is(SpanKind)(kind.value) ? kind.value : nativeKind;
+};
+const sourceTiming = Effect.fnUntraced(function* (span: typeof RawSpan.Type) {
+  const start = yield* time(span.startTimeUnixNano);
+  const end = yield* time(span.endTimeUnixNano);
+  if (O.isSome(start) && O.isSome(end) && end.value < start.value) return yield* failure("invalid-envelope");
+  return {
+    startTimeUnixNano: O.map(start, (value) => value.toString()),
+    endTimeUnixNano: O.map(end, (value) => value.toString()),
+    durationKnown: O.isSome(start) && O.isSome(end),
+  };
+});
+const projectedStatus = Match.type<(typeof RawSpan.Type)["status"]>().pipe(
+  Match.when({ code: 1 }, (): NativeTraceMetadata["status"] => "ok"),
+  Match.when({ code: 2 }, (): NativeTraceMetadata["status"] => "error"),
+  Match.orElse((): NativeTraceMetadata["status"] => "unset")
+);
+const sourceUsage = Effect.fnUntraced(function* (
+  attributes: typeof Attributes.Type,
+  convention: typeof UsageConvention.Type
+) {
+  const isOi = convention === "openinference";
+  return {
+    convention,
+    input: yield* countAttribute(attributes, isOi ? "llm.token_count.prompt" : "input_tokens"),
+    output: yield* countAttribute(attributes, isOi ? "llm.token_count.completion" : "output_tokens"),
+    cacheRead: yield* countAttribute(
+      attributes,
+      isOi ? "llm.token_count.prompt_details.cache_read" : "cache_read_tokens"
+    ),
+    cacheWrite: yield* countAttribute(
+      attributes,
+      isOi ? "llm.token_count.prompt_details.cache_write" : "cache_creation_tokens"
+    ),
+  };
+});
+const privateHash = (salt: string) => (value: string) =>
+  hashPrivateIdentifier(value, O.some(salt)).pipe(Effect.mapError(() => failure("hash-failure")));
+const hashTextOption = Effect.fnUntraced(function* (value: O.Option<string>, hash: ReturnType<typeof privateHash>) {
+  return O.isSome(value) ? O.some(yield* hash(value.value)) : O.none();
+});
+const projectSpan = Effect.fnUntraced(function* (
+  entry: { readonly span: unknown; readonly resource: typeof Attributes.Type },
+  input: NativeTraceRequest,
+  namespaceId: typeof Sha256Hex.Type,
+  hash: ReturnType<typeof privateHash>,
+  protobuf: boolean
+) {
+  const span = yield* S.decodeUnknownEffect(RawSpan)(entry.span);
+  const traceId = yield* id(span.traceId, 32, protobuf);
+  const spanId = yield* id(span.spanId, 16, protobuf);
+  const parentSpanId = yield* parentIdentity(span.parentSpanId, protobuf);
+  const attributes = [...entry.resource, ...(span.attributes ?? [])];
+  const session = yield* textAttribute(attributes, ["session.id", "gen_ai.conversation.id"]);
+  const model = yield* textAttribute(attributes, ["llm.model_name", "gen_ai.request.model", "model"]);
+  const kindValue = yield* textAttribute(attributes, ["openinference.span.kind"]);
+  const fixtureSurface = O.isSome(input.syntheticFixtureMetadata)
+    ? yield* textAttribute(attributes, ["beep.fixture.surface"]).pipe(Effect.flatMap(decodeBoundaryValue))
+    : O.none();
+  const kind = projectedKind(kindValue, span.name, input.usageConvention);
+  const timing = yield* sourceTiming(span);
+  return NativeTraceMetadata.make({
+    eventId: yield* hash(`native-span/v1:${input.routeId}:${traceId}:${spanId}`),
+    routeId: input.routeId,
+    namespaceId,
+    traceId,
+    spanId,
+    parentSpanId,
+    nameHash: yield* hashTextOption(O.fromUndefinedOr(span.name).pipe(O.filter((name) => name !== "")), hash),
+    kind,
+    ...timing,
+    status: projectedStatus(span.status),
+    fixtureSurface,
+    sessionHash: yield* hashTextOption(session, hash),
+    modelHash: yield* hashTextOption(model, hash),
+    modelName: O.filter(model, (value) => A.contains(input.approvedModels, value)),
+    usage: yield* sourceUsage(attributes, input.usageConvention),
+  });
+});
 
 /**
  * Decode and sanitize native OTLP/HTTP JSON or protobuf traces before persistence.
  *
- * **Example**
+ * **Example** (Project a native trace request)
  * ```ts
  * import { projectNativeTraceRequest } from "@beep/repo-ai-metrics/native-trace"
  * console.log(typeof projectNativeTraceRequest)
@@ -332,8 +428,7 @@ export const projectNativeTraceRequest = Effect.fn("AiMetrics.projectNativeTrace
   if (input.body.byteLength > 262144) return yield* failure("oversize");
   const salt = Redacted.value(input.hashSalt);
   if (Str.trim(salt) === "") return yield* failure("missing-salt");
-  const hash = (value: string) =>
-    hashPrivateIdentifier(value, O.some(salt)).pipe(Effect.mapError(() => failure("hash-failure")));
+  const hash = privateHash(salt);
   const protobuf = input.contentType === "application/x-protobuf";
   const decoded = protobuf
     ? Effect.try({
@@ -346,7 +441,7 @@ export const projectNativeTraceRequest = Effect.fn("AiMetrics.projectNativeTrace
     : Effect.try({
         try: () => new TextDecoder("utf-8", { fatal: true }).decode(input.body),
         catch: () => failure("invalid-envelope"),
-      }).pipe(Effect.flatMap(S.decodeEffect(S.fromJsonString(RawEnvelope))));
+      }).pipe(Effect.flatMap(decodeRawEnvelopeJson));
   const envelope = yield* decoded.pipe(Effect.mapError(() => failure("invalid-envelope")));
   const entries = A.flatMap(envelope.resourceSpans ?? [], (resource) =>
     A.flatMap(resource.scopeSpans ?? [], (scope) =>
@@ -356,73 +451,7 @@ export const projectNativeTraceRequest = Effect.fn("AiMetrics.projectNativeTrace
   if (entries.length > 1024) return yield* failure("too-many-spans");
   const namespaceId = yield* hash("ai-metrics-hash-salt-namespace/v1");
   const results = yield* Effect.forEach(entries, (entry) =>
-    Effect.result(
-      Effect.gen(function* () {
-        const span = yield* S.decodeUnknownEffect(RawSpan)(entry.span);
-        const traceId = yield* id(span.traceId, 32, protobuf);
-        const spanId = yield* id(span.spanId, 16, protobuf);
-        const parent = span.parentSpanId;
-        const parentSpanId =
-          parent === undefined || parent === "" || (S.is(S.Uint8Array)(parent) && parent.byteLength === 0)
-            ? O.none<string>()
-            : O.some(yield* id(parent, 16, protobuf));
-        const attributes = [...entry.resource, ...(span.attributes ?? [])];
-        const session = yield* textAttribute(attributes, ["session.id", "gen_ai.conversation.id"]);
-        const model = yield* textAttribute(attributes, ["llm.model_name", "gen_ai.request.model", "model"]);
-        const kindValue = yield* textAttribute(attributes, ["openinference.span.kind"]);
-        const fixtureSurface = O.isSome(input.syntheticFixtureMetadata)
-          ? yield* textAttribute(attributes, ["beep.fixture.surface"]).pipe(
-              Effect.flatMap(S.decodeUnknownEffect(S.Option(FixtureSurface)))
-            )
-          : O.none();
-        const nativeKind =
-          input.usageConvention === "claude-code"
-            ? span.name === "claude_code.llm_request"
-              ? "LLM"
-              : span.name === "claude_code.interaction"
-                ? "AGENT"
-                : span.name === "claude_code.tool" || span.name === "claude_code.tool.execution"
-                  ? "TOOL"
-                  : "UNKNOWN"
-            : "UNKNOWN";
-        const kind = O.isSome(kindValue) && S.is(SpanKind)(kindValue.value) ? kindValue.value : nativeKind;
-        const start = yield* time(span.startTimeUnixNano);
-        const end = yield* time(span.endTimeUnixNano);
-        if (O.isSome(start) && O.isSome(end) && end.value < start.value) return yield* failure("invalid-envelope");
-        const isOi = input.usageConvention === "openinference";
-        return NativeTraceMetadata.make({
-          eventId: yield* hash(`native-span/v1:${input.routeId}:${traceId}:${spanId}`),
-          routeId: input.routeId,
-          namespaceId,
-          traceId,
-          spanId,
-          parentSpanId,
-          nameHash: span.name === undefined || span.name === "" ? O.none() : O.some(yield* hash(span.name)),
-          kind,
-          startTimeUnixNano: O.map(start, (value) => value.toString()),
-          endTimeUnixNano: O.map(end, (value) => value.toString()),
-          durationKnown: O.isSome(start) && O.isSome(end),
-          status: span.status?.code === 1 ? "ok" : span.status?.code === 2 ? "error" : "unset",
-          fixtureSurface,
-          sessionHash: O.isSome(session) ? O.some(yield* hash(session.value)) : O.none(),
-          modelHash: O.isSome(model) ? O.some(yield* hash(model.value)) : O.none(),
-          modelName: O.filter(model, (value) => A.contains(input.approvedModels, value)),
-          usage: {
-            convention: input.usageConvention,
-            input: yield* countAttribute(attributes, isOi ? "llm.token_count.prompt" : "input_tokens"),
-            output: yield* countAttribute(attributes, isOi ? "llm.token_count.completion" : "output_tokens"),
-            cacheRead: yield* countAttribute(
-              attributes,
-              isOi ? "llm.token_count.prompt_details.cache_read" : "cache_read_tokens"
-            ),
-            cacheWrite: yield* countAttribute(
-              attributes,
-              isOi ? "llm.token_count.prompt_details.cache_write" : "cache_creation_tokens"
-            ),
-          },
-        });
-      })
-    )
+    Effect.result(projectSpan(entry, input, namespaceId, hash, protobuf))
   );
   if (
     A.some(

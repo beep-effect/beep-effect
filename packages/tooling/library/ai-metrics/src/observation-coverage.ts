@@ -11,7 +11,7 @@ import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { readBoundedMetadata } from "./internal/bounded-metadata.ts";
+import { readBoundedMetadata } from "./observation-file.ts";
 import { ObservationInventory, ObservationInventoryError, ObservationPopulation } from "./observation-inventory.ts";
 
 const $I = $RepoAiMetricsId.create("observation-coverage");
@@ -187,6 +187,9 @@ export const reconcileObservationCoverage = (input: ObservationCoverageInput): O
       };
     }),
   });
+const decodeObservationCoverageInputJson = S.decodeEffect(S.fromJsonString(ObservationCoverageInput), {
+  onExcessProperty: "error",
+});
 
 /**
  * Read a bounded metadata-only coverage evidence file with sanitized failures.
@@ -207,7 +210,7 @@ export const readObservationCoverage = Effect.fn("AiMetrics.readObservationCover
     oversize: error("Observation coverage exceeds its byte limit."),
     encodingFailed: error("Invalid observation coverage encoding."),
   });
-  return yield* S.decodeEffect(S.fromJsonString(ObservationCoverageInput), { onExcessProperty: "error" })(json).pipe(
+  return yield* decodeObservationCoverageInputJson(json).pipe(
     Effect.mapError(() => error("Invalid observation coverage boundary or evidence."))
   );
 });

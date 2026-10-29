@@ -4,11 +4,13 @@
  * @since 0.0.0
  */
 import { $RepoAiMetricsId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as HttpServerRequest from "effect/http/HttpServerRequest";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
@@ -92,6 +94,10 @@ export const renderNativeHttpMetrics = (health: NativeHttpHealth): string =>
     ],
     "\n"
   );
+const NativeContentEncoding = LiteralKit(["identity", "gzip"]).pipe(
+  $I.annoteSchema("NativeContentEncoding", { description: "Supported native trace HTTP body encodings." })
+);
+const isNativeContentEncoding = S.is(NativeContentEncoding);
 const byteLimit = 262144;
 /**
  * Owned route policy and cooperative body-read deadline.
@@ -137,6 +143,28 @@ const responseSchema = Protobuf.Root.fromJSON({
 });
 const exportResponse = responseSchema.lookupType("ExportTraceServiceResponse");
 const statusResponse = responseSchema.lookupType("Status");
+const responseMessage = (status: number, rejected: number, expired: number) =>
+  Match.value(status).pipe(
+    Match.when(410, () => "Request references expired local acceptance; it cannot be reaccepted"),
+    Match.when(200, () =>
+      expired > 0
+        ? `${expired} spans reference expired local records; total rejected: ${rejected}`
+        : "Some spans were rejected by local admission"
+    ),
+    Match.orElse(() => "Local intake refused the request")
+  );
+const responseErrorCode = (status: number) =>
+  Match.value(status).pipe(
+    Match.when(503, () => 14),
+    Match.when(413, () => 8),
+    Match.when(410, () => 9),
+    Match.orElse(() => 3)
+  );
+const responsePayload = (status: number, rejected: number, message: string) => {
+  if (status === 200)
+    return rejected === 0 ? {} : { partialSuccess: { rejectedSpans: `${rejected}`, errorMessage: message } };
+  return { code: responseErrorCode(status), message };
+};
 const response = (
   contentType: "application/json" | "application/x-protobuf",
   status: number,
@@ -144,20 +172,8 @@ const response = (
   receiptId?: string,
   expired = 0
 ) => {
-  const message =
-    status === 410
-      ? "Request references expired local acceptance; it cannot be reaccepted"
-      : status === 200
-        ? expired > 0
-          ? `${expired} spans reference expired local records; total rejected: ${rejected}`
-          : "Some spans were rejected by local admission"
-        : "Local intake refused the request";
-  const value =
-    status === 200
-      ? rejected === 0
-        ? {}
-        : { partialSuccess: { rejectedSpans: `${rejected}`, errorMessage: message } }
-      : { code: status === 503 ? 14 : status === 413 ? 8 : status === 410 ? 9 : 3, message };
+  const message = responseMessage(status, rejected, expired);
+  const value = responsePayload(status, rejected, message);
   const headers = {
     "cache-control": "no-store",
     connection: "close",
@@ -234,79 +250,94 @@ export const makeNativeHttpIntake = Effect.fn("AiMetrics.makeNativeHttpIntake")(
     (yield* makeObservationControl(ObservationControlPolicy.make({ maxActive: 1, drainTimeoutMillis: 10000 })));
   if (sharedControl === undefined) yield* control.resume;
   const permit = yield* Semaphore.make(1);
-  const handler = Effect.gen(function* () {
-    const request = yield* HttpServerRequest.HttpServerRequest;
-    const mediaType = Str.toLowerCase(Str.trim(Str.split(request.headers["content-type"] ?? "", ";")[0] ?? ""));
-    const contentType = mediaType === "application/x-protobuf" ? "application/x-protobuf" : "application/json";
-    if (request.url !== "/v1/traces") return yield* response(contentType, 404);
-    if (request.method !== "POST") return yield* response(contentType, 405);
-    if (mediaType !== "application/json" && mediaType !== "application/x-protobuf")
-      return yield* refused(contentType, 415, "unsupported");
-    const encoding = Str.toLowerCase(Str.trim(request.headers["content-encoding"] ?? "identity"));
-    if (encoding !== "identity" && encoding !== "gzip") return yield* refused(contentType, 415, "unsupported");
+  const readBody = Effect.fnUntraced(function* (
+    request: HttpServerRequest.HttpServerRequest,
+    encoding: typeof NativeContentEncoding.Type
+  ) {
+    // The public Web adapter preserves an absent body as null. Some platform
+    // request.stream implementations otherwise reject valid empty protobuf.
+    const webRequest = yield* HttpServerRequest.toWeb(request).pipe(Effect.mapError(() => bodyFailure("malformed")));
+    const incoming = O.fromNullishOr(webRequest.body).pipe(
+      O.map((body) => Stream.fromReadableStream({ evaluate: () => body, onError: () => bodyFailure("malformed") })),
+      O.getOrElse(() => Stream.empty)
+    );
+    return yield* boundedBytes(incoming).pipe(
+      Effect.filterOrElse(() => encoding !== "gzip", expandGzip),
+      Effect.timeoutOrElse({
+        duration: policy.bodyTimeoutMillis,
+        orElse: () => Effect.fail(bodyFailure("timed-out")),
+      })
+    );
+  });
+  const accept = Effect.fnUntraced(function* (
+    request: HttpServerRequest.HttpServerRequest,
+    contentType: NativeTraceRequest["contentType"],
+    encoding: typeof NativeContentEncoding.Type
+  ) {
+    return yield* Effect.gen(function* () {
+      const body = yield* readBody(request, encoding);
+      const batch = yield* projectNativeTraceRequest(NativeTraceRequest.make({ ...policy, contentType, body }));
+      if (batch.spans.length === 0 && batch.rejections.length === 0)
+        return yield* count("accepted").pipe(Effect.andThen(response(contentType, 200)));
+      const receipt = yield* journal.acceptBatch(batch);
+      yield* count(receipt.rejected > 0 ? "partial" : "accepted");
+      return yield* response(contentType, 200, receipt.rejected, receipt.page.receiptId, receipt.expiredIndices.length);
+    }).pipe(
+      Effect.catchTags({
+        ObservationHttpBodyError: (error) =>
+          refused(
+            contentType,
+            error.reason === "oversize" ? 413 : error.reason === "timed-out" ? 503 : 400,
+            error.reason === "oversize" ? "oversized" : error.reason === "timed-out" ? "timedOut" : "malformed"
+          ),
+        NativeTraceError: (error) =>
+          refused(
+            contentType,
+            error.reason === "hash-failure" || error.reason === "missing-salt" ? 503 : 400,
+            error.reason === "hash-failure" || error.reason === "missing-salt" ? "unavailable" : "malformed"
+          ),
+        TranscriptIntakeError: (error) =>
+          refused(
+            contentType,
+            error.reason === "expired" ? 410 : 503,
+            error.reason === "expired" ? "expired" : error.reason === "capacity" ? "capacity" : "storage"
+          ),
+      })
+    );
+  });
+  const admit = Effect.fnUntraced(function* (
+    request: HttpServerRequest.HttpServerRequest,
+    contentType: NativeTraceRequest["contentType"],
+    encoding: typeof NativeContentEncoding.Type
+  ) {
     const declaredLength = request.headers["content-length"];
     if (declaredLength !== undefined && (!/^[0-9]{1,10}$/.test(declaredLength) || Number(declaredLength) > byteLimit))
       return yield* refused(contentType, 413, "oversized");
     const admitted = yield* permit.withPermitsIfAvailable(1)(
       control
-        .run(
-          Effect.gen(function* () {
-            // The public Web adapter preserves an absent body as null. Some platform
-            // request.stream implementations otherwise reject valid empty protobuf.
-            const webRequest = yield* HttpServerRequest.toWeb(request).pipe(
-              Effect.mapError(() => bodyFailure("malformed"))
-            );
-            const incoming = O.fromNullishOr(webRequest.body).pipe(
-              O.map((body) =>
-                Stream.fromReadableStream({ evaluate: () => body, onError: () => bodyFailure("malformed") })
-              ),
-              O.getOrElse(() => Stream.empty)
-            );
-            const body = yield* boundedBytes(incoming).pipe(
-              Effect.filterOrElse(() => encoding !== "gzip", expandGzip),
-              Effect.timeoutOrElse({
-                duration: policy.bodyTimeoutMillis,
-                orElse: () => Effect.fail(bodyFailure("timed-out")),
-              })
-            );
-            const batch = yield* projectNativeTraceRequest(NativeTraceRequest.make({ ...policy, contentType, body }));
-            if (batch.spans.length === 0 && batch.rejections.length === 0)
-              return yield* count("accepted").pipe(Effect.andThen(response(contentType, 200)));
-            const receipt = yield* journal.acceptBatch(batch);
-            yield* count(receipt.rejected > 0 ? "partial" : "accepted");
-            return yield* response(
-              contentType,
-              200,
-              receipt.rejected,
-              receipt.page.receiptId,
-              receipt.expiredIndices.length
-            );
-          }).pipe(
-            Effect.catchTags({
-              ObservationHttpBodyError: (error) =>
-                refused(
-                  contentType,
-                  error.reason === "oversize" ? 413 : error.reason === "timed-out" ? 503 : 400,
-                  error.reason === "oversize" ? "oversized" : error.reason === "timed-out" ? "timedOut" : "malformed"
-                ),
-              NativeTraceError: (error) =>
-                refused(
-                  contentType,
-                  error.reason === "hash-failure" || error.reason === "missing-salt" ? 503 : 400,
-                  error.reason === "hash-failure" || error.reason === "missing-salt" ? "unavailable" : "malformed"
-                ),
-              TranscriptIntakeError: (error) =>
-                refused(
-                  contentType,
-                  error.reason === "expired" ? 410 : 503,
-                  error.reason === "expired" ? "expired" : error.reason === "capacity" ? "capacity" : "storage"
-                ),
-            })
-          )
-        )
+        .run(accept(request, contentType, encoding))
         .pipe(Effect.catchTag("ObservationControlError", () => refused(contentType, 503, "controlRefusal")))
     );
     return O.isSome(admitted) ? admitted.value : yield* refused(contentType, 503, "overloaded");
+  });
+  const traceRequest = Effect.fnUntraced(function* (
+    request: HttpServerRequest.HttpServerRequest,
+    contentType: NativeTraceRequest["contentType"],
+    mediaType: string
+  ) {
+    if (request.method !== "POST") return yield* response(contentType, 405);
+    if (mediaType !== "application/json" && mediaType !== "application/x-protobuf")
+      return yield* refused(contentType, 415, "unsupported");
+    const encoding = Str.toLowerCase(Str.trim(request.headers["content-encoding"] ?? "identity"));
+    if (!isNativeContentEncoding(encoding)) return yield* refused(contentType, 415, "unsupported");
+    return yield* admit(request, contentType, encoding);
+  });
+  const handler = Effect.gen(function* () {
+    const request = yield* HttpServerRequest.HttpServerRequest;
+    const mediaType = Str.toLowerCase(Str.trim(Str.split(request.headers["content-type"] ?? "", ";")[0] ?? ""));
+    const contentType = mediaType === "application/x-protobuf" ? "application/x-protobuf" : "application/json";
+    if (request.url !== "/v1/traces") return yield* response(contentType, 404);
+    return yield* traceRequest(request, contentType, mediaType);
   });
   return { handler, journal, control, health };
 });

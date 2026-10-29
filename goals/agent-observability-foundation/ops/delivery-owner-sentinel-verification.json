@@ -1,0 +1,211 @@
+{
+  "observedAt": "2026-10-29T13:23:03.223308-05:00",
+  "baseHead": "1ed9704cc640a24fe880a5b1dc161b009d1ca1ef",
+  "archive": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-owner-sentinel-9p14hnqi",
+  "artifacts": [
+    {
+      "file": "foundation-launch-owner-reproduction.log",
+      "bytes": 2640,
+      "sha256": "b685fd256f25a88871c3403c81243e392f2814d4cb67e82c02a15209e0999023"
+    },
+    {
+      "file": "foundation-launch-owner-reproduction-guard.json",
+      "bytes": 356,
+      "sha256": "a624f1766d091c15f7b4d98d4e789436a3a05ace97b98c0ed07bbf20eadb4d3f"
+    },
+    {
+      "file": "foundation-launch-owner-fix.log",
+      "bytes": 1031,
+      "sha256": "5e35dcf1437335fa387040ad4a3f25cbe9024aebae0206d99b850bc1c24220a3"
+    },
+    {
+      "file": "foundation-launch-owner-fix-guard.json",
+      "bytes": 347,
+      "sha256": "012da439c02ee48cacce90664dd753f72377dff75a1031d243fd3fb42cdea7cd"
+    },
+    {
+      "file": "foundation-claims-owner-reproduction.log",
+      "bytes": 2637,
+      "sha256": "e4602ca0ab5511349eaa991ccefde39e811cfe720b1cffa8b11378be45523229"
+    },
+    {
+      "file": "foundation-claims-owner-reproduction-guard.json",
+      "bytes": 356,
+      "sha256": "4ed4edf49e36734344327452ffbe0a9d255e5850b7b99825f36022f2712c82da"
+    },
+    {
+      "file": "foundation-owner-fix-v1.log",
+      "bytes": 1183,
+      "sha256": "27bf4cbf16f76d8167d771cafe38ac24edc374b3162ffa22314d6521cd20aebe"
+    },
+    {
+      "file": "foundation-owner-fix-v1-guard.json",
+      "bytes": 343,
+      "sha256": "7c1e5cfd151e81518463364c0811779cc68fb5d7b4da6e99024e9e1351ef950d"
+    },
+    {
+      "file": "foundation-owner-quality-v1.log",
+      "bytes": 1695,
+      "sha256": "e146419599a125f4e985dad28c9bd4e677ae2ad7f1617af6638eb9623e7fefe8"
+    },
+    {
+      "file": "foundation-owner-quality-v1-guard.json",
+      "bytes": 348,
+      "sha256": "b00e542ced95ee668b270504f2bf5a904aa3b90cffea7048d05b77465d071d2e"
+    },
+    {
+      "file": "foundation-delivery-cheap-v1.log",
+      "bytes": 1095,
+      "sha256": "f842df2915246f04cc64283c8a5a71d38cdaaf9ee20c7691848f743ab94abe3d"
+    },
+    {
+      "file": "foundation-delivery-cheap-v1-guard.json",
+      "bytes": 351,
+      "sha256": "737cef9c3b14d259c04c165ee7711f08c41b4cf950cf01ff498dbe5981fa4f56"
+    },
+    {
+      "file": "foundation-launch-client-before.ts",
+      "bytes": 10032,
+      "sha256": "8684c04b687f69912fad37166bdbf978e4391563206786d901932d7b5d2640ed"
+    },
+    {
+      "file": "foundation-launch-client-test-before.ts",
+      "bytes": 9728,
+      "sha256": "e66331a72ada58527081f4d7b6b9d0aeabed8438528c0426a8d37e33b32af631"
+    },
+    {
+      "file": "foundation-claims-owner-before.ts",
+      "bytes": 27971,
+      "sha256": "e40ef18215e4c2e58a9bd8e0880a5c9327bfc2ce757b75f8fbaf5229620fdd33"
+    },
+    {
+      "file": "foundation-claims-owner-test-before.ts",
+      "bytes": 8370,
+      "sha256": "1e1860c0176eb3656b49b308ef551d5d16052799a99f9a9356451b5ebe5175ac"
+    },
+    {
+      "file": "foundation-cli-owner-before.ts",
+      "bytes": 27972,
+      "sha256": "f60e713976fa379b07fc0ad3cd75834c67b47379893301b1703abdc29de9ea01"
+    },
+    {
+      "file": "foundation-bounded-job.py",
+      "bytes": 7421,
+      "sha256": "e7d72f286ed9cbb662eceaab93df404f8ecee8462f3998e320b6557eb828c4ee"
+    },
+    {
+      "file": "OWNERSHIP-SENTINEL-REVIEW.md",
+      "bytes": 2324,
+      "sha256": "6a194710f0781d82c79d7c424ef65410f4a8a51ef3e44a8e689f4ca7c0ac9afd"
+    }
+  ],
+  "currentSourceSha256": {
+    "packages/tooling/library/ai-metrics/src/observation-launch-client.ts": "4f7e2f59c1e16e33a346d0425f452fac0e3ff87b02d7d599e1695ae051e2dd7a",
+    "packages/tooling/library/ai-metrics/src/observation-launch-claims.ts": "d38589b2189f94b227e75fb513a8785c796134a2b4867eab76dd149ed7803786",
+    "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.observation.ts": "4d58a7f2e2434b4d4afefa47520a464e5d519b3babdadd2ca4a691a4728b79c9",
+    "packages/tooling/library/ai-metrics/test/observation-launch-client.test.ts": "d7f056a347281dbbacbdf22e076be441f317460791aee1cb4527bdfd550a8080",
+    "packages/tooling/library/ai-metrics/test/observation-launch-claims.test.ts": "74f0470f495cfcb35b1e6a8c25443e34163b73a40b1f5fa91e3ce0e83149d2c5"
+  },
+  "verification": {
+    "regressionBeforeFix": "both failed by original acceptance",
+    "clientAndClaimsCases": 14,
+    "cliObservationCases": 7,
+    "aiMetricsAuditSeconds": 118.8,
+    "aiMetricsDocgenSeconds": 12.5,
+    "cliQuickLintSeconds": 35.0,
+    "cliQuickCheckSeconds": 42.2,
+    "independentReview": "accepted exact five source/test hashes"
+  },
+  "guards": {
+    "foundation-launch-owner-reproduction": {
+      "ownedScopes": {},
+      "unit": "foundation-launch-owner-reproduction.service",
+      "profile": "bounded",
+      "memoryStopBytes": 8589934592,
+      "hostAvailableFloorBytes": 8589934592,
+      "initialAvailableBytes": 21047787520,
+      "peakObservedBytes": 438005760,
+      "minimumAvailableBytes": 20563951616,
+      "stoppedFor": null,
+      "exitCode": 1,
+      "orphanCleanup": []
+    },
+    "foundation-launch-owner-fix": {
+      "ownedScopes": {},
+      "unit": "foundation-launch-owner-fix.service",
+      "profile": "bounded",
+      "memoryStopBytes": 8589934592,
+      "hostAvailableFloorBytes": 8589934592,
+      "initialAvailableBytes": 21290356736,
+      "peakObservedBytes": 388108288,
+      "minimumAvailableBytes": 21016481792,
+      "stoppedFor": null,
+      "exitCode": 0,
+      "orphanCleanup": []
+    },
+    "foundation-claims-owner-reproduction": {
+      "ownedScopes": {},
+      "unit": "foundation-claims-owner-reproduction.service",
+      "profile": "bounded",
+      "memoryStopBytes": 8589934592,
+      "hostAvailableFloorBytes": 8589934592,
+      "initialAvailableBytes": 20097654784,
+      "peakObservedBytes": 389931008,
+      "minimumAvailableBytes": 19696398336,
+      "stoppedFor": null,
+      "exitCode": 1,
+      "orphanCleanup": []
+    },
+    "foundation-owner-fix-v1": {
+      "ownedScopes": {},
+      "unit": "foundation-owner-fix-v1.service",
+      "profile": "bounded",
+      "memoryStopBytes": 8589934592,
+      "hostAvailableFloorBytes": 8589934592,
+      "initialAvailableBytes": 20894375936,
+      "peakObservedBytes": 341618688,
+      "minimumAvailableBytes": 20496556032,
+      "stoppedFor": null,
+      "exitCode": 0,
+      "orphanCleanup": []
+    },
+    "foundation-owner-quality-v1": {
+      "ownedScopes": {},
+      "unit": "foundation-owner-quality-v1.service",
+      "profile": "bounded",
+      "memoryStopBytes": 8589934592,
+      "hostAvailableFloorBytes": 8589934592,
+      "initialAvailableBytes": 20876353536,
+      "peakObservedBytes": 6428438528,
+      "minimumAvailableBytes": 15638917120,
+      "stoppedFor": null,
+      "exitCode": 0,
+      "orphanCleanup": []
+    },
+    "foundation-delivery-cheap-v1": {
+      "ownedScopes": {},
+      "unit": "foundation-delivery-cheap-v1.service",
+      "profile": "bounded",
+      "memoryStopBytes": 8589934592,
+      "hostAvailableFloorBytes": 8589934592,
+      "initialAvailableBytes": 21581758464,
+      "peakObservedBytes": 1499107328,
+      "minimumAvailableBytes": 12040855552,
+      "stoppedFor": null,
+      "exitCode": 130,
+      "orphanCleanup": []
+    }
+  },
+  "publicationPreflight": {
+    "result": "incomplete",
+    "reason": "Stopped owned queued cheap-gates job after discovering catalog stage needs documented larger profile; no gate pass claimed.",
+    "upstreamMain": "524a5fad6f",
+    "behindCount": 1
+  },
+  "limitations": [
+    "Latest Fallow v14 remains 30 introduced complexity, zero introduced duplication, four inherited adjacent duplication and zero dead-code findings; no new scan from this ownership-only change.",
+    "Full CLI runtime abort remains unresolved; quick check is not full CLI proof.",
+    "Generated gates, base sync, publication, installed/canary refresh, final panel, hosted checks/review/merge and reflection remain open.",
+    "No recovery release, production enrollment or intentional memory exhaustion."
+  ]
+}

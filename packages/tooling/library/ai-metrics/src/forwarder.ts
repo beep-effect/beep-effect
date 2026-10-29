@@ -447,11 +447,11 @@ export class AiMetricsForwarderError extends S.TaggedError<AiMetricsForwarderErr
  *
  * ```ts
  * import { AiMetricsForwarderInput } from "@beep/repo-ai-metrics"
- * import * as Option from "effect/Option";
+ * import * as O from "effect/Option";
  * import * as Redacted from "effect/Redacted";
  * const input = AiMetricsForwarderInput.make({
- *   dataRoot: Option.some("/home/dev/.local/state/beep/ai-metrics"),
- *   hashSalt: Option.some("salt"),
+ *   dataRoot: O.some("/home/dev/.local/state/beep/ai-metrics"),
+ *   hashSalt: O.some("salt"),
  *   homeDir: "/home/dev",
  *   rawArchiveKey: Redacted.make("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="),
  *   repoRoot: "/repo"
@@ -1297,6 +1297,7 @@ class DiscoveryCursorRow extends S.Opaque<DiscoveryCursorRow, { readonly brand: 
     })
   )
 ) {}
+const decodeDiscoveryCursorRowRows = S.decodeUnknownEffect(S.Array(DiscoveryCursorRow));
 
 const selectSourceFiles = Effect.fn("AiMetrics.forwarder.selectSourceFiles")(function* (
   input: AiMetricsForwarderInput,
@@ -1331,7 +1332,7 @@ const selectSourceFiles = Effect.fn("AiMetrics.forwarder.selectSourceFiles")(fun
           'SELECT cursor_hash AS "cursorHash" FROM ai_metrics_discovery_cursors WHERE scope_id = $scopeId',
           { scopeId }
         );
-        const decoded = yield* S.decodeUnknownEffect(S.Array(DiscoveryCursorRow))(rows).pipe(
+        const decoded = yield* decodeDiscoveryCursorRowRows(rows).pipe(
           Effect.mapError((cause) =>
             DuckDbError.make({
               cause: O.some(cause),
@@ -1500,12 +1501,12 @@ const processSourceFile = Effect.fn("AiMetrics.forwarder.processSourceFile")(
  * } from "@beep/repo-ai-metrics"
  * import { NodeServices } from "@effect/platform-node"
  * import * as Effect from "effect/Effect";
- * import * as Option from "effect/Option";
+ * import * as O from "effect/Option";
  * import * as Redacted from "effect/Redacted";
  * const dataRoot = "/home/dev/.local/state/beep/ai-metrics"
  *
  * const input = AiMetricsForwarderInput.make({
- *   dataRoot: Option.some(dataRoot),
+ *   dataRoot: O.some(dataRoot),
  *   homeDir: "/home/dev",
  *   rawArchiveKey: Redacted.make("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="),
  *   repoRoot: "/work/repo"

@@ -1,0 +1,35 @@
+{
+  "observedAt": "2026-10-29T16:28:08.117602+00:00",
+  "since": "2026-10-27",
+  "distinctOomDecisions": 9,
+  "kernelDecisions": [
+    "2026-10-27T07:16:09-05:00 DankStation kernel: oom-kill:constraint=CONSTRAINT_NONE,nodemask=(null),cpuset=/,mems_allowed=0,global_oom,task_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/app-comfyui\\x2drdna4@4dfd146fea434a4896d0d9bc1189700d.service,task=python,pid=3841020,uid=1000",
+    "2026-10-28T05:57:47-05:00 DankStation kernel: oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),cpuset=user@1000.service,mems_allowed=0,oom_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/beep-observation-proof-f73fd58c50b7.service,task_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/beep-observation-proof-f73fd58c50b7.service,task=bun.native,pid=1726603,uid=1000",
+    "2026-10-28T05:59:29-05:00 DankStation kernel: oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),cpuset=user@1000.service,mems_allowed=0,oom_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/beep-observation-proof-43e8e622bca9.service,task_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/beep-observation-proof-43e8e622bca9.service,task=bun.native,pid=1880114,uid=1000",
+    "2026-10-28T06:04:08-05:00 DankStation kernel: oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),cpuset=user@1000.service,mems_allowed=0,oom_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/beep-observation-proof-c2d016cab73a.service,task_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/beep-observation-proof-c2d016cab73a.service,task=bun.native,pid=2100022,uid=1000",
+    "2026-10-28T06:06:47-05:00 DankStation kernel: oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),cpuset=user@1000.service,mems_allowed=0,oom_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/beep-observation-proof-8698e49ccdfa.service,task_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/beep-observation-proof-8698e49ccdfa.service,task=bun.native,pid=2199743,uid=1000",
+    "2026-10-28T14:26:17-05:00 DankStation kernel: oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),cpuset=user@1000.service,mems_allowed=0,oom_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/beep-observation-proof-db4bf07912b3.service,task_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/beep-observation-proof-db4bf07912b3.service,task=bun.native,pid=719818,uid=1000",
+    "2026-10-28T21:13:20-05:00 DankStation kernel: oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),cpuset=user@1000.service,mems_allowed=0,oom_memcg=/user.slice/user-1000.slice/user@1000.service/agent.slice/agent-runs.slice/foundation-managed-enrollment-types.service,task_memcg=/user.slice/user-1000.slice/user@1000.service/agent.slice/agent-runs.slice/foundation-managed-enrollment-types.service,task=tsc,pid=2096272,uid=1000",
+    "2026-10-29T07:54:53-05:00 DankStation kernel: oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),cpuset=user@1000.service,mems_allowed=0,oom_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/restricted-runtime-qual-35bd64e246d2427c9ccfdf60344ace7c.service,task_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/restricted-runtime-qual-35bd64e246d2427c9ccfdf60344ace7c.service,task=python3,pid=3993553,uid=1000",
+    "2026-10-29T10:56:06-05:00 DankStation kernel: oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),cpuset=user@1000.service,mems_allowed=0,oom_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/restricted-runtime-qual-41a0eb0cc1ac45b8b27e82a47e7e20dc.service,task_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/restricted-runtime-qual-41a0eb0cc1ac45b8b27e82a47e7e20dc.service,task=python3,pid=2787027,uid=1000"
+  ],
+  "newerService": {
+    "unit": "restricted-runtime-qual-41a0eb0cc1ac45b8b27e82a47e7e20dc.service",
+    "timestamp": "2026-10-29T10:56:06-05:00",
+    "classification": "service-limit-CONSTRAINT_MEMCG",
+    "memoryPeakBytes": 805306368,
+    "journal": "2026-10-29T10:56:06-05:00 DankStation systemd[1826]: Starting restricted-runtime-qualification 6c99b70c333546ada34d87d71a51e9b0...\n2026-10-29T10:56:06-05:00 DankStation systemd[1826]: Started restricted-runtime-qualification 6c99b70c333546ada34d87d71a51e9b0.\n2026-10-29T10:56:06-05:00 DankStation systemd[1826]: restricted-runtime-qual-41a0eb0cc1ac45b8b27e82a47e7e20dc.service: The kernel OOM killer killed some processes in this unit.\n2026-10-29T10:56:06-05:00 DankStation systemd[1826]: restricted-runtime-qual-41a0eb0cc1ac45b8b27e82a47e7e20dc.service: Killing process 2787027 (python3) with signal SIGKILL.\n2026-10-29T10:56:06-05:00 DankStation systemd[1826]: restricted-runtime-qual-41a0eb0cc1ac45b8b27e82a47e7e20dc.service: Main process exited, code=killed, status=9/KILL\n2026-10-29T10:56:06-05:00 DankStation systemd[1826]: restricted-runtime-qual-41a0eb0cc1ac45b8b27e82a47e7e20dc.service: Failed with result 'oom-kill'.\n2026-10-29T10:56:06-05:00 DankStation systemd[1826]: restricted-runtime-qual-41a0eb0cc1ac45b8b27e82a47e7e20dc.service: Consumed 209ms CPU time over 232ms wall clock time, 768M memory peak.\n",
+    "sourceCandidate": "/home/elpresidank/ai/lib/review/restricted_runtime_aggregate.py",
+    "sourceSha256": "3ad0ead0b7e85291f1fc365de88013507072696bff9ac01a7cc8000ed3c295b2",
+    "exactCaseReceiptRecovered": false,
+    "interpretation": "Source declares an explicit memory-pressure stress case, but exact per-run intent is not established."
+  },
+  "host": {
+    "MemTotal": 134352207872,
+    "MemAvailable": 40758083584,
+    "SwapTotal": 51539603456,
+    "SwapFree": 5975863296
+  },
+  "pressure": "some avg10=1.86 avg60=0.37 avg300=0.31 total=520584157\nfull avg10=1.86 avg60=0.37 avg300=0.28 total=468927626\n",
+  "mutations": "No unrelated services, applications, notifications, or swap configuration changed."
+}

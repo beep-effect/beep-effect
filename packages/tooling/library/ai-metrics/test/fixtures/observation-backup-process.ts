@@ -23,10 +23,13 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
 
+const decodeArguments = S.decodeUnknownEffect(
+  S.Tuple([S.Literals(["capture-before", "capture-after", "restore-before", "restore-after"]), S.String])
+);
+const encodeObservationBackupReceiptJson = S.encodeEffect(S.fromJsonString(ObservationBackupReceipt));
+
 const program = Effect.gen(function* () {
-  const [mode, directory] = yield* S.decodeUnknownEffect(
-    S.Tuple([S.Literals(["capture-before", "capture-after", "restore-before", "restore-after"]), S.String])
-  )(A.drop(process.argv, 2));
+  const [mode, directory] = yield* decodeArguments(A.drop(process.argv, 2));
   const fs = yield* FileSystem.FileSystem;
   const boundary = fs.writeFileString(`${directory}/boundary`, mode).pipe(Effect.andThen(Effect.never));
   const intercepted = new Proxy(fs, {
@@ -77,11 +80,9 @@ const program = Effect.gen(function* () {
       Effect.provideService(FileSystem.FileSystem, intercepted)
     );
   }).pipe(Effect.scoped);
-  yield* fs.writeFileString(
-    `${directory}/receipt.json`,
-    yield* S.encodeEffect(S.fromJsonString(ObservationBackupReceipt))(receipt),
-    { mode: 0o600 }
-  );
+  yield* fs.writeFileString(`${directory}/receipt.json`, yield* encodeObservationBackupReceiptJson(receipt), {
+    mode: 0o600,
+  });
   if (mode === "capture-after") return yield* boundary;
   // Original source is closed. Recovery uses only the independent snapshot.
   yield* fs.writeFileString(`${directory}/source.sqlite`, "synthetic database corruption");

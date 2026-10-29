@@ -3,8 +3,10 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
 import { $RepoCliId } from "@beep/identity/packages";
 import { renderNativeHttpMetrics } from "@beep/repo-ai-metrics/native-http";
+import { isPrivateObservationFile, readBoundedMetadata } from "@beep/repo-ai-metrics/observation-file";
 import {
   observationWorkerConfigFromLaunch,
   readObservationLaunchConfig,
@@ -30,7 +32,6 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
-import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
 
@@ -65,101 +66,103 @@ export class ObservationProcessError extends S.TaggedError<ObservationProcessErr
   })
 ) {}
 const failure = (reason: ObservationProcessError["reason"]) => ObservationProcessError.make({ reason });
-const readKernel = Effect.fn("ObservationProcess.readKernel")(function* (file: string, limit = 8192) {
-  const fs = yield* FileSystem.FileSystem;
-  const chunks = yield* fs.stream(file, { bytesToRead: limit + 1 }).pipe(
-    Stream.runCollect,
-    Effect.mapError(() => failure("resources"))
-  );
-  const size = A.reduce(chunks, 0, (n, b) => n + b.byteLength);
-  if (size > limit) return yield* failure("resources");
-  const bytes = new Uint8Array(size);
-  let offset = 0;
-  for (const chunk of chunks) {
-    bytes.set(chunk, offset);
-    offset += chunk.byteLength;
-  }
-  return yield* Effect.try({
-    try: () => new TextDecoder("utf-8", { fatal: true }).decode(bytes),
-    catch: () => failure("resources"),
-  });
-});
+const readKernel = Effect.fn("ObservationProcess.readKernel")((file: string, limit = 8192) =>
+  readBoundedMetadata(file, limit, {
+    readFailed: failure("resources"),
+    oversize: failure("resources"),
+    encodingFailed: failure("resources"),
+  })
+);
 const privateFile = Effect.fn("ObservationProcess.privateFile")(function* (file: string, uid: number) {
   const fs = yield* FileSystem.FileSystem;
   const info = yield* fs.lstat(file).pipe(Effect.mapError(() => failure("ownership")));
-  if (
-    info.type !== "File" ||
-    (info.mode & 0o777) !== 0o600 ||
-    O.isNone(info.uid) ||
-    info.uid.value !== uid ||
-    O.isNone(info.nlink) ||
-    info.nlink.value !== BigInt(1) ||
-    O.isNone(info.ino)
-  )
-    return yield* failure("ownership");
+  if (!isPrivateObservationFile(info, uid) || O.isNone(info.ino)) return yield* failure("ownership");
   return info;
 });
-const qualify = Effect.fn("ObservationProcess.qualify")(function* (directory: string, uid: number, dbPages: number) {
+const sameFileIdentity = (left: FileSystem.File.Info, right: FileSystem.File.Info) =>
+  left.dev === right.dev && O.isSome(left.ino) && O.isSome(right.ino) && left.ino.value === right.ino.value;
+const descriptorOwnsLock = Effect.fnUntraced(function* (
+  descriptor: string,
+  lock: Effect.Success<ReturnType<typeof privateFile>>
+) {
+  if (!/^\d{1,3}$/.test(descriptor)) return false;
+  const fs = yield* FileSystem.FileSystem;
+  const info = yield* fs.stat(`/proc/self/fd/${descriptor}`).pipe(Effect.option);
+  if (O.isNone(info)) return false;
+  if (!sameFileIdentity(info.value, lock)) return false;
+  const metadata = yield* readKernel(`/proc/self/fdinfo/${descriptor}`);
+  return O.exists(lock.ino, (inode) =>
+    new RegExp(
+      `^lock:\\s+\\d+:\\s+FLOCK\\s+ADVISORY\\s+WRITE\\s+${process.pid}\\s+[0-9a-f]+:[0-9a-f]+:${inode}\\s+0\\s+EOF$`,
+      "m"
+    ).test(metadata)
+  );
+});
+const requireInheritedLock = Effect.fnUntraced(function* (directory: string, uid: number) {
   const fs = yield* FileSystem.FileSystem;
   const lock = yield* privateFile(`${directory}/worker.lock`, uid);
   const descriptors = yield* fs.readDirectory("/proc/self/fd");
   if (descriptors.length > 256) return yield* failure("resources");
-  let owned = false;
   for (const descriptor of descriptors) {
-    if (!/^\d{1,3}$/.test(descriptor)) continue;
-    const info = yield* fs.stat(`/proc/self/fd/${descriptor}`).pipe(Effect.option);
-    if (
-      O.isNone(info) ||
-      info.value.dev !== lock.dev ||
-      O.isNone(info.value.ino) ||
-      O.isNone(lock.ino) ||
-      info.value.ino.value !== lock.ino.value
-    )
-      continue;
-    const metadata = yield* readKernel(`/proc/self/fdinfo/${descriptor}`);
-    owned = new RegExp(
-      `^lock:\\s+\\d+:\\s+FLOCK\\s+ADVISORY\\s+WRITE\\s+${process.pid}\\s+[0-9a-f]+:[0-9a-f]+:${lock.ino.value}\\s+0\\s+EOF$`,
-      "m"
-    ).test(metadata);
-    if (owned) break;
+    if (yield* descriptorOwnsLock(descriptor, lock)) return;
   }
-  if (!owned) return yield* failure("ownership");
+  return yield* failure("ownership");
+});
+const ProcessPopulationLimits = S.Struct({
+  memory: S.Number.check(S.isGreaterThan(0), S.isLessThanOrEqualTo(2147483648)),
+  swap: S.Literal(0),
+  pids: S.Number.check(S.isGreaterThanOrEqualTo(1), S.isLessThanOrEqualTo(128)),
+}).pipe(
+  $I.annoteSchema("ProcessPopulationLimits", {
+    description: "Observed cgroup memory, zero swap and task ceilings required before opening the journal.",
+  })
+);
+const isProcessPopulationLimits = S.is(ProcessPopulationLimits);
+const requireMemoryAndTasks = Effect.fnUntraced(function* (memory: number, swap: number, pids: number) {
+  if (!isProcessPopulationLimits({ memory, swap, pids })) return yield* failure("resources");
+});
+const validCpuRatio = (quota: number, period: number) => quota > 0 && period > 0 && quota <= period;
+const requireCpuLimit = Effect.fnUntraced(function* (value: string) {
+  const cpu = O.getOrNull(Str.match(/^(\d+) (\d+)\n?$/)(value));
+  if (cpu === null) return yield* failure("resources");
+  if (!validCpuRatio(Number(cpu[1]), Number(cpu[2]))) return yield* failure("resources");
+});
+const decodeFiniteLimit = S.decodeEffect(S.FiniteFromString);
+const requireCgroupLimits = Effect.fnUntraced(function* () {
   const group = O.getOrUndefined(Str.match(/^0::(\/[^\n]+)\n?$/)(yield* readKernel("/proc/self/cgroup")))?.[1];
   if (group === undefined || Str.includes("..")(group)) return yield* failure("resources");
   const root = `/sys/fs/cgroup${group}`;
   const number = Effect.fn("ObservationProcess.limit")(function* (name: string) {
-    return yield* S.decodeEffect(S.FiniteFromString)(Str.trim(yield* readKernel(`${root}/${name}`))).pipe(
+    return yield* decodeFiniteLimit(Str.trim(yield* readKernel(`${root}/${name}`))).pipe(
       Effect.mapError(() => failure("resources"))
     );
   });
   const memory = yield* number("memory.max");
   const swap = yield* number("memory.swap.max");
   const pids = yield* number("pids.max");
-  const cpu = O.getOrNull(Str.match(/^(\d+) (\d+)\n?$/)(yield* readKernel(`${root}/cpu.max`)));
-  if (
-    memory <= 0 ||
-    memory > 2147483648 ||
-    swap !== 0 ||
-    pids < 1 ||
-    pids > 128 ||
-    cpu === null ||
-    Number(cpu[1]) <= 0 ||
-    Number(cpu[2]) <= 0 ||
-    Number(cpu[1]) > Number(cpu[2])
-  )
-    return yield* failure("resources");
-  const limits = yield* readKernel("/proc/self/limits");
+  const cpu = yield* readKernel(`${root}/cpu.max`);
+  yield* requireMemoryAndTasks(memory, swap, pids);
+  yield* requireCpuLimit(cpu);
+});
+const requireDescriptorLimit = Effect.fnUntraced(function* (limits: string) {
   const descriptorsLimit = O.getOrNull(Str.match(/^Max open files\s+(\d+)\s+(\d+)\s+files[ \t]*$/m)(limits));
+  if (descriptorsLimit === null || Number(descriptorsLimit[2]) > 256) return yield* failure("resources");
+});
+const requireFileLimit = Effect.fnUntraced(function* (limits: string, dbPages: number) {
   const fileLimit = O.getOrNull(Str.match(/^Max file size\s+(\d+)\s+(\d+)\s+bytes[ \t]*$/m)(limits));
-  if (
-    descriptorsLimit === null ||
-    Number(descriptorsLimit[2]) > 256 ||
-    fileLimit === null ||
-    Number(fileLimit[2]) > 67108864 ||
-    Number(fileLimit[1]) < dbPages * 8192 ||
-    !/^Max core file size\s+0\s+0\s+bytes[ \t]*$/m.test(limits)
-  )
+  if (fileLimit === null || Number(fileLimit[2]) > 67108864 || Number(fileLimit[1]) < dbPages * 8192)
     return yield* failure("resources");
+});
+const requireProcessLimits = Effect.fnUntraced(function* (dbPages: number) {
+  const limits = yield* readKernel("/proc/self/limits");
+  yield* requireDescriptorLimit(limits);
+  yield* requireFileLimit(limits, dbPages);
+  if (!/^Max core file size\s+0\s+0\s+bytes[ \t]*$/m.test(limits)) return yield* failure("resources");
+});
+const qualify = Effect.fn("ObservationProcess.qualify")(function* (directory: string, uid: number, dbPages: number) {
+  yield* requireInheritedLock(directory, uid);
+  yield* requireCgroupLimits();
+  yield* requireProcessLimits(dbPages);
   const status = yield* readKernel("/proc/self/status");
   if (!/^NoNewPrivs:\s+1$/m.test(status) || !/^Umask:\s+0077$/m.test(status)) return yield* failure("resources");
 });

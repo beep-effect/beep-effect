@@ -1,0 +1,54 @@
+{
+  "recordedAt": "2026-10-29T13:57:55.853335+00:00",
+  "result": "passed",
+  "scope": "Small synthetic sibling-scope accounting and runtime limit application; not a memory exhaustion or full Yeet qualification",
+  "guard": {
+    "ownedScopes": {
+      "agent-run-foundation-guard-proof-v1.scope": {
+        "group": "/user.slice/user-1000.slice/user@1000.service/agent.slice/agent-runs.slice/agent-run-foundation-guard-proof-v1.scope",
+        "preGuardPeakBytes": 15900672,
+        "ownership": "live descendant of proof service MainPID"
+      }
+    },
+    "unit": "foundation-guard-admission-proof-v1.service",
+    "memoryStopBytes": 8589934592,
+    "hostAvailableFloorBytes": 8589934592,
+    "initialAvailableBytes": 56686374912,
+    "peakObservedBytes": 28151808,
+    "minimumAvailableBytes": 56590680064,
+    "stoppedFor": null,
+    "exitCode": 0
+  },
+  "allocationBytes": 16777216,
+  "childObservedLimits": {
+    "memory.high": 7516192768,
+    "memory.max": 12884901888,
+    "memory.swap.max": 0
+  },
+  "outerReportedPeak": "2.4M",
+  "deliberateMemoryExhaustion": false,
+  "thresholdStopExercised": false,
+  "hostPressureStopExercised": false,
+  "artifacts": [
+    {
+      "path": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-guard-zzy7o8u5/foundation-bounded-job.py",
+      "sha256": "ea52e029a1ac722694c3060b454e8f481cf733a888b2784d432a14c4362ca83c"
+    },
+    {
+      "path": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-guard-zzy7o8u5/foundation-guard-admission-proof-v1.log",
+      "sha256": "423b4126790978053010d2866e868603fbcebe987b666511835f07a2220c45ce"
+    },
+    {
+      "path": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-guard-zzy7o8u5/foundation-guard-admission-proof-v1-guard.json",
+      "sha256": "6b1e1016161e808cab5373a807619a17e24fbd5f8fb54049d2bf0376e442e6a5"
+    },
+    {
+      "path": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-guard-zzy7o8u5/foundation-schema-repair-verification-v1.log",
+      "sha256": "03efe4ec6f0b62bebbb8a9b035d9378d45dfe70949a16d2708a224264e2c8004"
+    },
+    {
+      "path": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-guard-zzy7o8u5/foundation-schema-repair-verification-v1-guard.json",
+      "sha256": "3fe8f4edc7c28f9ceff8974e0979b40292b37cb24c91fdfc5ae8a47a7e409180"
+    }
+  ]
+}

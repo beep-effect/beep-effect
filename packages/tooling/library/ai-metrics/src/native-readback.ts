@@ -20,7 +20,7 @@ import { nativeTraceWire } from "./internal/native-trace-wire.ts";
 import { makeObservationExportReader } from "./internal/observation-export-reader.ts";
 import { parseSourceEventTime } from "./internal/source-event-time.ts";
 import { nativeDeliveryReadbackOrigin, nativeDeliveryTargetId } from "./native-delivery.ts";
-import type { PhoenixConfigInput } from "@beep/phoenix";
+import type { PhoenixConfigInput, PhoenixStoredSpan } from "@beep/phoenix";
 import type { DeliveryLedgerConfig } from "./delivery-ledger.ts";
 import type { NativeDeliveryPolicy, NativeDeliveryRequest } from "./native-delivery.ts";
 import type { TranscriptIntakeConfig } from "./transcript-intake.ts";
@@ -136,6 +136,58 @@ const microsecondMatches = (stored: O.Option<bigint>, sourceNano: string) =>
   O.isSome(stored) &&
   stored.value * BigInt(1000) > BigInt(sourceNano) - BigInt(1000) &&
   stored.value * BigInt(1000) < BigInt(sourceNano) + BigInt(1000);
+const decodeUnionValue = S.decodeUnknownEffect(S.Union([S.String, S.Finite, S.Boolean]));
+const decodeWire = S.decodeUnknownEffect(wire);
+
+const expectedAttributes = Effect.fnUntraced(function* (expected: typeof expectedSpan.Type) {
+  const entries = yield* Effect.forEach(
+    A.filter(expected.attributes, (attr) => attr.key !== "openinference.span.kind"),
+    ({ key, value }) =>
+      Effect.gen(function* () {
+        const scalar = yield* decodeUnionValue(
+          value.stringValue ?? (value.intValue !== undefined ? Number(value.intValue) : value.boolValue)
+        ).pipe(Effect.mapError(() => fail("encoding")));
+        return [key, scalar] satisfies readonly [string, string | number | boolean];
+      })
+  );
+  return R.fromEntries(entries);
+});
+const expectedStatus = (code: number | undefined) => {
+  if (code === 1) return "OK";
+  if (code === 2) return "ERROR";
+  return "UNSET";
+};
+const identityMatches = (stored: PhoenixStoredSpan, expected: typeof expectedSpan.Type) => {
+  const kind = A.findFirst(expected.attributes, (attr) => attr.key === "openinference.span.kind");
+  const parentId =
+    expected.parentSpanId === undefined || expected.parentSpanId.byteLength === 0
+      ? null
+      : Hex.encode(expected.parentSpanId);
+  return (
+    stored.name === expected.name &&
+    stored.kind === (O.isSome(kind) ? kind.value.value.stringValue : undefined) &&
+    stored.parentId === parentId &&
+    stored.status === expectedStatus(expected.status.code)
+  );
+};
+const timestampsMatch = (stored: PhoenixStoredSpan, expected: typeof expectedSpan.Type) => {
+  const start = micros(stored.startTime);
+  const end = micros(stored.endTime);
+  if (O.isNone(start) || O.isNone(end)) return false;
+  if (end.value < start.value) return false;
+  if (expected.startTimeUnixNano === expected.endTimeUnixNano && start.value !== end.value) return false;
+  return microsecondMatches(start, expected.startTimeUnixNano) && microsecondMatches(end, expected.endTimeUnixNano);
+};
+const storedMatches = (
+  stored: PhoenixStoredSpan,
+  expected: typeof expectedSpan.Type,
+  attributes: Effect.Success<ReturnType<typeof expectedAttributes>>
+) => {
+  const metadataMatches =
+    R.size(attributes) === R.size(stored.attributes) &&
+    R.every(attributes, (value, key) => Equal.equals(value, stored.attributes[key]));
+  return identityMatches(stored, expected) && timestampsMatch(stored, expected) && metadataMatches;
+};
 /**
  * Reconcile one event against its original encoded request and declared backend.
  * **Example** (Inspecting the reconciler)
@@ -162,49 +214,50 @@ export const makeNativeReadback = Effect.fn("AiMetrics.makeNativeReadback")(func
   const pages = yield* makeObservationExportReader(intake);
   const ledger = yield* makeDeliveryLedger(intake, config);
   const permit = yield* Semaphore.make(1);
+  const decodeExpected = Effect.fnUntraced(function* (
+    encoded: Effect.Success<ReturnType<typeof pages.prepare>>,
+    eventId: Sha256Hex
+  ) {
+    const decoded = yield* Effect.try(() =>
+      nativeTraceWire.toObject(nativeTraceWire.decode(encoded.body), { longs: String })
+    ).pipe(
+      Effect.flatMap(decodeWire),
+      Effect.mapError(() => fail("encoding"))
+    );
+    const candidates = A.flatMap(decoded.resourceSpans, (resource) =>
+      A.flatMap(resource.scopeSpans, (scope) => scope.spans)
+    );
+    const index = A.findFirstIndex(encoded.eventIds, (id) => id === eventId);
+    if (O.isNone(index)) return yield* fail("attempt-mismatch");
+    const expected = candidates[index.value];
+    if (expected === undefined) return yield* fail("encoding");
+    return expected;
+  });
+  const prepareOriginalAttempt = Effect.fnUntraced(function* (request: NativeDeliveryRequest, eventId: Sha256Hex) {
+    const attempt = yield* ledger.attempt(request.attemptId);
+    if (O.isNone(attempt)) return yield* fail("unknown-attempt");
+    const page = yield* pages.read(request.receiptId);
+    if (O.isNone(page)) return yield* fail("unknown-page");
+    if (request.offset >= pages.eventIds(page.value).length || !A.contains(attempt.value.eventIds, eventId))
+      return yield* fail("attempt-mismatch");
+    const encoded = yield* pages.prepare(request.receiptId, request.offset, request.limit, policy.project);
+    if (
+      encoded.payloadDigest !== attempt.value.payloadDigest ||
+      encoded.eventIds.length !== attempt.value.eventIds.length ||
+      !A.every(encoded.eventIds, (id) => A.contains(attempt.value.eventIds, id))
+    )
+      return yield* fail("attempt-mismatch");
+    return encoded;
+  });
   const reconcile = Effect.fn("AiMetrics.nativeReadback.reconcile")(function* (
     request: NativeDeliveryRequest,
     eventId: Sha256Hex
   ) {
     const admitted = yield* permit.withPermitsIfAvailable(1)(
       Effect.gen(function* () {
-        const attempt = yield* ledger.attempt(request.attemptId);
-        if (O.isNone(attempt)) return yield* fail("unknown-attempt");
-        const page = yield* pages.read(request.receiptId);
-        if (O.isNone(page)) return yield* fail("unknown-page");
-        if (request.offset >= pages.eventIds(page.value).length || !A.contains(attempt.value.eventIds, eventId))
-          return yield* fail("attempt-mismatch");
-        const encoded = yield* pages.prepare(request.receiptId, request.offset, request.limit, policy.project);
-        if (
-          encoded.payloadDigest !== attempt.value.payloadDigest ||
-          encoded.eventIds.length !== attempt.value.eventIds.length ||
-          !A.every(encoded.eventIds, (id) => A.contains(attempt.value.eventIds, id))
-        )
-          return yield* fail("attempt-mismatch");
-        const decoded = yield* Effect.try(() =>
-          nativeTraceWire.toObject(nativeTraceWire.decode(encoded.body), { longs: String })
-        ).pipe(
-          Effect.flatMap(S.decodeUnknownEffect(wire)),
-          Effect.mapError(() => fail("encoding"))
-        );
-        const candidates = A.flatMap(decoded.resourceSpans, (resource) =>
-          A.flatMap(resource.scopeSpans, (scope) => scope.spans)
-        );
-        const index = A.findFirstIndex(encoded.eventIds, (id) => id === eventId);
-        if (O.isNone(index)) return yield* fail("attempt-mismatch");
-        const expected = candidates[index.value];
-        if (expected === undefined) return yield* fail("encoding");
-        const entries = yield* Effect.forEach(
-          A.filter(expected.attributes, (attr) => attr.key !== "openinference.span.kind"),
-          ({ key, value }) =>
-            Effect.gen(function* () {
-              const scalar = yield* S.decodeUnknownEffect(S.Union([S.String, S.Finite, S.Boolean]))(
-                value.stringValue ?? (value.intValue !== undefined ? Number(value.intValue) : value.boolValue)
-              ).pipe(Effect.mapError(() => fail("encoding")));
-              return [key, scalar] satisfies readonly [string, string | number | boolean];
-            })
-        );
-        const attributes = R.fromEntries(entries);
+        const encoded = yield* prepareOriginalAttempt(request, eventId);
+        const expected = yield* decodeExpected(encoded, eventId);
+        const attributes = yield* expectedAttributes(expected);
         const lookup = yield* reader.lookup(
           PhoenixSpanLookup.make({
             project: policy.project,
@@ -214,32 +267,7 @@ export const makeNativeReadback = Effect.fn("AiMetrics.makeNativeReadback")(func
           })
         );
         if (O.isNone(lookup)) return NativeReadbackResult.cases.Missing.make({ eventId });
-        const stored = lookup.value;
-        const kind = A.findFirst(expected.attributes, (attr) => attr.key === "openinference.span.kind");
-        const start = micros(stored.startTime);
-        const end = micros(stored.endTime);
-        const orderedTimes =
-          O.isSome(start) &&
-          O.isSome(end) &&
-          end.value >= start.value &&
-          (expected.startTimeUnixNano !== expected.endTimeUnixNano || start.value === end.value);
-        const metadataMatches =
-          R.size(attributes) === R.size(stored.attributes) &&
-          R.every(attributes, (value, key) => Equal.equals(value, stored.attributes[key]));
-        if (
-          stored.name !== expected.name ||
-          stored.kind !== (O.isSome(kind) ? kind.value.value.stringValue : undefined) ||
-          stored.parentId !==
-            (expected.parentSpanId === undefined || expected.parentSpanId.byteLength === 0
-              ? null
-              : Hex.encode(expected.parentSpanId)) ||
-          stored.status !==
-            ((expected.status.code ?? 0) === 1 ? "OK" : expected.status.code === 2 ? "ERROR" : "UNSET") ||
-          !orderedTimes ||
-          !microsecondMatches(start, expected.startTimeUnixNano) ||
-          !microsecondMatches(end, expected.endTimeUnixNano) ||
-          !metadataMatches
-        )
+        if (!storedMatches(lookup.value, expected, attributes))
           return NativeReadbackResult.cases.Mismatch.make({ eventId });
         const proof = yield* ledger.recordVisibility(
           DeliveryVisibility.make({

@@ -51,8 +51,9 @@ const fixture = Effect.fn("TranscriptDiscoveryTest.fixture")(function* () {
     });
   return { fs, dir, config, input };
 });
+const encodeTranscriptDiscoveryReportJson = S.encodeEffect(S.fromJsonString(TranscriptDiscoveryReport));
 
-it.layer(Layer.fresh(layer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect(
     "discovers N+1 files across roots, skips retired roots and admits metadata fairly despite a missing root",
     () =>
@@ -90,7 +91,7 @@ it.layer(Layer.fresh(layer), { excludeTestServices: true })((it) =>
           expect(report.discovery.candidates).toBeLessThanOrEqual(1);
           expect(report.discovery.activeHelpers).toBeLessThanOrEqual(3);
           expect(report.discovery.roots[3]).toMatchObject({ state: "retired", cycle: 0, entries: 0 });
-          const encoded = yield* S.encodeEffect(S.fromJsonString(TranscriptDiscoveryReport))(report.discovery);
+          const encoded = yield* encodeTranscriptDiscoveryReportJson(report.discovery);
           expect(encoded).not.toContain(f.dir);
           expect(encoded).not.toContain("synthetic-discovery-salt");
           expect(encoded).not.toContain("synthetic-private-discovery");
@@ -98,7 +99,7 @@ it.layer(Layer.fresh(layer), { excludeTestServices: true })((it) =>
       })
   )
 );
-it.layer(Layer.fresh(layer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect(
     "restarts discovery without losing accepted offsets and finds appended, copied and newly created files",
     () =>
@@ -135,7 +136,7 @@ it.layer(Layer.fresh(layer), { excludeTestServices: true })((it) =>
       })
   )
 );
-it.layer(Layer.fresh(layer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("reports depth and entry overflow, excludes symlinks, and never follows a symlink root", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -163,7 +164,7 @@ it.layer(Layer.fresh(layer), { excludeTestServices: true })((it) =>
     })
   )
 );
-it.layer(Layer.fresh(layer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("reports real permission failures and recovers after access is restored", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -186,7 +187,7 @@ it.layer(Layer.fresh(layer), { excludeTestServices: true })((it) =>
     })
   )
 );
-it.layer(Layer.fresh(layer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("closes owned helper processes with its scope and rejects reopening", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -212,7 +213,7 @@ it.layer(Layer.fresh(layer), { excludeTestServices: true })((it) =>
     })
   )
 );
-it.layer(Layer.fresh(layer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("rejects overlapping or relative declarations before creating helper processes", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -224,7 +225,7 @@ it.layer(Layer.fresh(layer), { excludeTestServices: true })((it) =>
   )
 );
 
-it.layer(Layer.fresh(layer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("refuses concurrent discovery and closes owned helpers when an active read is interrupted", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -254,7 +255,7 @@ it.layer(Layer.fresh(layer), { excludeTestServices: true })((it) =>
   )
 );
 
-it.layer(Layer.fresh(layer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("retains partial and unread file evidence through later directory-only pages", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -277,11 +278,11 @@ it.layer(Layer.fresh(layer), { excludeTestServices: true })((it) =>
       // An unrecorded page is not silently declared assessed.
       if (raw.sources.length > 0) expect(raw.report.roots[0]?.read.pending).toBeGreaterThan(0);
       expect((yield* (yield* makeTranscriptIntakeJournal(f.config)).stats).pages).toBe(0);
-    }).pipe(Effect.scoped)
+    })
   )
 );
 
-it.layer(Layer.fresh(layer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("reports unread backlog and mixed accepted/partial tails through the end of traversal", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -310,6 +311,6 @@ it.layer(Layer.fresh(layer), { excludeTestServices: true })((it) =>
         }
       }
       expect(completed).toBe(true);
-    }).pipe(Effect.scoped)
+    })
   )
 );

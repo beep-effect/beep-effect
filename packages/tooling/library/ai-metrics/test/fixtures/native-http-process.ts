@@ -19,10 +19,14 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
 
+const decodeArguments = S.decodeUnknownEffect(
+  S.Tuple([S.Literals(["inspect", "serve", "before-commit", "after-commit"]), S.String, S.String, S.String, S.String])
+);
+const encodeJsonValue = S.encodeEffect(S.fromJsonString(S.Unknown));
+const isStringRows = S.is(S.Array(S.String));
+
 const program = Effect.gen(function* () {
-  const [mode, databasePath, readyPath, resultPath, markerPath] = yield* S.decodeUnknownEffect(
-    S.Tuple([S.Literals(["inspect", "serve", "before-commit", "after-commit"]), S.String, S.String, S.String, S.String])
-  )(A.drop(process.argv, 2));
+  const [mode, databasePath, readyPath, resultPath, markerPath] = yield* decodeArguments(A.drop(process.argv, 2));
   const fs = yield* FileSystem.FileSystem;
   const client = yield* SqliteClient.make({ filename: databasePath });
   const salt = "synthetic-native-http-crash-salt";
@@ -34,7 +38,7 @@ const program = Effect.gen(function* () {
     maxDatabasePages: 256,
   });
   const writeJson = (path: string, value: unknown) =>
-    S.encodeEffect(S.fromJsonString(S.Unknown))(value).pipe(
+    encodeJsonValue(value).pipe(
       Effect.flatMap((text) => fs.writeFileString(`${path}.partial`, text, { mode: 0o600 })),
       Effect.andThen(fs.rename(`${path}.partial`, path))
     );
@@ -44,7 +48,7 @@ const program = Effect.gen(function* () {
       const fragments: unknown = parameters[0];
       if (
         mode === "before-commit" &&
-        S.is(S.Array(S.String))(fragments) &&
+        isStringRows(fragments) &&
         Str.includes("INSERT INTO observation_native_receipts")(fragments[0] ?? "")
       ) {
         return Effect.gen(function* () {

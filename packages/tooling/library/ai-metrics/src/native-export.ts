@@ -6,14 +6,19 @@
 import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { DeliveryAttempt } from "./delivery-ledger.ts";
-import { nativeTraceWire } from "./internal/native-trace-wire.ts";
+import {
+  encodeObservationTraceWire,
+  otlpBooleanAttribute as flag,
+  hashObservationPayload,
+  otlpIntegerAttribute as integer,
+  otlpStringAttribute as text,
+} from "./internal/native-trace-wire.ts";
 import { NativeTraceMetadata } from "./native-trace.ts";
 
 const $I = $RepoAiMetricsId.create("native-export");
@@ -90,9 +95,6 @@ export class NativeExportError extends S.TaggedError<NativeExportError, { readon
   { reason: S.Literals(["encoding", "namespace", "digest"]) },
   $I.annote("NativeExportError", { description: "Safe native export projection refusal." })
 ) {}
-const text = (key: string, stringValue: string) => ({ key, value: { stringValue } });
-const integer = (key: string, value: number) => ({ key, value: { intValue: `${value}` } });
-const flag = (key: string, boolValue: boolean) => ({ key, value: { boolValue } });
 const sum = (values: ReadonlyArray<O.Option<number>>) => {
   if (A.some(values, O.isNone)) return O.none<number>();
   const total = A.reduce(A.getSomes(values), 0, (a, b) => a + b);
@@ -202,31 +204,14 @@ export const encodeNativeTraceBatch = Effect.fn("AiMetrics.encodeNativeTraceBatc
       };
     })
   ).pipe(Effect.mapError(() => NativeExportError.make({ reason: "encoding" })));
-  const body = yield* Effect.try({
-    try: () =>
-      nativeTraceWire
-        .encode({
-          resourceSpans: [
-            {
-              resource: {
-                attributes: [
-                  text("service.name", "beep-agent-observability"),
-                  text("openinference.project.name", input.project),
-                  text("ai_metrics.host_id", input.hostId),
-                  text("ai_metrics.namespace_id", input.namespaceId),
-                ],
-              },
-              scopeSpans: [{ scope: { name: "beep.agent-observation", version: "native-export/v1" }, spans }],
-            },
-          ],
-        })
-        .finish(),
-    catch: () => NativeExportError.make({ reason: "encoding" }),
-  });
-  const crypto = yield* Crypto.Crypto;
-  const payloadDigest = yield* crypto.digest("SHA-256", body).pipe(
-    Effect.map(Hex.encode),
-    Effect.flatMap(S.decodeUnknownEffect(Sha256Hex)),
+  const body = yield* encodeObservationTraceWire(
+    input.project,
+    input.hostId,
+    input.namespaceId,
+    "native-export/v1",
+    spans
+  ).pipe(Effect.mapError(() => NativeExportError.make({ reason: "encoding" })));
+  const payloadDigest = yield* hashObservationPayload(body).pipe(
     Effect.mapError(() => NativeExportError.make({ reason: "digest" }))
   );
   return yield* S.decodeEffect(NativeEncodedBatch)({

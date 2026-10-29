@@ -61,6 +61,7 @@ const heartbeat = (activity: "active" | "idle" | "failed") =>
 const population = (ids: ReadonlyArray<Sha256Hex>) =>
   ObservationPopulation.cases.Enumerated.make({ ids, evidenceId: id("e") });
 const encodeRaw = S.encodeEffect(S.fromJsonString(S.Unknown));
+const encodeObservationInventoryJson = S.encodeEffect(S.fromJsonString(ObservationInventory));
 
 describe("declared observability inventory", () => {
   it("represents every requested harness without claiming capability", () => {
@@ -229,7 +230,7 @@ describe("declared observability inventory", () => {
   });
   it.effect("rejects unexpected content without exposing it in boundary errors", () =>
     Effect.gen(function* () {
-      const encoded = yield* S.encodeEffect(S.fromJsonString(ObservationInventory))(inventory([route()]));
+      const encoded = yield* encodeObservationInventoryJson(inventory([route()]));
       expect(summarizeObservationInventory(yield* decodeObservationInventory(encoded)).declaredRoutes).toBe(1);
       const valid = yield* S.encodeEffect(ObservationInventory)(inventory([route()]));
       const bad = yield* encodeRaw({ ...valid, secret: "synthetic-content-must-not-leak" });

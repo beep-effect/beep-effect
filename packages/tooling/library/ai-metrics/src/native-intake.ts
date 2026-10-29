@@ -4,10 +4,11 @@
  * @since 0.0.0
  */
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { Sha256Hex } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
@@ -15,14 +16,19 @@ import * as Tuple from "effect/Tuple";
 import { requireDispositionCapacity } from "./internal/disposition-capacity.ts";
 import { NativeTraceBatch, NativeTraceMetadata } from "./native-trace.ts";
 import { hashPublicTextSha256 } from "./privacy.ts";
-import { makeTranscriptIntakeJournal, TranscriptAcceptance, TranscriptIntakeError } from "./transcript-intake.ts";
+import {
+  makeTranscriptIntakeJournal,
+  sanitizeTranscriptIntakeError,
+  TranscriptAcceptance,
+  TranscriptIntakeError,
+} from "./transcript-intake.ts";
 import type { TranscriptIntakeConfig } from "./transcript-intake.ts";
 
 const $I = $RepoAiMetricsId.create("native-intake");
 /**
  * Durable local native admission counts and precise conflict positions.
  *
- * **Example**
+ * **Example** (Inspect native intake receipt)
  * ```ts
  * import { NativeIntakeReceipt } from "@beep/repo-ai-metrics/native-intake"
  * console.log(typeof NativeIntakeReceipt.make)
@@ -61,19 +67,38 @@ export class NativeIntakeReceipt extends S.Opaque<NativeIntakeReceipt, { readonl
     )
     .pipe($I.annoteSchema("NativeIntakeReceipt", { description: "Post-commit local native admission receipt." }))
 ) {}
+const SpanAdmission = LiteralKit(["new", "duplicate", "conflict", "expired"]).pipe(
+  $I.annoteSchema("SpanAdmission", {
+    description: "Per-occurrence native identity admission decision within the intake transaction.",
+  })
+);
 const failure = (reason: TranscriptIntakeError["reason"]) => TranscriptIntakeError.make({ reason });
-const safe = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
-  effect.pipe(Effect.mapError((error) => (S.is(TranscriptIntakeError)(error) ? error : failure("storage"))));
+const safe = Effect.mapError(sanitizeTranscriptIntakeError);
 const PayloadRows = S.Array(S.Struct({ payload: S.String }));
 const encodeBatch = S.encodeEffect(S.fromJsonString(NativeTraceBatch));
 const decodeBatch = S.decodeEffect(S.fromJsonString(NativeTraceBatch), { onExcessProperty: "error" });
 const encodeReceipt = S.encodeEffect(S.fromJsonString(NativeIntakeReceipt));
 const decodeReceipt = S.decodeEffect(S.fromJsonString(NativeIntakeReceipt), { onExcessProperty: "error" });
+const decodePayloadPayloadHashRecordRows = S.decodeUnknownEffect(
+  S.Array(S.Struct({ payload: S.String, payloadHash: Sha256Hex }))
+);
+const encodeTranscriptAcceptanceJson = S.encodeEffect(S.fromJsonString(TranscriptAcceptance));
+const encodeNativeTraceMetadataJson = S.encodeEffect(S.fromJsonString(NativeTraceMetadata));
+const decodeDigestReceiptIdRecordRows = S.decodeUnknownEffect(
+  S.Array(S.Struct({ digest: Sha256Hex, receiptId: Sha256Hex }))
+);
+const decodePayloadHashReceiptIdRecordRows = S.decodeUnknownEffect(
+  S.Array(S.Struct({ payloadHash: Sha256Hex, receiptId: Sha256Hex }))
+);
+const decodeArguments = S.decodeUnknownEffect(S.Tuple([TranscriptAcceptance]));
+const decodeEventIdPayloadHashRecordRows = S.decodeUnknownEffect(
+  S.Array(S.Struct({ eventId: Sha256Hex, payloadHash: Sha256Hex, spanIndex: S.Natural }))
+);
 
 /**
  * Open native admission over the same owned SQLite profile and shared page budget.
  *
- * **Example**
+ * **Example** (Open a bounded native journal)
  * ```ts
  * import { makeNativeIntakeJournal } from "@beep/repo-ai-metrics/native-intake"
  * console.log(typeof makeNativeIntakeJournal)
@@ -93,9 +118,7 @@ export const makeNativeIntakeJournal = Effect.fn("AiMetrics.makeNativeIntakeJour
             Effect.gen(function* () {
               const rows =
                 yield* sql`SELECT substr(payload,1,65537) AS payload, payload_hash AS "payloadHash" FROM observation_native_receipts WHERE receipt_id=${receiptId}`.pipe(
-                  Effect.flatMap(
-                    S.decodeUnknownEffect(S.Array(S.Struct({ payload: S.String, payloadHash: Sha256Hex })))
-                  )
+                  Effect.flatMap(decodePayloadPayloadHashRecordRows)
                 );
               if (rows[0] === undefined) return O.none<NativeIntakeReceipt>();
               if ((yield* hashPublicTextSha256(rows[0].payload)) !== rows[0].payloadHash)
@@ -106,6 +129,12 @@ export const makeNativeIntakeJournal = Effect.fn("AiMetrics.makeNativeIntakeJour
             })
           )
         );
+        const missingBatch = Effect.fnUntraced(function* (receiptId: Sha256Hex) {
+          const disposed = yield* base.readDisposition(receiptId);
+          if (O.isSome(disposed))
+            return yield* failure(disposed.value.reason === "retention-expired" ? "expired" : "reclaimed");
+          return O.none<NativeTraceBatch>();
+        });
         const readBatch = Effect.fn("AiMetrics.nativeIntake.readBatch")((receiptId: Sha256Hex) =>
           safe(
             Effect.gen(function* () {
@@ -115,12 +144,7 @@ export const makeNativeIntakeJournal = Effect.fn("AiMetrics.makeNativeIntakeJour
                 yield* sql`SELECT substr(payload,1,4194305) AS payload FROM observation_intake_pages WHERE receipt_id=${receiptId} AND source_key LIKE 'native:%'`.pipe(
                   Effect.flatMap(S.decodeUnknownEffect(PayloadRows))
                 );
-              if (rows[0] === undefined) {
-                const disposed = yield* base.readDisposition(receiptId);
-                if (O.isSome(disposed))
-                  return yield* failure(disposed.value.reason === "retention-expired" ? "expired" : "reclaimed");
-                return O.none<NativeTraceBatch>();
-              }
+              if (rows[0] === undefined) return yield* missingBatch(receiptId);
               if (
                 (yield* hashPublicTextSha256(
                   accepted.value.page.evidenceEpoch === 0
@@ -133,6 +157,82 @@ export const makeNativeIntakeJournal = Effect.fn("AiMetrics.makeNativeIntakeJour
             })
           )
         );
+        const checkReplayReference = Effect.fnUntraced(function* (
+          span: NativeTraceMetadata,
+          index: number,
+          replay: NativeIntakeReceipt
+        ) {
+          if (A.contains(replay.conflictIndices, index) || A.contains(replay.expiredIndices, index)) return;
+          const encoded = yield* encodeNativeTraceMetadataJson(span);
+          const digest = yield* hashPublicTextSha256(encoded);
+          const original =
+            yield* sql`SELECT payload_hash AS digest,receipt_id AS "receiptId" FROM observation_native_events WHERE event_id=${span.eventId}`.pipe(
+              Effect.flatMap(decodeDigestReceiptIdRecordRows)
+            );
+          if (original[0] === undefined || original[0].digest !== digest) return yield* failure("storage");
+          const canonicalDisposition = yield* base.readDisposition(original[0].receiptId);
+          if (O.isSome(canonicalDisposition) && canonicalDisposition.value.reason === "retention-expired")
+            return yield* failure("expired");
+        });
+        const checkReplay = Effect.fnUntraced(function* (
+          receiptId: Sha256Hex,
+          replay: NativeIntakeReceipt,
+          batch: NativeTraceBatch
+        ) {
+          const disposed = yield* base.readDisposition(receiptId);
+          if (O.isSome(disposed)) {
+            if (disposed.value.reason === "retention-expired") return yield* failure("expired");
+            if (
+              (yield* encodeTranscriptAcceptanceJson(disposed.value.page)) !==
+              (yield* encodeTranscriptAcceptanceJson(replay.page))
+            )
+              return yield* failure("storage");
+          } else if (O.isNone(yield* readNewEvents(receiptId))) return yield* failure("storage");
+          for (const [span, index] of A.map(batch.spans, (span, index) => Tuple.make(span, index)))
+            yield* checkReplayReference(span, index, replay);
+          return replay;
+        });
+        const admitSpan = Effect.fnUntraced(function* (span: NativeTraceMetadata, index: number, receiptId: Sha256Hex) {
+          const spanPayload = yield* encodeNativeTraceMetadataJson(span);
+          const payloadHash = yield* hashPublicTextSha256(spanPayload);
+          const existing =
+            yield* sql`SELECT payload_hash AS "payloadHash",receipt_id AS "receiptId" FROM observation_native_events WHERE event_id=${span.eventId}`.pipe(
+              Effect.flatMap(decodePayloadHashReceiptIdRecordRows)
+            );
+          if (existing[0] === undefined) {
+            yield* sql`INSERT INTO observation_native_events(event_id,payload_hash,receipt_id,span_index) VALUES(${span.eventId},${payloadHash},${receiptId},${index})`;
+            return SpanAdmission.Enum.new;
+          }
+          if (existing[0].payloadHash !== payloadHash) return SpanAdmission.Enum.conflict;
+          const disposed = yield* base.readDisposition(existing[0].receiptId);
+          if (O.isSome(disposed) && disposed.value.reason === "retention-expired") return SpanAdmission.Enum.expired;
+          return SpanAdmission.Enum.duplicate;
+        });
+        const admitSpans = Effect.fnUntraced(function* (batch: NativeTraceBatch, receiptId: Sha256Hex) {
+          let newEvents = 0;
+          let duplicates = 0;
+          let conflictIndices: ReadonlyArray<number> = [];
+          let expiredIndices: ReadonlyArray<number> = [];
+          for (const [span, index] of A.map(batch.spans, (span, index) => Tuple.make(span, index))) {
+            const admission = yield* admitSpan(span, index, receiptId);
+            Match.value(admission).pipe(
+              Match.when("new", () => {
+                newEvents += 1;
+              }),
+              Match.when("duplicate", () => {
+                duplicates += 1;
+              }),
+              Match.when("conflict", () => {
+                conflictIndices = A.append(conflictIndices, index);
+              }),
+              Match.when("expired", () => {
+                expiredIndices = A.append(expiredIndices, index);
+              }),
+              Match.exhaustive
+            );
+          }
+          return { newEvents, duplicates, conflictIndices, expiredIndices };
+        });
         const acceptBatch = Effect.fn("AiMetrics.nativeIntake.acceptBatch")((batch: NativeTraceBatch) =>
           safe(
             Effect.gen(function* () {
@@ -154,37 +254,7 @@ export const makeNativeIntakeJournal = Effect.fn("AiMetrics.makeNativeIntakeJour
                       : `native-acceptance/v2:${config.hostId}:${config.namespaceId}:${window.epoch}:${payload}`
                   );
                   const replay = yield* receipt(receiptId);
-                  if (O.isSome(replay)) {
-                    const disposed = yield* base.readDisposition(receiptId);
-                    if (O.isSome(disposed)) {
-                      if (disposed.value.reason === "retention-expired") return yield* failure("expired");
-                      if (
-                        (yield* S.encodeEffect(S.fromJsonString(TranscriptAcceptance))(disposed.value.page)) !==
-                        (yield* S.encodeEffect(S.fromJsonString(TranscriptAcceptance))(replay.value.page))
-                      )
-                        return yield* failure("storage");
-                    } else if (O.isNone(yield* readNewEvents(receiptId))) return yield* failure("storage");
-                    for (const [span, index] of A.map(batch.spans, (span, index) => Tuple.make(span, index))) {
-                      if (
-                        A.contains(replay.value.conflictIndices, index) ||
-                        A.contains(replay.value.expiredIndices, index)
-                      )
-                        continue;
-                      const encoded = yield* S.encodeEffect(S.fromJsonString(NativeTraceMetadata))(span);
-                      const digest = yield* hashPublicTextSha256(encoded);
-                      const original =
-                        yield* sql`SELECT payload_hash AS digest,receipt_id AS "receiptId" FROM observation_native_events WHERE event_id=${span.eventId}`.pipe(
-                          Effect.flatMap(
-                            S.decodeUnknownEffect(S.Array(S.Struct({ digest: Sha256Hex, receiptId: Sha256Hex })))
-                          )
-                        );
-                      if (original[0] === undefined || original[0].digest !== digest) return yield* failure("storage");
-                      const canonicalDisposition = yield* base.readDisposition(original[0].receiptId);
-                      if (O.isSome(canonicalDisposition) && canonicalDisposition.value.reason === "retention-expired")
-                        return yield* failure("expired");
-                    }
-                    return replay.value;
-                  }
+                  if (O.isSome(replay)) return yield* checkReplay(receiptId, replay.value, batch);
                   yield* requireDispositionCapacity.pipe(
                     Effect.provideService(SqlClient.SqlClient, sql),
                     Effect.mapError((error) => failure(error === "disposition-capacity" ? "capacity" : "storage"))
@@ -195,39 +265,17 @@ export const makeNativeIntakeJournal = Effect.fn("AiMetrics.makeNativeIntakeJour
                     stats.payloadBytes + (yield* base.reservedLaunchBytes) + payloadBytes > config.maxPayloadBytes
                   )
                     return yield* failure("capacity");
-                  let newEvents = 0;
-                  let duplicates = 0;
-                  let conflictIndices: ReadonlyArray<number> = [];
-                  let expiredIndices: ReadonlyArray<number> = [];
-                  for (const [span, index] of A.map(batch.spans, (span, index) => Tuple.make(span, index))) {
-                    const spanPayload = yield* S.encodeEffect(S.fromJsonString(NativeTraceMetadata))(span);
-                    const payloadHash = yield* hashPublicTextSha256(spanPayload);
-                    const existing =
-                      yield* sql`SELECT payload_hash AS "payloadHash",receipt_id AS "receiptId" FROM observation_native_events WHERE event_id=${span.eventId}`.pipe(
-                        Effect.flatMap(
-                          S.decodeUnknownEffect(S.Array(S.Struct({ payloadHash: Sha256Hex, receiptId: Sha256Hex })))
-                        )
-                      );
-                    if (existing[0] !== undefined) {
-                      if (existing[0].payloadHash !== payloadHash) conflictIndices = A.append(conflictIndices, index);
-                      else {
-                        const disposed = yield* base.readDisposition(existing[0].receiptId);
-                        if (O.isSome(disposed) && disposed.value.reason === "retention-expired")
-                          expiredIndices = A.append(expiredIndices, index);
-                        else duplicates += 1;
-                      }
-                    } else {
-                      yield* sql`INSERT INTO observation_native_events(event_id,payload_hash,receipt_id,span_index) VALUES(${span.eventId},${payloadHash},${receiptId},${index})`;
-                      newEvents += 1;
-                    }
-                  }
+                  const { newEvents, duplicates, conflictIndices, expiredIndices } = yield* admitSpans(
+                    batch,
+                    receiptId
+                  );
                   const accepted = newEvents + duplicates;
                   const at = yield* Clock.currentTimeMillis;
                   yield* sql`INSERT INTO observation_intake_pages(receipt_id,source_key,payload,payload_bytes,frames,accepted_at,evidence_epoch)
         VALUES(${receiptId},${`native:${batch.routeId}`},${payload},${payloadBytes},${accepted},${at},${window.epoch})`;
                   const pages =
                     yield* sql`SELECT receipt_id AS "receiptId", sequence, accepted_at AS "acceptedAt", payload_bytes AS "payloadBytes", frames,evidence_epoch AS "evidenceEpoch" FROM observation_intake_pages WHERE receipt_id=${receiptId}`.pipe(
-                      Effect.flatMap(S.decodeUnknownEffect(S.Tuple([TranscriptAcceptance])))
+                      Effect.flatMap(decodeArguments)
                     );
                   const acceptedReceipt = NativeIntakeReceipt.make({
                     page: pages[0],
@@ -256,18 +304,14 @@ export const makeNativeIntakeJournal = Effect.fn("AiMetrics.makeNativeIntakeJour
               if (O.isNone(batch)) return yield* failure("storage");
               const rows =
                 yield* sql`SELECT event_id AS "eventId", payload_hash AS "payloadHash", span_index AS "spanIndex" FROM observation_native_events WHERE receipt_id=${receiptId} ORDER BY span_index LIMIT 1025`.pipe(
-                  Effect.flatMap(
-                    S.decodeUnknownEffect(
-                      S.Array(S.Struct({ eventId: Sha256Hex, payloadHash: Sha256Hex, spanIndex: S.Natural }))
-                    )
-                  )
+                  Effect.flatMap(decodeEventIdPayloadHashRecordRows)
                 );
               if (rows.length !== storedReceipt.value.newEvents) return yield* failure("storage");
               const events = yield* Effect.forEach(rows, (row) =>
                 Effect.gen(function* () {
                   const span = batch.value.spans[row.spanIndex];
                   if (span === undefined || span.eventId !== row.eventId) return yield* failure("storage");
-                  const payload = yield* S.encodeEffect(S.fromJsonString(NativeTraceMetadata))(span);
+                  const payload = yield* encodeNativeTraceMetadataJson(span);
                   if ((yield* hashPublicTextSha256(payload)) !== row.payloadHash) return yield* failure("storage");
                   return span;
                 })

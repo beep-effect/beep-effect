@@ -71,6 +71,8 @@ export class ObservationWorkerConfig extends S.Opaque<ObservationWorkerConfig, {
     })
   )
 ) {}
+const decodeTranscriptAcceptanceRows = S.decodeUnknownEffect(S.Array(TranscriptAcceptance).check(S.isMaxLength(32)));
+
 /**
  * Compose intake, delivery, read-back, source sweeps and reversible maintenance.
  * **Example** (Inspecting the worker factory)
@@ -150,7 +152,7 @@ export const makeObservationWorker = Effect.fn("AiMetrics.makeObservationWorker"
         Effect.gen(function* () {
           yield* S.decodeEffect(S.Natural)(afterSequence);
           return yield* sql`SELECT receipt_id AS "receiptId", sequence, accepted_at AS "acceptedAt", payload_bytes AS "payloadBytes", frames, evidence_epoch AS "evidenceEpoch" FROM observation_intake_pages WHERE sequence > ${afterSequence} ORDER BY sequence LIMIT 32`.pipe(
-            Effect.flatMap(S.decodeUnknownEffect(S.Array(TranscriptAcceptance).check(S.isMaxLength(32))))
+            Effect.flatMap(decodeTranscriptAcceptanceRows)
           );
         })
       ),

@@ -5,7 +5,7 @@
     "title": "Trustworthy agent observability foundation",
     "status": "active",
     "created": "2026-10-27",
-    "updated": "2026-10-28",
+    "updated": "2026-10-29",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/agent-observability-foundation",
@@ -59,12 +59,12 @@
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P4",
@@ -84,7 +84,7 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Explicitly launched 2026-10-27. Synthetic proof and implementation active; recovery hold preserved. See research/IMPLEMENTATION.md.",
+  "statusNote": "Delivery active in separate current-main checkout; Dankserver draft PR 3 published, Beep committed but pre-push quality repairs remain. Recovery hold intact.",
   "resumeConditions": [
     "Explicit launch of this packet after dependency proof; refresh live state before changes."
   ],

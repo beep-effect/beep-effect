@@ -420,6 +420,22 @@ try:
     start(root,expected_refusal='resources',overrides={'UMask':'0022'})
     assert hashlib.sha256((root/'journal.sqlite').read_bytes()).hexdigest()==original_digest
     evidence['unsafeCreationModeRefused']=True
+    # Startup-only refusal checks: no allocation stress or deliberate OOM.
+    resource_refusals = [
+        ('memory-ceiling', {'MemoryMax':'3221225472'}),
+        ('swap-allowance', {'MemorySwapMax':'1048576'}),
+        ('task-ceiling', {'TasksMax':'129'}),
+        ('cpu-ceiling', {'CPUQuota':'200%'}),
+        ('descriptor-ceiling', {'LimitNOFILE':'512'}),
+        ('file-ceiling', {'LimitFSIZE':'67108865'}),
+        ('file-headroom', {'LimitFSIZE':'1048575'}),
+        ('core-dump-enabled', {'LimitCORE':'1048576'}),
+    ]
+    evidence['resourceRefusals']=[]
+    for label, overrides in resource_refusals:
+        start(root,expected_refusal='resources',overrides=overrides)
+        assert hashlib.sha256((root/'journal.sqlite').read_bytes()).hexdigest()==original_digest
+        evidence['resourceRefusals'].append({'case':label,'overrides':overrides,'journalUnchanged':True})
     # Refuse symlink databases and active sockets without touching unrelated state.
     symlink_root=Path(tempfile.mkdtemp(prefix='obs-link-',dir='/tmp'))
     evidence['symlinkFixture']=str(symlink_root)
@@ -451,6 +467,6 @@ finally:
     backend.shutdown()
     backend.server_close()
     backend_thread.join(timeout=3)
-    evidence['sourceSha256']={str(file.relative_to(workspace)):hashlib.sha256(file.read_bytes()).hexdigest() for file in [entry,writer,client_fixture,managed_fixture,managed_peer,owner_fixture,workspace/'packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.observation.ts',workspace/'packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.observation.command.ts',workspace/'packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.command.ts',workspace/'packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.runtime.ts',workspace/'packages/tooling/library/ai-metrics/src/observation-launch-claims.ts',workspace/'packages/tooling/library/ai-metrics/src/observation-claim-population.ts',workspace/'packages/drivers/ai-provider-cli/src/AiProviderCliSession.lifecycle.ts',workspace/'packages/drivers/ai-provider-cli/src/AiProviderCliSession.service.ts',workspace/'packages/drivers/ai-provider-cli/src/AiProviderCliSession.stdio.service.ts',workspace/'packages/drivers/ai-provider-cli/src/AiProviderCliSession.claude.service.ts',workspace/'packages/tooling/library/ai-metrics/src/observation-launch-client.ts',workspace/'packages/tooling/library/ai-metrics/src/observation-launch-http.ts',workspace/'packages/tooling/library/ai-metrics/src/observation-launch-facts.ts',workspace/'packages/tooling/library/ai-metrics/src/observation-worker.ts',workspace/'packages/tooling/library/ai-metrics/src/internal/observation-http-body.ts',workspace/'packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts',workspace/'packages/tooling/library/ai-metrics/src/observation-launch.ts',workspace/'packages/tooling/library/ai-metrics/src/observation-runtime.ts',workspace/'packages/tooling/library/ai-metrics/src/observation-source-health.ts',workspace/'packages/tooling/library/ai-metrics/src/transcript-discovery.ts',workspace/'packages/tooling/library/ai-metrics/src/transcript-sweep.ts',Path(__file__).resolve()]}
+    evidence['sourceSha256']={str(file.relative_to(workspace)):hashlib.sha256(file.read_bytes()).hexdigest() for file in [entry,writer,client_fixture,managed_fixture,managed_peer,owner_fixture,workspace/'packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.observation.ts',workspace/'packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.observation.command.ts',workspace/'packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.command.ts',workspace/'packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.runtime.ts',workspace/'packages/tooling/library/ai-metrics/src/observation-launch-claims.ts',workspace/'packages/tooling/library/ai-metrics/src/observation-claim-population.ts',workspace/'packages/drivers/ai-provider-cli/src/AiProviderCliSession.lifecycle.ts',workspace/'packages/drivers/ai-provider-cli/src/AiProviderCliSession.service.ts',workspace/'packages/drivers/ai-provider-cli/src/AiProviderCliSession.stdio.service.ts',workspace/'packages/drivers/ai-provider-cli/src/AiProviderCliSession.claude.service.ts',workspace/'packages/tooling/library/ai-metrics/src/observation-launch-client.ts',workspace/'packages/tooling/library/ai-metrics/src/observation-launch-http.ts',workspace/'packages/tooling/library/ai-metrics/src/observation-launch-facts.ts',workspace/'packages/tooling/library/ai-metrics/src/observation-worker.ts',workspace/'packages/tooling/library/ai-metrics/src/internal/observation-http-body.ts',workspace/'packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts',workspace/'packages/tooling/library/ai-metrics/src/observation-launch.ts',workspace/'packages/tooling/library/ai-metrics/src/observation-file.ts',workspace/'packages/tooling/library/ai-metrics/src/observation-runtime.ts',workspace/'packages/tooling/library/ai-metrics/src/observation-source-health.ts',workspace/'packages/tooling/library/ai-metrics/src/transcript-discovery.ts',workspace/'packages/tooling/library/ai-metrics/src/transcript-sweep.ts',Path(__file__).resolve()]}
     (root/'evidence.json').write_text(json.dumps(evidence,indent=2)+'\n')
     print(json.dumps({'result':evidence['result'],'evidence':str(root/'evidence.json'),'productionRollout':False}))

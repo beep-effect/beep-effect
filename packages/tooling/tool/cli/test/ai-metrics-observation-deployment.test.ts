@@ -1,3 +1,4 @@
+import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { aiMetricsCommand } from "@beep/repo-cli/commands/AIMetrics";
 import {
   ObservationDeploymentPlan,
@@ -5,13 +6,18 @@ import {
   renderObservationDeployment,
 } from "@beep/repo-cli/commands/AIMetrics/internal/ObservationDeployment";
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
+import * as NodePath from "@effect/platform-node/NodePath";
+import * as NodeStdio from "@effect/platform-node/NodeStdio";
+import * as NodeTerminal from "@effect/platform-node/NodeTerminal";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
@@ -26,22 +32,39 @@ const input = {
   intakePort: 14318,
   runtimeMaxSeconds: 60,
 };
+// Command dispatch requires the platform capabilities for all branches. These
+// fixtures only read synthetic files; an attempted subprocess is a test defect.
+const testServices = Layer.mergeAll(
+  MemoryFileSystem.layer,
+  NodeCrypto.layer,
+  NodePath.layer,
+  NodeStdio.layer,
+  NodeTerminal.layer,
+  Layer.succeed(
+    ChildProcessSpawner.ChildProcessSpawner,
+    ChildProcessSpawner.make(() => Effect.die("Unexpected subprocess in synthetic command fixture"))
+  )
+);
+
 const run = Command.runWith(aiMetricsCommand, { version: "proof", renderErrors: false });
 const directory = FileSystem.FileSystem.use((fs) =>
   Effect.acquireRelease(fs.makeTempDirectory(), (path) => fs.remove(path, { recursive: true }).pipe(Effect.orDie))
 );
+const encodeJsonValue = S.encodeEffect(S.fromJsonString(S.Unknown));
+const decodeObservationDeploymentPlanJson = S.decodeEffect(S.fromJsonString(ObservationDeploymentPlan));
+const decodeJsonValue = S.decodeEffect(S.fromJsonString(S.Unknown));
 
-it.layer(NodeServices.layer, { concurrent: false })("Observation deployment plan", (it) => {
+it.layer(testServices, { timeout: "30 seconds", concurrent: false })("Observation deployment plan", (it) => {
   it.effect("renders through the registered command without installing or resuming services", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const root = yield* directory;
       const request = `${root}/request.json`;
-      yield* fs.writeFileString(request, yield* S.encodeEffect(S.fromJsonString(S.Unknown))(input));
+      yield* fs.writeFileString(request, yield* encodeJsonValue(input));
       yield* run(["install", "observation-plan", "--input", request]);
       const lines = yield* TestConsole.logLines;
       const text = A.join(A.filter(lines, S.is(S.String)), "\n");
-      const plan = yield* S.decodeEffect(S.fromJsonString(ObservationDeploymentPlan))(text);
+      const plan = yield* decodeObservationDeploymentPlanJson(text);
       expect(plan.workerUnit).toContain("RuntimeMaxSec=60");
       expect(plan.workerUnit).toContain("--nonblock --no-fork --conflict-exit-code 73");
       expect(plan.workerUnit).toContain("MemorySwapMax=0");
@@ -56,7 +79,7 @@ it.layer(NodeServices.layer, { concurrent: false })("Observation deployment plan
       expect(plan.workerUnit).not.toContain("[Install]");
       expect(plan.workerUnit).not.toContain("resume");
       expect(plan.intakeUnit).toContain("BindsTo=beep-observation-proof.service");
-      const config = yield* S.decodeEffect(S.fromJsonString(S.Unknown))(plan.intakeConfig);
+      const config = yield* decodeJsonValue(plan.intakeConfig);
       expect(config).toMatchObject({
         admin: { disabled: true, config: { persist: false } },
         logging: { logs: { default: { writer: { output: "discard" } } } },
@@ -143,9 +166,7 @@ it.layer(NodeServices.layer, { concurrent: false })("Observation deployment plan
       const bodies = [
         new TextEncoder().encode(Str.repeat(17000)("PRIVATE")),
         new Uint8Array([255]),
-        new TextEncoder().encode(
-          yield* S.encodeEffect(S.fromJsonString(S.Unknown))({ ...input, credential: "PRIVATE" })
-        ),
+        new TextEncoder().encode(yield* encodeJsonValue({ ...input, credential: "PRIVATE" })),
       ];
       for (const body of bodies) {
         yield* fs.writeFile(request, body);

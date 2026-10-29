@@ -50,6 +50,9 @@ export class SelectionError extends S.TaggedError<SelectionError, { readonly bra
   $I.annote("SelectionError", { description: "Safe retained-page selection refusal." })
 ) {}
 const failure = () => TranscriptIntakeError.make({ reason: "storage" });
+const decodeRowRows = S.decodeUnknownEffect(S.Array(Row));
+const decodeTranscriptPageJson = S.decodeEffect(S.fromJsonString(TranscriptPage), { onExcessProperty: "error" });
+
 /**
  * Read only canonical retained pages and reconstruct their deterministic wire bytes.
  * **Example** (Sharing verified pages)
@@ -64,7 +67,7 @@ export const makeObservationExportReader = Effect.fn("AiMetrics.makeObservationE
   const read = Effect.fn("AiMetrics.observationExport.read")(function* (receiptId: Sha256Hex) {
     const rows =
       yield* sql`SELECT substr(payload,1,4194305) AS payload,source_key AS "sourceKey",receipt_id AS "receiptId",sequence,accepted_at AS "acceptedAt",payload_bytes AS "payloadBytes",frames,evidence_epoch AS "evidenceEpoch" FROM observation_intake_pages WHERE receipt_id=${receiptId}`.pipe(
-        Effect.flatMap(S.decodeUnknownEffect(S.Array(Row)))
+        Effect.flatMap(decodeRowRows)
       );
     const row = rows[0];
     if (row === undefined) return O.none<typeof AcceptedPage.Type>();
@@ -82,7 +85,7 @@ export const makeObservationExportReader = Effect.fn("AiMetrics.makeObservationE
         : `transcript-acceptance/v2:${intake.hostId}:${intake.namespaceId}:${row.evidenceEpoch}:${row.payload}`
     );
     if (digest !== receiptId) return yield* failure();
-    const page = yield* S.decodeEffect(S.fromJsonString(TranscriptPage), { onExcessProperty: "error" })(row.payload);
+    const page = yield* decodeTranscriptPageJson(row.payload);
     if (
       page.cursor.namespaceId !== intake.namespaceId ||
       row.sourceKey !== `${page.cursor.source}:${page.cursor.pathHash}` ||
@@ -146,7 +149,7 @@ export const makeObservationExportReader = Effect.fn("AiMetrics.makeObservationE
     page._tag === "Native"
       ? O.fromUndefinedOr(page.spans[index]).pipe(
           O.flatMap((span) => span.startTimeUnixNano.pipe(O.orElse(() => span.endTimeUnixNano))),
-          O.map((nano) => Number(BigInt(nano) / 1_000_000n))
+          O.map((nano) => Number(BigInt(nano) / BigInt(1_000_000)))
         )
       : O.fromUndefinedOr(A.filter(page.page.frames, (frame) => frame._tag === "Accepted")[index]).pipe(
           O.flatMap((frame) => frame.metadata.sourceTime),

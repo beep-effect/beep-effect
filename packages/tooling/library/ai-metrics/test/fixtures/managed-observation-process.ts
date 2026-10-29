@@ -34,10 +34,34 @@ import * as Str from "effect/String";
 import { syntheticLaunchSalt } from "./observation-launch-config.ts";
 import type { ManagedSessionIdentity, ManagedSessionProcess } from "@beep/ai-provider-cli";
 
+const decodeArguments = S.decodeUnknownEffect(
+  S.Tuple([S.String, Sha256Hex, Sha256Hex, S.String, S.String, S.Literals(["initialize", "retry"])])
+);
+const encodeReceiptsChildStoppedRecordJson = S.encodeEffect(
+  S.fromJsonString(
+    S.Struct({
+      receipts: S.Array(ObservationLaunchReceipt),
+      childStopped: S.Boolean,
+      syntheticOnly: S.Boolean,
+      lostAcknowledgment: S.Boolean,
+      outboxReceipts: S.Natural,
+    })
+  )
+);
+const encodeRefusedReceiptsRecordJson = S.encodeEffect(
+  S.fromJsonString(
+    S.Struct({
+      refused: S.tag("claimed"),
+      receipts: S.Array(ObservationLaunchReceipt),
+      outboxReceipts: S.Natural,
+    })
+  )
+);
+
 const program = Effect.gen(function* () {
-  const [directory, hostId, namespaceId, peer, claimDirectory, claimMode] = yield* S.decodeUnknownEffect(
-    S.Tuple([S.String, Sha256Hex, Sha256Hex, S.String, S.String, S.Literals(["initialize", "retry"])])
-  )(A.drop(process.argv, 2));
+  const [directory, hostId, namespaceId, peer, claimDirectory, claimMode] = yield* decodeArguments(
+    A.drop(process.argv, 2)
+  );
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const workspace = path.join(directory, "synthetic-agent-workspace");
@@ -151,17 +175,7 @@ const program = Effect.gen(function* () {
           if (!(yield* Ref.get(lostAck))) return yield* Effect.die("Synthetic lost acknowledgment was not exercised");
           const outbox = yield* claims.readOutbox(launchId);
           yield* Console.log(
-            yield* S.encodeEffect(
-              S.fromJsonString(
-                S.Struct({
-                  receipts: S.Array(ObservationLaunchReceipt),
-                  childStopped: S.Boolean,
-                  syntheticOnly: S.Boolean,
-                  lostAcknowledgment: S.Boolean,
-                  outboxReceipts: S.Natural,
-                })
-              )
-            )({
+            yield* encodeReceiptsChildStoppedRecordJson({
               receipts: yield* Ref.get(receipts),
               childStopped: true,
               syntheticOnly: true,
@@ -178,15 +192,11 @@ const program = Effect.gen(function* () {
               const recovered = yield* claims.reconcile(launchId, client.submit);
               const state = yield* claims.readOutbox(launchId);
               yield* Console.log(
-                yield* S.encodeEffect(
-                  S.fromJsonString(
-                    S.Struct({
-                      refused: S.Literal("claimed"),
-                      receipts: S.Array(ObservationLaunchReceipt),
-                      outboxReceipts: S.Natural,
-                    })
-                  )
-                )({ refused: "claimed", receipts: recovered, outboxReceipts: state.receipts.length })
+                yield* encodeRefusedReceiptsRecordJson({
+                  refused: "claimed",
+                  receipts: recovered,
+                  outboxReceipts: state.receipts.length,
+                })
               );
             })
           : Effect.fail(error)

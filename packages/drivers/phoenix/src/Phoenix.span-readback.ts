@@ -108,6 +108,8 @@ const row = S.Struct({
   attributes: S.Record(S.String, S.Unknown),
 });
 const page = S.Struct({ data: S.Array(row).check(S.isMaxLength(2)), next_cursor: S.NullOr(text) });
+const decodePageJson = S.decodeEffect(S.fromJsonString(page));
+
 /**
  * Make a one-query-at-a-time Phoenix reader with a 256 KiB streaming ceiling.
  * **Example** (Inspecting the reader)
@@ -174,7 +176,7 @@ export const makePhoenixSpanReader = Effect.fn("Phoenix.makeSpanReader")(functio
           try: () => new TextDecoder("utf-8", { fatal: true }).decode(bytes.subarray(0, used)),
           catch: () => fail("invalid-response"),
         }).pipe(
-          Effect.flatMap(S.decodeEffect(S.fromJsonString(page))),
+          Effect.flatMap(decodePageJson),
           Effect.mapError(() => fail("invalid-response"))
         );
         if (decoded.next_cursor !== null || decoded.data.length > 1) return yield* fail("ambiguous");

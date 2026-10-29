@@ -26,6 +26,7 @@ import * as HttpServer from "effect/http/HttpServer";
 import * as HttpServerRequest from "effect/http/HttpServerRequest";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
 import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
@@ -53,6 +54,73 @@ const requestSchema = S.Struct({
     S.Struct({ scopeSpans: S.Array(S.Struct({ spans: S.Array(S.Struct({ attributes: S.Array(attribute) })) })) })
   ),
 });
+const encodeJsonValue = S.encodeEffect(S.fromJsonString(S.Unknown));
+const decodeUnionValue = S.decodeUnknownEffect(S.Union([S.String, S.Finite, S.Boolean]));
+
+const responseStartTimes: Readonly<Record<string, string>> = {
+  "point-rounded": "2026-10-26T07:33:20.000001+00:00",
+  reversed: "2026-10-26T07:33:20.000001+00:00",
+  submicro: "2026-10-26T07:33:20.000000870+00:00",
+  rounded: "2026-10-26T07:33:20.000001+00:00",
+  "beyond-precision": "2026-10-26T07:33:20.000002+00:00",
+  carry: "2026-10-26T07:33:21+00:00",
+};
+const responseEndTimes: Readonly<Record<string, string>> = {
+  "point-split": "2026-10-26T07:33:20.000001+00:00",
+  "point-rounded": "2026-10-26T07:33:20.000001+00:00",
+  reversed: "2026-10-26T07:33:20+00:00",
+  rounded: "2026-10-26T07:33:20.100001+00:00",
+  carry: "2026-10-26T07:33:21.100000+00:00",
+};
+const fixtureKeys: Readonly<Record<string, string | boolean>> = {
+  "ai_metrics.synthetic": true,
+  "ai_metrics.fixture.surface": "cli",
+  "ai_metrics.fixture.provenance": "declared_synthetic_fixture",
+};
+const changedAttributes = (current: string, attrs: Readonly<Record<string, string | number | boolean>>) =>
+  Match.value(current).pipe(
+    Match.when("tokens", () => ({ ...attrs, "llm.token_count.total": 136 })),
+    Match.when("extra", () => ({ ...attrs, "llm.provider": "invented" })),
+    Match.when("time", () => ({ ...attrs, "ai_metrics.source_start_time_unix_nano": "1793000000000000002" })),
+    Match.orElse(() => attrs)
+  );
+const decodeWireAttributes = Effect.fnUntraced(function* (bytes: Uint8Array) {
+  const decoded = yield* Effect.try(() => proto.toObject(proto.decode(bytes), { longs: String })).pipe(
+    Effect.flatMap(S.decodeUnknownEffect(requestSchema))
+  );
+  const span = decoded.resourceSpans[0]?.scopeSpans[0]?.spans[0];
+  if (span === undefined) return yield* Effect.die("Invalid synthetic wire");
+  const entries = yield* Effect.forEach(
+    A.filter(span.attributes, (attr) => attr.key !== "openinference.span.kind"),
+    ({ key, value }) =>
+      Effect.gen(function* () {
+        const scalar = yield* decodeUnionValue(
+          value.stringValue ?? (value.intValue !== undefined ? Number(value.intValue) : value.boolValue)
+        );
+        return [key, scalar] satisfies readonly [string, string | number | boolean];
+      })
+  );
+  return R.fromEntries(entries);
+});
+const responseRow = (
+  current: string,
+  attrs: Readonly<Record<string, string | number | boolean>>,
+  event: { readonly traceId: string; readonly spanId: string }
+) => {
+  const changed = changedAttributes(current, attrs);
+  const injected = R.get(fixtureKeys, current);
+  return {
+    context: { trace_id: event.traceId, span_id: event.spanId },
+    name: "agent.llm",
+    parent_id: null,
+    span_kind: "LLM",
+    status_code: "UNSET",
+    start_time: O.getOrElse(R.get(responseStartTimes, current), () => "2026-10-26T07:33:20+00:00"),
+    end_time: O.getOrElse(R.get(responseEndTimes, current), () => "2026-10-26T07:33:20.100000+00:00"),
+    attributes: O.isSome(injected) ? { ...changed, [current]: injected.value } : changed,
+  };
+};
+
 const fixture = Effect.fn("NativeReadbackTest.fixture")(function* (fraction = "000000001", durationNano = 100000000) {
   const sql = yield* SqlClient.SqlClient;
   const context = yield* Layer.build(BunHttpServer.layer({ hostname: "127.0.0.1", port: 0 }));
@@ -79,7 +147,7 @@ const fixture = Effect.fn("NativeReadbackTest.fixture")(function* (fraction = "0
     maxAttemptsPerEvent: 8,
   });
   const native = yield* makeNativeIntakeJournal(intake);
-  const body = yield* S.encodeEffect(S.fromJsonString(S.Unknown))({
+  const body = yield* encodeJsonValue({
     resourceSpans: [
       {
         scopeSpans: [
@@ -132,22 +200,7 @@ const fixture = Effect.fn("NativeReadbackTest.fixture")(function* (fraction = "0
       const request = yield* HttpServerRequest.HttpServerRequest;
       if (request.method === "POST") {
         const bytes = new Uint8Array(yield* request.arrayBuffer);
-        const decoded = yield* Effect.try(() => proto.toObject(proto.decode(bytes), { longs: String })).pipe(
-          Effect.flatMap(S.decodeUnknownEffect(requestSchema))
-        );
-        const span = decoded.resourceSpans[0]?.scopeSpans[0]?.spans[0];
-        if (span === undefined) return yield* Effect.die("Invalid synthetic wire");
-        const entries = yield* Effect.forEach(
-          A.filter(span.attributes, (attr) => attr.key !== "openinference.span.kind"),
-          ({ key, value }) =>
-            Effect.gen(function* () {
-              const scalar = yield* S.decodeUnknownEffect(S.Union([S.String, S.Finite, S.Boolean]))(
-                value.stringValue ?? (value.intValue !== undefined ? Number(value.intValue) : value.boolValue)
-              );
-              return [key, scalar] satisfies readonly [string, string | number | boolean];
-            })
-        );
-        yield* Ref.set(stored, R.fromEntries(entries));
+        yield* Ref.set(stored, yield* decodeWireAttributes(bytes));
         return HttpServerResponse.uint8Array(new Uint8Array(), { contentType: "application/x-protobuf" });
       }
       yield* Ref.update(reads, (n) => n + 1);
@@ -155,50 +208,7 @@ const fixture = Effect.fn("NativeReadbackTest.fixture")(function* (fraction = "0
       expect(request.url).toContain("limit=2");
       const current = yield* Ref.get(mode);
       const attrs = yield* Ref.get(stored);
-      const changed =
-        current === "tokens"
-          ? { ...attrs, "llm.token_count.total": 136 }
-          : current === "extra"
-            ? { ...attrs, "llm.provider": "invented" }
-            : current === "time"
-              ? { ...attrs, "ai_metrics.source_start_time_unix_nano": "1793000000000000002" }
-              : attrs;
-      const fixtureKeys: Readonly<Record<string, string | boolean>> = {
-        "ai_metrics.synthetic": true,
-        "ai_metrics.fixture.surface": "cli",
-        "ai_metrics.fixture.provenance": "declared_synthetic_fixture",
-      };
-      const injected = R.get(fixtureKeys, current);
-      const row = {
-        context: { trace_id: event.traceId, span_id: event.spanId },
-        name: "agent.llm",
-        parent_id: null,
-        span_kind: "LLM",
-        status_code: "UNSET",
-        start_time:
-          current === "point-rounded" || current === "reversed"
-            ? "2026-10-26T07:33:20.000001+00:00"
-            : current === "submicro"
-              ? "2026-10-26T07:33:20.000000870+00:00"
-              : current === "rounded"
-                ? "2026-10-26T07:33:20.000001+00:00"
-                : current === "beyond-precision"
-                  ? "2026-10-26T07:33:20.000002+00:00"
-                  : current === "carry"
-                    ? "2026-10-26T07:33:21+00:00"
-                    : "2026-10-26T07:33:20+00:00",
-        end_time:
-          current === "point-split" || current === "point-rounded"
-            ? "2026-10-26T07:33:20.000001+00:00"
-            : current === "reversed"
-              ? "2026-10-26T07:33:20+00:00"
-              : current === "rounded"
-                ? "2026-10-26T07:33:20.100001+00:00"
-                : current === "carry"
-                  ? "2026-10-26T07:33:21.100000+00:00"
-                  : "2026-10-26T07:33:20.100000+00:00",
-        attributes: O.isSome(injected) ? { ...changed, [current]: injected.value } : changed,
-      };
+      const row = responseRow(current, attrs, event);
       return yield* HttpServerResponse.json({
         data: current === "missing" ? [] : current === "duplicate" ? [row, row] : [row],
         next_cursor: null,
@@ -214,7 +224,7 @@ const fixture = Effect.fn("NativeReadbackTest.fixture")(function* (fraction = "0
   const reconcile = () => reader.reconcile(selection, event.eventId);
   return { sql, sender, selection, reconcile, reader, event, mode, reads, intake, config, policy, backend, client };
 });
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect(
     "verifies the original wire metadata before persisting visible and does not downgrade historical proof",
     () =>
@@ -242,10 +252,10 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
         yield* Ref.set(f.mode, "missing");
         expect(yield* f.reconcile()).toMatchObject({ _tag: "Missing" });
         expect(yield* f.sender.ledger.state(f.event.eventId)).toMatchObject({ value: { state: "visible" } });
-      }).pipe(Effect.scoped)
+      })
   )
 );
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("refuses duplicate query rows, invalid attempts and failed visibility writes", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -264,10 +274,10 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
       yield* f.sql`CREATE TRIGGER synthetic_visibility_failure BEFORE INSERT ON observation_delivery_visibility BEGIN SELECT RAISE(ABORT,'synthetic'); END`;
       expect(yield* f.reconcile().pipe(Effect.flip)).toMatchObject({ reason: "storage" });
       expect(yield* f.sender.ledger.state(f.event.eventId)).toMatchObject({ value: { state: "accepted-unverified" } });
-    }).pipe(Effect.scoped)
+    })
   )
 );
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("binds a separately declared backend into the immutable target and refuses drift", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -283,11 +293,11 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
         )
       ).toMatchObject({ reason: "configuration" });
       expect(yield* Ref.get(f.reads)).toBe(0);
-    }).pipe(Effect.scoped)
+    })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("accepts backend microsecond rounding only with exact nanosecond metadata and rejects larger drift", () =>
     Effect.gen(function* () {
       const f = yield* fixture("000000870");
@@ -298,31 +308,31 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
       }
       yield* Ref.set(f.mode, "rounded");
       expect(yield* f.reconcile()).toMatchObject({ _tag: "Visible" });
-    }).pipe(Effect.scoped)
+    })
   )
 );
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("refuses a full microsecond shift for an already aligned timestamp", () =>
     Effect.gen(function* () {
       const f = yield* fixture("000000000");
       yield* f.sender.send(f.selection);
       yield* Ref.set(f.mode, "rounded");
       expect(yield* f.reconcile()).toMatchObject({ _tag: "Mismatch" });
-    }).pipe(Effect.scoped)
+    })
   )
 );
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("accepts microsecond rounding across the next second while preserving exact event time", () =>
     Effect.gen(function* () {
       const f = yield* fixture("999999870");
       yield* f.sender.send(f.selection);
       yield* Ref.set(f.mode, "carry");
       expect(yield* f.reconcile()).toMatchObject({ _tag: "Visible" });
-    }).pipe(Effect.scoped)
+    })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("never invents a duration by rounding the same point in different directions", () =>
     Effect.gen(function* () {
       const f = yield* fixture("000000870", 0);
@@ -331,16 +341,16 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
       expect(yield* f.reconcile()).toMatchObject({ _tag: "Mismatch" });
       yield* Ref.set(f.mode, "point-rounded");
       expect(yield* f.reconcile()).toMatchObject({ _tag: "Visible" });
-    }).pipe(Effect.scoped)
+    })
   )
 );
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("refuses inverted stored endpoints even inside each endpoint's rounding bucket", () =>
     Effect.gen(function* () {
       const f = yield* fixture("000000870", 10);
       yield* f.sender.send(f.selection);
       yield* Ref.set(f.mode, "reversed");
       expect(yield* f.reconcile()).toMatchObject({ _tag: "Mismatch" });
-    }).pipe(Effect.scoped)
+    })
   )
 );

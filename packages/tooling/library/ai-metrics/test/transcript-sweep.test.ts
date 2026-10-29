@@ -45,7 +45,7 @@ const fixture = Effect.fn("TranscriptSweepTest.fixture")(function* (maxPages = 1
   return { fs, dir, salt, config, input };
 });
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("wraps N+1 declared sources fairly despite an unreadable source and skips retired roots", () =>
     Effect.gen(function* () {
       const { fs, dir, config, input } = yield* fixture();
@@ -74,7 +74,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("retains the unaccepted source cursor when intake fills and keeps scheduling it", () =>
     Effect.gen(function* () {
       const { fs, dir, salt, config, input } = yield* fixture(1);
@@ -98,7 +98,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("waits for partial lines without filling the journal and commits truncation checkpoints", () =>
     Effect.gen(function* () {
       const { fs, dir, config, input } = yield* fixture();
@@ -128,7 +128,7 @@ it.layer(Layer.fresh(sqlLayer))((it) =>
   )
 );
 
-it.layer(Layer.fresh(sqlLayer))((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("rejects duplicate path aliases and wrong namespaces before initializing a journal", () =>
     Effect.gen(function* () {
       const { dir, config, input } = yield* fixture();

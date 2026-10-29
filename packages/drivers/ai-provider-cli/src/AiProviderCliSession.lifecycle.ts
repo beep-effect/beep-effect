@@ -76,3 +76,31 @@ export const observeManagedSession = Effect.fn("AiProviderCliSession.observe")(
       })
     )
 );
+
+/**
+ * Observe a spawned child through the restricted process-evidence port.
+ * **Example** (Inspect the owned process observer)
+ * ```ts
+ * import { observeStartedManagedProcess } from "@beep/ai-provider-cli/AiProviderCliSession.lifecycle"
+ * console.log(typeof observeStartedManagedProcess)
+ * ```
+ * **Details** Copies only PID, exit and running evidence. When present, the
+ * observer runs once under the existing deadline before adapter initialization;
+ * uncertain observation is never retried here. The returned port is the same
+ * object supplied to the observer and exposes no stdio or kill capability.
+ * @internal
+ * @category resource-management
+ * @since 0.0.0
+ */
+export const observeStartedManagedProcess = Effect.fnUntraced(function* (
+  handle: ManagedSessionProcess,
+  observer?: ManagedSessionObserver
+) {
+  const process = { pid: handle.pid, exitCode: handle.exitCode, isRunning: handle.isRunning };
+  if (observer !== undefined)
+    yield* observeManagedSession(
+      "observe-started",
+      Effect.suspend(() => observer.started(process))
+    );
+  return process;
+});

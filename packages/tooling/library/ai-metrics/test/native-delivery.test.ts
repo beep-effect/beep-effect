@@ -35,6 +35,8 @@ import * as SqlClient from "effect/sql/SqlClient";
 
 const sqlLayer = Layer.merge(makeSqlTestLayer({ config: undefined, driver: BunSqliteTestDriver }), NodeCrypto.layer);
 const id = (char: string) => Sha256Hex.make(Str.repeat(64)(char));
+const encodeJsonValue = S.encodeEffect(S.fromJsonString(S.Unknown));
+
 const fixture = Effect.fn("NativeDeliveryTest.fixture")(function* (timeoutMillis = 2000) {
   const salt = "synthetic-delivery-salt";
   const intakeConfig = TranscriptIntakeConfig.make({
@@ -45,7 +47,7 @@ const fixture = Effect.fn("NativeDeliveryTest.fixture")(function* (timeoutMillis
     maxDatabasePages: 256,
   });
   const native = yield* makeNativeIntakeJournal(intakeConfig);
-  const body = yield* S.encodeEffect(S.fromJsonString(S.Unknown))({
+  const body = yield* encodeJsonValue({
     resourceSpans: [
       {
         scopeSpans: [
@@ -135,7 +137,7 @@ const fixture = Effect.fn("NativeDeliveryTest.fixture")(function* (timeoutMillis
 const response = (body = new Uint8Array(), status = 200, contentType = "application/x-protobuf") =>
   Effect.succeed(HttpServerResponse.uint8Array(body, { status, contentType }));
 
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("commits before socket I/O, records full acknowledgment, and never resends an existing attempt", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -146,10 +148,10 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
       expect(yield* f.ledger.state(f.first.eventId)).toMatchObject({
         value: { state: "accepted-unverified", attempts: 1 },
       });
-    }).pipe(Effect.scoped)
+    })
   )
 );
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("retains partial batch evidence instead of inventing an accepted event subset", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -158,11 +160,11 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
       expect(yield* f.ledger.state(f.first.eventId)).toMatchObject({
         value: { state: "unresolved", ambiguousAttempts: 1 },
       });
-    }).pipe(Effect.scoped)
+    })
   )
 );
 for (const status of [503, 400, 302])
-  it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+  it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
     it.effect(`preserves explicit HTTP ${status} without automatic retries or redirects`, () =>
       Effect.gen(function* () {
         const f = yield* fixture();
@@ -181,12 +183,12 @@ for (const status of [503, 400, 302])
         });
         expect(yield* Ref.get(f.calls)).toBe(1);
         const facts = yield* f.sql`SELECT payload FROM observation_delivery_results`;
-        expect(yield* S.encodeEffect(S.fromJsonString(S.Unknown))(facts)).not.toContain("private-server-detail");
-      }).pipe(Effect.scoped)
+        expect(yield* encodeJsonValue(facts)).not.toContain("private-server-detail");
+      })
     )
   );
 for (const malformed of [true, false])
-  it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+  it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
     it.effect(`bounds ${malformed ? "malformed" : "oversize streamed"} responses`, () =>
       Effect.gen(function* () {
         const f = yield* fixture();
@@ -202,10 +204,10 @@ for (const malformed of [true, false])
         );
         expect(yield* f.send()).toMatchObject({ outcome: { _tag: "Unknown", reason: "invalid-response" } });
         expect(yield* f.ledger.state(f.first.eventId)).toMatchObject({ value: { state: "unresolved" } });
-      }).pipe(Effect.scoped)
+      })
     )
   );
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("keeps a lost response unresolved and refuses overlap without consuming an attempt", () =>
     Effect.gen(function* () {
       const f = yield* fixture(100);
@@ -217,10 +219,10 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
         outcome: { _tag: "Unknown", reason: "timed-out" },
       });
       expect(yield* f.ledger.state(f.first.eventId)).toMatchObject({ value: { state: "unresolved", attempts: 1 } });
-    }).pipe(Effect.scoped)
+    })
   )
 );
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("records interruption after send and preserves an unresolved attempt if result persistence fails", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -229,15 +231,15 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
       yield* Deferred.await(f.received);
       yield* Fiber.interrupt(sending);
       const facts = yield* f.sql`SELECT payload FROM observation_delivery_results`;
-      expect(yield* S.encodeEffect(S.fromJsonString(S.Unknown))(facts)).toContain("interrupted");
+      expect(yield* encodeJsonValue(facts)).toContain("interrupted");
       expect(yield* f.ledger.state(f.first.eventId)).toMatchObject({ value: { state: "unresolved" } });
       yield* f.sql`CREATE TRIGGER synthetic_result_failure BEFORE INSERT ON observation_delivery_results BEGIN SELECT RAISE(ABORT,'synthetic'); END`;
       expect((yield* f.send("e").pipe(Effect.flip)).reason).toBe("storage");
       expect(yield* f.ledger.state(f.first.eventId)).toMatchObject({ value: { state: "unresolved", attempts: 2 } });
-    }).pipe(Effect.scoped)
+    })
   )
 );
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("refuses unowned destinations and unknown selections before network I/O", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -265,6 +267,6 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
         ).toMatchObject({ reason: "configuration" });
       }
       expect(yield* Ref.get(f.calls)).toBe(0);
-    }).pipe(Effect.scoped)
+    })
   )
 );

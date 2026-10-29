@@ -2,7 +2,6 @@ import * as NodeURL from "node:url";
 import * as Zlib from "node:zlib";
 import { TranscriptAcceptance, TranscriptIntakeStats } from "@beep/repo-ai-metrics/transcript-intake";
 import { it } from "@beep/test-runner";
-import { provideScopedLayer } from "@beep/test-utils/Layer";
 import { NodeServices } from "@effect/platform-node";
 import * as NodeHttpClient from "@effect/platform-node/NodeHttpClient";
 import { expect } from "@effect/vitest";
@@ -28,8 +27,13 @@ const Inspection = S.Struct({
   pages: S.Array(TranscriptAcceptance),
   events: S.Tuple([S.Struct({ n: S.Natural })]),
   receipts: S.Tuple([S.Struct({ n: S.Natural })]),
-  integrity: S.Tuple([S.Struct({ integrity_check: S.Literal("ok") })]),
+  integrity: S.Tuple([S.Struct({ integrity_check: S.tag("ok") })]),
 });
+const encodeJsonValue = S.encodeEffect(S.fromJsonString(S.Unknown));
+const decodeInspectionJson = S.decodeEffect(S.fromJsonString(Inspection));
+const decodeUrlRecordJson = S.decodeEffect(S.fromJsonString(S.Struct({ url: S.String })));
+const decodeJsonValue = S.decodeEffect(S.fromJsonString(S.Unknown));
+
 const scenario = Effect.fn("NativeHttpCrashTest.scenario")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const executablePath = yield* Config.String("PATH");
@@ -38,7 +42,7 @@ const scenario = Effect.fn("NativeHttpCrashTest.scenario")(function* () {
   const marker = `${directory}/boundary.json`;
   const output = `${directory}/result.json`;
   const client = Context.get(yield* Layer.build(NodeHttpClient.layerNodeHttp), HttpClient.HttpClient);
-  const body = yield* S.encodeEffect(S.fromJsonString(S.Unknown))({
+  const body = yield* encodeJsonValue({
     resourceSpans: [
       {
         scopeSpans: [
@@ -84,17 +88,13 @@ const scenario = Effect.fn("NativeHttpCrashTest.scenario")(function* () {
     );
     if (mode === "inspect") {
       expect(yield* child.exitCode).toBe(0);
-      return O.some(
-        yield* fs.readFileString(output).pipe(Effect.flatMap(S.decodeEffect(S.fromJsonString(Inspection))))
-      );
+      return O.some(yield* fs.readFileString(output).pipe(Effect.flatMap(decodeInspectionJson)));
     }
     while (!(yield* fs.exists(ready))) {
       expect(yield* child.isRunning).toBe(true);
       yield* Effect.sleep("10 millis");
     }
-    const { url } = yield* fs
-      .readFileString(ready)
-      .pipe(Effect.flatMap(S.decodeEffect(S.fromJsonString(S.Struct({ url: S.String })))));
+    const { url } = yield* fs.readFileString(ready).pipe(Effect.flatMap(decodeUrlRecordJson));
     if (mode === "protocol") {
       const post = (bytes: Uint8Array, contentType = "application/json", encoding = "identity") =>
         client
@@ -155,7 +155,7 @@ const scenario = Effect.fn("NativeHttpCrashTest.scenario")(function* () {
       expect(yield* child.isRunning).toBe(true);
       yield* Effect.sleep("10 millis");
     }
-    const evidence = yield* fs.readFileString(marker).pipe(Effect.flatMap(S.decodeEffect(S.fromJsonString(S.Unknown))));
+    const evidence = yield* fs.readFileString(marker).pipe(Effect.flatMap(decodeJsonValue));
     expect(evidence).toEqual(
       mode === "before-commit"
         ? { boundary: mode, pages: [{ n: 1 }], events: [{ n: 1 }], receipts: [{ n: 0 }] }
@@ -170,54 +170,60 @@ const scenario = Effect.fn("NativeHttpCrashTest.scenario")(function* () {
   });
   return { start };
 });
-it.live("rolls back native events and page when the HTTP worker is killed before receipt commit", () =>
-  Effect.gen(function* () {
-    const { start } = yield* scenario();
-    yield* start("before-commit");
-    expect(yield* start("inspect")).toMatchObject({
-      _tag: "Some",
-      value: {
-        stats: { pages: 0, frames: 0, payloadBytes: 0 },
-        events: [{ n: 0 }],
-        receipts: [{ n: 0 }],
-        pages: [],
-      },
-    });
-    yield* start("serve");
-    const accepted = yield* start("inspect");
-    expect(accepted).toMatchObject({
-      _tag: "Some",
-      value: { stats: { pages: 1, frames: 1 }, events: [{ n: 1 }], receipts: [{ n: 1 }] },
-    });
-    yield* start("serve");
-    expect(yield* start("inspect")).toEqual(accepted);
-  }).pipe(Effect.scoped, provideScopedLayer(NodeServices.layer), Effect.timeout("20 seconds"))
+it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) =>
+  it.effect("rolls back native events and page when the HTTP worker is killed before receipt commit", () =>
+    Effect.gen(function* () {
+      const { start } = yield* scenario();
+      yield* start("before-commit");
+      expect(yield* start("inspect")).toMatchObject({
+        _tag: "Some",
+        value: {
+          stats: { pages: 0, frames: 0, payloadBytes: 0 },
+          events: [{ n: 0 }],
+          receipts: [{ n: 0 }],
+          pages: [],
+        },
+      });
+      yield* start("serve");
+      const accepted = yield* start("inspect");
+      expect(accepted).toMatchObject({
+        _tag: "Some",
+        value: { stats: { pages: 1, frames: 1 }, events: [{ n: 1 }], receipts: [{ n: 1 }] },
+      });
+      yield* start("serve");
+      expect(yield* start("inspect")).toEqual(accepted);
+    }).pipe(Effect.timeout("20 seconds"))
+  )
 );
-it.live("replays the original durable receipt after commit but before the HTTP acknowledgment is sent", () =>
-  Effect.gen(function* () {
-    const { start } = yield* scenario();
-    yield* start("after-commit");
-    const accepted = yield* start("inspect");
-    expect(accepted).toMatchObject({
-      _tag: "Some",
-      value: { stats: { pages: 1, frames: 1 }, events: [{ n: 1 }], receipts: [{ n: 1 }] },
-    });
-    yield* start("serve");
-    expect(yield* start("inspect")).toEqual(accepted);
-  }).pipe(Effect.scoped, provideScopedLayer(NodeServices.layer), Effect.timeout("20 seconds"))
+it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) =>
+  it.effect("replays the original durable receipt after commit but before the HTTP acknowledgment is sent", () =>
+    Effect.gen(function* () {
+      const { start } = yield* scenario();
+      yield* start("after-commit");
+      const accepted = yield* start("inspect");
+      expect(accepted).toMatchObject({
+        _tag: "Some",
+        value: { stats: { pages: 1, frames: 1 }, events: [{ n: 1 }], receipts: [{ n: 1 }] },
+      });
+      yield* start("serve");
+      expect(yield* start("inspect")).toEqual(accepted);
+    }).pipe(Effect.timeout("20 seconds"))
+  )
 );
 
-it.live("qualifies gzip, empty protobuf, expansion refusal and unfinished uploads on an actual Bun worker", () =>
-  Effect.gen(function* () {
-    const { start } = yield* scenario();
-    yield* start("protocol");
-    expect(yield* start("inspect")).toMatchObject({
-      _tag: "Some",
-      value: {
-        stats: { pages: 1, frames: 1 },
-        events: [{ n: 1 }],
-        receipts: [{ n: 1 }],
-      },
-    });
-  }).pipe(Effect.scoped, provideScopedLayer(NodeServices.layer), Effect.timeout("20 seconds"))
+it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) =>
+  it.effect("qualifies gzip, empty protobuf, expansion refusal and unfinished uploads on an actual Bun worker", () =>
+    Effect.gen(function* () {
+      const { start } = yield* scenario();
+      yield* start("protocol");
+      expect(yield* start("inspect")).toMatchObject({
+        _tag: "Some",
+        value: {
+          stats: { pages: 1, frames: 1 },
+          events: [{ n: 1 }],
+          receipts: [{ n: 1 }],
+        },
+      });
+    }).pipe(Effect.timeout("20 seconds"))
+  )
 );

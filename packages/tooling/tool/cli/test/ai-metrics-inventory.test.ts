@@ -1,8 +1,12 @@
+import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { ObservationHarness, ObservationInventoryReport } from "@beep/repo-ai-metrics/observation-inventory";
 import { ObservationRootProbeResult } from "@beep/repo-ai-metrics/observation-root-probe";
 import { aiMetricsCommand } from "@beep/repo-cli/commands/AIMetrics";
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
+import * as NodePath from "@effect/platform-node/NodePath";
+import * as NodeStdio from "@effect/platform-node/NodeStdio";
+import * as NodeTerminal from "@effect/platform-node/NodeTerminal";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
@@ -11,10 +15,26 @@ import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
+
+// Command dispatch requires the platform capabilities for all branches. These
+// fixtures only read synthetic files; an attempted subprocess is a test defect.
+const testServices = Layer.mergeAll(
+  MemoryFileSystem.layer,
+  NodeCrypto.layer,
+  NodePath.layer,
+  NodeStdio.layer,
+  NodeTerminal.layer,
+  Layer.succeed(
+    ChildProcessSpawner.ChildProcessSpawner,
+    ChildProcessSpawner.make(() => Effect.die("Unexpected subprocess in synthetic command fixture"))
+  )
+);
 
 const run = Command.runWith(aiMetricsCommand, { version: "0.0.0" });
 const id = (digit: string) => Str.repeat(64)(digit);
@@ -55,17 +75,19 @@ const failureText = (input: string) =>
   run(["inventory", "report", "--input", input]).pipe(
     Effect.matchCause({ onFailure: Cause.pretty, onSuccess: () => "unexpected success" })
   );
+const encodeJsonValue = S.encodeEffect(S.fromJsonString(S.Unknown));
+const decodeObservationInventoryReportJson = S.decodeEffect(S.fromJsonString(ObservationInventoryReport));
 
-it.layer(NodeServices.layer, { concurrent: false, timeout: "10 seconds" })("ai-metrics inventory command", (it) => {
+it.layer(testServices, { concurrent: false, timeout: "10 seconds" })("ai-metrics inventory command", (it) => {
   it.effect("reports all declared harnesses with explicit unknown denominators", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const directory = yield* temporaryDirectory;
       const input = `${directory}/inventory.json`;
-      yield* fs.writeFileString(input, yield* S.encodeEffect(S.fromJsonString(S.Unknown))(manifest));
+      yield* fs.writeFileString(input, yield* encodeJsonValue(manifest));
       yield* run(["inventory", "report", "--input", input, "--json"]);
       const output = yield* logged;
-      const report = yield* S.decodeEffect(S.fromJsonString(ObservationInventoryReport))(output);
+      const report = yield* decodeObservationInventoryReportJson(output);
       expect(report.summary.declaredRoutes).toBe(7);
       expect(report.summary.knownLaunches).toBe(0);
       expect(report.summary.unknownLaunchRoutes).toBe(7);
@@ -79,7 +101,7 @@ it.layer(NodeServices.layer, { concurrent: false, timeout: "10 seconds" })("ai-m
       const fs = yield* FileSystem.FileSystem;
       const directory = yield* temporaryDirectory;
       const input = `${directory}/inventory.json`;
-      yield* fs.writeFileString(input, yield* S.encodeEffect(S.fromJsonString(S.Unknown))(manifest));
+      yield* fs.writeFileString(input, yield* encodeJsonValue(manifest));
       yield* run(["inventory", "report", "--input", input]);
       const output = yield* logged;
       expect(output).toContain("Population window: [2026-10-27T11:00:00.000Z, 2026-10-27T12:00:00.000Z)");
@@ -100,10 +122,7 @@ it.layer(NodeServices.layer, { concurrent: false, timeout: "10 seconds" })("ai-m
       expect(yield* failureText(input)).toContain("exceeds its byte limit");
       yield* fs.writeFile(input, new Uint8Array([0xff, 0xfe]));
       expect(yield* failureText(input)).toContain("Invalid observation inventory encoding");
-      yield* fs.writeFileString(
-        input,
-        yield* S.encodeEffect(S.fromJsonString(S.Unknown))({ ...manifest, secret: "synthetic-private-content" })
-      );
+      yield* fs.writeFileString(input, yield* encodeJsonValue({ ...manifest, secret: "synthetic-private-content" }));
       const rejected = yield* failureText(input);
       expect(rejected).toContain("Invalid observation inventory");
       expect(rejected).not.toContain("synthetic-private-content");
@@ -115,8 +134,9 @@ it.layer(NodeServices.layer, { concurrent: false, timeout: "10 seconds" })("ai-m
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 });
+const decodeObservationRootProbeResultJson = S.decodeEffect(S.fromJsonString(ObservationRootProbeResult));
 
-it.layer(NodeServices.layer, { concurrent: false, timeout: "10 seconds" })("ai-metrics inventory root probe", (it) => {
+it.layer(testServices, { concurrent: false, timeout: "10 seconds" })("ai-metrics inventory root probe", (it) => {
   it.effect("runs the declared probe command and emits only pseudonymous evidence", () =>
     Effect.gen(function* () {
       yield* TestClock.setTime(1000);
@@ -125,7 +145,7 @@ it.layer(NodeServices.layer, { concurrent: false, timeout: "10 seconds" })("ai-m
       const input = `${directory}/private-declaration.json`;
       yield* fs.writeFileString(
         input,
-        yield* S.encodeEffect(S.fromJsonString(S.Unknown))({
+        yield* encodeJsonValue({
           schemaVersion: "agent-observation-root-declaration/v1",
           hostKey: "synthetic-private-host",
           populationWindowStart: "1970-01-01T00:00:00Z",
@@ -140,7 +160,7 @@ it.layer(NodeServices.layer, { concurrent: false, timeout: "10 seconds" })("ai-m
         )
       );
       const output = yield* logged;
-      const result = yield* S.decodeEffect(S.fromJsonString(ObservationRootProbeResult))(output);
+      const result = yield* decodeObservationRootProbeResultJson(output);
       expect(result.inventory.roots[0]?.availability).toBe("retired");
       expect(result.rootReceipts).toHaveLength(1);
       expect(result.inventory.routes).toHaveLength(7);
@@ -156,7 +176,7 @@ it.layer(NodeServices.layer, { concurrent: false, timeout: "10 seconds" })("ai-m
       const input = `${directory}/private-declaration.json`;
       yield* fs.writeFileString(
         input,
-        yield* S.encodeEffect(S.fromJsonString(S.Unknown))({
+        yield* encodeJsonValue({
           schemaVersion: "agent-observation-root-declaration/v1",
           hostKey: "synthetic-private-host",
           populationWindowStart: "1970-01-01T00:00:00Z",
@@ -175,7 +195,7 @@ it.layer(NodeServices.layer, { concurrent: false, timeout: "10 seconds" })("ai-m
   );
 });
 
-it.layer(NodeServices.layer, { concurrent: false, timeout: "10 seconds" })("ai-metrics coverage command", (it) => {
+it.layer(testServices, { concurrent: false, timeout: "10 seconds" })("ai-metrics coverage command", (it) => {
   const evidence = {
     version: "observation-coverage/v1",
     inventory: manifest,
@@ -197,7 +217,7 @@ it.layer(NodeServices.layer, { concurrent: false, timeout: "10 seconds" })("ai-m
       const fs = yield* FileSystem.FileSystem;
       const directory = yield* temporaryDirectory;
       const input = `${directory}/coverage.json`;
-      yield* fs.writeFileString(input, yield* S.encodeEffect(S.fromJsonString(S.Unknown))(evidence));
+      yield* fs.writeFileString(input, yield* encodeJsonValue(evidence));
       yield* run(["inventory", "coverage", "--input", input]);
       const output = yield* logged;
       expect(output).toContain("acceptedEvents: 1 observed; denominator unknown; snapshot partial");
@@ -215,7 +235,7 @@ it.layer(NodeServices.layer, { concurrent: false, timeout: "10 seconds" })("ai-m
         { ...evidence, boundaryEvidenceId: id("0") },
         { ...evidence, secret: "synthetic-coverage-private" },
       ]) {
-        yield* fs.writeFileString(input, yield* S.encodeEffect(S.fromJsonString(S.Unknown))(invalid));
+        yield* fs.writeFileString(input, yield* encodeJsonValue(invalid));
         const result = yield* run(["inventory", "coverage", "--input", input, "--json"]).pipe(
           Effect.matchCause({ onFailure: Cause.pretty, onSuccess: () => "unexpected success" })
         );

@@ -128,6 +128,8 @@ const DirectoryEvent = S.Struct({
   ]),
   relative: S.String.check(S.isMaxLength(4096)),
 }).pipe($I.annoteSchema("DirectoryEvent", { description: "Private bounded event from the owned directory helper." }));
+const decodeDirectoryEventJson = S.decodeEffect(S.fromJsonString(DirectoryEvent));
+
 const openRoot = Effect.fn("AiMetrics.discovery.openRoot")(function* (
   directory: string,
   input: TranscriptDiscoveryInput
@@ -147,7 +149,7 @@ const openRoot = Effect.fn("AiMetrics.discovery.openRoot")(function* (
     const pull = yield* handle.stdout.pipe(
       Stream.decodeText(),
       Stream.splitLines,
-      Stream.mapEffect((line) => S.decodeEffect(S.fromJsonString(DirectoryEvent))(line)),
+      Stream.mapEffect((line) => decodeDirectoryEventJson(line)),
       Stream.rechunk(1),
       Stream.toPull
     );
@@ -236,6 +238,18 @@ export const makeTranscriptDiscovery = Effect.fn("AiMetrics.makeTranscriptDiscov
     })
   );
   const semaphore = yield* Semaphore.make(1);
+  const suspendRoots = Effect.forEach(
+    roots,
+    (root) =>
+      closeRoot(root).pipe(
+        Effect.andThen(
+          Effect.sync(() => {
+            if (root.state === "scanning") root.state = "pending";
+          })
+        )
+      ),
+    { discard: true }
+  );
   let cursor = 0;
   let closed = false;
   yield* Effect.addFinalizer(() =>
@@ -367,20 +381,7 @@ export const makeTranscriptDiscovery = Effect.fn("AiMetrics.makeTranscriptDiscov
     );
     return { sources, report: report(operations, sources.length), recordReads };
   }).pipe(
-    Effect.onInterrupt(() =>
-      Effect.forEach(
-        roots,
-        (root) =>
-          closeRoot(root).pipe(
-            Effect.andThen(
-              Effect.sync(() => {
-                if (root.state === "scanning") root.state = "pending";
-              })
-            )
-          ),
-        { discard: true }
-      )
-    ),
+    Effect.onInterrupt(() => suspendRoots),
     Effect.provideService(Scope.Scope, ownerScope),
     Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
     semaphore.withPermitsIfAvailable(1),
@@ -391,18 +392,7 @@ export const makeTranscriptDiscovery = Effect.fn("AiMetrics.makeTranscriptDiscov
       })
     )
   );
-  const suspend = Effect.forEach(
-    roots,
-    (root) =>
-      closeRoot(root).pipe(
-        Effect.andThen(
-          Effect.sync(() => {
-            if (root.state === "scanning") root.state = "pending";
-          })
-        )
-      ),
-    { discard: true }
-  ).pipe(
+  const suspend = suspendRoots.pipe(
     semaphore.withPermitsIfAvailable(1),
     Effect.flatMap((result) => (O.isNone(result) ? Effect.fail(failure("busy")) : Effect.void))
   );

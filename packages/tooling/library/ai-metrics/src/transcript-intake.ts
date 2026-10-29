@@ -24,7 +24,7 @@ const $I = $RepoAiMetricsId.create("transcript-intake");
 /**
  * Bounded candidate identities for one fair scheduling reservation.
  *
- * **Example**
+ * **Example** (Inspect transcript schedule input)
  * ```ts
  * import { TranscriptScheduleInput } from "@beep/repo-ai-metrics/transcript-intake"
  * console.log(TranscriptScheduleInput.make({ candidates: [], limit: 1 }).limit)
@@ -42,7 +42,7 @@ export class TranscriptScheduleInput extends S.Opaque<TranscriptScheduleInput, {
 /**
  * Fixed ownership and storage bounds for a dedicated local intake database.
  *
- * **Example**
+ * **Example** (Inspect transcript intake config)
  * ```ts
  * import { TranscriptIntakeConfig } from "@beep/repo-ai-metrics/transcript-intake"
  * import * as S from "effect/Schema"
@@ -69,7 +69,7 @@ export class TranscriptIntakeConfig extends S.Opaque<TranscriptIntakeConfig, { r
 /**
  * Local transaction acceptance, distinct from export or backend visibility.
  *
- * **Example**
+ * **Example** (Inspect transcript acceptance)
  * ```ts
  * import { TranscriptAcceptance } from "@beep/repo-ai-metrics/transcript-intake"
  * import * as S from "effect/Schema"
@@ -108,7 +108,7 @@ export class TranscriptAcceptance extends S.Opaque<TranscriptAcceptance, { reado
 export class VerifiedPageDisposition extends S.Opaque<VerifiedPageDisposition, { readonly brand: unique symbol }>()(
   S.Struct({
     version: S.tag("verified-page-disposition/v1"),
-    reason: S.Literal("backend-verified"),
+    reason: S.tag("backend-verified"),
     page: TranscriptAcceptance,
     disposedAt: S.Natural,
     enrolledOwnership: S.optionalKey(CanonicalOwnershipSummary),
@@ -131,7 +131,7 @@ export class VerifiedPageDisposition extends S.Opaque<VerifiedPageDisposition, {
 export class ExpiredPageDisposition extends S.Opaque<ExpiredPageDisposition, { readonly brand: unique symbol }>()(
   S.Struct({
     version: S.tag("expired-page-disposition/v1"),
-    reason: S.Literal("retention-expired"),
+    reason: S.tag("retention-expired"),
     page: TranscriptAcceptance,
     disposedAt: S.Natural,
     enrolledOwnership: S.optionalKey(CanonicalOwnershipSummary),
@@ -184,9 +184,21 @@ export const PageDisposition = S.Union([VerifiedPageDisposition, ExpiredPageDisp
   $I.annoteSchema("PageDisposition", { description: "Checksummed reason for metadata payload removal." })
 );
 /**
+ * Validated payload disposition returned by journal maintenance.
+ *
+ * **Example** (Read a disposition reason)
+ * ```ts
+ * import type { PageDisposition } from "@beep/repo-ai-metrics/transcript-intake"
+ * const reason = (disposition: PageDisposition) => disposition.reason
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export type PageDisposition = typeof PageDisposition.Type;
+/**
  * Current retained metadata totals, not a fleet coverage count.
  *
- * **Example**
+ * **Example** (Inspect transcript intake stats)
  * ```ts
  * import { TranscriptIntakeStats } from "@beep/repo-ai-metrics/transcript-intake"
  * import * as S from "effect/Schema"
@@ -204,7 +216,7 @@ export class TranscriptIntakeStats extends S.Opaque<TranscriptIntakeStats, { rea
 /**
  * Safe refusal of intake without advancing source progress.
  *
- * **Example**
+ * **Example** (Inspect transcript intake error)
  * ```ts
  * import { TranscriptIntakeError } from "@beep/repo-ai-metrics/transcript-intake"
  * console.log(TranscriptIntakeError.make({ reason: "capacity" }).message)
@@ -243,13 +255,141 @@ const PayloadRows = S.Array(S.Struct({ payload: S.String }));
 const ReceiptRows = S.Array(TranscriptAcceptance);
 const singleStats = S.Tuple([TranscriptIntakeStats]);
 
-const safe = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
-  effect.pipe(Effect.mapError((error) => (S.is(TranscriptIntakeError)(error) ? error : failure("storage"))));
+/**
+ * Preserve typed intake refusals while redacting unknown storage failures.
+ *
+ * **Example** (Retaining a safe refusal)
+ * ```ts
+ * import { sanitizeTranscriptIntakeError, TranscriptIntakeError } from "@beep/repo-ai-metrics/transcript-intake"
+ * console.log(sanitizeTranscriptIntakeError(TranscriptIntakeError.make({ reason: "capacity" })).reason)
+ * ```
+ * **Details** Native and reconstructed intake share this boundary. Unknown errors
+ * become content-free storage refusals; known intake errors retain their identity.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const sanitizeTranscriptIntakeError = (error: unknown): TranscriptIntakeError =>
+  S.is(TranscriptIntakeError)(error) ? error : failure("storage");
+const safe = Effect.mapError(sanitizeTranscriptIntakeError);
+const encodeTranscriptIntakeConfigJson = S.encodeEffect(S.fromJsonString(TranscriptIntakeConfig));
+const decodeNameRecordRows = S.decodeUnknownEffect(S.Array(S.Struct({ name: S.String })));
+const decodeNameFileRecordRows = S.decodeUnknownEffect(S.Array(S.Struct({ name: S.String, file: S.String })));
+const decodeArguments = S.decodeUnknownEffect(S.Tuple([S.Struct({ synchronous: S.tag(3) })]));
+const decodeArguments2 = S.decodeUnknownEffect(S.Tuple([S.Struct({ journal_mode: S.tag("delete") })]));
+const decodeArguments3 = S.decodeUnknownEffect(S.Tuple([S.Struct({ page_size: S.tag(4096) })]));
+const decodeArguments4 = S.decodeUnknownEffect(S.Tuple([S.Struct({ max_page_count: S.Natural })]));
+const encodeEvidenceWindowJson = S.encodeEffect(S.fromJsonString(EvidenceWindow));
+const decodeArguments5 = S.decodeUnknownEffect(S.Tuple([S.Struct({ bytes: S.Natural })]));
+const decodePayloadDigestRecordRows = S.decodeUnknownEffect(
+  S.Array(S.Struct({ payload: S.String, digest: Sha256Hex }))
+);
+const decodePageDispositionJson = S.decodeEffect(S.fromJsonString(PageDisposition), {
+  onExcessProperty: "error",
+});
+const encodeTranscriptPageJson = S.encodeEffect(S.fromJsonString(TranscriptPage));
+const decodeArguments6 = S.decodeUnknownEffect(S.Tuple([TranscriptAcceptance]));
+const decodeSourceIdRecordRows = S.decodeUnknownEffect(S.Array(S.Struct({ sourceId: Sha256Hex })));
+
+const requireStoredConfiguration = Effect.fnUntraced(function* (sql: SqlClient.SqlClient, configJson: string) {
+  const existing =
+    yield* sql`SELECT substr(payload,1,4097) AS payload FROM observation_intake_config WHERE singleton = 1`.pipe(
+      Effect.flatMap(S.decodeUnknownEffect(PayloadRows))
+    );
+  if (existing.length !== 1 || existing[0]?.payload !== configJson) return yield* failure("configuration");
+});
+const requireOwnedJournal = Effect.fnUntraced(function* (sql: SqlClient.SqlClient, configJson: string) {
+  const names =
+    yield* sql`SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT GLOB 'sqlite_*' LIMIT ${tables.length + 1}`.pipe(
+      Effect.flatMap(decodeNameRecordRows)
+    );
+  if (
+    names.length > tables.length ||
+    A.some(names, (row) => !A.contains(tables, row.name)) ||
+    (names.length > 0 && !A.some(names, (row) => row.name === "observation_intake_config"))
+  )
+    return yield* failure("not-owned");
+  if (names.length > 0) {
+    yield* requireStoredConfiguration(sql, configJson);
+  }
+});
+const configureJournalDatabase = Effect.fnUntraced(function* (
+  sql: SqlClient.SqlClient,
+  config: TranscriptIntakeConfig
+) {
+  const databases = yield* sql`PRAGMA database_list`.pipe(Effect.flatMap(decodeNameFileRecordRows));
+  if (databases.length !== 1 || databases[0]?.name !== "main" || databases[0]?.file === "")
+    return yield* failure("configuration");
+  yield* sql`PRAGMA page_size = 4096`;
+  yield* sql`PRAGMA journal_mode = DELETE`;
+  yield* sql`PRAGMA synchronous = EXTRA`;
+  yield* sql`PRAGMA mmap_size = 0`;
+  yield* sql`PRAGMA cache_size = -2048`;
+  yield* sql.unsafe(`PRAGMA max_page_count = ${config.maxDatabasePages}`);
+  yield* sql`PRAGMA synchronous`.pipe(Effect.flatMap(decodeArguments));
+  yield* sql`PRAGMA journal_mode`.pipe(Effect.flatMap(decodeArguments2));
+  yield* sql`PRAGMA page_size`.pipe(Effect.flatMap(decodeArguments3));
+  const ceiling = yield* sql`PRAGMA max_page_count`.pipe(Effect.flatMap(decodeArguments4));
+  if (ceiling[0].max_page_count !== config.maxDatabasePages) return yield* failure("configuration");
+});
+const initializeJournalTables = Effect.fnUntraced(function* (sql: SqlClient.SqlClient, configJson: string) {
+  yield* sql.withTransaction(
+    Effect.gen(function* () {
+      yield* sql`CREATE TABLE IF NOT EXISTS observation_intake_config (singleton INTEGER PRIMARY KEY CHECK(singleton=1), payload TEXT NOT NULL)`;
+      yield* sql`INSERT OR IGNORE INTO observation_intake_config(singleton,payload) VALUES (1,${configJson})`;
+      yield* requireStoredConfiguration(sql, configJson);
+      yield* sql`CREATE TABLE IF NOT EXISTS observation_intake_pages (
+        sequence INTEGER PRIMARY KEY AUTOINCREMENT, receipt_id TEXT NOT NULL UNIQUE,
+        source_key TEXT NOT NULL, payload TEXT NOT NULL, payload_bytes INTEGER NOT NULL CHECK(payload_bytes>0),
+        frames INTEGER NOT NULL CHECK(frames>=0), accepted_at INTEGER NOT NULL,evidence_epoch INTEGER NOT NULL DEFAULT 0)`;
+      const columns = yield* sql`PRAGMA table_info(observation_intake_pages)`.pipe(
+        Effect.flatMap(decodeNameRecordRows)
+      );
+      if (!A.some(columns, (c) => c.name === "evidence_epoch"))
+        yield* sql`ALTER TABLE observation_intake_pages ADD COLUMN evidence_epoch INTEGER NOT NULL DEFAULT 0`;
+      yield* sql`CREATE TABLE IF NOT EXISTS observation_evidence_window(singleton INTEGER PRIMARY KEY CHECK(singleton=1),payload TEXT NOT NULL,digest TEXT NOT NULL)`;
+      const window = EvidenceWindow.make({
+        epoch: 0,
+        openedAt: yield* Clock.currentTimeMillis,
+        latest: O.none(),
+        totals: RetiredEvidenceTotals.make({
+          pages: 0,
+          payloadBytes: 0,
+          nativeAcceptedOccurrences: 0,
+          nativeRejectedOccurrences: 0,
+          transcriptFrameOccurrences: 0,
+          eventObservations: 0,
+          attempts: 0,
+          pending: 0,
+          acceptedUnverified: 0,
+          visible: 0,
+          rejected: 0,
+          unresolved: 0,
+          verifiedPages: 0,
+          expiredPages: 0,
+        }),
+      });
+      const windowPayload = yield* encodeEvidenceWindowJson(window);
+      const windowDigest = yield* hashPublicTextSha256(windowPayload);
+      yield* sql`INSERT OR IGNORE INTO observation_evidence_window(singleton,payload,digest) VALUES(1,${windowPayload},${windowDigest})`;
+      yield* readEvidenceWindow().pipe(Effect.provideService(SqlClient.SqlClient, sql));
+      yield* sql`CREATE TABLE IF NOT EXISTS observation_launch_facts (
+        sequence INTEGER PRIMARY KEY AUTOINCREMENT, launch_id TEXT NOT NULL, phase INTEGER NOT NULL CHECK(phase BETWEEN 0 AND 3),
+        payload TEXT NOT NULL, payload_bytes INTEGER NOT NULL CHECK(payload_bytes>0), digest TEXT NOT NULL,
+        recorded_at INTEGER NOT NULL, evidence_epoch INTEGER NOT NULL, UNIQUE(launch_id,phase))`;
+      yield* sql`CREATE TABLE IF NOT EXISTS observation_page_dispositions (receipt_id TEXT PRIMARY KEY, payload TEXT NOT NULL, digest TEXT NOT NULL)`;
+      yield* sql`CREATE TABLE IF NOT EXISTS observation_source_cursors (source_key TEXT PRIMARY KEY, payload TEXT NOT NULL, receipt_id TEXT NOT NULL)`;
+      yield* sql`CREATE TABLE IF NOT EXISTS observation_schedule_cursor (singleton INTEGER PRIMARY KEY CHECK(singleton=1), source_id TEXT NOT NULL)`;
+      yield* sql`CREATE TABLE IF NOT EXISTS observation_native_events (event_id TEXT PRIMARY KEY, payload_hash TEXT NOT NULL, receipt_id TEXT NOT NULL, span_index INTEGER NOT NULL)`;
+      yield* sql`CREATE INDEX IF NOT EXISTS observation_native_events_by_receipt ON observation_native_events(receipt_id,span_index)`;
+      yield* sql`CREATE TABLE IF NOT EXISTS observation_native_receipts (receipt_id TEXT PRIMARY KEY, payload TEXT NOT NULL, payload_hash TEXT NOT NULL)`;
+    })
+  );
+});
 
 /**
  * Open the metadata journal on an injected dedicated, file-backed SQLite client.
  *
- * **Example**
+ * **Example** (Open a transcript journal)
  * ```ts
  * import { makeTranscriptIntakeJournal } from "@beep/repo-ai-metrics/transcript-intake"
  * console.log(typeof makeTranscriptIntakeJournal) // function
@@ -263,104 +403,10 @@ export const makeTranscriptIntakeJournal = Effect.fn("AiMetrics.makeTranscriptIn
     safe(
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
-        const configJson = yield* S.encodeEffect(S.fromJsonString(TranscriptIntakeConfig))(config);
-        const names =
-          yield* sql`SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT GLOB 'sqlite_*' LIMIT ${tables.length + 1}`.pipe(
-            Effect.flatMap(S.decodeUnknownEffect(S.Array(S.Struct({ name: S.String }))))
-          );
-        if (
-          names.length > tables.length ||
-          A.some(names, (row) => !A.contains(tables, row.name)) ||
-          (names.length > 0 && !A.some(names, (row) => row.name === "observation_intake_config"))
-        )
-          return yield* failure("not-owned");
-        if (names.length > 0) {
-          const existing =
-            yield* sql`SELECT substr(payload,1,4097) AS payload FROM observation_intake_config WHERE singleton = 1`.pipe(
-              Effect.flatMap(S.decodeUnknownEffect(PayloadRows))
-            );
-          if (existing.length !== 1 || existing[0]?.payload !== configJson) return yield* failure("configuration");
-        }
-        const databases = yield* sql`PRAGMA database_list`.pipe(
-          Effect.flatMap(S.decodeUnknownEffect(S.Array(S.Struct({ name: S.String, file: S.String }))))
-        );
-        if (databases.length !== 1 || databases[0]?.name !== "main" || databases[0]?.file === "")
-          return yield* failure("configuration");
-        yield* sql`PRAGMA page_size = 4096`;
-        yield* sql`PRAGMA journal_mode = DELETE`;
-        yield* sql`PRAGMA synchronous = EXTRA`;
-        yield* sql`PRAGMA mmap_size = 0`;
-        yield* sql`PRAGMA cache_size = -2048`;
-        yield* sql.unsafe(`PRAGMA max_page_count = ${config.maxDatabasePages}`);
-        yield* sql`PRAGMA synchronous`.pipe(
-          Effect.flatMap(S.decodeUnknownEffect(S.Tuple([S.Struct({ synchronous: S.Literal(3) })])))
-        );
-        yield* sql`PRAGMA journal_mode`.pipe(
-          Effect.flatMap(S.decodeUnknownEffect(S.Tuple([S.Struct({ journal_mode: S.Literal("delete") })])))
-        );
-        yield* sql`PRAGMA page_size`.pipe(
-          Effect.flatMap(S.decodeUnknownEffect(S.Tuple([S.Struct({ page_size: S.Literal(4096) })])))
-        );
-        const ceiling = yield* sql`PRAGMA max_page_count`.pipe(
-          Effect.flatMap(S.decodeUnknownEffect(S.Tuple([S.Struct({ max_page_count: S.Natural })])))
-        );
-        if (ceiling[0].max_page_count !== config.maxDatabasePages) return yield* failure("configuration");
-        yield* sql.withTransaction(
-          Effect.gen(function* () {
-            yield* sql`CREATE TABLE IF NOT EXISTS observation_intake_config (singleton INTEGER PRIMARY KEY CHECK(singleton=1), payload TEXT NOT NULL)`;
-            yield* sql`INSERT OR IGNORE INTO observation_intake_config(singleton,payload) VALUES (1,${configJson})`;
-            const stored =
-              yield* sql`SELECT substr(payload,1,4097) AS payload FROM observation_intake_config WHERE singleton = 1`.pipe(
-                Effect.flatMap(S.decodeUnknownEffect(PayloadRows))
-              );
-            if (stored.length !== 1 || stored[0]?.payload !== configJson) return yield* failure("configuration");
-            yield* sql`CREATE TABLE IF NOT EXISTS observation_intake_pages (
-        sequence INTEGER PRIMARY KEY AUTOINCREMENT, receipt_id TEXT NOT NULL UNIQUE,
-        source_key TEXT NOT NULL, payload TEXT NOT NULL, payload_bytes INTEGER NOT NULL CHECK(payload_bytes>0),
-        frames INTEGER NOT NULL CHECK(frames>=0), accepted_at INTEGER NOT NULL,evidence_epoch INTEGER NOT NULL DEFAULT 0)`;
-            const columns = yield* sql`PRAGMA table_info(observation_intake_pages)`.pipe(
-              Effect.flatMap(S.decodeUnknownEffect(S.Array(S.Struct({ name: S.String }))))
-            );
-            if (!A.some(columns, (c) => c.name === "evidence_epoch"))
-              yield* sql`ALTER TABLE observation_intake_pages ADD COLUMN evidence_epoch INTEGER NOT NULL DEFAULT 0`;
-            yield* sql`CREATE TABLE IF NOT EXISTS observation_evidence_window(singleton INTEGER PRIMARY KEY CHECK(singleton=1),payload TEXT NOT NULL,digest TEXT NOT NULL)`;
-            const window = EvidenceWindow.make({
-              epoch: 0,
-              openedAt: yield* Clock.currentTimeMillis,
-              latest: O.none(),
-              totals: RetiredEvidenceTotals.make({
-                pages: 0,
-                payloadBytes: 0,
-                nativeAcceptedOccurrences: 0,
-                nativeRejectedOccurrences: 0,
-                transcriptFrameOccurrences: 0,
-                eventObservations: 0,
-                attempts: 0,
-                pending: 0,
-                acceptedUnverified: 0,
-                visible: 0,
-                rejected: 0,
-                unresolved: 0,
-                verifiedPages: 0,
-                expiredPages: 0,
-              }),
-            });
-            const windowPayload = yield* S.encodeEffect(S.fromJsonString(EvidenceWindow))(window);
-            const windowDigest = yield* hashPublicTextSha256(windowPayload);
-            yield* sql`INSERT OR IGNORE INTO observation_evidence_window(singleton,payload,digest) VALUES(1,${windowPayload},${windowDigest})`;
-            yield* readEvidenceWindow().pipe(Effect.provideService(SqlClient.SqlClient, sql));
-            yield* sql`CREATE TABLE IF NOT EXISTS observation_launch_facts (
-        sequence INTEGER PRIMARY KEY AUTOINCREMENT, launch_id TEXT NOT NULL, phase INTEGER NOT NULL CHECK(phase BETWEEN 0 AND 3),
-        payload TEXT NOT NULL, payload_bytes INTEGER NOT NULL CHECK(payload_bytes>0), digest TEXT NOT NULL,
-        recorded_at INTEGER NOT NULL, evidence_epoch INTEGER NOT NULL, UNIQUE(launch_id,phase))`;
-            yield* sql`CREATE TABLE IF NOT EXISTS observation_page_dispositions (receipt_id TEXT PRIMARY KEY, payload TEXT NOT NULL, digest TEXT NOT NULL)`;
-            yield* sql`CREATE TABLE IF NOT EXISTS observation_source_cursors (source_key TEXT PRIMARY KEY, payload TEXT NOT NULL, receipt_id TEXT NOT NULL)`;
-            yield* sql`CREATE TABLE IF NOT EXISTS observation_schedule_cursor (singleton INTEGER PRIMARY KEY CHECK(singleton=1), source_id TEXT NOT NULL)`;
-            yield* sql`CREATE TABLE IF NOT EXISTS observation_native_events (event_id TEXT PRIMARY KEY, payload_hash TEXT NOT NULL, receipt_id TEXT NOT NULL, span_index INTEGER NOT NULL)`;
-            yield* sql`CREATE INDEX IF NOT EXISTS observation_native_events_by_receipt ON observation_native_events(receipt_id,span_index)`;
-            yield* sql`CREATE TABLE IF NOT EXISTS observation_native_receipts (receipt_id TEXT PRIMARY KEY, payload TEXT NOT NULL, payload_hash TEXT NOT NULL)`;
-          })
-        );
+        const configJson = yield* encodeTranscriptIntakeConfigJson(config);
+        yield* requireOwnedJournal(sql, configJson);
+        yield* configureJournalDatabase(sql, config);
+        yield* initializeJournalTables(sql, configJson);
         const stats = safe(
           sql`SELECT COUNT(*) AS pages, COALESCE(SUM(payload_bytes),0) + (SELECT COALESCE(SUM(payload_bytes),0) FROM observation_launch_facts) AS "payloadBytes", COALESCE(SUM(frames),0) AS frames FROM observation_intake_pages`.pipe(
             Effect.flatMap(S.decodeUnknownEffect(singleStats)),
@@ -372,7 +418,7 @@ export const makeTranscriptIntakeJournal = Effect.fn("AiMetrics.makeTranscriptIn
           SELECT launch_id, SUM(payload_bytes) AS used FROM observation_launch_facts GROUP BY launch_id
           HAVING MIN(phase)=0 AND MAX(phase)<3
         )`.pipe(
-            Effect.flatMap(S.decodeUnknownEffect(S.Tuple([S.Struct({ bytes: S.Natural })]))),
+            Effect.flatMap(decodeArguments5),
             Effect.map((rows) => rows[0].bytes)
           )
         );
@@ -381,13 +427,11 @@ export const makeTranscriptIntakeJournal = Effect.fn("AiMetrics.makeTranscriptIn
             Effect.gen(function* () {
               const rows =
                 yield* sql`SELECT substr(payload,1,4097) AS payload,digest FROM observation_page_dispositions WHERE receipt_id=${receiptId}`.pipe(
-                  Effect.flatMap(S.decodeUnknownEffect(S.Array(S.Struct({ payload: S.String, digest: Sha256Hex }))))
+                  Effect.flatMap(decodePayloadDigestRecordRows)
                 );
               if (rows[0] === undefined) return O.none<typeof PageDisposition.Type>();
               if ((yield* hashPublicTextSha256(rows[0].payload)) !== rows[0].digest) return yield* failure("storage");
-              const value = yield* S.decodeEffect(S.fromJsonString(PageDisposition), {
-                onExcessProperty: "error",
-              })(rows[0].payload);
+              const value = yield* decodePageDispositionJson(rows[0].payload);
               if (value.page.receiptId !== receiptId) return yield* failure("storage");
               return O.some(value);
             })
@@ -418,7 +462,7 @@ export const makeTranscriptIntakeJournal = Effect.fn("AiMetrics.makeTranscriptIn
                     expected.value.source !== page.cursor.source)
                 )
                   return yield* failure("namespace");
-                const payload = yield* S.encodeEffect(S.fromJsonString(TranscriptPage))(page);
+                const payload = yield* encodeTranscriptPageJson(page);
                 const payloadBytes = new TextEncoder().encode(payload).byteLength;
                 if (payloadBytes > 4_194_304) return yield* failure("oversize");
 
@@ -473,7 +517,7 @@ export const makeTranscriptIntakeJournal = Effect.fn("AiMetrics.makeTranscriptIn
           ON CONFLICT(source_key) DO UPDATE SET payload=excluded.payload,receipt_id=excluded.receipt_id`;
                     const inserted =
                       yield* sql`SELECT receipt_id AS "receiptId", sequence, accepted_at AS "acceptedAt", payload_bytes AS "payloadBytes", frames,evidence_epoch AS "evidenceEpoch" FROM observation_intake_pages WHERE receipt_id=${receiptId}`.pipe(
-                        Effect.flatMap(S.decodeUnknownEffect(S.Tuple([TranscriptAcceptance])))
+                        Effect.flatMap(decodeArguments6)
                       );
                     return inserted[0];
                   })
@@ -488,7 +532,7 @@ export const makeTranscriptIntakeJournal = Effect.fn("AiMetrics.makeTranscriptIn
                 const candidates = A.sort(A.dedupe(input.candidates), Order.String);
                 const rows =
                   yield* sql`SELECT source_id AS "sourceId" FROM observation_schedule_cursor WHERE singleton=1`.pipe(
-                    Effect.flatMap(S.decodeUnknownEffect(S.Array(S.Struct({ sourceId: Sha256Hex }))))
+                    Effect.flatMap(decodeSourceIdRecordRows)
                   );
                 const prior = rows[0]?.sourceId;
                 const ordered =

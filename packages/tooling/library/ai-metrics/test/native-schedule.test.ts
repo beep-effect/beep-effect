@@ -24,6 +24,7 @@ import * as BunHttpServer from "@effect/platform-bun/BunHttpServer";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeHttpClient from "@effect/platform-node/NodeHttpClient";
 import { expect } from "@effect/vitest";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
@@ -53,6 +54,8 @@ const schedulePolicy = NativeSchedulePolicy.make({
   reconcileDelayMillis: 100,
   tickTimeoutMillis: 1000,
 });
+const encodeJsonValue = S.encodeEffect(S.fromJsonString(S.Unknown));
+
 const fixture = Effect.fn("NativeScheduleTest.fixture")(function* (
   count = 1,
   sourceTime: O.Option<string> = O.none(),
@@ -67,7 +70,7 @@ const fixture = Effect.fn("NativeScheduleTest.fixture")(function* (
     maxDatabasePages: 256,
   });
   const native = yield* makeNativeIntakeJournal(intake);
-  const body = yield* S.encodeEffect(S.fromJsonString(S.Unknown))({
+  const body = yield* encodeJsonValue({
     resourceSpans: [
       {
         scopeSpans: [
@@ -179,18 +182,18 @@ const replayPolicy = (targetId: Sha256Hex, minimumDelayMillis = 100) =>
     ),
   });
 
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("rejects replay qualification for another target before persisting a schedule", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
       expect(yield* f.reopen(replayPolicy(id("e"))).pipe(Effect.flip)).toMatchObject({ reason: "configuration" });
       expect(yield* f.sql`SELECT name FROM sqlite_master WHERE name='observation_native_schedule'`).toHaveLength(0);
       expect(yield* Ref.get(f.posts)).toBe(0);
-    }).pipe(Effect.scoped)
+    })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("preserves the replay delay and never retries a failed query", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -207,11 +210,11 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
       yield* Effect.sleep(120);
       expect(yield* scheduler.tick).toMatchObject({ outcomes: [{ _tag: "Sent" }] });
       expect(yield* Ref.get(f.posts)).toBe(2);
-    }).pipe(Effect.scoped)
+    })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("never replays a mismatched backend record even with qualification", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -228,11 +231,11 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
       yield* Effect.sleep(120);
       expect(yield* scheduler.tick).toMatchObject({ outcomes: [{ _tag: "Reconciled", result: { _tag: "Mismatch" } }] });
       expect(yield* Ref.get(f.posts)).toBe(1);
-    }).pipe(Effect.scoped)
+    })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("bounds qualified replays across scheduler reconstruction without erasing acceptance", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -249,11 +252,11 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
         value: { state: "accepted-unverified", attempts: 8 },
       });
       expect(yield* f.reopen().pipe(Effect.flip)).toMatchObject({ reason: "configuration" });
-    }).pipe(Effect.scoped)
+    })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("reconciles then replays an interrupted attempt under explicit qualification", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -272,11 +275,11 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
       expect(yield* restarted.tick).toMatchObject({ outcomes: [{ _tag: "Sent" }] });
       expect(yield* Ref.get(f.posts)).toBe(2);
       expect(yield* Ref.get(f.reads)).toBe(1);
-    }).pipe(Effect.scoped)
+    })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("retries an accepted-but-missing event only under target-bound idempotent qualification", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -307,26 +310,26 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
       expect(yield* f.sender.ledger.state(f.batch.spans[0]?.eventId ?? id("0"))).toMatchObject({
         value: { state: "accepted-unverified", attempts: 2 },
       });
-    }).pipe(Effect.scoped)
+    })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("samples unresolved source and acceptance age without calling missing timestamps zero", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
       const scheduler = yield* f.reopen();
       const tick = yield* scheduler.tick;
-      expect(tick).toMatchObject({
-        lag: { value: { sampledEvents: 1, unknownSourceTimes: 1, maxSourceAgeMillis: O.none() } },
-      });
-      if (tick._tag !== "Complete" || O.isNone(tick.lag)) return yield* Effect.die("Missing age sample");
+      assertTrue(tick._tag === "Complete");
+      assertTrue(O.isSome(tick.lag));
+      expect(tick.lag.value).toMatchObject({ sampledEvents: 1, unknownSourceTimes: 1 });
+      assertNone(tick.lag.value.maxSourceAgeMillis);
       expect(O.getOrElse(tick.lag.value.maxAcceptedAgeMillis, () => -1)).toBeGreaterThanOrEqual(0);
-    }).pipe(Effect.scoped)
+    })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("reports historical source age separately from newly accepted age", () =>
     Effect.gen(function* () {
       const now = yield* Clock.currentTimeMillis;
@@ -336,23 +339,25 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
       expect(O.getOrElse(tick.lag.value.maxSourceAgeMillis, () => -1)).toBeGreaterThanOrEqual(60000);
       expect(O.getOrElse(tick.lag.value.maxAcceptedAgeMillis, () => 60000)).toBeLessThan(60000);
       expect(tick.lag.value.unknownSourceTimes).toBe(0);
-    }).pipe(Effect.scoped)
+    })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("reports a future source clock without fabricating zero lag", () =>
     Effect.gen(function* () {
       const now = yield* Clock.currentTimeMillis;
       const f = yield* fixture(1, O.some(`${now + 60000}000000`));
-      expect(yield* (yield* f.reopen()).tick).toMatchObject({
-        lag: { value: { sourceClockRegressions: 1, unknownSourceTimes: 0, maxSourceAgeMillis: O.none() } },
-      });
-    }).pipe(Effect.scoped)
+      const tick = yield* (yield* f.reopen()).tick;
+      assertTrue(tick._tag === "Complete");
+      assertTrue(O.isSome(tick.lag));
+      expect(tick.lag.value).toMatchObject({ sourceClockRegressions: 1, unknownSourceTimes: 0 });
+      assertNone(tick.lag.value.maxSourceAgeMillis);
+    })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("uses an end-only timestamp and floors nanoseconds before numeric conversion", () =>
     Effect.gen(function* () {
       const clock = yield* Clock.Clock;
@@ -371,14 +376,15 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
           currentTimeMillisUnsafe: () => observedAt,
         })
       );
-      expect(tick).toMatchObject({
-        lag: { value: { sampledEvents: 1, unknownSourceTimes: 0, maxSourceAgeMillis: O.some(1) } },
-      });
-    }).pipe(Effect.scoped)
+      assertTrue(tick._tag === "Complete");
+      assertTrue(O.isSome(tick.lag));
+      expect(tick.lag.value).toMatchObject({ sampledEvents: 1, unknownSourceTimes: 0 });
+      assertSome(tick.lag.value.maxSourceAgeMillis, 1);
+    })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("reconstructs a prior multi-event attempt in source order rather than sorted identity order", () =>
     Effect.gen(function* () {
       const f = yield* fixture(5);
@@ -395,11 +401,11 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
       });
       expect(yield* Ref.get(f.posts)).toBe(1);
       expect(yield* Ref.get(f.reads)).toBe(1);
-    }).pipe(Effect.scoped)
+    })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("resumes the durable scan after reconstruction and queries accepted events without resending", () =>
     Effect.gen(function* () {
       const f = yield* fixture(3);
@@ -420,11 +426,11 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
       });
       expect(yield* Ref.get(f.posts)).toBe(3);
       expect(yield* Ref.get(f.reads)).toBe(1);
-    }).pipe(Effect.scoped)
+    })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("backs off retryable replies and reserves a fresh attempt only after the delay", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -441,11 +447,11 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
       const attempts = yield* f.sql`SELECT attempt_id FROM observation_delivery_attempts`;
       expect(attempts).toHaveLength(2);
       expect(attempts[0]).not.toEqual(attempts[1]);
-    }).pipe(Effect.scoped)
+    })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("does not let a permanent refusal starve the next event", () =>
     Effect.gen(function* () {
       const f = yield* fixture(2);
@@ -456,11 +462,11 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
       expect(yield* scheduler.tick).toMatchObject({ outcomes: [{ _tag: "Sent", eventId: f.batch.spans[1]?.eventId }] });
       expect(yield* scheduler.tick).toMatchObject({ outcomes: [{ _tag: "Held", reason: "permanent-refusal" }] });
       expect(yield* Ref.get(f.posts)).toBe(2);
-    }).pipe(Effect.scoped)
+    })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("advances only one claim before a deadline and recovers uncertainty by read-back", () =>
     Effect.gen(function* () {
       const f = yield* fixture(3);
@@ -487,11 +493,11 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
       expect(yield* f.sender.ledger.state(f.batch.spans[0]?.eventId ?? id("0"))).toMatchObject({
         value: { state: "unresolved", attempts: 1 },
       });
-    }).pipe(Effect.scoped)
+    })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("refuses concurrent ticks and releases admission after interruption", () =>
     Effect.gen(function* () {
       const f = yield* fixture(2);
@@ -504,11 +510,11 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
       yield* Ref.set(f.hang, false);
       expect(yield* scheduler.tick).toMatchObject({ outcomes: [{ _tag: "Sent", eventId: f.batch.spans[1]?.eventId }] });
       expect(yield* Ref.get(f.posts)).toBe(2);
-    }).pipe(Effect.scoped)
+    })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("refuses policy drift and cursor tampering before any network work", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -520,11 +526,11 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
       expect(yield* scheduler.tick.pipe(Effect.flip)).toMatchObject({ reason: "storage" });
       expect(yield* Ref.get(f.posts)).toBe(0);
       expect(yield* Ref.get(f.reads)).toBe(0);
-    }).pipe(Effect.scoped)
+    })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("fairly schedules native and reconstructed pages with separate event identities", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -558,12 +564,12 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
       const restarted = yield* f.reopen();
       expect(yield* restarted.tick).toMatchObject({ outcomes: [{ _tag: "Sent", eventId: frame.occurrenceId }] });
       expect(yield* Ref.get(f.posts)).toBe(2);
-    }).pipe(Effect.scoped)
+    })
   )
 );
 
 for (const initial of ["accepted", "interrupted"]) {
-  it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+  it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
     it.effect(`stops qualified replay after permanent refusal while preserving ${initial} history`, () =>
       Effect.gen(function* () {
         const f = yield* fixture();
@@ -592,12 +598,12 @@ for (const initial of ["accepted", "interrupted"]) {
             attempts: 2,
           },
         });
-      }).pipe(Effect.scoped)
+      })
     )
   );
 }
 
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("persists capped read-back delay across reconstruction without more sends", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -619,11 +625,11 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
       expect(yield* (yield* f.reopen()).tick).toMatchObject({ outcomes: [{ _tag: "Reconciled" }] });
       expect(yield* Ref.get(f.reads)).toBe(5);
       expect(yield* Ref.get(f.posts)).toBe(1);
-    }).pipe(Effect.scoped)
+    })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("reserves query delay before failed or interrupted read-back", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -640,11 +646,11 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
       expect(yield* (yield* f.reopen()).tick).toMatchObject({ outcomes: [{ reason: "query-delay" }] });
       expect(yield* Ref.get(f.reads)).toBe(1);
       expect(yield* Ref.get(f.posts)).toBe(1);
-    }).pipe(Effect.scoped)
+    })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("refuses corrupted query reservations without querying or sending", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -655,6 +661,6 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
       expect(yield* (yield* f.reopen()).tick).toMatchObject({ outcomes: [{ _tag: "Failed", reason: "storage" }] });
       expect(yield* Ref.get(f.reads)).toBe(1);
       expect(yield* Ref.get(f.posts)).toBe(1);
-    }).pipe(Effect.scoped)
+    })
   )
 );

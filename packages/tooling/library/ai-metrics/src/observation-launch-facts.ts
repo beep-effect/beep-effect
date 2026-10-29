@@ -156,6 +156,29 @@ export const observationLaunchReceiptId = Effect.fn("AiMetrics.observationLaunch
       )
     )
 );
+const StoredLaunchRow = S.Struct({
+  phase: S.Natural,
+  payload: S.String,
+  digest: Sha256Hex,
+  recordedAt: S.Natural,
+  epoch: S.Natural,
+  bytes: S.Natural,
+}).pipe(
+  $I.annoteSchema("StoredLaunchRow", { description: "Bounded launch fact row checked before receipt interpretation." })
+);
+const decodePhasePayloadRecordRows = S.decodeUnknownEffect(S.Array(StoredLaunchRow));
+const requiresStarted = (fact: ObservationLaunchFact) =>
+  fact._tag === "SessionBound" || (fact._tag === "Finished" && fact.outcome === "succeeded");
+const requireTransition = Effect.fnUntraced(function* (
+  facts: ReadonlyArray<ObservationLaunchReceipt>,
+  fact: ObservationLaunchFact
+) {
+  const started = A.some(facts, (receipt) => receipt.fact._tag === "Started");
+  const closed = A.some(facts, (receipt) => receipt.fact._tag === "Finished");
+  if (closed) return yield* failure("conflict");
+  if (fact._tag === "Prepared" ? facts.length !== 0 : facts.length === 0) return yield* failure("conflict");
+  if (requiresStarted(fact) && !started) return yield* failure("conflict");
+});
 
 /**
  * Open bounded immutable launch observations inside the existing owned journal.
@@ -175,51 +198,54 @@ export const makeObservationLaunchFacts = Effect.fn("AiMetrics.makeObservationLa
   const sql = yield* SqlClient.SqlClient;
   const identity = (fact: ObservationLaunchFact, epoch: number) =>
     observationLaunchReceiptId(config.hostId, config.namespaceId, epoch, fact);
+  const requireStoredEnvelope = Effect.fnUntraced(function* (row: typeof StoredLaunchRow.Type, epoch: number) {
+    if (
+      row.payload.length > 8192 ||
+      new TextEncoder().encode(row.payload).byteLength !== row.bytes ||
+      row.epoch !== epoch ||
+      (yield* hashPublicTextSha256(row.payload)) !== row.digest
+    )
+      return yield* failure("storage");
+  });
+  const receiptMatchesOwner = (value: ObservationLaunchReceipt, launchId: Sha256Hex, epoch: number) =>
+    value.hostId === config.hostId &&
+    value.namespaceId === config.namespaceId &&
+    value.evidenceEpoch === epoch &&
+    value.fact.launchId === launchId;
+  const decodeStoredReceipt = Effect.fnUntraced(function* (
+    row: typeof StoredLaunchRow.Type,
+    launchId: Sha256Hex,
+    epoch: number
+  ) {
+    yield* requireStoredEnvelope(row, epoch);
+    const value = yield* decodeReceipt(row.payload);
+    if (
+      !receiptMatchesOwner(value, launchId, epoch) ||
+      phase(value.fact) !== row.phase ||
+      value.recordedAt !== row.recordedAt ||
+      (yield* identity(value.fact, epoch)) !== value.receiptId
+    )
+      return yield* failure("storage");
+    return value;
+  });
+  const requirePayloadCapacity = Effect.fnUntraced(function* (bytes: number, fact: ObservationLaunchFact) {
+    if (
+      bytes > 8192 ||
+      (fact._tag === "Prepared" &&
+        (yield* base.stats).payloadBytes + (yield* base.reservedLaunchBytes) + 32768 > config.maxPayloadBytes)
+    )
+      return yield* failure("capacity");
+  });
   const read = Effect.fn("AiMetrics.launchFacts.read")((launchId: Sha256Hex, epoch: number) =>
     safe(
       Effect.gen(function* () {
         if ((yield* base.evidenceWindow).epoch !== epoch) return yield* failure("retired");
         const rows =
           yield* sql`SELECT phase,substr(payload,1,8193) AS payload,digest,recorded_at AS "recordedAt",evidence_epoch AS epoch,payload_bytes AS bytes FROM observation_launch_facts WHERE launch_id=${launchId} ORDER BY phase LIMIT 5`.pipe(
-            Effect.flatMap(
-              S.decodeUnknownEffect(
-                S.Array(
-                  S.Struct({
-                    phase: S.Natural,
-                    payload: S.String,
-                    digest: Sha256Hex,
-                    recordedAt: S.Natural,
-                    epoch: S.Natural,
-                    bytes: S.Natural,
-                  })
-                )
-              )
-            )
+            Effect.flatMap(decodePhasePayloadRecordRows)
           );
         if (rows.length > 4) return yield* failure("storage");
-        const receipts = yield* Effect.forEach(rows, (row) =>
-          Effect.gen(function* () {
-            if (
-              row.payload.length > 8192 ||
-              new TextEncoder().encode(row.payload).byteLength !== row.bytes ||
-              row.epoch !== epoch ||
-              (yield* hashPublicTextSha256(row.payload)) !== row.digest
-            )
-              return yield* failure("storage");
-            const value = yield* decodeReceipt(row.payload);
-            if (
-              value.hostId !== config.hostId ||
-              value.namespaceId !== config.namespaceId ||
-              value.evidenceEpoch !== epoch ||
-              value.fact.launchId !== launchId ||
-              phase(value.fact) !== row.phase ||
-              value.recordedAt !== row.recordedAt ||
-              (yield* identity(value.fact, epoch)) !== value.receiptId
-            )
-              return yield* failure("storage");
-            return value;
-          })
-        );
+        const receipts = yield* Effect.forEach(rows, (row) => decodeStoredReceipt(row, launchId, epoch));
         if (receipts.length > 0) {
           const started = A.some(receipts, (value) => value.fact._tag === "Started");
           if (
@@ -249,15 +275,7 @@ export const makeObservationLaunchFacts = Effect.fn("AiMetrics.makeObservationLa
             if (existing.value.receiptId !== receiptId) return yield* failure("conflict");
             return existing.value;
           }
-          const started = A.some(facts, (receipt) => receipt.fact._tag === "Started");
-          const closed = A.some(facts, (receipt) => receipt.fact._tag === "Finished");
-          if (
-            closed ||
-            (fact._tag === "Prepared" ? facts.length !== 0 : facts.length === 0) ||
-            (fact._tag === "SessionBound" && !started) ||
-            (fact._tag === "Finished" && fact.outcome === "succeeded" && !started)
-          )
-            return yield* failure("conflict");
+          yield* requireTransition(facts, fact);
           const launches = yield* sql`SELECT count(*) AS n FROM observation_launch_facts WHERE phase=0`.pipe(
             Effect.flatMap(S.decodeUnknownEffect(Count))
           );
@@ -274,12 +292,7 @@ export const makeObservationLaunchFacts = Effect.fn("AiMetrics.makeObservationLa
           });
           const payload = yield* encodeReceipt(receipt);
           const bytes = new TextEncoder().encode(payload).byteLength;
-          if (
-            bytes > 8192 ||
-            (fact._tag === "Prepared" &&
-              (yield* base.stats).payloadBytes + (yield* base.reservedLaunchBytes) + 32768 > config.maxPayloadBytes)
-          )
-            return yield* failure("capacity");
+          yield* requirePayloadCapacity(bytes, fact);
           const digest = yield* hashPublicTextSha256(payload);
           yield* sql`INSERT INTO observation_launch_facts(launch_id,phase,payload,payload_bytes,digest,recorded_at,evidence_epoch) VALUES(${fact.launchId},${phase(fact)},${payload},${bytes},${digest},${recordedAt},${epoch})`;
           return receipt;

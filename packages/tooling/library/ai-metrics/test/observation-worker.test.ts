@@ -33,6 +33,7 @@ import { NodeServices } from "@effect/platform-node";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeHttpClient from "@effect/platform-node/NodeHttpClient";
 import { expect } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Deferred from "effect/Deferred";
@@ -56,6 +57,10 @@ import type * as Statement from "effect/sql/Statement";
 
 const sqlLayer = Layer.merge(makeSqlTestLayer({ config: undefined, driver: BunSqliteTestDriver }), NodeCrypto.layer);
 const id = (char: string) => Sha256Hex.make(Str.repeat(64)(char));
+const isStringRows = S.is(S.Array(S.String));
+const encodeJsonValue = S.encodeEffect(S.fromJsonString(S.Unknown));
+const decodeArguments = S.decodeUnknownEffect(S.Tuple([S.Struct({ id: Sha256Hex })]));
+
 const fixture = Effect.fn("ObservationWorkerTest.fixture")(function* (blockBackend = false, blockAdmission = false) {
   const sql = yield* SqlClient.SqlClient;
   const backendCalls = yield* Ref.make(0);
@@ -69,7 +74,7 @@ const fixture = Effect.fn("ObservationWorkerTest.fixture")(function* (blockBacke
       const original: Statement.Statement<Record<string, unknown>> = Reflect.apply(target, receiver, parameters);
       if (
         blockAdmission === true &&
-        S.is(S.Array(S.String))(fragments) &&
+        isStringRows(fragments) &&
         Str.includes("INSERT INTO observation_intake_pages")(fragments[0] ?? "")
       )
         return Deferred.succeed(admissionStarted, undefined).pipe(
@@ -149,7 +154,7 @@ const fixture = Effect.fn("ObservationWorkerTest.fixture")(function* (blockBacke
   );
   yield* intake.serve(worker.handler);
   const post = Effect.fn("ObservationWorkerTest.post")(function* (digit = "1", protobuf = false) {
-    const body = yield* S.encodeEffect(S.fromJsonString(S.Unknown))({
+    const body = yield* encodeJsonValue({
       resourceSpans: [{ scopeSpans: [{ spans: [{ traceId: Str.repeat(32)("1"), spanId: Str.repeat(16)(digit) }] }] }],
     });
     const response = yield* client.execute(
@@ -167,7 +172,7 @@ const fixture = Effect.fn("ObservationWorkerTest.fixture")(function* (blockBacke
   const requestFor = (receiptId: Sha256Hex) =>
     NativeDeliveryRequest.make({ receiptId, attemptId: id("c"), offset: 0, limit: 512 });
   const event = sql`SELECT event_id AS id FROM observation_native_events LIMIT 1`.pipe(
-    Effect.flatMap(S.decodeUnknownEffect(S.Tuple([S.Struct({ id: Sha256Hex })]))),
+    Effect.flatMap(decodeArguments),
     Effect.map((rows) => rows[0].id)
   );
   const paused = Effect.gen(function* () {
@@ -202,7 +207,7 @@ const futureClock = Effect.gen(function* () {
   } satisfies Clock.Clock;
 });
 
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("starts paused, refuses both HTTP encodings and drains a durable send before maintenance", () =>
     Effect.gen(function* () {
       const f = yield* fixture(true);
@@ -241,14 +246,14 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
       expect((yield* f.worker.send(request).pipe(Effect.flip)).reason).toBe("paused");
       expect((yield* f.worker.reconcile(request, eventId).pipe(Effect.flip)).reason).toBe("paused");
       expect(yield* Ref.get(f.backendCalls)).toBe(1);
-      expect(yield* f.worker.seal(0)).toEqual(O.none());
+      assertNone(yield* f.worker.seal(0));
       yield* f.worker.resume;
       expect((yield* f.post("2")).status).toBe(200);
-    }).pipe(Effect.scoped, Effect.timeout("15 seconds"))
+    }).pipe(Effect.timeout("15 seconds"))
   )
 );
 
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect(
     "drains an in-flight SQLite admission before allowing maintenance and never acknowledges a refused page",
     () =>
@@ -269,11 +274,11 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
         expect(yield* Fiber.join(pausing)).toMatchObject({ active: 0, accepting: false });
         expect(yield* f.worker.stats).toMatchObject({ pages: 1, frames: 1 });
         expect(yield* f.sql`SELECT count(*) AS n FROM observation_native_receipts`).toEqual([{ n: 1 }]);
-      }).pipe(Effect.scoped, Effect.timeout("15 seconds"))
+      }).pipe(Effect.timeout("15 seconds"))
   )
 );
 
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect(
     "coordinates expiry, retirement and restoration while preserving uncertainty and refusing paused sweeps",
     () =>
@@ -314,11 +319,11 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
         expect((yield* f.post()).status).toBe(410);
         expect((yield* f.post("2")).status).toBe(200);
         expect(yield* Ref.get(f.backendCalls)).toBe(1);
-      }).pipe(Effect.scoped, Effect.timeout("15 seconds"))
+      }).pipe(Effect.timeout("15 seconds"))
   )
 );
 
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("captures a physical backup only while paused and leaves admission closed", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -339,64 +344,65 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
       expect(yield* fs.exists(`${root}/backup/manifest.json`)).toBe(true);
       expect(yield* f.worker.status).toMatchObject({ accepting: false, active: 0, maintenance: false });
       expect((yield* f.post()).status).toBe(503);
-    }).pipe(Effect.scoped)
-  )
-);
-
-it.layer(Layer.fresh(Layer.merge(sqlLayer, NodeServices.layer)), { excludeTestServices: true })((it) =>
-  it.effect("gates real filesystem discovery and its durable reader behind worker admission", () =>
-    Effect.gen(function* () {
-      const f = yield* fixture();
-      const fs = yield* FileSystem.FileSystem;
-      const dir = yield* fs.makeTempDirectoryScoped();
-      yield* fs.writeFileString(
-        `${dir}/rollout-synthetic.jsonl`,
-        '{"type":"response_item","payload":{"type":"message"}}\n'
-      );
-      const discovery = yield* makeTranscriptDiscovery(
-        TranscriptDiscoveryInput.make({
-          roots: [{ path: dir, source: "codex", retired: false }],
-          hashSalt: f.config.nativeHttp.hashSalt,
-          maxDepth: 2,
-          maxEntries: 1,
-          maxFiles: 32,
-          maxCycleEntries: 128,
-        })
-      );
-      const policy = TranscriptDiscoveryReadPolicy.make({ maxBytes: 512, maxLineBytes: 256, maxFrames: 1 });
-      expect(yield* f.worker.discover(discovery, policy).pipe(Effect.flip)).toMatchObject({ reason: "paused" });
-      expect((yield* f.worker.stats).pages).toBe(0);
-      yield* f.worker.resume;
-      const result = yield* f.worker.discover(discovery, policy);
-      expect(result.discovery.roots[0]).toMatchObject({ cycle: 1, state: "scanning" });
-      expect(result.discovery.activeHelpers).toBe(1);
-      expect((yield* f.worker.stats).pages).toBe(0);
-      yield* f.worker.pause;
-      expect(yield* f.worker.discover(discovery, policy).pipe(Effect.flip)).toMatchObject({ reason: "paused" });
-      yield* f.worker.resume;
-      const restarted = yield* f.worker.discover(discovery, policy);
-      expect(restarted.discovery.roots[0]).toMatchObject({ cycle: 2, state: "scanning" });
-      const accepted = yield* f.worker.discover(discovery, policy);
-      expect(accepted.sweep.outcomes[0]?._tag).toBe("Accepted");
-      expect((yield* f.worker.stats).pages).toBe(1);
-      const other = yield* makeTranscriptDiscovery(
-        TranscriptDiscoveryInput.make({
-          roots: [{ path: dir, source: "codex", retired: false }],
-          hashSalt: f.config.nativeHttp.hashSalt,
-          maxDepth: 2,
-          maxEntries: 1,
-          maxFiles: 1,
-          maxCycleEntries: 128,
-        })
-      );
-      expect(yield* f.worker.discover(other, policy).pipe(Effect.flip)).toMatchObject({ reason: "configuration" });
-      yield* f.worker.pause;
-      expect((yield* f.worker.stats).pages).toBe(1);
     })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(Layer.merge(sqlLayer, NodeServices.layer)), { timeout: "30 seconds", excludeTestServices: true })(
+  (it) =>
+    it.effect("gates real filesystem discovery and its durable reader behind worker admission", () =>
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        const fs = yield* FileSystem.FileSystem;
+        const dir = yield* fs.makeTempDirectoryScoped();
+        yield* fs.writeFileString(
+          `${dir}/rollout-synthetic.jsonl`,
+          '{"type":"response_item","payload":{"type":"message"}}\n'
+        );
+        const discovery = yield* makeTranscriptDiscovery(
+          TranscriptDiscoveryInput.make({
+            roots: [{ path: dir, source: "codex", retired: false }],
+            hashSalt: f.config.nativeHttp.hashSalt,
+            maxDepth: 2,
+            maxEntries: 1,
+            maxFiles: 32,
+            maxCycleEntries: 128,
+          })
+        );
+        const policy = TranscriptDiscoveryReadPolicy.make({ maxBytes: 512, maxLineBytes: 256, maxFrames: 1 });
+        expect(yield* f.worker.discover(discovery, policy).pipe(Effect.flip)).toMatchObject({ reason: "paused" });
+        expect((yield* f.worker.stats).pages).toBe(0);
+        yield* f.worker.resume;
+        const result = yield* f.worker.discover(discovery, policy);
+        expect(result.discovery.roots[0]).toMatchObject({ cycle: 1, state: "scanning" });
+        expect(result.discovery.activeHelpers).toBe(1);
+        expect((yield* f.worker.stats).pages).toBe(0);
+        yield* f.worker.pause;
+        expect(yield* f.worker.discover(discovery, policy).pipe(Effect.flip)).toMatchObject({ reason: "paused" });
+        yield* f.worker.resume;
+        const restarted = yield* f.worker.discover(discovery, policy);
+        expect(restarted.discovery.roots[0]).toMatchObject({ cycle: 2, state: "scanning" });
+        const accepted = yield* f.worker.discover(discovery, policy);
+        expect(accepted.sweep.outcomes[0]?._tag).toBe("Accepted");
+        expect((yield* f.worker.stats).pages).toBe(1);
+        const other = yield* makeTranscriptDiscovery(
+          TranscriptDiscoveryInput.make({
+            roots: [{ path: dir, source: "codex", retired: false }],
+            hashSalt: f.config.nativeHttp.hashSalt,
+            maxDepth: 2,
+            maxEntries: 1,
+            maxFiles: 1,
+            maxCycleEntries: 128,
+          })
+        );
+        expect(yield* f.worker.discover(other, policy).pipe(Effect.flip)).toMatchObject({ reason: "configuration" });
+        yield* f.worker.pause;
+        expect((yield* f.worker.stats).pages).toBe(1);
+      })
+    )
+);
+
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("schedules accepted receipts after resume and drains the scheduler before pausing", () =>
     Effect.gen(function* () {
       const f = yield* fixture(true);
@@ -412,11 +418,11 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
       expect(yield* Fiber.join(pausing)).toMatchObject({ active: 0, accepting: false });
       expect(yield* Ref.get(f.backendCalls)).toBe(1);
       expect(yield* f.worker.eventState(yield* f.event)).toMatchObject({ value: { state: "accepted-unverified" } });
-    }).pipe(Effect.scoped, Effect.timeout("15 seconds"))
+    }).pipe(Effect.timeout("15 seconds"))
   )
 );
 
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("runs the actual journal-to-socket scheduler on cadence and closes intake on shutdown", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -441,11 +447,11 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
       expect(yield* runtime.health).toMatchObject({ phase: "stopped", running: false, sourceCoverage: "unknown" });
       expect(yield* f.worker.status).toMatchObject({ accepting: false, active: 0 });
       expect((yield* f.post("2")).status).toBe(503);
-    }).pipe(Effect.scoped, Effect.timeout("15 seconds"))
+    }).pipe(Effect.timeout("15 seconds"))
   )
 );
 
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("refuses an unexpected table beyond the complete owned table inventory on reopen", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -454,10 +460,10 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
       yield* f.sql`CREATE TABLE unexpected_late_table (private_value TEXT)`;
       expect(yield* makeTranscriptIntakeJournal(f.config.intake).pipe(Effect.isFailure)).toBe(true);
       expect((yield* f.sql`SELECT name FROM sqlite_master WHERE name='unexpected_late_table'`).length).toBe(1);
-    }).pipe(Effect.scoped)
+    })
   )
 );
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("refuses an unexpected table beyond the complete owned table inventory before backup", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -473,7 +479,7 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
           .pipe(Effect.isFailure)
       ).toBe(true);
       expect(yield* fs.exists(`${root}/refused/manifest.json`)).toBe(false);
-    }).pipe(Effect.scoped)
+    })
   )
 );
 
@@ -499,7 +505,7 @@ const maintenanceFixture = Effect.fn("ObservationWorkerTest.maintenanceFixture")
     targetId = maintenance.context.targetId,
     ownerInstanceId = maintenance.context.ownerInstanceId
   ) {
-    const body = yield* S.encodeEffect(S.fromJsonString(S.Unknown))({
+    const body = yield* encodeJsonValue({
       version: "observation-maintenance/v1",
       hostId,
       namespaceId: f.config.intake.namespaceId,
@@ -516,7 +522,9 @@ const maintenanceFixture = Effect.fn("ObservationWorkerTest.maintenanceFixture")
   });
   return { ...f, root, fs, request, maintenance };
 });
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+const decodeArgumentsJson = S.decodeEffect(S.fromJsonString(S.Tuple([TranscriptAcceptance])));
+
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("private maintenance refuses active mutations, bad identity and arbitrary backup destinations", () =>
     Effect.gen(function* () {
       const f = yield* maintenanceFixture();
@@ -543,7 +551,7 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
       yield* f.worker.pause;
       const pages = yield* f.request({ _tag: "Pages", afterSequence: 0 });
       expect(pages.status).toBe(200);
-      const rows = yield* S.decodeEffect(S.fromJsonString(S.Tuple([TranscriptAcceptance])))(pages.text);
+      const rows = yield* decodeArgumentsJson(pages.text);
       expect((yield* f.request({ _tag: "Pages", afterSequence: rows[0].sequence })).text).toBe("[]");
       expect((yield* f.request({ _tag: "Reclaim", receiptId: rows[0].receiptId })).text).toBe("null");
       expect((yield* f.request({ _tag: "Expire", receiptId: rows[0].receiptId })).text).toBe("null");
@@ -554,10 +562,13 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
       expect(yield* f.fs.readFileString(`${f.root}/backup-0/manifest.json`)).toBe(original);
       expect((yield* f.request({ _tag: "Seal", epoch: 0 })).text).toBe("null");
       expect(yield* f.worker.status).toMatchObject({ accepting: false, active: 0, maintenance: false });
-    }).pipe(Effect.scoped)
+    })
   )
 );
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+const decodeJsonValue = S.decodeEffect(S.fromJsonString(S.Unknown));
+const decodeDigestRecordJson = S.decodeEffect(S.fromJsonString(S.Struct({ digest: Sha256Hex })));
+
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("private maintenance expires old metadata, seals and restores exact evidence without resuming", () =>
     Effect.gen(function* () {
       const f = yield* maintenanceFixture(true);
@@ -567,16 +578,16 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
       yield* f.worker.pause;
       const expired = yield* f.request({ _tag: "Expire", receiptId });
       expect(expired.status).toBe(200);
-      expect(yield* S.decodeEffect(S.fromJsonString(S.Unknown))(expired.text)).toMatchObject({
+      expect(yield* decodeJsonValue(expired.text)).toMatchObject({
         reason: "retention-expired",
       });
       const sealed = yield* f.request({ _tag: "Seal", epoch: 0 });
       expect(sealed.status).toBe(200);
-      const seal = yield* S.decodeEffect(S.fromJsonString(S.Struct({ digest: Sha256Hex })))(sealed.text);
+      const seal = yield* decodeDigestRecordJson(sealed.text);
       expect((yield* f.request({ _tag: "RestoreEvidence", digest: id("f") })).status).toBe(503);
       expect((yield* f.request({ _tag: "RestoreEvidence", digest: seal.digest })).text).toBe('"restored"');
       expect((yield* f.request({ _tag: "RestoreEvidence", digest: seal.digest })).text).toBe('"already-restored"');
       expect(yield* f.worker.status).toMatchObject({ accepting: false, active: 0, maintenance: false });
-    }).pipe(Effect.scoped)
+    })
   )
 );

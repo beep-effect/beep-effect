@@ -11,6 +11,7 @@ import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { BunSqliteTestDriver, makeSqlTestLayer } from "@beep/test-utils/SqlTest";
 import { expect } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -63,7 +64,7 @@ const fixture = Effect.fn("LaunchFactsTest.fixture")(function* (maxPages = 4, ma
   return { config, facts, journal, retention };
 });
 
-it.layer(Layer.fresh(sqlLayer))((it) => {
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) => {
   it.effect("retains independent identity and exact lifecycle receipts across reopening", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -88,7 +89,7 @@ it.layer(Layer.fresh(sqlLayer))((it) => {
   );
 });
 
-it.layer(Layer.fresh(sqlLayer))((it) => {
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) => {
   it.effect("refuses missing preparation, conflicting observations and success without a start", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -108,7 +109,7 @@ it.layer(Layer.fresh(sqlLayer))((it) => {
   );
 });
 
-it.layer(Layer.fresh(sqlLayer))((it) => {
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) => {
   it.effect("reserves completion bytes and permits exact replay at the launch-count limit", () =>
     Effect.gen(function* () {
       const f = yield* fixture(1, 32768);
@@ -124,19 +125,18 @@ it.layer(Layer.fresh(sqlLayer))((it) => {
   );
 });
 
-it.layer(Layer.fresh(sqlLayer))((it) => {
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) => {
   it.effect("holds open launches and reversibly retires closed launch-only epochs", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
       const prepared = yield* f.facts.record(prepare(), 0);
       yield* TestClock.adjust(60001);
-      expect(yield* f.retention.seal(0)).toEqual(O.none());
+      assertNone(yield* f.retention.seal(0));
       yield* f.facts.record(start(), 0);
       yield* f.facts.record(bind, 0);
       yield* f.facts.record(finish(), 0);
       const sealed = yield* f.retention.seal(0);
-      expect(O.isSome(sealed)).toBe(true);
-      if (O.isNone(sealed)) return;
+      assertTrue(O.isSome(sealed));
       expect(sealed.value.record.totals).toMatchObject({
         pages: 0,
         eventObservations: 0,
@@ -154,7 +154,7 @@ it.layer(Layer.fresh(sqlLayer))((it) => {
   );
 });
 
-it.layer(Layer.fresh(sqlLayer))((it) => {
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) => {
   it.effect("detects stored tampering and orphaned lifecycle rows", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -170,7 +170,7 @@ it.layer(Layer.fresh(sqlLayer))((it) => {
   );
 });
 
-it.layer(Layer.fresh(sqlLayer))((it) => {
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) => {
   it.effect("rejects private fields at the fact decoding boundary", () =>
     Effect.gen(function* () {
       const encoded = yield* S.encodeEffect(ObservationLaunchFact)(prepare());

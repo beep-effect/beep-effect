@@ -1,0 +1,162 @@
+{
+  "observedAt": "2026-10-29T16:08:12.762945+00:00",
+  "baseHead": "1ed9704cc640a24fe880a5b1dc161b009d1ca1ef",
+  "archive": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-retirement-s5iipw1h",
+  "artifacts": [
+    {
+      "file": "foundation-bounded-job.py",
+      "bytes": 7421,
+      "sha256": "e7d72f286ed9cbb662eceaab93df404f8ecee8462f3998e320b6557eb828c4ee"
+    },
+    {
+      "file": "delivery-fallow-worklist.json",
+      "bytes": 21641,
+      "sha256": "f650d2481d674e4b5a269770a0a5a19805c4360d7fec863a9ad0aa2ec62e506d"
+    },
+    {
+      "file": "foundation-retirement-refactor-v1.log",
+      "bytes": 14263,
+      "sha256": "118838bb88b6058f96ce70ee5c275ce4867689204abadf4f7aeee31a8cbd2170"
+    },
+    {
+      "file": "foundation-retirement-refactor-v1-guard.json",
+      "bytes": 354,
+      "sha256": "16b334bd88ac66901b8cbb60441e60d6aa411a6f93f568ef3d9f85ef9e0562c8"
+    },
+    {
+      "file": "foundation-retirement-refactor-v2.log",
+      "bytes": 1357,
+      "sha256": "ac9813fea1369281f886f60db173ee0cbe9c6e26e6a4e6fd4940b0639331fb88"
+    },
+    {
+      "file": "foundation-retirement-refactor-v2-guard.json",
+      "bytes": 354,
+      "sha256": "4c21ba9a15c9fd5052a0c5050fbe8194846e66cd7b90a19d94014b36c66293ec"
+    },
+    {
+      "file": "foundation-retirement-health-v1.log",
+      "bytes": 1574,
+      "sha256": "2cd9f285fd3da185dc4c696ec6697004ca4626d7e62083a1bcbeba9da3ed50fc"
+    },
+    {
+      "file": "foundation-retirement-health-v1-guard.json",
+      "bytes": 352,
+      "sha256": "0de769a156b43905360daa23f40998490f3cae4aa088f02973ae8bb8ce018cc0"
+    },
+    {
+      "file": "foundation-retirement-health-v2.log",
+      "bytes": 1614,
+      "sha256": "b86c6daa990dabd25453b56d4e178edf8364055dddd53627f125c8ddbaae6f77"
+    },
+    {
+      "file": "foundation-retirement-health-v2-guard.json",
+      "bytes": 352,
+      "sha256": "dd60912b726fce5ff16e7bed7c0b7e3cbb37f8376ae421a26201c245aa48aae0"
+    },
+    {
+      "file": "foundation-retirement-quality-v3.log",
+      "bytes": 17896,
+      "sha256": "fd0dd471da5355d04f40d5e7579635edc575888d81487404799718ca0cf85eb7"
+    },
+    {
+      "file": "foundation-retirement-quality-v3-guard.json",
+      "bytes": 353,
+      "sha256": "d3c9db3bc7a49258a749c35a96e88dd7a241167498bfe7b26fd8abc298642250"
+    },
+    {
+      "file": "foundation-retirement-export-verification-v4.log",
+      "bytes": 2675,
+      "sha256": "ee43e39261055befa026862bbfd4a0a382431641ca7783dfda33ada4f6daf3a4"
+    },
+    {
+      "file": "foundation-retirement-export-verification-v4-guard.json",
+      "bytes": 365,
+      "sha256": "ca0009b3e60956c8fe5bdb60a4672e298c828edc20a9d0d4e9a0c3253f6e3ee0"
+    },
+    {
+      "file": "foundation-fallow-repair-audit-v4.log",
+      "bytes": 16886,
+      "sha256": "00393cd1aa898ac9921a0a922e58f7c8da0dd142562e15f338b4b93a423e3fdc"
+    },
+    {
+      "file": "foundation-fallow-repair-audit-v4-guard.json",
+      "bytes": 354,
+      "sha256": "3c6eb99f3ab40b4bdf55510a965187a49aff347e82b5eddb1f805e05e1023779"
+    },
+    {
+      "file": "foundation-retirement-law-check-v1.log",
+      "bytes": 378,
+      "sha256": "0d0d16c27de1a552dda1a60805227b3a83fbe9834d7f93b574317c69f50d8347"
+    },
+    {
+      "file": "foundation-retirement-law-check-v1-guard.json",
+      "bytes": 346,
+      "sha256": "b7bb12f90bf9cb62580844861bbb6fdaf7ca423b5e3abe88194cfce67d13f1a8"
+    },
+    {
+      "file": "foundation-retirement-health-v1.json",
+      "bytes": 7850,
+      "sha256": "2f522310b0c85a8a04448e62bacfd332fa2a91156b1a07e224f8c332397f6369"
+    },
+    {
+      "file": "foundation-retirement-health-v2.json",
+      "bytes": 6201,
+      "sha256": "fd616d3ea898770175c0a6ac14293f7ba888733e0ec5e6bf2d207f39917a1d6f"
+    },
+    {
+      "file": "audit.repair-v4.json",
+      "bytes": 16371,
+      "sha256": "650ca530a1a9234c523b97070ce68c8991af5f1b0cbd62c88cfe0cab41dc80da"
+    },
+    {
+      "file": "audit.repair-v4.combined.txt",
+      "bytes": 141002,
+      "sha256": "578c8aaa8c9504cca806fe452efc142bef63f70336059b5371424351609c07a3"
+    }
+  ],
+  "currentSourceSha256": {
+    "packages/tooling/library/ai-metrics/src/evidence-retention.ts": "f05d08e5ac949e2512c7bb4cca8078f8bb2bb7446668d93a8bc990f76ce18257",
+    "packages/tooling/library/ai-metrics/src/internal/native-trace-wire.ts": "b12dc87522ed91895337cba86e66c562e3e64753fde03d459bbc6b19d5279981",
+    "packages/tooling/library/ai-metrics/src/native-export.ts": "96d6727eccc6a8e0c3fe0948c5b4baba797728a7f114624eeb6d8ef645ec6f73",
+    "packages/tooling/library/ai-metrics/src/transcript-export.ts": "aa1ed8cb2cf8805e476f06ea660ff4fd5959e0bd80bb72a6722e458ed3ba0cfb",
+    "packages/tooling/library/ai-metrics/src/observation-source-health.ts": "eadcdf1f0880245db14cfb83cfba2eee34ed107d63a82df1ce5bb853c964b2ed",
+    "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Inventory.ts": "bd7c5aaaf4e19da178de3ee35465c02d0f2cedb48974943caa295df5e240bc43"
+  },
+  "packageSourceManifestSha256": "3d458df9bf5988c36d9d08c161bdfb9deeb8ae1f3c20f701cb1ec9f7d08ad906",
+  "verification": {
+    "focusedLibraryTests": 50,
+    "focusedCliInventoryTests": 7,
+    "aiMetricsAudit": "passed",
+    "aiMetricsDocgen": "passed",
+    "cliLint": "passed",
+    "cliTypeCheck": "passed",
+    "scopedOxlint": "passed",
+    "independentReview": "bounded acceptance; RETIREMENT-REFACTOR-REVIEW.md",
+    "fallow": {
+      "status": "failed",
+      "complexityIntroduced": 57,
+      "duplicationIntroduced": 8,
+      "duplicationInheritedAdjacent": 4,
+      "deadCodeIssues": 0
+    }
+  },
+  "guard": {
+    "ownedScopes": {},
+    "unit": "foundation-retirement-export-verification-v4.service",
+    "profile": "bounded",
+    "memoryStopBytes": 8589934592,
+    "hostAvailableFloorBytes": 8589934592,
+    "initialAvailableBytes": 44732416000,
+    "peakObservedBytes": 6791561216,
+    "minimumAvailableBytes": 29142802432,
+    "stoppedFor": null,
+    "exitCode": 0,
+    "orphanCleanup": []
+  },
+  "limits": [
+    "Historical intermediate runs are not current-source proof; v1 type-check and v1 health failures are retained.",
+    "The very short oxlint job completed before a nonzero sample; its sampled peak of zero is not zero memory use.",
+    "Full CLI execution, installed proof, final repository gates, publication and acceptance remain open.",
+    "No production deployment or recovery-hold release."
+  ]
+}

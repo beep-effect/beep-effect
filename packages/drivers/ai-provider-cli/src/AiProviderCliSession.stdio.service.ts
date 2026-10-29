@@ -23,7 +23,7 @@ import * as Str from "effect/String";
 import { codexArguments, negotiateCodex } from "./AiProviderCliSession.codex.service.ts";
 import { cursorArguments, verifyCursor } from "./AiProviderCliSession.cursor.service.ts";
 import { grokArguments, verifyGrok } from "./AiProviderCliSession.grok.service.ts";
-import { observeManagedSession } from "./AiProviderCliSession.lifecycle.ts";
+import { observeStartedManagedProcess } from "./AiProviderCliSession.lifecycle.ts";
 import { ManagedSessionEvent, ManagedTerminalEvidence, ManagedTurnResult } from "./AiProviderCliSession.models.ts";
 import { collectStderr, failure, logStderrExcerpt, transportFailure } from "./AiProviderCliSession.profile.service.ts";
 import {
@@ -102,12 +102,7 @@ export const openStdio = Effect.fn("AiProviderCliSession.openStdio")(function* (
     stderr: "pipe",
     forceKillAfter: Duration.seconds(3),
   }).pipe(transportFailure("spawn"));
-  const process = { pid: handle.pid, exitCode: handle.exitCode, isRunning: handle.isRunning };
-  if (observer !== undefined)
-    yield* observeManagedSession(
-      "observe-started",
-      Effect.suspend(() => observer.started(process))
-    );
+  const process = yield* observeStartedManagedProcess(handle, observer);
   const stderrTail = yield* handle.stderr.pipe(collectStderr(profile));
   // Grok and Cursor pin ACP generation 1 and send a pure v1 `initialize`. Their managed paths call
   // methods that generation 2 removed: Grok `authenticate` with `cached_token`, Cursor

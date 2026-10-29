@@ -7,6 +7,7 @@ import {
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
@@ -44,11 +45,13 @@ const accepted = (frame: typeof TranscriptFrame.Type | undefined) => {
   if (frame === undefined || frame._tag !== "Accepted") throw new Error("Expected accepted fixture frame");
   return frame;
 };
+const decodeTranscriptCursorJson = S.decodeEffect(S.fromJsonString(TranscriptCursor));
+const encodeTranscriptCursorJson = S.encodeEffect(S.fromJsonString(TranscriptCursor));
+
 const retryCursor = Effect.fn("TranscriptPageTest.retryCursor")(function* (cursor: TranscriptCursor) {
-  return yield* S.decodeEffect(S.fromJsonString(TranscriptCursor))(
-    yield* S.encodeEffect(S.fromJsonString(TranscriptCursor))(cursor)
-  );
+  return yield* decodeTranscriptCursorJson(yield* encodeTranscriptCursorJson(cursor));
 });
+const encodeTranscriptPageJson = S.encodeEffect(S.fromJsonString(TranscriptPage));
 
 it.layer(NodeServices.layer, { concurrent: false, timeout: "20 seconds" })(
   "incremental transcript metadata pages",
@@ -65,7 +68,7 @@ it.layer(NodeServices.layer, { concurrent: false, timeout: "20 seconds" })(
         expect(first.reset).toBe("new");
         expect(first.waitingForPartialLine).toBe(true);
         expect(first.cursor.offset).toBe(new TextEncoder().encode(initial).length - 1);
-        expect(accepted(first.frames[0]).metadata.sourceTime).toEqual(O.some("2020-01-02T10:00:00+02:00"));
+        assertSome(accepted(first.frames[0]).metadata.sourceTime, "2020-01-02T10:00:00+02:00");
         expect(accepted(first.frames[1]).metadata.session.id).toEqual(accepted(first.frames[0]).metadata.session.id);
         const before = yield* fs.readFile(path);
         const retry = yield* readTranscriptPage(input(path));
@@ -81,7 +84,7 @@ it.layer(NodeServices.layer, { concurrent: false, timeout: "20 seconds" })(
           A.map(first.frames, (frame) => frame.occurrenceId)
         );
         expect(accepted(second.frames[0]).metadata.session.id).toEqual(first.cursor.session.id);
-        const serialized = yield* S.encodeEffect(S.fromJsonString(TranscriptPage))(first);
+        const serialized = yield* encodeTranscriptPageJson(first);
         for (const privateText of [
           dir,
           "private-prompt",
@@ -130,7 +133,7 @@ it.layer(NodeServices.layer, { concurrent: false, timeout: "20 seconds" })(
         expect(a.contentHash).toBe(b.contentHash);
         expect(a.contentHash).toBe(c.contentHash);
         expect(new Set([a.occurrenceId, b.occurrenceId, c.occurrenceId]).size).toBe(3);
-        expect(a.metadata.session.id).toEqual(O.none());
+        assertNone(a.metadata.session.id);
       })
     );
     it.effect("advances through an oversized growing line with bounded pages and later reaches valid data", () =>
@@ -172,7 +175,7 @@ it.layer(NodeServices.layer, { concurrent: false, timeout: "20 seconds" })(
           "invalid-shape",
           "Accepted",
         ]);
-        const text = yield* S.encodeEffect(S.fromJsonString(TranscriptPage))(page);
+        const text = yield* encodeTranscriptPageJson(page);
         expect(text).not.toContain("private-invalid-json");
         expect(text).not.toContain("private-prompt");
       })
@@ -188,32 +191,56 @@ it.layer(NodeServices.layer, { concurrent: false, timeout: "20 seconds" })(
           `${yield* meta()}\n${yield* meta("conflicting-session")}\n${yield* encode({ type: "event_msg", payload: { type: "token_count", info: { last_token_usage: lastUsage, total_token_usage: { input_tokens: 999 } } } })}\n`
         );
         const page = yield* readTranscriptPage(input(path));
-        expect(page.cursor.session).toEqual({ id: O.none(), conflicted: true });
+        assertNone(page.cursor.session.id);
+        expect(page.cursor.session.conflicted).toBe(true);
         const usage = accepted(page.frames[2]).metadata.usage;
-        expect(usage).toEqual(
-          O.some({
-            basis: "last-request",
-            input: O.some(10),
-            output: O.some(3),
-            cacheRead: O.some(7),
-            cacheWrite: O.none(),
-          })
-        );
+        assertSome(usage, {
+          basis: "last-request",
+          input: O.some(10),
+          output: O.some(3),
+          cacheRead: O.some(7),
+          cacheWrite: O.none(),
+        });
         const claudePath = `${dir}/claude.jsonl`;
         yield* fs.writeFileString(
           claudePath,
           `${yield* encode({ type: "assistant", sessionId: "synthetic-claude-session", message: { id: "message-id", usage: { input_tokens: 11, output_tokens: 5, cache_read_input_tokens: 8, cache_creation_input_tokens: 2 } } })}\n`
         );
         const claude = yield* readTranscriptPage(TranscriptPageInput.make({ ...input(claudePath), source: "claude" }));
-        expect(accepted(claude.frames[0]).metadata.usage).toEqual(
-          O.some({
-            basis: "message",
-            input: O.some(11),
-            output: O.some(5),
-            cacheRead: O.some(8),
-            cacheWrite: O.some(2),
-          })
+        assertSome(accepted(claude.frames[0]).metadata.usage, {
+          basis: "message",
+          input: O.some(11),
+          output: O.some(5),
+          cacheRead: O.some(8),
+          cacheWrite: O.some(2),
+        });
+      })
+    );
+    it.effect("preserves cumulative-only usage and an explicitly empty last-request measurement", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = `${yield* temp}/usage.jsonl`;
+        const cumulative = { total_token_usage: { input_tokens: 0, output_tokens: 9 } };
+        const emptyLast = { ...cumulative, last_token_usage: {} };
+        const lines = yield* Effect.forEach([cumulative, emptyLast], (info) =>
+          encode({ type: "event_msg", payload: { type: "token_count", info } })
         );
+        yield* fs.writeFileString(path, `${A.join(lines, "\n")}\n`);
+        const page = yield* readTranscriptPage(input(path));
+        assertSome(accepted(page.frames[0]).metadata.usage, {
+          basis: "cumulative",
+          input: O.some(0),
+          output: O.some(9),
+          cacheRead: O.none(),
+          cacheWrite: O.none(),
+        });
+        assertSome(accepted(page.frames[1]).metadata.usage, {
+          basis: "last-request",
+          input: O.none(),
+          output: O.none(),
+          cacheRead: O.none(),
+          cacheWrite: O.none(),
+        });
       })
     );
     it.effect("honors a frame budget across pages and never reads a large file in full", () =>

@@ -15,6 +15,7 @@ import { NodeServices } from "@effect/platform-node";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as SqliteClient from "@effect/sql-sqlite-bun/SqliteClient";
 import { expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -59,6 +60,8 @@ const fixture = Effect.fn("ObservationBackupTest.fixture")(function* () {
   return { fs, directory, sql, config, journal, source, line, input, page, accepted, capture };
 });
 const layers = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, Reactivity.layer);
+const encodeObservationBackupManifestJson = S.encodeEffect(S.fromJsonString(ObservationBackupManifest));
+
 it.layer(layers, { timeout: "30 seconds", excludeTestServices: true })("Independent observation backups", (it) => {
   it.effect(
     "restores original receipts and cursors into a distinct database without rewinding later source observations",
@@ -87,15 +90,13 @@ it.layer(layers, { timeout: "30 seconds", excludeTestServices: true })("Independ
         );
         expect((yield* recovered.stats).pages).toBe(1);
         expect(yield* recovered.acceptPage(f.page, O.none())).toEqual(f.accepted);
-        expect(yield* recovered.readCursor(f.page.cursor.source, f.page.cursor.pathHash)).toEqual(
-          O.some(f.page.cursor)
-        );
+        assertSome(yield* recovered.readCursor(f.page.cursor.source, f.page.cursor.pathHash), f.page.cursor);
         expect(new TextDecoder().decode(yield* f.fs.readFile(`${f.directory}/backup/journal.sqlite`))).not.toContain(
           "synthetic-private-backup-prompt"
         );
         expect(yield* verifier`PRAGMA database_list`).toEqual([{ seq: 0, name: "main", file: "" }]);
         expect(yield* f.fs.exists(`${f.directory}/restored/restore.json`)).toBe(true);
-      }).pipe(Effect.scoped)
+      })
   );
   it.effect("refuses existing destinations, exposed parents and foreign journal tables without modifying them", () =>
     Effect.gen(function* () {
@@ -110,7 +111,7 @@ it.layer(layers, { timeout: "30 seconds", excludeTestServices: true })("Independ
       expect((yield* f.capture(`${f.directory}/foreign`).pipe(Effect.flip)).reason).toBe("configuration");
       expect(yield* f.fs.exists(`${f.directory}/foreign`)).toBe(false);
       expect((yield* f.journal.stats).pages).toBe(1);
-    }).pipe(Effect.scoped)
+    })
   );
   it.effect(
     "detects modified backup bytes and a substituted caller receipt before creating a restore destination",
@@ -134,7 +135,7 @@ it.layer(layers, { timeout: "30 seconds", excludeTestServices: true })("Independ
         expect((yield* restore(receipt).pipe(Effect.flip)).reason).toBe("integrity");
         expect(yield* f.fs.exists(`${f.directory}/restored`)).toBe(false);
         expect((yield* f.journal.stats).pages).toBe(1);
-      }).pipe(Effect.scoped)
+      })
   );
   it.effect("refuses a digest-valid older snapshot containing an unexpected table before publishing restoration", () =>
     Effect.gen(function* () {
@@ -153,7 +154,7 @@ it.layer(layers, { timeout: "30 seconds", excludeTestServices: true })("Independ
         snapshotDigest: yield* S.decodeEffect(Sha256HexFromBytes)(bytes),
         bytes: bytes.length,
       });
-      const encoded = yield* S.encodeEffect(S.fromJsonString(ObservationBackupManifest))(manifest);
+      const encoded = yield* encodeObservationBackupManifestJson(manifest);
       yield* f.fs.writeFileString(`${f.directory}/backup/manifest.json`, encoded);
       const receipt = ObservationBackupReceipt.make({ manifest, manifestDigest: yield* hashPublicTextSha256(encoded) });
       const verifier = yield* SqliteClient.make({ filename: ":memory:" });
@@ -166,7 +167,7 @@ it.layer(layers, { timeout: "30 seconds", excludeTestServices: true })("Independ
       expect(yield* f.fs.exists(`${f.directory}/refused/restore.json`)).toBe(false);
       expect(yield* f.fs.readFile(`${f.directory}/source.sqlite`)).toEqual(originalSource);
       expect(yield* f.fs.readFile(`${f.directory}/backup/journal.sqlite`)).toEqual(bytes);
-    }).pipe(Effect.scoped)
+    })
   );
   it.effect("refuses a source beyond the snapshot ceiling while preserving the preceding generation", () =>
     Effect.gen(function* () {
@@ -178,7 +179,7 @@ it.layer(layers, { timeout: "30 seconds", excludeTestServices: true })("Independ
       expect(yield* f.fs.exists(`${f.directory}/too-large`)).toBe(false);
       expect(yield* f.fs.readFile(`${f.directory}/first/journal.sqlite`)).toEqual(first);
       expect((yield* f.journal.stats).pages).toBe(1);
-    }).pipe(Effect.scoped)
+    })
   );
   it.effect("recovers through an independent client after the original database is closed and damaged", () =>
     Effect.gen(function* () {
@@ -208,9 +209,9 @@ it.layer(layers, { timeout: "30 seconds", excludeTestServices: true })("Independ
         Effect.provideService(SqlClient.SqlClient, client)
       );
       expect(yield* journal.acceptPage(f.page, O.none())).toEqual(recovery.accepted);
-      expect(yield* journal.readCursor(f.page.cursor.source, f.page.cursor.pathHash)).toEqual(O.some(f.page.cursor));
+      assertSome(yield* journal.readCursor(f.page.cursor.source, f.page.cursor.pathHash), f.page.cursor);
       expect(yield* f.fs.readFileString(original)).toBe("synthetic database corruption");
-    }).pipe(Effect.scoped)
+    })
   );
   it.effect(
     "leaves no published manifest after an injected publication failure and preserves the prior generation",
@@ -234,6 +235,6 @@ it.layer(layers, { timeout: "30 seconds", excludeTestServices: true })("Independ
         expect(yield* f.fs.exists(`${f.directory}/failed/manifest.partial`)).toBe(true);
         expect(yield* f.fs.readFile(`${f.directory}/first/journal.sqlite`)).toEqual(prior);
         expect((yield* f.journal.stats).pages).toBe(1);
-      }).pipe(Effect.scoped)
+      })
   );
 });

@@ -61,7 +61,7 @@ export class ObservationClaimPopulationEvidence extends S.Opaque<
   { readonly brand: unique symbol }
 >()(
   S.Struct({
-    scope: S.Literal("claims-created-in-window"),
+    scope: S.tag("claims-created-in-window"),
     anchor: ObservationClaimAnchor,
     request: ObservationClaimPopulationRequest,
     captureStartedAt: S.DateTimeUtcFromString,
@@ -133,6 +133,10 @@ export class ObservationClaimPopulationError extends S.TaggedError<
   $I.annote("ObservationClaimPopulationError", { description: "No path, owner identity or source content in refusal." })
 ) {}
 const fail = (reason: ObservationClaimPopulationError["reason"]) => ObservationClaimPopulationError.make({ reason });
+const encodeObservationClaimPopulationEvidenceJson = S.encodeEffect(
+  S.fromJsonString(ObservationClaimPopulationEvidence)
+);
+
 /**
  * Read one independent claim cohort without collector access or process-launch authority.
  * **Details** Two agreeing bounded scans must finish within ten seconds. A missing
@@ -198,16 +202,13 @@ export const readObservationClaimPopulation = Effect.fn("AiMetrics.readObservati
       return yield* fail("identity");
   }
   const evidence = ObservationClaimPopulationEvidence.make({
-    scope: "claims-created-in-window",
     anchor: policy.anchor,
     request,
     captureStartedAt,
     captureFinishedAt,
     outboxes,
   });
-  const evidenceId = yield* hashPublicTextSha256(
-    yield* S.encodeEffect(S.fromJsonString(ObservationClaimPopulationEvidence))(evidence)
-  );
+  const evidenceId = yield* hashPublicTextSha256(yield* encodeObservationClaimPopulationEvidenceJson(evidence));
   const rows = A.map(request.routeIds, (routeId) => {
     const cohort = A.filter(
       outboxes,

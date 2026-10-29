@@ -3,7 +3,6 @@ import { DeliveryEventState } from "@beep/repo-ai-metrics/delivery-ledger";
 import { NativeDeliveryResult } from "@beep/repo-ai-metrics/native-delivery";
 import { NativeScheduleTick } from "@beep/repo-ai-metrics/native-schedule";
 import { it } from "@beep/test-runner";
-import { provideScopedLayer } from "@beep/test-utils/Layer";
 import * as BunHttpServer from "@effect/platform-bun/BunHttpServer";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
@@ -27,8 +26,11 @@ const Inspection = S.Struct({
   state: S.NullOr(DeliveryEventState),
   attempts: S.Tuple([S.Struct({ n: S.Natural })]),
   results: S.Tuple([S.Struct({ n: S.Natural })]),
-  integrity: S.Tuple([S.Struct({ integrity_check: S.Literal("ok") })]),
+  integrity: S.Tuple([S.Struct({ integrity_check: S.tag("ok") })]),
 });
+const decodeJsonValue = S.decodeEffect(S.fromJsonString(S.Unknown));
+const decodeBoundaryValueJson = S.decodeEffect(S.fromJsonString(S.toCodecJson(Inspection)));
+
 const scenario = Effect.fn("DeliveryCrashTest.scenario")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const executablePath = yield* Config.String("PATH");
@@ -77,9 +79,7 @@ const scenario = Effect.fn("DeliveryCrashTest.scenario")(function* () {
         expect(yield* child.isRunning).toBe(true);
         yield* Effect.sleep("10 millis");
       }
-      const observed = yield* fs
-        .readFileString(marker)
-        .pipe(Effect.flatMap(S.decodeEffect(S.fromJsonString(S.Unknown))));
+      const observed = yield* fs.readFileString(marker).pipe(Effect.flatMap(decodeJsonValue));
       expect(observed).toEqual({
         boundary: mode,
         attempts: [{ n: 1 }],
@@ -92,53 +92,59 @@ const scenario = Effect.fn("DeliveryCrashTest.scenario")(function* () {
       return;
     }
     expect(yield* child.exitCode).toBe(0);
-    return yield* fs
-      .readFileString(output)
-      .pipe(Effect.flatMap(S.decodeEffect(S.fromJsonString(S.toCodecJson(Inspection)))));
+    return yield* fs.readFileString(output).pipe(Effect.flatMap(decodeBoundaryValueJson));
   });
   return { run, calls, reads };
 });
 for (const mode of ["before-result", "after-result"])
-  it.live(`survives sender death ${mode} without sending the same attempt twice`, () =>
-    Effect.gen(function* () {
-      const { run, calls } = yield* scenario();
-      if (mode !== "before-result" && mode !== "after-result") return yield* Effect.die("Invalid fixture mode");
-      yield* run(mode);
-      expect(yield* Ref.get(calls)).toBe(1);
-      const inspected = yield* run("inspect");
-      expect(inspected).toMatchObject({
-        state: { state: mode === "before-result" ? "unresolved" : "accepted-unverified", attempts: 1 },
-        results: [{ n: mode === "before-result" ? 0 : 1 }],
-      });
-      const replay = yield* run("send");
-      expect(replay).toMatchObject({
-        sendResult: { _tag: "ExistingAttempt" },
-        state: inspected?.state,
-        attempts: [{ n: 1 }],
-      });
-      expect(yield* Ref.get(calls)).toBe(1);
-    }).pipe(Effect.scoped, provideScopedLayer(NodeServices.layer), Effect.timeout("20 seconds"))
+  it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) =>
+    it.effect(`survives sender death ${mode} without sending the same attempt twice`, () =>
+      Effect.gen(function* () {
+        const { run, calls } = yield* scenario();
+        if (mode !== "before-result" && mode !== "after-result") return yield* Effect.die("Invalid fixture mode");
+        yield* run(mode);
+        expect(yield* Ref.get(calls)).toBe(1);
+        const inspected = yield* run("inspect");
+        expect(inspected).toMatchObject({
+          state: { state: mode === "before-result" ? "unresolved" : "accepted-unverified", attempts: 1 },
+          results: [{ n: mode === "before-result" ? 0 : 1 }],
+        });
+        const replay = yield* run("send");
+        expect(replay).toMatchObject({
+          sendResult: { _tag: "ExistingAttempt" },
+          state: inspected?.state,
+          attempts: [{ n: 1 }],
+        });
+        expect(yield* Ref.get(calls)).toBe(1);
+      }).pipe(Effect.timeout("20 seconds"))
+    )
   );
 
-it.live("recovers the scheduler cursor after SIGKILL between backend acceptance and result commit", () =>
-  Effect.gen(function* () {
-    const { run, calls, reads } = yield* scenario();
-    yield* run("schedule-before-result");
-    expect(yield* Ref.get(calls)).toBe(1);
-    const next = yield* run("schedule-tick");
-    expect(next).toMatchObject({
-      sendResult: { _tag: "Complete", outcomes: [{ _tag: "Sent", result: { outcome: { _tag: "Accepted" } } }] },
-      state: { state: "unresolved", attempts: 1 },
-      attempts: [{ n: 2 }],
-      results: [{ n: 1 }],
-    });
-    const wrapped = yield* run("schedule-tick");
-    expect(wrapped).toMatchObject({
-      sendResult: { _tag: "Complete", wrapped: true, outcomes: [{ _tag: "Reconciled", result: { _tag: "Missing" } }] },
-      state: { state: "unresolved", attempts: 1 },
-      attempts: [{ n: 2 }],
-    });
-    expect(yield* Ref.get(calls)).toBe(2);
-    expect(yield* Ref.get(reads)).toBe(1);
-  }).pipe(Effect.scoped, provideScopedLayer(NodeServices.layer), Effect.timeout("20 seconds"))
+it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) =>
+  it.effect("recovers the scheduler cursor after SIGKILL between backend acceptance and result commit", () =>
+    Effect.gen(function* () {
+      const { run, calls, reads } = yield* scenario();
+      yield* run("schedule-before-result");
+      expect(yield* Ref.get(calls)).toBe(1);
+      const next = yield* run("schedule-tick");
+      expect(next).toMatchObject({
+        sendResult: { _tag: "Complete", outcomes: [{ _tag: "Sent", result: { outcome: { _tag: "Accepted" } } }] },
+        state: { state: "unresolved", attempts: 1 },
+        attempts: [{ n: 2 }],
+        results: [{ n: 1 }],
+      });
+      const wrapped = yield* run("schedule-tick");
+      expect(wrapped).toMatchObject({
+        sendResult: {
+          _tag: "Complete",
+          wrapped: true,
+          outcomes: [{ _tag: "Reconciled", result: { _tag: "Missing" } }],
+        },
+        state: { state: "unresolved", attempts: 1 },
+        attempts: [{ n: 2 }],
+      });
+      expect(yield* Ref.get(calls)).toBe(2);
+      expect(yield* Ref.get(reads)).toBe(1);
+    }).pipe(Effect.timeout("20 seconds"))
+  )
 );

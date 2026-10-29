@@ -10,6 +10,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Redacted from "effect/Redacted";
@@ -38,7 +39,7 @@ const emptySession = () => Session.make({ id: O.none(), conflicted: false });
 /**
  * Restartable source position; committing it requires durable acceptance of its page.
  *
- * **Example**
+ * **Example** (Inspect transcript cursor)
  * ```ts
  * import { TranscriptCursor } from "@beep/repo-ai-metrics/transcript-page"
  * import * as S from "effect/Schema"
@@ -95,7 +96,7 @@ const Usage = S.Struct({
 /**
  * Allowlisted metadata from one source record, with no prompt or tool payload.
  *
- * **Example**
+ * **Example** (Inspect transcript metadata)
  * ```ts
  * import { TranscriptMetadata } from "@beep/repo-ai-metrics/transcript-page"
  * import * as S from "effect/Schema"
@@ -133,7 +134,7 @@ export class TranscriptMetadata extends S.Opaque<TranscriptMetadata, { readonly 
 /**
  * One physical source occurrence or an explicit rejection, never raw text.
  *
- * **Example**
+ * **Example** (Inspect transcript frame)
  * ```ts
  * import { TranscriptFrame } from "@beep/repo-ai-metrics/transcript-page"
  * console.log(TranscriptFrame.cases.Accepted)
@@ -164,7 +165,7 @@ export const TranscriptFrame = S.TaggedUnion({
 /**
  * Bounded read budget and optional previously committed cursor.
  *
- * **Example**
+ * **Example** (Inspect transcript page input)
  * ```ts
  * import { TranscriptPageInput } from "@beep/repo-ai-metrics/transcript-page"
  * import * as S from "effect/Schema"
@@ -198,7 +199,7 @@ export class TranscriptPageInput extends S.Opaque<TranscriptPageInput, { readonl
 /**
  * Proposed metadata page; its cursor is not an intake or backend acknowledgment.
  *
- * **Example**
+ * **Example** (Inspect transcript page)
  * ```ts
  * import { TranscriptPage } from "@beep/repo-ai-metrics/transcript-page"
  * import * as S from "effect/Schema"
@@ -222,7 +223,7 @@ export class TranscriptPage extends S.Opaque<TranscriptPage, { readonly brand: u
 /**
  * Payload-free read failure: the caller retains its previous durable cursor.
  *
- * **Example**
+ * **Example** (Inspect transcript page error)
  * ```ts
  * import { TranscriptPageError } from "@beep/repo-ai-metrics/transcript-page"
  * console.log(TranscriptPageError.make({ reason: "unavailable" }).reason)
@@ -289,6 +290,65 @@ const safeTime = (value: string | undefined) =>
   );
 const failure = (reason: TranscriptPageError["reason"]) => TranscriptPageError.make({ reason });
 
+// Preserve source precedence: an envelope's own session/message type wins over
+// a nested payload type. Unrecognized records remain explicit "other" metadata.
+const recordKind = Match.type<typeof RawRecord.Type>().pipe(
+  Match.when({ type: "session_meta" }, (): TranscriptMetadata["kind"] => "session"),
+  Match.when({ type: Match.is("assistant", "user") }, (): TranscriptMetadata["kind"] => "message"),
+  Match.when({ payload: { type: "message" } }, (): TranscriptMetadata["kind"] => "message"),
+  Match.when(
+    { payload: { type: Match.is("function_call", "custom_tool_call") } },
+    (): TranscriptMetadata["kind"] => "tool-call"
+  ),
+  Match.when(
+    { payload: { type: Match.is("function_call_output", "custom_tool_call_output") } },
+    (): TranscriptMetadata["kind"] => "tool-result"
+  ),
+  Match.when({ payload: { type: "token_count" } }, (): TranscriptMetadata["kind"] => "usage"),
+  Match.orElse((): TranscriptMetadata["kind"] => "other")
+);
+
+const projectUsage = (raw: typeof RawUsage.Type, source: typeof Source.Type, basis: (typeof Usage.Type)["basis"]) =>
+  Usage.make({
+    basis,
+    input: O.fromUndefinedOr(raw.input_tokens),
+    output: O.fromUndefinedOr(raw.output_tokens),
+    cacheRead: O.fromUndefinedOr(source === "claude" ? raw.cache_read_input_tokens : raw.cached_input_tokens),
+    cacheWrite: O.fromUndefinedOr(source === "claude" ? raw.cache_creation_input_tokens : undefined),
+  });
+
+const codexUsage = (row: typeof RawRecord.Type) => {
+  if (row.type !== "event_msg" || row.payload?.type !== "token_count") return O.none();
+  const info = row.payload.info;
+  const last = info?.last_token_usage;
+  return O.fromUndefinedOr(last ?? info?.total_token_usage).pipe(
+    O.map((raw) => projectUsage(raw, "codex", last === undefined ? "cumulative" : "last-request"))
+  );
+};
+
+const recordUsage = (row: typeof RawRecord.Type, source: typeof Source.Type) => {
+  if (source === "codex") return codexUsage(row);
+  if (row.type !== "assistant") return O.none();
+  return O.fromUndefinedOr(row.message?.usage).pipe(O.map((raw) => projectUsage(raw, source, "message")));
+};
+
+const mergeSession = (session: typeof Session.Type, candidate: O.Option<Sha256Hex>) => {
+  const conflicted =
+    session.conflicted || (O.isSome(session.id) && O.isSome(candidate) && session.id.value !== candidate.value);
+  return Session.make({ conflicted, id: conflicted ? O.none() : O.orElse(candidate, () => session.id) });
+};
+
+const recordSession = (row: typeof RawRecord.Type, source: typeof Source.Type) => {
+  if (source === "claude") return { id: row.sessionId, cwd: row.cwd };
+  if (row.type === "session_meta") return { id: row.payload?.id, cwd: row.payload?.cwd };
+  return { id: undefined, cwd: undefined };
+};
+
+const recordIdentifiers = (row: typeof RawRecord.Type, source: typeof Source.Type) => {
+  if (source === "claude") return { message: row.message?.id, model: row.message?.model };
+  return { message: row.type === "response_item" ? row.payload?.id : undefined, model: row.payload?.model };
+};
+
 const project = Effect.fn("AiMetrics.projectTranscriptRecord")(function* (
   row: typeof RawRecord.Type,
   source: typeof Source.Type,
@@ -299,69 +359,69 @@ const project = Effect.fn("AiMetrics.projectTranscriptRecord")(function* (
   const hash = (value: string) => hashPrivateIdentifier(value, O.some(salt));
   const hashOptional = (value: string | undefined) =>
     value === undefined || value === "" ? Effect.succeedNone : hash(value).pipe(Effect.asSome);
-  const sessionId = source === "claude" ? row.sessionId : row.type === "session_meta" ? row.payload?.id : undefined;
-  const candidate = yield* hashOptional(sessionId);
-  const conflicted =
-    session.conflicted || (O.isSome(session.id) && O.isSome(candidate) && session.id.value !== candidate.value);
-  const nextSession = Session.make({ conflicted, id: conflicted ? O.none() : O.orElse(candidate, () => session.id) });
-  const cwd = source === "claude" ? row.cwd : row.type === "session_meta" ? row.payload?.cwd : undefined;
-  const payloadType = row.payload?.type;
-  const kind: TranscriptMetadata["kind"] =
-    row.type === "session_meta"
-      ? "session"
-      : row.type === "assistant" || row.type === "user" || payloadType === "message"
-        ? "message"
-        : payloadType === "function_call" || payloadType === "custom_tool_call"
-          ? "tool-call"
-          : payloadType === "function_call_output" || payloadType === "custom_tool_call_output"
-            ? "tool-result"
-            : payloadType === "token_count"
-              ? "usage"
-              : "other";
-  const rawUsage =
-    source === "claude" && row.type === "assistant"
-      ? row.message?.usage
-      : source === "codex" && row.type === "event_msg" && payloadType === "token_count"
-        ? (row.payload?.info?.last_token_usage ?? row.payload?.info?.total_token_usage)
-        : undefined;
-  const usage =
-    rawUsage === undefined
-      ? O.none()
-      : O.some(
-          Usage.make({
-            basis:
-              source === "claude"
-                ? "message"
-                : row.payload?.info?.last_token_usage === undefined
-                  ? "cumulative"
-                  : "last-request",
-            input: O.fromUndefinedOr(rawUsage.input_tokens),
-            output: O.fromUndefinedOr(rawUsage.output_tokens),
-            cacheRead: O.fromUndefinedOr(
-              source === "claude" ? rawUsage.cache_read_input_tokens : rawUsage.cached_input_tokens
-            ),
-            cacheWrite: O.fromUndefinedOr(source === "claude" ? rawUsage.cache_creation_input_tokens : undefined),
-          })
-        );
+  const { id, cwd } = recordSession(row, source);
+  const identifiers = recordIdentifiers(row, source);
+  const nextSession = mergeSession(session, yield* hashOptional(id));
   return TranscriptMetadata.make({
-    kind,
+    kind: recordKind(row),
     session: nextSession,
     sourceTime: safeTime(row.timestamp),
-    usage,
-    logicalMessageId: yield* hashOptional(
-      source === "claude" ? row.message?.id : row.type === "response_item" ? row.payload?.id : undefined
-    ),
+    usage: recordUsage(row, source),
+    logicalMessageId: yield* hashOptional(identifiers.message),
     workingDirectoryHash: yield* hashOptional(
       cwd !== undefined && path.isAbsolute(cwd) ? path.normalize(cwd) : undefined
     ),
-    modelHash: yield* hashOptional(source === "claude" ? row.message?.model : row.payload?.model),
+    modelHash: yield* hashOptional(identifiers.model),
   });
 });
+
+class FrameProgress extends S.Opaque<FrameProgress, { readonly brand: unique symbol }>()(
+  S.Struct({
+    offset: TranscriptCursor.fields.offset,
+    lineNumber: TranscriptCursor.fields.lineNumber,
+    discarding: TranscriptCursor.fields.discarding,
+    discardStart: TranscriptCursor.fields.discardStart,
+    session: TranscriptCursor.fields.session,
+  }).pipe(
+    $I.annoteSchema("FrameProgress", { description: "Metadata-only position after the last consumed frame fragment." })
+  )
+) {}
+class FramePage extends S.Opaque<FramePage, { readonly brand: unique symbol }>()(
+  S.Struct({
+    ...FrameProgress.fields,
+    frames: TranscriptPage.fields.frames,
+    waitingForPartialLine: TranscriptPage.fields.waitingForPartialLine,
+  }).pipe($I.annoteSchema("FramePage", { description: "Bounded metadata scan and proposed cursor advancement." }))
+) {}
+const lineBoundary = (bytes: Uint8Array, local: number) => {
+  const newline = bytes.indexOf(10, local);
+  const complete = newline !== -1;
+  const end = complete ? newline + 1 : bytes.length;
+  return { complete, end, length: (complete ? newline : end) - local };
+};
+const advanceFrame = (progress: FrameProgress, frame: typeof TranscriptFrame.Type, complete: boolean) =>
+  FrameProgress.make({
+    offset: frame.end,
+    lineNumber: progress.lineNumber + (complete ? 1 : 0),
+    discarding: !complete,
+    discardStart: complete ? frame.end : frame.start,
+    session: frame._tag === "Accepted" ? frame.metadata.session : progress.session,
+  });
+const decodeRawRecordOption = S.decodeUnknownOption(RawRecord);
+const parseRecord = (text: string) => {
+  const line = A.head(Line.split(text));
+  const parsed = O.isSome(line) ? Line.parseResult(line.value) : Result.fail(undefined);
+  const row = Result.isSuccess(parsed) ? decodeRawRecordOption(parsed.success.value) : O.none();
+  if (O.isSome(row)) return Result.succeed(row.value);
+  const reason: typeof TranscriptFrame.cases.Rejected.Type.reason =
+    Str.trim(text) === "" ? "blank" : Result.isFailure(parsed) ? "invalid-json" : "invalid-shape";
+  return Result.fail(reason);
+};
 
 /**
  * Read a fixed-size source page through one pinned file handle.
  *
- * **Example**
+ * **Example** (Read an incremental transcript page)
  * ```ts
  * import { readTranscriptPage } from "@beep/repo-ai-metrics/transcript-page"
  * console.log(typeof readTranscriptPage) // function
@@ -379,29 +439,131 @@ export const readTranscriptPage = Effect.fn("AiMetrics.readTranscriptPage")(func
       const path = yield* Path.Path;
       const hash = (value: string) => hashPrivateIdentifier(value, O.some(salt));
       const hashBytes = (bytes: Uint8Array) => hash(Hex.encode(bytes));
+      const completeFrame = Effect.fnUntraced(function* (
+        frameBytes: Uint8Array,
+        occurrenceId: Sha256Hex,
+        start: number,
+        end: number,
+        session: typeof Session.Type
+      ) {
+        const decoded = Result.try(() => new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(frameBytes));
+        if (Result.isFailure(decoded))
+          return TranscriptFrame.cases.Rejected.make({
+            occurrenceId,
+            start,
+            end,
+            reason: "invalid-utf8",
+            complete: true,
+          });
+        const text = start === 0 ? Str.replace(/^\uFEFF/u, "")(decoded.success) : decoded.success;
+        const parsed = parseRecord(text);
+        if (Result.isFailure(parsed))
+          return TranscriptFrame.cases.Rejected.make({
+            occurrenceId,
+            start,
+            end,
+            reason: parsed.failure,
+            complete: true,
+          });
+        const metadata = yield* project(parsed.success, input.source, session, salt);
+        return TranscriptFrame.cases.Accepted.make({
+          occurrenceId,
+          start,
+          end,
+          contentHash: yield* hashBytes(frameBytes),
+          metadata,
+        });
+      });
+      const consumeFrame = Effect.fnUntraced(function* (
+        progress: FrameProgress,
+        bytes: Uint8Array,
+        local: number,
+        start: number,
+        boundary: ReturnType<typeof lineBoundary>,
+        generationId: Sha256Hex
+      ) {
+        const occurrenceStart = progress.discarding ? progress.discardStart : start + local;
+        const occurrenceId = yield* hash(`source-occurrence/v1:${generationId}:${occurrenceStart}`);
+        if (progress.discarding || boundary.length > input.maxLineBytes)
+          return O.some(
+            TranscriptFrame.cases.Rejected.make({
+              occurrenceId,
+              start: occurrenceStart,
+              end: start + boundary.end,
+              reason: "line-too-long",
+              complete: boundary.complete,
+            })
+          );
+        if (!boundary.complete) return O.none();
+        return O.some(
+          yield* completeFrame(
+            bytes.subarray(local, boundary.end),
+            occurrenceId,
+            occurrenceStart,
+            start + boundary.end,
+            progress.session
+          )
+        );
+      });
+      const scanPage = Effect.fnUntraced(function* (
+        resumed: O.Option<TranscriptCursor>,
+        start: number,
+        bytes: Uint8Array,
+        generationId: Sha256Hex
+      ) {
+        let progress = FrameProgress.make({
+          offset: O.match(resumed, { onNone: () => 0, onSome: (cursor) => cursor.offset }),
+          lineNumber: O.match(resumed, { onNone: () => 0, onSome: (cursor) => cursor.lineNumber }),
+          discarding: O.match(resumed, { onNone: () => false, onSome: (cursor) => cursor.discarding }),
+          discardStart: O.match(resumed, { onNone: () => 0, onSome: (cursor) => cursor.discardStart }),
+          session: O.match(resumed, { onNone: emptySession, onSome: (cursor) => cursor.session }),
+        });
+        const frames: Array<typeof TranscriptFrame.Type> = [];
+        let local = 0;
+        let waitingForPartialLine = false;
+        while (local < bytes.length && frames.length < input.maxFrames) {
+          const boundary = lineBoundary(bytes, local);
+          const frame = yield* consumeFrame(progress, bytes, local, start, boundary, generationId);
+          if (O.isNone(frame)) {
+            waitingForPartialLine = true;
+            break;
+          }
+          frames.push(frame.value);
+          progress = advanceFrame(progress, frame.value, boundary.complete);
+          local = boundary.end;
+        }
+        return FramePage.make({ ...progress, frames, waitingForPartialLine });
+      });
       const resolvedPath = path.resolve(input.path);
       const pathHash = yield* hash(resolvedPath);
       const namespaceId = yield* hash("ai-metrics-hash-salt-namespace/v1");
       const previous = input.cursor;
-      if (
-        O.isSome(previous) &&
-        (previous.value.pathHash !== pathHash ||
-          previous.value.namespaceId !== namespaceId ||
-          previous.value.source !== input.source)
-      )
-        return yield* failure("invalid-cursor");
-      // Refuse obvious special files before open; noFollow closes the final
-      // symlink race on supported platforms. The owning worker still needs a
-      // hard wall-clock limit for uninterruptible platform I/O.
-      if ((yield* fs.stat(resolvedPath)).type !== "File") return yield* failure("identity-unavailable");
-      const handle = yield* fs.open(resolvedPath, { flag: "r", noFollow: true });
-      const info = yield* handle.stat;
-      if (info.type !== "File" || O.isNone(info.ino) || info.size > BigInt(Number.MAX_SAFE_INTEGER))
-        return yield* failure("identity-unavailable");
-      const fileIdentity = yield* hash(
-        `${info.dev}:${info.ino.value}:${O.match(info.birthtime, { onNone: () => "unknown", onSome: (time) => time.getTime().toString() })}`
-      );
-      const size = Number(info.size);
+      const requireSourceBinding = Effect.fnUntraced(function* () {
+        if (
+          O.isSome(previous) &&
+          (previous.value.pathHash !== pathHash ||
+            previous.value.namespaceId !== namespaceId ||
+            previous.value.source !== input.source)
+        )
+          return yield* failure("invalid-cursor");
+      });
+      yield* requireSourceBinding();
+      const openPinnedSource = Effect.fnUntraced(function* () {
+        // Refuse obvious special files before open; noFollow closes the final
+        // symlink race on supported platforms. The owning worker still needs a
+        // hard wall-clock limit for uninterruptible platform I/O.
+        if ((yield* fs.stat(resolvedPath)).type !== "File") return yield* failure("identity-unavailable");
+        const handle = yield* fs.open(resolvedPath, { flag: "r", noFollow: true });
+        const info = yield* handle.stat;
+        if (info.type !== "File" || O.isNone(info.ino) || info.size > BigInt(Number.MAX_SAFE_INTEGER))
+          return yield* failure("identity-unavailable");
+        const fileIdentity = yield* hash(
+          `${info.dev}:${info.ino.value}:${O.match(info.birthtime, { onNone: () => "unknown", onSome: (time) => time.getTime().toString() })}`
+        );
+        const size = Number(info.size);
+        return { handle, fileIdentity, size };
+      });
+      const { handle, fileIdentity, size } = yield* openPinnedSource();
       let bytesRead = 0;
       const readAt = Effect.fnUntraced(function* (offset: number, length: number) {
         const buffer = new Uint8Array(length);
@@ -414,31 +576,26 @@ export const readTranscriptPage = Effect.fn("AiMetrics.readTranscriptPage")(func
         }
         return buffer;
       });
-      let reset: TranscriptPage["reset"] = O.isNone(previous) ? "new" : "none";
-      if (O.isSome(previous)) {
+      const sourceReset = Effect.fnUntraced(function* () {
+        if (O.isNone(previous)) return "new";
         const prior = previous.value;
-        if (fileIdentity !== prior.fileIdentity) reset = "replaced";
-        else if (size < prior.offset || size < prior.prefixLength) reset = "truncated";
-        else if (
+        if (fileIdentity !== prior.fileIdentity) return "replaced";
+        if (size < prior.offset || size < prior.prefixLength) return "truncated";
+        if (
           (yield* hashBytes(yield* readAt(0, prior.prefixLength))) !== prior.prefixHash ||
           (yield* hashBytes(yield* readAt(prior.offset - prior.anchorLength, prior.anchorLength))) !== prior.anchorHash
         )
-          reset = "rewritten";
-      }
-      if (
-        reset === "none" &&
-        O.isSome(previous) &&
-        !previous.value.discarding &&
-        previous.value.offset > 0 &&
-        (yield* readAt(previous.value.offset - 1, 1))[0] !== 10
-      )
-        return yield* failure("invalid-cursor");
-      const resumed = reset === "none" && O.isSome(previous) ? O.some(previous.value) : O.none();
-      let offset = O.match(resumed, { onNone: () => 0, onSome: (cursor) => cursor.offset });
-      let lineNumber = O.match(resumed, { onNone: () => 0, onSome: (cursor) => cursor.lineNumber });
-      let discarding = O.match(resumed, { onNone: () => false, onSome: (cursor) => cursor.discarding });
-      let discardStart = O.match(resumed, { onNone: () => 0, onSome: (cursor) => cursor.discardStart });
-      let session = O.match(resumed, { onNone: emptySession, onSome: (cursor) => cursor.session });
+          return "rewritten";
+        return "none";
+      });
+      const reset = yield* sourceReset();
+      const resumed = reset === "none" ? previous : O.none();
+      const requireLineBoundary = Effect.fnUntraced(function* () {
+        if (O.isNone(resumed)) return;
+        if (resumed.value.discarding || resumed.value.offset === 0) return;
+        if ((yield* readAt(resumed.value.offset - 1, 1))[0] !== 10) return yield* failure("invalid-cursor");
+      });
+      yield* requireLineBoundary();
       const prefixLength = Math.min(256, size);
       const prefixHash = yield* hashBytes(yield* readAt(0, prefixLength));
       const generationId = O.isSome(resumed)
@@ -446,94 +603,21 @@ export const readTranscriptPage = Effect.fn("AiMetrics.readTranscriptPage")(func
         : yield* hash(
             `source-generation/v1:${input.source}:${pathHash}:${fileIdentity}:${reset}:${O.match(previous, { onNone: () => "initial", onSome: (cursor) => cursor.generationId })}`
           );
-      const start = offset;
+      const start = O.match(resumed, { onNone: () => 0, onSome: (cursor) => cursor.offset });
       const bytes = yield* readAt(start, Math.min(input.maxBytes, size - start));
-      const frames: Array<typeof TranscriptFrame.Type> = [];
-      let local = 0;
-      let waitingForPartialLine = false;
-      while (local < bytes.length && frames.length < input.maxFrames) {
-        const newline = bytes.indexOf(10, local);
-        const complete = newline !== -1;
-        const end = complete ? newline + 1 : bytes.length;
-        const length = (complete ? newline : end) - local;
-        const occurrenceStart = discarding ? discardStart : start + local;
-        const occurrenceId = yield* hash(`source-occurrence/v1:${generationId}:${occurrenceStart}`);
-        if (discarding || length > input.maxLineBytes) {
-          frames.push(
-            TranscriptFrame.cases.Rejected.make({
-              occurrenceId,
-              start: occurrenceStart,
-              end: start + end,
-              reason: "line-too-long",
-              complete,
-            })
-          );
-          discardStart = occurrenceStart;
-          discarding = !complete;
-        } else if (!complete) {
-          waitingForPartialLine = true;
-          break;
-        } else {
-          const frameBytes = bytes.subarray(local, end);
-          const decoded = Result.try(() =>
-            new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(frameBytes)
-          );
-          if (Result.isFailure(decoded))
-            frames.push(
-              TranscriptFrame.cases.Rejected.make({
-                occurrenceId,
-                start: occurrenceStart,
-                end: start + end,
-                reason: "invalid-utf8",
-                complete: true,
-              })
-            );
-          else {
-            const text = occurrenceStart === 0 ? Str.replace(/^\uFEFF/u, "")(decoded.success) : decoded.success;
-            const line = A.head(Line.split(text));
-            const parsed = O.isSome(line) ? Line.parseResult(line.value) : Result.fail(undefined);
-            const row = Result.isSuccess(parsed) ? S.decodeUnknownOption(RawRecord)(parsed.success.value) : O.none();
-            if (O.isNone(row))
-              frames.push(
-                TranscriptFrame.cases.Rejected.make({
-                  occurrenceId,
-                  start: occurrenceStart,
-                  end: start + end,
-                  reason: Str.trim(text) === "" ? "blank" : Result.isFailure(parsed) ? "invalid-json" : "invalid-shape",
-                  complete: true,
-                })
-              );
-            else {
-              const metadata = yield* project(row.value, input.source, session, salt);
-              session = metadata.session;
-              frames.push(
-                TranscriptFrame.cases.Accepted.make({
-                  occurrenceId,
-                  start: occurrenceStart,
-                  end: start + end,
-                  contentHash: yield* hashBytes(frameBytes),
-                  metadata,
-                })
-              );
-            }
-          }
-        }
-        local = end;
-        offset = start + local;
-        if (complete) {
-          lineNumber += 1;
-          discarding = false;
-          discardStart = offset;
-        }
-      }
-      // Re-read this bounded page and prefix before returning. A source mutation
-      // during the read is refused; the caller keeps its previous durable cursor.
-      const again = yield* readAt(start, bytes.length);
-      if (
-        (yield* hashBytes(again)) !== (yield* hashBytes(bytes)) ||
-        (yield* hashBytes(yield* readAt(0, prefixLength))) !== prefixHash
-      )
-        return yield* failure("unstable");
+      const scanned = yield* scanPage(resumed, start, bytes, generationId);
+      const { offset, lineNumber, discarding, discardStart, session, frames, waitingForPartialLine } = scanned;
+      const verifySample = Effect.fnUntraced(function* () {
+        // Re-read this bounded page and prefix before returning. A source mutation
+        // during the read is refused; the caller keeps its previous durable cursor.
+        const again = yield* readAt(start, bytes.length);
+        if (
+          (yield* hashBytes(again)) !== (yield* hashBytes(bytes)) ||
+          (yield* hashBytes(yield* readAt(0, prefixLength))) !== prefixHash
+        )
+          return yield* failure("unstable");
+      });
+      yield* verifySample();
       const anchorLength = Math.min(256, offset);
       const cursor = TranscriptCursor.make({
         source: input.source,

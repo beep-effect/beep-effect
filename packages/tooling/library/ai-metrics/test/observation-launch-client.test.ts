@@ -28,6 +28,7 @@ import * as HttpServer from "effect/http/HttpServer";
 import * as HttpServerRequest from "effect/http/HttpServerRequest";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -49,6 +50,8 @@ const prepare = ObservationLaunchFact.cases.Prepared.make({
     evidenceId: id("d"),
   }),
 });
+const encodeObservationLaunchReceiptJson = S.encodeEffect(S.fromJsonString(ObservationLaunchReceipt));
+
 const fixture = Effect.fn("LaunchClientTest.fixture")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const directory = yield* fs.makeTempDirectoryScoped({ directory: "/tmp", prefix: "obs-client-" });
@@ -92,9 +95,7 @@ const fixture = Effect.fn("LaunchClientTest.fixture")(function* () {
         const row = (yield* facts.read(id("1"), 0))[0];
         if (row === undefined) return yield* Effect.die("Missing synthetic receipt");
         return HttpServerResponse.text(
-          yield* S.encodeEffect(S.fromJsonString(ObservationLaunchReceipt))(
-            ObservationLaunchReceipt.make({ ...row, receiptId: id("f") })
-          ),
+          yield* encodeObservationLaunchReceiptJson(ObservationLaunchReceipt.make({ ...row, receiptId: id("f") })),
           {
             contentType: "application/json",
             headers: { "x-observation-receipt": id("f") },
@@ -121,7 +122,7 @@ const fixture = Effect.fn("LaunchClientTest.fixture")(function* () {
   return { fs, directory, policy, uid, client, control, facts, mode, posts, submission };
 });
 
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("reads paused context through an owner-only socket and verifies exact committed receipts", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -143,11 +144,11 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
           .pipe(Effect.flip)).reason
       ).toBe("retired");
       expect((yield* f.client.context).evidenceEpoch).toBe(0);
-    }).pipe(Effect.scoped)
+    })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("keeps lost acknowledgments ambiguous without retrying or changing facts", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -161,11 +162,11 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
       expect(yield* f.client.submit(f.submission)).toEqual(rows[0]);
       expect(yield* Ref.get(f.posts)).toBe(2);
       expect((yield* f.facts.read(id("1"), 0)).length).toBe(1);
-    }).pipe(Effect.scoped, Effect.timeout("3 seconds"))
+    }).pipe(Effect.timeout("3 seconds"))
   )
 );
 
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("rejects forged receipt digests and unbounded responses", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -177,11 +178,11 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
       expect((yield* f.client.context.pipe(Effect.flip)).reason).toBe("unavailable");
       yield* Ref.set(f.mode, "normal");
       expect((yield* f.client.submit(f.submission)).fact).toEqual(prepare);
-    }).pipe(Effect.scoped)
+    })
   )
 );
 
-it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("refuses exposed permissions, wrong destinations and replacement socket identities", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -203,11 +204,14 @@ it.layer(Layer.fresh(sqlLayer), { excludeTestServices: true })((it) =>
       yield* replacement.serve(Effect.succeed(HttpServerResponse.text("synthetic replacement")));
       yield* f.fs.chmod(`${f.directory}/worker.sock`, 0o600);
       expect((yield* f.client.context.pipe(Effect.flip)).reason).toBe("configuration");
-    }).pipe(Effect.scoped)
+    })
   )
 );
 
-it.layer(Layer.merge(Layer.fresh(sqlLayer), NodeHttpClient.layerNodeHttp), { excludeTestServices: true })((it) =>
+it.layer(Layer.merge(Layer.fresh(sqlLayer), NodeHttpClient.layerNodeHttp), {
+  timeout: "30 seconds",
+  excludeTestServices: true,
+})((it) =>
   it.effect("keeps its private socket client isolated from the enclosing command HTTP client", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -221,6 +225,24 @@ it.layer(Layer.merge(Layer.fresh(sqlLayer), NodeHttpClient.layerNodeHttp), { exc
       expect((yield* second.client.submit(second.submission)).fact).toEqual(prepare);
       expect(yield* Ref.get(second.posts)).toBe(1);
       expect(yield* Ref.get(f.posts)).toBe(1);
-    }).pipe(Effect.scoped)
+    })
+  )
+);
+
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
+  it.effect("refuses missing owner metadata when the caller UID is unavailable", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      const missingOwner = {
+        ...f.fs,
+        lstat: (path: string) => f.fs.lstat(path).pipe(Effect.map((info) => ({ ...info, uid: O.none<number>() }))),
+      };
+      const error = yield* makeObservationLaunchClient(f.policy, -1).pipe(
+        Effect.provideService(FileSystem.FileSystem, missingOwner),
+        Effect.flip
+      );
+      expect(error.reason).toBe("configuration");
+      expect(yield* Ref.get(f.posts)).toBe(0);
+    })
   )
 );

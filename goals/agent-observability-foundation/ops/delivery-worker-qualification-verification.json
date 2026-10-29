@@ -1,0 +1,298 @@
+{
+  "observedAt": "2026-10-29T16:57:35.557426+00:00",
+  "baseHead": "1ed9704cc640a24fe880a5b1dc161b009d1ca1ef",
+  "archive": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-worker-qualification-uxysx66h",
+  "artifacts": [
+    {
+      "file": "foundation-bounded-job.py",
+      "bytes": 7421,
+      "sha256": "e7d72f286ed9cbb662eceaab93df404f8ecee8462f3998e320b6557eb828c4ee"
+    },
+    {
+      "file": "audit.repair-v7.combined.txt",
+      "bytes": 113433,
+      "sha256": "ab9858b0119271aae8d05194c831db942e0969f1981904a75ab039874a6a6f79"
+    },
+    {
+      "file": "audit.repair-v7.json",
+      "bytes": 13188,
+      "sha256": "f9769faebeee292427734c7f86b8c835cc7e45ed27935a7e55f4bb88083ffdf0"
+    },
+    {
+      "file": "delivery-fallow-worklist.json",
+      "bytes": 14827,
+      "sha256": "6f28d77f0d93dea0f3cbd079197d60b96a4da7323604e33569cddf508beeb103"
+    },
+    {
+      "file": "WORKER-QUALIFICATION-REVIEW.md",
+      "bytes": 3767,
+      "sha256": "ed6b30b86f6c55306adaf9f3995918066e6f09a0af7d060e194c4089887c7f33"
+    },
+    {
+      "file": "foundation-worker-AgentMessage.observation.ts.before",
+      "bytes": 28036,
+      "sha256": "e89e1801cefee3cc9c1ea92c1e0bd05b2a036f1121eb546bbfd523ccbeaba530"
+    },
+    {
+      "file": "foundation-worker-observation-launch-claims.ts.before",
+      "bytes": 28070,
+      "sha256": "18b400045e148b0b795ad6809a9718d89a438e0d8978d9eddfcecba8ca659b2b"
+    },
+    {
+      "file": "foundation-worker-observation-launch.ts.before",
+      "bytes": 10467,
+      "sha256": "da4510989a535d5310d523669448324bbadba4560b71d1539a31a16d0367fcc0"
+    },
+    {
+      "file": "foundation-worker-bounded-metadata.ts.before",
+      "bytes": 1410,
+      "sha256": "07108d75d503d5a8fccbe0f1a91fa7792dc4f7cf9d8d2af039d3e58e6dbf16ca"
+    },
+    {
+      "file": "foundation-worker-ObservationWorker.ts.before",
+      "bytes": 15371,
+      "sha256": "f30ee3f563ac61b90a735243ca6c466ab5e49a1fdc6a582cfa936e80f3a279fb"
+    },
+    {
+      "file": "foundation-worker-entrypoint-before.py",
+      "bytes": 30652,
+      "sha256": "df710022e3f00477a442f0fec062f25e3a202053a54fe476340aad521e5218df"
+    },
+    {
+      "file": "foundation-worker-qualification-v1.log",
+      "bytes": 4328,
+      "sha256": "ff420fe3e19d1d9d4ec366dbca2f295dcec80b56ac97bdd0f2e341e48ab703f6"
+    },
+    {
+      "file": "foundation-worker-qualification-v1-guard.json",
+      "bytes": 355,
+      "sha256": "92753ddbfbe6fa8fe9d70ec1861aecaf7102d617045065fe1862f4201627468d"
+    },
+    {
+      "file": "foundation-worker-qualification-v2.log",
+      "bytes": 997,
+      "sha256": "1f6c5d6151b1cc47e576e18d479d8ff74af90359fb9166da77f941f462cc1434"
+    },
+    {
+      "file": "foundation-worker-qualification-v2-guard.json",
+      "bytes": 354,
+      "sha256": "de9b6661c4cc2d6b2b541b9ac311c1934038a1270e544ceaaaab4df4702bc19b"
+    },
+    {
+      "file": "foundation-worker-full-v3.log",
+      "bytes": 872,
+      "sha256": "2ffb298d5eca868e90188345c0fa87044babd1e37e56dc5bbeda0bfb0f2c6e56"
+    },
+    {
+      "file": "foundation-worker-full-v3-guard.json",
+      "bytes": 346,
+      "sha256": "567f38076d53906398ae222594f2752a01a36f3c533d8b2c21586bae858c5642"
+    },
+    {
+      "file": "foundation-worker-final-v4.log",
+      "bytes": 14096,
+      "sha256": "daecd01c6b6eb01b4d2d89b8f37fe043eb2caa438ca0882093e8441a8b1c87c3"
+    },
+    {
+      "file": "foundation-worker-final-v4-guard.json",
+      "bytes": 347,
+      "sha256": "27e5230cd942a7d69423a4ec03cd381d913d6d7be9dbf470c2e6327e75c14e26"
+    },
+    {
+      "file": "foundation-worker-health-v1.json",
+      "bytes": 14625,
+      "sha256": "47126eeacb5d233727a901e2d71ff3691b222fa93c8f7222676e9a056c165c7d"
+    },
+    {
+      "file": "foundation-worker-health-v2.json",
+      "bytes": 11253,
+      "sha256": "e7e82871f6943eec6b4aef0e486cb8988fed512cdd077cce7410e974d68398fc"
+    },
+    {
+      "file": "initial-entrypoint-evidence.json",
+      "bytes": 15562,
+      "sha256": "73f733fe7a36599a89deda33c062eb9751ff663efe54001e268890719aab3464"
+    },
+    {
+      "file": "final-entrypoint-evidence.json",
+      "bytes": 15562,
+      "sha256": "b120ee638f6a44d4189beec698fc590ef10f8e8b2cd7377d5951d412640f919a"
+    }
+  ],
+  "currentSourceSha256": {
+    "packages/tooling/tool/cli/src/commands/AIMetrics/ObservationWorker.entry.ts": "9c774e7d328c5bcbc709bc07557150f70b7e3684cd74071ce67261dd526ab9d2",
+    "packages/tooling/library/ai-metrics/test/fixtures/write-observation-launch.ts": "f5cc8d01872ab8cd9c0f594d7553121dad1fa668c006b42237f947368ca21b35",
+    "packages/tooling/library/ai-metrics/test/fixtures/observation-launch-client-process.ts": "b648dcee102878290975f3300b4205a84ad1f2755e02a1c68d02979d5a0cb3a7",
+    "packages/tooling/library/ai-metrics/test/fixtures/managed-observation-process.ts": "088055ea862eb05f214540c0107d7de2e09bb978ea84031bfe472dbc3016aa39",
+    "packages/drivers/ai-provider-cli/test/fixtures/managed-codex-peer.ts": "162b5ede901fd11192f48ef194bc5170ea8f15cacd36dda1d5a22153df87b992",
+    "packages/tooling/tool/cli/test/fixtures/managed-observation-command.ts": "6d5f019022b91c091a867e56335f2c5b3afd317edb7c3c5d0d137ed43fd6d594",
+    "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.observation.ts": "f60e713976fa379b07fc0ad3cd75834c67b47379893301b1703abdc29de9ea01",
+    "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.observation.command.ts": "358ffc461f284df13111856c04bd7b09b34a0493f3f0d12f74189a385f275972",
+    "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.command.ts": "6301e99c8579eb396aedfc1e555cabe88a0c8cd7b22f85e4e24344b0c33cc9af",
+    "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.runtime.ts": "286a399084bbb92e1f5a0b82ee7cab23717a3d6c7dc8ea4df29dc67ba102ffa6",
+    "packages/tooling/library/ai-metrics/src/observation-launch-claims.ts": "e40ef18215e4c2e58a9bd8e0880a5c9327bfc2ce757b75f8fbaf5229620fdd33",
+    "packages/tooling/library/ai-metrics/src/observation-claim-population.ts": "27c3a68886dfd71b530f30ed30ba134b9bd8f950adfe6fe2f73750df924ed10b",
+    "packages/drivers/ai-provider-cli/src/AiProviderCliSession.lifecycle.ts": "6e67e6a4bb1f5740a8d6ade5327254bc71b9d788682f8e5c1bd62fe147b455af",
+    "packages/drivers/ai-provider-cli/src/AiProviderCliSession.service.ts": "5089bd893151d7acb1e1770dc7899fb283a13a85a89bca825c145913ec2566d7",
+    "packages/drivers/ai-provider-cli/src/AiProviderCliSession.stdio.service.ts": "2bf2154d56b9a1b9092e5e22f966be7ff3ea8d09b18b88d6bb1c2a9634c50fa8",
+    "packages/drivers/ai-provider-cli/src/AiProviderCliSession.claude.service.ts": "ed1e0fa4233ce08f5499282276a1d8423c775b7855f05a33b19adff4da8ef25d",
+    "packages/tooling/library/ai-metrics/src/observation-launch-client.ts": "8684c04b687f69912fad37166bdbf978e4391563206786d901932d7b5d2640ed",
+    "packages/tooling/library/ai-metrics/src/observation-launch-http.ts": "c173247d0ade3132c9a2a35cc3b433e6adbf94c21f06d3184d0817132059f2fe",
+    "packages/tooling/library/ai-metrics/src/observation-launch-facts.ts": "775f221abd1ab56e947227bc02b55c7264489917158c0fc0cf1a231b1a2a640a",
+    "packages/tooling/library/ai-metrics/src/observation-worker.ts": "3e2c413329d426e9f56836615a6f393b5b8352634a2b2840aa7a1a422950aacc",
+    "packages/tooling/library/ai-metrics/src/internal/observation-http-body.ts": "f8cad40500b97060f07087123db637d2e04ab8a7f14d0f23bdce050ed51d7fa7",
+    "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts": "b001740c23315a5190de5be77f3ff91cc623ebc9dc43f43ae66533971af49bbd",
+    "packages/tooling/library/ai-metrics/src/observation-launch.ts": "6907b4eda7565d00527803a81b62b780c59747cd09161974512cd8310bfce9d0",
+    "packages/tooling/library/ai-metrics/src/observation-file.ts": "4be1ba9a329806f13a9821e9febfdf87fd3e6b3ffe115a6da7e05896754c63dc",
+    "packages/tooling/library/ai-metrics/src/observation-runtime.ts": "b310f4abc1e1e5267eb9d480f8cb8c669ffec909726509e7c6da5bfef97775d9",
+    "packages/tooling/library/ai-metrics/src/observation-source-health.ts": "eadcdf1f0880245db14cfb83cfba2eee34ed107d63a82df1ce5bb853c964b2ed",
+    "packages/tooling/library/ai-metrics/src/transcript-discovery.ts": "a36be4d37f9859a5094d18cdbcb2695f3a4ca9dac9c9bb520689c31cf7f1ad3f",
+    "packages/tooling/library/ai-metrics/src/transcript-sweep.ts": "35d6d06c0378fdebb8c82295b082a01f820fe6dac75eb7f8544652910c131af5",
+    "goals/agent-observability-foundation/ops/verify-worker-entrypoint.py": "42414b61353cd4e6da96e76c6077722d702275bc1c7c9b624b021ce96671ab02"
+  },
+  "verification": {
+    "focusedLibraryTests": 21,
+    "focusedCliTests": 11,
+    "aiMetricsAudit": "passed",
+    "aiMetricsDocgen": "passed",
+    "finalCliQuick": "lint and check passed",
+    "syntheticEntrypoint": "passed",
+    "startupResourceRefusals": [
+      {
+        "case": "memory-ceiling",
+        "overrides": {
+          "MemoryMax": "3221225472"
+        },
+        "journalUnchanged": true
+      },
+      {
+        "case": "swap-allowance",
+        "overrides": {
+          "MemorySwapMax": "1048576"
+        },
+        "journalUnchanged": true
+      },
+      {
+        "case": "task-ceiling",
+        "overrides": {
+          "TasksMax": "129"
+        },
+        "journalUnchanged": true
+      },
+      {
+        "case": "cpu-ceiling",
+        "overrides": {
+          "CPUQuota": "200%"
+        },
+        "journalUnchanged": true
+      },
+      {
+        "case": "descriptor-ceiling",
+        "overrides": {
+          "LimitNOFILE": "512"
+        },
+        "journalUnchanged": true
+      },
+      {
+        "case": "file-ceiling",
+        "overrides": {
+          "LimitFSIZE": "67108865"
+        },
+        "journalUnchanged": true
+      },
+      {
+        "case": "file-headroom",
+        "overrides": {
+          "LimitFSIZE": "1048575"
+        },
+        "journalUnchanged": true
+      },
+      {
+        "case": "core-dump-enabled",
+        "overrides": {
+          "LimitCORE": "1048576"
+        },
+        "journalUnchanged": true
+      }
+    ],
+    "qualificationHelperComplexityFindings": 0,
+    "remainingWorkerComplexityFindings": 5,
+    "fallowAttribution": {
+      "gate": "new-only",
+      "dead_code_introduced": 0,
+      "dead_code_inherited": 0,
+      "complexity_introduced": 48,
+      "complexity_inherited": 0,
+      "duplication_introduced": 3,
+      "duplication_inherited": 4,
+      "styling_introduced": 0,
+      "styling_inherited": 0,
+      "duplication_demoted": 0,
+      "diff_risk_introduced": 0
+    },
+    "maximumRemainingCyclomatic": 30,
+    "independentReview": "accepted at exact current hashes"
+  },
+  "guards": {
+    "foundation-worker-qualification-v1": {
+      "ownedScopes": {},
+      "unit": "foundation-worker-qualification-v1.service",
+      "profile": "bounded",
+      "memoryStopBytes": 8589934592,
+      "hostAvailableFloorBytes": 8589934592,
+      "initialAvailableBytes": 49502273536,
+      "peakObservedBytes": 5891624960,
+      "minimumAvailableBytes": 44576006144,
+      "stoppedFor": null,
+      "exitCode": 0,
+      "orphanCleanup": []
+    },
+    "foundation-worker-qualification-v2": {
+      "ownedScopes": {},
+      "unit": "foundation-worker-qualification-v2.service",
+      "profile": "bounded",
+      "memoryStopBytes": 8589934592,
+      "hostAvailableFloorBytes": 8589934592,
+      "initialAvailableBytes": 46905802752,
+      "peakObservedBytes": 393695232,
+      "minimumAvailableBytes": 41588944896,
+      "stoppedFor": null,
+      "exitCode": 0,
+      "orphanCleanup": []
+    },
+    "foundation-worker-full-v3": {
+      "ownedScopes": {},
+      "unit": "foundation-worker-full-v3.service",
+      "profile": "bounded",
+      "memoryStopBytes": 8589934592,
+      "hostAvailableFloorBytes": 8589934592,
+      "initialAvailableBytes": 42952564736,
+      "peakObservedBytes": 7516229632,
+      "minimumAvailableBytes": 33249996800,
+      "stoppedFor": null,
+      "exitCode": 0,
+      "orphanCleanup": []
+    },
+    "foundation-worker-final-v4": {
+      "ownedScopes": {},
+      "unit": "foundation-worker-final-v4.service",
+      "profile": "bounded",
+      "memoryStopBytes": 8589934592,
+      "hostAvailableFloorBytes": 8589934592,
+      "initialAvailableBytes": 33933983744,
+      "peakObservedBytes": 6072922112,
+      "minimumAvailableBytes": 30482124800,
+      "stoppedFor": null,
+      "exitCode": 1,
+      "orphanCleanup": []
+    }
+  },
+  "limitations": [
+    "Final combined run exits 1 for the remaining Fallow audit findings; CLI lint/types and entrypoint proof passed before that audit.",
+    "Five other worker complexity findings remain. No threshold, suppression or allowance changed.",
+    "Entrypoint fixtures attest synthetic managed CLI/desktop labels only, not real harness coverage or live Phoenix durability.",
+    "Entrypoint services have individual caps; outer guard sampling does not aggregate every sibling transient service. No allocation stress or deliberate OOM was run.",
+    "Whole CLI runtime-abort resolution, remaining quality/catalog checks, installed canary, publication and hosted review/merge remain pending.",
+    "Forwarder service and timer remain masked/inactive; no historical removal or live enrollment."
+  ]
+}

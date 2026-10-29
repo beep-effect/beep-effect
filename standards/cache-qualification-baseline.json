@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Opus 5.5 (effected-promotion adoption 4-A4, effected-4a4)",
-      "reason": "Record the @beep/repo-cli manifest edit that adds the @beep/repo-workspaces workspace dependency for the 4-A4 EcosystemPolarity adoption of SourceBoundary.scan; the task graphs gain only repo-workspaces build/transit, and the policy-tool fingerprint closure gains that one package, as measured in the review; no qualification is granted.",
+      "reviewer": "GPT-6-Astra independent foundation panel",
+      "reason": "Record the six reviewed task configuration changes from foundation dependencies and canonical jsonl policy closure inputs. No cache qualification or exception is added.",
       "basis": {
-        "path": "goals/effected-promotion/research/cache-baseline-review-4-a4.md",
-        "sha256": "5cbdd44e9e9763da57998829e196fc1313b97d97a89852584f867b76afc768e2"
+        "path": "goals/agent-observability-foundation/research/CACHE-BASELINE-REVIEW.md",
+        "sha256": "67c9d7d18844c8ead6abf384586d4dac98bc6646a87819d66c8bee0fc02b866d"
       }
     },
     "@beep/acp": {
@@ -1122,11 +1122,11 @@
       }
     },
     "@beep/repo-ai-metrics": {
-      "reviewer": "Claude Fable 5.1 (tsrs-gates, feat/tsrs-gates)",
-      "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
+      "reviewer": "GPT-6-Astra independent foundation panel",
+      "reason": "Record the six reviewed task configuration changes from foundation dependencies and canonical jsonl policy closure inputs. No cache qualification or exception is added.",
       "basis": {
-        "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
+        "path": "goals/agent-observability-foundation/research/CACHE-BASELINE-REVIEW.md",
+        "sha256": "67c9d7d18844c8ead6abf384586d4dac98bc6646a87819d66c8bee0fc02b866d"
       }
     },
     "@beep/repo-cli": {
@@ -3018,6 +3018,8 @@
             "packages/foundation/modeling/identity/src/**",
             "packages/foundation/modeling/jsonc/package.json",
             "packages/foundation/modeling/jsonc/src/**",
+            "packages/foundation/modeling/jsonl/package.json",
+            "packages/foundation/modeling/jsonl/src/**",
             "packages/foundation/modeling/lockfiles/package.json",
             "packages/foundation/modeling/lockfiles/src/**",
             "packages/foundation/modeling/managed-section/package.json",
@@ -97151,11 +97153,13 @@
         "command": "bun run --if-present beep:audit",
         "commandDigest": "76f57aca0937ac80ee29b8eb6348b90079c7b393d9053a25ea742392ae891cab",
         "dependencies": [
+          "@beep/ai-provider-cli#audit",
           "@beep/cli-kit#audit",
           "@beep/duckdb#audit",
           "@beep/fc-runs#audit",
           "@beep/file-processing#audit",
           "@beep/identity#audit",
+          "@beep/jsonl#audit",
           "@beep/memfs#audit",
           "@beep/observability#audit",
           "@beep/phoenix#audit",
@@ -97225,11 +97229,13 @@
         "command": "bun run beep:build",
         "commandDigest": "76f57aca0937ac80ee29b8eb6348b90079c7b393d9053a25ea742392ae891cab",
         "dependencies": [
+          "@beep/ai-provider-cli#build",
           "@beep/cli-kit#build",
           "@beep/duckdb#build",
           "@beep/fc-runs#build",
           "@beep/file-processing#build",
           "@beep/identity#build",
+          "@beep/jsonl#build",
           "@beep/memfs#build",
           "@beep/observability#build",
           "@beep/phoenix#build",
@@ -97288,11 +97294,13 @@
         "command": "bun run beep:check",
         "commandDigest": "76f57aca0937ac80ee29b8eb6348b90079c7b393d9053a25ea742392ae891cab",
         "dependencies": [
+          "@beep/ai-provider-cli#build",
           "@beep/cli-kit#build",
           "@beep/duckdb#build",
           "@beep/fc-runs#build",
           "@beep/file-processing#build",
           "@beep/identity#build",
+          "@beep/jsonl#build",
           "@beep/memfs#build",
           "@beep/observability#build",
           "@beep/phoenix#build",
@@ -97338,11 +97346,13 @@
         "command": "bunx vitest run --coverage",
         "commandDigest": "76f57aca0937ac80ee29b8eb6348b90079c7b393d9053a25ea742392ae891cab",
         "dependencies": [
+          "@beep/ai-provider-cli#build",
           "@beep/cli-kit#build",
           "@beep/duckdb#build",
           "@beep/fc-runs#build",
           "@beep/file-processing#build",
           "@beep/identity#build",
+          "@beep/jsonl#build",
           "@beep/memfs#build",
           "@beep/observability#build",
           "@beep/phoenix#build",
@@ -97473,11 +97483,13 @@
         "commandDigest": "76f57aca0937ac80ee29b8eb6348b90079c7b393d9053a25ea742392ae891cab",
         "dependencies": [
           "//#lint:policy-fingerprint",
+          "@beep/ai-provider-cli#transit",
           "@beep/cli-kit#transit",
           "@beep/duckdb#transit",
           "@beep/fc-runs#transit",
           "@beep/file-processing#transit",
           "@beep/identity#transit",
+          "@beep/jsonl#transit",
           "@beep/memfs#transit",
           "@beep/observability#transit",
           "@beep/phoenix#transit",
@@ -97686,11 +97698,13 @@
         "command": "beep-cli quality test-tsgo-package",
         "commandDigest": "76f57aca0937ac80ee29b8eb6348b90079c7b393d9053a25ea742392ae891cab",
         "dependencies": [
+          "@beep/ai-provider-cli#transit",
           "@beep/cli-kit#transit",
           "@beep/duckdb#transit",
           "@beep/fc-runs#transit",
           "@beep/file-processing#transit",
           "@beep/identity#transit",
+          "@beep/jsonl#transit",
           "@beep/memfs#transit",
           "@beep/observability#transit",
           "@beep/phoenix#transit",
@@ -97739,11 +97753,13 @@
         "command": "bun run beep:test",
         "commandDigest": "76f57aca0937ac80ee29b8eb6348b90079c7b393d9053a25ea742392ae891cab",
         "dependencies": [
+          "@beep/ai-provider-cli#transit",
           "@beep/cli-kit#transit",
           "@beep/duckdb#transit",
           "@beep/fc-runs#transit",
           "@beep/file-processing#transit",
           "@beep/identity#transit",
+          "@beep/jsonl#transit",
           "@beep/memfs#transit",
           "@beep/observability#transit",
           "@beep/phoenix#transit",
@@ -97798,11 +97814,13 @@
         "command": "bun run beep:test",
         "commandDigest": "76f57aca0937ac80ee29b8eb6348b90079c7b393d9053a25ea742392ae891cab",
         "dependencies": [
+          "@beep/ai-provider-cli#transit",
           "@beep/cli-kit#transit",
           "@beep/duckdb#transit",
           "@beep/fc-runs#transit",
           "@beep/file-processing#transit",
           "@beep/identity#transit",
+          "@beep/jsonl#transit",
           "@beep/memfs#transit",
           "@beep/observability#transit",
           "@beep/phoenix#transit",
@@ -129977,7 +129995,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "e1fdc840e70992359d20318b3841fb0c0bcbd18802ad76bf5879c45ebcfcb8cf"
+        "sha256": "61c1cb309c83a1b2f74f3967d6921409380691d50eb3fbb9bcf619034770010a"
       }
     ]
   }

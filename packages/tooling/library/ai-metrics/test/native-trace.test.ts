@@ -6,8 +6,9 @@ import {
 } from "@beep/repo-ai-metrics/native-trace";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { expect } from "@effect/vitest";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -58,37 +59,36 @@ const request = (body: Uint8Array, contentType: NativeTraceRequest["contentType"
     approvedModels: ["claude-opus-5-5"],
     usageConvention: "claude-code",
   });
-const jsonRequest = (value: unknown) =>
-  S.encodeEffect(S.fromJsonString(S.Unknown))(value).pipe(
-    Effect.map((value) => request(new TextEncoder().encode(value)))
-  );
+const encodeJsonValue = S.encodeEffect(S.fromJsonString(S.Unknown));
 
-it.layer(NodeServices.layer)((it) => {
+const jsonRequest = (value: unknown) =>
+  encodeJsonValue(value).pipe(Effect.map((value) => request(new TextEncoder().encode(value))));
+const encodeNativeTraceBatchJson = S.encodeEffect(S.fromJsonString(NativeTraceBatch));
+
+it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) => {
   it.effect("keeps native IDs, exact times and usage categories while discarding private payloads", () =>
     Effect.gen(function* () {
       const input = yield* jsonRequest(envelope([span]));
       const batch = yield* projectNativeTraceRequest(input);
       expect(batch.rejections).toEqual([]);
       expect(batch.spans).toHaveLength(1);
-      expect(batch.spans[0]).toMatchObject({
-        traceId: span.traceId,
-        spanId: span.spanId,
-        parentSpanId: O.some(span.parentSpanId),
-        startTimeUnixNano: O.some(span.startTimeUnixNano),
-        endTimeUnixNano: O.some(span.endTimeUnixNano),
-        durationKnown: true,
-        kind: "LLM",
-        status: "error",
-        modelName: O.some("claude-opus-5-5"),
-        usage: {
-          convention: "claude-code",
-          input: O.some(100),
-          output: O.some(20),
-          cacheRead: O.some(30),
-          cacheWrite: O.some(40),
-        },
-      });
-      const serialized = yield* S.encodeEffect(S.fromJsonString(NativeTraceBatch))(batch);
+      const observedSpan = batch.spans[0];
+      assertTrue(observedSpan !== undefined);
+      expect(observedSpan.traceId).toEqual(span.traceId);
+      expect(observedSpan.spanId).toEqual(span.spanId);
+      assertSome(observedSpan.parentSpanId, span.parentSpanId);
+      assertSome(observedSpan.startTimeUnixNano, span.startTimeUnixNano);
+      assertSome(observedSpan.endTimeUnixNano, span.endTimeUnixNano);
+      expect(observedSpan.durationKnown).toEqual(true);
+      expect(observedSpan.kind).toEqual("LLM");
+      expect(observedSpan.status).toEqual("error");
+      assertSome(observedSpan.modelName, "claude-opus-5-5");
+      expect(observedSpan.usage.convention).toEqual("claude-code");
+      assertSome(observedSpan.usage.input, 100);
+      assertSome(observedSpan.usage.output, 20);
+      assertSome(observedSpan.usage.cacheRead, 30);
+      assertSome(observedSpan.usage.cacheWrite, 40);
+      const serialized = yield* encodeNativeTraceBatchJson(batch);
       expect(serialized).not.toContain("private-");
       expect(serialized).not.toContain("synthetic-native-salt");
       expect(serialized).not.toContain("input.value");
@@ -121,7 +121,7 @@ it.layer(NodeServices.layer)((it) => {
       );
       expect(batch.spans).toHaveLength(1);
       expect(A.map(batch.rejections, (rejection) => rejection.ordinal)).toEqual([0, 1, 2, 3, 4, 5, 6]);
-      expect(yield* S.encodeEffect(S.fromJsonString(NativeTraceBatch))(batch)).not.toContain("private-");
+      expect(yield* encodeNativeTraceBatchJson(batch)).not.toContain("private-");
     })
   );
 
@@ -139,11 +139,11 @@ it.layer(NodeServices.layer)((it) => {
           ])
         )
       );
-      expect(batch.spans[0]).toMatchObject({
-        traceId: Str.repeat(16)("ab"),
-        spanId: Str.repeat(8)("cd"),
-        endTimeUnixNano: O.some("18446744073709551615"),
-      });
+      const observedSpan = batch.spans[0];
+      assertTrue(observedSpan !== undefined);
+      expect(observedSpan.traceId).toEqual(Str.repeat(16)("ab"));
+      expect(observedSpan.spanId).toEqual(Str.repeat(8)("cd"));
+      assertSome(observedSpan.endTimeUnixNano, "18446744073709551615");
       expect(S.is(NativeTraceMetadata)({ ...batch.spans[0], startTimeUnixNano: O.some("invalid") })).toBe(false);
       expect(S.is(NativeTraceMetadata)({ ...batch.spans[0], durationKnown: false })).toBe(false);
     })
@@ -164,18 +164,21 @@ it.layer(NodeServices.layer)((it) => {
           ])
         )
       );
-      expect(batch.spans[0]).toMatchObject({
-        startTimeUnixNano: O.none(),
-        endTimeUnixNano: O.none(),
-        durationKnown: false,
-        status: "unset",
-        kind: "UNKNOWN",
-        modelName: O.none(),
-        sessionHash: O.none(),
-        usage: { input: O.some(0), output: O.none(), cacheRead: O.none(), cacheWrite: O.none() },
-      });
-      expect(O.isSome(batch.spans[0]?.modelHash ?? O.none())).toBe(true);
-      expect(yield* S.encodeEffect(S.fromJsonString(NativeTraceBatch))(batch)).not.toContain("private-");
+      const observedSpan = batch.spans[0];
+      assertTrue(observedSpan !== undefined);
+      assertNone(observedSpan.startTimeUnixNano);
+      assertNone(observedSpan.endTimeUnixNano);
+      expect(observedSpan.durationKnown).toEqual(false);
+      expect(observedSpan.status).toEqual("unset");
+      expect(observedSpan.kind).toEqual("UNKNOWN");
+      assertNone(observedSpan.modelName);
+      assertNone(observedSpan.sessionHash);
+      assertSome(observedSpan.usage.input, 0);
+      assertNone(observedSpan.usage.output);
+      assertNone(observedSpan.usage.cacheRead);
+      assertNone(observedSpan.usage.cacheWrite);
+      assertTrue(O.isSome(batch.spans[0]?.modelHash ?? O.none()));
+      expect(yield* encodeNativeTraceBatchJson(batch)).not.toContain("private-");
     })
   );
 
@@ -198,13 +201,81 @@ it.layer(NodeServices.layer)((it) => {
       const batch = yield* projectNativeTraceRequest(
         NativeTraceRequest.make({ ...input, usageConvention: "openinference" })
       );
-      expect(batch.spans[0]?.usage).toEqual({
-        convention: "openinference",
-        input: O.some(170),
-        output: O.some(20),
-        cacheRead: O.some(30),
-        cacheWrite: O.some(40),
-      });
+      const observedSpan = batch.spans[0];
+      assertTrue(observedSpan !== undefined);
+      expect(observedSpan.usage.convention).toEqual("openinference");
+      assertSome(observedSpan.usage.input, 170);
+      assertSome(observedSpan.usage.output, 20);
+      assertSome(observedSpan.usage.cacheRead, 30);
+      assertSome(observedSpan.usage.cacheWrite, 40);
+    })
+  );
+
+  it.effect("scopes name-based kinds to the declared convention and preserves explicit kinds and absent parents", () =>
+    Effect.gen(function* () {
+      const names = [
+        "claude_code.llm_request",
+        "claude_code.interaction",
+        "claude_code.tool",
+        "claude_code.tool.execution",
+        "private-unknown",
+        "",
+      ];
+      const input = yield* jsonRequest(
+        envelope([
+          ...A.map(names, (name) => ({ ...span, name, parentSpanId: "", status: { code: 1 }, attributes: [] })),
+          { ...span, name: "claude_code.llm_request", attributes: [text("openinference.span.kind", "TOOL")] },
+          {
+            ...span,
+            name: "claude_code.llm_request",
+            attributes: [text("openinference.span.kind", "private-invalid-kind")],
+          },
+        ])
+      );
+      const native = yield* projectNativeTraceRequest(input);
+      expect(native.rejections).toEqual([]);
+      expect(A.map(native.spans, (span) => span.kind)).toEqual([
+        "LLM",
+        "AGENT",
+        "TOOL",
+        "TOOL",
+        "UNKNOWN",
+        "UNKNOWN",
+        "TOOL",
+        "LLM",
+      ]);
+      expect(A.map(native.spans, (span) => span.status)).toEqual([
+        "ok",
+        "ok",
+        "ok",
+        "ok",
+        "ok",
+        "ok",
+        "error",
+        "error",
+      ]);
+      expect(A.every(A.take(native.spans, 6), (span) => O.isNone(span.parentSpanId))).toBe(true);
+      const unnamed = native.spans[5];
+      assertTrue(unnamed !== undefined);
+      assertNone(unnamed.nameHash);
+      const oi = yield* projectNativeTraceRequest(
+        NativeTraceRequest.make({ ...input, usageConvention: "openinference" })
+      );
+      expect(A.map(oi.spans, (span) => span.kind)).toEqual([
+        "UNKNOWN",
+        "UNKNOWN",
+        "UNKNOWN",
+        "UNKNOWN",
+        "UNKNOWN",
+        "UNKNOWN",
+        "TOOL",
+        "UNKNOWN",
+      ]);
+      const unknown = yield* projectNativeTraceRequest(
+        NativeTraceRequest.make({ ...input, usageConvention: "unknown" })
+      );
+      expect(A.map(unknown.spans, (span) => span.kind)).toEqual(A.map(oi.spans, (span) => span.kind));
+      expect(yield* encodeNativeTraceBatchJson(native)).not.toContain("private-");
     })
   );
 
@@ -264,7 +335,7 @@ it.layer(NodeServices.layer)((it) => {
       const json = yield* projectNativeTraceRequest(yield* jsonRequest(envelope([span])));
       expect(binary.spans).toEqual(json.spans);
       expect(binary.rejections).toEqual([]);
-      expect(yield* S.encodeEffect(S.fromJsonString(NativeTraceBatch))(binary)).not.toContain("private-");
+      expect(yield* encodeNativeTraceBatchJson(binary)).not.toContain("private-");
     })
   );
   it.effect("only preserves finite synthetic surface labels on an explicitly enabled fixture route", () =>
@@ -276,7 +347,7 @@ it.layer(NodeServices.layer)((it) => {
         );
         const disabled = yield* projectNativeTraceRequest(input);
         expect(disabled.spans).toEqual(original.spans);
-        expect(yield* S.encodeEffect(S.fromJsonString(NativeTraceBatch))(disabled)).not.toContain("fixtureSurface");
+        expect(yield* encodeNativeTraceBatchJson(disabled)).not.toContain("fixtureSurface");
         const enabled = yield* projectNativeTraceRequest(
           NativeTraceRequest.make({ ...input, syntheticFixtureMetadata: O.some(true) })
         );
@@ -284,9 +355,11 @@ it.layer(NodeServices.layer)((it) => {
           expect(enabled.spans).toEqual([]);
           expect(enabled.rejections).toEqual([{ ordinal: 0, reason: "invalid-span" }]);
         } else {
-          expect(enabled.spans[0]?.fixtureSurface).toEqual(O.some(surface));
+          const span = enabled.spans[0];
+          if (span === undefined) return yield* Effect.die("Missing synthetic span");
+          assertSome(span.fixtureSurface, surface);
           expect(enabled.spans[0]?.eventId).toBe(original.spans[0]?.eventId);
-          expect(yield* S.encodeEffect(S.fromJsonString(NativeTraceBatch))(enabled)).not.toContain("private-");
+          expect(yield* encodeNativeTraceBatchJson(enabled)).not.toContain("private-");
         }
       }
     })

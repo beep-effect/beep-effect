@@ -4348,11 +4348,13 @@
       {
         "from": "@beep/repo-ai-metrics",
         "allow": [
+          "@beep/ai-provider-cli",
           "@beep/cli-kit",
           "@beep/duckdb",
           "@beep/fc-runs",
           "@beep/file-processing",
           "@beep/identity",
+          "@beep/jsonl",
           "@beep/memfs",
           "@beep/observability",
           "@beep/phoenix",
@@ -4364,11 +4366,13 @@
           "@beep/xdg"
         ],
         "allowTypeOnly": [
+          "@beep/ai-provider-cli",
           "@beep/cli-kit",
           "@beep/duckdb",
           "@beep/fc-runs",
           "@beep/file-processing",
           "@beep/identity",
+          "@beep/jsonl",
           "@beep/memfs",
           "@beep/observability",
           "@beep/phoenix",

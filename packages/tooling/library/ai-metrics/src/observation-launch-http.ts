@@ -15,7 +15,7 @@ import * as Semaphore from "effect/Semaphore";
 import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
 import { readEvidenceWindow } from "./evidence-window.ts";
-import { observationHttpBodyFailure, readObservationHttpBytes } from "./internal/observation-http-body.ts";
+import { observationHttpBodyFailure, readObservationHttpText } from "./internal/observation-http-body.ts";
 import {
   makeObservationLaunchFacts,
   ObservationLaunchFact,
@@ -122,6 +122,21 @@ const response = (status: number) =>
     status,
     headers: { "cache-control": "no-store", connection: "close" },
   });
+const encodeObservationLaunchContextJson = S.encodeEffect(S.fromJsonString(ObservationLaunchContext));
+const encodeObservationLaunchReceiptJson = S.encodeEffect(S.fromJsonString(ObservationLaunchReceipt));
+
+const rejectSubmissionHeaders = (request: HttpServerRequest.HttpServerRequest) => {
+  const mediaType = Str.toLowerCase(Str.trim(Str.split(request.headers["content-type"] ?? "", ";")[0] ?? ""));
+  if (
+    mediaType !== "application/json" ||
+    Str.toLowerCase(request.headers["content-encoding"] ?? "identity") !== "identity"
+  )
+    return O.some(response(415));
+  const length = request.headers["content-length"];
+  if (length !== undefined && (!/^[0-9]{1,10}$/.test(length) || Number(length) > 8192)) return O.some(response(413));
+  return O.none();
+};
+
 /**
  * Serve one bounded launch write at a time through shared worker admission.
  * **Example** (Inspect the transport factory)
@@ -141,94 +156,80 @@ export const makeObservationLaunchHttp = Effect.fn("AiMetrics.makeObservationLau
   const sql = yield* SqlClient.SqlClient;
   const facts = yield* makeObservationLaunchFacts(config);
   const permit = yield* Semaphore.make(1);
+  const readContext = Effect.gen(function* () {
+    const window = yield* readEvidenceWindow().pipe(Effect.provideService(SqlClient.SqlClient, sql));
+    const state = yield* control.status;
+    const context = ObservationLaunchContext.make({
+      hostId: config.hostId,
+      namespaceId: config.namespaceId,
+      evidenceEpoch: window.epoch,
+      accepting: state.accepting,
+      routes: policy.routes,
+    });
+    return HttpServerResponse.text(yield* encodeObservationLaunchContextJson(context), {
+      contentType: "application/json",
+      headers: { "cache-control": "no-store", connection: "close" },
+    });
+  });
+  const submit = Effect.fnUntraced(function* (request: HttpServerRequest.HttpServerRequest) {
+    const text = yield* readObservationHttpText(request.stream, 8192, policy.bodyTimeoutMillis);
+    const submission = yield* decode(text).pipe(Effect.mapError(() => observationHttpBodyFailure("malformed")));
+    if (submission.hostId !== config.hostId || submission.namespaceId !== config.namespaceId) return response(409);
+    const previous = yield* facts.read(submission.fact.launchId, submission.evidenceEpoch);
+    const prepared = submission.fact._tag === "Prepared" ? submission.fact : previous[0]?.fact;
+    if (prepared?._tag !== "Prepared") return response(409);
+    if (
+      !A.some(
+        policy.routes,
+        (route) =>
+          route.routeId === prepared.identity.routeId &&
+          route.harness === prepared.identity.harness &&
+          route.surface === prepared.identity.surface
+      )
+    )
+      return response(403);
+    const receipt = yield* facts.record(submission.fact, submission.evidenceEpoch);
+    const body = yield* encodeObservationLaunchReceiptJson(receipt);
+    return HttpServerResponse.text(body, {
+      status: 200,
+      contentType: "application/json",
+      headers: {
+        "cache-control": "no-store",
+        connection: "close",
+        "x-observation-receipt": receipt.receiptId,
+      },
+    });
+  });
+  const contextRequest = Effect.fnUntraced(function* (request: HttpServerRequest.HttpServerRequest) {
+    if (request.method !== "GET") return response(405);
+    const result = yield* permit.withPermitsIfAvailable(1)(readContext);
+    return O.isSome(result) ? result.value : response(503);
+  });
+  const submissionRequest = Effect.fnUntraced(function* (request: HttpServerRequest.HttpServerRequest) {
+    if (request.method !== "POST") return response(405);
+    const rejected = rejectSubmissionHeaders(request);
+    if (O.isSome(rejected)) return rejected.value;
+    const result = yield* permit.withPermitsIfAvailable(1)(
+      control.run(submit(request)).pipe(
+        Effect.catchTags({
+          ObservationHttpBodyError: (error) =>
+            Effect.succeed(response(error.reason === "oversize" ? 413 : error.reason === "timed-out" ? 503 : 400)),
+          ObservationControlError: () => Effect.succeed(response(503)),
+          ObservationLaunchFactsError: (error) =>
+            Effect.succeed(response(error.reason === "retired" ? 410 : error.reason === "conflict" ? 409 : 503)),
+        })
+      )
+    );
+    return O.isSome(result) ? result.value : response(503);
+  });
   const handler = Effect.gen(function* () {
     const request = yield* HttpServerRequest.HttpServerRequest;
     if (policy.routes.length === 0) return response(404);
     if (request.url === "/v1/launch-context") {
-      if (request.method !== "GET") return response(405);
-      const result = yield* permit.withPermitsIfAvailable(1)(
-        Effect.gen(function* () {
-          const window = yield* readEvidenceWindow().pipe(Effect.provideService(SqlClient.SqlClient, sql));
-          const state = yield* control.status;
-          const context = ObservationLaunchContext.make({
-            hostId: config.hostId,
-            namespaceId: config.namespaceId,
-            evidenceEpoch: window.epoch,
-            accepting: state.accepting,
-            routes: policy.routes,
-          });
-          return HttpServerResponse.text(yield* S.encodeEffect(S.fromJsonString(ObservationLaunchContext))(context), {
-            contentType: "application/json",
-            headers: { "cache-control": "no-store", connection: "close" },
-          });
-        })
-      );
-      return O.isSome(result) ? result.value : response(503);
+      return yield* contextRequest(request);
     }
     if (request.url !== "/v1/launch-facts") return response(404);
-    if (request.method !== "POST") return response(405);
-    const mediaType = Str.toLowerCase(Str.trim(Str.split(request.headers["content-type"] ?? "", ";")[0] ?? ""));
-    if (
-      mediaType !== "application/json" ||
-      Str.toLowerCase(request.headers["content-encoding"] ?? "identity") !== "identity"
-    )
-      return response(415);
-    const length = request.headers["content-length"];
-    if (length !== undefined && (!/^[0-9]{1,10}$/.test(length) || Number(length) > 8192)) return response(413);
-    const result = yield* permit.withPermitsIfAvailable(1)(
-      control
-        .run(
-          Effect.gen(function* () {
-            const bytes = yield* readObservationHttpBytes(request.stream, 8192).pipe(
-              Effect.timeoutOrElse({
-                duration: policy.bodyTimeoutMillis,
-                orElse: () => Effect.fail(observationHttpBodyFailure("timed-out")),
-              })
-            );
-            const text = yield* Effect.try({
-              try: () => new TextDecoder("utf-8", { fatal: true }).decode(bytes),
-              catch: () => observationHttpBodyFailure("malformed"),
-            });
-            const submission = yield* decode(text).pipe(Effect.mapError(() => observationHttpBodyFailure("malformed")));
-            if (submission.hostId !== config.hostId || submission.namespaceId !== config.namespaceId)
-              return response(409);
-            const previous = yield* facts.read(submission.fact.launchId, submission.evidenceEpoch);
-            const prepared = submission.fact._tag === "Prepared" ? submission.fact : previous[0]?.fact;
-            if (prepared?._tag !== "Prepared") return response(409);
-            if (
-              !A.some(
-                policy.routes,
-                (route) =>
-                  route.routeId === prepared.identity.routeId &&
-                  route.harness === prepared.identity.harness &&
-                  route.surface === prepared.identity.surface
-              )
-            )
-              return response(403);
-            const receipt = yield* facts.record(submission.fact, submission.evidenceEpoch);
-            const body = yield* S.encodeEffect(S.fromJsonString(ObservationLaunchReceipt))(receipt);
-            return HttpServerResponse.text(body, {
-              status: 200,
-              contentType: "application/json",
-              headers: {
-                "cache-control": "no-store",
-                connection: "close",
-                "x-observation-receipt": receipt.receiptId,
-              },
-            });
-          })
-        )
-        .pipe(
-          Effect.catchTags({
-            ObservationHttpBodyError: (error) =>
-              Effect.succeed(response(error.reason === "oversize" ? 413 : error.reason === "timed-out" ? 503 : 400)),
-            ObservationControlError: () => Effect.succeed(response(503)),
-            ObservationLaunchFactsError: (error) =>
-              Effect.succeed(response(error.reason === "retired" ? 410 : error.reason === "conflict" ? 409 : 503)),
-          })
-        )
-    );
-    return O.isSome(result) ? result.value : response(503);
+    return yield* submissionRequest(request);
   }).pipe(Effect.orElseSucceed(() => response(503)));
   return { handler };
 });

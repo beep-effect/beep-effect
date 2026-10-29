@@ -6,13 +6,18 @@
 import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { nativeTraceWire } from "./internal/native-trace-wire.ts";
+import {
+  encodeObservationTraceWire,
+  otlpBooleanAttribute as flag,
+  hashObservationPayload,
+  otlpIntegerAttribute as integer,
+  otlpStringAttribute as text,
+} from "./internal/native-trace-wire.ts";
 import { parseSourceEventTime } from "./internal/source-event-time.ts";
 import { NativeEncodedBatch, NativeExportInput } from "./native-export.ts";
 import { hashPublicTextSha256 } from "./privacy.ts";
@@ -62,9 +67,6 @@ export class TranscriptExportError extends S.TaggedError<TranscriptExportError, 
   { reason: S.Literals(["namespace", "identity", "encoding", "digest"]) },
   $I.annote("TranscriptExportError", { description: "Safe reconstruction refusal without source contents." })
 ) {}
-const text = (key: string, stringValue: string) => ({ key, value: { stringValue } });
-const integer = (key: string, value: number) => ({ key, value: { intValue: `${value}` } });
-const flag = (key: string, boolValue: boolean) => ({ key, value: { boolValue } });
 /**
  * Encode reconstructed points separately from native spans without invented costs or durations.
  * **Example** (Inspecting the encoder)
@@ -160,31 +162,14 @@ export const encodeTranscriptTraceBatch = Effect.fn("AiMetrics.encodeTranscriptT
       };
     })
   ).pipe(Effect.mapError(() => TranscriptExportError.make({ reason: "encoding" })));
-  const body = yield* Effect.try({
-    try: () =>
-      nativeTraceWire
-        .encode({
-          resourceSpans: [
-            {
-              resource: {
-                attributes: [
-                  text("service.name", "beep-agent-observability"),
-                  text("openinference.project.name", input.project),
-                  text("ai_metrics.host_id", input.hostId),
-                  text("ai_metrics.namespace_id", input.namespaceId),
-                ],
-              },
-              scopeSpans: [{ scope: { name: "beep.agent-observation", version: "transcript-export/v1" }, spans }],
-            },
-          ],
-        })
-        .finish(),
-    catch: () => TranscriptExportError.make({ reason: "encoding" }),
-  });
-  const crypto = yield* Crypto.Crypto;
-  const payloadDigest = yield* crypto.digest("SHA-256", body).pipe(
-    Effect.map(Hex.encode),
-    Effect.flatMap(S.decodeUnknownEffect(Sha256Hex)),
+  const body = yield* encodeObservationTraceWire(
+    input.project,
+    input.hostId,
+    input.namespaceId,
+    "transcript-export/v1",
+    spans
+  ).pipe(Effect.mapError(() => TranscriptExportError.make({ reason: "encoding" })));
+  const payloadDigest = yield* hashObservationPayload(body).pipe(
     Effect.mapError(() => TranscriptExportError.make({ reason: "digest" }))
   );
   return yield* S.decodeEffect(NativeEncodedBatch)({

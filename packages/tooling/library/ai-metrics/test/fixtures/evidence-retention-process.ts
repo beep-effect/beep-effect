@@ -23,27 +23,26 @@ import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
 
 const id = (char: string) => Sha256Hex.make(Str.repeat(64)(char));
+const decodeArguments = S.decodeUnknownEffect(
+  S.Tuple([
+    S.Literals(["inspect", "new-epoch", "before-window", "after-window", "before-restore", "after-restore", "restore"]),
+    S.String,
+    S.String,
+    S.String,
+  ])
+);
+const encodeJsonValue = S.encodeEffect(S.fromJsonString(S.Unknown));
+const isStringRows = S.is(S.Array(S.String));
+const decodeIdRecordRows = S.decodeUnknownEffect(S.Array(S.Struct({ id: Sha256Hex })));
+const decodeArguments2 = S.decodeUnknownEffect(S.Tuple([S.Struct({ payload: S.String })]));
+const decodeRetirementDigestRecordJson = S.decodeEffect(S.fromJsonString(S.Struct({ retirementDigest: Sha256Hex })));
+
 const program = Effect.gen(function* () {
-  const [mode, databasePath, output, marker] = yield* S.decodeUnknownEffect(
-    S.Tuple([
-      S.Literals([
-        "inspect",
-        "new-epoch",
-        "before-window",
-        "after-window",
-        "before-restore",
-        "after-restore",
-        "restore",
-      ]),
-      S.String,
-      S.String,
-      S.String,
-    ])
-  )(A.drop(process.argv, 2));
+  const [mode, databasePath, output, marker] = yield* decodeArguments(A.drop(process.argv, 2));
   const fs = yield* FileSystem.FileSystem;
   const client = yield* SqliteClient.make({ filename: databasePath });
   const writeJson = (path: string, value: unknown) =>
-    S.encodeEffect(S.fromJsonString(S.Unknown))(value).pipe(
+    encodeJsonValue(value).pipe(
       Effect.flatMap((v) => fs.writeFileString(`${path}.partial`, v, { mode: 0o600 })),
       Effect.andThen(fs.rename(`${path}.partial`, path))
     );
@@ -52,7 +51,7 @@ const program = Effect.gen(function* () {
       const fragments: unknown = parameters[0];
       if (
         (mode === "before-window" || mode === "before-restore") &&
-        S.is(S.Array(S.String))(fragments) &&
+        isStringRows(fragments) &&
         Str.includes("UPDATE observation_evidence_window")(fragments[0] ?? "")
       )
         return Effect.gen(function* () {
@@ -101,7 +100,7 @@ const program = Effect.gen(function* () {
       deadlineMillis: 60000,
     })
   ).pipe(Effect.provideService(SqlClient.SqlClient, sql));
-  const body = yield* S.encodeEffect(S.fromJsonString(S.Unknown))({
+  const body = yield* encodeJsonValue({
     resourceSpans: [{ scopeSpans: [{ spans: [{ traceId: Str.repeat(32)("1"), spanId: Str.repeat(16)("2") }] }] }],
   });
   const batch = yield* projectNativeTraceRequest(
@@ -121,7 +120,7 @@ const program = Effect.gen(function* () {
   if (mode === "before-window" || mode === "after-window") {
     const existing =
       yield* client`SELECT receipt_id AS id FROM observation_native_events WHERE event_id=${event.eventId}`.pipe(
-        Effect.flatMap(S.decodeUnknownEffect(S.Array(S.Struct({ id: Sha256Hex }))))
+        Effect.flatMap(decodeIdRecordRows)
       );
     const receipt =
       existing[0] === undefined ? O.some(yield* native.acceptBatch(batch)) : yield* native.receipt(existing[0].id);
@@ -154,11 +153,9 @@ const program = Effect.gen(function* () {
   let restored: string | null = null;
   if (mode === "before-restore" || mode === "after-restore" || mode === "restore") {
     const rows = yield* client`SELECT payload FROM observation_evidence_recovery WHERE singleton=1`.pipe(
-      Effect.flatMap(S.decodeUnknownEffect(S.Tuple([S.Struct({ payload: S.String })])))
+      Effect.flatMap(decodeArguments2)
     );
-    const manifest = yield* S.decodeEffect(S.fromJsonString(S.Struct({ retirementDigest: Sha256Hex })))(
-      rows[0].payload
-    );
+    const manifest = yield* decodeRetirementDigestRecordJson(rows[0].payload);
     restored = yield* retention.restore(manifest.retirementDigest);
     if (mode === "after-restore") {
       yield* writeJson(marker, {

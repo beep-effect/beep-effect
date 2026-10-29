@@ -21,16 +21,20 @@ import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
 
 const args = A.drop(process.argv, 2);
+const decodeArguments = S.decodeUnknownEffect(
+  S.Tuple([
+    S.Literals(["inspect", "accept", "reserve", "before-commit", "after-commit"]),
+    S.String,
+    S.String,
+    S.String,
+    S.String,
+  ])
+);
+const encodeJsonValue = S.encodeEffect(S.fromJsonString(S.Unknown));
+const isStringRows = S.is(S.Array(S.String));
+
 const program = Effect.gen(function* () {
-  const [mode, databasePath, sourcePath, resultPath, markerPath] = yield* S.decodeUnknownEffect(
-    S.Tuple([
-      S.Literals(["inspect", "accept", "reserve", "before-commit", "after-commit"]),
-      S.String,
-      S.String,
-      S.String,
-      S.String,
-    ])
-  )(args);
+  const [mode, databasePath, sourcePath, resultPath, markerPath] = yield* decodeArguments(args);
   const fs = yield* FileSystem.FileSystem;
   const client = yield* SqliteClient.make({ filename: databasePath });
   const salt = "synthetic-process-intake-salt";
@@ -42,7 +46,7 @@ const program = Effect.gen(function* () {
     maxDatabasePages: 256,
   });
   const writeJson = (path: string, value: unknown) =>
-    S.encodeEffect(S.fromJsonString(S.Unknown))(value).pipe(
+    encodeJsonValue(value).pipe(
       Effect.flatMap((text) => fs.writeFileString(`${path}.partial`, text, { mode: 0o600 })),
       Effect.andThen(fs.rename(`${path}.partial`, path))
     );
@@ -53,7 +57,7 @@ const program = Effect.gen(function* () {
       const fragments: unknown = parameters[0];
       if (
         mode === "before-commit" &&
-        S.is(S.Array(S.String))(fragments) &&
+        isStringRows(fragments) &&
         Str.includes("INSERT INTO observation_source_cursors")(fragments[0] ?? "")
       ) {
         return Effect.gen(function* () {
