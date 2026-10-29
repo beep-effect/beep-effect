@@ -139,3 +139,17 @@ clients. Cleanup restores each baseline. Inspect real wrapper reads, narrow
 the metadata boundary where justified, and prove actual lint-output/verdict
 equivalence before qualification. These dry plans prove no task result or
 speed improvement; the candidate stays disabled.
+
+
+### Integration after merged parent
+
+PR2352 merged atddcf09b480 and its lane is retired with private proofs retained.
+Nine unpublished commits were replayed onto that main revision. All fifteen
+owned implementation files are byte-identical to the passing frozen source;
+the conformance test also retains the parent's coverage controls. Node and Bun
+each pass359tests in18files; quick lint/check pass. The canonical inventory
+verifies431source digests and preserves all2571dispositions and130configuration
+records. Historical source-bound checkpoints keep their original scope.
+The operator clarified that the human credential helper has not yet run;
+completion remains pending. Signing and all affected qualification/rollout
+gates stay closed.

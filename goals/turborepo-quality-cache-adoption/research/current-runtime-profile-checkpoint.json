@@ -106,8 +106,8 @@
   },
   "population": {
     "path": "goals/turborepo-quality-cache-adoption/research/current-population.json",
-    "sha256": "acf0a0e81c5936df4758bf688ac8420d4b0c9c512bdae6b6f7585e39c2cdabcb",
-    "sourcesVerified": 430,
+    "sha256": "8e355c913f6b9faf61ce77f7fdc8d06cad6572539c6d172b9741ae7d19f7132c",
+    "sourcesVerified": 431,
     "counts": {
       "workspaces": 190,
       "rootScripts": 113,
@@ -123,7 +123,8 @@
     },
     "qualificationLedgerSha256": "13067bf343f413b4cc99b4cefca3ce7d094a1f09247a54ffc20114e766d4d2bb",
     "configuredFlagsChanged": false,
-    "qualificationEntriesChanged": false
+    "qualificationEntriesChanged": false,
+    "priorPopulationBeforeMainIntegration": "acf0a0e81c5936df4758bf688ac8420d4b0c9c512bdae6b6f7585e39c2cdabcb"
   },
   "secretHandoff": {
     "agentCreateFailed": true,
@@ -134,7 +135,7 @@
     "createdSecretFields": 0,
     "referenceFilesWritten": 0,
     "humanBootstrapPrepared": true,
-    "operatorResult": "pending"
+    "operatorResult": "Operator clarified that the helper has not yet been run; completion is pending."
   },
   "qualified": false,
   "signedTrialActivated": false,
@@ -149,5 +150,39 @@
     "path": "goals/turborepo-quality-cache-adoption/research/actual-ignored-input-observation.json",
     "sha256": "ffc155409a9a8860b0d878981105778cc6a8864736a159b7738c07a3d6659400",
     "scope": "Native dry input counterexample only; semantic irrelevance and task output equivalence remain unproven."
+  },
+  "integrationAfterParentMerge": {
+    "recordedAt": "2026-10-29T10:52:14.451746+00:00",
+    "sourceHead": "77ea30566d421db84757f3d14280ce1720178626",
+    "parentMerge": "ddcf09b48093408bb18f16deced45945ef7c7647",
+    "ownPriorTip": "3341bd33935149d1744f4164857c2eec17f4b5fb",
+    "unpublishedCommitsReplayed": 9,
+    "ownedImplementationFilesByteIdentical": 15,
+    "combinedTestFile": {
+      "path": "packages/tooling/tool/cli/test/cache-conformance.test.ts",
+      "sha256": "1173e07e54716e0fcb89b91041e7b522ad384b42f4374c31fccb486423b1d2cf"
+    },
+    "parentAndOwnReportsPreserved": true,
+    "parentLaneRetired": true,
+    "verification": {
+      "node": {
+        "passed": 359,
+        "files": 18,
+        "seconds": 41.14,
+        "logSha256": "4d2142919ff3263bd8bdee9cc8ed58024d5819aa270e1c42a2f00cb2416166ae"
+      },
+      "bun": {
+        "passed": 359,
+        "files": 18,
+        "seconds": 30.17,
+        "logSha256": "970209c69129f23e879c729550038159c2899dedc5202ee033f41d1df6d66eba"
+      },
+      "quickPackage": {
+        "lintSeconds": 5.4,
+        "checkSeconds": 11.6,
+        "logSha256": "2b29e779bcdc9c5c1ca32dd1082c7b5cd4472555baf235f4e201fb585dc701a5"
+      }
+    },
+    "scope": "Combined source regression and inventory only; the earlier frozen whole-package proof retains its original source head and source bytes."
   }
 }

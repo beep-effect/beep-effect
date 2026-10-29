@@ -492,3 +492,16 @@ not write authority. Stop that write path. The human-only bootstrap is prepared
 outside the repository, resumes a matching item, refuses changed reference
 files, and emits only a sanitized receipt. No desktop sign-in is attempted by
 the agent. The already created Alchemy roles remain unassigned.
+
+
+### Parent replay must stop on failed validation
+
+- While replaying the unpublished producer work after PR2352 merged, a JSON
+  union helper rejected an inserted parent report. The surrounding shell lacked
+  immediate-error handling and continued into an unpublished replay commit.
+- The rebase was aborted back to the saved clean tip; the complete patch backup
+  remained intact. Replayed again with immediate-error handling, explicit
+  preservation of all common reports and a staged conflict-marker check before
+  every continuation. Both parent/own report sets and appended sections agree.
+- Prevention: every mutation sequence must stop when its preceding validation
+  fails. This recovery changed no cloud resource, credential or published ref.

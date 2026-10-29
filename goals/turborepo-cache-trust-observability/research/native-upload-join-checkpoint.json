@@ -142,11 +142,13 @@
   },
   "currentPopulation": {
     "path": "goals/turborepo-quality-cache-adoption/research/current-population.json",
-    "sha256": "acf0a0e81c5936df4758bf688ac8420d4b0c9c512bdae6b6f7585e39c2cdabcb",
+    "sha256": "8e355c913f6b9faf61ce77f7fdc8d06cad6572539c6d172b9741ae7d19f7132c",
     "base": "repository-root",
-    "sourcesVerified": 430,
+    "sourcesVerified": 431,
     "refreshedAt": "2026-10-29T10:05:33.391812+00:00",
-    "scope": "Inventory metadata only; the original native execution and qualification limitations are unchanged."
+    "scope": "Inventory metadata only; the original native execution and qualification limitations are unchanged.",
+    "priorInventoryAtRuntimeObservation": "acf0a0e81c5936df4758bf688ac8420d4b0c9c512bdae6b6f7585e39c2cdabcb",
+    "integrationScope": "Canonical inventory metadata refresh after merged parent; original native upload observations and their source/proof scope are unchanged."
   },
   "productionChanges": false,
   "qualified": false,
