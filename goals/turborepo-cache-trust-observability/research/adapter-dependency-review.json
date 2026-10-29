@@ -1,6 +1,6 @@
 {
   "schemaVersion": "r2-cache-dependency-review/v1",
-  "recordedAt": "2026-10-28T23:50:24.101490+00:00",
+  "recordedAt": "2026-10-29T00:16:54.790811+00:00",
   "authority": "component-source-review-only",
   "initialScan": {
     "packageNamesWithFindings": 10,
@@ -54,9 +54,11 @@
     "newPortableBinaryControls": {
       "wirePassed": 20,
       "nativePassed": 12,
-      "sha256": "b6b08b91cd29d6c0ef5560ba307d42caad60e0b3e71633b08a0a3d3e60bbe2d6"
-    }
+      "startupPassed": 1,
+      "sha256": "39b58a78c7c57470cfe40d375af84b6b18e5c9dffaaeda14aead11056094675f"
+    },
+    "cargoTestsCompiler": "1.96.0: actual tracked driver with compiler bin pinned in the child PATH"
   },
   "productionReadiness": false,
-  "sourcePatchSha256": "87d06bb3632a51feeafa11b966e956e377c9a0a8f1a3f8dbca7aa1b841e652b4"
+  "sourcePatchSha256": "4cbc8cd80bc680d86a1cf43726ff0bb042ac93951dacb6214a9b61c732c143c5"
 }

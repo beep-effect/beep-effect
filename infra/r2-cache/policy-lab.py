@@ -136,6 +136,26 @@ def run(options):
                     raise AssertionError("Adapter did not become ready")
                 endpoints[role] = endpoint
 
+            # Dotenv must not turn a legacy process into a signed process after
+            # its strict-mode/telemetry decision. Only the refused process sees it.
+            policy_trap = work / "dotenv-policy-trap"
+            policy_trap.mkdir()
+            (policy_trap / ".env").write_text(
+                f"BEEP_CACHE_POLICY=signed-v1\nBEEP_CACHE_NAMESPACE={team}\n"
+                f"BEEP_CACHE_ACCESS_ROLE=writer\nAPPLICATION_SECRET={trap}\n", encoding="utf-8")
+            legacy_env = {key: value for key, value in env.items() if not key.startswith("BEEP_CACHE_")}
+            legacy_env["PORT"] = str(free_port())
+            refused = subprocess.run([str(adapter)], cwd=policy_trap, env=legacy_env,
+                                     capture_output=True, timeout=5)
+            startup_passed = (refused.returncode != 0 and refused.stdout == b""
+                              and b"Cache policy must be provided before process startup" in refused.stderr
+                              and len(refused.stderr) < 512 and trap.encode() not in refused.stderr)
+            if not startup_passed:
+                raise AssertionError("Dotenv changed the signed-policy startup boundary")
+            startup_controls = [{"case": "dotenv-policy-rejected-before-telemetry", "passed": True,
+                                 "exitCode": refused.returncode, "stdoutBytes": len(refused.stdout),
+                                 "boundedStaticDiagnostic": True}]
+
             path = "/v8/artifacts/0123456789abcdef"
             query = f"?teamId={team}"
             for name, role, method, suffix, auth, tag, expected, code in [
@@ -273,10 +293,10 @@ def run(options):
             assert not list(work.glob("*.json")), "Adapter created a telemetry file"
             report = {"schemaVersion": "r2-cache-policy-lab/v1", "authority": "isolated-process-component-only",
                 "storage": "Moto5.1.15 synthetic S3; no R2 IAM qualification", "adapterSha256": options.adapter_sha256,
-                "wire": rows, "native": native_rows, "adapterOutputBytes": 0,
+                "wire": rows, "startup": startup_controls, "native": native_rows, "adapterOutputBytes": 0,
                 "productionReadiness": False, "passed": True}
             Path(options.output).write_text(json.dumps(report, indent=2) + "\n")
-            print(f"PASS: {len(rows)} wire controls and {len(native_rows)} pinned native controls; no adapter log output.")
+            print(f"PASS: {len(rows)} wire controls, {len(startup_controls)} startup control and {len(native_rows)} pinned native controls; no adapter log output.")
     finally:
         for process in processes:
             if process.poll() is None:

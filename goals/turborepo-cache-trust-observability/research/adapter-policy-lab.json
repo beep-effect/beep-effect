@@ -2,7 +2,7 @@
   "schemaVersion": "r2-cache-policy-lab/v1",
   "authority": "isolated-process-component-only",
   "storage": "Moto5.1.15 synthetic S3; no R2 IAM qualification",
-  "adapterSha256": "b6b08b91cd29d6c0ef5560ba307d42caad60e0b3e71633b08a0a3d3e60bbe2d6",
+  "adapterSha256": "39b58a78c7c57470cfe40d375af84b6b18e5c9dffaaeda14aead11056094675f",
   "wire": [
     {
       "case": "missing-auth",
@@ -137,6 +137,15 @@
       "result": "write-denied",
       "storageCalls": 0,
       "passed": true
+    }
+  ],
+  "startup": [
+    {
+      "case": "dotenv-policy-rejected-before-telemetry",
+      "passed": true,
+      "exitCode": 1,
+      "stdoutBytes": 0,
+      "boundedStaticDiagnostic": true
     }
   ],
   "native": [
@@ -276,30 +285,31 @@
   "adapterOutputBytes": 0,
   "productionReadiness": false,
   "passed": true,
-  "recordedAt": "2026-10-28T23:50:24.101490+00:00",
+  "recordedAt": "2026-10-29T00:16:54.790811+00:00",
   "upstreamCommit": "0e893f63e1c7f1ac3c460d79e75fb63d4c9f7c85",
-  "patchSha256": "87d06bb3632a51feeafa11b966e956e377c9a0a8f1a3f8dbca7aa1b841e652b4",
-  "harnessSha256": "8913dcf8093cea3353193fc21268d46554f28cd70d534aeb015428de3bbed59d",
+  "patchSha256": "4cbc8cd80bc680d86a1cf43726ff0bb042ac93951dacb6214a9b61c732c143c5",
+  "harnessSha256": "7f4d78a7e8643ef3124a6769865cb90a826f31014ca7e36a7482a4c79b89d4f5",
   "build": {
     "target": "x86_64-unknown-linux-musl",
     "profile": "release",
     "rustc": "1.96.0",
     "cargoZigbuild": "0.20.1",
     "zig": "0.14.1",
-    "sha256": "b6b08b91cd29d6c0ef5560ba307d42caad60e0b3e71633b08a0a3d3e60bbe2d6",
-    "bytes": 10035736,
+    "sha256": "39b58a78c7c57470cfe40d375af84b6b18e5c9dffaaeda14aead11056094675f",
+    "bytes": 10037496,
     "staticElf": true,
-    "buildSeconds": 125,
-    "sourcePatchSha256": "87d06bb3632a51feeafa11b966e956e377c9a0a8f1a3f8dbca7aa1b841e652b4",
+    "buildSeconds": 27.74,
+    "sourcePatchSha256": "4cbc8cd80bc680d86a1cf43726ff0bb042ac93951dacb6214a9b61c732c143c5",
     "runtimeVerification": "Current Linux workstation only; fleet pending",
-    "trackedDriverVerified": true
+    "trackedDriverVerified": true,
+    "compilerExecutablePinnedInChildPath": true
   },
-  "dotenvReloadTrap": "Invalid encryption setting in cwd dotenv would prevent startup; both strict processes stayed healthy.",
+  "dotenvReloadTrap": "Explicit signed startup skips fatal dotenv; dotenv-only policy is rejected with a bounded static diagnostic before telemetry.",
   "readerWriterIndependence": "Both native-produced valid tags were denied reader PUT with zero storage calls.",
   "limitations": [
-    "Static musl binary passed on the current workstation only; remote fleet portability remains unproven.",
-    "Synthetic S3 does not prove Cloudflare R2 IAM enforcement or deployed credentials.",
-    "No production rollout, artifact-key distribution, namespace migration or task qualification.",
+    "Static musl binary ran on this workstation only; remote fleet portability remains unproven.",
+    "Synthetic S3 does not qualify Cloudflare R2 IAM or deployed producer authority.",
+    "No production activation, key distribution, epoch migration or task qualification.",
     "No representative seven/seven/fourteen-day observation evidence."
   ]
 }

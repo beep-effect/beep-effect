@@ -74,3 +74,19 @@ scan and all32 final-binary process controls pass. Make this independent Cargo
 scan part of each candidate build. A first scan could not read a mode0600 public
 lock through a capability-dropped container; copying only that public input to a
 mode0444 read-only bind preserved the private source cache permissions.
+
+### Decide strict startup before dotenv
+
+Review found that cwd dotenv could introduce signed policy after the process
+had already selected legacy telemetry. The new real-process control failed on
+the previous executable, then passed after rejecting dotenv-only policy before
+logger setup. Explicit signed startup still ignores the fatal dotenv trap and
+emits zero logs. Legacy metadata fallback also retains its original static
+warning without attaching an object-store error or request details.
+
+A private verification driver initially lost a referenced source variable; it
+never entered Cargo. A separate build guard then rejected the systemd child
+compiler version. The corrected drivers use the tracked source preparation and
+pin the actual installed compiler bin in child PATH, rather than relying on
+RUSTUP_TOOLCHAIN across shim/default differences. Rust1.96.0 passes48tests and
+the exact static executable passes all33process controls.

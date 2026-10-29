@@ -251,7 +251,8 @@ reader PUT and ambiguous/encoded selectors are denied before storage access.
 Writer uploads require one bounded opaque tag. The adapter never receives the
 artifact HMAC key or claims the tag proves a protected producer.
 
-Strict mode skips dotenv and telemetry initialization. Responses carry a finite
+Strict mode skips dotenv and telemetry initialization. A policy introduced only
+by cwd dotenv is rejected before logging initializes. Responses carry a finite
 `x-beep-cache-result`; an unclassified 404 stays `not-found`, and an unsuccessful
 PUT stays `write-ambiguous`. Explicit storage 429 responses retain the
 `throttled` class. A signed read with an unavailable metadata lookup fails as
@@ -283,7 +284,7 @@ and only exact owned child processes are stopped. See the packet's
 `research/adapter-policy-lab.json` for the local result and limits.
 
 The final dependency closure's statically linked x86_64 musl release build passed
-all20 wire and12 native controls on the current workstation. Earlier glibc
+all20 wire, one startup-boundary and12 native controls on the current workstation. Earlier glibc
 receipts retain their original source inputs. The portable build uses installed
 Rust1.96.0 plus cargo-zigbuild0.20.1/Zig0.14.1, pinned in
 `policy-build-requirements.txt`; its checksum and byte size are retained beside

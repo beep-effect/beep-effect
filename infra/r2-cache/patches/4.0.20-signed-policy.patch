@@ -984,10 +984,10 @@ index 625e944..794d195 100644
  /// Returns `None` when the scheme is not Bearer or the token is empty.
  fn parse_bearer_token(header_value: &str) -> Option<&str> {
 diff --git a/src/main.rs b/src/main.rs
-index d196b24..56a04ba 100644
+index d196b24..13f37af 100644
 --- a/src/main.rs
 +++ b/src/main.rs
-@@ -13,27 +13,35 @@
+@@ -13,27 +13,41 @@
  
  #[tokio::main]
  async fn main() -> Result<(), std::io::Error> {
@@ -995,6 +995,12 @@ index d196b24..56a04ba 100644
 +    let signed_policy = std::env::var_os("BEEP_CACHE_POLICY").is_some();
 +    if !signed_policy {
 +        dotenvy::dotenv().ok();
++        if std::env::var_os("BEEP_CACHE_POLICY").is_some() {
++            return Err(std::io::Error::new(
++                std::io::ErrorKind::InvalidInput,
++                "Cache policy must be provided before process startup",
++            ));
++        }
 +    }
 +    // Validate before any logger starts. Strict mode neither reloads client dotenv
 +    // material nor initializes URL/payload-bearing request logs, files or OTEL.
@@ -1040,7 +1046,7 @@ index d196b24..56a04ba 100644
      let address = format!("{}:{}", app_settings.host, app_settings.port);
      let listener = TcpListener::bind(address)?;
 diff --git a/src/routes/artifacts.rs b/src/routes/artifacts.rs
-index a5bf2ea..d88d74d 100644
+index a5bf2ea..9af90bb 100644
 --- a/src/routes/artifacts.rs
 +++ b/src/routes/artifacts.rs
 @@ -8,6 +8,7 @@
@@ -1082,7 +1088,7 @@ index a5bf2ea..d88d74d 100644
      let artifact_info = match ArtifactRequest::from(&req) {
          Some(info) => info,
          None => return HttpResponse::NotFound().finish(),
-@@ -192,20 +199,30 @@
+@@ -192,20 +199,33 @@
  
      let file_path = artifact_info.file_path();
  
@@ -1111,7 +1117,10 @@ index a5bf2ea..d88d74d 100644
 +        Err(_) if settings.cache_policy.is_some() => {
 +            return HttpResponse::ServiceUnavailable().finish();
 +        }
-+        Err(_) => HashMap::new(),
++        Err(_) => {
++            tracing::warn!("HEAD request failed, omitting object metadata");
++            HashMap::new()
++        }
 +    };
 +
      let stream = response.bytes.map(|maybe_chunk| match maybe_chunk {

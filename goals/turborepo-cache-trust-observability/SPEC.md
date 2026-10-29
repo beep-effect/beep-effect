@@ -223,3 +223,13 @@ published binary pin. Rollback of this component is removal of the unused patch
 and test artifacts; a production activation needs its own numeric rollout,
 source-bound executable, cohort, grants, namespace/key and rollback evidence.
 The local process report does not satisfy those deployment or observation gates.
+
+## Decision log
+
+- 2026-10-29: The pinned adapter must decide signed startup from its inherited
+  process configuration. Reject policy introduced by dotenv before logging
+  begins; retain the legacy metadata-failure warning as static text only. The
+  previous executable failed the new startup control and the repaired exact
+  binary passes. Reversal: keep this candidate inactive and continue using the
+  incumbent while repairing the candidate; do not restore the mixed-mode path.
+  This component decision grants no deployment or broad qualification.
