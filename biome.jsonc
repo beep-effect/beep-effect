@@ -293,6 +293,9 @@
       // sha256 and compared byte-for-byte by its check-by-default scripts and tests.
       "includes": [
         "goals/turborepo-task-qualification/research/**/*.json",
+        "goals/epistemic-retention-policy-calibration/ops/protocol-v1.json",
+        "goals/epistemic-retention-policy-calibration/ops/fixture-v1.json",
+        "goals/epistemic-retention-policy-calibration/history/results/*.json",
         "goals/ciops-ontology-pipeline/research/kpi-reading.json",
         "goals/ciops-ontology-pipeline/research/kpi-adoption-table.json",
         "standards/cache-qualification.json",

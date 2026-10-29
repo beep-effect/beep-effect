@@ -30,7 +30,15 @@ leave no packet-applicable finding open.
 5. [`ops/triage.json`](./ops/triage.json)
 6. [`findings/INDEX.md`](./findings/INDEX.md)
 
-## Current Phase
+## Latest verified state — 2026-10-28
+
+PR #1930 is merged, all eight original Cloud IDs are Fixed, and captured
+Dependabot alerts are closed (122 fixed, one withdrawn). The retained readiness
+provider returns verified in the owning clone. The resumed goal remains active
+for the seven findings in the linked supplemental packet. See
+[the exact-ID reconciliation](research/2026-10-28-cloud-refresh.md).
+
+## Historical execution state
 
 PR [#1930](https://github.com/beep-effect/beep-effect/pull/1930) is published; the parent-confirmed remote head is
 `02b5bd3f47`. It contains the eight Cloud remediations and scoped remediation for
@@ -85,3 +93,11 @@ bun run beep goals completion refresh --slug codex-security-findings-2026-10-20
 
 The clone-scoped receipt derives `completed-retained` without a second PR or a
 premature tracked status flip. See `goals/README.md` for the completion contract.
+
+## October 28 supplemental batch
+
+The live inventory and supplied CSV agree on seven new findings. All seven are
+tracked in the [linked supplemental packet](../codex-security-findings-2026-10-28/README.md).
+See [the reconciliation receipt](research/2026-10-28-cloud-refresh.md) for the
+exact-ID mapping and the already merged #1930 state. Completion of this resumed
+goal requires both historical closeout verification and supplemental remediation.

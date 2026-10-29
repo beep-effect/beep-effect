@@ -1,6 +1,8 @@
 /**
  * Execution ledger port errors.
  *
+ * **Details**
+ *
  * The ledger is fail-closed by consumption, not by shape: `appendDecision`
  * failing with any of these is what the governed gate turns into a refusal, so
  * the error vocabulary stays small and total — a constraint the database

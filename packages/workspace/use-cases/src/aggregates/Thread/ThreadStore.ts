@@ -1,6 +1,8 @@
 /**
  * Cross-concept ThreadStore port.
  *
+ * **Details**
+ *
  * The ThreadStore coordinates the Thread, Turn, and Message concepts behind a
  * single persistence boundary. It is allowed under the std-01 cross-concept
  * escape hatch because a single appended turn must atomically write a Turn and

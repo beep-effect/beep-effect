@@ -1,6 +1,8 @@
 /**
  * Claim lifecycle transition service.
  *
+ * **Details**
+ *
  * Advances a candidate claim along the lifecycle in response to a gate verdict:
  * an admitted verdict drives `candidate -> shape_valid`; a rejected verdict
  * blocks the advance (the claim is returned unchanged); an illegal forward step
