@@ -1,6 +1,8 @@
 /**
  * Epistemic EdgeVersion table metadata.
  *
+ * **Details**
+ *
  * The bitemporal constraints that make this table trustworthy — the ordered
  * interval CHECK constraints, the endpoint-kind CHECK constraints, the `logical_key` exclusion
  * constraint, and the open-head partial unique index — are owned by the raw-SQL

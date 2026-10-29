@@ -30,7 +30,7 @@ const $I = $LawPracticeDomainId.create("values/KindCode/KindCode");
  * console.log(KindCode.is.A("A")) // true
  * ```
  *
- * @see https://www.wipo.int/documents/d/standards/docs-en-03-16-01.pdf
+ * @see {@link https://www.wipo.int/documents/d/standards/docs-en-03-16-01.pdf} for the WIPO ST.16 kind-code categories.
  * @category value-objects
  * @since 0.0.0
  */
