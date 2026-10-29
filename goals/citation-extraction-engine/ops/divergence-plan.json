@@ -102,7 +102,13 @@
         "goals/citation-extraction-engine/ops/probe-default-observations.py",
         "goals/citation-extraction-engine/ops/verify-default-observation-controls.py",
         "packages/law-practice/server/src/internal/Citation/ResourceIdentity.ts",
-        "packages/law-practice/server/src/internal/Citation/Document.ts"
+        "packages/law-practice/server/src/internal/Citation/Document.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-10-29-literal-cleaners.md",
+        "packages/law-practice/server/src/internal/Citation/LiteralCleaners.ts",
+        "packages/law-practice/server/test/CitationLiteralCleaners.test.ts",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/literal-cleaners.json",
+        "goals/citation-extraction-engine/ops/probe-literal-cleaners.py",
+        "goals/citation-extraction-engine/ops/verify-literal-cleaner-controls.py"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

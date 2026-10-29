@@ -187,6 +187,14 @@ replay pass. These observations support exact default status/reason and candidat
 set tests; they do not qualify arbitrary host/finalizer behavior or historical
 candidate label production. Existing eyecite BSD-2-Clause attribution applies.
 
+The [literal cleaner evidence](
+../history/evidence/2026-10-29-literal-cleaners.md) binds a new primitive corpus
+with 440 vectors and four times 1,114,112 actual source character evaluations.
+All 135 immutable string artifacts are content-verified. Eight corruption
+controls and fresh replay pass. Existing non-HTML observations also match in
+helper compositions; HTML, custom pipeline and source-map proof stay open.
+Existing eyecite BSD-2-Clause attribution applies.
+
 ## Incorporated-source discipline
 
 - A local clone is research state, not an incorporated dependency.

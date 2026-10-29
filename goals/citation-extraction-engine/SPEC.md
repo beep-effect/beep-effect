@@ -1094,6 +1094,14 @@ instead of silently splitting delivery or weakening scope.
   rejects rather than fabricating two candidates; historical identity and general
   host qualification remain open. No exhaustive completion or waiver follows.
 
+- **2026-10-29 literal cleaner primitives:** four private scans implement inline
+  and all whitespace, underscore runs and XML prefix removal. All 440 source
+  vectors and exhaustive single-code-point facts match; 135 immutable strings
+  retain complete values behind content hashes. Captured limits, Clock and
+  cooperative yields provide scoped count/deadline/interruption evidence. HTML,
+  custom/named composition, source maps and full family safety remain open.
+  No canonical capability is rejected and no completion row is promoted.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from

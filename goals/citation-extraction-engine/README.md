@@ -50,6 +50,8 @@ unfinished.
 
 Current evidence:
 
+- [Literal cleaner primitives](./history/evidence/2026-10-29-literal-cleaners.md)
+
 - [Default branch observations](./history/evidence/2026-10-29-default-branch-observations.md)
 
 - [Registered default resolution](./history/evidence/2026-10-29-registered-default-resolution.md)
