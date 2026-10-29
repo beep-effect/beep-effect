@@ -90,6 +90,7 @@ export { CacheConformanceProxyOptions, makeCacheConformanceFaultProxy } from "./
  * @since 0.0.0
  */
 export {
+  CacheConformanceBackendResult,
   CacheConformanceBearers,
   CacheConformanceCase,
   CacheConformanceCaseClass,
@@ -154,6 +155,7 @@ export {
   CacheConformanceWireCheck,
   CacheConformanceWireOutcome,
   cacheConformanceLabCaseIds,
+  classifyCacheConformanceBackendResult,
   classifyCacheConformanceMediaType,
   classifyCacheConformanceStatus,
   readCacheConformanceReply,

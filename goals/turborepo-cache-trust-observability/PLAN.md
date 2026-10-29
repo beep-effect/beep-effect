@@ -273,6 +273,81 @@ and protocol source hashes are unchanged. Wrong-team native proof, deployed
 R2/AWS capabilities, epoch rotation, production provenance and representative
 observation remain open. No whole acceptance criterion is closed by this checkpoint.
 
+## 2026-10-29: finite backend-result capture
+
+The optional exchange field preserves fifteen pinned adapter labels, with a
+static invalid-evidence result for incompatible method/status pairs or unknown
+claims. Direct and proxy controls retain failure causes through JSON and reject
+synthetic credential/path/artifact text. A known-written object returning 404
+remains not-found; the backend header cannot establish a genuine miss. Historical
+receipts default to absent attribution. The focused set passes 34 tests, and
+package lint/check pass. The full audit (1068.2 seconds) and docgen (275.4
+seconds) passed on their frozen recorded source. The later test-codec hoist and
+schema-catalog refresh have separate current-source checks in
+[the component checkpoint](research/backend-result-checkpoint.json).
+The corrected integrated source passes 236 tests across ten files, package
+lint/type checks, repository oxlint and the current 9,328-entry schema catalog.
+The census was refreshed and every recorded source digest verified.
+Protected producer integration, production event capture and representative
+observation remain open. No current adapter/service/cloud configuration changes.
+
+
+### Current signing/backend-result integration
+
+The reviewed signing component and backend-result component now pass 249 tests
+across ten files on their combined source. Package lint (6.4 seconds) and check
+(15.3 seconds) pass; the canonical catalog contains 9,333 entries in 173 shards.
+All 427 census source bindings were verified. Original 136- and 240-test
+verification snapshots and full-audit source maps remain separate historical
+evidence. The original native artifact bytes and protocol sources are unchanged.
+This integration does not close production, observation or adoption gates.
+
+## 2026-10-29: fail-closed lab capture budgets
+
+The former 5,000-event cap silently discarded later events, and the request-body
+error fallback could forward an empty tagged upload. Actual negative controls
+reproduce both problems. Atomic request/replay reservations, bounded streamed
+replies and incomplete-receipt errors now reject affected traffic. Seven new
+controls are part of the passing 256-test integrated suite; package lint/check
+pass in 5.7/12.2 seconds, root oxlint passes and the schema catalog is current.
+The 427 current census bindings verify. Historical full audits are not proof of
+this new implementation. See the source-bound
+[capture checkpoint](research/proxy-capture-bounds-checkpoint.json). The live
+R2 service, producer integration and all representative windows are unchanged.
+
+### Current capture seam and complexity repair
+
+CI attributed one new complexity finding to the request handler. Capture budget
+state and admission/recording now live in a private local component; transport
+orchestration keeps its existing options and controls. The current combined
+suite passes 256 tests in 29.20 seconds, package lint/check pass in 6.9/16.1
+seconds, and the exact-source Fallow audit has zero findings. No suppression or
+baseline waiver was added. The current source checkpoint retains the earlier
+functional proof separately; production and overall acceptance remain open.
+
+### Final main integration for this capture repair
+
+Three reviewed main changes were merged without owned-source overlap. The
+selected suite now passes 271 tests across eleven files, including the inherited
+ecosystem-polarity tests. Current package lint/check pass in 5.8/15.7 seconds;
+Fallow audit, Fallow health and repository oxlint pass with zero findings. The
+catalog remains current and all 427 census source bindings verify. Earlier
+256-test and full-audit snapshots remain separate historical evidence.
+
+## 2026-10-29: hosted request-completion repair
+
+The completed hosted run identified seven introduced assertion-style findings
+and an interrupted-upload race. Canonical polarity-preserving assertions,
+actual body/handler signals and bounded complete-request settlement now pass
+271 tests across eleven files (26.43 seconds), package lint/check (6.6/13.8
+seconds), zero-new-finding Fallow audit/health and the full Effect/Vitest scan.
+Two separate counterfactuals fail at their intended assertions; three fresh
+processes pass under one CPU and a three-GiB limit. See the source-bound
+[completion checkpoint](research/proxy-request-completion-checkpoint.json).
+Historical full audits are not transferred to these new implementation bytes.
+The live R2 configuration, signing setting and all representative windows are
+unchanged. Full goals remain active.
+
 ## 2026-10-29: bounded candidate adapter runtime
 
 The patched candidate now fixes Tokio core workers, HTTP workers and per-runtime
@@ -297,3 +372,28 @@ unit assertion. Fresh 20-wire/one-startup/twelve-native controls and four measur
 runtime observations pass with zero adapter output. Current infra audit/docgen
 pass in 11.0/13.4 seconds. Success evidence is written after teardown. The prior
 report remains separate, and the exact Rust patch and binary are unchanged.
+
+
+### Actual streaming runtime in the Node CI suite
+
+The hosted Node shard exposed a deterministic compatibility-shim deadlock,
+reproduced locally before repair. Node now invokes the same physical control
+in a bounded Bun child; Bun runs it directly. Both eleven-file suites pass
+271 tests, the Node V8-instrumented control passes, and three independent
+Node-to-Bun executions pass under a one-CPU quota. Removing either the early-
+receipt or empty-upload guard fails both runtimes; exact proxy bytes are
+restored. Current package, Fallow and Effect/Vitest checks pass. See
+[the runtime checkpoint](research/proxy-node-runtime-checkpoint.json).
+Fresh hosted acceptance remains pending; production proxy bytes are unchanged.
+
+
+### Response error-path coverage repair
+
+All current hosted unit shards passed; their coverage comparison found the
+conformance wire below its retained line/statement floors. Added direct reply-
+reader controls for exact byte bounds, segmented and empty bodies, interrupted
+streams and unexpected statuses. Bun and Node/V8 each pass 19 tests. Combining
+the supplemental Node/V8 observations with the downloaded exact-head shard
+coverage clears the reported floors locally; fresh hosted acceptance is still
+required. No baseline or production source changed. See
+[the coverage checkpoint](research/reply-error-coverage-checkpoint.json).

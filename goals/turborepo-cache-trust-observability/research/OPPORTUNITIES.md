@@ -193,6 +193,18 @@ pin the actual installed compiler bin in child PATH, rather than relying on
 RUSTUP_TOOLCHAIN across shim/default differences. Rust1.96.0 passes48tests and
 the exact static executable passes all33process controls.
 
+### Preserve backend fault causes beside transport outcomes
+
+Actual wire controls showed that backend-unavailable response metadata was
+discarded. A finite optional projection now retains the cause, validates its
+method/status pairing, and records only invalid-evidence for unsafe claims.
+Keep the independent never-written evidence: a known-written 404 must not become
+a genuine miss because of a response label. Initial test assumptions incorrectly
+required a header on exchanges without a response and treated a never-written
+fixture as already written; corrected controls use observed responses and an
+actual successful upload before the 404. Type checking also caught introduced
+codec/opaque test construction mistakes; package-owned tests and lint/check pass
+after fixing them. These are component controls, not production observability.
 ### Keep the plan summary aligned with retained proof
 
 Review found stale focused-test/control counts and a pending-audit statement in
@@ -221,6 +233,25 @@ compute direct-push route after its ten-minute root-replay threshold, with exact
 final-check skips and hosted proof retained; never manufacture a reusable state
 file or copy an unrelated verdict into the new context.
 
+### Compile test codecs once and refresh their canonical catalog
+
+The collected publish wave found two introduced no-inline-schema-compile errors
+and a stale CLI schema-catalog shard. All other collected cheap gates passed,
+including Fallow with zero findings. The frozen full audit/docgen completed
+first; its exact source map remains recorded. The repair reuses the existing
+exchange codec, hoists historical JSON decoding and invokes the catalog writer.
+Current-source focused tests, lint/type checks and both failed gates must pass
+before publication. The initial detached submit also needed the documented
+non-session user-bus environment; no fallback job or duplicate was launched.
+
+The corrected tree passes both failed root gates, 236 integrated tests and
+package lint/check. The canonical catalog writer changed only the CLI shard.
+All four production source files and two other test/fixture files match the
+frozen full audit; the
+post-audit test-only change and imported main are recorded separately. Refreshed
+the census after the shared source changes and verified all427 source digests.
+The initial collected root replay lasted over ten minutes; publish through the
+standing scoped-proof/direct-draft route with hosted broad proof retained.
 - 2026-10-29 — The candidate runtime inherited host-dependent HTTP worker
   defaults, and an invalid ambient Tokio worker setting prevented startup.
   Source-pinned worker counts, an actual startup negative control, executable
@@ -242,6 +273,47 @@ result. Native artifact bytes and protocol source hashes remain unchanged.
 Source-bound evidence must be refreshed at its actual boundary after integration,
 not treated as permanent qualification.
 
+- 2026-10-29 — Existing proxy capture silently truncated after 5,000 events;
+  an unreadable-body fallback could write an empty artifact upstream. The actual
+  interrupted-request negative control observed one upstream tag with the old
+  fallback and none with the repair. Explicit atomic request/byte/key budgets,
+  bounded streamed replies and a sticky incomplete-capture failure now prevent
+  truncated evidence from appearing complete. Seven actual controls and 256
+  integrated tests pass. The proxy remains a lab tool, with production joining
+  and transport-level completeness still outside this component's proof.
+
+- 2026-10-29 — Hosted Fallow found introduced request-handler complexity after
+  the capture controls were added (CC/cognitive14, CRAP56.3). A targeted current
+  audit would have caught it before the push. Budget admission and recording
+  now form a private local component, preserving transport behavior and all
+  seven controls. Current tests and the zero-finding Fallow audit pass; no
+  suppression or baseline waiver hides the finding.
+
+- 2026-10-29 — Review found two historical evidence ambiguities: a shallow
+  snapshot had carried current counts into the prior integration, and the red
+  restoration digest did not name its uncommitted file state. The prior249-test
+  result is restored from its immutable revision; the restoration now names its
+  file/state and includes a digest-verified reconstruction without inventing a
+  commit for that earlier working tree. Current implementation proof is separate.
+
+## 2026-10-29: hosted assertion and interrupted-request repair
+
+The completed Check run on PR #2352 found seven EV006 Boolean assertions in
+`cache-conformance-lab.test.ts` and one interrupted-upload failure. The unit
+aggregate and coverage guard failed because of that unit failure. Required
+logs were read before any rerun. The Boolean assertions now use the canonical
+polarity-preserving helper; no expected error payload was invented and no
+baseline was enlarged.
+
+The interrupted-upload control used fifty/one-hundred-millisecond sleeps. It
+now observes the real request-body read and handler completion with bounded
+Deferred signals. A capture snapshot must also reject admitted requests that
+have no recorded event, including pending or interrupted handlers. The prior
+count-only limit did not establish that completion invariant. Removing that
+invariant or restoring the old empty-upload fallback separately makes the
+synchronized control fail. Both counterfactuals restore exact source bytes.
+Retain these controls in hosted and CPU-constrained native verification rather
+than compensating with larger sleeps or retries.
 - 2026-10-29 — PR #2353 cleanup review found that the first stop/show failure
   skipped other owned resources and fixture closure. Actual failure injection
   reproduced the remaining active unit. Cleanup now aggregates after all unit/
@@ -249,3 +321,37 @@ not treated as permanent qualification.
   failures. Three controls and the full current process replay pass. Success
   receipt publication follows teardown, preventing a later cleanup failure from
   publishing fresh passing evidence. No live R2 service was touched.
+
+
+## 2026-10-29: Node CI cannot model a streaming Bun request lifecycle
+
+The CI shard passed 4,164 tests but timed out the interrupted-upload handshake.
+The Node Bun.serve shim buffers the body before dispatch, so waiting for handler
+body-read before releasing the body deadlocks. Local Bun-only CPU controls did
+not exercise this boundary. Reproduce using the actual Node entrypoint; run
+this physical streaming assertion in a bounded real Bun child from Node rather
+than changing the shim's declared behavior, skipping it, or increasing sleeps.
+The repaired Node and Bun suites pass, V8 instrumentation passes, and guard
+removals fail both the child control and its parent. Require both runtime paths
+for future changes to this lifecycle control. No production proxy change.
+
+
+## 2026-10-29: Successful unit shards did not settle response error-path coverage
+
+PR #2352 passed its unit shards but failed Coverage Regression on conformance
+wire lines/statements. The new streaming reply reader lacked a direct failed-
+stream control; unusual HTTP statuses were also unexercised. Added focused
+complete/empty/oversize/interrupted reply controls and unexpected-status tests.
+Both runtimes pass; Node/V8 observes the previously uncovered paths. Keep the
+committed floors and require the fresh hosted comparison. Do not infer coverage
+acceptance from a unit-pass aggregate or lower the baseline to make it green.
+
+
+## 2026-10-29: Post-format report bytes must be hashed after the commit hook
+
+Review on PR #2352 caught two coverage-checkpoint references hashed before the
+formatter collapsed a numeric array. The report data and source bindings were
+unchanged, but the recorded byte digest was wrong. Both pointers now hash the
+formatted report. Audit every path/digest reference in the current checkpoint
+and completion audit against committed bytes after hooks, not merely source
+file bindings or pre-format serialization. Preserve historical proof scopes.
