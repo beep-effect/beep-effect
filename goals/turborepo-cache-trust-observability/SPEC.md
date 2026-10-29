@@ -208,7 +208,9 @@ fault receipts. Remote fallback must never mean unsigned restore.
 | --- | --- | --- | --- | --- |
 | None approved | This goal | Goal executor | Record real exceptions before using them. | Every temporary exception needs a bounded removal condition. |
 
-## Decision log: signed-client component, 2026-10-28
+## Decision log
+
+### Signed-client component, 2026-10-28
 
 - Route optional artifact-key references through the existing cache secret-session
   allowlist; keep backend and storage credentials separate. A reference cannot
@@ -222,3 +224,29 @@ fault receipts. Remote fallback must never mean unsigned restore.
 - Preserve the current unsigned configuration until deployment readiness, explicit
   epoch/role/tenant policy, bounded rollout and rollback evidence are complete.
   This component prepares enforcement; it does not activate a signed cohort.
+
+### Pinned loopback policy component
+
+2026-10-28: prepare a minimal patch against upstream adapter 4.0.20 commit
+`0e893f63e1c7f1ac3c460d79e75fb63d4c9f7c85`. Each explicitly enabled process
+binds one reader/writer role and one tenant/epoch namespace, independently of
+artifact HMAC possession. Keep the artifact key in native clients. This closes
+method and selector gaps in the disposable lab while retaining the existing
+loopback adapter and object-store topology. Use synthetic local storage, one
+canonical admitted job and two compiler workers; no new cloud spend or service.
+
+The patch is opt-in preparation. Existing production `adapter.sh` stays on its
+published binary pin. Rollback of this component is removal of the unused patch
+and test artifacts; a production activation needs its own numeric rollout,
+source-bound executable, cohort, grants, namespace/key and rollback evidence.
+The local process report does not satisfy those deployment or observation gates.
+
+### Startup isolation
+
+- 2026-10-29: The pinned adapter must decide signed startup from its inherited
+  process configuration. Reject policy introduced by dotenv before logging
+  begins; retain the legacy metadata-failure warning as static text only. The
+  previous executable failed the new startup control and the repaired exact
+  binary passes. Reversal: keep this candidate inactive and continue using the
+  incumbent while repairing the candidate; do not restore the mixed-mode path.
+  This component decision grants no deployment or broad qualification.

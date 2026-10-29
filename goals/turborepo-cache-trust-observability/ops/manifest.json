@@ -56,7 +56,9 @@
     "research/owned-producer-private-approval.json",
     "research/signing-posture-checkpoint.json",
     "research/signing-posture-native-stable.json",
-    "research/signing-posture-native-canary.json"
+    "research/signing-posture-native-canary.json",
+    "research/adapter-policy-lab.json",
+    "research/adapter-dependency-review.json"
   ],
   "agentLaunchers": [
     {
