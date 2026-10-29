@@ -28,6 +28,7 @@ import * as HttpServer from "effect/http/HttpServer";
 import * as HttpServerRequest from "effect/http/HttpServerRequest";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
 import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Redacted from "effect/Redacted";
@@ -166,6 +167,75 @@ const qualify = Effect.fn("ObservationProcess.qualify")(function* (directory: st
   const status = yield* readKernel("/proc/self/status");
   if (!/^NoNewPrivs:\s+1$/m.test(status) || !/^Umask:\s+0077$/m.test(status)) return yield* failure("resources");
 });
+const resolveObservationCredentials = Effect.fnUntraced(function* (uid: number) {
+  const fs = yield* FileSystem.FileSystem;
+  const credentialDirectory = yield* Config.option(Config.String("CREDENTIALS_DIRECTORY")).pipe(
+    Effect.mapError(() => failure("secret-environment"))
+  );
+  const secrets = yield* Effect.gen(function* () {
+    if (O.isNone(credentialDirectory)) {
+      // Direct process fixtures retain their explicit environment route. The
+      // installed service uses credentials and clears all inherited variables.
+      return {
+        salt: yield* Config.Redacted("BEEP_AI_METRICS_HASH_SALT"),
+        apiKey: yield* Config.option(Config.Redacted("BEEP_OBSERVATION_PHOENIX_API_KEY")),
+      };
+    }
+    const path = yield* Path.Path;
+    const directory = credentialDirectory.value;
+    if (!path.isAbsolute(directory) || path.normalize(directory) !== directory)
+      return yield* failure("secret-environment");
+    const info = yield* fs.lstat(directory);
+    if (info.type !== "Directory" || O.isNone(info.uid) || info.uid.value !== uid || (info.mode & 0o077) !== 0)
+      return yield* failure("secret-environment");
+    const names = yield* fs.readDirectory(directory);
+    if (!A.contains(names, "hash-salt") || A.some(names, (name) => name !== "hash-salt" && name !== "phoenix-api-key"))
+      return yield* failure("secret-environment");
+    const read = Effect.fn("ObservationProcess.readCredential")(function* (name: string) {
+      const file = path.join(directory, name);
+      const info = yield* fs.lstat(file);
+      if (
+        info.type !== "File" ||
+        O.isNone(info.uid) ||
+        info.uid.value !== uid ||
+        (info.mode & 0o077) !== 0 ||
+        O.isNone(info.nlink) ||
+        info.nlink.value !== BigInt(1) ||
+        info.size < 1 ||
+        info.size > 4096
+      )
+        return yield* failure("secret-environment");
+      const value = yield* readKernel(file, 4096);
+      if (Str.includes("\u0000")(value) || Str.includes("\n")(value) || Str.includes("\r")(value))
+        return yield* failure("secret-environment");
+      return Redacted.make(value);
+    });
+    return {
+      salt: yield* read("hash-salt"),
+      apiKey: A.contains(names, "phoenix-api-key") ? O.some(yield* read("phoenix-api-key")) : O.none(),
+    };
+  }).pipe(Effect.mapError(() => failure("secret-environment")));
+  return secrets;
+});
+const prepareObservationStorage = Effect.fnUntraced(function* (directory: string, uid: number) {
+  const fs = yield* FileSystem.FileSystem;
+  const names = yield* fs.readDirectory(directory);
+  for (const name of ["journal.sqlite", "journal.sqlite-journal", "journal.sqlite-wal", "journal.sqlite-shm"]) {
+    if (A.contains(names, name)) yield* privateFile(`${directory}/${name}`, uid);
+  }
+  const socket = `${directory}/worker.sock`;
+  if (A.contains(names, "worker.sock")) {
+    const info = yield* fs.lstat(socket);
+    if (info.type !== "Socket" || O.isNone(info.uid) || info.uid.value !== uid || (info.mode & 0o777) !== 0o600)
+      return yield* failure("socket");
+    if (
+      A.some(Str.split("\n")(yield* readKernel("/proc/net/unix", 1048576)), (line) => Str.endsWith(` ${socket}`)(line))
+    )
+      return yield* failure("socket");
+    yield* fs.remove(socket);
+  }
+  return socket;
+});
 /**
  * Run a paused-by-default observation process on a private Unix socket.
  * **Example** (Inspecting the process program)
@@ -186,75 +256,11 @@ export const runObservationWorkerProcess = Effect.fn("AIMetrics.runObservationWo
       Effect.mapError(() => failure("configuration"))
     );
     yield* qualify(directory, uid, config.intake.maxDatabasePages);
-    const credentialDirectory = yield* Config.option(Config.String("CREDENTIALS_DIRECTORY")).pipe(
-      Effect.mapError(() => failure("secret-environment"))
-    );
-    const secrets = yield* Effect.gen(function* () {
-      if (O.isNone(credentialDirectory)) {
-        // Direct process fixtures retain their explicit environment route. The
-        // installed service uses credentials and clears all inherited variables.
-        return {
-          salt: yield* Config.Redacted("BEEP_AI_METRICS_HASH_SALT"),
-          apiKey: yield* Config.option(Config.Redacted("BEEP_OBSERVATION_PHOENIX_API_KEY")),
-        };
-      }
-      const path = yield* Path.Path;
-      const directory = credentialDirectory.value;
-      if (!path.isAbsolute(directory) || path.normalize(directory) !== directory)
-        return yield* failure("secret-environment");
-      const info = yield* fs.lstat(directory);
-      if (info.type !== "Directory" || O.isNone(info.uid) || info.uid.value !== uid || (info.mode & 0o077) !== 0)
-        return yield* failure("secret-environment");
-      const names = yield* fs.readDirectory(directory);
-      if (
-        !A.contains(names, "hash-salt") ||
-        A.some(names, (name) => name !== "hash-salt" && name !== "phoenix-api-key")
-      )
-        return yield* failure("secret-environment");
-      const read = Effect.fn("ObservationProcess.readCredential")(function* (name: string) {
-        const file = path.join(directory, name);
-        const info = yield* fs.lstat(file);
-        if (
-          info.type !== "File" ||
-          O.isNone(info.uid) ||
-          info.uid.value !== uid ||
-          (info.mode & 0o077) !== 0 ||
-          O.isNone(info.nlink) ||
-          info.nlink.value !== BigInt(1) ||
-          info.size < 1 ||
-          info.size > 4096
-        )
-          return yield* failure("secret-environment");
-        const value = yield* readKernel(file, 4096);
-        if (Str.includes("\u0000")(value) || Str.includes("\n")(value) || Str.includes("\r")(value))
-          return yield* failure("secret-environment");
-        return Redacted.make(value);
-      });
-      return {
-        salt: yield* read("hash-salt"),
-        apiKey: A.contains(names, "phoenix-api-key") ? O.some(yield* read("phoenix-api-key")) : O.none(),
-      };
-    }).pipe(Effect.mapError(() => failure("secret-environment")));
+    const secrets = yield* resolveObservationCredentials(uid);
     const workerConfig = yield* observationWorkerConfigFromLaunch(config, secrets.salt, secrets.apiKey).pipe(
       Effect.mapError(() => failure("configuration"))
     );
-    const names = yield* fs.readDirectory(directory);
-    for (const name of ["journal.sqlite", "journal.sqlite-journal", "journal.sqlite-wal", "journal.sqlite-shm"]) {
-      if (A.contains(names, name)) yield* privateFile(`${directory}/${name}`, uid);
-    }
-    const socket = `${directory}/worker.sock`;
-    if (A.contains(names, "worker.sock")) {
-      const info = yield* fs.lstat(socket);
-      if (info.type !== "Socket" || O.isNone(info.uid) || info.uid.value !== uid || (info.mode & 0o777) !== 0o600)
-        return yield* failure("socket");
-      if (
-        A.some(Str.split("\n")(yield* readKernel("/proc/net/unix", 1048576)), (line) =>
-          Str.endsWith(` ${socket}`)(line)
-        )
-      )
-        return yield* failure("socket");
-      yield* fs.remove(socket);
-    }
+    const socket = yield* prepareObservationStorage(directory, uid);
     const sql = yield* SqliteClient.make({ filename: `${directory}/journal.sqlite` });
     yield* fs.chmod(`${directory}/journal.sqlite`, 0o600);
     const worker = yield* makeObservationWorker(workerConfig).pipe(Effect.provideService(SqlClient.SqlClient, sql));
@@ -278,14 +284,7 @@ export const runObservationWorkerProcess = Effect.fn("AIMetrics.runObservationWo
       Effect.gen(function* () {
         if (O.isNone(ownedSocket)) return;
         const current = yield* fs.lstat(socket).pipe(Effect.option);
-        if (
-          O.isSome(current) &&
-          current.value.type === "Socket" &&
-          current.value.dev === ownedSocket.value.dev &&
-          O.isSome(current.value.ino) &&
-          O.isSome(ownedSocket.value.ino) &&
-          current.value.ino.value === ownedSocket.value.ino.value
-        )
+        if (O.isSome(current) && current.value.type === "Socket" && sameFileIdentity(current.value, ownedSocket.value))
           yield* fs.remove(socket);
       }).pipe(Effect.orDie)
     );
@@ -297,26 +296,34 @@ export const runObservationWorkerProcess = Effect.fn("AIMetrics.runObservationWo
     yield* fs.chmod(socket, 0o600);
     const handler = Effect.gen(function* () {
       const request = yield* HttpServerRequest.HttpServerRequest;
-      if (request.method === "GET" && request.url === "/health") {
-        const health = yield* runtime.health;
-        return yield* HttpServerResponse.json(
-          { control: yield* worker.status, runtime: health, intake: yield* worker.intakeHealth },
-          { status: health.running ? 200 : 503 }
-        );
-      }
-      if (request.method === "GET" && request.url === "/metrics")
-        return HttpServerResponse.text(
-          renderObservationRuntimeMetrics(yield* runtime.health) + renderNativeHttpMetrics(yield* worker.intakeHealth),
-          {
-            contentType: "text/plain; version=0.0.4; charset=utf-8",
-          }
-        );
-      if (request.method === "POST" && request.url === "/control/resume")
-        return yield* HttpServerResponse.json(yield* worker.resume);
-      if (request.method === "POST" && request.url === "/control/pause")
-        return yield* HttpServerResponse.json(yield* worker.pause);
-      if (request.url === "/maintenance") return yield* maintenance.handler;
-      return yield* worker.handler;
+      return yield* Match.value({ method: request.method, url: request.url }).pipe(
+        Match.when({ method: "GET", url: "/health" }, () =>
+          Effect.gen(function* () {
+            const health = yield* runtime.health;
+            return yield* HttpServerResponse.json(
+              { control: yield* worker.status, runtime: health, intake: yield* worker.intakeHealth },
+              { status: health.running ? 200 : 503 }
+            );
+          })
+        ),
+        Match.when({ method: "GET", url: "/metrics" }, () =>
+          Effect.gen(function* () {
+            return HttpServerResponse.text(
+              renderObservationRuntimeMetrics(yield* runtime.health) +
+                renderNativeHttpMetrics(yield* worker.intakeHealth),
+              { contentType: "text/plain; version=0.0.4; charset=utf-8" }
+            );
+          })
+        ),
+        Match.when({ method: "POST", url: "/control/resume" }, () =>
+          Effect.flatMap(worker.resume, HttpServerResponse.json)
+        ),
+        Match.when({ method: "POST", url: "/control/pause" }, () =>
+          Effect.flatMap(worker.pause, HttpServerResponse.json)
+        ),
+        Match.when({ url: "/maintenance" }, () => maintenance.handler),
+        Match.orElse(() => worker.handler)
+      );
     }).pipe(Effect.orElseSucceed(() => HttpServerResponse.text("Observation operation unavailable", { status: 503 })));
     yield* server.serve(handler);
     const running = yield* runtime.run.pipe(Effect.forkChild);

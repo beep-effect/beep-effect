@@ -316,3 +316,18 @@ corrective retry retains the same memory, CPU, host-headroom and runtime limits,
 raises only the temporary proof task allowance to 1024, and records peak task
 count and pids-limit events. Future proof receipts should capture these counters
 alongside memory so spawn failures cannot masquerade as source defects.
+
+## Whole-package proof reserve stop — 2026-10-29
+
+The full CLI package verification reached its docgen subprocess but the owned
+guard observed host available memory below its 16 GiB reserve and stopped the
+run. The service peaked near 7 GiB with zero PID-limit events; all 1,779 source
+hashes remained unchanged. The five-second shutdown grace expired, so systemd
+reported timeout/KILL. This is incomplete proof, not a kernel OOM or a failing
+source assertion. Receipt: `../ops/whole-cli-protective-stop-verification.json`.
+
+A phase-aware verifier should stream parent step results into durable receipts
+so a reserve stop does not discard already completed proof. Descendant command
+names alone cannot identify parent progress because test fixtures invoke the
+same commands. Keep reserve protection and avoid immediate whole-run repeats;
+use bounded focused verification while finishing the implementation.

@@ -574,3 +574,27 @@ that other desktop workloads can create substantial real memory pressure. See
 `../ops/memory-dolphin-growth-20261029.json` for the process/service binding and
 ordered observations. Do not label the process a proven memory leak or attribute
 it to this packet without further evidence.
+
+## Cross-checkout pressure during delivery — 2026-10-29 afternoon
+
+The 26-minute full CLI run stopped protectively after host available memory
+fell below the 16 GiB reserve. Its own peak was about 7 GiB and PID-limit
+events remained zero. systemd later reported a shutdown timeout because the
+process did not exit within the five-second stop grace. This was not a
+RuntimeMax deadline or kernel OOM. All 1,779 checked source hashes were stable.
+
+A later local final-check also stopped on host pressure; available RAM then
+fell to about 7.5 GiB and swap was almost full. Metadata-only process inspection
+identified Bun workloads in `beep-effect9-worktrees/turborepo-producer-capture`
+and `beep-effect9-worktrees/docgen-node-launch`, including two processes over
+11 GiB RSS, under a shared Chromium application scope. ComfyUI held about
+34 GiB RSS plus 14 GiB swapped memory. These observations establish competing
+workloads, not a memory leak or the exact commands that launched them.
+
+The next owned package check was refused before launch under the 24 GiB
+admission floor. No unrelated workload was stopped. The separately bounded
+installed worker proof passed with no deliberate OOM; temporary units and
+its independent monitor were stopped and removed as owned. All heavy proof
+paths need admission and per-job budgets, including commands launched by
+browser-hosted sessions. Evidence: `../ops/memory-pressure-cross-checkout-20261029.json`
+and `../ops/whole-cli-protective-stop-verification.json`.
