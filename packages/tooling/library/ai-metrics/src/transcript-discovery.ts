@@ -129,6 +129,9 @@ const DirectoryEvent = S.Struct({
   relative: S.String.check(S.isMaxLength(4096)),
 }).pipe($I.annoteSchema("DirectoryEvent", { description: "Private bounded event from the owned directory helper." }));
 const decodeDirectoryEventJson = S.decodeEffect(S.fromJsonString(DirectoryEvent));
+const isTerminalDirectoryEventKind = S.is(
+  DirectoryEvent.fields.kind.pick(["complete", "overflow", "unavailable", "changed"])
+);
 
 const openRoot = Effect.fn("AiMetrics.discovery.openRoot")(function* (
   directory: string,
@@ -326,12 +329,7 @@ export const makeTranscriptDiscovery = Effect.fn("AiMetrics.makeTranscriptDiscov
     }
     if (O.isNone(root.handle)) return yield* failure("changed");
     const event = yield* root.handle.value.next;
-    if (
-      event.kind === "complete" ||
-      event.kind === "overflow" ||
-      event.kind === "unavailable" ||
-      event.kind === "changed"
-    ) {
+    if (isTerminalDirectoryEventKind(event.kind)) {
       root.state = event.kind;
       yield* closeRoot(root);
       return O.none();

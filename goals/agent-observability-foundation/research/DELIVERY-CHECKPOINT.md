@@ -1,5 +1,27 @@
 # Delivery checkpoint — 2026-10-29
 
+## Terminal classification and narrow complexity allowances — October 29
+
+Current Fallow v23 passes with zero introduced blocking findings; four inherited
+adjacent duplication groups and descriptive diff-risk observations remain. The
+terminal-event predicate derives its four values from the existing schema.
+Five reviewed exact-function allowances retain unchanged global thresholds and
+review deadlines. The root-probe generator was uniquely named after independent
+review found the previous emitted selector also matched its wrapper.
+
+Current type checks, 14 discovery/root tests, 55 managed-session tests and five
+root-selector follow-up tests passed. Current actual entrypoint and installed
+synthetic live-canary/health proofs passed, with source stability and owned-unit
+cleanup verified. Details: `ops/terminal-classification-verification.json`.
+The reviewed credential boundaries are byte-identical to the separately passing
+optional-credential proof in the preceding receipt. This is not actual harness
+coverage, whole-CLI completion or production enrollment. Recovery hold remains.
+
+The latest corrective PR2362 final-check admission was refused before launch
+for less than 24 GiB host headroom; its guard receipt is archived with that PR.
+Unit-test jobs have passed at the current head, heavy hosted jobs remain queued.
+No new final-check pass, Beep merge or foundation publication is claimed.
+
 ## Boundary predicate verification and Dankserver merge — October 29, 15:58 CDT
 
 The reviewed five-file boundary refactor passed 50 focused tests, full AI-metrics

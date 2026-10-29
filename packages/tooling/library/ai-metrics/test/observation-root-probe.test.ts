@@ -78,7 +78,7 @@ const encodeObservationRootDeclarationJson = S.encodeEffect(S.fromJsonString(Obs
 
 it.layer(NodeServices.layer, { concurrent: false, timeout: "20 seconds" })("declared root inventory producer", (it) => {
   it.effect("observes clones and worktrees with evidence while all harness populations stay unknown", () =>
-    Effect.gen(function* () {
+    Effect.gen(function* observeCloneWorktreeEvidence() {
       yield* end.pipe(DateTime.toEpochMillis, TestClock.setTime);
       const directory = yield* temp;
       const primary = `${directory}/clone`;

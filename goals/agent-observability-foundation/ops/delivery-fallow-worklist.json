@@ -1,82 +1,22 @@
 {
   "basis": {
-    "report": ".beep/fallow/audit.repair-v20.json",
-    "rawArchive": "~/.local/state/beep/observation-proof-archive/boundary-predicates-o2cv8ikx/audit.repair-v20.combined.txt",
-    "observedAt": "2026-10-29T20:58:02.330890+00:00"
+    "report": ".beep/fallow/audit.repair-v23.json",
+    "rawArchive": "~/.local/state/beep/observation-proof-archive/terminal-classification-5rdyqadi/audit.repair-v23.combined.txt",
+    "observedAt": "2026-10-29T21:05:30.320164+00:00"
   },
-  "complexity": [
-    {
-      "path": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts",
-      "name": "read",
-      "line": 194,
-      "cyclomatic": 12,
-      "cognitive": 4,
-      "line_count": 19,
-      "exceeded": "crap",
-      "severity": "critical"
-    },
-    {
-      "path": "packages/tooling/library/ai-metrics/test/observation-root-probe.test.ts",
-      "name": "it.effect(\"observes clones and worktrees with evide...\")",
-      "line": 81,
-      "cyclomatic": 11,
-      "cognitive": 6,
-      "line_count": 65,
-      "exceeded": "crap",
-      "severity": "moderate"
-    },
-    {
-      "path": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts",
-      "name": "secrets",
-      "line": 175,
-      "cyclomatic": 11,
-      "cognitive": 8,
-      "line_count": 43,
-      "exceeded": "crap",
-      "severity": "critical"
-    },
-    {
-      "path": "packages/drivers/ai-provider-cli/test/AiProviderCliSession.test.ts",
-      "name": "<arrow>",
-      "line": 62,
-      "cyclomatic": 10,
-      "cognitive": 9,
-      "line_count": 953,
-      "exceeded": "cognitive_crap",
-      "severity": "moderate"
-    },
-    {
-      "path": "packages/tooling/library/ai-metrics/src/transcript-discovery.ts",
-      "name": "advanceRoot",
-      "line": 322,
-      "cyclomatic": 10,
-      "cognitive": 7,
-      "line_count": 21,
-      "exceeded": "crap",
-      "severity": "moderate"
-    },
-    {
-      "path": "packages/tooling/library/ai-metrics/test/fixtures/managed-observation-process.ts",
-      "name": "program",
-      "line": 61,
-      "cyclomatic": 7,
-      "cognitive": 4,
-      "line_count": 145,
-      "exceeded": "crap",
-      "severity": "high"
-    }
-  ],
+  "complexity": [],
   "attribution": {
     "gate": "new-only",
     "dead_code_introduced": 0,
     "dead_code_inherited": 0,
-    "complexity_introduced": 6,
+    "complexity_introduced": 0,
     "complexity_inherited": 0,
     "duplication_introduced": 0,
     "duplication_inherited": 4,
     "styling_introduced": 0,
     "styling_inherited": 0,
     "duplication_demoted": 0,
-    "diff_risk_introduced": 0
-  }
+    "diff_risk_introduced": 20
+  },
+  "result": "exit0; no introduced blocking findings; inherited adjacent duplication and descriptive diff risk retained"
 }
