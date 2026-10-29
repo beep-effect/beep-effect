@@ -2319,13 +2319,13 @@
       "reason": "Retain the deliberately SHORT PATH acquireUseRelease bracket: prepend only the disposable systemctl shim during fixture-owner reaping, restore the exact previous/unset PATH before later journal/export assertions. Root ownership is already per-test and outer native services runner-owned. Broadening PATH to the entire layer/test or deleting restoration changes global state/isolation. Sequential fixture scope and synchronous final restoration are required. Source and import provenance: research/cli-continuation-nine-lineage.json; reviewed scope: research/cli-continuation-nine-proof.md. Owner: @beep/repo-cli. Exit: the fixture-owner reaper resolves systemctl through Config or an injected executable path. #1855 wave 5 register."
     },
     {
-      "id": "EV003:packages/tooling/tool/cli/test/quality-tasks.test.ts:359:withEnvVarEffect@25#1",
+      "id": "EV003:packages/tooling/tool/cli/test/quality-tasks.test.ts:360:withEnvVarEffect@25#1",
       "lens": "detector",
       "ruleId": "EV003",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
-      "line": 359,
-      "endLine": 383,
+      "line": 360,
+      "endLine": 384,
       "symbol": "withEnvVarEffect",
       "occurrence": "v2:7a4f71fe20382ddc1c39e6fb461768ddeb358a00ea78878e97d203874b0453bf",
       "class": "resource-wrapper",
@@ -5849,7 +5849,7 @@
       "symbol": "it.live",
       "occurrence": "v2:c027e67dd880a2a8fe4d854ffa24710fb29e526922688554f73771e44f9220b0",
       "class": "unjustified-live-test",
-      "evidence": "it.live( \"never restores over a synchronous turn start (subscription races the dispatch)\", Effect.fnUntraced(function* () { // A submit whose write starts the turn synchronously inside the set \u2014 // th",
+      "evidence": "it.live( \"never restores over a synchronous turn start (subscription races the dispatch)\", Effect.fnUntraced(function* () { // A submit whose write starts the turn synchronously inside the set — // th",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -5893,7 +5893,7 @@
       "symbol": "it.live",
       "occurrence": "v2:839f4c06674803449cc12ea63d0ef0fe4c6c3b982ae7010cc7e7aa1039f70146",
       "class": "unjustified-live-test",
-      "evidence": "it.live( \"restores the draft when the dispatch is swallowed\", Effect.fnUntraced(function* () { // A submit whose write is silently dropped \u2014 the zombie-node failure // mode the QA 2026-08-26 P0 found:",
+      "evidence": "it.live( \"restores the draft when the dispatch is swallowed\", Effect.fnUntraced(function* () { // A submit whose write is silently dropped — the zombie-node failure // mode the QA 2026-08-26 P0 found:",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -8787,13 +8787,13 @@
       "reason": "Fresh private SQLite mailboxes and grant-bound MCP authorization fixtures need the real filesystem and path services. Owner: @beep/repo-cli. Exit: retire when the tool cases run over an in-memory SQLite mailbox."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/accounts-usage.test.ts:59:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/accounts-usage.test.ts:67:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/accounts-usage.test.ts",
-      "line": 59,
-      "endLine": 59,
+      "line": 67,
+      "endLine": 67,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
@@ -8985,13 +8985,13 @@
       "reason": "The lab builds its corpus from the real checkout (buildCacheConformanceCorpus(repoRoot)) and serves it from the loopback cache-conformance-server. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the corpus is seeded into memory and the lab server reads it through FileSystem."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/cache-conformance.test.ts:10:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/cache-conformance.test.ts:11:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/cache-conformance.test.ts",
-      "line": 10,
-      "endLine": 10,
+      "line": 11,
+      "endLine": 11,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
@@ -10327,13 +10327,13 @@
       "reason": "Real scheduler lease publication, link behavior and queue state need the native filesystem; the two procfs cases already use MemoryFileSystem (research/cli-scheduler-drift-package-proof.json). Owner: @beep/repo-cli. Exit: retire when MemoryFileSystem models link-based lease publication and the drift cases move to it."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/quality-tasks.test.ts:167:@effect/platform-node/NodeFileSystem@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/quality-tasks.test.ts:168:@effect/platform-node/NodeFileSystem@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
-      "line": 167,
-      "endLine": 167,
+      "line": 168,
+      "endLine": 168,
       "symbol": "@effect/platform-node/NodeFileSystem",
       "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
       "class": "platform-filesystem-candidate",
@@ -10613,13 +10613,13 @@
       "reason": "The emit test resolves the real checkout with findRepoRoot() and reads its projects. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the emitter runs over a seeded workspace volume."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/skills-command.test.ts:18:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/skills-command.test.ts:19:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/skills-command.test.ts",
-      "line": 18,
-      "endLine": 18,
+      "line": 19,
+      "endLine": 19,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
       "class": "platform-resource-provenance-review",
@@ -11295,13 +11295,13 @@
       "reason": "appendYeetInboxRow writes the red rows, and the inbox active projection runs flock, sh and jq through Bun.spawnSync in the real inbox directory. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the inbox projection runs in process or behind an injected lock service."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/yeet-ready-gate.test.ts:42:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/yeet-ready-gate.test.ts:43:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/yeet-ready-gate.test.ts",
-      "line": 42,
-      "endLine": 42,
+      "line": 43,
+      "endLine": 43,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
@@ -11889,6 +11889,28 @@
       "reason": "The tests run sequentially in one it.layer block, and each forked loop is interrupted and joined before the next test, so no timer fiber survives an adjustment; the real SQLite contention case uses TestClock.withLive and does not adjust. Owner: @beep/repo-cli. Exit: retire when each clock-adjusting test owns its TestClock, for example a single-case it.layer(TestClock.layer()) block (#1855 wave 8 register)."
     },
     {
+      "id": "EV015:packages/tooling/tool/cli/test/accounts-usage.test.ts:922:TestClock.adjust@13#1",
+      "lens": "resource",
+      "ruleId": "EV015",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/accounts-usage.test.ts",
+      "line": 922,
+      "endLine": 922,
+      "symbol": "TestClock.adjust",
+      "occurrence": "v2:87575d87e20b8bac89bf600f6c186369afedec75d92569c261efc5b1a2b43cad",
+      "class": "shared-test-clock-adjustment",
+      "evidence": "TestClock.adjust(\"8 seconds\")",
+      "replacement": {
+        "primitive": "TestClock.adjust",
+        "sketch": "it.layer.option.excludeTestServices: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) only when the block intentionally needs live default Clock and Console and supplies any required test services explicitly. TestClock.adjust: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) to review ownership of a shared deterministic clock and forked work before advancing it. Preserve deterministic timeout subjects; prove serial ownership or isolate test services before considering a reset."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The owning `live account poller` block runs its tests serially on the shared test clock; the test forks the one poll it owns with forkChild, advances the clock only after the hung /me request has signalled through a Deferred that it is in flight, and joins the fiber before the test ends, so no other test sees the adjustment. Owner: @beep/repo-cli. Exit: retire when the Kimi profile timeout test owns its TestClock in a single-case it.layer(TestClock.layer()) block."
+    },
+    {
       "id": "EV015:packages/tooling/tool/cli/test/cache-acceptance.test.ts:532:TestClock.adjust@15#1",
       "lens": "resource",
       "ruleId": "EV015",
@@ -11933,13 +11955,13 @@
       "reason": "The closed-issuer suite is concurrent: false, every test creates a new issuer and envelope from its current Clock, and the expiry test advances 25 hours to reject its own envelope; no issuer or fiber survives into another test (goals/turborepo-task-qualification/research/test-resource-boundaries.md). Owner: @beep/repo-cli. Exit: retire when each clock-adjusting test owns its TestClock, for example a single-case it.layer(TestClock.layer()) block (#1855 wave 8 register)."
     },
     {
-      "id": "EV015:packages/tooling/tool/cli/test/yeet-ready-gate.test.ts:1782:TestClock.adjust@13#1",
+      "id": "EV015:packages/tooling/tool/cli/test/yeet-ready-gate.test.ts:1808:TestClock.adjust@13#1",
       "lens": "resource",
       "ruleId": "EV015",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/yeet-ready-gate.test.ts",
-      "line": 1782,
-      "endLine": 1782,
+      "line": 1808,
+      "endLine": 1808,
       "symbol": "TestClock.adjust",
       "occurrence": "v2:16af695d6fdd2c50ed44ebc1644b55d8fbbbf2ef74b2adb092cf2a9008c9f844",
       "class": "shared-test-clock-adjustment",
@@ -11955,13 +11977,13 @@
       "reason": "The budget-wait tests run serially in one it.layer block; each creates fresh scripted REST and GraphQL refs, owns one forkChild fiber, advances the TestClock to drive the real budget guard and joins the fiber before the next test. A live clock would add real ten-minute sleeps. Owner: @beep/repo-cli. Exit: retire when each clock-adjusting test owns its TestClock, for example a single-case it.layer(TestClock.layer()) block (#1855 wave 8 register)."
     },
     {
-      "id": "EV015:packages/tooling/tool/cli/test/yeet-ready-gate.test.ts:1786:TestClock.adjust@13#1",
+      "id": "EV015:packages/tooling/tool/cli/test/yeet-ready-gate.test.ts:1812:TestClock.adjust@13#1",
       "lens": "resource",
       "ruleId": "EV015",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/yeet-ready-gate.test.ts",
-      "line": 1786,
-      "endLine": 1786,
+      "line": 1812,
+      "endLine": 1812,
       "symbol": "TestClock.adjust",
       "occurrence": "v2:f5f72453e622f338e0862cd4adf4696a1dc053d28b030d2d8f26aab9f844d320",
       "class": "shared-test-clock-adjustment",
@@ -11977,13 +11999,13 @@
       "reason": "The budget-wait tests run serially in one it.layer block; each creates fresh scripted REST and GraphQL refs, owns one forkChild fiber, advances the TestClock to drive the real budget guard and joins the fiber before the next test. A live clock would add real ten-minute sleeps. Owner: @beep/repo-cli. Exit: retire when each clock-adjusting test owns its TestClock, for example a single-case it.layer(TestClock.layer()) block (#1855 wave 8 register)."
     },
     {
-      "id": "EV015:packages/tooling/tool/cli/test/yeet-ready-gate.test.ts:1809:TestClock.adjust@13#1",
+      "id": "EV015:packages/tooling/tool/cli/test/yeet-ready-gate.test.ts:1835:TestClock.adjust@13#1",
       "lens": "resource",
       "ruleId": "EV015",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/yeet-ready-gate.test.ts",
-      "line": 1809,
-      "endLine": 1809,
+      "line": 1835,
+      "endLine": 1835,
       "symbol": "TestClock.adjust",
       "occurrence": "v2:7764f481f1365b5a4273608abe4b751cdc34356a2d93d8d9ca1319b390c0a040",
       "class": "shared-test-clock-adjustment",
@@ -11999,13 +12021,13 @@
       "reason": "The budget-wait tests run serially in one it.layer block; each creates fresh scripted REST and GraphQL refs, owns one forkChild fiber, advances the TestClock to drive the real budget guard and joins the fiber before the next test. A live clock would add real ten-minute sleeps. Owner: @beep/repo-cli. Exit: retire when each clock-adjusting test owns its TestClock, for example a single-case it.layer(TestClock.layer()) block (#1855 wave 8 register)."
     },
     {
-      "id": "EV015:packages/tooling/tool/cli/test/yeet-ready-gate.test.ts:1839:TestClock.adjust@13#1",
+      "id": "EV015:packages/tooling/tool/cli/test/yeet-ready-gate.test.ts:1865:TestClock.adjust@13#1",
       "lens": "resource",
       "ruleId": "EV015",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/yeet-ready-gate.test.ts",
-      "line": 1839,
-      "endLine": 1839,
+      "line": 1865,
+      "endLine": 1865,
       "symbol": "TestClock.adjust",
       "occurrence": "v2:5e21b25388c7682b6f1c4a8ae9855d334f4c5d65d7513ddacb5f7fe24a5fb5fb",
       "class": "shared-test-clock-adjustment",
