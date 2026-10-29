@@ -3,7 +3,7 @@
   "goal": "turborepo-cache-trust-observability",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "1cfed321351946a8a9112f1fa78ae51974039b23ebee0d5e3d123c734cf6505f",
+  "specSha256": "635d08d49cc925bdcc7e2a2b40afe1ac301518dd70fa038936af75e7e9ea2960",
   "acceptance": [
     {
       "id": "AC-01",
@@ -289,7 +289,8 @@
   "priorSpecSha256AtRuntimeAlias": "511be224c49a558752eb531a086e571a1838bd38514359d049b59b621106fcdb",
   "signedRuntimeAliasCheckpoint": {
     "path": "goals/turborepo-cache-trust-observability/research/signed-runtime-alias-checkpoint.json",
-    "sha256": "b7cc46b36aa2ff24f6e85440d14bb26e7e4c342d9b4fc06b2692613ea8119cb0",
+    "sha256": "bbbd4cb29b50471db90851735192bd69bfa37f1d26b1c959c291d33c9f95924b",
     "scope": "Source-bound launcher repair, actual private runtime probe and passing full package replay; no qualification or production activation."
-  }
+  },
+  "priorSpecSha256BeforeRuntimeAliasWording": "1cfed321351946a8a9112f1fa78ae51974039b23ebee0d5e3d123c734cf6505f"
 }

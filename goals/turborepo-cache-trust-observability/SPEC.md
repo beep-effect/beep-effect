@@ -444,7 +444,7 @@ The local process report does not satisfy those deployment or observation gates.
   worker. The real Bun file may be named `bun.native`; mounting that file at
   its original path does not provide the `bun` command used by tool discovery.
   Preserve original-path mounts, private networking, explicit clean runtime
-  configuration and independent executable content checks. No host directory
-  or caller-supplied search path is shared.
+  configuration and independent executable content checks. Add no host tools
+  directory to the existing read-only mounts; use the fixed search path.
 - Reversal leaves signed experiments disabled and reverts this launcher fix.
   This repair grants no producer, qualification or signed production authority.

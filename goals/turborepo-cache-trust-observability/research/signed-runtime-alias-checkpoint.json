@@ -16,7 +16,6 @@
     "bunSha256": "10702245766b225e70bbf6235fd6b47214fd94b4760d00ffaed8ab0df57ac235",
     "nodeSha256": "e32e2d16081cf644f88392934288086e7662529d0d43277c34f7aad2207cfafb",
     "networkNamespace": "private in both cases",
-    "hostDirectoryShared": false,
     "results": [
       {
         "topology": "original",
@@ -36,7 +35,12 @@
         "stdoutSha256": "36743d8aa7210313acd03e82c4a2774acc7734b23c35b2bb47f137cb0a728304",
         "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
       }
-    ]
+    ],
+    "additionalHostToolsDirectoryShared": false,
+    "systemDirectoryMount": {
+      "path": "/usr",
+      "readOnly": true
+    }
   },
   "verification": {
     "nodeTests": {

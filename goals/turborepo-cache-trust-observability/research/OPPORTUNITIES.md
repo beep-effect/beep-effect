@@ -647,3 +647,8 @@ the policy check; do not add a baseline finding or waive the detector.
 - The fixture's existing spy variable named `process` shadowed the runtime
   process used by the new assertion. The compiler and runtime tests exposed it;
   renaming the spy preserved the fixture API and restored the typed assertion.
+
+- Distinguish an added tools directory from the existing read-only system and
+  source mounts in evidence claims. Overbroad wording was corrected before the
+  first push; the superseded publication wave is not passing proof. Describe
+  additions relative to the reviewed mount baseline to prevent this ambiguity.
