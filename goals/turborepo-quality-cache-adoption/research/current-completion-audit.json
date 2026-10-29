@@ -3,7 +3,7 @@
   "goal": "turborepo-quality-cache-adoption",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "02e520db66390a5cb167d4604659e8b35ac809644e36fc238533c2c1cd533ac3",
+  "specSha256": "f7fd00e00643a346a41e6f4b5f1fc3f4ca9cca07291859cf75936e70bf07a477",
   "acceptance": [
     {
       "id": "AC-01",
@@ -156,7 +156,11 @@
     "nativeProtocol": "goals/turborepo-cache-trust-observability/research/current-native-checkpoint.json",
     "mutatingFixerDisposition": {
       "path": "research/mutating-fixer-disposition-review.json",
-      "scope": "136 whole-command source-reviewed keep-fresh dispositions;136 read-only counterparts and2435 other population rows remain unfinished; no whole acceptance criterion complete."
+      "scope": "136 whole-command keep-fresh fixer dispositions. Their 136 read-only counterparts still need qualification/adoption; current population review counts include the later service review."
+    },
+    "persistentServiceDisposition": {
+      "path": "research/persistent-service-disposition-review.json",
+      "scope": "Two source-only persistent-service keep-fresh dispositions; total138 reviewed fresh boundaries,2433 population gaps; builds and all acceptance criteria remain unfinished."
     }
   },
   "remainingExplicitGates": [
@@ -213,5 +217,6 @@
     "authority": "Transport component only; no production or qualification authority.",
     "scope": "Original production and native-test bytes unchanged; new test-only in-process coverage/control file passes51 cases per provider and quick verification. Prior complete package scope retained; fresh combined-source final still required. No full-goal acceptance."
   },
-  "priorSpecSha256AtMutatingFixerReview": "7e7bd28c21dc6ddb46b29e62aefcc0f0f8d49c99da7bab4f1fa6d4a372b64ed3"
+  "priorSpecSha256AtMutatingFixerReview": "7e7bd28c21dc6ddb46b29e62aefcc0f0f8d49c99da7bab4f1fa6d4a372b64ed3",
+  "priorSpecSha256AtPersistentServiceReview": "02e520db66390a5cb167d4604659e8b35ac809644e36fc238533c2c1cd533ac3"
 }

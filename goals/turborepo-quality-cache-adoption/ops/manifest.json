@@ -53,7 +53,8 @@
     "research/current-runtime-baseline-review.md",
     "research/current-runtime-baseline-checkpoint.json",
     "research/mutating-fixer-disposition-review.json",
-    "research/mutating-fixer-replay-control.json"
+    "research/mutating-fixer-replay-control.json",
+    "research/persistent-service-disposition-review.json"
   ],
   "agentLaunchers": [
     {

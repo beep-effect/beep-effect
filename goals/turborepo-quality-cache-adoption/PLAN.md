@@ -186,6 +186,15 @@ resolves 136 existing source-mutating fixer boundaries as keep-fresh, with
 unchanged script-map digests and cache-disabled configuration. Each has a
 separate read-only lint counterpart whose qualification/adoption stays open.
 Six actual synthetic stable/canary native runs demonstrate the lost mutation
-on a logs-only hit and the successful cache-disabled control. The other 2,435
-population dispositions, current feature review and all acceptance criteria
-remain incomplete. No cache flags or qualification ledger entries changed.
+on a logs-only hit and the successful cache-disabled control. At that checkpoint, the other 2,435 population dispositions, current feature
+review and all acceptance criteria remained incomplete. No cache flags or qualification ledger entries changed.
+
+
+### Current persistent service review
+
+`research/persistent-service-disposition-review.json` resolves the two directly
+declared OIP Web/Todox development services as keep-fresh. Their app/dependency
+builds remain separate unfinished computations. There are now 138 source-reviewed
+whole-command keep-fresh dispositions and 2,433 remaining disposition gaps. No
+service was launched; all feature/runtime qualification and full-goal acceptance
+requirements remain open.

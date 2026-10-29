@@ -15,8 +15,8 @@
     "retainedQualificationRecordStates": {
       "excluded": 5
     },
-    "sourceReviewedWholeTaskFreshDispositions": 136,
-    "remainingFinalDispositionGaps": 2435
+    "sourceReviewedWholeTaskFreshDispositions": 138,
+    "remainingFinalDispositionGaps": 2433
   },
   "provenance": {
     "censusSha256": "3b7c597abae8339da6516258e94abd746251318fac8e2633b65d722cdc48fe9c",
@@ -1749,7 +1749,8 @@
         "sha256": "e1fdc840e70992359d20318b3841fb0c0bcbd18802ad76bf5879c45ebcfcb8cf"
       }
     ],
-    "populationBeforeMutatingFixerReviewSha256": "ab1053066e7b0cd5c89c105656e3a04f39485865ae637283779c7a66630f09e5"
+    "populationBeforeMutatingFixerReviewSha256": "ab1053066e7b0cd5c89c105656e3a04f39485865ae637283779c7a66630f09e5",
+    "populationBeforePersistentServiceReviewSha256": "9ce209d0bf0bc0b2f15f062a2a1425241923df0fdbc7426e5613f74cb7ce5c0a"
   },
   "unresolvedCensusObligations": [
     "Classify nested workspace and root command semantics.",
@@ -37451,9 +37452,28 @@
       "priorCommandTextUnchanged": true,
       "priorSemanticProfileIdsForReview": ["service"],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "persistent-development-service",
+        "pureCounterpart": "@beep/oip-web#build",
+        "purePrerequisites": [
+          "@beep/hubspot#build",
+          "@beep/identity#build",
+          "@beep/repo-configs#build",
+          "@beep/repo-utils#build",
+          "@beep/sanity#build",
+          "@beep/schema#build",
+          "@beep/test-runner#build",
+          "@beep/test-utils#build",
+          "@beep/ui#build",
+          "@beep/utils#build"
+        ],
+        "review": "research/persistent-service-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/persistent-service-disposition-review.json"
     },
     {
       "computation": "@beep/oip-web#lint",
@@ -57836,9 +57856,17 @@
       "priorCommandTextUnchanged": true,
       "priorSemanticProfileIdsForReview": ["service"],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "persistent-development-service",
+        "pureCounterpart": "@beep/todox#build",
+        "purePrerequisites": ["@beep/identity#build", "@beep/schema#build"],
+        "review": "research/persistent-service-disposition-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/persistent-service-disposition-review.json"
     },
     {
       "computation": "@beep/todox#lint",
@@ -63024,6 +63052,13 @@
       "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5",
       "sourceRevision": "fa47a808cf1d0d185bb013615c612dea81206831",
       "reviewedComputations": 136,
+      "authority": "source-review-only whole-command keep-fresh dispositions"
+    },
+    {
+      "path": "research/persistent-service-disposition-review.json",
+      "sha256": "911f9f89c8e57f7148e627d513612c476e4722458f62bf6edad6fd0a6ca3d9ff",
+      "sourceRevision": "72badf688b2f96bb489e944b0bd581909114a19f",
+      "reviewedComputations": 2,
       "authority": "source-review-only whole-command keep-fresh dispositions"
     }
   ]

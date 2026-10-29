@@ -262,3 +262,14 @@ review is `research/current-runtime-baseline-review.md`.
   population row retain their independent qualification/adoption obligations.
   Reversal removes only the review/dispositions; no task flag, script, ledger
   entry, production cache or required hosted status changes.
+
+
+### Persistent development service disposition, 2026-10-29
+
+- Keep the exact reviewed OIP Web and Todox `dev` commands fresh. Both start
+  named Portless Next development services and already declare persistent,
+  cache-disabled tasks with no output archive. Their existing application and
+  dependency build computations retain separate review and qualification work.
+- Bind this source-only exclusion to current manifests, complete script maps,
+  configuration and runtime declarations. Reversal removes only the review
+  records; no service, script, flag, ledger entry or hosted status changes.

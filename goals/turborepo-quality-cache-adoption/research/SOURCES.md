@@ -279,3 +279,9 @@ binds changed runner source bytes. Historical claims above keep their dates.
 - [Actual native fixer replay control](mutating-fixer-replay-control.json):
   stable/canary fresh, logs-only hit and cache-disabled runs in disposable
   fixtures. A hit skipped the required write; no source or remote cache changed.
+
+
+- [Persistent service source review](persistent-service-disposition-review.json):
+  two exact Portless Next development commands remain fresh, with independently
+  bound script maps/configuration and existing unfinished build counterparts.
+  This is source review only; no service or runtime experiment was launched.
