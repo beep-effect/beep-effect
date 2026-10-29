@@ -140,5 +140,18 @@
       "status": "passed"
     },
     "scope": "Component integration only; no production trust or task qualification."
+  },
+  "postProtocolMainIntegration": {
+    "head": "e90ec4819e4d436f5e7a60f00a52b767e006e716",
+    "componentSourceHashesUnchanged": true,
+    "selectedFiles": 9,
+    "selectedTestsPassed": 240,
+    "seconds": 19.44,
+    "packageQuick": {
+      "status": "passed",
+      "lintSeconds": 5.9,
+      "checkSeconds": 12.8
+    },
+    "census": "Reran after integration; all 427 source bindings checked; 190 workspaces and 2571 executable computations. Inventory only."
   }
 }

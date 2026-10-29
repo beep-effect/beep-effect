@@ -220,3 +220,15 @@ package replay remain independently recorded. Use the existing constrained-
 compute direct-push route after its ten-minute root-replay threshold, with exact
 final-check skips and hosted proof retained; never manufacture a reusable state
 file or copy an unrelated verdict into the new context.
+
+### Refresh source-bound inventories after shared Cache changes
+
+Integrating the signed-client and receipt-safety components left seven census
+source digests different from the retained inventory, even though task counts
+were unchanged. Reran the existing census/UTF-8 refresh recipe and checked all
+427 source digests. The original native verification test snapshot also predates
+the signing posture test change; preserved that exact proof separately, reran
+240 integration tests and bound the current verification sources to this new
+result. Native artifact bytes and protocol source hashes remain unchanged.
+Source-bound evidence must be refreshed at its actual boundary after integration,
+not treated as permanent qualification.
