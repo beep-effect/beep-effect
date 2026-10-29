@@ -767,6 +767,18 @@ instead of silently splitting delivery or weakening scope.
   not extraction or full resolution parity. Protocol changes require a new
   ID version and migration rather than a silent ca1 reinterpretation.
 
+- **2026-10-28 document relationship ownership:** make resolved mention-to-
+  authority edges the sole encoded authority membership. Authority records
+  reference a full mention representing the resource; derive ordered members
+  from document mentions and resolved edges. Ambiguous candidates are not
+  membership. Require one outcome per mention, unique IDs, closed references,
+  coherent source/engine identity and full representatives resolved to their
+  own authority. Reuse the same graph check for structural document receipts;
+  those receipts cannot issue runtime anchor proofs. Whole-document server
+  production/restoration and resolver correctness remain open. Reversal needs
+  equivalent coherence/persistence proof and a consumer migration, not a second
+  member array or mention-level group pointer.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from

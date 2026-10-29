@@ -27,8 +27,10 @@ forms now have semantic schemas. Remaining mixed citation contracts and
 provisional extension stubs are retired. Verified mention composition and
 explicit receipt restoration now pass local package gates. A private ca1
 authority-key producer matches focused oracle equality and protocol vectors.
-Document/resolution relationships, Bluebook codecs, extension adoption/schema
-proof, runtime enforcement and family safety remain unfinished.
+Stable-ID document/resolution schemas now validate graph coherence and
+structural receipt round-trips. Document production/restoration, full resolver
+proof, Bluebook codecs, extension adoption/schema proof, runtime enforcement
+and family safety remain unfinished.
 
 Current evidence:
 
@@ -54,6 +56,7 @@ Current evidence:
 - [Retirement](./history/evidence/2026-10-28-provisional-retirement.md)
 - [Verified mentions](./history/evidence/2026-10-28-verified-mentions.md)
 - [Authority identity](./history/evidence/2026-10-28-authority-identity.md)
+- [Document relationships](./history/evidence/2026-10-28-document-relationships.md)
 
 ## Mission
 

@@ -80,6 +80,20 @@ no parser or formatting behavior is claimed by retaining their schemas.
 See `history/evidence/2026-10-28-provisional-retirement.md` for the complete
 path/hash inventory, consumer findings and remaining proof obligations.
 
+## Applied document relationship composition — 2026-10-28
+
+The Citation concept barrel now exports tagged resolution outcomes, authority
+representatives, runtime documents and explicit structural document receipts.
+Resolved edges alone encode authority membership. The derived member projection
+uses mention order; ambiguous candidates never become members. Shared graph
+checks require unique IDs, exact outcome coverage, closed references and
+coherent source/engine identity. Runtime mentions still require genuine
+prerequisite anchor proofs. Receipts cannot produce them by decoding.
+
+This is graph composition proof, not resolver correctness or whole-document
+server restoration. Parallel/string/history detection and all relevant donor
+obligations remain open. See the document-relationships evidence receipt.
+
 ## Target boundaries
 
 ### Semantic legal values

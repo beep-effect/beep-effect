@@ -12,6 +12,7 @@
  * @since 0.0.0
  */
 export * from "./Citation.case.ts";
+export * from "./Citation.document.ts";
 /**
  * Document-local occurrence and authority identities.
  *
@@ -50,6 +51,12 @@ export * from "./Citation.mention.ts";
  * @since 0.0.0
  */
 export * from "./Citation.models.ts";
+/**
+ * Stable-ID resolution outcomes and document-owned relationships.
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./Citation.resolution.ts";
 /**
  * Shared canonical semantic components, publication refs and locator metadata.
  * @category models
