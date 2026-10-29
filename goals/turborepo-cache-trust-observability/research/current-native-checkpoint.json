@@ -19,7 +19,7 @@
   "evidence": {
     "stable": {
       "path": "goals/turborepo-cache-trust-observability/research/current-native-stable.json",
-      "sha256": "703dc41d1085c868c9d2df67a777c1982163451ff5189e540e5dd0d074858eaa",
+      "sha256": "3649f96e07d69f08cf85945c87084146e9e7040f78e16496cd4d97561079d46d",
       "nativeCases": 6,
       "transportCases": 3,
       "isolatedRoots": 9,
@@ -27,7 +27,7 @@
     },
     "canary": {
       "path": "goals/turborepo-cache-trust-observability/research/current-native-canary.json",
-      "sha256": "b0ac80d46aad6eeb8e8408ca9e9a230f690425004cb126063fd7df5fa3881258",
+      "sha256": "237a47a1e8c2199192c5d7624a02a54314f7466de69196a09135d3a2d335e641",
       "nativeCases": 6,
       "transportCases": 3,
       "isolatedRoots": 9,

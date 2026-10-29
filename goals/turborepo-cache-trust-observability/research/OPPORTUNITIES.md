@@ -65,3 +65,11 @@ that default into the CLI Vitest configuration. The affected fixture suite
 passes there; the complete package audit must be repeated after that fix lands.
 The earlier missing ExifTool failures were caused by a reduced verification
 path and did not recur with the normal path. No product-cache setting changed.
+
+### Bind evidence after its final formatting
+
+Final review found that two checkpoint hashes covered compact runner output,
+while the committed native evidence was pretty-printed. Recomputed the bindings
+over the actual retained file bytes. The source/test and retained conformance
+bindings also verify. Hash retained evidence after formatting and recheck after
+hooks; canonical object content is a separate contract from a raw artifact hash.
