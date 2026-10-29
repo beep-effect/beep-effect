@@ -36,13 +36,14 @@ Refresh actual task/lane/workflow population and create the stable/canary featur
 
 ## Latest evidence
 
-The [current population](./research/current-population.json) records 2,571
+The [source-bound population snapshot](./research/current-population.json) records 2,571
 executable computations across 190 workspaces. The
 [feature inventory](./research/current-feature-matrix.json) and
 [client pins](./research/current-client-pins.json) record the current review
 surface. The [completion audit](./research/current-completion-audit.json) keeps
 the remaining acceptance evidence explicit. These inventories do not qualify
-tasks or complete production observation.
+tasks or complete production observation. Re-run the census and refresh recipe
+before using this snapshot as current if any retained census-source digest differs.
 
 ## Notes
 

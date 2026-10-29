@@ -36,3 +36,12 @@ is not an actual billing receipt. Do not reuse this local-only procedure as a
 hard expiry guarantee; prepare an independently available expiry control before
 another bounded burst. Runner-cap control belongs to CI operations, not cache
 qualification. The restored cap and original private launch receipts are retained.
+
+### Refresh after source integration
+
+Review found that the population receipt still held pre-integration census
+source hashes. Re-ran the existing census and refresh recipe after main
+integration; all retained census-source digests now match. Counts remain190
+workspaces and2571 executable computations. The recipe now reads explicit UTF-8
+and writes UTF-8 with LF under an ASCII locale. Source refresh is inventory
+maintenance and grants no qualification or adoption.

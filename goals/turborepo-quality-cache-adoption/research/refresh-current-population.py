@@ -19,17 +19,17 @@ def main():
     recipe = Path(__file__).resolve()
     root = recipe.parents[3]
     census_path = args.census.resolve()
-    census = json.loads(census_path.read_text())
+    census = json.loads(census_path.read_text(encoding="utf-8"))
     for source in census["sources"]:
         path = (root / source["path"]).resolve()
         if not path.is_relative_to(root) or not path.is_file() or digest(path) != source["sha256"]:
             raise SystemExit(f"Census source changed or escaped the checkout: {source['path']}")
 
     prior_path = root / "goals/turborepo-task-qualification/research/adoption/population.json"
-    prior = json.loads(prior_path.read_text())
+    prior = json.loads(prior_path.read_text(encoding="utf-8"))
     prior_rows = {row["computation"]: row for row in prior["rows"]}
     ledger_path = root / "standards/cache-qualification.json"
-    ledger = json.loads(ledger_path.read_text())
+    ledger = json.loads(ledger_path.read_text(encoding="utf-8"))
     records = defaultdict(list)
     for entry in ledger["entries"]:
         records[entry["key"]["computation"]].append({
@@ -99,7 +99,8 @@ def main():
         ],
     }
     output = recipe.parent / "current-population.json"
-    output.write_text(json.dumps(report, indent=2) + "\n")
+    with output.open("w", encoding="utf-8", newline="\n") as handle:
+        handle.write(json.dumps(report, indent=2) + "\n")
     print(json.dumps(report["counts"], indent=2))
 
 
