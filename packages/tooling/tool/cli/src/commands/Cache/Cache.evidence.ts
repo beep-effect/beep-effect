@@ -7,11 +7,14 @@
 import { Sha256HexFromBytes } from "@beep/schema";
 import { HostProcessArchitecture, HostProcessPlatform } from "@beep/utils";
 import * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { readContainedFileBytesNoFollow } from "../../internal/cli/FsGuards.ts";
+import { ensureZeroExit } from "../../internal/process/index.ts";
 import { CacheCommandError } from "./Cache.schemas.ts";
 import type { CacheEvidenceReference } from "@beep/repo-configs/cache";
+import type { CapturedStreams } from "../../internal/process/index.ts";
 
 /**
  * Read a required contained experiment artifact within its byte bound.
@@ -141,3 +144,35 @@ export const requireCacheLinuxX64 = Effect.fn("CacheEvidence.requireLinuxX64")(f
   if ((yield* HostProcessPlatform) !== "linux" || (yield* HostProcessArchitecture) !== "x64")
     return yield* CacheCommandError.new(message);
 });
+
+/**
+ * Require a complete successful supervisor capture without exposing worker streams.
+ *
+ * **Example** (Validate a bounded private capture)
+ * ```ts
+ * import { requireCacheSupervisorCapture } from "@beep/repo-cli/commands/Cache/Cache.evidence"
+ * import { CapturedStreams } from "@beep/repo-cli/test/Process"
+ * const capture = CapturedStreams.make({ exitCode: 0, stdout: "", stderr: "", truncated: false })
+ * const check = requireCacheSupervisorCapture("Protocol")(capture)
+ * console.assert(check !== undefined)
+ * ```
+ *
+ * @param captured - Private captured streams; only status and truncation affect the result.
+ * @param context - Static runner label for the bounded diagnostic.
+ * @returns Typed failure for truncation or nonzero exit, with no raw stream cause.
+ * @internal
+ * @category validation
+ * @since 0.0.0
+ */
+export const requireCacheSupervisorCapture: {
+  (context: string): (captured: CapturedStreams) => Effect.Effect<void, CacheCommandError>;
+  (captured: CapturedStreams, context: string): Effect.Effect<void, CacheCommandError>;
+} = dual(
+  2,
+  Effect.fn("CacheEvidence.requireSupervisorCapture")(function* (captured: CapturedStreams, context: string) {
+    if (captured.truncated) return yield* CacheCommandError.new(`${context} supervisor exceeded its capture bound.`);
+    yield* ensureZeroExit(captured, (exitCode) =>
+      CacheCommandError.new(`${context} supervisor exited with exit code ${exitCode}.`)
+    );
+  })
+);
