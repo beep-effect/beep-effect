@@ -198,7 +198,8 @@ non-session user-bus environment; no fallback job or duplicate was launched.
 
 The corrected tree passes both failed root gates, 236 integrated tests and
 package lint/check. The canonical catalog writer changed only the CLI shard.
-All six production component source files match the frozen full audit; the
+All four production source files and two other test/fixture files match the
+frozen full audit; the
 post-audit test-only change and imported main are recorded separately. Refreshed
 the census after the shared source changes and verified all427 source digests.
 The initial collected root replay lasted over ten minutes; publish through the

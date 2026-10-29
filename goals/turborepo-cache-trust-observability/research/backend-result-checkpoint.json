@@ -78,7 +78,7 @@
       "checkSeconds": 13.1
     },
     "rootOxlint": "passed across the repository",
-    "mainIntegration": "Imported reviewed protocol and CLI doctrine; focused protocol/posture/conformance tests and package checks pass. All six production component source files match the frozen full audit.",
+    "mainIntegration": "Imported reviewed protocol and CLI doctrine; focused protocol/posture/conformance tests and package checks pass. All four production source files and both other test/fixture files match the frozen full audit; only the exchange-test codec declaration changed.",
     "census": {
       "sourceBindingsVerified": 427,
       "workspaces": 190,
