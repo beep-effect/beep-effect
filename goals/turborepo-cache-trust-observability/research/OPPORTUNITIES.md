@@ -457,3 +457,27 @@ map key contained credential-related words. Retain the same independently
 computed hashes in explicit path/sha256 source records and name the prior SPEC
 snapshot for its role-preparation phase. No scanner suppression or security
 exception is added; post-hook verification still checks actual source bytes.
+
+
+## 2026-10-29: Preview and credential creation have different authority
+
+The bucket provisioning token can plan the bucket but Alchemy account-token
+creation is Unauthorized. Stop that credential path rather than infer authority
+from a successful plan. The existing authenticated Cloudflare CLI login has
+account_api_tokens:create and can inspect its own created tokens; its OAuth
+value reaches Alchemy only in memory. No new management token was requested.
+Alchemy's interactive prompt cannot pass through the agent secret wrapper.
+Retain default prompting, but accept an explicit reviewed-deploy --yes option;
+plan/destruction and unknown flag forms reject it.
+
+Cloudflare's live token API also rejects fractional-second expires_on values,
+even though the date parses locally. Require whole-second UTC at the schema
+boundary and keep the original failed requests. All six current configuration
+negatives reject before planning. The new storage probe continues both cleanup
+attempts after an injected delete or HEAD failure and never reports success for
+those controls. Success receipts are written only after both real keys are
+confirmed absent.
+
+The full laboratory requirements include an uncached package; the storage
+control needs only the already cached pinned boto3 dependency. Use that narrow
+invocation rather than expanding the install or spending a new environment.

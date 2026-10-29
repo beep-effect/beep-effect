@@ -3,7 +3,7 @@
   "goal": "turborepo-cache-trust-observability",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "47d95a38ee3ccd92b66b2eaf1cb31180246ddee1d3c059bc76ffedcf567cd25e",
+  "specSha256": "511be224c49a558752eb531a086e571a1838bd38514359d049b59b621106fcdb",
   "acceptance": [
     {
       "id": "AC-01",
@@ -245,5 +245,16 @@
     "sha256": "2d644f51d3c986807d5b2e0e80a69a32a75fb729a83eca79ce09bec0df0eb679",
     "scope": "Current test setup/guard repair; original broad failures remain retained."
   },
-  "priorSpecSha256AtRolePreparation": "639205887c0d7562eee13846657fd92083d866cb70f10be6718758373666894d"
+  "priorSpecSha256AtRolePreparation": "639205887c0d7562eee13846657fd92083d866cb70f10be6718758373666894d",
+  "passingProducerPackageReplay": {
+    "path": "goals/turborepo-cache-trust-observability/research/producer-package-replay-checkpoint.json",
+    "sha256": "d603624f46a7bee646b968c198199e6dbf16fb44c0bcebc6f5319cace01dcf15",
+    "scope": "Component progress only; whole-goal acceptance remains unproven."
+  },
+  "signedCredentialDeployment": {
+    "path": "goals/turborepo-cache-trust-observability/research/signed-credential-deployment-checkpoint.json",
+    "sha256": "f80c99e883d4ba37f3033bfac6dda453039df81af98c36c75cf22de07502b8d0",
+    "scope": "Component progress only; whole-goal acceptance remains unproven."
+  },
+  "priorSpecSha256AtRoleDeployment": "47d95a38ee3ccd92b66b2eaf1cb31180246ddee1d3c059bc76ffedcf567cd25e"
 }

@@ -453,3 +453,24 @@ starts outside Git by construction and checks the actual Git-failure messages;
 twenty tests pass in each runtime, with an intended-failure guard control.
 [The repair checkpoint](research/workflow-git-fixture-checkpoint.json) preserves
 the original failed run. A new whole-package result remains pending.
+
+
+### Passing whole CLI replay and actual Alchemy storage roles
+
+The clean committed CLI package replay passes audit in1087.0seconds and docgen
+in41.5seconds. All frozen component and repaired workflow bytes still agree;
+both earlier audit failures and their attribution remain retained. The package
+operator acknowledges both audit inbox rows at the passing head. See
+[the replay checkpoint](research/producer-package-replay-checkpoint.json).
+
+Two bucket-scoped trial roles are now actually created by the separate pinned
+Alchemy stack through the existing approved Cloudflare CLI OAuth authorization.
+The older API token was denied; a fractional-second expiry was also rejected
+and repaired to whole-second UTC before success. Exact active policies, writer
+upload/deletion, reader exact bytes and reader PUT/DELETE denial all pass. Both
+probe keys are confirmed absent after cleanup; the subsequent plan has no
+changes. The roles remain unassigned. See
+[the deployment checkpoint](research/signed-credential-deployment-checkpoint.json).
+This supplies storage-role evidence only. Durable runtime/key handoff, signed
+adapter activation, protected publication, qualification, rotation/rollback and
+all representative windows remain open.

@@ -21,6 +21,11 @@ case "$operation" in
     ;;
   *) echo 'Usage: alchemy.sh plan|deploy|destroy|plan-signed-credentials|deploy-signed-credentials|destroy-signed-credentials' >&2; exit 2 ;;
 esac
+confirmation=()
+if [[ $# -gt 1 ]]; then
+  [[ $# -eq 2 && "$2" == --yes && "$action" == deploy ]] || { echo '--yes is accepted only for an explicitly reviewed deploy.' >&2; exit 2; }
+  confirmation=(--yes)
+fi
 if [[ ! -d "$tool/.git" ]]; then
   git clone --no-hardlinks --no-checkout "$reference" "$tool"
   git -C "$tool" checkout --detach "$revision"
@@ -51,5 +56,6 @@ archive="$(mktemp --suffix=.tar.gz "$(dirname "$state")/state-before-${operation
 cd "$tool"
 args=("$action" --config "./pilot/$config" --stage "$stage")
 [[ "$action" == plan ]] && args+=(--detailed)
-# No --yes: inspect plan output before an attended destructive operation.
-exec bun run alchemy "${args[@]}"
+# Default to interactive approval; unattended deploys require explicit --yes after plan review.
+# Destruction retains interactive approval and never accepts --yes through this wrapper.
+exec bun run alchemy "${args[@]}" "${confirmation[@]}"

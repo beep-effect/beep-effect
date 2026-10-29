@@ -418,3 +418,20 @@ The local process report does not satisfy those deployment or observation gates.
 - Reversal removes only the separate trial token resources after stopping trial
   consumers; it does not destroy the shared bucket or change ordinary grants.
   Actual signed activation, rotation and representative windows remain pending.
+
+
+### Actual trial role creation, 2026-10-29
+
+- Apply only the two separately owned Alchemy trial roles through the existing
+  Cloudflare CLI OAuth authorization after the provisioning API token is denied.
+  Keep the OAuth value in memory; do not create a broader management credential.
+  Exact active policies and direct storage operations prove only those roles.
+  Keep them unassigned until runtime/key handoff and signed readiness pass.
+- Require whole-second UTC expiry at the API boundary. Accept an explicit
+  reviewed-deploy confirmation through the wrapper while plan/destruction reject
+  unattended confirmation. Preserve the original denied and invalid-date
+  requests rather than rewriting the earlier plan checkpoint.
+- Retain owner-only state and its private recovery archive. Reversal is to stop
+  any trial consumers and destroy only this separate token stack using current
+  approved management authorization. No bucket is removed. Actual revocation,
+  epoch rollback and consumer requalification remain required before activation.

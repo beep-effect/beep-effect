@@ -250,7 +250,8 @@ bucket-scoped account tokens: object-read for the reader and object-read/write
 for the writer. It uses the pinned Cloudflare provider's typed permission names
 and bucket resource shape. The provider's `R2.S3Credentials` binding requires a
 Worker; these host/CI roles use its underlying `ApiToken.AccountApiToken`
-resource directly. Creating the tokens requires account `API Tokens > Write`.
+resource directly. API-token callers need `Account API Tokens Write`; an
+authorized OAuth provisioning flow can use `account_api_tokens:create`.
 
 Preview the ordinary bucket, then the separate credentials with an explicit UTC
 expiry from the rollout receipt:
@@ -262,15 +263,23 @@ R2_SIGNED_TRIAL_EXPIRES_ON="2026-11-28T00:00:00Z" \
   infra/r2-cache/alchemy.sh plan-signed-credentials
 ```
 
-Refresh the example cutoff before execution. Expiry must be in the future and
-within thirty days; the bucket name must be one literal valid name. The current
-preview has two tokens to create, with no bucket, Worker or compute resources.
+Refresh the example cutoff before execution. Expiry must use whole-second UTC
+format (`YYYY-MM-DDTHH:mm:ssZ`), be in the future and within thirty days; the
+bucket name must be one literal valid name. Cloudflare rejects fractional
+seconds at this API boundary. The initial preview has two tokens to create,
+with no bucket, Worker or compute resources.
 `deploy-signed-credentials` applies that separate stack;
 `destroy-signed-credentials` revokes only its managed trial tokens after the
 trial consumers stop. Ordinary `plan|deploy|destroy` retains the bucket stack's
 existing ownership. Keep the deployment receipt, exact source and role handoff
 bound to the reviewed preview. A successful plan is not proof of token creation
 permissions or effective storage grants.
+
+After inspecting the exact plan, an unattended deployment may pass `--yes` as
+the wrapper's second argument. Plan and destruction actions reject that flag.
+The default still asks for interactive approval. The agent secret wrapper does
+not preserve an interactive Alchemy prompt; use its approved authentication
+lane and the explicit reviewed-deploy option instead of bypassing the wrapper.
 
 Local Alchemy state can contain token values and is restricted to owner mode
 0700; backup archives are private under the wrapper's umask. Stack outputs
@@ -279,6 +288,30 @@ handoff. The artifact HMAC key remains separate from both storage tokens and
 reaches clients only. These credential actions prepare grants; signed adapter
 startup, current qualification, rotation/rollback and observation are separate
 rollout gates.
+
+The 2026-10-29 trial created both roles through the pinned Alchemy provider
+using the existing Cloudflare CLI OAuth authorization. That authorization has
+`account_api_tokens:create`; the older provisioning API token was denied.
+The OAuth value was supplied to Alchemy in memory and was not copied into
+another credential file. A subsequent plan reports no changes. The roles
+remain unassigned to cache consumers, with expiry on 2026-11-28.
+That attended OAuth route is not a durable service credential; future token
+management needs a current approved management credential or current CLI login.
+
+From the repository root, the retained storage control checks the exact active
+policies against Alchemy's state, uploads a small owned object, requires the
+reader's exact bytes, rejects reader upload/deletion, then deletes both owned
+probe keys and requires 404 on both cleanup HEADs:
+
+```sh
+uv run --no-project --with boto3==1.43.121 python3 infra/r2-cache/trial-grants.py
+```
+
+It uses the existing owner-only Cloudflare CLI login and Alchemy state; it
+does not log token values or activate a consumer. Its receipt is under
+`.beep/producer-upload`. Run only while this exact trial and its expiry remain
+current. Storage-grant proof does not establish signed adapter startup, native
+restoration, protected producer publication or task qualification.
 
 ## Signed-policy component lab
 

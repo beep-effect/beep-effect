@@ -76,7 +76,9 @@
     "research/native-upload-join-checkpoint.json",
     "research/native-upload-join-observations.json",
     "research/signed-credential-readiness-checkpoint.json",
-    "research/workflow-git-fixture-checkpoint.json"
+    "research/workflow-git-fixture-checkpoint.json",
+    "research/producer-package-replay-checkpoint.json",
+    "research/signed-credential-deployment-checkpoint.json"
   ],
   "agentLaunchers": [
     {

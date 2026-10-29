@@ -330,9 +330,22 @@ artifact, signing activation, deployed grant or observation window changes.
 - [Signed credential readiness checkpoint](signed-credential-readiness-checkpoint.json):
   authenticated Alchemy previews, exact wrapper/template and pinned provider
   provenance, five rejected configurations and current GitHub branch/secret
-  metadata. Two account-token resources are planned; none were created, no key
-  was handed off and no signed cache was activated.
+  metadata. At that earlier snapshot, two account-token resources were planned;
+  none had been created, no key had been handed off and no signed cache had
+  been activated. The later deployment checkpoint records the actual grants.
 
 - [Git fixture repair checkpoint](workflow-git-fixture-checkpoint.json): original
   clean whole-run failure, current Bun/Node tests and actual Git-guard removal.
   Production workflow implementation bytes are unchanged.
+
+
+- [Passing CLI package replay](producer-package-replay-checkpoint.json): clean
+  committed source, audit1087.0seconds/docgen41.5seconds, original failures kept.
+- [Actual Alchemy role deployment](signed-credential-deployment-checkpoint.json)
+  and [retained storage control](../../../infra/r2-cache/trial-grants.py): two
+  scoped active roles, exact policies, reader denials, actual writer operations,
+  confirmed cleanup and unchanged follow-up plan. Roles are not assigned to
+  consumers, and no signed cache or qualification was activated.
+- [Cloudflare OAuth account-token provisioning](https://developers.cloudflare.com/changelog/post/2026-10-01-account-api-token-provisioning/)
+  and [account-token ownership](https://developers.cloudflare.com/fundamentals/api/get-started/account-owned-tokens/):
+  existing OAuth creation scope and creator-limited management.
