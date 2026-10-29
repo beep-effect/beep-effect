@@ -74,7 +74,15 @@ describe("Public USPTO antecedent slice", () => {
             UsptoClaimSource.cases.publication.make({ publicationNumber: PatentNumber.make("20200109732") })
           )
         );
-        assert.deepStrictEqual(result.claimSet.claims, expectedClaims);
+        // Preserve the immutable legacy file; only its old wrapper boundary is
+        // projected to the corrected canonical preamble, never its source text.
+        assert.deepStrictEqual(
+          result.claimSet.claims,
+          A.map(expectedClaims, (claim) => ({
+            ...claim,
+            preamble: Str.trim(Str.replace(/,?\s+further$/iu, "")(claim.preamble)),
+          }))
+        );
         assert.deepStrictEqual(result.report.undecomposed, []);
         // This immutable first-slice fixture predates functional/bare-mention support.
         // Keep its exact source spans, terms and edges as a subset, not current gold.

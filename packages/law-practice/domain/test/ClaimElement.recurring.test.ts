@@ -23,6 +23,22 @@ describe("next recurring source-structure gaps", () => {
     })
   );
 
+  it.effect("distinguishes further as a nominal modifier from a transition adverb", () =>
+    Effect.gen(function* () {
+      const claims = yield* normalizePatentClaims([
+        ["1", "A tester comprising at least one further component; a platform further includes a frame."],
+      ]);
+      const tree = yield* decomposeClaim(O.getOrThrow(A.head(claims)), claims);
+      assert.deepStrictEqual(
+        A.map(
+          A.flatMap(tree.elements, (element) => element.terms),
+          (term) => term.anchor.quote
+        ),
+        ["A tester", "at least one further component", "a platform", "a frame"]
+      );
+    })
+  );
+
   it.effect("prefers an explicit defining clause over incidental having or wherein wording", () =>
     Effect.gen(function* () {
       const capsule = "A capsule having a rim, said capsule being characterized by the fact that a seal is fixed.";
@@ -169,6 +185,21 @@ describe("next recurring source-structure gaps", () => {
           antecedentPolicy(trees, claims),
           (finding) => finding.kind === "missing-antecedent" && finding.referring.path === "2.a"
         )
+      );
+    })
+  );
+  it.effect("does not collapse a multi-select at-least-one list into one exclusive selection name", () =>
+    Effect.gen(function* () {
+      const claims = yield* normalizePatentClaims([
+        ["1", "A tester comprising at least one of paper, card and cloth."],
+      ]);
+      const tree = yield* decomposeClaim(O.getOrThrow(A.head(claims)), claims);
+      assert.deepStrictEqual(
+        A.map(
+          A.flatMap(tree.elements, (element) => element.terms),
+          (term) => term.anchor.quote
+        ),
+        ["A tester", "paper", "card", "cloth"]
       );
     })
   );

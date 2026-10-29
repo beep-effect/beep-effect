@@ -67,6 +67,9 @@ the subsequent user-directed repair is recorded below; publication remains pendi
 
 ## Latest Evidence
 
+- **Next closest-match repair (2026-10-28):** [the comparison](history/2026-10-28-next-closest-comparison.md) records **21/538 strict matches (3.90%)**, retaining all previous 11, and exact typed-edge F1 **29.31%**. All labels, earlier results and the scorer remain unchanged; the intermediate 19-match source/result is preserved at 007427078c. 459 mismatches and 58 input failures remain. This is development-set remediation; human agreement and full-goal acceptance are still open.
+
+
 - **Closest-match repair (2026-10-28):** [the new comparison](history/2026-10-28-closest-comparison.md) records **11/538 complete matches (2.04%)**, up from zero, and exact typed-edge F1 **25.98%**. The intermediate 10-match checkpoint, all prior results, labels and scorer remain unchanged. 469 structural mismatches and 58 input failures remain; [nearest unresolved diagnostics](history/2026-10-28-closest-remaining.json) are retained without waivers. Domain/use-cases/server verification passes. This is development-set remediation, not full-goal acceptance.
 
 

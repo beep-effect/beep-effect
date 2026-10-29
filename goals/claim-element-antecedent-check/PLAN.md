@@ -41,6 +41,9 @@ are fixed, never before.
 
 ## Current Blockers
 
+- **Next closest-match repair (2026-10-28):** [the comparison](history/2026-10-28-next-closest-comparison.md) records **21/538 strict matches (3.90%)**, retaining all previous 11, and exact typed-edge F1 **29.31%**. All labels, earlier results and the scorer remain unchanged; the intermediate 19-match source/result is preserved at 007427078c. 459 mismatches and 58 input failures remain. This is development-set remediation; human agreement and full-goal acceptance are still open.
+
+
 - **Closest-match repair frontier (2026-10-28):** [fixed-reference rerun](history/2026-10-28-closest-comparison.md) improves strict recovery to 11/538 and typed-edge F1 to 25.98%; 469 structural mismatches and 58 normalization failures remain. Explicit aliases, clause boundaries and body/entity dependencies are repaired. Remaining interpretation/convention questions are diagnosed without changing labels or excluding failures; human acceptance and full-goal completion remain unproven.
 
 

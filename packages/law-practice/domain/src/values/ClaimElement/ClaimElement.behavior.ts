@@ -443,8 +443,13 @@ const headAt = (tokens: ReadonlyArray<Span>, index: number): ReadonlyArray<Span>
       !isPredicateToken(tokens, position + 1);
     const selectorList =
       O.exists(A.get(tokens, index - 2), ({ text }) => Str.toLowerCase(text) === "one") &&
-      O.exists(A.get(tokens, index - 1), ({ text }) => Str.toLowerCase(text) === "of");
+      O.exists(A.get(tokens, index - 1), ({ text }) => Str.toLowerCase(text) === "of") &&
+      !(
+        O.exists(A.get(tokens, index - 3), ({ text }) => Str.toLowerCase(text) === "least") &&
+        O.exists(A.get(tokens, index - 4), ({ text }) => Str.toLowerCase(text) === "at")
+      );
     if (selectorList && (text === "," || word === "or" || word === "and")) return true;
+    const furtherModifier = word === "further" && offset === 0 && !isPredicateToken(tokens, position + 1);
     const throughHole =
       word === "through" &&
       offset === 0 &&
@@ -457,7 +462,12 @@ const headAt = (tokens: ReadonlyArray<Span>, index: number): ReadonlyArray<Span>
       O.exists(A.get(tokens, position + 1), ({ text }) => !HashSet.has(boundaryWords, Str.toLowerCase(text)));
     return (
       !HashSet.has(punctuation, text) &&
-      (!HashSet.has(boundaryWords, word) || partitive || coordinatedOrdinal || alternativeName || throughHole) &&
+      (!HashSet.has(boundaryWords, word) ||
+        partitive ||
+        coordinatedOrdinal ||
+        alternativeName ||
+        throughHole ||
+        furtherModifier) &&
       !isPredicateToken(tokens, position) &&
       (!Str.endsWith("ly")(word) ||
         Str.endsWith("assembly")(word) ||
