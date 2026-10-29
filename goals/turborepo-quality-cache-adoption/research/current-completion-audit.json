@@ -3,7 +3,7 @@
   "goal": "turborepo-quality-cache-adoption",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "7e7bd28c21dc6ddb46b29e62aefcc0f0f8d49c99da7bab4f1fa6d4a372b64ed3",
+  "specSha256": "02e520db66390a5cb167d4604659e8b35ac809644e36fc238533c2c1cd533ac3",
   "acceptance": [
     {
       "id": "AC-01",
@@ -153,7 +153,11 @@
       "scope": "unit/fixture only; not deployed trust or all-task qualification"
     },
     "retainedQualification": "goals/turborepo-task-qualification/research/current-signed-qualification.json applies only to its recorded older private-loopback tuple",
-    "nativeProtocol": "goals/turborepo-cache-trust-observability/research/current-native-checkpoint.json"
+    "nativeProtocol": "goals/turborepo-cache-trust-observability/research/current-native-checkpoint.json",
+    "mutatingFixerDisposition": {
+      "path": "research/mutating-fixer-disposition-review.json",
+      "scope": "136 whole-command source-reviewed keep-fresh dispositions;136 read-only counterparts and2435 other population rows remain unfinished; no whole acceptance criterion complete."
+    }
   },
   "remainingExplicitGates": [
     "SPEC verification matrix commands on actual final changes",
@@ -207,5 +211,6 @@
     "path": "goals/turborepo-cache-trust-observability/research/private-socket-checkpoint.json",
     "sha256": "a25822f0ef271dedb2b7ea045af6bf4db263535c5737e17c84e4234f43abbd54",
     "authority": "Transport component only; no production or qualification authority."
-  }
+  },
+  "priorSpecSha256AtMutatingFixerReview": "7e7bd28c21dc6ddb46b29e62aefcc0f0f8d49c99da7bab4f1fa6d4a372b64ed3"
 }

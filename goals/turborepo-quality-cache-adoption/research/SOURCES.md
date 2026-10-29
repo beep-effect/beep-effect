@@ -271,3 +271,11 @@ binds changed runner source bytes. Historical claims above keep their dates.
 - [Producer publication gate repair](../../turborepo-cache-trust-observability/research/producer-publication-gate-repair-checkpoint.json):
   current properties/catalog and 361-test integrations. Inventory refresh
   preserves all computation dispositions and configuration records.
+
+
+- [Current mutating-fixer source review](mutating-fixer-disposition-review.json):
+  exact current manifest/script/configuration bindings for 136 keep-fresh
+  whole-command fixers and 136 separate unfinished read-only counterparts.
+- [Actual native fixer replay control](mutating-fixer-replay-control.json):
+  stable/canary fresh, logs-only hit and cache-disabled runs in disposable
+  fixtures. A hit skipped the required write; no source or remote cache changed.

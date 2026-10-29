@@ -130,3 +130,19 @@ duplicate or missing targets and reported execution. A fresh report directory
 is created before writing. The new control receipt separates unit excerpts
 from actual synthetic stable/canary replay and retains all historical source
 bindings. Owner: the active Turbo goals. No qualification or rollout changed.
+
+
+### Fixer classification must follow delegated scripts
+
+The census command digest binds the complete sorted script map, not just the
+visible task command. The first direct-command digest comparison was therefore
+inapplicable; use the owner's existing encoding. All 136 current source-fixer
+script maps match, and their delegated `--write` implementations have separate
+read-only counterparts. A native control initially probed canary version without
+`--skip-infer` and selected local stable. Preserve that failed harness check;
+explicit inference suppression validates the exact canary and six native runs.
+Keep source-review dispositions separate from qualification and runtime proof.
+
+The population file exceeds Biome's default one-MiB read limit. Format this
+existing large evidence file with a one-command five-million-byte limit and
+verify structural diffs; do not change the repository's shared limit.

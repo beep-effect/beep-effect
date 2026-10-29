@@ -732,3 +732,22 @@ the policy check; do not add a baseline finding or waive the detector.
   result inside predicate/assertion calls. The compiler required the equivalent
   Result pipe; the canonical helper form passed lint/check and the full package
   replay. Keep runtime refusal and evidence-invalidity assertions together.
+
+
+## Current real-pilot preparation friction
+
+- Reusing an older dependency snapshot because its lockfile and root manifest
+  matched was insufficient: the actual installed tree differed. The existing
+  guard correctly refused it; regenerate through the canonical dependency
+  materialization command and compare the complete tree identity.
+- The active verification checkout had210 additional native identity-lint inputs
+  relative to a clean source worktree, including compiled utilities and coverage
+  reports, although command and configuration matched. Use a clean registered
+  runner for like-for-like comparisons. Any later input narrowing still needs
+  semantic invalidation proof; no input was discarded here.
+- The new activation fixture reserialized JSON and changed formatting. Because
+  the selected command runs `biome check`, the proposed enabled config made the
+  check fail. An actual formatter comparison identified this introduced fixture
+  error. Preserve the original formatting, change only the cache literal and
+  refresh the exact activation reference. Failed observations remain retained;
+  the corrected proposed-launch diagnostic is running and grants no qualification.

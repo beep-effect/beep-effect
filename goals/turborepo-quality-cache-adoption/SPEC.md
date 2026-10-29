@@ -247,3 +247,18 @@ carried package reviews and ledger. This creates no qualification or signed
 production epoch. Reversal uses the same compare-and-swap writer against the
 retained prior baseline after checking current-epoch state. The immutable
 review is `research/current-runtime-baseline-review.md`.
+
+
+### Current mutating-fixer disposition, 2026-10-29
+
+- Keep the 136 exact reviewed `lint:fix` commands fresh. Each delegates to
+  Biome check with `--write`, has no archived outputs, and has an existing
+  separate read-only `lint` computation. Native stable/canary controls show a
+  logs-only hit skips the required rewrite; cache-disabled controls perform it.
+  Bind this source review to full script maps, manifests and configuration
+  files. A changed binding requires a fresh review.
+- These are final whole-command exclusions for the reviewed semantics, not
+  qualification transitions. The 136 read-only counterparts and every remaining
+  population row retain their independent qualification/adoption obligations.
+  Reversal removes only the review/dispositions; no task flag, script, ledger
+  entry, production cache or required hosted status changes.

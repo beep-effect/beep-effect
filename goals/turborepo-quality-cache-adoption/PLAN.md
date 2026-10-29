@@ -177,3 +177,15 @@ records and the unchanged qualification ledger. Input-count/digest observations
 are refreshed for this checkout; no semantic review or cache flag is promoted.
 Closed producer integration and actual current-computation qualification remain
 required before adopting signed reuse.
+
+
+### Current whole-command fixer review: 2026-10-29
+
+The source-bound review in `research/mutating-fixer-disposition-review.json`
+resolves 136 existing source-mutating fixer boundaries as keep-fresh, with
+unchanged script-map digests and cache-disabled configuration. Each has a
+separate read-only lint counterpart whose qualification/adoption stays open.
+Six actual synthetic stable/canary native runs demonstrate the lost mutation
+on a logs-only hit and the successful cache-disabled control. The other 2,435
+population dispositions, current feature review and all acceptance criteria
+remain incomplete. No cache flags or qualification ledger entries changed.
