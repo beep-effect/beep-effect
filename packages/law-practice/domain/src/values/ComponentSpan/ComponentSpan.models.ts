@@ -2,6 +2,8 @@
  * Component-span value objects that locate the sub-parts of a parsed legal
  * citation within the source text.
  *
+ * **Details**
+ *
  * Each citation kind (case, statute, constitutional, ...) has a dedicated
  * schema whose fields are optional {@link Span}s — one per recognized
  * component (reporter, page, section, year, ...). A field is present only when

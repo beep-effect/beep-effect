@@ -2,6 +2,8 @@
  * Short-form citation-type value object: the discriminant literal identifying
  * which kind of short-form reference a parsed citation is.
  *
+ * **Details**
+ *
  * Short-form references (`Id.`, `supra`, and short-form case citations) point
  * back to an authority cited in full earlier in the document; this literal
  * domain selects how downstream resolvers link a short form to its antecedent.

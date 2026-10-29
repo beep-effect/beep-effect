@@ -3,7 +3,7 @@
   "goal": "turborepo-cache-trust-observability",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "ba30a00e2c84b3b89c1e62ae39f7bc452e554cdd58b8c54b5af6fa97f09cd8f0",
+  "specSha256": "456a722a999a75f0b630a1d3b2fb7737c96bb858fa4c72eea391b86bdb1286a3",
   "acceptance": [
     {
       "id": "AC-01",
@@ -198,7 +198,8 @@
         },
         "verificationSourceBindings": "Refreshed against the passing current suite; original 136-test proof and its six source bindings retained separately in the native checkpoint."
       }
-    }
+    },
+    "adapterRuntimeComponent": "goals/turborepo-cache-trust-observability/research/adapter-runtime-checkpoint.json"
   },
   "remainingExplicitGates": [
     "SPEC verification matrix commands on actual final changes",

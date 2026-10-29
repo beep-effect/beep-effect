@@ -93,6 +93,20 @@ export class SetupRepairFailed extends S.TaggedError<SetupRepairFailed, { readon
  * repair per requirement id. Repairs run only after the doctor has obtained
  * approval through {@link SetupApprovals}.
  *
+ * **Example** (Report every requirement as satisfied)
+ *
+ * ```ts
+ * import { ProbeSatisfied } from "@beep/law-practice-domain/values/SetupRequirement"
+ * import { SetupProbesShape } from "@beep/law-practice-use-cases/PracticeSetup"
+ * import * as Effect from "effect/Effect"
+ *
+ * const shape = SetupProbesShape.make({
+ *   probe: () => Effect.succeed(ProbeSatisfied.make({})),
+ *   repair: () => Effect.void
+ * })
+ * console.log(typeof shape.probe) // "function"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -171,6 +185,19 @@ export type RepairDecision = typeof RepairDecision.Type;
 
 /**
  * Host service shape for asking the lawyer to approve an automatic repair.
+ *
+ * **Example** (Decline every repair)
+ *
+ * ```ts
+ * import { SetupApprovalsShape } from "@beep/law-practice-use-cases/PracticeSetup"
+ * import type { RepairDecision } from "@beep/law-practice-use-cases/PracticeSetup"
+ * import * as Effect from "effect/Effect"
+ *
+ * const shape = SetupApprovalsShape.make({
+ *   approveRepair: () => Effect.succeed<RepairDecision>("declined")
+ * })
+ * console.log(typeof shape.approveRepair) // "function"
+ * ```
  *
  * @category models
  * @since 0.0.0

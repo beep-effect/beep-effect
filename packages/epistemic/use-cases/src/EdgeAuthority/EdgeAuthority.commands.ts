@@ -1,6 +1,8 @@
 /**
  * Edge authority command payloads.
  *
+ * **Details**
+ *
  * These are the only three shapes a caller may hand the bitemporal edge
  * repository: assert a fact, supersede a known version of a fact, and ask what
  * was believed at a point on both axes. Time arrives as epoch millis and decodes

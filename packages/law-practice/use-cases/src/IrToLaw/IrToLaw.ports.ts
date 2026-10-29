@@ -3,6 +3,8 @@
  * output is mapped into concrete law-practice domain entities. This is the
  * boundary at which generic NLP annotations acquire IP-law meaning.
  *
+ * **Details**
+ *
  * The input is `ReadonlyArray<GroundedExtraction>` (from `@beep/langextract`),
  * NOT the `@beep/nlp` `AnnotatedDocument` envelope. The envelope does not carry
  * per-entity character spans: its `Entity.mentions` are bare `MentionId[]` and
