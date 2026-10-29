@@ -239,7 +239,7 @@ const locateParts = ({
 // whitespace or the end of the body ends a segment and stays with it.
 const separatorPattern = /[,;()[\]]|:(?=\s|$)/gu;
 const clauseStartPattern =
-  /^(?:and\s+|or\s+)?(?:wherein\b|(?:the|said|an?|at least one|one or more)\s+[^,;]*?\b(?:is|are|has|have|comprises|includes|forms|acts|passes|describes|generates)\b|(?:creating|encoding|generating|transmitting|receiving|flushing)\b)/iu;
+  /^(?:and\s+|or\s+)?(?:wherein\b|(?:the|said|an?|at least one|one or more)\s+[^,;]*?\b(?:is|are|has|have|comprises|includes|forms|acts|passes|describes|generates)\b|(?:creating|encoding|generating|transmitting|receiving|flushing|placing|threading|stretching|turning)\b)/iu;
 
 const splitBody = (body: Span): ReadonlyArray<Span> => {
   const split = A.reduce(
@@ -265,7 +265,7 @@ const splitBody = (body: Span): ReadonlyArray<Span> => {
 
 const cleanSegment = flow(
   trimSpan,
-  dropPrefix(["and ", "or "]),
+  dropPrefix(["and, ", "and ", "or "]),
   trimSpan,
   dropSuffix([";", ".", ", and", ", or", ", respectively", " respectively"]),
   trimSpan
@@ -310,14 +310,14 @@ const digitsPattern = /^[0-9]+$/u;
 const punctuation = HashSet.make(",", ";", ":", ".", "(", ")", "[", "]");
 const boundaryWords = HashSet.fromIterable(
   Str.split(
-    "that which wherein whereby where when configured adapted operable arranged having comprising comprises including includes containing contains being is are was were has have to for in on of at by with from into onto between through via and or such so than as each said the a an its their according claim claims they it we them can may shall must should will would be been not apart respectively",
+    "that which wherein whereby where when configured adapted operable arranged having comprising comprises including includes containing contains being is are was were has have to for in on of at by with from into onto between through via and or such so than as each said the a an its their according claim claims they it we them can may shall must should will would be been not apart respectively along below above beyond across",
     " "
   )
 );
 // Closed grammatical separators, not a lexical token cap or suffix guess.
 const predicateWords = HashSet.fromIterable(
   Str.split(
-    "irradiates switching reconstructs detects indicates controls samples outputs detect facing wired operates configuring flushing provides passes determining acts formed couple depressed spaced bending skip start passed received transmitted assigned generated allocated chosen configured adapted operable arranged connected coupled mounted attached positioned located disposed formed extending extends comprises includes contains comprising including containing detects detecting based before after during upon under over near within without until than whose respectively either both such",
+    "irradiates switching reconstructs detects indicates controls samples outputs detect facing wired operates configuring comprised flushing provides passes determining acts formed couple depressed spaced bending skip start passed received transmitted assigned generated allocated chosen configured adapted operable arranged connected coupled mounted attached positioned located disposed formed extending extends comprises includes contains comprising including containing detects detecting based before after during upon under over near within without until than whose respectively either both such",
     " "
   )
 );
@@ -418,7 +418,14 @@ const headAt = (tokens: ReadonlyArray<Span>, index: number): ReadonlyArray<Span>
       !HashSet.has(punctuation, text) &&
       (!HashSet.has(boundaryWords, word) || partitive) &&
       !isPredicateToken(tokens, position) &&
-      (!Str.endsWith("ly")(word) || word === "assembly")
+      (!Str.endsWith("ly")(word) ||
+        Str.endsWith("assembly")(word) ||
+        (offset === 0 &&
+          O.exists(
+            A.get(tokens, position + 1),
+            ({ text }) => !HashSet.has(boundaryWords, Str.toLowerCase(text)) && !HashSet.has(punctuation, text)
+          ) &&
+          !isPredicateToken(tokens, position + 1)))
     );
   });
 
@@ -454,8 +461,17 @@ const scanStepOf = (term: O.Option<EncodedTerm>, resumeAt: number): ScanStep => 
 // One scan step from `index`: the term found there, if any, and where the scan resumes.
 const scanStep =
   (claimText: string, tokens: ReadonlyArray<Span>) =>
-  (index: number): ScanStep =>
-    pipe(
+  (index: number): ScanStep => {
+    const idiom = A.findFirst(
+      [
+        ["by", "means", "of"],
+        ["side", "by", "side"],
+        ["at", "least", "by", "means", "of"],
+      ],
+      (words) => surfaceAt(tokens, index)(words)
+    );
+    if (O.isSome(idiom)) return scanStepOf(O.none(), index + idiom.value.length);
+    return pipe(
       determinerAt(tokens, index),
       O.match({
         onNone: () => {
@@ -482,6 +498,7 @@ const scanStep =
         },
       })
     );
+  };
 
 const termsIn =
   (claimText: string) =>
@@ -574,13 +591,19 @@ const antecedentEdges = (
           (!root(referring.path) ||
             A.some(ancestors, (element) => element.path === path && element.kind === "preamble-subject"))
       );
-      const introductions = A.isArrayNonEmpty(exact)
-        ? exact
-        : A.isArrayNonEmpty(abbreviated)
-          ? abbreviated
-          : A.isArrayNonEmpty(modified)
-            ? modified
-            : mentions;
+      const bareMentions = A.filter(mentions, ({ term }) => term.determiner === "bare");
+      const rootShortened = root(referring.path)
+        ? A.filter(
+            eligible,
+            ({ path, term }) =>
+              Str.endsWith(` ${referring.term.head}`)(term.head) &&
+              A.some(ancestors, (element) => element.path === path && element.kind === "preamble-subject")
+          )
+        : [];
+      const introductions = O.getOrElse(
+        A.findFirst([exact, abbreviated, rootShortened, modified, bareMentions, mentions], A.isReadonlyArrayNonEmpty),
+        () => []
+      );
       return O.map(
         A.length(introductions) === 1 ? A.head(introductions) : O.none(),
         (introducing): EncodedEdge => ({
@@ -635,12 +658,15 @@ const treeInput = (
   parts: { readonly preamble: Span; readonly body: Span }
 ): typeof ClaimElementTree.Encoded => {
   const root = `${claim.claimNumber}`;
+  const methodFrame = O.isSome(Str.match(/^(?::\s*)?(?:the\s+)?following steps\s*:/iu)(Str.trimStart(parts.body.text)));
   const segments = A.filter(
     A.map(splitBody(parts.body), (segment) => {
       const cleaned = cleanSegment(segment);
-      return claim.transition === "wherein" ? pipe(cleaned, dropPrefix(["wherein "]), trimSpan) : cleaned;
+      return claim.transition === "wherein" || methodFrame
+        ? pipe(cleaned, dropPrefix(["wherein "]), trimSpan)
+        : cleaned;
     }),
-    isContentSegment
+    (span) => isContentSegment(span) && !O.isSome(Str.match(/^(?:the\s+)?following steps\s*:$/iu)(span.text))
   );
   // Rule `colon-sublist`: the first limitation ending in ":" absorbs every later segment.
   const [beforeColon, fromColon] = A.span(segments, (segment) => !endsWithColon(segment));

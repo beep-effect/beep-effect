@@ -67,6 +67,9 @@ the subsequent user-directed repair is recorded below; publication remains pendi
 
 ## Latest Evidence
 
+- **Closest-match repair (2026-10-28):** [the new comparison](history/2026-10-28-closest-comparison.md) records **11/538 complete matches (2.04%)**, up from zero, and exact typed-edge F1 **25.98%**. The intermediate 10-match checkpoint, all prior results, labels and scorer remain unchanged. 469 structural mismatches and 58 input failures remain; [nearest unresolved diagnostics](history/2026-10-28-closest-remaining.json) are retained without waivers. Domain/use-cases/server verification passes. This is development-set remediation, not full-goal acceptance.
+
+
 - **User-directed repair and rerun (2026-10-28):** [the comparison report](history/2026-10-28-repair-comparison.md) preserves the original and all references. Final strict recovery remains **0/538**; input failures fall **186 → 58**, undecomposed **8 → 0**, and diagnostic typed-edge F1 rises **5.70% → 21.88%**. Functional relationships and conservative ancestor links are now implemented. All three affected package verifications pass. This is a development-set comparison; attorney agreement and adjudicated FP remain pending.
 
 

@@ -41,6 +41,9 @@ are fixed, never before.
 
 ## Current Blockers
 
+- **Closest-match repair frontier (2026-10-28):** [fixed-reference rerun](history/2026-10-28-closest-comparison.md) improves strict recovery to 11/538 and typed-edge F1 to 25.98%; 469 structural mismatches and 58 normalization failures remain. Explicit aliases, clause boundaries and body/entity dependencies are repaired. Remaining interpretation/convention questions are diagnosed without changing labels or excluding failures; human acceptance and full-goal completion remain unproven.
+
+
 - **User-directed bounded repair (2026-10-28):** the user authorized fixing gaps and rerunning without changing original results or reference labels. [Final comparison](history/2026-10-28-repair-comparison.md): strict 0/538, 58 input failures, no undecomposed selected claims, typed-edge F1 21.88%. Functional/phrase/ancestor/transition repairs and full package verification are saved locally. The earlier stop was superseded only for this repair; full goal completion, adjudicated FP and human acceptance remain unproven.
 
 

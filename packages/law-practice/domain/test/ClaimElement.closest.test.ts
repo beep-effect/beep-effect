@@ -125,6 +125,20 @@ describe("closest-match structural gaps", () => {
           (edge) => edge.kind === "antecedent" && edge.referring.path === "2" && edge.introducing.path === "1"
         )
       );
+      const shortenedClaims = yield* normalizePatentClaims([
+        ["1", "A wideband telemetry system comprising a sensor."],
+        ["2", "The system of claim 1 wherein the sensor is optical."],
+      ]);
+      const shortened = yield* decomposeClaim(O.getOrThrow(A.last(shortenedClaims)), shortenedClaims);
+      assert.isTrue(
+        A.some(
+          shortened.edges,
+          (edge) =>
+            edge.kind === "antecedent" &&
+            edge.referring.path === "2" &&
+            edge.introducing.anchor.quote === "A wideband telemetry system"
+        )
+      );
     })
   );
 
@@ -145,6 +159,79 @@ describe("closest-match structural gaps", () => {
         A.some(
           antecedentPolicy(trees, claims),
           (finding) => finding.kind === "missing-antecedent" && finding.referring.path === "2.a"
+        )
+      );
+    })
+  );
+  it.effect("treats an explicit following-steps frame as organization rather than a claimed entity", () =>
+    Effect.gen(function* () {
+      const claims = yield* normalizePatentClaims([
+        [
+          "1",
+          "A method comprising the following steps: placing a sensor in a housing, threading a cable through the housing, and turning the sensor; wherein the cable is fixed.",
+        ],
+      ]);
+      const tree = yield* decomposeClaim(O.getOrThrow(A.head(claims)), claims);
+      assert.deepStrictEqual(
+        A.map(tree.elements, (element) => [element.path, element.anchor.quote]),
+        [
+          ["1", "A method"],
+          ["1.a", "placing a sensor in a housing"],
+          ["1.b", "threading a cable through the housing"],
+          ["1.c", "turning the sensor"],
+          ["1.d", "the cable is fixed"],
+        ]
+      );
+    })
+  );
+
+  it.effect("retains compound nouns ending in assembly and adverbial nominal modifiers", () =>
+    Effect.gen(function* () {
+      const claims = yield* normalizePatentClaims([
+        ["1", "A tester comprising a subassembly; a substantially rectangular bearing; selectively adjustable vanes."],
+      ]);
+      const tree = yield* decomposeClaim(O.getOrThrow(A.head(claims)), claims);
+      assert.deepStrictEqual(
+        A.map(
+          A.flatMap(tree.elements, (element) => element.terms),
+          (term) => term.head
+        ),
+        ["tester", "subassembly", "substantially rectangular bearing", "selectively adjustable vanes"]
+      );
+    })
+  );
+
+  it.effect("keeps functional idioms in connecting text instead of inventing noun phrases", () =>
+    Effect.gen(function* () {
+      const claims = yield* normalizePatentClaims([
+        ["1", "A tester comprising a sensor positioned side by side with a relay by means of a carrier."],
+      ]);
+      const tree = yield* decomposeClaim(O.getOrThrow(A.head(claims)), claims);
+      assert.deepStrictEqual(
+        A.map(
+          A.flatMap(tree.elements, (element) => element.terms),
+          (term) => term.anchor.quote
+        ),
+        ["A tester", "a sensor", "a relay", "a carrier"]
+      );
+    })
+  );
+
+  it.effect("resolves a unique bare origin ahead of its later definite reminders", () =>
+    Effect.gen(function* () {
+      const claims = yield* normalizePatentClaims([
+        ["1", "A tester comprising a sensor for torque; the torque is recorded."],
+        ["2", "The tester of claim 1 wherein the torque is displayed."],
+      ]);
+      const tree = yield* decomposeClaim(O.getOrThrow(A.last(claims)), claims);
+      assert.isTrue(
+        A.some(
+          tree.edges,
+          (edge) =>
+            edge.kind === "antecedent" &&
+            edge.referring.anchor.quote === "the torque" &&
+            edge.introducing.anchor.quote === "torque" &&
+            edge.introducing.path === "1.a"
         )
       );
     })
