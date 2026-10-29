@@ -93,8 +93,19 @@ was read from the local reference checkout.
 - **Example holds.**
   - `syncpack.config.ts` has a "Held back — do not auto-update" version group,
     with its reasons in prose comments.
-  - `statelyai` is pinned exactly in the root `package.json` catalog with no
-    reason anywhere.
+  - `statelyai` is pinned exactly in the root `package.json` catalog.
+    `syncpack.config.ts` records the reason: 0.15.0 depends on the unpublished
+    `@statelyai/model-testing@0.2.0`. The prose gives an exit condition, a
+    release whose dependencies resolve, but no automated probe or expiry.
+- **Manual hold register.**
+  `goals/repository-simplification-residue/history/receipts/hold-register.md`
+  (#1861/#1906) records consumers, failures, owners and exit conditions for
+  overrides, patches and held catalog pins. It is an existing manual
+  precedent for the proposed ledger.
+- **Dated security exceptions.** `osv-scanner.toml` records exact package
+  exceptions with `effectiveUntil = 2027-01-14T00:00:00Z` and reasons that
+  name a recheck date and link to the hold register. OSV enforces these date
+  expiries; the general hold exit conditions still require manual rechecks.
 - **Claim envelope.** `makeClaimEnvelope` in
   `packages/foundation/modeling/epistemics/src/Claim/Claim.model.ts` provides:
   - `validTime` (an interval)
@@ -117,7 +128,8 @@ was read from the local reference checkout.
   tokens are the in-repo counterpart of skulk's capacity slots.
 - **Syntactic guards.** `@beep/lint-rules` carries Biome GritQL `.grit` rules.
 - **NOT FOUND:**
-  - any hold, expiry or re-check ledger;
+  - a schema-checked, machine-probed hold ledger that evaluates exit
+    conditions and records renewals;
   - any agent wake service or event-trigger daemon;
   - any provider-agnostic agent launch adapter with quota fallback.
 

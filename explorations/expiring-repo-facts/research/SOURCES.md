@@ -61,7 +61,9 @@ three files under [`notes/`](./notes/). The load-bearing ones:
 | Agent pool routes | `docs/runbooks/agent-pools.md` | reuse: adapter pins and fallback rules |
 | GritQL rules | `@beep/lint-rules` | extend: `[hold:<id>]` anchors in test skips |
 | Held-back deps | `syncpack.config.ts` | first consumer |
-| Hold ledger | NOT FOUND | NET-NEW |
+| Manual hold register | `goals/repository-simplification-residue/history/receipts/hold-register.md` | reference: consumers, failures, owners and exits (#1861/#1906) |
+| Dated security exceptions | `osv-scanner.toml` | reference: enforced date expiries and links to the hold register |
+| Schema-checked, machine-probed hold ledger | NOT FOUND | NET-NEW |
 | Wake service | NOT FOUND | NET-NEW (port of skulk) |
 | Delivery adapters with fallback | NOT FOUND | NET-NEW |
 
