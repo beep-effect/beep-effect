@@ -678,10 +678,9 @@ describe("PackedInstall against a real fixture workspace", () => {
           // takes the slot, so shared-cli (the front end) beats shared-plugin (the carrier), as
           // @vitest-agent/cli beats @vitest-agent/plugin; named the other way round, the carrier won
           // both. Bun 1.4.4 gives the slot to the carrier, the consumer's direct dependency, so bun's
-          // row is keyed by the bun consumer's pinned version. Yarn 1.22 and 4.18 (node-modules linker) gave the slot
-          // to the carrier. pnpm links only the direct dependency. Every manager on PATH is asserted,
-          // yarn included.
-          // Keyed by the version the bun consumer was pinned to, not by a probe of the host PATH.
+          // row is keyed by the bun consumer's pinned version. Yarn 1.22 and 4.18 (node-modules linker)
+          // gave the slot to the carrier. pnpm links only the direct dependency. Every manager on
+          // PATH is asserted, yarn included.
           const bunVersion = pipe(
             A.findFirst(result.consumers, (consumer) => consumer.manager === "bun"),
             O.map((consumer) => consumer.managerVersion),
