@@ -316,6 +316,11 @@ export class CitationCallbackList extends S.Opaque<CitationCallbackList, { reado
 export class CitationCallbackDictionary extends Context.Service<
   CitationCallbackDictionary,
   {
+    readonly writeCitation: (
+      reference: CitationGroupMember,
+      citation: Citation
+    ) => Effect.Effect<void, CitationCallbackFailure>;
+    readonly readMentions: Effect.Effect<ReadonlyArray<CitationMention>, CitationCallbackFailure>;
     readonly readFulls: Effect.Effect<ReadonlyArray<CitationCallbackFull>, CitationCallbackFailure>;
     readonly createFullPair: (
       citation: CitationGroupMember,
@@ -404,7 +409,16 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
   const crypto = yield* Crypto.Crypto;
   const work = yield* CitationResolutionWork;
   if (work.maximum !== limits.resolutionIterations) return yield* invalid();
-  const known = HashMap.fromIterable(A.map(prepared.mentions, (mention) => Tuple.make(mention.id, mention.citation)));
+  const semanticEntries = yield* Effect.forEach(
+    prepared.mentions,
+    (mention) =>
+      Effect.gen(function* () {
+        const citation = yield* S.decodeEffect(CitationJson)(yield* S.encodeEffect(CitationJson)(mention.citation));
+        return Tuple.make(mention.id, citation);
+      }).pipe(Effect.mapError(invalid)),
+    { concurrency: 1 }
+  );
+  let known = HashMap.fromIterable(semanticEntries);
   let detached = HashMap.empty<CitationDetachedId, CitationDetached>();
   const detachedObjects = new WeakMap<object, CitationDetachedId>();
   let detachedOrder = A.empty<CitationDetached>();
@@ -623,7 +637,46 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
       return yield* invalid();
     fulls = A.fromIterable(snapshot);
   });
+  const writeCitation = Effect.fn("Citation.writeCallbackCitation")(function* (
+    reference: CitationGroupMember,
+    input: Citation
+  ) {
+    yield* alive;
+    yield* work.step;
+    const refCodec = S.fromJsonString(CitationGroupMember);
+    const target = yield* S.decodeEffect(refCodec)(
+      yield* S.encodeEffect(refCodec)(reference).pipe(Effect.mapError(invalid))
+    ).pipe(Effect.mapError(invalid));
+    const current = yield* citationOf(target);
+    const citation = yield* S.decodeEffect(CitationJson)(
+      yield* S.encodeEffect(CitationJson)(input).pipe(Effect.mapError(invalid))
+    ).pipe(Effect.mapError(invalid));
+    if (target._tag === "Mention") {
+      // cm1 includes the semantic discriminant; no stale ID or fake proof.
+      if (citation.type !== current.type) return yield* invalid();
+      known = HashMap.set(known, target.mentionId, citation);
+    } else {
+      const object = CitationDetached.make({ id: target.detachedId, citation });
+      detached = HashMap.set(detached, target.detachedId, object);
+      detachedOrder = A.map(detachedOrder, (entry) => (entry.id === target.detachedId ? object : entry));
+    }
+  });
   const api = CitationCallbackDictionary.of({
+    writeCitation,
+    readMentions: alive.pipe(
+      Effect.andThen(
+        Effect.suspend(() =>
+          Effect.forEach(
+            prepared.mentions,
+            (mention) =>
+              citationOf(CitationGroupMember.cases.Mention.make({ mentionId: mention.id })).pipe(
+                Effect.map((citation) => CitationMention.make({ ...mention, citation }))
+              ),
+            { concurrency: 1 }
+          )
+        )
+      )
+    ),
     readFulls: alive.pipe(
       Effect.andThen(
         Effect.suspend(() =>
@@ -739,6 +792,10 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
   });
   return CitationCallbackDictionary.of({
     ...api,
+    writeCitation: Effect.fn("Citation.serialWriteCitation")((reference: CitationGroupMember, citation: Citation) =>
+      mutex.withPermit(api.writeCitation(reference, citation))
+    ),
+    readMentions: mutex.withPermit(api.readMentions),
     readFulls: mutex.withPermit(api.readFulls),
     createFullPair: Effect.fn("Citation.serialCreateFullPair")(
       (citation: CitationGroupMember, resource: CitationCallbackResource) =>
@@ -810,8 +867,12 @@ export const runPreparedCitationCallbackSession = Effect.fn("Citation.runPrepare
     dictionary.start,
     () =>
       Effect.gen(function* () {
-        for (const mention of prepared.mentions) {
+        for (const original of prepared.mentions) {
           yield* step;
+          const citation = yield* dictionary.citationOf(
+            CitationGroupMember.cases.Mention.make({ mentionId: original.id })
+          );
+          const mention = CitationMention.make({ ...original, citation });
           if (isFull(mention.citation)) {
             const result = yield* callbacks.full(mention).pipe(Effect.mapError(callbackFailed));
             last = yield* S.decodeEffect(ResourceJson)(
@@ -859,6 +920,7 @@ export const runPreparedCitationCallbackSession = Effect.fn("Citation.runPrepare
 
         return yield* S.decodeEffect(S.toType(SessionState))({
           ...prepared,
+          mentions: yield* dictionary.readMentions,
           fulls: yield* dictionary.readFulls,
           groups,
           last,

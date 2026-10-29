@@ -163,5 +163,9 @@ all sixteen dictionary/list/detached scenes and their thirty-eight events; see
 ./history/evidence/2026-10-29-detached-callback-objects.md). Eight further
 [retained prior-full list/pair scenes](
 ./history/evidence/2026-10-29-retained-prior-fulls.md) match all thirty-one events
-and final context/groups. General host/model mutation and final session
-projection remain open.
+and final context/groups. Eight further stable-resource
+[semantic mutation scenes](
+./history/evidence/2026-10-29-semantic-model-mutations.md) match complete events
+and semantic snapshots without changing verified anchors or mention IDs. Three
+mutable default-key scenes remain open, along with general host/model behavior
+and final session projection.

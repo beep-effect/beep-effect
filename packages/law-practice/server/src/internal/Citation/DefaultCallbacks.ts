@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { Citation, CitationComponents, FullCitation } from "@beep/law-practice-domain/values";
+import { Citation, CitationComponents, CitationGroupMember, FullCitation } from "@beep/law-practice-domain/values";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
@@ -62,6 +62,9 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
   if (dictionary.owner !== prepared || dictionary.work !== work) return yield* invalid();
   const editions = HashMap.fromIterable(A.map(prepared.editions, (edition) => Tuple.make(edition.edition, edition)));
   const citationOf = dictionary.citationOf;
+  const currentCitation = Effect.fn("Citation.defaultCurrentSemantic")((mention: CitationMention) =>
+    citationOf(CitationGroupMember.cases.Mention.make({ mentionId: mention.id }))
+  );
   const selected = Effect.fn("Citation.defaultSelectedEdition")(function* (citation: Citation) {
     if (!isFull(citation) && citation.type !== "shortFormCase") return O.none();
     const edition = O.flatMap(citation.publication.selectedEdition, (id) => HashMap.get(editions, id));
@@ -126,12 +129,13 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
   }, Effect.mapError(invalid));
   return CitationResolutionCallbacks.of({
     full: Effect.fn("Citation.defaultFullCallback")(function* (mention: CitationMention) {
-      if (!isFull(mention.citation)) return yield* invalid();
-      const edition = yield* selected(mention.citation);
+      const citation = yield* currentCitation(mention);
+      if (!isFull(citation)) return yield* invalid();
+      const edition = yield* selected(citation);
       return CitationCallbackResource.cases.Hashable.make({
         identity: CitationResourceIdentity.cases.Canonical.make({
           authority: CitationAuthorityIdentityInput.make({
-            citation: mention.citation,
+            citation,
             mentionId: mention.id,
             selectedEdition: edition,
           }),
@@ -142,8 +146,8 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
     }),
     shortCase: Effect.fn("Citation.defaultShortCallback")(
       function* (input: CitationFullsCallbackInput) {
-        if (input.mention.citation.type !== "shortFormCase") return yield* invalid();
-        const citation = input.mention.citation;
+        const citation = yield* currentCitation(input.mention);
+        if (citation.type !== "shortFormCase") return yield* invalid();
         const current = yield* reporter(citation);
         let candidates = A.empty<CitationCallbackFull>();
         for (const entry of input.fulls) {
@@ -166,8 +170,9 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
     ),
     supra: Effect.fn("Citation.defaultSupraCallback")(
       function* (input: CitationFullsCallbackInput) {
-        if (input.mention.citation.type !== "supra") return yield* invalid();
-        const guess = input.mention.citation.metadata.antecedentGuess;
+        const citation = yield* currentCitation(input.mention);
+        if (citation.type !== "supra") return yield* invalid();
+        const guess = citation.metadata.antecedentGuess;
         const candidates = O.exists(guess, Str.isNonEmpty)
           ? yield* byParty(
               input.fulls,
@@ -180,13 +185,10 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
     ),
     reference: Effect.fn("Citation.defaultReferenceCallback")(
       function* (input: CitationFullsCallbackInput) {
-        if (input.mention.citation.type !== "reference") return yield* invalid();
+        const citation = yield* currentCitation(input.mention);
+        if (citation.type !== "reference") return yield* invalid();
         const names = A.filter(
-          A.getSomes(
-            R.values(
-              Struct.pick(input.mention.citation.metadata, ["plaintiff", "defendant", "shortCaseName", "caseName"])
-            )
-          ),
+          A.getSomes(R.values(Struct.pick(citation.metadata, ["plaintiff", "defendant", "shortCaseName", "caseName"]))),
           Str.isNonEmpty
         );
         let candidates = A.empty<CitationCallbackFull>();
@@ -203,7 +205,8 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
     ),
     id: Effect.fn("Citation.defaultIdCallback")(
       function* (input: CitationIdCallbackInput) {
-        if (input.mention.citation.type !== "id") return yield* invalid();
+        const citation = yield* currentCitation(input.mention);
+        if (citation.type !== "id") return yield* invalid();
         if (input.last._tag === "None" || !input.last.truthy) return { resource: none() };
         const id = yield* key(input.last);
         for (const group of input.groups) {
@@ -213,7 +216,7 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
           const prior = yield* citationOf(first);
           const bad = yield* hasInvalidCitationPinCite({
             fullCitation: prior,
-            idCitation: input.mention.citation,
+            idCitation: citation,
           }).pipe(Effect.mapError(() => CitationCallbackFailure.make({ reason: "callback-failed" })));
           return { resource: bad ? none() : input.last };
         }

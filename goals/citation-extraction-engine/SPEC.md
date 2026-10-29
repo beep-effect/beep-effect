@@ -981,6 +981,24 @@ instead of silently splitting delivery or weakening scope.
   final diagnostics/document projection, public ports and full safety/parity
   proof remain open; no exhaustive accounting row is promoted.
 
+- **2026-10-29 semantic mutation and live-key frontier:** add eleven pinned
+  semantic/default-resource mutation scenes. The operation owner now snapshots
+  initial semantics and accepts explicit schema-owned semantic writes. Default
+  helpers reread current semantics, including current Id./supra/short inputs;
+  final mention snapshots reflect the writes while preserving verified anchors
+  and cm1 inputs. Writes to a physical mention currently preserve its semantic
+  discriminant; unsupported class/tag mutation remains open, not waived.
+  Detached updates preserve their object token and aliases. Eight scenes using
+  stable string resources match complete event/semantic snapshots. Three
+  default-resource key scenes remain mandatory source counterexamples. A page
+  change after insertion can produce two dictionary entries for one resource
+  object; another page change retains one group. Preserve both outcomes and
+  live key/object/lookup history before closing custom resolution. The existing
+  immutable-artifact-reference law already forbids caching mutable resources;
+  no normalization, stable-key precondition or duplicate-group collapse is
+  approved by this checkpoint. Full safety/parity and final projection remain
+  open; no exhaustive row is promoted.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from

@@ -70,7 +70,11 @@ Detached objects use private scoped object tokens and carry no source anchors
 or occurrence IDs. Eight further prior-full-list/pair scenes now match all 31 events and final
 groups/context, including retained-list mutation and equal-valued immutable
 pair replacement. General host/model mutation, production document identity
-integration and final projection stay open.
+integration and final projection stay open. Eleven further model/key mutation
+scenes now expose a concrete live-key requirement. Eight stable-resource scenes
+match all semantic/event snapshots with source anchors and IDs preserved;
+three mutable default-key scenes remain open. Preserve both duplicate-entry
+and single-entry source outcomes rather than assume a key-normalization waiver.
 Exhaustive resolver/custom-resource proof, live artifact integration,
 Bluebook codecs and extension adoption/schema proof stay open.
 The remaining 37 provisional contract directories are retired; their donor obligations
