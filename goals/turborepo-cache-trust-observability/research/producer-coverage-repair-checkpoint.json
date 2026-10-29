@@ -321,7 +321,7 @@
   },
   "population": {
     "path": "goals/turborepo-quality-cache-adoption/research/current-population.json",
-    "sha256": "b869e63e32cbac1c52a4c1e22a943f55b782b98c94ad9696c0ff45729b9676b2",
+    "sha256": "d3a7ac705438932c1b621ceb818d68538ad2181118b093175be69afa2f5405bd",
     "sourcesVerified": 431,
     "counts": {
       "workspaces": 190,
@@ -336,7 +336,8 @@
         "excluded": 5
       }
     },
-    "semanticReviewsAndDispositionsChanged": false
+    "semanticReviewsAndDispositionsChanged": false,
+    "priorBeforeReviewRepair": "b869e63e32cbac1c52a4c1e22a943f55b782b98c94ad9696c0ff45729b9676b2"
   },
   "qualificationLedgerSha256": "13067bf343f413b4cc99b4cefca3ce7d094a1f09247a54ffc20114e766d4d2bb",
   "baselineChanged": false,

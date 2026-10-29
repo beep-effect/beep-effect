@@ -16,6 +16,10 @@ import stat
 import sys
 import urllib.request
 
+if sys.flags.optimize:
+    print("Trial grant verification requires Python assertions; optimized execution is refused.")
+    raise SystemExit(64)
+
 import boto3
 from botocore.config import Config
 from botocore.exceptions import BotoCoreError, ClientError

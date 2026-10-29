@@ -80,7 +80,8 @@
     "research/producer-package-replay-checkpoint.json",
     "research/signed-credential-deployment-checkpoint.json",
     "research/producer-publication-gate-repair-checkpoint.json",
-    "research/producer-coverage-repair-checkpoint.json"
+    "research/producer-coverage-repair-checkpoint.json",
+    "research/producer-review-repair-checkpoint.json"
   ],
   "agentLaunchers": [
     {

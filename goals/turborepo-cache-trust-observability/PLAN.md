@@ -497,3 +497,13 @@ bytes are restored. Current Node and Bun integrations each pass 361 tests in
 and the canonical instrumentation catalog has zero drift. The original failed
 publication is retained in the gate-repair checkpoint. Hosted proof and the
 full goal obligations remain open.
+
+
+### Protected producer review repair
+
+The [review repair checkpoint](research/producer-review-repair-checkpoint.json)
+records startup refusal under both Python optimization routes and retention
+of typed verifier failure causes. Thirty focused tests pass per runtime; the
+prior mapper fails both new cause-preservation assertions. The census retains
+all executable rows and semantic obligations. Publication and full acceptance
+remain open.

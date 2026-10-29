@@ -591,3 +591,18 @@ four focused policy/catalog checks passed. Hoist a named annotated tuple and
 its derived guard to module scope, then replay the root linter directly. The
 pre-push publisher was stopped with no push; retain its finding and source
 identity instead of treating the earlier partial checks as complete policy proof.
+
+
+### Assertion-dependent probes and internal verifier diagnostics
+
+Review found that optimized Python could remove every grant-proof assertion.
+The helper now refuses optimization before importing cloud clients. Hermetic
+import-sentinel probes cover normal execution, -O and PYTHONOPTIMIZE=2 without
+credential reads or network access. The verifier now uses the canonical error
+mapper to retain typed internal causes. Auth, missing-resource, rate-limit and
+identity-preservation tests cover it; runtime causes are not producer receipts.
+
+CI hit HTTP408 during checkout before lint ran. GitHub refused the exact-job
+retry while the workflow was running. This source repair will supersede that
+head; keep the environmental attribution and do not hide it by restarting an
+active proof.

@@ -166,8 +166,9 @@
   "priorSpecSha256AtRuntimeObservation": "9c2c1c88a7f13efab9252774f154d1e1e31e8d395695b2ab37dabc212af27e5c",
   "currentRuntimeProfileCheckpoint": {
     "path": "goals/turborepo-quality-cache-adoption/research/current-runtime-profile-checkpoint.json",
-    "sha256": "b120fc1bab3b11d5cc3eab57dfc775b602e5033705fbf738f686fa1828ea95ef",
-    "scope": "Runtime observation and passing frozen whole-package verification only; all qualification and rollout obligations remain open."
+    "sha256": "dc4fb8065cad72069b3fac057f689feea57b340f7a8c0289630cc38cbc4dbf66",
+    "scope": "Runtime observation and passing frozen whole-package verification only; all qualification and rollout obligations remain open.",
+    "priorBeforeReviewRepair": "b120fc1bab3b11d5cc3eab57dfc775b602e5033705fbf738f686fa1828ea95ef"
   },
   "priorSpecSha256AtCurrentRuntimeBaseline": "bf920216aed78bfef9065e4129e12ac08356e88307cf7fcb03f0395d6c5a88a6",
   "currentRuntimeBaselineCheckpoint": {
@@ -177,12 +178,19 @@
   },
   "publicationGateRepair": {
     "path": "goals/turborepo-cache-trust-observability/research/producer-publication-gate-repair-checkpoint.json",
-    "sha256": "ef5d83d08a083ca51cf059b26eb0a87a18aee2695d3d88459a08c07939560327",
-    "scope": "Properties/catalog and current component checks; hosted publication and whole-goal acceptance remain pending."
+    "sha256": "7d10fc4c50a2f086c7315912ddc981d23201bf5cece9c38b571d10d26d95b6e2",
+    "scope": "Properties/catalog and current component checks; hosted publication and whole-goal acceptance remain pending.",
+    "priorBeforeReviewRepair": "ef5d83d08a083ca51cf059b26eb0a87a18aee2695d3d88459a08c07939560327"
   },
   "producerCoverageRepairCheckpoint": {
     "path": "goals/turborepo-cache-trust-observability/research/producer-coverage-repair-checkpoint.json",
-    "sha256": "dba0c942aefb3c8ff0ce9185c75d3cb75a463656956e0f83fc4bf4983da40997",
-    "scope": "Current focused coverage/regression only; whole-goal acceptance remains unproven."
+    "sha256": "7a37b77aef708c66b8480549569a47fa96496777a39b5f28fc423b2f71b506cd",
+    "scope": "Current focused coverage/regression only; whole-goal acceptance remains unproven.",
+    "priorBeforeReviewRepair": "dba0c942aefb3c8ff0ce9185c75d3cb75a463656956e0f83fc4bf4983da40997"
+  },
+  "producerReviewRepairCheckpoint": {
+    "path": "goals/turborepo-cache-trust-observability/research/producer-review-repair-checkpoint.json",
+    "sha256": "93b602012d54e57aa9559e5df8bd8b53ae864d9f015e9ba6e3b9a0d2bfcb3fce",
+    "scope": "Latest internal review repair and current census; earlier source-bound positive proofs keep their historical scope."
   }
 }

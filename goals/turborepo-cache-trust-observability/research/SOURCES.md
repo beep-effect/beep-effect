@@ -364,3 +364,13 @@ artifact, signing activation, deployed grant or observation window changes.
   five intended-failure guard controls and 362 integration tests per runtime.
   Earlier frozen proofs remain separate; no coverage baseline, qualification
   entry, deployed signing policy or whole-goal acceptance changes.
+
+
+### Producer review repair
+
+- [Review repair checkpoint](producer-review-repair-checkpoint.json): optimized
+  Python refusal before cloud-client imports, retained typed runtime error causes,
+  30 focused tests per runtime, full file coverage and intended-failure controls.
+  The refreshed census changes no semantic reviews, cache flags or qualification.
+  The earlier passing full replay stays historical; this repair needs fresh
+  publication and hosted acceptance.

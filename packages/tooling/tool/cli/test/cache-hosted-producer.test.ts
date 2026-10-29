@@ -2,7 +2,7 @@ import { GitHubClient } from "@beep/github/GitHubClient";
 import { GitHubContent } from "@beep/github/GitHubContent";
 import { GitHubError } from "@beep/github/GitHubError";
 import { RepoRef } from "@beep/github/Repo";
-import { CacheProducerBinding } from "@beep/repo-cli/commands/Cache";
+import { CacheCommandError, CacheProducerBinding } from "@beep/repo-cli/commands/Cache";
 import {
   CacheHostedProducerApproval,
   CacheHostedProducerReference,
@@ -13,7 +13,7 @@ import {
 import { Sha256HexFromBytes } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { expect, it } from "@effect/vitest";
+import { expect, it, vi } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Clock from "effect/Clock";
 import * as DateTime from "effect/DateTime";
@@ -135,6 +135,7 @@ const fixture = Effect.fn("HostedProducerTest.fixture")(function* (selectedRefer
         readonly workflow?: string;
         readonly afterRun?: unknown;
         readonly afterArtifact?: unknown;
+        readonly runFailure?: GitHubError;
       } = {},
       transported = archive,
       approved = approval
@@ -148,6 +149,7 @@ const fixture = Effect.fn("HostedProducerTest.fixture")(function* (selectedRefer
       const client = GitHubClient.makeTest({
         requestDecoded: dual(3, <A, I>(route: string, _params: Record<string, unknown>, schema: S.Codec<A, I>) =>
           Effect.suspend(() => {
+            if (route === runRoute && responses.runFailure !== undefined) return Effect.fail(responses.runFailure);
             const data = route === runRoute ? runResponse() : artifactResponse();
             expect([runRoute, artifactRoute]).toContain(route);
             return S.decodeUnknownEffect(schema)(data).pipe(
@@ -180,6 +182,29 @@ const fixture = Effect.fn("HostedProducerTest.fixture")(function* (selectedRefer
 });
 
 it.layer(NodeServices.layer, { timeout: "30 seconds" })("immutable hosted producer evidence", (it) => {
+  it.effect("retains typed GitHub failure causes without adding them to producer observations", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      for (const status of [401, 403, 404, 429]) {
+        const failure = GitHubError.fromOctokit(runRoute, { status, message: "fixture metadata request rejected" }, 0);
+        const error = yield* f.verify({ runFailure: failure }).pipe(Effect.flip);
+        expect(error.cause).toBe(failure);
+        expect(error.message).toBe("Cannot verify the independently approved GitHub producer artifact.");
+      }
+    })
+  );
+  it.effect("preserves an existing CacheCommandError and its runtime cause", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      const original = CacheCommandError.new("controlled producer identity refusal", { stage: "fixture-identity" });
+      const create = vi.spyOn(CacheCommandError, "new").mockReturnValue(original);
+      yield* Effect.gen(function* () {
+        const error = yield* f.verify({ run: { ...f.run, id: f.run.id + 1 } }).pipe(Effect.flip);
+        expect(error).toBe(original);
+        expect(create).toHaveBeenCalledTimes(1);
+      }).pipe(Effect.ensuring(Effect.sync(() => create.mockRestore())));
+    })
+  );
   it.effect.prop(
     "binds schema-generated run references and rejects a different authenticated artifact identity",
     { selectedReference: CacheHostedProducerReference },

@@ -277,9 +277,5 @@ export const verifyCacheHostedProducerUpload = Effect.fn("CacheWorkflow.verifyHo
     });
   },
   Effect.scoped,
-  Effect.mapError((error) =>
-    S.is(CacheCommandError)(error)
-      ? CacheCommandError.new(error.message)
-      : CacheCommandError.new("Cannot verify the independently approved GitHub producer artifact.")
-  )
+  CacheCommandError.mapError("Cannot verify the independently approved GitHub producer artifact.")
 );
