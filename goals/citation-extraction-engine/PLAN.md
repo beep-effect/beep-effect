@@ -54,6 +54,8 @@ adaptation: valid resources can originate without a full mention. Falsy keys,
 key equality, callback order and mutable callback state also need explicit
 service-port treatment before custom resolution can be implemented. These
 source observations do not increase the 76 target-tested contexts.
+Authority representatives now refer to any resolved mention; the default
+persistence path explicitly rejects custom keys until their adapter is proved.
 Exhaustive resolver/custom-resource proof, live artifact integration,
 Bluebook codecs and extension adoption/schema proof stay open.
 The remaining 37 provisional contract directories are retired; their donor obligations

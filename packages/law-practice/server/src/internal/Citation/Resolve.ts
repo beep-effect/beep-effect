@@ -188,7 +188,7 @@ export const resolveCitationMentions = Effect.fn("Citation.resolveMentions")(fun
       if (!HashMap.has(representatives, id)) {
         if (Chunk.size(authorities) >= limits.authorities) return yield* exceeded();
         representatives = HashMap.set(representatives, id, citation);
-        authorities = Chunk.append(authorities, CitationAuthority.make({ id, fullMentionId: mention.id }));
+        authorities = Chunk.append(authorities, CitationAuthority.make({ id, representativeMentionId: mention.id }));
       }
       const wire = yield* S.encodeEffect(FullCitation)(citation).pipe(Effect.mapError(invalid));
       const metadata = yield* S.decodeEffect(S.Record(S.String, S.Unknown))(wire.metadata).pipe(

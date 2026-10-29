@@ -14,29 +14,27 @@ import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import { CitationAuthorityId, CitationMentionId } from "./Citation.identity.ts";
 import { CitationMention, CitationMentionReceipt } from "./Citation.mention.ts";
-import { FullCitation } from "./Citation.models.ts";
 import { CitationResolution } from "./Citation.resolution.ts";
 
 const $I = $LawPracticeDomainId.create("values/Citation/Citation.document");
 const sourceEquivalent = S.toEquivalence(SourceTextIdentity);
-const isFull = S.is(FullCitation);
 
 /**
- * Authority resource represented by a full mention already in the document.
+ * Authority resource represented by a resolved mention already in the document.
  * Membership is derived from resolved edges, never duplicated here.
  * **Example** (Inspect the representative reference)
  * ```ts
  * import { CitationAuthority } from "@beep/law-practice-domain/values"
- * console.log(CitationAuthority.fields.fullMentionId !== undefined) // true
+ * console.log(CitationAuthority.fields.representativeMentionId !== undefined) // true
  * ```
  * @category models
  * @since 0.0.0
  */
 export class CitationAuthority extends S.Opaque<CitationAuthority, { readonly brand: unique symbol }>()(
-  S.Struct({ id: CitationAuthorityId, fullMentionId: CitationMentionId }).pipe(
+  S.Struct({ id: CitationAuthorityId, representativeMentionId: CitationMentionId }).pipe(
     $I.annoteSchema("CitationAuthority", {
       description:
-        "Document-local resource identity with a full-citation representative; no embedded citation copy or membership array.",
+        "Document-local resource identity with a resolved occurrence representative; no embedded citation copy or membership array.",
     })
   )
 ) {}
@@ -91,10 +89,9 @@ const coherent = (document: typeof RuntimeShape.Type | typeof ReceiptShape.Type)
         })
     ) &&
     A.every(document.authorities, (authority) =>
-      O.match(HashMap.get(byMention, authority.fullMentionId), {
+      O.match(HashMap.get(byMention, authority.representativeMentionId), {
         onNone: () => false,
         onSome: (mention) =>
-          isFull(mention.citation) &&
           O.match(HashMap.get(byResolution, mention.id), {
             onNone: () => false,
             onSome: (resolution) => resolution.status === "Resolved" && resolution.authorityId === authority.id,
@@ -108,7 +105,7 @@ const graphCheck = S.makeFilter(
   $I.annote("DocumentRelationshipCoherence", {
     title: "Document Relationship Coherence",
     description:
-      "Unique IDs, exactly one resolution per mention, closed references, coherent source/engine identity and full authority representatives.",
+      "Unique IDs, exactly one resolution per mention, closed references, coherent source/engine identity and resolved authority representatives.",
     message: "Citation document relationships are incoherent.",
   })
 );
@@ -116,11 +113,13 @@ const graphCheck = S.makeFilter(
 /**
  * Ordered runtime mentions and the sole encoded authority membership edges.
  *
- * Every mention has exactly one resolution. Authorities reference full mentions
+ * Every mention has exactly one resolution. Authorities reference mentions
  * resolved to that authority. Warnings/candidates/targets stay within the same
  * document; mentions share its source and engine artifact. These checks prove
  * graph coherence, not legal classification, digest authenticity or resolution
- * correctness. Parallel/string/history relationships need their separate proof.
+ * correctness. Custom callbacks may introduce a resource from any citation kind.
+ * Identity verification belongs to the engine and its resource adapter.
+ * Parallel/string/history relationships need their separate proof.
  * Persist the explicit document receipt, never a JSON copy of runtime proofs.
  * **Example** (Inspect relationship ownership)
  * ```ts

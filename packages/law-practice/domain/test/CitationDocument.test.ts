@@ -109,8 +109,8 @@ const fixture = Effect.gen(function* () {
   const third = A.getUnsafe(mentions, 2);
   const fourth = A.getUnsafe(mentions, 3);
   const authorities = [
-    CitationAuthority.make({ id: a, fullMentionId: first.id }),
-    CitationAuthority.make({ id: b, fullMentionId: second.id }),
+    CitationAuthority.make({ id: a, representativeMentionId: first.id }),
+    CitationAuthority.make({ id: b, representativeMentionId: second.id }),
   ];
   const resolutions = [
     CitationResolved.make({ mentionId: first.id, authorityId: a, confidence: O.none() }),
@@ -221,12 +221,15 @@ it.layer(TestCrypto)("citation document relationships", (it) => {
     })
   );
 
-  it.effect("requires a full representative resolved to its own authority", () =>
+  it.effect("requires a present representative resolved to its own authority", () =>
     Effect.gen(function* () {
       const { document, third, first } = yield* fixture;
       const withRepresentative = (id: CitationMentionId) => ({
         ...document,
-        authorities: [CitationAuthority.make({ id: a, fullMentionId: id }), A.getUnsafe(document.authorities, 1)],
+        authorities: [
+          CitationAuthority.make({ id: a, representativeMentionId: id }),
+          A.getUnsafe(document.authorities, 1),
+        ],
       });
       expect(isDocument(withRepresentative(missingMention))).toBe(false);
       expect(isDocument(withRepresentative(third.id))).toBe(false);
@@ -240,6 +243,46 @@ it.layer(TestCrypto)("citation document relationships", (it) => {
           ),
         })
       ).toBe(false);
+    })
+  );
+
+  it.effect("represents resources introduced by each non-full callback family without fabricating a full mention", () =>
+    Effect.gen(function* () {
+      const { document, receipt, third, fourth } = yield* fixture;
+      const base = full("1");
+      const meanings = [
+        { ...base, type: "shortFormCase" },
+        {
+          type: "supra",
+          components: {},
+          metadata: { pinCite: null, parenthetical: null, antecedentGuess: null, volume: null },
+        },
+        { type: "reference", components: {}, metadata: base.metadata },
+        { type: "id", components: {}, metadata: { pinCite: null, parenthetical: null } },
+      ];
+      for (const meaning of meanings) {
+        const citation = yield* S.decodeUnknownEffect(Citation)(meaning);
+        // Graph tests deliberately use format-only occurrence/resource IDs.
+        // Semantic classification and private digest production are separate.
+        const mentions = [CitationMention.make({ ...third, citation }), CitationMention.make({ ...fourth, citation })];
+        const authorities = [CitationAuthority.make({ id: a, representativeMentionId: third.id })];
+        const resolutions = A.map(mentions, (mention) =>
+          CitationResolved.make({ mentionId: mention.id, authorityId: a, confidence: O.none() })
+        );
+        const graph = CitationDocument.make({ ...document, mentions, authorities, resolutions });
+        const structural = CitationDocumentReceipt.make({
+          ...receipt,
+          authorities,
+          resolutions,
+          mentions: A.map(A.takeRight(receipt.mentions, 2), (mention) => ({ ...mention, citation })),
+        });
+        const restored = yield* S.decodeEffect(ReceiptJson)(yield* S.encodeEffect(ReceiptJson)(structural));
+        expect(isDocument(graph)).toBe(true);
+        expect(isReceipt(restored)).toBe(true);
+        expect(citationAuthorityMembers(restored, a)).toEqual([third.id, fourth.id]);
+        expect(A.getUnsafe(restored.authorities, 0).representativeMentionId).toBe(third.id);
+        expect(A.every(restored.mentions, (mention) => mention.citation.type === citation.type)).toBe(true);
+      }
     })
   );
 

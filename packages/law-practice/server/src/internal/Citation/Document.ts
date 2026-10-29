@@ -17,6 +17,7 @@ import { LiteralKit, Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
@@ -33,6 +34,7 @@ const FailureReason = LiteralKit([
   "stale-mention",
   "stale-authority",
   "identity-failed",
+  "authority-key-unavailable",
 ]).pipe(
   $I.annoteSchema("FailureReason", {
     description: "Finite private document persistence failures without source text or nested causes.",
@@ -87,6 +89,9 @@ const verifyAuthorities = Effect.fn("Citation.verifyDocumentAuthorities")(functi
   const resolutions = HashMap.fromIterable(
     A.map(snapshot.receipt.resolutions, (resolution) => Tuple.make(resolution.mentionId, resolution))
   );
+  // A representative need not be full. Require a checked key witness for
+  // every group; the current adapter can establish only full-member keys.
+  let verified = HashSet.empty<CitationDocumentReceipt["authorities"][number]["id"]>();
   yield* Effect.forEach(
     snapshot.receipt.mentions,
     (mention) =>
@@ -100,14 +105,18 @@ const verifyAuthorities = Effect.fn("Citation.verifyDocumentAuthorities")(functi
         );
         if (expected !== resolution.value.authorityId)
           return yield* CitationDocumentFailure.make({ reason: "stale-authority" });
+        verified = HashSet.add(verified, expected);
       }),
     { concurrency: 1, discard: true }
   );
+  if (!A.every(snapshot.receipt.authorities, (authority) => HashSet.has(verified, authority.id)))
+    return yield* CitationDocumentFailure.make({ reason: "authority-key-unavailable" });
 });
 
 /**
  * Project a runtime document only after checking every occurrence and resolved
  * full authority key. Snapshot all structural data before the first hash.
+ * Custom resource keys are rejected until their trusted adapter is available.
  * Trusted edition descriptors still need live artifact authentication.
  * @internal
  * @category encoding
@@ -162,6 +171,7 @@ export const projectCitationDocumentReceipt = Effect.fn("Citation.projectDocumen
  * Restore a receipt against trusted source/engine identity, hashing its raw
  * source once for every mention/component/zone. Recompute all occurrence IDs
  * and resolved full authority keys before returning a coherent runtime value.
+ * Custom resource keys are rejected until their trusted adapter is available.
  * These checks do not authenticate semantic classification or short resolution.
  * @internal
  * @category validation

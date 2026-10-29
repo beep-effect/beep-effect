@@ -117,7 +117,7 @@ const fixture = Effect.gen(function* () {
     source,
     engineArtifact: artifact,
     mentions,
-    authorities: [CitationAuthority.make({ id: authorityId, fullMentionId: first.id })],
+    authorities: [CitationAuthority.make({ id: authorityId, representativeMentionId: first.id })],
     resolutions: A.map(mentions, (mention) =>
       CitationResolved.make({ mentionId: mention.id, authorityId, confidence: O.none() })
     ),
@@ -129,6 +129,52 @@ const fixture = Effect.gen(function* () {
 }).pipe(Effect.withSpan("DocumentPersistenceTest.fixture"));
 
 it.layer(BunCrypto.layer)("whole citation document persistence", (it) => {
+  it.effect("checks a full-member identity witness independently of the representative kind", () =>
+    Effect.gen(function* () {
+      const data = yield* fixture;
+      const mention = A.getUnsafe(data.document.mentions, 2);
+      const authorities = A.map(data.document.authorities, (authority) =>
+        CitationAuthority.make({ ...authority, representativeMentionId: mention.id })
+      );
+      const document = CitationDocument.make({ ...data.document, authorities });
+      const receipt = yield* projectCitationDocumentReceipt({ document, editions: data.editions });
+      const restored = yield* restoreCitationDocument({ ...data.restore, receipt });
+      expect(A.getUnsafe(restored.authorities, 0).representativeMentionId).toBe(mention.id);
+      expect(A.getUnsafe(restored.authorities, 0).id).toBe(A.getUnsafe(data.document.authorities, 0).id);
+    })
+  );
+
+  it.effect("rejects non-full resource identity until a trusted custom key adapter is available", () =>
+    Effect.gen(function* () {
+      const data = yield* fixture;
+      const mention = A.getUnsafe(data.document.mentions, 2);
+      const authority = CitationAuthority.make({ id: staleAuthority, representativeMentionId: mention.id });
+      const resolution = CitationResolved.make({
+        mentionId: mention.id,
+        authorityId: staleAuthority,
+        confidence: O.none(),
+      });
+      const document = CitationDocument.make({
+        ...data.document,
+        mentions: [mention],
+        authorities: [authority],
+        resolutions: [resolution],
+      });
+      const receipt = CitationDocumentReceipt.make({
+        ...data.receipt,
+        mentions: [A.getUnsafe(data.receipt.mentions, 2)],
+        authorities: [authority],
+        resolutions: [resolution],
+      });
+      expect((yield* Effect.flip(projectCitationDocumentReceipt({ document, editions: data.editions }))).reason).toBe(
+        "authority-key-unavailable"
+      );
+      expect((yield* Effect.flip(restoreCitationDocument({ ...data.restore, receipt }))).reason).toBe(
+        "authority-key-unavailable"
+      );
+    })
+  );
+
   it.effect("round-trips the whole graph with fresh anchor proofs and stable IDs", () =>
     Effect.gen(function* () {
       const data = yield* fixture;

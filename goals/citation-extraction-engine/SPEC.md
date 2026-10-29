@@ -825,6 +825,35 @@ instead of silently splitting delivery or weakening scope.
   Custom callback, helper/assertion, extraction and complete parity proof stay
   open. Reverse only with equivalent provenance/no-drop/source-group checks.
 
+- **2026-10-28 custom resolver contract gap:** pinned callback probes show that
+  short/supra/reference/Id. callbacks can introduce resources without any full
+  mention. The current full-representative authority schema is therefore only
+  sufficient for the default path; do not force custom results into it or
+  claim custom-resource parity. Preserve the source observations and adapt
+  authority representation, key production, persistence checks and port state
+  together before enabling custom resolution. Callable mutation, falsy keys
+  and resource equality require explicit source-bound treatment; no divergence
+  or immutable-state substitution is approved by this observation. Reversal
+  is removal of the focused probe/evidence checkpoint; existing target behavior
+  and the canonical accounting rows remain unchanged.
+
+
+- **2026-10-28 general authority representative:** replace the provisional
+  `fullMentionId` field with `representativeMentionId`. Graph coherence requires
+  an existing mention resolved to the authority, without restricting its
+  citation family. This is representation of canonical custom-resource results,
+  not adoption of a TypeScript extension or proof of callback execution. Keep
+  resource identity verification at the engine/adapter boundary. The current
+  default persistence verifier requires a checked full-member key witness for
+  each group, independently of its representative kind. A group without that
+  witness fails with sanitized private `authority-key-unavailable` until custom
+  identity verification lands; every resolved full key remains rechecked.
+  Default resolution still selects its first full member. No source consumer
+  of the retired field exists outside this initiative. This unshipped schema
+  replacement carries no compatibility alias; reverse by reverting the schema,
+  producer, persistence guard and tests together. Resource-key policy, mutable
+  state ports and target callback proof remain open.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from
@@ -841,15 +870,3 @@ artifact is retired.
 | Exception | Scope | Owner | Removal condition |
 | --- | --- | --- | --- |
 | Python 3.12 baseline bootstrap | The pinned `pyahocorasick==2.0.0` fails to compile under this host's Python 3.12/C23 toolchain before tests run; Python 3.11 passes all official tests. | P0 source baseline | Record as environment evidence; oracle generation uses pinned Python 3.11 unless upstream dependencies are deliberately re-pinned in a separate baseline decision. |
-
-- **2026-10-28 custom resolver contract gap:** pinned callback probes show that
-  short/supra/reference/Id. callbacks can introduce resources without any full
-  mention. The current full-representative authority schema is therefore only
-  sufficient for the default path; do not force custom results into it or
-  claim custom-resource parity. Preserve the source observations and adapt
-  authority representation, key production, persistence checks and port state
-  together before enabling custom resolution. Callable mutation, falsy keys
-  and resource equality require explicit source-bound treatment; no divergence
-  or immutable-state substitution is approved by this observation. Reversal
-  is removal of the focused probe/evidence checkpoint; existing target behavior
-  and the canonical accounting rows remain unchanged.
