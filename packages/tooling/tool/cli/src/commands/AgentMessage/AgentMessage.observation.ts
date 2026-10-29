@@ -336,6 +336,42 @@ export const initializeAgentObservationClaims = Effect.fn("AgentObservation.init
 });
 const encodeAgentObservationEnrollmentJson = S.encodeEffect(S.fromJsonString(AgentObservationEnrollment));
 
+const checkEnrollmentSeparation = Effect.fnUntraced(function* (
+  enrollment: AgentObservationEnrollment,
+  directory: string
+) {
+  for (const existing of [enrollment.claims.directory, enrollment.destination.directory]) {
+    if (
+      directory === existing ||
+      Str.startsWith(`${directory}/`)(existing) ||
+      Str.startsWith(`${existing}/`)(directory)
+    )
+      return yield* failure("configuration");
+  }
+});
+
+const prepareEnrollmentParent = Effect.fnUntraced(function* (
+  enrollment: AgentObservationEnrollment,
+  directory: string,
+  uid: number
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  if (!path.isAbsolute(directory) || path.normalize(directory) !== directory || directory === "/")
+    return yield* failure("configuration");
+  yield* checkEnrollmentSeparation(enrollment, directory);
+  const parent = path.dirname(directory);
+  const parentInfo = yield* fs.lstat(parent);
+  if (
+    parentInfo.type !== "Directory" ||
+    (parentInfo.mode & 0o777) !== 0o700 ||
+    !O.contains(parentInfo.uid, uid) ||
+    (yield* fs.realPath(parent)) !== parent
+  )
+    return yield* failure("configuration");
+  return parent;
+});
+
 /**
  * Durably create a new private enrollment against an existing independent store.
  * **Details** Refuses existing targets, consumed attempts and nested evidence
@@ -361,25 +397,7 @@ export const enrollAgentObservation = Effect.fn("AgentObservation.enroll")(funct
   yield* Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    if (!path.isAbsolute(directory) || path.normalize(directory) !== directory || directory === "/")
-      return yield* failure("configuration");
-    for (const existing of [enrollment.claims.directory, enrollment.destination.directory]) {
-      if (
-        directory === existing ||
-        Str.startsWith(`${directory}/`)(existing) ||
-        Str.startsWith(`${existing}/`)(directory)
-      )
-        return yield* failure("configuration");
-    }
-    const parent = path.dirname(directory);
-    const parentInfo = yield* fs.lstat(parent);
-    if (
-      parentInfo.type !== "Directory" ||
-      (parentInfo.mode & 0o777) !== 0o700 ||
-      !O.contains(parentInfo.uid, uid) ||
-      (yield* fs.realPath(parent)) !== parent
-    )
-      return yield* failure("configuration");
+    const parent = yield* prepareEnrollmentParent(enrollment, directory, uid);
     const body = new TextEncoder().encode(yield* encodeAgentObservationEnrollmentJson(enrollment));
     if (body.byteLength > 32768) return yield* failure("configuration");
     yield* fs.makeDirectory(directory, { mode: 0o700 });

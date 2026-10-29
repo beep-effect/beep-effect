@@ -1,40 +1,10 @@
 {
   "basis": {
-    "report": ".beep/fallow/audit.repair-v14.json",
-    "rawArchive": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-intake-boundaries-rs_lurab/audit.repair-v14.combined.txt",
-    "observedAt": "2026-10-29T18:04:24.499886+00:00"
+    "report": ".beep/fallow/audit.repair-v15.json",
+    "rawArchive": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-client-readback-structure-e3uh_lwe/audit.repair-v15.combined.txt",
+    "observedAt": "2026-10-29T19:17:34.678730+00:00"
   },
   "complexity": [
-    {
-      "path": "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.observation.ts",
-      "name": "<anonymous>",
-      "line": 361,
-      "cyclomatic": 15,
-      "cognitive": 11,
-      "line_count": 47,
-      "exceeded": "cognitive_crap",
-      "severity": "high"
-    },
-    {
-      "path": "packages/drivers/phoenix/src/Phoenix.span-readback.ts",
-      "name": "result",
-      "line": 142,
-      "cyclomatic": 14,
-      "cognitive": 12,
-      "line_count": 62,
-      "exceeded": "cognitive_crap",
-      "severity": "high"
-    },
-    {
-      "path": "packages/tooling/library/ai-metrics/src/observation-launch-client.ts",
-      "name": "result",
-      "line": 146,
-      "cyclomatic": 14,
-      "cognitive": 19,
-      "line_count": 37,
-      "exceeded": "cognitive_crap",
-      "severity": "high"
-    },
     {
       "path": "packages/tooling/library/ai-metrics/src/transcript-discovery.ts",
       "name": "operation",
@@ -73,16 +43,6 @@
       "cognitive": 12,
       "line_count": 104,
       "exceeded": "cognitive",
-      "severity": "moderate"
-    },
-    {
-      "path": "packages/tooling/library/ai-metrics/src/observation-launch-client.ts",
-      "name": "inspect",
-      "line": 102,
-      "cyclomatic": 13,
-      "cognitive": 4,
-      "line_count": 28,
-      "exceeded": "crap",
       "severity": "moderate"
     },
     {

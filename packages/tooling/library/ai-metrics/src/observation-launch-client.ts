@@ -12,6 +12,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
@@ -82,6 +83,39 @@ const encodeSubmission = S.encodeEffect(S.fromJsonString(ObservationLaunchSubmis
 const decodeReceipt = S.decodeEffect(S.fromJsonString(ObservationLaunchReceipt), { onExcessProperty: "error" });
 const decodeContext = S.decodeEffect(S.fromJsonString(ObservationLaunchContext), { onExcessProperty: "error" });
 
+const privateEntryInode = Effect.fnUntraced(function* (
+  info: FileSystem.File.Info,
+  uid: number,
+  type: FileSystem.File.Type,
+  mode: number
+) {
+  if (info.type !== type || (info.mode & 0o777) !== mode || !O.contains(info.uid, uid) || O.isNone(info.ino))
+    return yield* failure("configuration");
+  return info.ino.value;
+});
+
+const requestForSubmission = Effect.fnUntraced(function* (
+  policy: ObservationLaunchClientPolicy,
+  submission: O.Option<ObservationLaunchSubmission>
+) {
+  if (O.isNone(submission)) return HttpClientRequest.get("http://localhost/v1/launch-context");
+  if (submission.value.hostId !== policy.hostId || submission.value.namespaceId !== policy.namespaceId)
+    return yield* failure("configuration");
+  const body = yield* encodeSubmission(submission.value).pipe(Effect.mapError(() => failure("configuration")));
+  if (new TextEncoder().encode(body).byteLength > 8192) return yield* failure("configuration");
+  return HttpClientRequest.post("http://localhost/v1/launch-facts").pipe(
+    HttpClientRequest.bodyText(body, "application/json")
+  );
+});
+
+const submissionFailureReason = (status: number): ObservationLaunchClientError["reason"] =>
+  Match.value(status).pipe(
+    Match.withReturnType<ObservationLaunchClientError["reason"]>(),
+    Match.when(410, () => "retired"),
+    Match.when(409, () => "conflict"),
+    Match.orElse(() => "ambiguous")
+  );
+
 /**
  * Connect to one owner-only socket with bounded single-attempt exchanges.
  * **Example** (Inspect the client factory)
@@ -109,22 +143,13 @@ export const makeObservationLaunchClient = Effect.fn("AiMetrics.makeObservationL
       return yield* failure("configuration");
     const directory = yield* fs.lstat(policy.directory);
     const socket = yield* fs.lstat(path.join(policy.directory, "worker.sock"));
-    if (
-      directory.type !== "Directory" ||
-      (directory.mode & 0o777) !== 0o700 ||
-      !O.contains(directory.uid, uid) ||
-      socket.type !== "Socket" ||
-      (socket.mode & 0o777) !== 0o600 ||
-      !O.contains(socket.uid, uid) ||
-      O.isNone(directory.ino) ||
-      O.isNone(socket.ino)
-    )
-      return yield* failure("configuration");
+    const directoryInode = yield* privateEntryInode(directory, uid, "Directory", 0o700);
+    const socketInode = yield* privateEntryInode(socket, uid, "Socket", 0o600);
     return {
       directoryDev: directory.dev,
-      directoryInode: directory.ino.value,
+      directoryInode,
       socketDev: socket.dev,
-      socketInode: socket.ino.value,
+      socketInode,
     };
   }).pipe(Effect.mapError(() => failure("configuration")));
   const original = yield* inspect;
@@ -152,28 +177,11 @@ export const makeObservationLaunchClient = Effect.fn("AiMetrics.makeObservationL
           current.socketInode !== original.socketInode
         )
           return yield* failure("configuration");
-        let request = HttpClientRequest.get("http://localhost/v1/launch-context");
-        if (O.isSome(submission)) {
-          if (submission.value.hostId !== policy.hostId || submission.value.namespaceId !== policy.namespaceId)
-            return yield* failure("configuration");
-          const body = yield* encodeSubmission(submission.value).pipe(Effect.mapError(() => failure("configuration")));
-          if (new TextEncoder().encode(body).byteLength > 8192) return yield* failure("configuration");
-          request = HttpClientRequest.post("http://localhost/v1/launch-facts").pipe(
-            HttpClientRequest.bodyText(body, "application/json")
-          );
-        }
+        const request = yield* requestForSubmission(policy, submission);
         const response = yield* client.execute(request);
         const bytes = yield* readObservationHttpBytes(response.stream, O.isSome(submission) ? 8192 : 16384);
         if (response.status !== 200)
-          return yield* failure(
-            O.isSome(submission)
-              ? response.status === 410
-                ? "retired"
-                : response.status === 409
-                  ? "conflict"
-                  : "ambiguous"
-              : "unavailable"
-          );
+          return yield* failure(O.isSome(submission) ? submissionFailureReason(response.status) : "unavailable");
         const body = yield* Effect.try({
           try: () => new TextDecoder("utf-8", { fatal: true }).decode(bytes),
           catch: () => failure("invalid-response"),

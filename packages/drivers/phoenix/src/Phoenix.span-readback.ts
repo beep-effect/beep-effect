@@ -15,6 +15,7 @@ import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+import type * as HttpClientResponse from "effect/http/HttpClientResponse";
 import type { PhoenixConfigInput } from "./Phoenix.config.ts";
 
 const $I = $PhoenixId.create("Phoenix.span-readback");
@@ -110,6 +111,60 @@ const row = S.Struct({
 const page = S.Struct({ data: S.Array(row).check(S.isMaxLength(2)), next_cursor: S.NullOr(text) });
 const decodePageJson = S.decodeEffect(S.fromJsonString(page));
 
+const readSpanPage = Effect.fnUntraced(function* (response: HttpClientResponse.HttpClientResponse) {
+  if (response.status === 404) return yield* fail("not-found");
+  if (response.status !== 200) return yield* fail("http");
+  if (
+    Str.trim(Str.split(";")(Str.toLowerCase(response.headers["content-type"] ?? ""))[0] ?? "") !== "application/json" ||
+    Str.toLowerCase(response.headers["content-encoding"] ?? "identity") !== "identity"
+  )
+    return yield* fail("invalid-response");
+  const bytes = new Uint8Array(262144);
+  let used = 0;
+  yield* response.stream.pipe(
+    Stream.mapError(() => fail("transport")),
+    Stream.runForEach((chunk) =>
+      Effect.gen(function* () {
+        if (chunk.byteLength > bytes.byteLength - used) return yield* fail("oversize");
+        bytes.set(chunk, used);
+        used += chunk.byteLength;
+      })
+    )
+  );
+  const decoded = yield* Effect.try({
+    try: () => new TextDecoder("utf-8", { fatal: true }).decode(bytes.subarray(0, used)),
+    catch: () => fail("invalid-response"),
+  }).pipe(
+    Effect.flatMap(decodePageJson),
+    Effect.mapError(() => fail("invalid-response"))
+  );
+  return decoded;
+});
+
+const projectStoredSpan = Effect.fnUntraced(function* (decoded: typeof page.Type, input: PhoenixSpanLookup) {
+  if (decoded.next_cursor !== null || decoded.data.length > 1) return yield* fail("ambiguous");
+  const found = decoded.data[0];
+  if (found === undefined) return O.none<PhoenixStoredSpan>();
+  if (found.context.trace_id !== input.traceId || found.context.span_id !== input.spanId)
+    return yield* fail("invalid-response");
+  const attributes = yield* S.decodeUnknownEffect(PhoenixStoredSpan.fields.attributes)(
+    R.filter(found.attributes, (_value, key) => A.contains(input.attributeKeys, key))
+  ).pipe(Effect.mapError(() => fail("invalid-response")));
+  return O.some(
+    yield* S.decodeEffect(PhoenixStoredSpan)({
+      traceId: found.context.trace_id,
+      spanId: found.context.span_id,
+      parentId: found.parent_id,
+      name: found.name,
+      kind: found.span_kind,
+      startTime: found.start_time,
+      endTime: found.end_time,
+      status: found.status_code,
+      attributes,
+    }).pipe(Effect.mapError(() => fail("invalid-response")))
+  );
+});
+
 /**
  * Make a one-query-at-a-time Phoenix reader with a 256 KiB streaming ceiling.
  * **Example** (Inspecting the reader)
@@ -152,54 +207,8 @@ export const makePhoenixSpanReader = Effect.fn("Phoenix.makeSpanReader")(functio
           })
         );
         const response = yield* client.execute(request).pipe(Effect.mapError(() => fail("transport")));
-        if (response.status === 404) return yield* fail("not-found");
-        if (response.status !== 200) return yield* fail("http");
-        if (
-          Str.trim(Str.split(";")(Str.toLowerCase(response.headers["content-type"] ?? ""))[0] ?? "") !==
-            "application/json" ||
-          Str.toLowerCase(response.headers["content-encoding"] ?? "identity") !== "identity"
-        )
-          return yield* fail("invalid-response");
-        const bytes = new Uint8Array(262144);
-        let used = 0;
-        yield* response.stream.pipe(
-          Stream.mapError(() => fail("transport")),
-          Stream.runForEach((chunk) =>
-            Effect.gen(function* () {
-              if (chunk.byteLength > bytes.byteLength - used) return yield* fail("oversize");
-              bytes.set(chunk, used);
-              used += chunk.byteLength;
-            })
-          )
-        );
-        const decoded = yield* Effect.try({
-          try: () => new TextDecoder("utf-8", { fatal: true }).decode(bytes.subarray(0, used)),
-          catch: () => fail("invalid-response"),
-        }).pipe(
-          Effect.flatMap(decodePageJson),
-          Effect.mapError(() => fail("invalid-response"))
-        );
-        if (decoded.next_cursor !== null || decoded.data.length > 1) return yield* fail("ambiguous");
-        const found = decoded.data[0];
-        if (found === undefined) return O.none<PhoenixStoredSpan>();
-        if (found.context.trace_id !== input.traceId || found.context.span_id !== input.spanId)
-          return yield* fail("invalid-response");
-        const attributes = yield* S.decodeUnknownEffect(PhoenixStoredSpan.fields.attributes)(
-          R.filter(found.attributes, (_value, key) => A.contains(input.attributeKeys, key))
-        ).pipe(Effect.mapError(() => fail("invalid-response")));
-        return O.some(
-          yield* S.decodeEffect(PhoenixStoredSpan)({
-            traceId: found.context.trace_id,
-            spanId: found.context.span_id,
-            parentId: found.parent_id,
-            name: found.name,
-            kind: found.span_kind,
-            startTime: found.start_time,
-            endTime: found.end_time,
-            status: found.status_code,
-            attributes,
-          }).pipe(Effect.mapError(() => fail("invalid-response")))
-        );
+        const decoded = yield* readSpanPage(response);
+        return yield* projectStoredSpan(decoded, input);
       })
     ).pipe(
       Effect.timeoutOrElse({ duration: 5000, orElse: () => Effect.fail(fail("timed-out")) }),
