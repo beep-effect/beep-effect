@@ -683,3 +683,16 @@ through both Effect process backends. The default hosted Docgen gate passed at
 the original head. Keep the local full-runner interruption unattributed while
 checking executable resolution; do not change a compiler or platform service
 on speculation, and do not report a whole-package pass.
+
+
+### Resolve current Effect HTTP leaves before a transport prototype
+
+- A disposable private-network transport probe selected two obsolete HTTP
+  import locations and failed before sending any request. The pinned package
+  exports use the dedicated `effect/http/HttpClient` and
+  `effect/http/HttpClientRequest` leaves. Read the installed import map and
+  implementation before writing the probe; guessing historical module paths
+  added avoidable retries. Exact original errors remain in private diagnostics
+  and are not attributed to the backend. The public ledger also enforces the
+  retired-path policy in prose, so describe the mistake without repeating a
+  prohibited import location.

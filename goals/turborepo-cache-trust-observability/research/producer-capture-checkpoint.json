@@ -207,5 +207,24 @@
       "scope": "Compiler checks pass; the local full-runner interruption remains unattributed. Original hosted Docgen passes at f19. Fresh repaired-head hosted and whole-package proof remain separate."
     },
     "limits": "Controlled process-boundary test doubles; the changed real signed-pilot worker is still not physically executed."
+  },
+  "passingWholePackageReplay": {
+    "sourceHead": "11c6a3dc9a8d42cfc4264290c89b5ca6e8adf86f",
+    "command": "bun run beep quality package-verify @beep/repo-cli",
+    "exit": 0,
+    "elapsedSeconds": 1158.844,
+    "auditSeconds": 1117.9,
+    "docgenSeconds": 39.4,
+    "scope": "Complete default CLI package audit and actual full Docgen on the fixed signed-summary fixture source. Earlier f19 fixture failure and interrupted Docgen attempts remain historical evidence.",
+    "fixtureSource": {
+      "path": "packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts",
+      "sha256": "4bdeb426ca8ea866325fa7df95ab3b7f7813ffe2e703db5bc4f870dcc464e9d4"
+    },
+    "notClaimed": [
+      "closed protected producer",
+      "live signed R2 activation",
+      "current computation qualification",
+      "representative observation windows"
+    ]
   }
 }

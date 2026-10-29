@@ -394,3 +394,12 @@ summary retention, and the reviewed whole-graph upload validator. It also record
 the current census without changing configuration or qualification decisions.
 Actual signed real-pilot execution, backend/supervisor integration and protected
 publication remain separate proof obligations.
+
+
+## Passing producer-capture whole-package replay
+
+`producer-capture-checkpoint.json` now also records the complete default
+`@beep/repo-cli` package audit and full Docgen pass on the fixed signed-summary
+fixture source at `11c6a3dc9a8d`. The run completed in 1158.844 seconds (audit
+1117.9 seconds, Docgen 39.4 seconds). Prior failed and interrupted runs remain
+historical evidence; this pass grants neither live trust nor qualification.

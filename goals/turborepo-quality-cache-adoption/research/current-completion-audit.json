@@ -200,7 +200,7 @@
   },
   "producerCaptureCheckpoint": {
     "path": "goals/turborepo-cache-trust-observability/research/producer-capture-checkpoint.json",
-    "sha256": "03f100a870beea8f10c53412726822f76e5c0ef05a2e55a121c054447318f06e",
+    "sha256": "80720e8a16af59057281fc433fd9d74a11b6c9a4aeb0349ef6d99d1086d60a25",
     "scope": "Latest native request capture and whole-graph component proof; previous evidence retains its recorded source."
   }
 }
