@@ -726,7 +726,7 @@ the policy check; do not add a baseline finding or waive the detector.
   toolchain discovery. A private observer retained only static error classes
   and source locations. Its pinned Bun file was named `bun.native`, with no
   `bun` command in the mounted search path. An actual private-network probe
-  failed127 with the original mounts and passed0 with exact private binary
+  exited 127 with the original mounts and exited 0 with exact private binary
   aliases, reporting the expected Bun and Node versions. Keep aliases in the
   supervisor and test their complete mount arguments; never share a host tools
   directory or weaken the namespace. No current qualification was obtained.
