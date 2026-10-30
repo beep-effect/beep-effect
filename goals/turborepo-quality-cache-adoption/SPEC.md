@@ -314,3 +314,17 @@ review is `research/current-runtime-baseline-review.md`.
   local proof scope and require fresh hosted acceptance. Reversal changes only
   the documentation wording; no scheduler capacity, proof floor or cache flag
   is altered by this correction.
+
+
+### Go workspace discovery applicability, 2026-10-30
+
+- Retain the disabled Go workspace flag. The accepted tree has no root go.work,
+  Go modules or Go source, and none of its tracked manifest scripts directly
+  invokes the enumerated Go build/module commands. No computation or graph
+  edge in this repository can benefit from this discovery feature today.
+- Record this feature as accepted-not-applicable with its exact source and
+  client identities. Canary documentation absence does not establish runtime
+  non-support. Existing Cargo and Python consumers keep their separate reviews.
+- Reopen when a Go consumer or discovery-contract change appears. Require
+  exact-client positive/negative evidence before any proposed activation.
+  Reversal sets this review back to pending; it changes no runtime setting.

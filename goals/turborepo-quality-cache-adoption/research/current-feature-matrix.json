@@ -1,6 +1,6 @@
 {
   "schemaVersion": "cache-adoption-feature-matrix-refresh/v1",
-  "authority": "Current documented/CLI capability inventory and explicit remaining test obligations; not qualification.",
+  "authority": "Source-backed applicability decisions and remaining feature-test obligations; no computation qualification or activation.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
   "clients": "current-client-pins.json",
   "rows": [
@@ -641,14 +641,21 @@
       "enabledInObservedRoot": false,
       "canaryDocumentationObserved": false,
       "prerequisites": [
-        "Exact-client regression evidence",
-        "Change only one experimental flag at a time"
+        "Reopen applicability if a Go consumer or discovery-contract change appears.",
+        "Exact-client regression evidence remains required before any future activation."
       ],
-      "beepUseCase": "Review against the declared Bun workspace, trust controls and current root settings.",
-      "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
-      "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
-      "disposition": "disabled; determine applicability before proposing activation",
-      "acceptanceStatus": "pending"
+      "beepUseCase": "No Go workspace or computation exists in the current accepted source tree.",
+      "expectedBenefit": "Zero current Go-workspace computations or graph edges can benefit; no time saving is claimed.",
+      "correctnessCase": "Verify the clean accepted-tree absence census, exact pinned binary identities and schema false default; preserve absent root setting. Do not enable the feature or substitute a synthetic Go task for a repository consumer.",
+      "disposition": "not-applicable-current-repository; retain disabled",
+      "acceptanceStatus": "accepted-not-applicable",
+      "applicabilityReason": "There is no root go.work, Go module manifest or tracked Go source. No tracked package.json script directly invokes the enumerated Go build/module commands. The current accepted source has no Go workspace graph for this discovery feature to enroll.",
+      "finalReview": "go-workspace-feature-review.json",
+      "reopenWhen": [
+        "A root Go workspace, module, tracked source or actual consumer is introduced.",
+        "A client update changes the discovery or applicability contract.",
+        "A proposal would enable Go workspace discovery; exact-client positive and negative regression evidence is then required before activation."
+      ]
     },
     {
       "feature": "futureFlag:experimentalObservability",
@@ -827,6 +834,10 @@
   "limits": [
     "Documented availability is not runtime correctness proof.",
     "Research-only upstream main is not a production or canary lane.",
-    "Feature-specific applicability and regression evidence remain open."
-  ]
+    "One source-backed non-applicability decision is final for its recorded tree; the other 34 feature-specific reviews remain open."
+  ],
+  "reviewCounts": {
+    "acceptedNotApplicable": 1,
+    "pending": 34
+  }
 }

@@ -170,3 +170,14 @@ from a Turbo miss or hosted runner queue; cache hit-rate cannot explain it away.
 Use the existing ten-minute constrained-compute route when its real threshold
 is reached, recording completed local checks and relying on current hosted
 proof rather than lowering test floors or forcing overlapping memory-heavy jobs.
+
+
+### Refresh source absence before final applicability, 2026-10-30
+
+A prepared Go-workspace review named an unpublished producer source tree.
+Refresh it against the accepted tree before changing the feature matrix:
+43,760 tracked paths contain no Go files or manifests; 4,544 declared manifest
+scripts have no enumerated direct Go build/module command. Keep the superset
+script count distinct from executable computation population, preserve disabled
+configuration and reopen when a real consumer appears. Do not infer Go support
+from missing canary documentation or extend this absence result to Cargo/Python.

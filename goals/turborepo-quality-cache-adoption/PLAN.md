@@ -219,3 +219,18 @@ development and Vite preview. All twelve configured persistent executable
 computations now have source-bound keep-fresh dispositions. Finite build
 counterparts remain unfinished. The current total is 198 reviewed fresh
 boundaries with 2,373 final-disposition gaps; no service was launched.
+
+
+### Go workspace feature disposition
+
+The accepted-source census at dcca confirms zero Go files/modules/root workspace
+and zero direct Go build/module invocations across 4,544 tracked manifest
+scripts. This count includes fixtures and is not the computation census. Both
+pinned native identities were rechecked; the stable schema defaults the Go flag
+to false. The absent root setting remains unchanged.
+
+Record one accepted-not-applicable feature with an explicit reopening trigger
+in [the review](research/go-workspace-feature-review.json). The remaining 34
+feature entries and all nine complete acceptance criteria remain unfinished.
+No Cargo/Python exclusion, task qualification, cache enablement or speedup is
+implied by this source review.
