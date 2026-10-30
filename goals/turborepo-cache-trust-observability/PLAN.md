@@ -857,3 +857,15 @@ changes do not alter the compiled examples or runtime behavior; refresh the
 canonical inventories after accepted-parent replay before final publication.
 The default package proof runs on the updated source; no stale inventory is
 claimed as a passing combined final proof.
+
+
+### Inspection workflow policy repair, 2026-10-30
+
+The first default package proof passed 8,264 cases but exposed the introduced
+missing manual-inspection context mapping. The repair uses the existing explicit
+operational inventory and adds permission, protected-source, disabled capability
+and retention assertions. The current security/lane suite passes 127 cases per
+runtime; quick verification passes. See the
+[source-bound receipt](research/inspection-governance-checkpoint.json).
+Fresh default package and accepted-parent/final/hosted proof remain open; no
+inspection dispatch, credential activation or whole-goal acceptance is claimed.

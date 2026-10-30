@@ -542,3 +542,13 @@ The ordinary adapter lifecycle and cache configuration remain unchanged.
 - The unpublished continuation uses the committed lifecycle repair as its local
   parent. Accepted-parent replay, canonical combined proof and protected hosted
   execution are still required. All full-goal acceptance remains unproven.
+
+
+### Manual inspection governance, 2026-10-30
+
+- [Policy repair receipt](inspection-governance-checkpoint.json): introduced
+  missing-context mapping was found by the full package proof. The explicit
+  operational mapping preserves the workflow checker and required contexts.
+- Both native runtimes pass 127 security/lane cases, including dispatch/main,
+  read-only permission, disabled capability and retention checks. Actual protected
+  execution and complete combined proof remain separate requirements.

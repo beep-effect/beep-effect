@@ -1429,3 +1429,13 @@ in the owning producer PR; preserve it until the accepted-parent replay.
 - Prevention: inspect the prior successful command receipt or the command help
   before guessing a nested quality command. This was an invocation error, not a
   source or policy failure; no finding was waived.
+
+
+### Register operational workflow contexts with their policy proof
+
+- Work: verify the unpublished protected-producer component.
+- Evidence: the full package run reported `Inspect producer sources and tools`
+  as absent from the hosted job inventory; 8,264 other cases passed.
+- Prevention: add the exact operational context and the source/credential/retention
+  policy case in the same change that introduces a manual workflow. The checker
+  stays active; this introduced mapping failure is repaired, not waived.

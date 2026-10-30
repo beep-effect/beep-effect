@@ -857,3 +857,20 @@ coverage floor is unchanged and met. The failed publication pushed nothing.
   wiring while retaining prior private records and observations. Do not restore
   unsigned remote fallback or loosen the independent source and issuer policies.
   Ordinary R2 and inactive signed-trial state are unchanged.
+
+
+### Manual inspection governance, 2026-10-30
+
+- Classify the new manual source-inspection context through the existing explicit
+  orchestration inventory. It emits operational source evidence, not a required
+  quality verdict or a new CLI lane; do not expand required-status authority.
+- Keep the workflow policy checker active. Pin dispatch-only execution, protected
+  main, contents-read permission, the existing environment, ten-minute deadline,
+  all five disabled setup capabilities, disabled inherited host cache and one-day
+  artifact retention in the security suite.
+- The first default package proof found the missing mapping (introduced). The
+  repaired security/lane suite passes 127 cases on each runtime, with quick
+  verification passing. Fresh default and combined final/hosted proof remain
+  required; this does not prove actual protected inspection or signed execution.
+- Reverse by removing the still-unused inspection workflow and its exact mapping
+  and policy case together. No credential, permission, status or runtime change.
