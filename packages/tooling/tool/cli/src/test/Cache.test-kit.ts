@@ -9,6 +9,7 @@ export {
   CacheProducerAcceptanceReference,
   CacheProducerImportPreview,
   CacheProducerImportRequest,
+  CacheProducerPublication,
   CacheProducerStoreConfiguration,
   CacheProducerTrustLocations,
 } from "../commands/Cache/Cache.acceptance.schemas.ts";
@@ -89,6 +90,7 @@ export {
   openCacheProducerIssuer,
   openCacheProducerVerifier,
   readCacheProducerExecutionProfile,
+  readCacheProducerHostedApproval,
   readCacheProducerProvisioning,
   revokeCacheProducerIssuer,
   validateCacheProducerApproval,
@@ -113,6 +115,9 @@ export {
 } from "../commands/Cache/Cache.workflow.github.schemas.ts";
 export {
   buildCacheHostedProducerCompleteReport,
+  CacheHostedProducerVerifier,
+  CacheHostedProducerVerifierLive,
+  layerCacheHostedProducerMetadata,
   verifyCacheHostedProducerObservation,
   verifyCacheHostedProducerUpload,
 } from "../commands/Cache/Cache.workflow.github.ts";

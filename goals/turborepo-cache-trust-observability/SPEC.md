@@ -828,3 +828,32 @@ coverage floor is unchanged and met. The failed publication pushed nothing.
   which exists before upload. Reuse that schema inside the later artifact
   reference, whose real artifact ID remains mandatory during verification.
   No placeholder identity is introduced and the report wire format is unchanged.
+
+
+### Strict publication at acceptance and operational reads, 2026-10-30
+
+- Require both channel publications in the existing authenticated import owner.
+  Legacy requests remain decodable for preview, with explicit missing-publication
+  failures; they cannot persist acceptance or authorize an operational transition.
+  The fixed private issuer store supplies `publication.json`; submitted requests
+  select neither workflow approval, credentials nor an alternate trust directory.
+- Reuse the existing protected GitHub metadata and bounded immutable ZIP verifier.
+  Bind the entire canonical observation and its exact owned upload, retain both
+  issuer/MAC checks, and re-read both private publication approvals after both
+  channel checks. Refuse a stable approval replaced during canary verification.
+- Compose one lazy metadata capability into the existing cache and quality
+  commands. Resolve credentials only for a supplied publication, scope each
+  metadata client to one verification, and release it before returning on success
+  or failure. Existing expiry, revocation, live-source and policy checks remain.
+- Controlled physical ZIP, private-file and CLI tests cover acceptance, persistence
+  and operational rereads; source-removal tests cover the strict join, final
+  publication approval reads and final issuer checks. These tests use fixture
+  metadata and do not prove a real protected publication or signed R2 execution.
+- Continue locally from the committed producer lifecycle repair while its PR is
+  open; keep this dependent branch unpublished. Retain a recovery ref and exact
+  seven-commit patch, then replay only this branch's commits after its exact parent
+  onto accepted main before publication. Never rebase the published parent PR.
+- Reverse by disabling acceptance-driven qualification and reverting this consumer
+  wiring while retaining prior private records and observations. Do not restore
+  unsigned remote fallback or loosen the independent source and issuer policies.
+  Ordinary R2 and inactive signed-trial state are unchanged.

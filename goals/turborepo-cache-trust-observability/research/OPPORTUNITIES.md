@@ -1402,3 +1402,30 @@ in the owning producer PR; preserve it until the accepted-parent replay.
   Keep the full artifact ID mandatory at authenticated verification.
 - Prevention: trace the real producer/consumer ordering before fixing an input
   contract; never invent a placeholder artifact identifier.
+
+### Keep credential references intact across secret-runner boundaries, 2026-10-30
+
+- Doing: mark the passing conformance fixture repair ready for review.
+- Evidence: the GitHub identity path failed with `op did not return the GitHub
+  token (exit 1)`. Count-only probes showed the outer secret runner had resolved
+  `BEEP_GH_TOKEN_REF`, while the nested client still interpreted it as a reference.
+  The approved env-file read itself succeeded; this was an invocation-boundary
+  error, not evidence of desktop sign-in failure or missing operator consent.
+- Repair: restore the nonsecret reference after env resolution and remove all
+  `OP_*` credentials from the child environment. A second count-only probe
+  confirmed reference preservation, token availability and zero forwarded agent
+  credential variables. The canonical ready operation then passed. No token or
+  raw item data was written to evidence.
+- Prevention: credential consumers must distinguish references from resolved
+  values, especially when nested inside an existing secret runner. Preserve
+  the original failed result and never retry a malformed reference path.
+
+
+### Reuse recorded quality command arguments
+
+- Work: run the acceptance consumer's Fallow check.
+- Evidence: `beep quality fallow-audit` failed with `Unknown subcommand`;
+  the recorded `beep quality fallow audit --check` command passed without changes.
+- Prevention: inspect the prior successful command receipt or the command help
+  before guessing a nested quality command. This was an invocation error, not a
+  source or policy failure; no finding was waived.

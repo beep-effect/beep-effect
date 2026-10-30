@@ -826,3 +826,26 @@ source again passes32 cases per runtime and all three causal guard controls.
 Current source inspection confirms issuer exclusion already covers the actual
 worker mounts and `/usr`; the owned protected workflow must also stage and clear
 its temporary raw provisioning transfer before launching workers.
+
+
+### Acceptance publication consumer, 2026-10-30
+
+The unpublished continuation now joins protected publication into the existing
+issuer-authenticated acceptance, persistence and operational reads. Missing
+publication fails qualification; submitted ZIP bytes must match independently
+approved workflow/run/artifact metadata, the complete observation and its owned
+upload. Final reads cover changes across both channel verifications. Metadata
+credentials remain lazy and each verification scope releases its resources.
+
+The combined ten-file suite passes 222 cases under Node and Bun, with quick lint
+and check passing. Three removed-guard controls fail their selected assertions
+and restore the source exactly. Canonical Effect, JSDoc, instrumentation and schema writers pass; native resource
+judgments are reviewed. Default package and final/hosted proof remain required. See the source-bound
+[acceptance checkpoint](research/acceptance-publication-join-checkpoint.json).
+The local parent includes the committed lifecycle repair; publication remains
+held until that parent is accepted and only dependent commits are replayed.
+
+Actual protected publisher execution, independent publication-approval
+provisioning, successful human bootstrap, role/epoch/rollback qualification,
+all eligible computation and feature reviews, and real seven/seven/fourteen-day
+observations remain open. No acceptance criterion or phase is completed here.

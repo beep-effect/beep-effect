@@ -57,7 +57,7 @@ import {
   setAdmissionEvictionProtocol,
   TmpfsReapReport,
 } from "../../internal/repo-run/index.ts";
-import { CacheQualificationLive, runCachePolicyAudit } from "../Cache/index.ts";
+import { CacheHostedProducerVerifierLive, CacheQualificationLive, runCachePolicyAudit } from "../Cache/index.ts";
 import { FleetMirrorService, FleetMirrorServiceLive } from "../Worktree/Fleet.service.ts";
 import { WaveOrder } from "../Yeet/internal/WaveOrder.ts";
 import { CatalogUsageSourceLive, runCatalogUsageCheck } from "./CatalogUsage.ts";
@@ -3716,7 +3716,7 @@ const cachePolicyCommand = Command.make("cache-policy", {}, () =>
   findRepoRoot().pipe(Effect.flatMap((root) => runCachePolicyAudit(root, false)))
 ).pipe(
   Command.withDescription("Enforce Cache's reviewed qualification policy without writing qualification state"),
-  Command.provide(CacheQualificationLive)
+  Command.provide(CacheQualificationLive.pipe(Layer.provideMerge(CacheHostedProducerVerifierLive)))
 );
 
 const turboConfigProofCommand = Command.make(

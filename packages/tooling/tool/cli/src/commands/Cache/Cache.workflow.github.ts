@@ -12,12 +12,16 @@ import { Sha256HexFromBytes } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
+import { GithubClientRequest, layerGithubClientFor, selectGithubIdentity } from "../../internal/github/index.ts";
 import { OutputBound, runCaptured } from "../../internal/process/index.ts";
 import { CacheProducerBinding } from "./Cache.producer.schemas.ts";
 import { CacheCommandError } from "./Cache.schemas.ts";
@@ -29,9 +33,134 @@ import {
   CacheHostedProducerUpload,
 } from "./Cache.workflow.github.schemas.ts";
 import { CacheProducerObservation } from "./Cache.workflow.schemas.ts";
+import type * as Crypto from "effect/Crypto";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { CacheHostedProducerRunReference } from "./Cache.workflow.github.schemas.ts";
 
+/**
+ * Build the existing authenticated GitHub services only for hosted verification.
+ *
+ * **Details**
+ * Identity selection uses the repo CLI's approved reference/App/gh route.
+ * The supplied working directory is independently configured issuer storage;
+ * reports choose neither credentials nor the GitHub endpoint. Unpublished
+ * previews and unqualified policy audits never construct this layer.
+ *
+ * **Example** (Prepare an authenticated workflow-content read)
+ * ```ts
+ * import { GitHubContent } from "@beep/github/GitHubContent"
+ * import { layerCacheHostedProducerMetadata } from "@beep/repo-cli/test/Cache"
+ * import * as Effect from "effect/Effect"
+ *
+ * const workflow = GitHubContent.use((content) =>
+ *   content.getFile(".github/workflows/cache-producer.yml", {
+ *     ref: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+ *   })
+ * ).pipe(Effect.provide(layerCacheHostedProducerMetadata("/private/cache/stable")))
+ * // The caller still supplies the repository and platform services at execution.
+ * console.assert(Effect.isEffect(workflow))
+ * ```
+ *
+ * @internal
+ * @category layers
+ * @since 0.0.0
+ */
+export const layerCacheHostedProducerMetadata = (directory: string) =>
+  Layer.unwrap(
+    Effect.gen(function* () {
+      const identity = yield* selectGithubIdentity(O.none());
+      return GitHubContent.layer.pipe(
+        Layer.provideMerge(layerGithubClientFor(GithubClientRequest.make({ identity, cwd: directory })))
+      );
+    }).pipe(Effect.withSpan("CacheWorkflow.hostedMetadataLayer"))
+  );
+
 const $I = $RepoCliId.create("commands/Cache/Cache.workflow.github");
+
+/**
+ * Application-owned authenticated metadata capability for acceptance verification.
+ *
+ * **Details**
+ * This service owns lazy credential and HTTP resource composition. Submitted
+ * requests cannot configure it. An absent capability fails acceptance closed;
+ * unpublished previews need no credential or network lookup.
+ *
+ * **Example** (Deny published imports in a restricted application)
+ * ```ts
+ * import { CacheCommandError } from "@beep/repo-cli/commands/Cache"
+ * import { CacheHostedProducerVerifier } from "@beep/repo-cli/test/Cache"
+ * import * as Effect from "effect/Effect"
+ * import * as Layer from "effect/Layer"
+ *
+ * const denyPublishedImports = Layer.succeed(CacheHostedProducerVerifier, {
+ *   verify: () => Effect.fail(CacheCommandError.new("Published imports are disabled."))
+ * })
+ * console.assert(Layer.isLayer(denyPublishedImports))
+ * ```
+ *
+ * @internal
+ * @category services
+ * @since 0.0.0
+ */
+export class CacheHostedProducerVerifier extends Context.Service<
+  CacheHostedProducerVerifier,
+  {
+    readonly verify: (
+      directory: string,
+      approval: CacheHostedProducerApproval,
+      reference: CacheHostedProducerReference,
+      archive: Uint8Array,
+      observation: CacheProducerObservation
+    ) => Effect.Effect<CacheHostedProducerObservation, CacheCommandError>;
+  }
+>()($I`CacheHostedProducerVerifier`) {}
+
+/**
+ * Provide lazy authenticated GitHub verification with one owned scope per call.
+ *
+ * **Details**
+ * Captures platform services while composing the application layer. Credentials
+ * are resolved only when a published request is checked; the metadata context
+ * is built inside the verification scope and released before returning.
+ *
+ * **Example** (Compose qualification with lazy hosted verification)
+ * ```ts
+ * import { CacheQualificationLive } from "@beep/repo-cli/commands/Cache"
+ * import { CacheHostedProducerVerifierLive } from "@beep/repo-cli/test/Cache"
+ * import * as Layer from "effect/Layer"
+ *
+ * const qualification = CacheQualificationLive.pipe(
+ *   Layer.provideMerge(CacheHostedProducerVerifierLive)
+ * )
+ * console.assert(Layer.isLayer(qualification))
+ * ```
+ *
+ * @internal
+ * @category layers
+ * @since 0.0.0
+ */
+export const CacheHostedProducerVerifierLive = Layer.effect(
+  CacheHostedProducerVerifier,
+  Effect.gen(function* () {
+    const platform = yield* Effect.context<
+      FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+    >();
+    return CacheHostedProducerVerifier.of({
+      verify: Effect.fn("CacheWorkflow.verifyPublishedAcceptance")(
+        function* (directory, approval, reference, archive, observation) {
+          const metadata = yield* Layer.build(layerCacheHostedProducerMetadata(directory));
+          return yield* verifyCacheHostedProducerObservation(approval, reference, archive, observation).pipe(
+            Effect.provide(metadata)
+          );
+        },
+        Effect.scoped,
+        CacheCommandError.mapError("Cannot verify independently published acceptance metadata."),
+        Effect.provide(platform)
+      ),
+    });
+  })
+);
+
 const id = CacheHostedProducerReference.fields.runId;
 const repository = S.Struct({ id, full_name: S.NonEmptyString, fork: S.Boolean }).pipe(
   $I.annoteSchema("Repository", { description: "GitHub repository database identity and fork status." })

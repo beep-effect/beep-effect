@@ -527,3 +527,18 @@ The ordinary adapter lifecycle and cache configuration remain unchanged.
   after upload. The current report builder needs no invented future artifact ID;
   authenticated verification retains that required identity. Fresh Node/Bun
   replays and digest/upload/snapshot controls cover the refined source.
+
+
+### Publication-bound acceptance consumer, 2026-10-30
+
+- [Source-bound acceptance checkpoint](acceptance-publication-join-checkpoint.json):
+  local implementation joins immutable publication with existing issuer/MAC
+  acceptance, persistence and operational reads. The combined 222 cases pass
+  under each runtime; three exact-restored source-removal controls demonstrate
+  strict verification, final publication-approval reads and final issuer checks.
+- Tests use real private files, physical ZIPs, the real CLI command and controlled
+  metadata services. They prove refusal and scope behavior, not actual GitHub
+  producer execution, deployed credentials or signed R2 performance.
+- The unpublished continuation uses the committed lifecycle repair as its local
+  parent. Accepted-parent replay, canonical combined proof and protected hosted
+  execution are still required. All full-goal acceptance remains unproven.

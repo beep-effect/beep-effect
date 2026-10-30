@@ -1,0 +1,188 @@
+{
+  "schemaVersion": "cache-acceptance-publication-join-checkpoint/v1",
+  "recordedAt": "2026-10-30T18:17:16.620868+00:00",
+  "authority": "Unpublished source-bound local component proof with controlled external metadata; no protected hosted execution, qualification or rollout acceptance.",
+  "sourceParent": "27071a2d1c7071a9b3ed4e3f7254bf5e9adb3fe0",
+  "localUnpublishedDependency": "e6990a32b389e0a0900007ffd6bf0ada646edb58",
+  "sourceSha256": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.acceptance.schemas.ts": "a11454355bf0f69cf476b9fac5965df09a4560e58e03748994b58f0430df2280",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.acceptance.ts": "38ef3ee7be92deaa77dbeb462827fb694ea95ec3f1fd810acc6dccfa8397e5f8",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts": "a3b2edf5deceaf7d042782a2b2eb5b521f373bef54075d0cb499280c68d7751a",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts": "2f1149642027c1ad23cc15b3ecd7d658a6dfa9c649500ad8dde0ccf40a881c58",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.ts": "3c6d9509bbd5833004a9880e375c91fe09e6a0813db928e4d75b6e1ee2f110b9",
+    "packages/tooling/tool/cli/src/commands/Cache/index.ts": "4ef672c96ea78538e44127af92168178c387147ea8f87bb7087e114f9e39a89e",
+    "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts": "3b9c75db5736aab4097cd78364d7e972e798935e1376e5651b84dfb33147d247",
+    "packages/tooling/tool/cli/src/test/Cache.test-kit.ts": "f6e2f07459cb88eab2325bb99969332201853e208fa4b4cec0629364a1127708",
+    "packages/tooling/tool/cli/test/cache-accept-cli.test.ts": "048b7e25c5b219a4734b14357ee4928b212e386826d3f171e1e2d08290f7ebec",
+    "packages/tooling/tool/cli/test/cache-acceptance.test.ts": "32612ad64e0a18849b37eb4360cde8f91f9eb7b9618f8ad7721d5f4c047cfab2",
+    "packages/tooling/tool/cli/test/cache-hosted-producer.test.ts": "751a1cf279e06c7e4cf875cf3d798ba4de7079677ebe965b79bce38856637b4b",
+    "packages/tooling/tool/cli/test/cache-operational-acceptance.test.ts": "bb52d4ad7de5e9f381f7fc166552b43fca2d231b23045d31d2d537484f747013",
+    "packages/tooling/tool/cli/test/cache-workflow.test.ts": "89ec81e6eb52ce0f8fcb7d8af97dc1281a4a5f1c72c660ac770eb26a7fe862cd",
+    "packages/tooling/tool/cli/test/helpers/cache-hosted-publication-fixture.ts": "495cbdf7c3f7a8e0d89e2ef884ad78ed7fc2f4067ef9b4bdbce8c10e8a115646"
+  },
+  "verification": {
+    "node": {
+      "exit": 0,
+      "elapsedSeconds": 28.599,
+      "finishedAt": "2026-10-30T17:56:41.810409+00:00",
+      "tests": 222,
+      "files": 10
+    },
+    "bun": {
+      "exit": 0,
+      "elapsedSeconds": 23.224,
+      "finishedAt": "2026-10-30T17:56:35.430831+00:00",
+      "tests": 222,
+      "files": 10
+    },
+    "quick": {
+      "exit": 0,
+      "elapsedSeconds": 13.445,
+      "finishedAt": "2026-10-30T17:56:26.221386+00:00"
+    },
+    "scopedDocgen": {
+      "exit": 0,
+      "elapsedSeconds": 43.447,
+      "finishedAt": "2026-10-30T18:09:59.842018+00:00"
+    }
+  },
+  "causalControls": {
+    "schemaVersion": "cache-publication-import-controls/v1",
+    "recordedAt": "2026-10-30T18:16:29.154810+00:00",
+    "authority": "Local source-removal tests with controlled external metadata only; no production qualification.",
+    "sourceSha256": "38ef3ee7be92deaa77dbeb462827fb694ea95ec3f1fd810acc6dccfa8397e5f8",
+    "rows": [
+      {
+        "control": "strict-join",
+        "selectedTest": "accepts only a fully covered approved policy",
+        "removedGuardExit": 1,
+        "oneSelectedTestFailed": true,
+        "assertionFailure": true,
+        "logSha256": "3f37bc6b8f7ef6b4aec92185373a56841ec9c6fa84af1f9e22a67fb414959fe0"
+      },
+      {
+        "control": "approval-reread",
+        "selectedTest": "rejects replaced independent approvals",
+        "removedGuardExit": 1,
+        "oneSelectedTestFailed": true,
+        "assertionFailure": true,
+        "logSha256": "fdd0ad43597d5adb1381c1a2f64e54de9c8abffeba555dd1f833270b285e3840"
+      },
+      {
+        "control": "issuer-reread",
+        "selectedTest": "rejects issuer revocation that occurs",
+        "removedGuardExit": 1,
+        "oneSelectedTestFailed": true,
+        "assertionFailure": true,
+        "logSha256": "dcb0441720d3b3ecdc9fe0bf14b1827582d08ca107a6123ad881f8b67d21261f"
+      }
+    ],
+    "sourceRestoredExactly": true
+  },
+  "implementation": [
+    "Require both immutable publications in acceptance, persistence and operational reads.",
+    "Keep legacy requests preview-only with explicit missing-publication failures.",
+    "Read fixed independently provisioned private publication approvals; recheck both after both channel verifications.",
+    "Preserve final issuer/MAC reverification and all prior source/policy checks.",
+    "Reuse existing GitHub identity routing with lazy per-call client scopes and cleanup."
+  ],
+  "limitsUnchanged": {
+    "archiveBytes": 1048576,
+    "memberBytes": 65536,
+    "memberCount": 1,
+    "inspectionSeconds": 10,
+    "receiptHours": 24,
+    "acceptedRecordBytes": 8388608
+  },
+  "remaining": [
+    "Replay only unpublished dependent commits onto accepted main after the producer lifecycle parent lands.",
+    "Provision independent publication approvals through the existing trusted lifecycle.",
+    "Wire and execute the actual protected publisher and immutable artifact publication.",
+    "Complete canonical inventories and fresh combined/default-package/final/hosted proof.",
+    "Verify the real human bootstrap, qualify roles, signing, epochs and rollback.",
+    "Complete all eligible computations, feature reviews and actual seven/seven/fourteen-day observations."
+  ],
+  "productionChanges": false,
+  "qualificationChanges": false,
+  "allAcceptanceUnproven": true,
+  "canonicalMetadata": {
+    "effectVitest": {
+      "path": "standards/effect-vitest.inventory.jsonc",
+      "sha256": "6515267466583068f25cb5e76efb76e662c1881d2adcffb863bdad58093e95a4",
+      "writer": {
+        "exit": 0,
+        "elapsedSeconds": 38.719,
+        "finishedAt": "2026-10-30T17:58:20.072580+00:00"
+      }
+    },
+    "jsdoc": {
+      "path": "standards/jsdoc-documentation.inventory.jsonc",
+      "sha256": "46de14445d933f81c7a0e35950109ef6f6e6eeaddec71a37bc14f574b38fd734",
+      "writer": {
+        "exit": 0,
+        "elapsedSeconds": 281.898,
+        "finishedAt": "2026-10-30T18:15:22.646788+00:00"
+      }
+    },
+    "instrumentation": {
+      "path": "standards/instrumentation-catalog/@beep/repo-cli.generated.jsonc",
+      "sha256": "8ccf0daaa3a2ffc51b63a6e1fff16cb15067ec690300cd740bf1a144c7ef10b3",
+      "writer": {
+        "exit": 0,
+        "elapsedSeconds": 8.217,
+        "finishedAt": "2026-10-30T18:16:37.389413+00:00"
+      }
+    },
+    "schema": {
+      "path": "standards/schema-catalog/@beep/repo-cli.generated.jsonc",
+      "sha256": "1d65e964bae9ffd0c65a3aa13cf0271181efce3fcff33f90ac8da2e1e63d185a",
+      "writer": {
+        "exit": 0,
+        "elapsedSeconds": 22.366,
+        "finishedAt": "2026-10-30T18:16:59.771952+00:00"
+      }
+    }
+  },
+  "resourceReview": {
+    "findings": 556,
+    "open": 0,
+    "preservedTransactionPropertyReasons": 2,
+    "nativeProvenanceJudgmentsReviewed": 3,
+    "actualProviderAndWrapperDefectsRepaired": true,
+    "review": "goals/turborepo-task-qualification/research/test-resource-boundaries.md",
+    "coverageFloorsUnchanged": true
+  },
+  "checks": {
+    "effectVitest": {
+      "exit": 0,
+      "elapsedSeconds": 41.385,
+      "finishedAt": "2026-10-30T18:07:03.685537+00:00"
+    },
+    "instrumentation": {
+      "exit": 0,
+      "elapsedSeconds": 7.698,
+      "finishedAt": "2026-10-30T18:06:30.442589+00:00"
+    },
+    "schema": {
+      "exit": 0,
+      "elapsedSeconds": 19.381,
+      "finishedAt": "2026-10-30T18:06:42.537992+00:00"
+    },
+    "fallowAudit": {
+      "exit": 0,
+      "elapsedSeconds": 11.093,
+      "finishedAt": "2026-10-30T18:06:55.518731+00:00"
+    },
+    "goalsDoctor": {
+      "exit": 0,
+      "elapsedSeconds": 2.1,
+      "finishedAt": "2026-10-30T18:06:25.265157+00:00"
+    },
+    "explore": {
+      "exit": 0,
+      "elapsedSeconds": 1.468,
+      "finishedAt": "2026-10-30T18:06:24.625803+00:00"
+    }
+  },
+  "proofScope": "The 222-case dual-runtime functional replay preceded documentation-only example refinements. Current examples compile; canonical writers and exact-restored guard controls bind the documented source. Default package and final/hosted proof remain required."
+}

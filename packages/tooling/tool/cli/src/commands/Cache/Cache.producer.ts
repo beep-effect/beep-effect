@@ -35,10 +35,12 @@ import {
 } from "./Cache.producer.schemas.ts";
 import { validateCacheProtocolExecution } from "./Cache.protocol.ts";
 import { CacheCommandError } from "./Cache.schemas.ts";
+import { CacheHostedProducerApproval } from "./Cache.workflow.github.schemas.ts";
 import { CacheProducerExecutionProfile } from "./Cache.workflow.schemas.ts";
 
 const encodeApproval = S.encodeEffect(S.fromJsonString(CacheProducerApproval));
 const decodeApproval = S.decodeUnknownEffect(S.fromJsonString(CacheProducerApproval));
+const decodeHostedApproval = S.decodeUnknownEffect(S.fromJsonString(CacheHostedProducerApproval));
 const decodeExecutionProfile = S.decodeUnknownEffect(S.fromJsonString(CacheProducerExecutionProfile));
 const encodeContract = S.encodeEffect(S.fromJsonString(CacheTaskContract));
 const encodeBinding = S.encodeEffect(S.fromJsonString(CacheProducerBinding));
@@ -541,6 +543,37 @@ const readPrivateProducerRecord = Effect.fn("Producer.readPrivateRecord")(functi
   });
   return yield* decode(text);
 });
+
+/**
+ * Read independently provisioned hosted-publication approval from the issuer store.
+ *
+ * **Details**
+ * Reuses the owner-only directory, bounded single-link/no-follow record reader.
+ * Submitted observations cannot select the filename or supply its contents.
+ * Callers compare the binding to the current issuer approval and re-read after
+ * hosted verification to refuse concurrent replacement or revocation.
+ *
+ * **Example** (Read the independently approved workflow)
+ * ```ts
+ * import { readCacheProducerHostedApproval } from "@beep/repo-cli/test/Cache"
+ * import * as Effect from "effect/Effect"
+ *
+ * const approvedWorkflow = readCacheProducerHostedApproval("/private/cache/stable").pipe(
+ *   Effect.map((approval) => approval.workflowPath)
+ * )
+ * // Effect<string, CacheCommandError, FileSystem | Path>; no read until execution.
+ * console.assert(Effect.isEffect(approvedWorkflow))
+ * ```
+ *
+ * @internal
+ * @category queries
+ * @since 0.0.0
+ */
+export const readCacheProducerHostedApproval = Effect.fn("Producer.readHostedApproval")((directory: string) =>
+  readPrivateProducerRecord(directory, "publication.json", "hosted publication approval", decodeHostedApproval).pipe(
+    CacheCommandError.mapError("Hosted producer approval is unavailable or unsafe.")
+  )
+);
 
 const readIssuerApproval = Effect.fn("Producer.readIssuerApproval")(function* (directory: string) {
   const approval = yield* readPrivateProducerRecord(directory, "approval.json", "approval", decodeApproval);

@@ -106,7 +106,8 @@
     "research/dependency-security-compatibility-checkpoint.json",
     "research/protected-producer-entrypoint-checkpoint.json",
     "research/producer-provisioning-checkpoint.json",
-    "research/complete-observation-publication-checkpoint.json"
+    "research/complete-observation-publication-checkpoint.json",
+    "research/acceptance-publication-join-checkpoint.json"
   ],
   "agentLaunchers": [
     {

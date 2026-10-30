@@ -18,6 +18,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
+import * as Layer from "effect/Layer";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
@@ -84,6 +85,7 @@ import {
   CacheWarmReceiptJson,
 } from "./Cache.schemas.ts";
 import { CacheQualificationLive, CacheQualificationService } from "./Cache.service.ts";
+import { CacheHostedProducerVerifierLive } from "./Cache.workflow.github.ts";
 import { CacheProducerObservation, CacheProducerWorkflow } from "./Cache.workflow.schemas.ts";
 import {
   initializeCacheProducerExecution,
@@ -91,7 +93,6 @@ import {
   loadCacheProducerExecutionRuntime,
   runCacheProducerWorkflow,
 } from "./Cache.workflow.ts";
-import type * as Layer from "effect/Layer";
 import type { CacheConformanceBearers, CacheConformanceCorpus } from "./Cache.conformance.schemas.ts";
 
 const TurboTaskCache = S.Struct({
@@ -291,6 +292,7 @@ const runCacheWarmWith = Effect.fn("Cache.runCacheWarmWith")(function* (
  * ```ts
  * import { runCacheWarm } from "@beep/repo-cli/commands/Cache"
  * import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
  * import * as Option from "effect/Option";
  * console.log(Effect.isEffect(runCacheWarm(".", Option.none()))) // true
  * ```
@@ -311,6 +313,7 @@ export const runCacheWarm = Effect.fn("Cache.runCacheWarm")(function* (repoRoot:
  * import { CacheWarmLane } from "@beep/repo-cli/commands/Cache"
  * import { runCacheWarmForTesting } from "@beep/repo-cli/test/Cache"
  * import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
  * import * as O from "effect/Option"
  *
  * const runner = () =>
@@ -488,6 +491,7 @@ const observeCacheRun = (
  * ```ts
  * import { buildCacheDashboard } from "@beep/repo-cli/commands/Cache"
  * import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
  * import * as Option from "effect/Option";
  * console.log(Effect.isEffect(buildCacheDashboard(".turbo/runs", Option.none(), []))) // true
  * ```
@@ -543,6 +547,7 @@ export const buildCacheDashboard = Effect.fn("Cache.buildCacheDashboard")(functi
  * ```ts
  * import { runCacheRestorationProbe } from "@beep/repo-cli/commands/Cache"
  * import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
  * console.log(Effect.isEffect(runCacheRestorationProbe(".", ".beep/cache/probe"))) // true
  * ```
  *
@@ -1249,7 +1254,9 @@ const cacheCommandDefinition = Command.make("cache", {}, () =>
  * @category commands
  * @since 0.0.0
  */
-export const cacheCommand = cacheCommandDefinition.pipe(Command.provide(CacheQualificationLive));
+export const cacheCommand = cacheCommandDefinition.pipe(
+  Command.provide(CacheQualificationLive.pipe(Layer.provideMerge(CacheHostedProducerVerifierLive)))
+);
 
 /**
  * Build the real command tree with an explicit qualification authority for tests.

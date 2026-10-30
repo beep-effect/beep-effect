@@ -26,9 +26,9 @@ import {
   CacheHostedProducerUpload,
   CacheProducerAdapterLaunch,
   CacheProducerAdapterReceipt,
+  CacheProducerExecutionProfile,
   CacheProducerUploadApproval,
   CacheProducerUploadRuntime,
-  CacheProducerExecutionProfile,
   CacheProducerWorkflow,
   CacheRuntimeAdmission,
   collectCacheProducerWorkflowFiles,
@@ -271,7 +271,20 @@ const supervisedFixture = Effect.fn("WorkflowTest.supervisedFixture")(function* 
   const run = runCacheProducerWorkflow(root, request, directory, binding, runtime).pipe(
     Effect.provideService(FileSystem.FileSystem, observedFs)
   );
-  return { ...base, bundle, directory, binding, contract, request, signed, protocol, admission, runtime, run, observedFs };
+  return {
+    ...base,
+    bundle,
+    directory,
+    binding,
+    contract,
+    request,
+    signed,
+    protocol,
+    admission,
+    runtime,
+    run,
+    observedFs,
+  };
 });
 
 const provisioningFixture = Effect.fn("WorkflowTest.provisioningFixture")(function* () {

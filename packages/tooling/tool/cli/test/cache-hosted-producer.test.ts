@@ -38,6 +38,7 @@ import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { zipProducerReport as zipReport } from "./helpers/cache-hosted-publication-fixture.ts";
 import { input } from "./helpers/cache-producer-bundle-fixture.ts";
 
 const hashBytes = S.decodeEffect(Sha256HexFromBytes);
@@ -50,36 +51,6 @@ const workflow = "name: Producer\non: workflow_dispatch\n";
 const reference = CacheHostedProducerReference.make({ runId: 11, attempt: 2, artifactId: 22 });
 const runRoute = "GET /repos/{owner}/{repo}/actions/runs/{run_id}";
 const artifactRoute = "GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}";
-
-const zipReport = Effect.fn("HostedProducerTest.zip")(function* (
-  contents: string,
-  extra?: boolean,
-  symlink?: boolean,
-  alternateMember?: "cache-producer.jsonx"
-) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const directory = yield* fs.makeTempDirectoryScoped({ prefix: "hosted-producer-test-" });
-  const member = alternateMember ?? "cache-producer.json";
-  const reportPath = path.join(directory, member);
-  if (symlink === true) {
-    yield* fs.symlink(contents, reportPath);
-  } else {
-    yield* fs.writeFileString(reportPath, contents);
-  }
-  if (extra === true) yield* fs.writeFileString(path.join(directory, "extra.txt"), "synthetic private payload");
-  const zipped = yield* CacheRuntimeProcess.runCaptured({
-    command: "/usr/bin/zip",
-    args: ["-q", "-y", "report.zip", member, ...(extra === true ? ["extra.txt"] : [])],
-    cwd: directory,
-    source: "merge",
-    extendEnv: false,
-    env: { PATH: "/usr/bin" },
-    timeout: Duration.seconds(10),
-  });
-  expect(zipped.exitCode).toBe(0);
-  return yield* fs.readFile(path.join(directory, "report.zip"));
-});
 
 const fixture = Effect.fn("HostedProducerTest.fixture")(function* (selectedReference = reference) {
   const now = yield* Clock.currentTimeMillis;
