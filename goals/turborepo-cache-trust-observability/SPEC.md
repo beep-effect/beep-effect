@@ -547,3 +547,13 @@ The local process report does not satisfy those deployment or observation gates.
 - Reversal retains the original branches before merge and uses a reviewed
   revert after merge. No bucket, live service, credential, signing switch,
   proof floor or runner-capacity setting changes in this integration.
+
+
+### Containment refusal proof strategy
+
+The coverage repair changes only the orchestration fixture and its evidence.
+Use package lint/type checks and both runtime replays for that edit, then require
+the fresh complete canonical final and hosted coverage gates on the new head.
+The prior complete package pass retains its original 0d source scope. A combined
+coverage diagnostic guides the repair and never replaces fresh acceptance.
+Preserve every coverage floor, uncovered-count bound and full-goal obligation.

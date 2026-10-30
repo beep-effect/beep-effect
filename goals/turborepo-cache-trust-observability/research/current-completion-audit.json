@@ -3,7 +3,7 @@
   "goal": "turborepo-cache-trust-observability",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "1efc3a9f53579caa17cabaf6cff58d0b62fd5527ed48bd0ff3a0313878100fcb",
+  "specSha256": "821f7a7284c14e49f484d784caa09eea41d9d9c70e1e631bcedbec59a7fe874b",
   "acceptance": [
     {
       "id": "AC-01",
@@ -358,5 +358,11 @@
     "path": "goals/turborepo-cache-trust-observability/research/private-orchestration-cleanup-checkpoint.json",
     "sha256": "e2d9795bd75d26ba8831dd6aae1a1dc9d566b3407fcfa87b1c7e03f1e69de93b",
     "scope": "Introduced stale path expectations repaired with101-test integrations per runtime, permissions/location/cleanup assertions and one actual scope-removal control; fresh complete/final/hosted proof remains required."
+  },
+  "priorSpecSha256AtStorageRefusalCoverage": "1efc3a9f53579caa17cabaf6cff58d0b62fd5527ed48bd0ff3a0313878100fcb",
+  "privateStorageRefusalCoverageCheckpoint": {
+    "path": "goals/turborepo-cache-trust-observability/research/private-storage-refusal-coverage-checkpoint.json",
+    "sha256": "2a096026904b801aae90b7c6c7d2e353605ef7d3c06089442af4883a59f09b4d",
+    "scope": "Hosted0d coverage-gap attribution; new26-test-per-runtime containment refusal and exact guard-removal control. Diagnostic only; fresh final/CI acceptance required. Floors unchanged."
   }
 }

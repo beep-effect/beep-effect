@@ -465,3 +465,13 @@ remains required for the new test file and combined source.
   Both current 51-test provider runs pass with unchanged coverage floors.
 
 - `private-pilot-storage-checkpoint.json`: consolidated prerequisite source, actual synthetic guest-alias counterexample, scoped private storage and dependency import checks. Fresh combined whole-package/hosted and native trust acceptance remain pending.
+
+
+### Private storage refusal coverage
+
+The current hosted run 40985410945 and coverage job 123844603476 identify the
+unexecuted refusal. Retained CLI-shard artifacts plus the direct 26-test
+Istanbul run map the source guard; the existing coverage owner's normalizer and
+scoped Istanbul library combine the diagnostic counters. See the source-bound
+repair checkpoint. New published-head canonical and hosted acceptance remain
+required.

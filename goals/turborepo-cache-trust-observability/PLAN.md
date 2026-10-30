@@ -565,3 +565,14 @@ faults. Both runtime integrations pass101 tests in7 files; removing the owning
 cleanup scope fails the intended assertion and source bytes restore exactly.
 See [the repair checkpoint](research/private-orchestration-cleanup-checkpoint.json).
 Fresh complete package, final and hosted acceptance remain required.
+
+
+### Private storage refusal coverage repair
+
+Hosted coverage identified the unexecuted containment refusal in Cache.pilot.
+The new source-visible storage fixture checks the exact pre-task refusal and
+cleanup. Both 26-test runtime suites and quick package checks pass; removing the
+production guard fails the intended case and restores exactly. The canonical
+coverage diagnostic fills the reported gap while retaining every floor. See
+[the checkpoint](research/private-storage-refusal-coverage-checkpoint.json).
+Fresh current-head full final and hosted acceptance remain required.

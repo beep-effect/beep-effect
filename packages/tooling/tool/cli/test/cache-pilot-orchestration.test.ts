@@ -114,6 +114,7 @@ const faultDomain = LiteralKit([
   "missing-selected",
   "library-mismatch",
   "version-mismatch",
+  "private-storage-alias",
 ]);
 const encodePreview = S.encodeEffect(S.fromJsonString(CacheActivationPreview));
 const encodeDependencies = S.encodeEffect(S.fromJsonString(CacheDependencyMaterialization));
@@ -693,11 +694,11 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
   const observedFs = FileSystem.FileSystem.of({
     ...fs,
     makeTempDirectoryScoped: Effect.fn("PilotOrchestrationTest.makeTempDirectoryScoped")((options) =>
-      fs.makeTempDirectoryScoped(options).pipe(
+      fs.makeTempDirectoryScoped(fault === "private-storage-alias" ? { ...options, directory: root } : options).pipe(
         Effect.tap((directory) =>
           Effect.gen(function* () {
             MutableHashSet.add(privateDirectories, directory);
-            expect(Str.startsWith(`${root}/`)(directory)).toBe(false);
+            expect(Str.startsWith(`${root}/`)(directory)).toBe(fault === "private-storage-alias");
             expect((yield* fs.stat(directory)).mode & 0o777).toBe(0o700);
           })
         )
@@ -840,6 +841,18 @@ it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process bound
         expect(yield* fs.readFileString(path.join(source, identityDirectory, "src/index.ts"))).toBe(
           "export const fixture = 1;\n"
         );
+    })
+  );
+
+  it.effect(
+    "rejects source-visible private storage before starting any task and removes it",
+    Effect.fnUntraced(function* () {
+      const { fs, run, calls, privateDirectories } = yield* fixture("private-storage-alias");
+      const failure = yield* run().pipe(Effect.flip);
+      expect(failure.message).toBe("Private pilot storage must remain outside every source input mount.");
+      expect(calls).toHaveLength(0);
+      expect(A.fromIterable(privateDirectories)).toHaveLength(1);
+      for (const directory of privateDirectories) expect(yield* fs.exists(directory)).toBe(false);
     })
   );
 

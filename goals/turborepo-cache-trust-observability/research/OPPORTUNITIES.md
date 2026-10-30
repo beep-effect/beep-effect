@@ -900,3 +900,17 @@ obsolete assertion. The deliberate scope-removal control fails the new cleanup
 check. The first filesystem observer also needed a named Effect.fn, caught by
 the package type check and repaired before publication. Existing floors and
 qualification state remain unchanged.
+
+
+### Exercise new containment refusals before full coverage
+
+The current CI run passed its tests but lost three per-file coverage floors:
+the new private-storage refusal had zero executions. Test a deliberately
+source-visible allocation before starting a task, including cleanup after the
+refusal. Its source-removal control fails as expected. Preserve the original
+floors and use fresh canonical/hosted coverage as acceptance.
+
+The first diagnostic tried an unavailable unscoped Istanbul package and raw-map
+equality. Reuse the repo owner's `@vitest/istanbul-lib-coverage` fork and canonical
+normalizer: derived line metadata and serialized infinite columns need that
+normalization. Keep the diagnostic distinct from a new hosted proof.
