@@ -49,6 +49,30 @@ const runAgainst = Effect.fn("test.runAgainst")(function* (mode: ServerMode, spl
   return { report, tags: yield* server.tags };
 });
 
+const recoverAfterBindCollisions = Effect.fn("test.recoverAfterBindCollisions")(function* (forcedCollisions: number) {
+  const occupied = yield* makeConformanceServer(goodMode);
+  const port = yield* S.decodeEffect(S.FiniteFromString)(new URL(occupied.url).port);
+  const original = Bun.serve;
+  const serve = vi.spyOn(Bun, "serve");
+  for (let attempt = 0; attempt < forcedCollisions; attempt++)
+    serve.mockImplementationOnce((options) => original(Object.assign({ ...options }, { port })));
+  yield* Effect.gen(function* () {
+    const recovered = yield* makeConformanceServer({ ...goodMode, responseCacheResult: "allowed" });
+    expect(serve.mock.calls.length).toBeGreaterThanOrEqual(forcedCollisions + 1);
+    expect(serve).toHaveBeenLastCalledWith(
+      expect.objectContaining({ hostname: "127.0.0.1", port: 0, maxRequestBodySize: 128 * 1024 * 1024 })
+    );
+    expect(recovered.url).not.toBe(occupied.url);
+    const response = yield* HttpClientRequest.get(`${recovered.url}/v8/artifacts/status?teamId=team_conformance`).pipe(
+      HttpClientRequest.setHeader("authorization", `Bearer ${secrets.reader}`),
+      HttpClient.execute
+    );
+    expect(response.status).toBe(200);
+    assertSome(Headers.get(response.headers, "x-beep-cache-result"), "allowed");
+    expect(yield* response.text).toBe('{"status":"enabled"}');
+  }).pipe(Effect.ensuring(Effect.sync(() => serve.mockRestore())));
+});
+
 const Services = Layer.mergeAll(NodeServices.layer, FetchHttpClient.layer);
 
 it.layer(Services, { timeout: "60 seconds", excludeTestServices: true })("cache conformance corpus", (it) => {
@@ -97,33 +121,12 @@ it.layer(Services, { timeout: "60 seconds", excludeTestServices: true })("cache 
 });
 
 it.layer(Services, { timeout: "120 seconds", excludeTestServices: true })("cache conformance wire runner", (it) => {
-  it.effect("recovers through one or two occupied-port retries in the shared scoped loopback server", () =>
-    Effect.forEach(
-      [1, 2],
-      Effect.fnUntraced(function* (forcedCollisions) {
-        const occupied = yield* makeConformanceServer(goodMode);
-        const port = yield* S.decodeEffect(S.FiniteFromString)(new URL(occupied.url).port);
-        const original = Bun.serve;
-        const serve = vi.spyOn(Bun, "serve");
-        for (let attempt = 0; attempt < forcedCollisions; attempt++)
-          serve.mockImplementationOnce((options) => original(Object.assign({ ...options }, { port })));
-        yield* Effect.gen(function* () {
-          const recovered = yield* makeConformanceServer({ ...goodMode, responseCacheResult: "allowed" });
-          expect(serve.mock.calls.length).toBeGreaterThanOrEqual(forcedCollisions + 1);
-          expect(serve).toHaveBeenLastCalledWith(
-            expect.objectContaining({ hostname: "127.0.0.1", port: 0, maxRequestBodySize: 128 * 1024 * 1024 })
-          );
-          expect(recovered.url).not.toBe(occupied.url);
-          const response = yield* HttpClientRequest.get(
-            `${recovered.url}/v8/artifacts/status?teamId=team_conformance`
-          ).pipe(HttpClientRequest.setHeader("authorization", `Bearer ${secrets.reader}`), HttpClient.execute);
-          expect(response.status).toBe(200);
-          assertSome(Headers.get(response.headers, "x-beep-cache-result"), "allowed");
-          expect(yield* response.text).toBe('{"status":"enabled"}');
-        }).pipe(Effect.ensuring(Effect.sync(() => serve.mockRestore())));
-      }, Effect.scoped),
-      { discard: true }
-    )
+  it.effect("recovers through one occupied-port retry in the shared scoped loopback server", () =>
+    recoverAfterBindCollisions(1)
+  );
+
+  it.effect("recovers through two occupied-port retries in the shared scoped loopback server", () =>
+    recoverAfterBindCollisions(2)
   );
 
   it.effect("retains finite backend causes independently of recomputation outcomes", () =>
