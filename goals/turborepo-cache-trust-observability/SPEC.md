@@ -874,3 +874,29 @@ coverage floor is unchanged and met. The failed publication pushed nothing.
   required; this does not prove actual protected inspection or signed execution.
 - Reverse by removing the still-unused inspection workflow and its exact mapping
   and policy case together. No credential, permission, status or runtime change.
+
+### Owned command publication output, 2026-10-30
+
+- Extend the closed producer command with optional publication output rather than
+  adding another runner or editable report authority. Derive the existing v2
+  report from the exact observation returned by the owned execution.
+- Read run/attempt from workflow configuration using the existing positive-safe
+  identifier schemas before capabilities load. Require a separate private full
+  observation file and the fixed `cache-producer.json` upload member. Never accept
+  replacement uploads, issuer authority or artifact identity as command arguments.
+- Preserve observation-only callers without GitHub configuration. Prepare the
+  owned publication before either file is changed and keep report/observation
+  bounds at 64 KiB/8 MiB including newline. Immutable publication, independent
+  approval and authenticated acceptance remain later gates; local files alone
+  confer no producer or qualification authority.
+- Reverse by removing the optional publication flag and associated output wiring;
+  retain existing observations and strict acceptance requirements. No credential,
+  protected workflow, cache configuration or production change occurs here.
+
+- Adjacent quality audit: consolidate the duplicated expected/actual diagnostic
+  severity calculation into the existing one-pass Array idiom; preserve every
+  diagnostic and refusal. Retain the separately reported filesystem-presence
+  idiom: SAST canonical-path/security selection and JSDoc text diagnostics have
+  different policies and absence results, with no shared behavior beyond the
+  existing FileSystem primitive. Record the source judgment and leave the raw
+  warning intact; add no suppression or baseline relaxation.

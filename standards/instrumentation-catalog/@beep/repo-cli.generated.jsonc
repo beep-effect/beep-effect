@@ -228,6 +228,7 @@
     {"name":"Cache.collectTaskSelection","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Cache.makeProtocolFixture","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Cache.parseLambdaLogs","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"Cache.producerPublicationRun","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Cache.provisionProducer","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Cache.readConformanceTarget","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Cache.readRequest","owner":"@beep/repo-cli","family":"tooling","conforms":true},

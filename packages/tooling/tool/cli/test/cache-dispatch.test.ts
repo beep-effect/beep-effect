@@ -9,9 +9,14 @@ import {
   CacheExecutablePin,
   CacheLinkedFile,
   CacheLiveIdentity,
+  CachePilotRequest,
   CacheProducerApproval,
   CacheProducerBinding,
+  CacheProducerBody,
+  CacheProducerBundle,
+  CacheProducerEnvelope,
   CacheQualificationService,
+  CacheSignedPilotRequest,
   CacheToolchainSnapshot,
   CacheTransitionRequest,
 } from "@beep/repo-cli/commands/Cache";
@@ -20,7 +25,10 @@ import * as Profile from "@beep/repo-cli/commands/Cache/Cache.profile";
 import * as Runtime from "@beep/repo-cli/commands/Cache/Cache.runtime";
 import * as Workflow from "@beep/repo-cli/commands/Cache/Cache.workflow";
 import {
+  CacheHostedProducerCompleteReport,
   CacheProducerExecutionProfile,
+  CacheProducerObservation,
+  CacheProducerUploadRuntime,
   CacheProducerWorkflow,
   CacheProducerWorkflowFile,
   hashCacheProducerContract,
@@ -42,7 +50,7 @@ import {
   CacheTaskContract,
 } from "@beep/repo-configs/cache";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
-import { Sha256Hex } from "@beep/schema";
+import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
@@ -67,8 +75,8 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import * as TestConsole from "effect/testing/TestConsole";
-import { targetFor } from "./cache-conformance-server.ts";
-import { contractInput, pilot, protocol } from "./helpers/cache-producer-bundle-fixture.ts";
+import { bearers, targetFor } from "./cache-conformance-server.ts";
+import { input as bundleInput, contractInput, pilot, protocol } from "./helpers/cache-producer-bundle-fixture.ts";
 
 const digest = Sha256Hex.make(Str.repeat(64)("a"));
 const key = CacheQualificationKey.make({
@@ -505,6 +513,190 @@ describe("cache qualification command dispatch", () => {
         expect(f.calls).toEqual([]);
       })
     );
+    it.effect.each([false, true])("writes only the owned producer result with hosted publication %s", (publish) =>
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        const binding = yield* decodeProducerBinding({
+          ...pilot,
+          protocolClient: protocol.observation.client,
+          workflowRevision: Str.repeat(40)("a"),
+          workflowImplementation: digest,
+          policyDigest: digest,
+        });
+        const runtime = CacheProducerUploadRuntime.make({
+          target: targetFor({ url: "http://127.0.0.1:19427/" }),
+          bearers,
+          signing: Redacted.make("synthetic-dispatch-key"),
+          adapter: O.none(),
+        });
+        const observation = CacheProducerObservation.make({
+          observation: yield* S.decodeUnknownEffect(CacheProducerBundle)({
+            ...bundleInput,
+            upload: {
+              taskHash: "0123456789abcdef",
+              archiveSha256: digest,
+              archiveBytes: 128,
+              status: 202,
+              backendResult: "allowed",
+            },
+          }),
+          envelope: CacheProducerEnvelope.make({
+            body: CacheProducerBody.make({
+              issuer: digest,
+              binding,
+              payloadSha256: digest,
+              issuedAtMs: 1,
+              expiresAtMs: 60_001,
+            }),
+            mac: digest,
+          }),
+        });
+        const selected = CacheSignedPilotRequest.make({
+          sourceRoot: f.root,
+          pilot: CachePilotRequest.make({
+            channel: binding.channel,
+            client: binding.client,
+            executable: "/fixture/turbo",
+            biomeExecutable: "/fixture/biome",
+            nodeExecutable: "/fixture/node",
+            dependencies: reference,
+            activation: reference,
+            worktrees: [f.root, f.path.dirname(f.root)],
+            selection: "full",
+          }),
+        });
+        const request = f.path.join(f.root, "producer-request.json");
+        const output = f.path.join(f.root, "private-observation.json");
+        const publication = f.path.join(f.root, "cache-producer.json");
+        yield* f.fs.writeFileString(
+          request,
+          yield* S.encodeEffect(S.fromJsonString(CacheSignedPilotRequest))(selected)
+        );
+        const load = vi
+          .spyOn(Workflow, "loadCacheProducerExecutionRuntime")
+          .mockReturnValue(Effect.succeed(Tuple.make(binding, runtime)));
+        const run = vi.spyOn(Workflow, "runCacheProducerWorkflow").mockReturnValue(Effect.succeed(observation));
+        yield* f
+          .run([
+            "producer-run",
+            "--request",
+            request,
+            "--output",
+            output,
+            ...(publish ? ["--publication", publication] : []),
+          ])
+          .pipe(
+            Effect.provideService(
+              ConfigProvider.ConfigProvider,
+              ConfigProvider.fromUnknown({
+                BEEP_CACHE_PRODUCER_STORE: "/trusted/producer",
+                ...(publish ? { GITHUB_RUN_ID: "11", GITHUB_RUN_ATTEMPT: "2" } : {}),
+              })
+            )
+          );
+        expect(load).toHaveBeenCalledWith("/trusted/producer");
+        deepStrictEqual(run.mock.calls, [[process.cwd(), selected, "/trusted/producer", binding, O.some(runtime)]]);
+        const contents = yield* f.fs.readFileString(output);
+        expect(yield* S.decodeEffect(S.fromJsonString(CacheProducerObservation))(contents)).toEqual(observation);
+        expect(yield* f.fs.exists(publication)).toBe(publish);
+        if (publish) {
+          const report = yield* f.fs
+            .readFileString(publication)
+            .pipe(Effect.flatMap(S.decodeEffect(S.fromJsonString(CacheHostedProducerCompleteReport))));
+          expect(report.runId).toBe(11);
+          expect(report.attempt).toBe(2);
+          expect(report.binding).toEqual(binding);
+          expect(report.uploads).toEqual(O.toArray(observation.observation.upload));
+          expect(report.observationSha256).toBe(
+            yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(Str.trimEnd(contents)))
+          );
+          yield* f.fs.writeFileString(output, "preserved observation");
+          yield* f.fs.writeFileString(publication, "preserved publication");
+          run.mockReturnValue(
+            Effect.succeed(
+              CacheProducerObservation.make({
+                ...observation,
+                observation: CacheProducerBundle.make({ ...observation.observation, upload: O.none() }),
+              })
+            )
+          );
+          expect(
+            yield* f.run(["producer-run", "--request", request, "--output", output, "--publication", publication]).pipe(
+              Effect.provideService(
+                ConfigProvider.ConfigProvider,
+                ConfigProvider.fromUnknown({
+                  BEEP_CACHE_PRODUCER_STORE: "/trusted/producer",
+                  GITHUB_RUN_ID: "11",
+                  GITHUB_RUN_ATTEMPT: "2",
+                })
+              ),
+              Effect.isFailure
+            )
+          ).toBe(true);
+          expect(yield* errorText).toContain("Complete producer publication requires its owned upload");
+          expect(yield* f.fs.readFileString(output)).toBe("preserved observation");
+          expect(yield* f.fs.readFileString(publication)).toBe("preserved publication");
+        }
+        expect(f.calls).toEqual([]);
+        expect(yield* consoleText).not.toContain('"observation"');
+        expect(yield* consoleText).not.toContain('"uploads"');
+      })
+    );
+    it.effect.each([
+      {},
+      { GITHUB_RUN_ID: "11" },
+      { GITHUB_RUN_ID: "0", GITHUB_RUN_ATTEMPT: "2" },
+      { GITHUB_RUN_ID: "11", GITHUB_RUN_ATTEMPT: "1.5" },
+      { GITHUB_RUN_ID: "9007199254740992", GITHUB_RUN_ATTEMPT: "2" },
+    ])("refuses invalid hosted run identity before capability loading: %s", (configuration) =>
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        const load = vi.spyOn(Workflow, "loadCacheProducerExecutionRuntime");
+        const output = f.path.join(f.root, "private-observation.json");
+        const publication = f.path.join(f.root, "cache-producer.json");
+        expect(
+          yield* f
+            .run(["producer-run", "--request", f.requests.baseline, "--output", output, "--publication", publication])
+            .pipe(
+              Effect.provideService(
+                ConfigProvider.ConfigProvider,
+                ConfigProvider.fromUnknown({ BEEP_CACHE_PRODUCER_STORE: "/trusted/producer", ...configuration })
+              ),
+              Effect.isFailure
+            )
+        ).toBe(true);
+        expect(load).not.toHaveBeenCalled();
+        expect(yield* f.fs.exists(output)).toBe(false);
+        expect(yield* f.fs.exists(publication)).toBe(false);
+        expect(yield* errorText).toContain("requires valid GITHUB_RUN_ID and GITHUB_RUN_ATTEMPT");
+      })
+    );
+    it.effect.each(["missing-output", "same-path", "wrong-member"])(
+      "refuses unsafe publication output layout before configuration: %s",
+      (layout) =>
+        Effect.gen(function* () {
+          const f = yield* fixture();
+          const publication = f.path.join(f.root, layout === "wrong-member" ? "report.json" : "cache-producer.json");
+          const output = layout === "same-path" ? publication : f.path.join(f.root, "observation.json");
+          const forbidConfiguration = ConfigProvider.make(() =>
+            Effect.die("Read configuration before layout refusal.")
+          );
+          expect(
+            yield* f
+              .run([
+                "producer-run",
+                "--request",
+                f.requests.baseline,
+                ...(layout === "missing-output" ? [] : ["--output", output]),
+                "--publication",
+                publication,
+              ])
+              .pipe(Effect.provideService(ConfigProvider.ConfigProvider, forbidConfiguration), Effect.isFailure)
+          ).toBe(true);
+          expect(yield* errorText).toContain("requires --output and a distinct cache-producer.json path");
+          expect(f.calls).toEqual([]);
+        })
+    );
     it.effect("requires separate trusted provisioning configuration without loading an experiment", () =>
       Effect.gen(function* () {
         const f = yield* fixture();
@@ -600,21 +792,28 @@ describe("cache qualification command dispatch", () => {
           expect(f.calls).toEqual([]);
         })
     );
-    it.effect.each(["--store", "--issuer", "--target", "--signing-key"])(
-      "refuses request-side producer authority selection through %s",
-      (flag) =>
-        Effect.gen(function* () {
-          const f = yield* fixture();
-          const forbidConfiguration = ConfigProvider.make(() =>
-            Effect.die("Producer configuration was read before invalid arguments were rejected.")
-          );
-          expect(
-            yield* f
-              .run(["producer-run", "--request", f.requests.baseline, flag, "/untrusted-selection"])
-              .pipe(Effect.provideService(ConfigProvider.ConfigProvider, forbidConfiguration), Effect.isFailure)
-          ).toBe(true);
-          expect(f.calls).toEqual([]);
-        })
+    it.effect.each([
+      "--store",
+      "--issuer",
+      "--target",
+      "--signing-key",
+      "--run-id",
+      "--attempt",
+      "--artifact-id",
+      "--upload",
+    ])("refuses request-side producer authority selection through %s", (flag) =>
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        const forbidConfiguration = ConfigProvider.make(() =>
+          Effect.die("Producer configuration was read before invalid arguments were rejected.")
+        );
+        expect(
+          yield* f
+            .run(["producer-run", "--request", f.requests.baseline, flag, "/untrusted-selection"])
+            .pipe(Effect.provideService(ConfigProvider.ConfigProvider, forbidConfiguration), Effect.isFailure)
+        ).toBe(true);
+        expect(f.calls).toEqual([]);
+      })
     );
   });
 });

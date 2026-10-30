@@ -1439,3 +1439,31 @@ in the owning producer PR; preserve it until the accepted-parent replay.
 - Prevention: add the exact operational context and the source/credential/retention
   policy case in the same change that introduces a manual workflow. The checker
   stays active; this introduced mapping failure is repaired, not waived.
+
+### Check Effect values and curated test exports before wiring publication
+
+- Work: connect the closed producer result to its existing complete report.
+- Evidence: initial Node/Bun tests and quick check caught `onNone is not a function`,
+  a fixture missing `backendResult`, and a request imported from the test facade
+  rather than its existing command facade. These were introduced implementation
+  and fixture errors, not environmental failures.
+- Repair: use explicit thunks for the Effect value, the existing allowed backend
+  result and the actual exported command schema. The current 71 cases pass on
+  both runtimes and package lint/check passes; no assertion or policy was waived.
+- Prevention: confirm value-versus-thunk APIs and curated barrel exports before
+  composing callbacks; keep producer byte binding and refusal cases in the same
+  focused run.
+
+### Use the current Effect collection contract during audit repairs
+
+- Work: remove repeated expected/actual severity calculations found beside the
+  publication wiring. The two raw clone fingerprints were already inherited.
+- Evidence: an Option-returning `Array.filterMap` callback failed quick typing
+  and the existing exact Drizzle diagnostic test. This Effect version expects
+  a Result there. The unchanged assertions correctly rejected that attempt.
+- Repair: use the existing Array.flatMap idiom already present in the same
+  module. All 96 selected cases now pass on Node and Bun; quick checking passes.
+  The separate file-existence idiom has no common policy to extract, so its
+  source-reviewed non-defect reason is recorded and its raw warning retained.
+- Prevention: read the current upstream collection API or reuse a verified local
+  idiom before applying an older-version combinator pattern.

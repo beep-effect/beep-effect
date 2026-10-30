@@ -879,3 +879,23 @@ context failure is repaired; this source-bound result supersedes the pending
 retry statement above. Accepted-parent integration, current combined final and
 hosted proof, real protected execution and every full acceptance criterion remain
 open. No credential or production activation occurred.
+
+### Closed producer publication output, 2026-10-30
+
+The existing `producer-run` can write its compact complete-observation report
+with `--publication` beside a private `--output`. Run/attempt use workflow Config
+and the existing identifier schema; the closed execution supplies every report
+byte. The current 71-case command/archive suites pass on Node and Bun, with quick
+package lint/check passing. Controlled tests prove fail-before-capability and
+fail-before-overwrite behavior. The [source-bound checkpoint](research/producer-command-publication-checkpoint.json)
+records limits and the actual remaining protected publisher/provisioning work.
+Default package, accepted-parent combined final and real hosted execution remain
+open. This component advances publication without granting any full acceptance.
+
+The adjacent severity-calculation clone is now consolidated without changing
+its exact diagnostics. All 96 cases across four suites pass on each runtime,
+with quick package verification passing. The other six-line file-presence
+pattern has a source-backed non-defect judgment: its SAST and JSDoc policies
+and absence results differ. Its raw warning stays visible and unsuppressed.
+Canonical anchors and the default package result will be refreshed for this
+combined source before publication.

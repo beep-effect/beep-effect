@@ -23,9 +23,11 @@ import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { readContainedFileBytesNoFollow } from "../../internal/cli/FsGuards.ts";
 import { MemoryStatsLive } from "../../internal/repo-run/QualityScheduler.ts";
@@ -85,7 +87,8 @@ import {
   CacheWarmReceiptJson,
 } from "./Cache.schemas.ts";
 import { CacheQualificationLive, CacheQualificationService } from "./Cache.service.ts";
-import { CacheHostedProducerVerifierLive } from "./Cache.workflow.github.ts";
+import { CacheHostedProducerCompleteReport, CacheHostedProducerRunReference } from "./Cache.workflow.github.schemas.ts";
+import { buildCacheHostedProducerCompleteReport, CacheHostedProducerVerifierLive } from "./Cache.workflow.github.ts";
 import { CacheProducerObservation, CacheProducerWorkflow } from "./Cache.workflow.schemas.ts";
 import {
   initializeCacheProducerExecution,
@@ -904,9 +907,37 @@ const cacheAcceptCommand = Command.make(
 
 const cacheProducerRunCommand = Command.make(
   "producer-run",
-  { request: Flag.File("request"), output: outputFlag },
-  ({ request, output }) =>
+  {
+    request: Flag.File("request"),
+    output: outputFlag,
+    publication: Flag.Path("publication", { pathType: "file" }).pipe(
+      Flag.optional,
+      Flag.withDescription("Write cache-producer.json for this workflow run and attempt, alongside private --output")
+    ),
+  },
+  ({ request, output, publication }) =>
     Effect.gen(function* () {
+      const publicationRun = yield* O.match(publication, {
+        onNone: () => Effect.succeedNone,
+        onSome: Effect.fn("Cache.producerPublicationRun")(function* (file) {
+          const path = yield* Path.Path;
+          if (
+            O.isNone(output) ||
+            path.basename(file) !== "cache-producer.json" ||
+            path.resolve(file) === path.resolve(output.value)
+          )
+            return yield* CacheCommandError.new(
+              "Hosted publication requires --output and a distinct cache-producer.json path."
+            );
+          const reference = yield* Config.all({
+            runId: Config.schema(CacheHostedProducerRunReference.fields.runId, "GITHUB_RUN_ID"),
+            attempt: Config.schema(CacheHostedProducerRunReference.fields.attempt, "GITHUB_RUN_ATTEMPT"),
+          }).pipe(
+            CacheCommandError.mapError("Hosted publication requires valid GITHUB_RUN_ID and GITHUB_RUN_ATTEMPT.")
+          );
+          return Tuple.make(file, CacheHostedProducerRunReference.make(reference));
+        }, Effect.asSome),
+      });
       const directory = yield* Config.String("BEEP_CACHE_PRODUCER_STORE").pipe(
         Effect.mapError(() => CacheCommandError.new("An independently provisioned producer store is required."))
       );
@@ -919,6 +950,14 @@ const cacheProducerRunCommand = Command.make(
         binding,
         O.some(runtime)
       );
+      const hosted = yield* O.match(publicationRun, {
+        onNone: () => Effect.succeedNone,
+        onSome: ([file, reference]) =>
+          buildCacheHostedProducerCompleteReport(observation, reference).pipe(
+            Effect.map((report) => Tuple.make(file, report)),
+            Effect.asSome
+          ),
+      });
       yield* writeEncoded(
         observation,
         JsonStringCodec(CacheProducerObservation),
@@ -926,6 +965,14 @@ const cacheProducerRunCommand = Command.make(
         O.isNone(output),
         O.some(8 * 1024 * 1024)
       );
+      if (O.isSome(hosted))
+        yield* writeEncoded(
+          hosted.value[1],
+          JsonStringCodec(CacheHostedProducerCompleteReport),
+          O.some(hosted.value[0]),
+          false,
+          O.some(64 * 1024)
+        );
     }).pipe(renderCacheFailure)
 ).pipe(
   Command.withDescription(

@@ -2270,19 +2270,16 @@ const collectEffectDrizzleSeverityDiffDiagnostics = (
   );
   const mismatched = pipe(
     baseRuleNames,
-    A.filter((ruleName) => {
+    A.flatMap((ruleName) => {
       const expectedSeverity = isEcosystemEffectDiagnosticOffRule(ruleName)
         ? "off"
         : pipe(R.get(baseSeverity, ruleName), O.getOrUndefined);
       const actualSeverity = pipe(R.get(severity, ruleName), O.getOrUndefined);
-      return actualSeverity !== undefined && actualSeverity !== expectedSeverity;
-    }),
-    A.map((ruleName) => {
-      const expectedSeverity = isEcosystemEffectDiagnosticOffRule(ruleName)
-        ? "off"
-        : pipe(R.get(baseSeverity, ruleName), O.getOrUndefined);
-      const actualSeverity = pipe(R.get(severity, ruleName), O.getOrUndefined);
-      return `${file}: Effect Drizzle diagnosticSeverity.${ruleName} must be ${Inspectable.toStringUnknown(expectedSeverity, 0)}; found ${Inspectable.toStringUnknown(actualSeverity, 0)}`;
+      return actualSeverity !== undefined && actualSeverity !== expectedSeverity
+        ? A.of(
+            `${file}: Effect Drizzle diagnosticSeverity.${ruleName} must be ${Inspectable.toStringUnknown(expectedSeverity, 0)}; found ${Inspectable.toStringUnknown(actualSeverity, 0)}`
+          )
+        : A.empty<string>();
     })
   );
   return A.appendAll(A.appendAll(missing, unexpected), mismatched);

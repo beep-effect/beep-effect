@@ -108,7 +108,8 @@
     "research/producer-provisioning-checkpoint.json",
     "research/complete-observation-publication-checkpoint.json",
     "research/acceptance-publication-join-checkpoint.json",
-    "research/inspection-governance-checkpoint.json"
+    "research/inspection-governance-checkpoint.json",
+    "research/producer-command-publication-checkpoint.json"
   ],
   "agentLaunchers": [
     {
