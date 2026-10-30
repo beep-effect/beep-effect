@@ -298,3 +298,21 @@ binds changed runner source bytes. Historical claims above keep their dates.
   ten additional exact Portless watcher/server commands, completing source
   classification of all twelve configured persistent executable computations.
   Their finite build counterparts retain independent qualification duties.
+
+
+### Retained native future-flag availability, 2026-10-30
+
+- [Native availability report](native-future-flag-availability.json) and
+  [retained driver](native-future-flag-availability.py): sixty bounded, isolated
+  dry runs using the exact installed/cached stable and canary binary digests.
+  Reproduce with `python3 goals/turborepo-quality-cache-adoption/research/native-future-flag-availability.py`.
+  Run from any directory after provisioning those pinned clients. No download,
+  credential or remote-cache access is used. The driver writes its report, raw
+  observation and bounded native logs under ignored
+  `.beep/native-future-flag-availability/`; its `driver.sha256` identifies the
+  actual executed file, and `rawObservationSha256` binds the retained raw report.
+  Both baselines and all 56 flag configurations parse; the two unknown-key
+  controls refuse, no marker command runs and owned fixture directories are
+  removed. These are configuration observations, with no feature semantic or
+  computation qualification. The earlier private-driver report remains in Git
+  history; the current report is a fresh replay from the retained driver.

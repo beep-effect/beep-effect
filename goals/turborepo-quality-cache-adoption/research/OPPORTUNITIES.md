@@ -190,3 +190,13 @@ accept all 14 flags false/true on both pins while rejecting an unknown key on
 both. Record this stronger availability evidence without calling syntax
 acceptance a semantic regression pass. The marker command never executes;
 production configuration and feature-acceptance states stay unchanged.
+
+
+### Retain reproducible observation drivers, 2026-10-30
+
+PR #2369 review found that the sixty-case native availability report recorded
+an executed-script digest without retaining that driver in the packet. Retain
+a portable driver, bind its exact bytes in the regenerated report and document
+the reproduction command in SOURCES.md. Re-run the observations from that
+retained driver; keep the previous report in Git history. This closes evidence
+reproduction, not feature semantics, task qualification or production adoption.

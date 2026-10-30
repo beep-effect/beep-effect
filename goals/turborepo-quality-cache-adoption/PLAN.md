@@ -243,3 +243,13 @@ the 60-case observation, with no sentinel command executed. The
 separates this parsing evidence from unresolved feature-specific semantics.
 The one Go non-applicability disposition is unchanged; the remaining 34 reviews
 are still pending. No repository task, cache setting or production flag changed.
+
+
+### Reproducible native availability review repair, 2026-10-30
+
+PR #2369 now retains the portable sixty-case driver, its exact source digest,
+the raw-report digest and the reproduction command. A fresh replay preserves
+the same native pins, fourteen flags, 58 accepted configurations and two
+unknown-key refusals. The marker never executes and owned fixtures are removed.
+This repairs evidence retention; all unfinished feature, computation,
+qualification, adoption and production-window obligations remain unchanged.

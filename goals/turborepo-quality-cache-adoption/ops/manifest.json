@@ -58,7 +58,8 @@
     "research/remaining-mutating-fixer-disposition-review.json",
     "research/remaining-persistent-service-disposition-review.json",
     "research/go-workspace-feature-review.json",
-    "research/native-future-flag-availability.json"
+    "research/native-future-flag-availability.json",
+    "research/native-future-flag-availability.py"
   ],
   "agentLaunchers": [
     {
