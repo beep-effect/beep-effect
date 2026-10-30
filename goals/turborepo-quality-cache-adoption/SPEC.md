@@ -417,3 +417,19 @@ review is `research/current-runtime-baseline-review.md`.
   until real consumers, remaining selector families and qualified changes are
   reviewed. Reverse this evidence addition by removing its driver/report and
   matrix links together; no production setting changes in this component.
+
+### Nested Python workspace feature decision, 2026-10-30
+
+- Retain the absent experimental root uv discovery flag. The tracked nested
+  `beep-photo-face` project is standalone; there is no root uv workspace. Its
+  lint and test commands remain explicitly owned by the Beep CLI package audit.
+  Do not add another discovery path without a concrete consumer and measured
+  benefit, or mistake a missing root workspace for missing Python quality work.
+- This final no-change feature decision grants no task qualification. Review
+  the Python quality computations and their complete source, lockfile, tool and
+  interpreter inputs independently. Never infer whole-task reuse for external
+  person-matching or model verdicts from this discovery decision.
+- Reopen for a proposed root uv workspace, independent Python quality ownership
+  or a changed client/discovery contract. Exact-client real uv graph and
+  execution controls precede any activation. Reverse this decision by restoring
+  the feature row to pending; runtime configuration is unchanged.

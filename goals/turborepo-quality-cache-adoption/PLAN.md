@@ -315,3 +315,16 @@ the source exactly and replay every case.
 The [checkpoint](research/selection-semantics-checkpoint.json) records source,
 pins, scope and remaining real-consumer work. Feature dispositions stay at two
 final and 33 pending; no task qualification or configuration change occurs.
+
+### Nested Python integration review, 2026-10-30
+
+The [source-backed review](research/python-workspace-feature-review.json)
+retains absent root uv discovery while accounting for the existing nested
+`beep-photo-face` project. Its lint/test commands already run in the Beep CLI
+package audit. No root uv workspace exists, no new graph consumer is enabled,
+and the retained four native flag cases establish syntax only.
+
+There are now three final no-change feature decisions and 32 pending reviews.
+Python computation decomposition and qualification remain open, with every
+full-goal acceptance still unproven. No generated script or runtime setting
+changed; final combined hosted proof remains required.

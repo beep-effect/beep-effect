@@ -767,10 +767,10 @@
         "Change only one experimental flag at a time"
       ],
       "beepUseCase": "Review against the declared Bun workspace, trust controls and current root settings.",
-      "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
-      "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
-      "disposition": "disabled; determine applicability before proposing activation",
-      "acceptanceStatus": "pending",
+      "expectedBenefit": "No measured benefit is claimed. The current Python lint and test commands remain in the computation census and must receive their own semantic decomposition and qualification evidence.",
+      "correctnessCase": "Preserve absent root uv workspace/flag and existing generated quality scripts. Any proposal to introduce root uv discovery must prove exact-client real uv graph selection and task ownership without duplicate, missing or falsely successful execution.",
+      "disposition": "Retain absent root uv discovery; preserve the existing nested standalone project and explicit Beep CLI quality-command ownership.",
+      "acceptanceStatus": "accepted-retain-current-absence",
       "nativeConfigurationObservation": {
         "report": "native-future-flag-availability.json",
         "stable": {
@@ -782,6 +782,15 @@
           "true": "dry-run-accepted"
         },
         "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      },
+      "finalReview": {
+        "report": "python-workspace-feature-review.json",
+        "sourceBaseRevision": "daf68a6395be5dd329453c9f56f4a579de14e666",
+        "reopenWhen": [
+          "A concrete owner proposes a root uv workspace or Turbo Python graph consumer.",
+          "Python quality decomposition would benefit from independent uv package ownership.",
+          "A pinned client update changes root/nested discovery behavior or another Python project is added."
+        ]
       }
     },
     {
@@ -1035,8 +1044,8 @@
   ],
   "reviewCounts": {
     "acceptedNotApplicable": 1,
-    "acceptedRetainCurrentAbsence": 1,
-    "pending": 33
+    "acceptedRetainCurrentAbsence": 2,
+    "pending": 32
   },
   "nativeAvailabilityCounts": {
     "flagCasesAccepted": 56,

@@ -373,3 +373,5 @@ or deployment authority.
 - Two feature decisions are final; 33 reviews and all full-goal acceptance remain.
 
 - 2026-10-30: `selection-semantics-checkpoint.json` binds the retained native driver, 44 asserted cases/88 dry-and-execution calls, actual native summaries and two intended negative driver controls. The existing input driver covers single-package hash perturbations; the availability driver covers syntax; neither establishes this multi-workspace selection behavior. All real repository feature and task qualifications remain open.
+
+- 2026-10-30: [Python workspace review](python-workspace-feature-review.json) binds the exact tracked path/script inventories, nested uv project, existing generated lint/test ownership and source hashes. Preserve absent root discovery without excluding real Python quality computations. Four retained native availability cases prove syntax only. Three feature dispositions are final; 32 and all full-goal acceptance remain open.

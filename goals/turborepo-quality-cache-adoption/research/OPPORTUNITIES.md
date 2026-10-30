@@ -322,3 +322,12 @@ workstation's memory protection policy.
 - Local tooling: Ruff was absent from PATH; use the existing cached 0.17.2
   binary for this driver rather than fetching another tool. Its standard UTC
   formatting rule was applied before the final source-bound replay.
+
+### Root discovery absence is not ecosystem absence
+
+- Work: review the experimental Python workspace flag. The tracked tree has
+  no root uv workspace, but the Beep CLI owns a nested `beep-photo-face` project
+  and explicit `beep:lint:python`/`beep:test:python` audit steps.
+- Prevention: inventory nested manifests and generated command ownership before
+  declaring an ecosystem inapplicable. Preserve those quality computations in
+  decomposition/qualification even when root discovery remains disabled.
