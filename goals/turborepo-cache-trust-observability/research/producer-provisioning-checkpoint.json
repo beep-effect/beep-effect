@@ -1,117 +1,115 @@
 {
   "schemaVersion": "cache-producer-provisioning-checkpoint/v1",
   "authority": "Local component implementation and controls only. Unpublished dependency lane; no real material transport, protected execution, grant, publication, activation, qualification or full-goal acceptance.",
-  "sourceParent": "56d4326c921080bd201d9c5d649e5bab5e9fb2c2",
+  "sourceParent": "c2000a00e7d1ae83d65ec66acf87a0fecd4aada9",
   "sourceSha256": {
     "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts": "1588f3eea7cbd1a4d355059ac3f5affbc0d536cf632e67a6ba323f4c09abbfd1",
     "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts": "1b6581f6fd9091cea5fe3bb62cc9978ada655ec89de1967455cdb8e200b34f4d",
-    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts": "f8ed7f54dacfceff5cb63e358c4a99ba85cc9572c3651adab994c56270c99497",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts": "65d10f5d2b5bfabfc68d46c18d0abc6b72784ef65cfe5e820200634f4aae285e",
     "packages/tooling/tool/cli/src/test/Cache.test-kit.ts": "f490a6a465869a8ad38be691bd454c38a140b49691c1f6d5c984e8963e928040",
     "packages/tooling/tool/cli/test/cache-dispatch.test.ts": "70ef75245504a6bf56e6ecb5a71a255502049715e790d6a373b877bcf06bdfbb",
     "packages/tooling/tool/cli/test/cache-producer.test.ts": "82ce7b5b35248796932817f9c2af82cef05625ea45e781787da612c4f593c760",
-    "packages/tooling/tool/cli/test/cache-workflow.test.ts": "d53d2fcc414f3e243d11b971ab5a96b5fb1dc2e275385d1169e3706aacec27a0"
+    "packages/tooling/tool/cli/test/cache-workflow.test.ts": "d53d2fcc414f3e243d11b971ab5a96b5fb1dc2e275385d1169e3706aacec27a0",
+    "packages/tooling/tool/cli/test/cache-producer-upload-runtime.test.ts": "4331afd93be34c0e067024467866d5c6cab98f0a0cc91b4207e343ac51191d74"
   },
   "implementation": [
     "Reuse existing approval/profile/issuer and private-record boundaries; input material stays redacted.",
     "Require exact binding-bound transferred material for producer-install; refuse malformed/different binding before store reservation.",
     "Validate target, executable and live source before creation; reopen and compare installed profile and inspect source afterward.",
     "Revoke newly reserved material on error or interruption; preserve pre-existing stores.",
-    "Keep verifier material independent and off-runner; protect every copy outside all worker mounts in the actual workflow."
+    "Keep verifier material independent and off-runner; protect every copy outside all worker mounts in the actual workflow.",
+    "Reuse one concrete owned-snapshot upload validator under the optional experiment API and the private loader. Preserve paired absence for local experiments; reject a store without upload approval before any credential lookup. Aggregate independent positive profile constraints without changing their meaning or error."
   ],
   "verification": {
-    "node126": {
+    "node127": {
       "exit": 0,
-      "elapsedSeconds": 8.712,
-      "finishedAt": "2026-10-30T09:54:02.514001+00:00"
+      "elapsedSeconds": 11.232,
+      "finishedAt": "2026-10-30T10:36:43.084168+00:00"
     },
-    "bun126": {
+    "bun127": {
       "exit": 0,
-      "elapsedSeconds": 6.097,
-      "finishedAt": "2026-10-30T09:54:08.626327+00:00"
+      "elapsedSeconds": 6.21,
+      "finishedAt": "2026-10-30T10:36:49.311124+00:00"
     },
     "quick": {
       "exit": 0,
-      "elapsedSeconds": 12.446,
-      "finishedAt": "2026-10-30T09:53:53.782009+00:00"
+      "elapsedSeconds": 12.773,
+      "finishedAt": "2026-10-30T10:36:31.835253+00:00"
     },
     "effectPolicy": {
       "exit": 0,
-      "elapsedSeconds": 38.817,
-      "finishedAt": "2026-10-30T09:54:47.459881+00:00"
+      "elapsedSeconds": 39.725,
+      "finishedAt": "2026-10-30T10:37:29.052394+00:00"
     },
-    "inlinePolicy": {
+    "rootInlinePolicy": {
       "exit": 0,
-      "elapsedSeconds": 0.272,
-      "finishedAt": "2026-10-30T09:54:47.748291+00:00"
+      "elapsedSeconds": 6.235,
+      "finishedAt": "2026-10-30T10:37:35.306025+00:00"
     },
     "rootRulePolicy": {
       "exit": 0,
-      "elapsedSeconds": 2.919,
-      "finishedAt": "2026-10-30T09:54:50.685698+00:00"
+      "elapsedSeconds": 2.486,
+      "finishedAt": "2026-10-30T10:37:37.811592+00:00"
     },
     "fallowAudit": {
       "exit": 0,
-      "elapsedSeconds": 8.898,
-      "finishedAt": "2026-10-30T09:54:59.599927+00:00"
+      "elapsedSeconds": 8.86,
+      "finishedAt": "2026-10-30T10:37:46.689756+00:00"
     },
     "fallowHealth": {
       "exit": 0,
-      "elapsedSeconds": 6.002,
-      "finishedAt": "2026-10-30T09:55:05.620294+00:00"
+      "elapsedSeconds": 6.279,
+      "finishedAt": "2026-10-30T10:37:52.987607+00:00"
     },
     "scopedDocgen": {
       "exit": 0,
-      "elapsedSeconds": 40.566,
-      "finishedAt": "2026-10-30T09:57:14.180775+00:00"
-    },
-    "generatedInventory": {
-      "exit": 0,
-      "elapsedSeconds": 270.789,
-      "finishedAt": "2026-10-30T10:02:10.546649+00:00"
+      "elapsedSeconds": 42.252,
+      "finishedAt": "2026-10-30T10:38:35.260279+00:00"
     },
     "instrumentationCatalog": {
       "exit": 0,
-      "elapsedSeconds": 7.109,
-      "finishedAt": "2026-10-30T10:15:31.062044+00:00"
+      "elapsedSeconds": 7.246,
+      "finishedAt": "2026-10-30T10:38:50.464776+00:00"
     }
   },
   "guardControls": {
-    "recordedAt": "2026-10-30T09:53:17.270470+00:00",
+    "recordedAt": "2026-10-30T10:36:16.088971+00:00",
     "authority": "Local causal guard-removal controls only; no real issuer provisioning or runtime.",
     "rows": [
       {
         "guard": "target",
         "removedGuardTestExit": 1,
         "sourceRestoredExactly": true,
-        "sourceSha256": "f8ed7f54dacfceff5cb63e358c4a99ba85cc9572c3651adab994c56270c99497",
-        "testLogSha256": "148cb4618ddd04a506492cd92bed8fe16ba5e9e3d70b18699c3f7426bc3a36e6",
-        "focusedTestFailureConfirmed": true,
-        "unexpectedRuntimeLoadFailure": false
+        "sourceSha256": "65d10f5d2b5bfabfc68d46c18d0abc6b72784ef65cfe5e820200634f4aae285e"
       },
       {
         "guard": "interruption-revocation",
         "removedGuardTestExit": 1,
         "sourceRestoredExactly": true,
-        "sourceSha256": "f8ed7f54dacfceff5cb63e358c4a99ba85cc9572c3651adab994c56270c99497",
-        "testLogSha256": "91a67cfc8eb8fa7b85df61858b814253c6aaea88334d6139f5fe9e7196097897",
-        "focusedTestFailureConfirmed": true,
-        "unexpectedRuntimeLoadFailure": false
+        "sourceSha256": "65d10f5d2b5bfabfc68d46c18d0abc6b72784ef65cfe5e820200634f4aae285e"
       },
       {
         "guard": "installed-profile",
         "removedGuardTestExit": 1,
         "sourceRestoredExactly": true,
-        "sourceSha256": "f8ed7f54dacfceff5cb63e358c4a99ba85cc9572c3651adab994c56270c99497",
-        "testLogSha256": "549b0a0bde5da39c78c7e8ac108eec42082aa59c96ba1447251f707e36852d7d",
-        "focusedTestFailureConfirmed": true,
-        "unexpectedRuntimeLoadFailure": false
+        "sourceSha256": "65d10f5d2b5bfabfc68d46c18d0abc6b72784ef65cfe5e820200634f4aae285e"
+      },
+      {
+        "guard": "approval-before-credentials",
+        "mutation": "Move capability lookup before independent approval checks, retaining all validation.",
+        "removedGuardTestExit": 1,
+        "sourceRestoredExactly": true,
+        "sourceSha256": "65d10f5d2b5bfabfc68d46c18d0abc6b72784ef65cfe5e820200634f4aae285e",
+        "deniedCredentialLookupTripwireObserved": true,
+        "oneSelectedTestFailed": true,
+        "testLogSha256": "c18081054e40313bfeb8b25d8bacfc6462d2f581aa74fe6b27fb1751d5e07313"
       }
     ],
     "passed": true
   },
   "realFileComponent": "Peer store receives the exact synthetic approved material; random generation is forbidden by the fixture and a bundle issued there verifies using the original independent verifier store. This is local filesystem proof, not actual hosted producer evidence.",
   "remaining": [
-    "Full combined source proof after accepted-parent replay.",
+    "Accepted-parent replay, canonical generated JSDoc inventory, then complete combined package/final/hosted checks and review.",
     "Secure protected material transport and independently approved actual runner source/tool binding.",
     "Actual protected producer, immutable bounded artifact publication and acceptance join.",
     "Actual human bootstrap and seven exact suppressed reads/four reference-only files; signing remains inactive.",
@@ -119,14 +117,167 @@
   ],
   "runtimeChanges": false,
   "instrumentationCatalog": {
-    "generator": "bun run beep observability catalog --write",
-    "catalogSha256": "e39dc308a39714b91e7e8f6645ce05894187ef52e5ba281ecdfd6def8a340202",
     "file": "standards/instrumentation-catalog/@beep/repo-cli.generated.jsonc",
+    "catalogSha256": "fa7982c93d3ecf63763ba349a49192a938e5f6310c5102f76d63033291d098ff",
     "check": {
       "exit": 0,
-      "elapsedSeconds": 7.109,
-      "finishedAt": "2026-10-30T10:15:31.062044+00:00"
+      "elapsedSeconds": 7.246,
+      "finishedAt": "2026-10-30T10:38:50.464776+00:00"
     },
-    "scope": "Generated span inventory only; source hashes, coverage floors and production trust state unchanged."
+    "scope": "Canonical generated span inventory, including the concrete upload validator; no threshold or exception change."
+  },
+  "beforeConcreteRuntime": {
+    "sourceParent": "56d4326c921080bd201d9c5d649e5bab5e9fb2c2",
+    "sourceSha256": {
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts": "1588f3eea7cbd1a4d355059ac3f5affbc0d536cf632e67a6ba323f4c09abbfd1",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts": "1b6581f6fd9091cea5fe3bb62cc9978ada655ec89de1967455cdb8e200b34f4d",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts": "f8ed7f54dacfceff5cb63e358c4a99ba85cc9572c3651adab994c56270c99497",
+      "packages/tooling/tool/cli/src/test/Cache.test-kit.ts": "f490a6a465869a8ad38be691bd454c38a140b49691c1f6d5c984e8963e928040",
+      "packages/tooling/tool/cli/test/cache-dispatch.test.ts": "70ef75245504a6bf56e6ecb5a71a255502049715e790d6a373b877bcf06bdfbb",
+      "packages/tooling/tool/cli/test/cache-producer.test.ts": "82ce7b5b35248796932817f9c2af82cef05625ea45e781787da612c4f593c760",
+      "packages/tooling/tool/cli/test/cache-workflow.test.ts": "d53d2fcc414f3e243d11b971ab5a96b5fb1dc2e275385d1169e3706aacec27a0"
+    },
+    "verification": {
+      "node126": {
+        "exit": 0,
+        "elapsedSeconds": 8.712,
+        "finishedAt": "2026-10-30T09:54:02.514001+00:00"
+      },
+      "bun126": {
+        "exit": 0,
+        "elapsedSeconds": 6.097,
+        "finishedAt": "2026-10-30T09:54:08.626327+00:00"
+      },
+      "quick": {
+        "exit": 0,
+        "elapsedSeconds": 12.446,
+        "finishedAt": "2026-10-30T09:53:53.782009+00:00"
+      },
+      "effectPolicy": {
+        "exit": 0,
+        "elapsedSeconds": 38.817,
+        "finishedAt": "2026-10-30T09:54:47.459881+00:00"
+      },
+      "inlinePolicy": {
+        "exit": 0,
+        "elapsedSeconds": 0.272,
+        "finishedAt": "2026-10-30T09:54:47.748291+00:00"
+      },
+      "rootRulePolicy": {
+        "exit": 0,
+        "elapsedSeconds": 2.919,
+        "finishedAt": "2026-10-30T09:54:50.685698+00:00"
+      },
+      "fallowAudit": {
+        "exit": 0,
+        "elapsedSeconds": 8.898,
+        "finishedAt": "2026-10-30T09:54:59.599927+00:00"
+      },
+      "fallowHealth": {
+        "exit": 0,
+        "elapsedSeconds": 6.002,
+        "finishedAt": "2026-10-30T09:55:05.620294+00:00"
+      },
+      "scopedDocgen": {
+        "exit": 0,
+        "elapsedSeconds": 40.566,
+        "finishedAt": "2026-10-30T09:57:14.180775+00:00"
+      },
+      "generatedInventory": {
+        "exit": 0,
+        "elapsedSeconds": 270.789,
+        "finishedAt": "2026-10-30T10:02:10.546649+00:00"
+      },
+      "instrumentationCatalog": {
+        "exit": 0,
+        "elapsedSeconds": 7.109,
+        "finishedAt": "2026-10-30T10:15:31.062044+00:00"
+      }
+    },
+    "guardControls": {
+      "recordedAt": "2026-10-30T09:53:17.270470+00:00",
+      "authority": "Local causal guard-removal controls only; no real issuer provisioning or runtime.",
+      "rows": [
+        {
+          "guard": "target",
+          "removedGuardTestExit": 1,
+          "sourceRestoredExactly": true,
+          "sourceSha256": "f8ed7f54dacfceff5cb63e358c4a99ba85cc9572c3651adab994c56270c99497",
+          "testLogSha256": "148cb4618ddd04a506492cd92bed8fe16ba5e9e3d70b18699c3f7426bc3a36e6",
+          "focusedTestFailureConfirmed": true,
+          "unexpectedRuntimeLoadFailure": false
+        },
+        {
+          "guard": "interruption-revocation",
+          "removedGuardTestExit": 1,
+          "sourceRestoredExactly": true,
+          "sourceSha256": "f8ed7f54dacfceff5cb63e358c4a99ba85cc9572c3651adab994c56270c99497",
+          "testLogSha256": "91a67cfc8eb8fa7b85df61858b814253c6aaea88334d6139f5fe9e7196097897",
+          "focusedTestFailureConfirmed": true,
+          "unexpectedRuntimeLoadFailure": false
+        },
+        {
+          "guard": "installed-profile",
+          "removedGuardTestExit": 1,
+          "sourceRestoredExactly": true,
+          "sourceSha256": "f8ed7f54dacfceff5cb63e358c4a99ba85cc9572c3651adab994c56270c99497",
+          "testLogSha256": "549b0a0bde5da39c78c7e8ac108eec42082aa59c96ba1447251f707e36852d7d",
+          "focusedTestFailureConfirmed": true,
+          "unexpectedRuntimeLoadFailure": false
+        }
+      ],
+      "passed": true
+    },
+    "instrumentationCatalog": {
+      "generator": "bun run beep observability catalog --write",
+      "catalogSha256": "e39dc308a39714b91e7e8f6645ce05894187ef52e5ba281ecdfd6def8a340202",
+      "file": "standards/instrumentation-catalog/@beep/repo-cli.generated.jsonc",
+      "check": {
+        "exit": 0,
+        "elapsedSeconds": 7.109,
+        "finishedAt": "2026-10-30T10:15:31.062044+00:00"
+      },
+      "scope": "Generated span inventory only; source hashes, coverage floors and production trust state unchanged."
+    }
+  },
+  "generatedInventory": {
+    "status": "pending-after-accepted-parent-replay",
+    "reason": "Canonical exported-anchor inventory and complete combined package/final/hosted proof remain required before publication. The current unpublished lane is not final."
+  },
+  "focusedCoverage": {
+    "authority": "Current-source focused Node V8 observation, not a passing whole-file floor or complete package claim. Unchanged coverage floors still apply after accepted-parent replay.",
+    "files": {
+      "Cache.producer.ts": {
+        "branches": 98.18,
+        "functions": 100,
+        "lines": 99.14,
+        "statements": 99.17
+      },
+      "Cache.workflow.ts": {
+        "branches": 94.82,
+        "functions": 93.33,
+        "lines": 95.45,
+        "statements": 94.97
+      }
+    }
+  },
+  "refinementAttribution": {
+    "initialApiMisuse": "Effect.succeedNone is a value, not an Option.match callback. Initial quick and four None-path tests failed; current callback and Effect.asSome use the installed Effect API and pass.",
+    "initialFallowFailure": {
+      "function": "validateProvidedCacheProducerUploadRuntime",
+      "cyclomatic": 15,
+      "crap": 63.6,
+      "coverageSource": "estimated partial",
+      "fixed": "Aggregate the same independent positive requirements with Effect Array; fresh audit and health both report zero findings."
+    },
+    "rootLintWarning": {
+      "status": "inherited from the unpublished parent boundary, not introduced by this refinement",
+      "file": "test/cache-producer-adapter.test.ts",
+      "finding": "process.platform at Linux test gate",
+      "owner": "Parent producer PR #2368 already fixes it with currentHostPlatform; preserve and consume through accepted-parent replay.",
+      "currentWarningCount": 1
+    },
+    "coverageFloorsLowered": false,
+    "inventoryWaiverGranted": false
   }
 }

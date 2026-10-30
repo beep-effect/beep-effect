@@ -335,34 +335,13 @@ export const hashCacheProducerUploadKey = Effect.fn("CacheWorkflow.hashUploadKey
   digest(new TextEncoder().encode(`beep/cache-producer-artifact-key/v1\0${Redacted.value(key)}`))
 );
 
-/**
- * Require independent approval of the exact bounded pilot upload destination.
- *
- * **Details**
- * Approval contains paired descriptor and artifact-key digests. Runtime bearers
- * and the key value never enter it. Historical bindings without an upload target can execute
- * their original isolated matrix but cannot perform an external upload.
- *
- * **Example** (Reference the pre-network approval gate)
- * ```ts
- * import { assertCacheProducerUploadRuntime } from "@beep/repo-cli/test/Cache"
- * console.assert(typeof assertCacheProducerUploadRuntime === "function")
- * ```
- *
- * @internal
- * @category validation
- * @since 0.0.0
- */
-export const assertCacheProducerUploadRuntime = Effect.fn("CacheWorkflow.assertUploadRuntime")(function* (
+const validateProvidedCacheProducerUploadRuntime = Effect.fn("CacheWorkflow.assertProvidedUploadRuntime")(function* (
   binding: CacheProducerBinding,
-  runtime: O.Option<CacheProducerUploadRuntime>
+  runtime: CacheProducerUploadRuntime
 ) {
-  if (O.isSome(binding.uploadApproval) !== O.isSome(runtime))
-    return yield* CacheCommandError.new("Producer upload runtime differs from independent target approval.");
-  if (O.isNone(runtime)) return runtime;
   const targetCodec = JsonStringCodec(CacheConformanceTarget);
-  const target = yield* targetCodec.encode(runtime.value.target).pipe(Effect.flatMap(targetCodec.decode));
-  const supplied = runtime.value;
+  const target = yield* targetCodec.encode(runtime.target).pipe(Effect.flatMap(targetCodec.decode));
+  const supplied = runtime;
   const owned = CacheProducerUploadRuntime.make({
     target,
     bearers: CacheConformanceBearers.make({
@@ -402,23 +381,69 @@ export const assertCacheProducerUploadRuntime = Effect.fn("CacheWorkflow.assertU
   const targetDigest = yield* hashCacheProducerUploadTarget(target);
   const keyDigest = yield* hashCacheProducerUploadKey(owned.signing);
   if (
-    url.href !== "http://127.0.0.1:19427/" ||
-    !S.is(Sha256Hex)(target.backend.digest) ||
-    !Str.startsWith("/")(owned.adapter.value.executable) ||
-    !isR2StorageEndpoint(endpoint.href) ||
-    storage.bucket !== "beep-turbo-r2-pilot" ||
-    target.namespace.teamId !== "team_beep_signed_canary_v1" ||
-    target.namespace.teamId !== binding.client.namespace ||
-    target.namespace.teamId === target.namespace.foreignTeamId ||
-    !target.policy.readerWriterSplit ||
-    !target.policy.tenantBinding ||
-    !O.containsWith(S.toEquivalence(CacheProducerUploadApproval))(
-      binding.uploadApproval,
-      CacheProducerUploadApproval.make({ targetSha256: targetDigest, artifactKeySha256: keyDigest })
+    A.contains(
+      [
+        url.href === "http://127.0.0.1:19427/",
+        S.is(Sha256Hex)(target.backend.digest),
+        Str.startsWith("/")(owned.adapter.value.executable),
+        isR2StorageEndpoint(endpoint.href),
+        storage.bucket === "beep-turbo-r2-pilot",
+        target.namespace.teamId === "team_beep_signed_canary_v1",
+        target.namespace.teamId === binding.client.namespace,
+        target.namespace.teamId !== target.namespace.foreignTeamId,
+        target.policy.readerWriterSplit,
+        target.policy.tenantBinding,
+        O.containsWith(S.toEquivalence(CacheProducerUploadApproval))(
+          binding.uploadApproval,
+          CacheProducerUploadApproval.make({ targetSha256: targetDigest, artifactKeySha256: keyDigest })
+        ),
+      ],
+      false
     )
   )
     return yield* CacheCommandError.new("Producer upload target differs from its approved bounded pilot profile.");
-  return O.some(owned);
+  return owned;
+});
+
+/**
+ * Require independent approval of the exact bounded pilot upload destination.
+ *
+ * **Details**
+ * Approval contains paired descriptor and artifact-key digests. Runtime bearers
+ * and the key value never enter it. Historical bindings without an upload target can execute
+ * their original isolated matrix but cannot perform an external upload.
+ *
+ * **Example** (Validate a local-only execution without upload capabilities)
+ * ```ts
+ * import {
+ *   assertCacheProducerUploadRuntime,
+ *   readCacheProducerExecutionProfile,
+ * } from "@beep/repo-cli/test/Cache"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ *
+ * const localOnly = Effect.gen(function* () {
+ *   const [binding] = yield* readCacheProducerExecutionProfile("/private/local-only-producer")
+ *   // An upload-approved binding refuses absent capabilities instead of uploading.
+ *   return yield* assertCacheProducerUploadRuntime(binding, O.none())
+ * })
+ * console.assert(Effect.isEffect(localOnly))
+ * ```
+ *
+ * @internal
+ * @category validation
+ * @since 0.0.0
+ */
+export const assertCacheProducerUploadRuntime = Effect.fn("CacheWorkflow.assertUploadRuntime")(function* (
+  binding: CacheProducerBinding,
+  runtime: O.Option<CacheProducerUploadRuntime>
+) {
+  if (O.isSome(binding.uploadApproval) !== O.isSome(runtime))
+    return yield* CacheCommandError.new("Producer upload runtime differs from independent target approval.");
+  return yield* O.match(runtime, {
+    onNone: () => Effect.succeedNone,
+    onSome: (provided) => validateProvidedCacheProducerUploadRuntime(binding, provided).pipe(Effect.asSome),
+  });
 });
 
 /**
@@ -470,11 +495,7 @@ export const loadCacheProducerExecutionRuntime = Effect.fn("CacheWorkflow.loadEx
       })
     ),
   });
-  const owned = yield* assertCacheProducerUploadRuntime(binding, O.some(runtime)).pipe(
-    Effect.flatMap(
-      Effect.fromOption(() => CacheCommandError.new("Approved producer execution requires an upload capability."))
-    )
-  );
+  const owned = yield* validateProvidedCacheProducerUploadRuntime(binding, runtime);
   return Tuple.make(binding, owned);
 }, CacheCommandError.mapError("Cannot load independently approved producer execution capabilities."));
 

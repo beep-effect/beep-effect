@@ -510,6 +510,7 @@
     {"name":"CacheQualificationService.transition","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheWorkflow.assertHostedReport","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheWorkflow.assertIdentity","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"CacheWorkflow.assertProvidedUploadRuntime","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheWorkflow.assertUploadRuntime","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheWorkflow.executeOwnedUpload","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheWorkflow.file","owner":"@beep/repo-cli","family":"tooling","conforms":true},

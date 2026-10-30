@@ -1354,3 +1354,29 @@ check. It removes exactly the stale span in the producer lane and records the
 new provisioning spans in the unpublished dependent lane. Both checks report
 zero drift. Run this narrow check after changing named Effect functions before
 the next complete publication. Preserve the failed verdict; no gate is waived.
+
+
+### Test the private loader's approval boundary directly, 2026-10-30
+
+Focused coverage exposed a missing loader case for absent upload approval and
+a redundant optional-result error after a concrete capability was validated.
+Reuse the same owned-snapshot validator under the optional experiment wrapper
+and the private loader, preserving every target/key/adapter check. Add a
+real private-store case with a credential provider that defects if consulted;
+move lookup before approval as a causal ordering control.
+
+The first refactor used Effect.succeedNone as a callback. Local type checking
+and four None-path tests rejected that introduced API misuse. The installed
+Effect source defines it as a value, so the callback must return it; Effect.asSome
+is the canonical wrapping operator. Retain the failed receipts and require
+fresh current-source checks. No external credentials or runtime were involved.
+
+
+The extracted concrete validator triggered one introduced Fallow complexity
+finding: cyclomatic 15, CRAP 63.6 using estimated partial coverage. Its profile
+requirements form one conjunction. Express their positive checks as one Effect
+Array aggregate, retaining every constraint, the exact error and each existing
+negative case; do not change a threshold or add an exception. A nonquiet root
+lint also identified the old adapter fixture's process.platform warning. That
+line is inherited from the unpublished parent boundary and is already fixed
+in the owning producer PR; preserve it until the accepted-parent replay.

@@ -343,11 +343,17 @@ it.layer(NodeCrypto.layer)("approved producer upload runtime", (it) => {
   );
 });
 
-const executionFixture = Effect.fn("ProducerUploadRuntimeTest.executionFixture")(function* () {
+const executionFixture = Effect.fn("ProducerUploadRuntimeTest.executionFixture")(function* (
+  withUploadApproval: typeof S.Boolean.Type = true
+) {
   const [original, runtime] = yield* fixture();
   const before = yield* decodeContract(contractInput);
   const contract = CacheTaskContract.make({ ...before, clients: { ...before.clients, stable: original.client } });
-  const binding = CacheProducerBinding.make({ ...original, policyDigest: yield* hashCacheProducerContract(contract) });
+  const binding = CacheProducerBinding.make({
+    ...original,
+    uploadApproval: withUploadApproval ? original.uploadApproval : O.none(),
+    policyDigest: yield* hashCacheProducerContract(contract),
+  });
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const parent = yield* fs.makeTempDirectoryScoped();
@@ -403,6 +409,16 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer))("closed producer 
         expect(accepted).toBe(signing === environment.TURBO_REMOTE_CACHE_SIGNATURE_KEY);
       }),
     { arbitrary: fcRuns(20) }
+  );
+  it.effect("refuses a store without upload approval before any credential lookup", () =>
+    Effect.gen(function* () {
+      const { directory } = yield* executionFixture(false);
+      const failure = yield* loadCacheProducerExecutionRuntime(directory).pipe(
+        Effect.provideService(ConfigProvider.ConfigProvider, denyCredentialLookup),
+        Effect.flip
+      );
+      expect(failure.message).toBe("The producer store has no independently approved upload.");
+    })
   );
   it.effect("refuses a changed destination before any credential lookup", () =>
     Effect.gen(function* () {

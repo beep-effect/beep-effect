@@ -788,3 +788,20 @@ coverage floor is unchanged and met. The failed publication pushed nothing.
 - Reversal: revoke execution stores through the existing authority, remove these
   installation callers and private inputs, and retain verifier stores and prior
   observations. Ordinary R2 and signed-activation state remain independently held.
+
+
+### Concrete private runtime validation, 2026-10-30
+
+- Keep one implementation of upload target, key separation, adapter policy and
+  owned capability snapshots. The optional experiment API retains paired
+  approval/runtime absence; the private loader calls the concrete validator
+  after requiring upload approval and checking its target before credentials.
+- Do not unwrap a redundant optional result in the private loader. Its
+  independently approved store and locally constructed capability are concrete.
+  The same validator still returns the owned snapshot on both paths.
+- Prove a store without upload approval fails before any credential provider
+  is consulted; moving lookup earlier must trip the denying provider control.
+  Existing optional no-upload experiments retain their behavior.
+- Reverse by recombining the same validator with the optional API and restoring
+  the loader caller. Keep the denial-before-lookup case and snapshot controls.
+  No runtime, grant, profile or production setting changes.

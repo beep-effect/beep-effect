@@ -782,10 +782,23 @@ independently approved issuer rather than generating a disconnected CI key.
 Source/target/executable checks precede installation; normal profile reopen,
 exact selection and source checks follow it, with revocation on error/interruption.
 
-The current 126-case Node/Bun suites, quick lint/check, root rule/inline policies
+The initial 126-case Node/Bun suites, quick lint/check, root rule/inline policies
 and Fallow audit/health pass; Effect policy introduces zero findings. Three
 guard-removal controls fail as intended and restore source exactly. These are
 local component results. After accepted-parent replay, full combined package,
 final, hosted/review proof and real protected workflow/material handoff remain.
 No secret bootstrap, signing activation, qualification or observation window
 is completed by these component controls.
+
+
+The concrete-runtime refinement now passes 127 cases on each runtime, quick
+lint/check, default Effect policy, root rule policy, Fallow audit/health and
+scoped Docgen. Four causal controls include denial before credential lookup.
+The same validator owns snapshots under both its optional API and concrete
+loader; every bounded profile requirement remains. Canonical instrumentation
+regeneration/check passes. One inherited adapter-test platform warning is fixed
+in the owning producer PR and will be consumed through accepted-parent replay.
+
+Refresh the canonical JSDoc anchor inventory after that replay, then run the
+complete combined package, final and hosted proof. This unpublished component
+is not final and grants no activation, qualification or whole-goal acceptance.
