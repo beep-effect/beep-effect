@@ -1,13 +1,13 @@
 {
   "schemaVersion": "cache-producer-execution-coverage-repair/v1",
   "authority": "Source-bound local component proof only. Canonical complete package/final and current-head hosted checks remain required; no qualification or deployment authority.",
-  "sourceParent": "22b21f37d4a2d79ddfc687b4eca6867f4a0805f1",
+  "sourceParent": "84cffa097b39aade35dfad643445c56b880f2e72",
   "sourceSha256": {
     "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts": "235e4ad4a65f29c6489cc7f4b04492a7856133b8b3d9f8c8998e324cfac55e5e",
     "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts": "933bc85de00f51c35d7183629dd4012cf7cbc5c63d1007ed67c61e4f5c63798c",
     "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts": "df7ad1db4c1a64bfef8bcdd1e8252a83774a0e425406bad2e09f9d2672f14bb4",
-    "packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts": "598c59a8c75b04cbee2c1eb6b75c0a533ff6d8213f1471d129691189122ed3b3",
-    "packages/tooling/tool/cli/test/cache-workflow.test.ts": "c18a6a94d9e229894dfd1d5baa97d64e5e16f8e1547cd1c3f563720e1491a3e0"
+    "packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts": "db07db496221a047a59772281599c0433d621ccac1e7c2c09cc9d5835f75cd85",
+    "packages/tooling/tool/cli/test/cache-workflow.test.ts": "41a02883405bf985c3a08f342eb2391a33c7b10ffc395662ff786fc58bbd1b03"
   },
   "hostedFailure": {
     "head": "22b21f37d4a2d79ddfc687b4eca6867f4a0805f1",
@@ -27,33 +27,33 @@
   "verification": {
     "node153": {
       "exit": 0,
-      "elapsedSeconds": 30.702,
-      "finishedAt": "2026-10-30T07:02:18.002589+00:00"
+      "elapsedSeconds": 31.911,
+      "finishedAt": "2026-10-30T07:18:13.274682+00:00"
     },
     "bun153": {
       "exit": 0,
-      "elapsedSeconds": 17.475,
-      "finishedAt": "2026-10-30T07:02:35.492820+00:00"
+      "elapsedSeconds": 16.955,
+      "finishedAt": "2026-10-30T07:18:30.246224+00:00"
     },
     "quick": {
       "exit": 0,
-      "elapsedSeconds": 12.604,
-      "finishedAt": "2026-10-30T07:01:47.277084+00:00"
+      "elapsedSeconds": 11.879,
+      "finishedAt": "2026-10-30T07:17:41.337071+00:00"
     },
-    "effectPolicy": {
+    "inlinePolicy": {
       "exit": 0,
-      "elapsedSeconds": 37.822,
-      "finishedAt": "2026-10-30T07:03:13.330393+00:00"
+      "elapsedSeconds": 0.232,
+      "finishedAt": "2026-10-30T07:17:29.440568+00:00"
     },
-    "brandJsdoc": {
+    "fallowAudit": {
       "exit": 0,
-      "elapsedSeconds": 0.502,
-      "finishedAt": "2026-10-30T06:55:18.263851+00:00"
+      "elapsedSeconds": 8.449,
+      "finishedAt": "2026-10-30T07:18:38.712124+00:00"
     },
-    "observabilityJsdoc": {
+    "fallowHealth": {
       "exit": 0,
-      "elapsedSeconds": 0.801,
-      "finishedAt": "2026-10-30T06:55:19.082445+00:00"
+      "elapsedSeconds": 5.884,
+      "finishedAt": "2026-10-30T07:18:44.613083+00:00"
     }
   },
   "focusedCoverage": {
@@ -134,5 +134,119 @@
     "Unmodified normal-source canary diagnosis and actual protected producer workflow with immutable publication.",
     "All task/feature adoption, production trust, rotation/rollback, required 7/7/14-day observations and final same-PR reflection/lifecycle."
   ],
-  "productionChanges": false
+  "productionChanges": false,
+  "beforePublicationPolicyRepair": {
+    "head": "84cffa097b39aade35dfad643445c56b880f2e72",
+    "sourceSha256": {
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts": "235e4ad4a65f29c6489cc7f4b04492a7856133b8b3d9f8c8998e324cfac55e5e",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts": "933bc85de00f51c35d7183629dd4012cf7cbc5c63d1007ed67c61e4f5c63798c",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts": "df7ad1db4c1a64bfef8bcdd1e8252a83774a0e425406bad2e09f9d2672f14bb4",
+      "packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts": "598c59a8c75b04cbee2c1eb6b75c0a533ff6d8213f1471d129691189122ed3b3",
+      "packages/tooling/tool/cli/test/cache-workflow.test.ts": "c18a6a94d9e229894dfd1d5baa97d64e5e16f8e1547cd1c3f563720e1491a3e0"
+    },
+    "verification": {
+      "node153": {
+        "exit": 0,
+        "elapsedSeconds": 30.702,
+        "finishedAt": "2026-10-30T07:02:18.002589+00:00"
+      },
+      "bun153": {
+        "exit": 0,
+        "elapsedSeconds": 17.475,
+        "finishedAt": "2026-10-30T07:02:35.492820+00:00"
+      },
+      "quick": {
+        "exit": 0,
+        "elapsedSeconds": 12.604,
+        "finishedAt": "2026-10-30T07:01:47.277084+00:00"
+      },
+      "effectPolicy": {
+        "exit": 0,
+        "elapsedSeconds": 37.822,
+        "finishedAt": "2026-10-30T07:03:13.330393+00:00"
+      },
+      "brandJsdoc": {
+        "exit": 0,
+        "elapsedSeconds": 0.502,
+        "finishedAt": "2026-10-30T06:55:18.263851+00:00"
+      },
+      "observabilityJsdoc": {
+        "exit": 0,
+        "elapsedSeconds": 0.801,
+        "finishedAt": "2026-10-30T06:55:19.082445+00:00"
+      }
+    },
+    "focusedCoverage": {
+      "authority": "Current-source local focused V8 diagnostic. Canonical complete final and hosted coverage still required.",
+      "runtime": "Node V8",
+      "testCount": 153,
+      "files": {
+        "Cache.pilot.runner.ts": {
+          "sourceSha256": "235e4ad4a65f29c6489cc7f4b04492a7856133b8b3d9f8c8998e324cfac55e5e",
+          "current": {
+            "branches": 100,
+            "functions": 100,
+            "lines": 100,
+            "statements": 100
+          },
+          "unchangedFloors": {
+            "branches": 100,
+            "functions": 100,
+            "lines": 100,
+            "statements": 100
+          },
+          "meetsFloors": true
+        },
+        "Cache.pilot.ts": {
+          "sourceSha256": "933bc85de00f51c35d7183629dd4012cf7cbc5c63d1007ed67c61e4f5c63798c",
+          "current": {
+            "branches": 86.25,
+            "functions": 88.43,
+            "lines": 91.51,
+            "statements": 91.32
+          },
+          "unchangedFloors": {
+            "branches": 86.09,
+            "functions": 87.95,
+            "lines": 91.23,
+            "statements": 91.04
+          },
+          "meetsFloors": true
+        },
+        "Cache.workflow.ts": {
+          "sourceSha256": "df7ad1db4c1a64bfef8bcdd1e8252a83774a0e425406bad2e09f9d2672f14bb4",
+          "current": {
+            "branches": 100,
+            "functions": 100,
+            "lines": 100,
+            "statements": 100
+          },
+          "unchangedFloors": {
+            "branches": 100,
+            "functions": 100,
+            "lines": 100,
+            "statements": 100
+          },
+          "meetsFloors": true
+        }
+      },
+      "emptyFilterAttemptsCountAsCoverage": false,
+      "baselineRelaxed": false
+    }
+  },
+  "prePushPolicyFailure": {
+    "head": "84cffa097b39aade35dfad643445c56b880f2e72",
+    "exit": 1,
+    "elapsedSeconds": 598.204,
+    "pushed": false,
+    "introduced": [
+      "Three inline activation JSON schema compilation sites",
+      "fixtureExitCode cyclomatic10, estimated CRAP31.6, reported by audit and health"
+    ],
+    "repair": [
+      "Reuse the existing module-scoped JsonStringCodec for activation encoding and decoding.",
+      "Match named owned-upload and failed-source cases before the existing mutation/source verdict; preserve every positive/refusal control."
+    ],
+    "waiversOrLoweredBaselines": false
+  }
 }

@@ -1080,3 +1080,13 @@ generated issue away.
 - The two previously opaque JSDoc child exits pass as exact serial commands.
   Preserve their failed full-final receipt; the cause of termination remains
   unproven and does not justify editing unrelated packages.
+
+
+### Pre-push policy coverage for fixture edits
+
+Quick package checks did not run root inline-schema or Fallow policy. A normal
+publication spent 598 seconds before rejecting three repeated activation
+codec compilations and one extended fixture exit rule. Run the narrow root
+policy and changed-file Fallow controls during fixture editing, then retain
+the normal publication gate. Module-scoped codec reuse and named match cases
+fix the findings; no threshold, fixture assertion or coverage floor changes.

@@ -41,6 +41,7 @@ import {
   CacheRuntimeProcess as StepExec,
 } from "@beep/repo-cli/test/Cache";
 import { MemoryStats } from "@beep/repo-cli/test/RepoRun";
+import { JsonStringCodec } from "@beep/repo-cli/test/SharedInternals";
 import { CacheClientPin, CacheEvidenceReference, CacheTaskContract } from "@beep/repo-configs/cache";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
@@ -67,6 +68,7 @@ import { bearers, targetFor } from "./cache-conformance-server.ts";
 import { input as bundleInput, contractInput } from "./helpers/cache-producer-bundle-fixture.ts";
 
 afterEach(() => vi.restoreAllMocks());
+const activationJson = JsonStringCodec(CacheActivationPreview);
 
 const fixture = Effect.fn("WorkflowTest.fixture")(function* () {
   const fs = yield* FileSystem.FileSystem;
@@ -214,7 +216,7 @@ const supervisedFixture = Effect.fn("WorkflowTest.supervisedFixture")(function* 
       toolchain: base.toolchain,
       toolchainDigest: binding.toolchainDigest,
     });
-    const text = yield* S.encodeEffect(S.fromJsonString(CacheActivationPreview))(
+    const text = yield* activationJson.encode(
       CacheActivationPreview.make({ source, target: source, activation: O.getOrThrow(contract.activation) })
     );
     yield* fs.writeFileString(path.join(root, "activation.json"), text);
@@ -426,10 +428,8 @@ it.layer(
     Effect.gen(function* () {
       const f = yield* supervisedFixture(true);
       const file = f.path.join(f.root, f.request.pilot.activation.path);
-      const preview = yield* f.fs
-        .readFileString(file)
-        .pipe(Effect.flatMap(S.decodeUnknownEffect(S.fromJsonString(CacheActivationPreview))));
-      const text = yield* S.encodeEffect(S.fromJsonString(CacheActivationPreview))(
+      const preview = yield* f.fs.readFileString(file).pipe(Effect.flatMap(activationJson.decode));
+      const text = yield* activationJson.encode(
         CacheActivationPreview.make({
           ...preview,
           source: CacheLiveIdentity.make({

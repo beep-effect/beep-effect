@@ -666,3 +666,10 @@ The exact-decoder and upload/admission/refusal tests are recorded in
 Complete committed-source package/final and hosted proof remain required. No
 goal acceptance criterion, credential bootstrap or deployed signed trial is
 completed by these local component checks.
+
+
+The first publication of this repair stopped before pushing on root inline
+schema policy and the fixture exit rule's Fallow score. Both are repaired in
+the same component. The fresh 153-case replays pass on each runtime, with
+current quick, inline, Fallow audit/health and unchanged Node coverage floors
+passing. Normal publication and complete committed-source proof still follow.

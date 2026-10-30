@@ -521,15 +521,19 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
                   hit = remote.hit;
                   const endpoint = remote.endpoint;
                   const fixtureExitCode = () =>
-                    (Str.startsWith("signed-")(label) &&
-                      ((Str.includes("export const =")(sourceText) &&
-                        !Str.includes("!**/src/index.ts")(rootConfigBytes)) ||
-                        Str.includes("@deprecated qualification dependency control")(dependencySource))) ||
-                    label === "failed-source" ||
-                    (label === "owned-producer-upload" && fault === "owned-upload-failure") ||
-                    (number === 0 && A.contains(["mutation-root-lint-config", "mutation-dependency-source"], label))
-                      ? 1
-                      : 0;
+                    Match.value(label).pipe(
+                      Match.when("owned-producer-upload", () => (fault === "owned-upload-failure" ? 1 : 0)),
+                      Match.when("failed-source", () => 1),
+                      Match.orElse(() =>
+                        (Str.startsWith("signed-")(label) &&
+                          ((Str.includes("export const =")(sourceText) &&
+                            !Str.includes("!**/src/index.ts")(rootConfigBytes)) ||
+                            Str.includes("@deprecated qualification dependency control")(dependencySource))) ||
+                        (number === 0 && A.contains(["mutation-root-lint-config", "mutation-dependency-source"], label))
+                          ? 1
+                          : 0
+                      )
+                    );
                   exitCode = fixtureExitCode();
                   if (reuse && exitCode === 0) yield* write(directory, cacheFile, "fixture");
                   const corruptSource = Effect.fn("PilotOrchestrationTest.corruptSource")(function* () {

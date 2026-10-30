@@ -653,3 +653,10 @@ no consumer, key, grant, service, bucket or subscription.
   three files' floors; empty initial include-filter reports count as no coverage.
   Full committed-source package/final/hosted proof, reviews and rollout gates
   remain required. See the source-bound coverage repair checkpoint.
+
+
+The pre-push policy replay found three inline schema compilations and one
+fixture verdict rule above the Fallow limit. Reuse the module-scoped JSON codec
+and match the named exit cases before the existing mutation rules. Current
+Node/Bun controls, root inline policy and both Fallow checks pass; every Node
+coverage floor is unchanged and met. The failed publication pushed nothing.
