@@ -99,7 +99,8 @@
     "research/owned-adapter-lifecycle-checkpoint.json",
     "research/owned-adapter-integration-checkpoint.json",
     "research/producer-integration-policy-review.json",
-    "research/producer-fallow-repair-checkpoint.json"
+    "research/producer-fallow-repair-checkpoint.json",
+    "research/producer-execution-coverage-repair.json"
   ],
   "agentLaunchers": [
     {

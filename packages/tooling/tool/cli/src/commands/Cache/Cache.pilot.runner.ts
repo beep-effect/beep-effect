@@ -55,6 +55,7 @@ class UploadSupervisor extends S.Opaque<UploadSupervisor, { readonly brand: uniq
   )
 ) {}
 const hashBytes = S.decodeEffect(Sha256HexFromBytes);
+const isSignedPilotReceipt = S.is(CacheSignedPilotReceipt);
 const bound = OutputBound.make({ maxChars: 64 * 1024, truncatedNotice: "signed pilot capture exceeded bound" });
 
 const renderSignedPilotWorker = Effect.fn("CachePilot.renderSignedWorker")(function* (
@@ -161,9 +162,12 @@ export const makePrivateSupervisorStorage = Effect.fn("CachePilot.makePrivateSup
  * @category cli-commands
  * @since 0.0.0
  */
-const captureCacheSignedPilotWorker = Effect.fn("CachePilot.captureSignedWorker")(function* (
+const captureCacheSignedPilotWorker = Effect.fn("CachePilot.captureSignedWorker")(function* <
+  Report extends CacheSignedPilotReceipt | CacheSignedPilotRun,
+>(
   runnerRoot: string,
   request: CacheSignedPilotRequest,
+  decodeReport: (text: string) => Effect.Effect<Report, S.SchemaError>,
   protectedIssuerMaterial: O.Option<string> = O.none(),
   upload: O.Option<UploadSupervisor> = O.none()
 ) {
@@ -315,15 +319,15 @@ const captureCacheSignedPilotWorker = Effect.fn("CachePilot.captureSignedWorker"
         const text = yield* readCacheExperimentBytes(directory, "report.json", 256 * 1024).pipe(
           Effect.flatMap(decodeCacheExperimentText)
         );
-        if (O.isSome(upload)) {
+        const report = yield* decodeReport(text);
+        if (!isSignedPilotReceipt(report)) {
           if (
             O.isSome(protectedIssuerMaterial) &&
             !O.contains(issuerDigest, yield* hashIssuerMaterial(protectedIssuerMaterial.value))
           )
             return yield* CacheCommandError.new("Persistent issuer material changed during the upload worker.");
-          return yield* JsonStringCodec(CacheSignedPilotRun).decode(text);
+          return report;
         }
-        const report = yield* JsonStringCodec(CacheSignedPilotReceipt).decode(text);
         const verifySupervisedReceipt = Effect.fn("CachePilot.verifySupervisedReceipt")(function* () {
           if (
             report.channel !== request.pilot.channel ||
@@ -342,7 +346,8 @@ const captureCacheSignedPilotWorker = Effect.fn("CachePilot.captureSignedWorker"
           }
         });
         yield* verifySupervisedReceipt();
-        return yield* validateCacheSignedPilotReceipt(report);
+        yield* validateCacheSignedPilotReceipt(report);
+        return report;
       })
     )
   );
@@ -365,10 +370,11 @@ export const runCacheSignedPilotExperiment = Effect.fn("CachePilot.signedExperim
   request: CacheSignedPilotRequest,
   protectedIssuerMaterial: O.Option<string> = O.none()
 ) {
-  return yield* captureCacheSignedPilotWorker(root, request, protectedIssuerMaterial).pipe(
-    Effect.filterOrFail(S.is(CacheSignedPilotReceipt), () =>
-      CacheCommandError.new("Expected the signed comparison matrix.")
-    )
+  return yield* captureCacheSignedPilotWorker(
+    root,
+    request,
+    JsonStringCodec(CacheSignedPilotReceipt).decode,
+    protectedIssuerMaterial
   );
 });
 
@@ -414,10 +420,9 @@ export const runCacheProducerUploadExperiment = Effect.fn("CachePilot.producerUp
       const report = yield* captureCacheSignedPilotWorker(
         root,
         request,
+        JsonStringCodec(CacheSignedPilotRun).decode,
         O.some(protectedIssuerMaterial),
         O.some(UploadSupervisor.make({ address: proxy.address, runtime }))
-      ).pipe(
-        Effect.filterOrFail(S.is(CacheSignedPilotRun), () => CacheCommandError.new("Expected an owned upload run."))
       );
       const summary = yield* report.nativeSummary.pipe(
         Effect.fromOption(() => CacheCommandError.new("Owned upload omitted its complete native summary."))

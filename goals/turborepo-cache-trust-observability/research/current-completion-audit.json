@@ -3,7 +3,7 @@
   "goal": "turborepo-cache-trust-observability",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "7c8a4475cd3db0ef372870fc9bce0e3b2c574cdc40ed645c266631cbfa4cb6ec",
+  "specSha256": "695224a4be385c42ba244f7232f1e427b1f94802da554e84beb570a42bbe65e6",
   "acceptance": [
     {
       "id": "AC-01",
@@ -414,5 +414,7 @@
     "sha256": "9266cb28ca37d0f3153b0fd6d978a942bf0af470f3e20e33768f1fe18b061eb0",
     "scope": "Introduced complexity/duplication repaired;163 focused tests per runtime, source-removal integrity control, real synthetic adapter lifecycle and canonical policy/documentation checks. Complete package/final/hosted and all actual signed/deployed acceptance remain pending.",
     "allAcceptanceUnproven": true
-  }
+  },
+  "priorSpecSha256AtExecutionCoverage": "7c8a4475cd3db0ef372870fc9bce0e3b2c574cdc40ed645c266631cbfa4cb6ec",
+  "producerExecutionCoverageRepair": "research/producer-execution-coverage-repair.json"
 }

@@ -651,3 +651,18 @@ digest check fails the intended assertion, with exact restoration. The real
 Bun controller replays actual adapter success, callback failure and interruption
 cleanup. Final source-bound evidence and complete/final/hosted gates remain
 required; no goal criterion or deployed trust state is completed here.
+
+
+### Producer execution coverage repair
+
+PR #2368 remains a component in progress. Its integrated head completed the
+default package audit, but full final failed on two opaque JSDoc child exits
+and terminated coverage, while hosted CI exposed three introduced per-file
+coverage regressions. Both exact JSDoc commands pass serially without source
+changes. The repaired source passes 153 focused tests per runtime, quick package
+checks and Effect test policy; the Node diagnostic meets all unchanged floors.
+The exact-decoder and upload/admission/refusal tests are recorded in
+[the coverage repair checkpoint](research/producer-execution-coverage-repair.json).
+Complete committed-source package/final and hosted proof remain required. No
+goal acceptance criterion, credential bootstrap or deployed signed trial is
+completed by these local component checks.

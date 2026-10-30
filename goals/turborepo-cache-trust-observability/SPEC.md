@@ -632,3 +632,24 @@ no consumer, key, grant, service, bucket or subscription.
 - Reverse by reverting the additive extraction/profile change before enabling
   a consumer that requires it. No running cache, credential, signing mode,
   backend selection, paid service or proof threshold changes in this repair.
+
+
+### Producer execution coverage and exact report decoding, 2026-10-30
+
+- Current-head CI on the integrated producer exposed missing execution coverage
+  in three files. Each trusted internal supervisor caller now supplies its exact
+  schema decoder; remove redundant union guards after decoding while preserving
+  capture, issuer-material and complete matrix verification.
+- Test the actual scoped Unix transport with deterministic native-task execution,
+  write-only access, complete fresh closure and failed-graph refusal. Cover the
+  workflow upload composition, independent activation/source refusal and the
+  admitted local route. These controlled tests grant no producer authority.
+- `NodeHttpServer.make` requires a native server factory to bind the real Unix
+  listener. Permit the one test-only `node:http` factory import with an adjacent,
+  import-scoped `nodeBuiltinImport` directive; Effect continues to own serving,
+  request IO and shutdown. Reverse this interop exception when Effect exposes a
+  native factory. No production HTTP implementation or global policy changes.
+- Preserve every coverage floor. The current focused Node diagnostic meets all
+  three files' floors; empty initial include-filter reports count as no coverage.
+  Full committed-source package/final/hosted proof, reviews and rollout gates
+  remain required. See the source-bound coverage repair checkpoint.

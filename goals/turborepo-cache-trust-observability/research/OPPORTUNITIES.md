@@ -1058,3 +1058,25 @@ example-import violation: `@beep/schema` was used instead of its stable
 `@beep/schema/Sha256` leaf. Compilation alone did not check that policy. Fix the
 example import and regenerate through the canonical writer; do not edit the
 generated issue away.
+
+
+## Coverage source and runtime fixture recovery, 2026-10-30
+
+- Hosted coverage exposed two unreachable post-decode guards and absent owned
+  upload/workflow paths. Use each trusted caller's exact schema decoder, and
+  add meaningful transport, admission and refusal controls; retain every floor.
+- An include filter prefixed with the repository path yielded empty reports
+  because the workspace coverage owner uses a different root. Assert the exact
+  three report members before comparing counters; a green test exit alone is
+  not coverage proof.
+- The real Node Unix listener requires the factory accepted by Effect's
+  NodeHttpServer. Keep the interop reason beside its single import directive.
+  ESM namespace exports cannot be redefined directly; hoisted Vitest spying
+  needs its direct mocks import and the actual original implementation.
+- Formatting removes an inferred Boolean parameter annotation that the Effect
+  function diagnostic still needs. A schema-derived Boolean type retains an
+  explicit typed boundary through formatting. An admitted-route fixture also
+  supplies its declared MemoryStats service even when admission is controlled.
+- The two previously opaque JSDoc child exits pass as exact serial commands.
+  Preserve their failed full-final receipt; the cause of termination remains
+  unproven and does not justify editing unrelated packages.
