@@ -75,7 +75,24 @@
       "fallowInheritedAdjacent": 1,
       "thresholdChanges": false
     },
-    "defaultPackage": "pending new committed source"
+    "defaultPackage": {
+      "status": "incomplete-environment-interruption",
+      "sourceRevision": "f1ec51b74e51eb7da37626c4e265e3a75ac045b1",
+      "exit": 1,
+      "elapsedSeconds": 1012.575,
+      "finishedAt": "2026-10-30T23:08:46.381335+00:00",
+      "audit": {
+        "exit": 143,
+        "seconds": 969.8,
+        "attribution": "System earlyoom journal records SIGTERM of this checkout's Vitest process at 23:08:04 UTC during low-memory/swap exhaustion. The audit did not complete."
+      },
+      "docgen": {
+        "exit": 0,
+        "seconds": 41.2
+      },
+      "retry": "Required on unchanged implementation after active heavy proofs settle. Narrow focused passes do not substitute for this complete package audit.",
+      "sourceOrQualityThresholdsChangedForFailure": false
+    }
   },
   "limits": [
     "The two output writes are sequential, not a transaction. A second-path refusal may leave only the new private observation; the command fails and the existing publication is preserved. Use a fresh caller-owned directory and paths per run.",

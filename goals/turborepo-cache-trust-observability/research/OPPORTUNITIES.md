@@ -1510,3 +1510,18 @@ in the owning producer PR; preserve it until the accepted-parent replay.
   API matched the generic-key rule. Verified their bytes against Git and the
   prior SPEC, then named the fields for the writer service boundary. Values,
   source evidence and scanner rules are preserved; no ignore or bypass is used.
+
+### 2026-10-30: complete producer package audit interrupted by earlyoom
+
+- Work: complete `quality package-verify @beep/repo-cli` at source revision
+  `f1ec51b74e51eb7da37626c4e265e3a75ac045b1`.
+- Evidence: package verification exited 1 after 1012.575 seconds. Audit ended
+  with exit 143 after 969.8 seconds; Docgen passed in 41.2 seconds. The system
+  earlyoom journal at 23:08:04 UTC records `sending SIGTERM` to this checkout's
+  Vitest process during memory and swap exhaustion. This is an interrupted
+  audit, not a test assertion failure or a passing package result.
+- Response: preserve the failing result and attribution; wait for current heavy
+  proofs to settle before one unchanged-implementation retry. No source fix,
+  quality floor, timeout relaxation or unrelated process termination is justified.
+- Prevention: serialize complete local package audits with other heavy proofs
+  when workstation memory is pressured, and retain hosted proof authority.
