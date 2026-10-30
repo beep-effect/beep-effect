@@ -328,3 +328,18 @@ review is `research/current-runtime-baseline-review.md`.
 - Reopen when a Go consumer or discovery-contract change appears. Require
   exact-client positive/negative evidence before any proposed activation.
   Reversal sets this review back to pending; it changes no runtime setting.
+
+
+### Exact-native future-flag availability observations, 2026-10-30
+
+- Add isolated configuration observations for every schema-listed future flag
+  on each exact pinned native client. Set one flag false/true per case, keep
+  cache local/read-only, and use dry-run with a command that would leave a
+  marker and exit 37 if accidentally executed. Require both baseline acceptance
+  and an unknown-key refusal control on each client.
+- All 56 flag cases parse on these pins; both unknown controls refuse and no
+  sentinel executes. This proves the observed configuration boundary only.
+  It grants no feature semantics, task qualification, production safety or
+  performance claim. Applicable features still need their complete regressions.
+- Retain the recorded observations if later semantic cases fail. Reverse the
+  matrix annotation by removing its observation links; no runtime setting changes.

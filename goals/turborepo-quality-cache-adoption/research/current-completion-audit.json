@@ -3,7 +3,7 @@
   "goal": "turborepo-quality-cache-adoption",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "2a0493c5035ef207a9dc492fb27732485cf32b5d4a434dc7d376749a09a943b3",
+  "specSha256": "dde95da4ebd1978da6c29a6dc151f325287648d082dcf3fc6f7dde6abd7a5e65",
   "acceptance": [
     {
       "id": "AC-01",
@@ -231,5 +231,7 @@
   "priorSpecSha256AtRemainingServiceReview": "15cee72051ba3b06cddc0ac1c39121b79072b969be51f4688e50544573a9f95c",
   "priorSpecSha256BeforePublicationAdmissionWording": "3ce2ae7c88aa3a8d7e11fcb2eeb652b146f256fa6a7c73aa288e91b2c6180a47",
   "priorSpecSha256AtGoApplicability": "8bd5c1c4151645d7a6829dae972793b35a3419ab0fbfef7bc49d7067a5e54bca",
-  "goWorkspaceFeatureReview": "research/go-workspace-feature-review.json"
+  "goWorkspaceFeatureReview": "research/go-workspace-feature-review.json",
+  "priorSpecSha256AtFutureFlagAvailability": "2a0493c5035ef207a9dc492fb27732485cf32b5d4a434dc7d376749a09a943b3",
+  "nativeFutureFlagAvailability": "research/native-future-flag-availability.json"
 }

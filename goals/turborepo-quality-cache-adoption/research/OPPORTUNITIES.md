@@ -181,3 +181,12 @@ scripts have no enumerated direct Go build/module command. Keep the superset
 script count distinct from executable computation population, preserve disabled
 configuration and reopen when a real consumer appears. Do not infer Go support
 from missing canary documentation or extend this absence result to Cargo/Python.
+
+
+### Missing documentation is not missing configuration support, 2026-10-30
+
+The pinned canary docs omit several future-flag names. Exact native dry runs
+accept all 14 flags false/true on both pins while rejecting an unknown key on
+both. Record this stronger availability evidence without calling syntax
+acceptance a semantic regression pass. The marker command never executes;
+production configuration and feature-acceptance states stay unchanged.

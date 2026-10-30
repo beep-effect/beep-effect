@@ -600,7 +600,19 @@
       "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
       "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
       "disposition": "retain observed setting pending current evidence",
-      "acceptanceStatus": "pending"
+      "acceptanceStatus": "pending",
+      "nativeConfigurationObservation": {
+        "report": "native-future-flag-availability.json",
+        "stable": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "canary": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      }
     },
     {
       "feature": "futureFlag:errorsOnlyShowHash",
@@ -616,7 +628,19 @@
       "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
       "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
       "disposition": "disabled; determine applicability before proposing activation",
-      "acceptanceStatus": "pending"
+      "acceptanceStatus": "pending",
+      "nativeConfigurationObservation": {
+        "report": "native-future-flag-availability.json",
+        "stable": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "canary": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      }
     },
     {
       "feature": "futureFlag:experimentalCargoWorkspaces",
@@ -632,7 +656,19 @@
       "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
       "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
       "disposition": "disabled; determine applicability before proposing activation",
-      "acceptanceStatus": "pending"
+      "acceptanceStatus": "pending",
+      "nativeConfigurationObservation": {
+        "report": "native-future-flag-availability.json",
+        "stable": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "canary": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      }
     },
     {
       "feature": "futureFlag:experimentalGoWorkspaces",
@@ -655,7 +691,19 @@
         "A root Go workspace, module, tracked source or actual consumer is introduced.",
         "A client update changes the discovery or applicability contract.",
         "A proposal would enable Go workspace discovery; exact-client positive and negative regression evidence is then required before activation."
-      ]
+      ],
+      "nativeConfigurationObservation": {
+        "report": "native-future-flag-availability.json",
+        "stable": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "canary": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      }
     },
     {
       "feature": "futureFlag:experimentalObservability",
@@ -671,7 +719,19 @@
       "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
       "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
       "disposition": "disabled; determine applicability before proposing activation",
-      "acceptanceStatus": "pending"
+      "acceptanceStatus": "pending",
+      "nativeConfigurationObservation": {
+        "report": "native-future-flag-availability.json",
+        "stable": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "canary": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      }
     },
     {
       "feature": "futureFlag:experimentalPythonWorkspaces",
@@ -687,7 +747,19 @@
       "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
       "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
       "disposition": "disabled; determine applicability before proposing activation",
-      "acceptanceStatus": "pending"
+      "acceptanceStatus": "pending",
+      "nativeConfigurationObservation": {
+        "report": "native-future-flag-availability.json",
+        "stable": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "canary": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      }
     },
     {
       "feature": "futureFlag:experimentalSetup",
@@ -703,7 +775,19 @@
       "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
       "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
       "disposition": "disabled; determine applicability before proposing activation",
-      "acceptanceStatus": "pending"
+      "acceptanceStatus": "pending",
+      "nativeConfigurationObservation": {
+        "report": "native-future-flag-availability.json",
+        "stable": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "canary": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      }
     },
     {
       "feature": "futureFlag:filterUsingTasks",
@@ -719,7 +803,19 @@
       "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
       "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
       "disposition": "retain observed setting pending current evidence",
-      "acceptanceStatus": "pending"
+      "acceptanceStatus": "pending",
+      "nativeConfigurationObservation": {
+        "report": "native-future-flag-availability.json",
+        "stable": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "canary": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      }
     },
     {
       "feature": "futureFlag:githubActionsRemoteBaseRefFallback",
@@ -735,7 +831,19 @@
       "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
       "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
       "disposition": "disabled; determine applicability before proposing activation",
-      "acceptanceStatus": "pending"
+      "acceptanceStatus": "pending",
+      "nativeConfigurationObservation": {
+        "report": "native-future-flag-availability.json",
+        "stable": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "canary": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      }
     },
     {
       "feature": "futureFlag:globalConfiguration",
@@ -756,6 +864,18 @@
         "report": "native-input-controls.json",
         "scope": "Pinned local globalConfiguration profile; no other future flag is inferred.",
         "authority": "synthetic feature observation only; real computation qualification remains pending"
+      },
+      "nativeConfigurationObservation": {
+        "report": "native-future-flag-availability.json",
+        "stable": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "canary": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
       }
     },
     {
@@ -772,7 +892,19 @@
       "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
       "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
       "disposition": "disabled; determine applicability before proposing activation",
-      "acceptanceStatus": "pending"
+      "acceptanceStatus": "pending",
+      "nativeConfigurationObservation": {
+        "report": "native-future-flag-availability.json",
+        "stable": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "canary": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      }
     },
     {
       "feature": "futureFlag:pruneIncludesGlobalFiles",
@@ -788,7 +920,19 @@
       "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
       "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
       "disposition": "disabled; determine applicability before proposing activation",
-      "acceptanceStatus": "pending"
+      "acceptanceStatus": "pending",
+      "nativeConfigurationObservation": {
+        "report": "native-future-flag-availability.json",
+        "stable": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "canary": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      }
     },
     {
       "feature": "futureFlag:strictTaskEntrypointSelection",
@@ -804,7 +948,19 @@
       "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
       "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
       "disposition": "disabled; determine applicability before proposing activation",
-      "acceptanceStatus": "pending"
+      "acceptanceStatus": "pending",
+      "nativeConfigurationObservation": {
+        "report": "native-future-flag-availability.json",
+        "stable": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "canary": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      }
     },
     {
       "feature": "futureFlag:watchUsingTaskInputs",
@@ -820,7 +976,19 @@
       "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
       "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
       "disposition": "disabled; determine applicability before proposing activation",
-      "acceptanceStatus": "pending"
+      "acceptanceStatus": "pending",
+      "nativeConfigurationObservation": {
+        "report": "native-future-flag-availability.json",
+        "stable": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "canary": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      }
     }
   ],
   "counts": {
@@ -839,5 +1007,12 @@
   "reviewCounts": {
     "acceptedNotApplicable": 1,
     "pending": 34
+  },
+  "nativeAvailabilityCounts": {
+    "flagCasesAccepted": 56,
+    "baselineCasesAccepted": 2,
+    "unknownControlsRefused": 2,
+    "sentinelsExecuted": 0,
+    "featuresSemanticallyQualified": 0
   }
 }

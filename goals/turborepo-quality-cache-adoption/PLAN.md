@@ -234,3 +234,12 @@ in [the review](research/go-workspace-feature-review.json). The remaining 34
 feature entries and all nine complete acceptance criteria remain unfinished.
 No Cargo/Python exclusion, task qualification, cache enablement or speedup is
 implied by this source review.
+
+
+Both pinned native clients accept false and true for all 14 future flags in the
+isolated dry-run profile. Two baseline and two unknown-key controls complete
+the 60-case observation, with no sentinel command executed. The
+[native availability report](research/native-future-flag-availability.json)
+separates this parsing evidence from unresolved feature-specific semantics.
+The one Go non-applicability disposition is unchanged; the remaining 34 reviews
+are still pending. No repository task, cache setting or production flag changed.
