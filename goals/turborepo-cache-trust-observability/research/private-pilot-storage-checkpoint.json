@@ -1,0 +1,179 @@
+{
+  "schemaVersion": "cache-private-pilot-storage-checkpoint/v1",
+  "recordedAt": "2026-10-30T00:24:30.100915+00:00",
+  "authority": "Bounded source and local component proof. Current whole-package, final, hosted, native qualification, deployed trust and elapsed representative windows remain unproven.",
+  "sourceBaseRevision": "34427073f7c34159197a174833a6e7c9aeebce20",
+  "sourceFiles": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts": "125553d2c5a2888cbe6f9672f1131a4b2ac5b17be700b083d6e7906cf7fa2a7f",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts": "0db66290385c73048895e9fb06c24822d248cf6d0e63abfa051e8b35928fdbe6",
+    "packages/tooling/tool/cli/test/cache-signed-runner.test.ts": "06c3ea9c3c7c758957b13f6cada6ee6c108d449802b0ec1d6197609aa420619a"
+  },
+  "generatedCatalogSha256": "85baeff4fe5e5f10f2652a5a88ef33c0dd10c2ea670d2c16c6e7540a4c2c10d7",
+  "integration": {
+    "targetPullRequest": 2367,
+    "originalSourceReferences": {
+      "docgen2361": "e3dc944478678398690553b26587324ba4055681",
+      "runtime2363": "66cb97b6fca031e115c84af344515b89c499bcb5",
+      "socket2367BeforeIntegration": "b0f0b85381a02dc1be5b218c38d1d43d2bcc1db9"
+    },
+    "reason": "One executor owns these CLI prerequisite branches. Consolidation avoids repeating the complete package proof and conflicting goal-document append merges. Every integrated source still requires one fresh combined acceptance.",
+    "socketSourceParity": {
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.fixture.ts": {
+        "sha256": "ed56ccf23a727041b8c46a8d4992df9d435e6328cd72f929780ec7772ae479f3",
+        "sameAsReviewedSocketSource": true
+      },
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.proxy.ts": {
+        "sha256": "c72ee0f1d1be185f333cadccdfda3a09adf6149dd65c233db2fc6099788204a6",
+        "sameAsReviewedSocketSource": true
+      },
+      "packages/tooling/tool/cli/src/test/Cache.test-kit.ts": {
+        "sha256": "a83e92ca5531dbd1cce86fd66c8145d4e000cf87ba88dc363a0991f30bf8fbd6",
+        "sameAsReviewedSocketSource": true
+      },
+      "packages/tooling/tool/cli/test/cache-private-socket.test.ts": {
+        "sha256": "1abd6e27ed1d78f5f91240788b80d08a88043a95bdea9121c3d53da0f37e1abe",
+        "sameAsReviewedSocketSource": true
+      },
+      "packages/tooling/tool/cli/test/cache-private-socket-controls.test.ts": {
+        "sha256": "78d62f94315057a2782e3549aaf54b77c6d9247c9a0c83f738d48a9a32b5ce0b",
+        "sameAsReviewedSocketSource": true
+      }
+    },
+    "docgenManifestParity": {
+      "path": "packages/tooling/tool/cli/package.json",
+      "sha256": "9f43e6fa5edfd4bea8663b41fb285fbeaac729ec6980b951d416039452bcd42e",
+      "sameAsRecordedDocgenSource": true
+    },
+    "runtimeChange": "Retain exact /tools/bun and /tools/node aliases and PATH. The added private storage repair and control extend the original runtime source, so its historical whole-package pass is not current combined proof.",
+    "originalBranches": "Preserve both original branches and their proof receipts until the combined PR passes and merges. Do not call them independently merged or retire them early."
+  },
+  "confinement": {
+    "finding": "A synthetic private file under source was hidden at its original host path but readable through the guest checkout alias. Read-only source binding does not deny reads.",
+    "actualSyntheticFilesystemProbe": [
+      {
+        "case": "old-original",
+        "exit": 1,
+        "readable": false,
+        "expected": false,
+        "validProbeExit": true,
+        "stderrBytes": 0
+      },
+      {
+        "case": "old-guest-alias",
+        "exit": 0,
+        "readable": true,
+        "expected": true,
+        "validProbeExit": true,
+        "stderrBytes": 0
+      },
+      {
+        "case": "new-original",
+        "exit": 1,
+        "readable": false,
+        "expected": false,
+        "validProbeExit": true,
+        "stderrBytes": 0
+      },
+      {
+        "case": "new-guest-alias",
+        "exit": 1,
+        "readable": false,
+        "expected": false,
+        "validProbeExit": true,
+        "stderrBytes": 0
+      }
+    ],
+    "probeScope": "Actual unprivileged bwrap topology probe using only synthetic files, independent of native Turbo execution. No credentials used.",
+    "repair": "Scoped supervisor and pilot directories under private /tmp outside all source, worktree, Git and dependency input mounts. Mode0700, explicit approved node_modules symlink, guard before request writes, no source experiment writable bind.",
+    "currentControls": [
+      "source-visible private storage alias rejected before request serialization",
+      "actual mode0700 and approved dependency link checked",
+      "private capture directory absent after the scope closes",
+      "exact runtime alias mount arguments and clean search path retained"
+    ],
+    "guardRemoval": {
+      "schemaVersion": "cache-owned-producer-guard-controls/v1",
+      "recordedAt": "2026-10-30T00:18:40.889369+00:00",
+      "scope": "Actual temporary removal of source guards in owned checkout; controlled unit seams, not native Turbo proof",
+      "controls": [
+        {
+          "case": "source-storage-alias",
+          "source": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts",
+          "sourceSha256": "125553d2c5a2888cbe6f9672f1131a4b2ac5b17be700b083d6e7906cf7fa2a7f",
+          "mutantSha256": "43a793fb83c6f047279a31f8ddf3c20a48e48e79c1665aa0771e1214514ee565",
+          "test": "refuses a private storage alias inside a source mount before writing the request",
+          "exit": 1,
+          "failedTests": 1,
+          "selectedGuardTestFailed": true,
+          "reportSha256": "9c1962c4ad77dc2682be1bff83a0a50657c4d4f1522c34cc06a13ccf2fc0f604",
+          "seconds": 3.083
+        }
+      ],
+      "allSourceBytesRestoredExactly": true
+    },
+    "actualPrivateImports": {
+      "schemaVersion": "cache-private-storage-import-probe/v1",
+      "recordedAt": "2026-10-30T00:19:23.304232+00:00",
+      "sourceBaseRevision": "663e57a7f3e817985a8641de6537a5e9a9cd3d72",
+      "scope": "Actual no-network bwrap/Bun dependency and Cache module imports from private external storage with exact runtime aliases; no Turbo task, credentials, R2 or signing activation",
+      "exit": 0,
+      "observed": {
+        "fixtureImports": true,
+        "requestImported": true,
+        "workerImported": true
+      },
+      "stdoutSha256": "be41a09c0d481d08b78630b38a02cfc3b78bfd8f5ad4024c6b6fea3d4553cc10",
+      "stderrBytes": 0,
+      "boundedSeconds": 60,
+      "workerEnvironmentNames": ["CI", "HOME", "NO_COLOR", "PATH"],
+      "moduleSourceSha256": "125553d2c5a2888cbe6f9672f1131a4b2ac5b17be700b083d6e7906cf7fa2a7f"
+    },
+    "historicalLimit": "Earlier source-contained synthetic confinement observations remain historical and do not establish the repaired native boundary. No current qualified ledger entry is granted and no production exposure is asserted."
+  },
+  "verification": {
+    "node": {
+      "exit": 0,
+      "elapsedSeconds": 28.756,
+      "finishedAt": "2026-10-30T00:22:28.722665+00:00",
+      "tests": 76,
+      "files": 6
+    },
+    "bun": {
+      "exit": 0,
+      "elapsedSeconds": 19.381,
+      "finishedAt": "2026-10-30T00:22:19.954595+00:00",
+      "tests": 76,
+      "files": 6
+    },
+    "quick": {
+      "exit": 0,
+      "elapsedSeconds": 14.922,
+      "finishedAt": "2026-10-30T00:22:15.955283+00:00"
+    },
+    "fallow": {
+      "exit": 0,
+      "elapsedSeconds": 14.796,
+      "finishedAt": "2026-10-30T00:17:52.644304+00:00"
+    },
+    "catalog": {
+      "exit": 0,
+      "elapsedSeconds": 7.097,
+      "finishedAt": "2026-10-30T00:21:43.298288+00:00"
+    }
+  },
+  "futureProof": [
+    "complete default package audit and Docgen on this source",
+    "fresh combined final-check and exact-head hosted checks/review/window",
+    "normal-source stable/canary native confinement and task qualification",
+    "protected immutable producer publication and applicable deployed trust",
+    "credential handoff, epoch rotation/rollback and actual representative windows"
+  ],
+  "activePosture": {
+    "ordinaryR2": "unchanged",
+    "signedTrial": "inactive",
+    "credentialChanges": 0,
+    "qualificationChanges": 0,
+    "runnerCapacityChanges": 0
+  },
+  "reversal": "Before merge, retain and return to the original owned branches without discarding their evidence. After merge, use a reviewed revert; no production activation or shared bucket change accompanies this integration."
+}

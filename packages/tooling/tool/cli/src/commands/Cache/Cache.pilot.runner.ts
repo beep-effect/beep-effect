@@ -37,13 +37,33 @@ import { CacheCommandError } from "./Cache.schemas.ts";
 const hashBytes = S.decodeEffect(Sha256HexFromBytes);
 const bound = OutputBound.make({ maxChars: 64 * 1024, truncatedNotice: "signed pilot capture exceeded bound" });
 
+const makePrivateSupervisorStorage = Effect.fn("CachePilot.makePrivateSupervisorStorage")(function* (
+  root: string,
+  mounts: ReadonlyArray<string>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const directory = yield* fs
+    .makeTempDirectoryScoped({
+      directory: "/tmp",
+      prefix: "beep-cache-supervisor-",
+    })
+    .pipe(Effect.flatMap(fs.realPath));
+  if (A.some([...mounts, "/usr"], (mount) => isResolvedPathWithinRoot(path, { root: mount, candidate: directory })))
+    return yield* CacheCommandError.new("Private supervisor storage must remain outside every source input mount.");
+  yield* fs.chmod(directory, 0o700);
+  // Resolve worker imports without placing private captures inside a source mount.
+  yield* fs.symlink(path.join(root, "node_modules"), path.join(directory, "node_modules"));
+  return directory;
+});
+
 /**
  * Supervise signed comparisons with a private loopback and read-only input mounts.
  *
  * **Details**
  * The runner checkout may differ from the frozen source checkout. The nested
  * worker verifies its exact tools, registered worktrees and dependency receipt.
- * Only scoped supervisor storage and the source experiment directory are writable.
+ * Only scoped supervisor storage outside every source input mount is writable.
  * An optional supervisor-selected issuer file is checked before/after execution
  * and probed from each nested reader. It is never added to the mount list or
  * passed as key bytes. The returned report remains observation-only and cannot
@@ -107,11 +127,21 @@ export const runCacheSignedPilotExperiment = Effect.fn("CachePilot.signedExperim
         if (git.exitCode !== 0 || git.truncated)
           return yield* CacheCommandError.new("Cannot resolve signed pilot source Git metadata.");
         const commonGit = yield* fs.realPath(Str.trim(git.stdout));
-        const parent = path.join(root, ".beep/cache-signed-pilot");
-        yield* fs.makeDirectory(parent, { recursive: true });
-        const directory = yield* fs.makeTempDirectoryScoped({ directory: parent, prefix: "run-" });
-        const experiments = path.join(sourceRoot, ".beep/cache/experiments");
-        yield* fs.makeDirectory(experiments, { recursive: true });
+        const mounts = yield* Effect.forEach(
+          [
+            root,
+            sourceRoot,
+            ...request.pilot.worktrees,
+            commonGit,
+            dependencies.directory,
+            bun,
+            node,
+            request.pilot.biomeExecutable,
+            request.pilot.executable,
+          ],
+          fs.realPath
+        );
+        const directory = yield* makePrivateSupervisorStorage(root, mounts);
         yield* writeContainedFileString(
           directory,
           "request.json",
@@ -149,25 +179,13 @@ BunRuntime.runMain(Effect.gen(function* () {
         // Bun otherwise discovers sourceRoot/bunfig.toml from the untrusted cwd,
         // including preloads that run before this trusted worker.
         yield* writeContainedFileString(directory, "bunfig.toml", "");
-        const mounts = yield* Effect.forEach(
-          [
-            root,
-            sourceRoot,
-            ...request.pilot.worktrees,
-            commonGit,
-            dependencies.directory,
-            bun,
-            node,
-            request.pilot.biomeExecutable,
-            request.pilot.executable,
-          ],
-          fs.realPath
-        );
         const verifyIssuerMountIsolation = Effect.fn("CachePilot.verifyIssuerMountIsolation")(function* () {
           if (O.isSome(protectedIssuerMaterial)) {
             const issuer = yield* fs.realPath(protectedIssuerMaterial.value);
             if (
-              A.some([...mounts, "/usr"], (mount) => isResolvedPathWithinRoot(path, { root: mount, candidate: issuer }))
+              A.some([...mounts, directory, "/usr"], (mount) =>
+                isResolvedPathWithinRoot(path, { root: mount, candidate: issuer })
+              )
             )
               return yield* CacheCommandError.new(
                 "Issuer material must remain outside every signed pilot input mount."
@@ -199,13 +217,18 @@ BunRuntime.runMain(Effect.gen(function* () {
             "/dev",
             "--tmpfs",
             "/tmp",
+            "--dir",
+            "/tools",
+            "--ro-bind",
+            bun,
+            "/tools/bun",
+            "--ro-bind",
+            node,
+            "/tools/node",
             ...A.flatMap(A.dedupe(mounts), (mount) => ["--ro-bind", mount, mount]),
             "--bind",
             directory,
             directory,
-            "--bind",
-            experiments,
-            experiments,
             "--chdir",
             sourceRoot,
             bun,
@@ -216,7 +239,7 @@ BunRuntime.runMain(Effect.gen(function* () {
           ],
           cwd: root,
           extendEnv: false,
-          env: { PATH: `${path.dirname(bun)}:${path.dirname(node)}:/usr/bin`, HOME: "/tmp", CI: "1", NO_COLOR: "1" },
+          env: { PATH: "/tools:/usr/bin", HOME: "/tmp", CI: "1", NO_COLOR: "1" },
           bound,
         }).pipe(Effect.timeout(Duration.minutes(20)));
         yield* requireCacheSupervisorCapture(captured, "Signed pilot");

@@ -130,3 +130,43 @@ duplicate or missing targets and reported execution. A fresh report directory
 is created before writing. The new control receipt separates unit excerpts
 from actual synthetic stable/canary replay and retains all historical source
 bindings. Owner: the active Turbo goals. No qualification or rollout changed.
+
+
+### Fixer classification must follow delegated scripts
+
+The census command digest binds the complete sorted script map, not just the
+visible task command. The first direct-command digest comparison was therefore
+inapplicable; use the owner's existing encoding. All 136 current source-fixer
+script maps match, and their delegated `--write` implementations have separate
+read-only counterparts. A native control initially probed canary version without
+`--skip-infer` and selected local stable. Preserve that failed harness check;
+explicit inference suppression validates the exact canary and six native runs.
+Keep source-review dispositions separate from qualification and runtime proof.
+
+The population file exceeds Biome's default one-MiB read limit. Format this
+existing large evidence file with a one-command five-million-byte limit and
+verify structural diffs; do not change the repository's shared limit.
+
+
+### Historical profile leads are not the current semantic population
+
+The first source-fixer review selected 136 historical source-fix profile leads.
+The current population also contains 50 unreviewed `lint:fix` commands. Exact
+current source shows 49 use the same write implementation and Storybook writes
+shared story sources. Review current executable rows directly; a historical
+profile label cannot establish complete classification. All 186 whole-command
+fixers stay fresh, with separate read-only lint qualification still unfinished.
+
+
+### Cheap publication still holds a memory admission lease
+
+Three normal publication attempts after the directory-coverage repair showed
+that the second and third waited behind the first local gate wave. The current
+`runPushFirstPublishPhases` source explicitly holds weighted admission because
+the schema-catalog scan peaks near 12.6 GiB, and `yeet-command-wiring.test.ts`
+covers cheap-gates admission. The Yeet skill still claimed no ticket was taken.
+Correct that wording and preserve the resource guard. A local queue is distinct
+from a Turbo miss or hosted runner queue; cache hit-rate cannot explain it away.
+Use the existing ten-minute constrained-compute route when its real threshold
+is reached, recording completed local checks and relying on current hosted
+proof rather than lowering test floors or forcing overlapping memory-heavy jobs.

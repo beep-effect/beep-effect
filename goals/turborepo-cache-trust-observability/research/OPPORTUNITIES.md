@@ -698,6 +698,24 @@ on speculation, and do not report a whole-package pass.
   prohibited import location.
 
 
+### Docgen child interpreter compatibility
+
+- While replaying the producer-capture package audit, full Docgen twice
+  returned exit 130 at example typechecking. Direct compilation of all 3,560 generated
+  examples and both Effect process backends passed. A complete launch without
+  `bunx --bun` passed; a later default before/after pair both passed, retaining
+  the intermittent nature of the failure. The CLI script now relies on the
+  executable's Bun shebang and preserves the compiler's own Node interpreter.
+  Prevent recurrence by qualifying actual full command launches, not only the
+  generated compiler input or mocked child processes. No gate is disabled.
+
+
+### Discover scheduling commands before a status probe
+
+- A read-only `bun run beep scheduler status` probe returned
+  `Unknown subcommand "scheduler"`. No scheduler state changed. Consult the
+  root command list and the owning quality command's help before constructing
+  a status command; command discovery would have avoided this interruption.
 ### Existing native-addon runtime warnings
 
 Publication exposed two `no-global-process-runtime` warnings in the KG addon
@@ -718,8 +736,123 @@ Use the test framework's scoped module pin and lift the dynamic import through
 Hosted policy found EV011 on the direct `vi` import from `vitest`. Import the
 same API through the pinned `@effect/vitest` export-star entrypoint and rerun
 the policy check; do not add a baseline finding or waive the detector.
+### Private socket test boundary attribution
+
+- The first real socket test reached the upstream and preserved its rejection,
+  but expected an absent result for a contradictory success header. The existing
+  classifier correctly preserves `invalid-evidence`; the assertion now checks
+  that finite failure rather than erasing its cause. The original failed run is
+  retained privately. A nested client layer also failed the strict provision
+  diagnostic; the fixture now acquires the platform agent in its own scope and
+  supplies the service value, preserving the lifecycle boundary.
+
+- The additional real-socket exhaustion assertion initially nested an Effect
+  result inside predicate/assertion calls. The compiler required the equivalent
+  Result pipe; the canonical helper form passed lint/check and the full package
+  replay. Keep runtime refusal and evidence-invalidity assertions together.
 
 
+## Current real-pilot preparation friction
+
+- Reusing an older dependency snapshot because its lockfile and root manifest
+  matched was insufficient: the actual installed tree differed. The existing
+  guard correctly refused it; regenerate through the canonical dependency
+  materialization command and compare the complete tree identity.
+- The active verification checkout had210 additional native identity-lint inputs
+  relative to a clean source worktree, including compiled utilities and coverage
+  reports, although command and configuration matched. Use a clean registered
+  runner for like-for-like comparisons. Any later input narrowing still needs
+  semantic invalidation proof; no input was discarded here.
+- The new activation fixture reserialized JSON and changed formatting. Because
+  the selected command runs `biome check`, the proposed enabled config made the
+  check fail. An actual formatter comparison identified this introduced fixture
+  error. Preserve the original formatting, change only the cache literal and
+  refresh the exact activation reference. Failed observations remain retained;
+  the corrected proposed-launch diagnostic is running and grants no qualification.
+
+
+### Native transport proof and in-process coverage
+
+The existing native socket lifecycle passes through a Bun child during Node
+coverage, leaving the new common listener function unexecuted in Node/V8.
+Actual focused V8 evidence showed 34/35 functions and 118/129 lines. Add explicit
+constructor-double controls for modes, wrong-address refusal, bind-cause
+preservation and cleanup; keep the physical Bun lifecycle as transport proof.
+The first controls tried to spy on an immutable ESM export and used a forbidden
+native HTTP import. Use the framework's module replacement and existing Effect
+server interface instead. Missing target options and the mock's filesystem
+error channel were corrected before both runtimes passed the three controls.
+Both runtime integration runs now pass 51 tests and package lint/check passes.
+Include json-summary with LCOV to judge the statement metric explicitly;
+function/branch/line counts alone are not the full committed ratchet. Preserve
+the original failures, unchanged implementation and unchanged coverage floor.
+
+Source-removal controls reject removal of the Unix-address guard and owner-only
+socket chmod for the intended assertions; exact original bytes are restored.
+Vitest truncates assertion strings in JSON failure messages, so the receipt
+wrapper verifies the unique test plus identifying assertion prefixes rather
+than requiring untruncated prose. Both providers now prove all four fixture
+metrics at 100%, and the proxy exceeds its existing floors.
+
+
+## Review deliberate resource lifetimes before changing a test baseline
+
+The first socket draft publication stopped on a stale generated instrumentation
+shard and seven new test-rule findings. Regenerate the catalog through its
+owner. Replace the hand-written Option assertion with the canonical helper,
+preserving its payload. The other findings concern four deliberate shorter
+scopes and two physical filesystem subjects. Four scope-removal controls fail
+the cleanup assertions, so retain those lifetimes with explicit source-bound
+reasons. Preserve every existing inventory judgment and coverage floor.
+
+The initial targeted replay guessed two nonexistent sibling filters and selected
+only the four socket tests. Reuse the owner's recorded file list and assert the
+actual four-file, 51-test scope before reporting a broader pass. The corrected
+Node and Bun provider runs both meet that scope.
+
+
+## Signed supervisor runtime discovery
+
+- While refreshing the real signed pilot, the unchanged supervisor exited1 at
+  toolchain discovery. A private observer retained only static error classes
+  and source locations. Its pinned Bun file was named `bun.native`, with no
+  `bun` command in the mounted search path. An actual private-network probe
+  exited 127 with the original mounts and exited 0 with exact private binary
+  aliases, reporting the expected Bun and Node versions. Keep aliases in the
+  supervisor and test their complete mount arguments; never share a host tools
+  directory or weaken the namespace. No current qualification was obtained.
+- The first added assertion used an unavailable Array helper. The installed
+  Effect declarations and canonical source expose `Array.window`; use that
+  primitive and retain the failed tests as introduced harness evidence.
+
+- The fixture's existing spy variable named `process` shadowed the runtime
+  process used by the new assertion. The compiler and runtime tests exposed it;
+  renaming the spy preserved the fixture API and restored the typed assertion.
+
+- Distinguish an added tools directory from the existing read-only system and
+  source mounts in evidence claims. Overbroad wording was corrected before the
+  first push; the superseded publication wave is not passing proof. Describe
+  additions relative to the reviewed mount baseline to prevent this ambiguity.
+
+
+### Runtime-alias regression fixture complexity
+
+Normal publication rejected the new test callback because repeated optional
+argument fallbacks increased cognitive complexity. Decode required arguments
+once through Option and reuse the resulting array; absent arguments now fail
+the fixture explicitly. Both18-test runtime suites, quick package lint/check
+and targeted Fallow audit/health pass. Retain the rejected publication and
+unchanged baselines. The earlier full package replay covers the production
+launcher and prior fixture bytes; fresh final proof must cover the new fixture.
+
+
+### Checkpoint reference refresh after fixture edits
+
+Main integration exposed an audit reference still bound to the earlier launcher
+checkpoint bytes after its fixture proof was updated. Refresh that exact report
+digest after formatting and retain both prior SPEC identities. Preserve the
+landed graph/capture evidence and the launcher evidence independently; neither
+component grants qualification or signed production authority.
 ## Deterministic contained-directory error coverage
 
 - PR #2361's current final repeat passed 8,114 tests with 5 skips but lost the
@@ -732,3 +865,52 @@ the policy check; do not add a baseline finding or waive the detector.
   a deliberate error-path fixture rather than incidental concurrent filesystem
   behavior. The full package audit and documentation pass; fresh final and
   hosted acceptance remain in progress.
+
+
+### Combined prerequisite source and file-confinement repair
+
+Repeated same-owner prerequisite merges conflicted only in appended goal
+decisions, report lists and derived SPEC hashes. Preserve both sides and their
+source-bound facts, then perform the expensive integrated proof once in PR2367.
+The original branches and receipts remain recoverable until combined acceptance.
+One normal publisher waited603seconds without admission, was interrupted through
+its exact owning process, and exited130 before the prepared commit was pushed
+through the standing constrained-compute route. That old-source escape is not
+proof for the newer combined source; fresh normal and hosted acceptance remain
+required. Four exact superseded pull-request runs were cancelled and verified
+terminal, without changing runner capacity or touching unrelated runs.
+
+The private-file probe found a real alias gap: absent original host paths did
+not stop reads through the guest checkout. Move private scratch outside all
+source mounts instead of weakening the probe. The current worker imports pass
+in a real isolated bwrap/Bun process, supervisor controls cover the storage
+refusal and cleanup, and removal of that guard fails the intended control.
+These component observations do not replace a current native comparison matrix.
+See `private-pilot-storage-checkpoint.json` for source bindings and exact scope.
+
+
+### Include orchestration consumers after storage changes
+
+The earlier76-test focused replay missed the orchestration file. The full
+package audit and CI each reported15 introduced failures because its cleanup
+checks still read `.beep/cache/experiments`. Include filesystem consumers when
+a storage boundary moves. Observe the allocated private directories and test
+their removal directly; do not restore source-visible storage to satisfy an
+obsolete assertion. The deliberate scope-removal control fails the new cleanup
+check. The first filesystem observer also needed a named Effect.fn, caught by
+the package type check and repaired before publication. Existing floors and
+qualification state remain unchanged.
+
+
+### Exercise new containment refusals before full coverage
+
+The current CI run passed its tests but lost three per-file coverage floors:
+the new private-storage refusal had zero executions. Test a deliberately
+source-visible allocation before starting a task, including cleanup after the
+refusal. Its source-removal control fails as expected. Preserve the original
+floors and use fresh canonical/hosted coverage as acceptance.
+
+The first diagnostic tried an unavailable unscoped Istanbul package and raw-map
+equality. Reuse the repo owner's `@vitest/istanbul-lib-coverage` fork and canonical
+normalizer: derived line metadata and serialized infinite columns need that
+normalization. Keep the diagnostic distinct from a new hosted proof.

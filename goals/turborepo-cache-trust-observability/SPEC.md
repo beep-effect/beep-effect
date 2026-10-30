@@ -460,6 +460,36 @@ The local process report does not satisfy those deployment or observation gates.
   epoch rollback and consumer requalification remain required before activation.
 
 
+### Preserve the compiler interpreter in Docgen launches
+
+- 2026-10-29: Remove only `--bun` from the repo CLI's `beep:docgen`
+  implementation script. Docgen's executable already selects Bun by its
+  shebang; forcing every child named `node` through Bun is unnecessary. Keep
+  the canonical generated task wrapper, compiler argv, examples and checks.
+- Two full default Docgen attempts in the producer lane ended with exit 130 during
+  example typechecking, while all 3,560 generated examples compiled under the
+  direct Node and Bun compilers and both Effect process backends. The complete
+  launch without the force flag passed. A fresh repair-lane before/after pair
+  also passed with both commands, so this is an intermittent compatibility
+  observation, not a proven deterministic upstream compiler defect.
+- Verification runs the real full Docgen command, the script generator and
+  package lint/check. Reversal restores the prior implementation string;
+  this change grants no cache qualification, credential access or signing.
+
+
+### Signed supervisor runtime aliases, 2026-10-29
+
+- Bind the exact selected Bun and Node files at private `/tools/bun` and
+  `/tools/node` aliases, and search only `/tools:/usr/bin` in the outer signed
+  worker. The real Bun file may be named `bun.native`; mounting that file at
+  its original path does not provide the `bun` command used by tool discovery.
+  Preserve original-path mounts, private networking, explicit clean runtime
+  configuration and independent executable content checks. Add no host tools
+  directory to the existing read-only mounts; use the fixed search path.
+- Reversal leaves signed experiments disabled and reverts this launcher fix.
+  This repair grants no producer, qualification or signed production authority.
+
+
 ### Deterministic contained-directory error control, 2026-10-29
 
 - Exercise the existing filesystem parent-creation error adapter with a scoped
@@ -483,3 +513,47 @@ The local process report does not satisfy those deployment or observation gates.
   caller-supplied schema values alone remain untrusted. Reversal is to stop
   multi-task producer publication and restore the single-task profile. No
   signing, production configuration or qualification state changes here.
+
+
+### Private producer socket transport
+
+- 2026-10-29: Keep the signed worker's private network namespace. Reuse the
+  existing bounded conformance observer with a companion Unix listener and the
+  platform's Unix-capable HTTP client. Allocate a fresh owner-only temporary
+  directory/socket and redact its address; mount only the selected socket into
+  the worker. Preserve the existing TCP API and upstream role/tenant enforcement.
+- The socket is transport, not upload authority or producer attestation. Actual
+  backend results, native task/byte capture, the approved supervisor and immutable
+  protected publication remain required. Reversal leaves the companion unwired
+  and keeps the existing loopback observer. No live service or credential changes.
+
+
+### Combined prerequisite proof and private pilot storage
+
+- 2026-10-29: Integrate the same executor's Docgen, pinned-runtime and private
+  transport prerequisites in PR2367. Preserve each original source and receipt;
+  require one fresh combined package/final/hosted/review proof rather than
+  repeatedly rebasing the same goal-document append conflicts. Original branches
+  are retained until that integration passes and merges. This grants no trust
+  readiness, task qualification or production activation.
+- A synthetic bwrap probe confirmed that source-contained private files could
+  be read through their guest alias. Move supervisor and experiment storage
+  outside every source input mount, use scoped mode0700 directories and an
+  explicit approved dependency link, and refuse source-visible storage before
+  writing the request. Preserve exact runtime aliases and private networking.
+  Actual repaired native confinement remains required; earlier original-path
+  denial alone is insufficient. The larger upload-approval prototype stays in
+  its own lane and must consume this accepted prerequisite through main.
+- Reversal retains the original branches before merge and uses a reviewed
+  revert after merge. No bucket, live service, credential, signing switch,
+  proof floor or runner-capacity setting changes in this integration.
+
+
+### Containment refusal proof strategy
+
+The coverage repair changes only the orchestration fixture and its evidence.
+Use package lint/type checks and both runtime replays for that edit, then require
+the fresh complete canonical final and hosted coverage gates on the new head.
+The prior complete package pass retains its original 0d source scope. A combined
+coverage diagnostic guides the repair and never replaces fresh acceptance.
+Preserve every coverage floor, uncovered-count bound and full-goal obligation.

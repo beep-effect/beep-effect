@@ -247,3 +247,70 @@ carried package reviews and ledger. This creates no qualification or signed
 production epoch. Reversal uses the same compare-and-swap writer against the
 retained prior baseline after checking current-epoch state. The immutable
 review is `research/current-runtime-baseline-review.md`.
+
+
+### Current mutating-fixer disposition, 2026-10-29
+
+- Keep the 136 exact reviewed `lint:fix` commands fresh. Each delegates to
+  Biome check with `--write`, has no archived outputs, and has an existing
+  separate read-only `lint` computation. Native stable/canary controls show a
+  logs-only hit skips the required rewrite; cache-disabled controls perform it.
+  Bind this source review to full script maps, manifests and configuration
+  files. A changed binding requires a fresh review.
+- These are final whole-command exclusions for the reviewed semantics, not
+  qualification transitions. The 136 read-only counterparts and every remaining
+  population row retain their independent qualification/adoption obligations.
+  Reversal removes only the review/dispositions; no task flag, script, ledger
+  entry, production cache or required hosted status changes.
+
+
+### Persistent development service disposition, 2026-10-29
+
+- Keep the exact reviewed OIP Web and Todox `dev` commands fresh. Both start
+  named Portless Next development services and already declare persistent,
+  cache-disabled tasks with no output archive. Their existing application and
+  dependency build computations retain separate review and qualification work.
+- Bind this source-only exclusion to current manifests, complete script maps,
+  configuration and runtime declarations. Reversal removes only the review
+  records; no service, script, flag, ledger entry or hosted status changes.
+
+
+### Remaining source-rewriting lint commands, 2026-10-29
+
+- Review all 50 remaining `lint:fix` commands from exact current manifest, full
+  script-map and effective-configuration bindings. Forty-nine delegate to the
+  same `biome check . --write` implementation. Storybook's existing shell
+  wrapper also writes cross-workspace story sources. Keep each whole command
+  fresh; all 50 already disable caching and archive no outputs.
+- The population now has 186 reviewed source-rewriting fixers and two reviewed
+  persistent services. Their separate read-only lint/build computations keep
+  their own qualification obligations; 2,383 population dispositions remain
+  unfinished. This source review changes no script, task flag or qualification
+  ledger. Reversal removes only these additional review/disposition records.
+
+
+### Remaining persistent service boundaries, 2026-10-29
+
+- Keep the ten additional exact current Portless service commands fresh: four
+  Bun watchers, four Vite development servers, Storybook development and Vite
+  static preview. This completes source review of all twelve configured
+  persistent executable computations; each already disables caching and has
+  no archived outputs. A restored cache result cannot supply a live service.
+- Bind each disposition to exact manifests, complete script maps and effective
+  configuration. Finite application/dependency builds and Storybook static
+  build keep their independent qualification obligations. The population now
+  has 198 reviewed fresh boundaries and 2,373 remaining disposition gaps.
+  No service is launched and no script, flag or ledger changes. Reversal
+  removes only these additional review/disposition records.
+
+
+### Publication memory guard and documentation consistency
+
+- 2026-10-29: Preserve the current weighted admission around cheap publication
+  gates: source and tests deliberately protect the schema-catalog scan's measured
+  memory demand. Correct the stale no-ticket claim in the Yeet skill. Attribute
+  local admission wait separately from remote-cache latency and hosted queues.
+  The existing ten-minute constrained-compute escape remains unchanged; record
+  local proof scope and require fresh hosted acceptance. Reversal changes only
+  the documentation wording; no scheduler capacity, proof floor or cache flag
+  is altered by this correction.

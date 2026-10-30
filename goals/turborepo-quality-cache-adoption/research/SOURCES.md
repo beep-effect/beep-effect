@@ -271,3 +271,30 @@ binds changed runner source bytes. Historical claims above keep their dates.
 - [Producer publication gate repair](../../turborepo-cache-trust-observability/research/producer-publication-gate-repair-checkpoint.json):
   current properties/catalog and 361-test integrations. Inventory refresh
   preserves all computation dispositions and configuration records.
+
+
+- [Current mutating-fixer source review](mutating-fixer-disposition-review.json):
+  exact current manifest/script/configuration bindings for 136 keep-fresh
+  whole-command fixers and 136 separate unfinished read-only counterparts.
+- [Actual native fixer replay control](mutating-fixer-replay-control.json):
+  stable/canary fresh, logs-only hit and cache-disabled runs in disposable
+  fixtures. A hit skipped the required write; no source or remote cache changed.
+
+
+- [Persistent service source review](persistent-service-disposition-review.json):
+  two exact Portless Next development commands remain fresh, with independently
+  bound script maps/configuration and existing unfinished build counterparts.
+  This is source review only; no service or runtime experiment was launched.
+
+
+- [Remaining mutating-fixer source review](remaining-mutating-fixer-disposition-review.json):
+  exact current script maps, manifests and effective configuration for 50
+  additional whole-command keep-fresh dispositions. This completes source
+  classification of all 186 `lint:fix` rows; their read-only counterparts and
+  every other unfinished computation retain qualification obligations.
+
+
+- [Remaining persistent-service source review](remaining-persistent-service-disposition-review.json):
+  ten additional exact Portless watcher/server commands, completing source
+  classification of all twelve configured persistent executable computations.
+  Their finite build counterparts retain independent qualification duties.

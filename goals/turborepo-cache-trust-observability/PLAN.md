@@ -519,3 +519,60 @@ needs actual execution. The pure join now checks the whole independently reviewe
 closure before selecting its upload task. It has not yet been connected to the
 owned supervisor or actual backend-result capture. No protected publication,
 signed rollout, task qualification or representative window is claimed.
+
+
+### Private socket component, 2026-10-29
+
+The existing conformance observer now supports an owner-only Unix endpoint
+through the source-only test facade. The unchanged TCP wrapper shares its
+handler. Actual runtime controls cover upstream policy, exact bytes and tags,
+request-limit refusal, safe capture, permissions and scope cleanup. Focused
+Node/Bun tests, package lint/check and the complete package audit plus Docgen
+pass; see [the component checkpoint](research/private-socket-checkpoint.json).
+Protected producer integration, actual adapter capture, immutable publication,
+current qualification, rollout and representative windows remain unfinished.
+
+
+### Current private socket coverage checkpoint
+
+After replaying only the owned unpublished commits onto landed PR #2359, all
+four original component files retain their exact hashes and current focused
+Node/Bun 48-test integration plus package lint/check pass. A new test-only
+constructor-control file closes the Node coverage gap: 51 cases pass per runtime,
+all four fixture metrics are 100% in V8/Istanbul, and proxy metrics exceed the
+committed floors. Two intended-failure source removals restore exactly. The
+earlier default full package replay retains its original four-file scope;
+fresh combined-source final and hosted acceptance remain required.
+
+
+### Combined prerequisite checkpoint
+
+PR2367 now integrates the retained Docgen and runtime prerequisite sources and
+the private storage repair. Original PR2361/2363 branches and proof are retained.
+`research/private-pilot-storage-checkpoint.json` binds the current 76-test runtime
+checks, lint/type check, intended guard-removal failure and isolated imports.
+Complete default package, final, hosted and native/deployed acceptance are still
+required. No phase or full-goal criterion is completed by this component work.
+
+
+### Private orchestration cleanup regression
+
+The complete combined package audit and hosted Property Laws/unit shard found
+15 introduced assertions still reading the removed source-contained experiment
+directory. The repaired tests observe actual private allocations, verify their
+permissions and location while live, then prove cleanup after success and
+faults. Both runtime integrations pass 101 tests in 7 files; removing the owning
+cleanup scope fails the intended assertion and source bytes restore exactly.
+See [the repair checkpoint](research/private-orchestration-cleanup-checkpoint.json).
+Fresh complete package, final and hosted acceptance remain required.
+
+
+### Private storage refusal coverage repair
+
+Hosted coverage identified the unexecuted containment refusal in Cache.pilot.
+The new source-visible storage fixture checks the exact pre-task refusal and
+cleanup. Both 26-test runtime suites and quick package checks pass; removing the
+production guard fails the intended case and restores exactly. The canonical
+coverage diagnostic fills the reported gap while retaining every floor. See
+[the checkpoint](research/private-storage-refusal-coverage-checkpoint.json).
+Fresh current-head full final and hosted acceptance remain required.

@@ -177,3 +177,45 @@ records and the unchanged qualification ledger. Input-count/digest observations
 are refreshed for this checkout; no semantic review or cache flag is promoted.
 Closed producer integration and actual current-computation qualification remain
 required before adopting signed reuse.
+
+
+### Current whole-command fixer review: 2026-10-29
+
+The source-bound review in `research/mutating-fixer-disposition-review.json`
+resolves 136 existing source-mutating fixer boundaries as keep-fresh, with
+unchanged script-map digests and cache-disabled configuration. Each has a
+separate read-only lint counterpart whose qualification/adoption stays open.
+Six actual synthetic stable/canary native runs demonstrate the lost mutation
+on a logs-only hit and the successful cache-disabled control. At that checkpoint, the other 2,435 population dispositions, current feature
+review and all acceptance criteria remained incomplete. No cache flags or qualification ledger entries changed.
+
+
+### Current persistent service review
+
+`research/persistent-service-disposition-review.json` resolves the two directly
+declared OIP Web/Todox development services as keep-fresh. Their app/dependency
+builds remain separate unfinished computations. There are now 138 source-reviewed
+whole-command keep-fresh dispositions and 2,433 remaining disposition gaps. No
+service was launched; all feature/runtime qualification and full-goal acceptance
+requirements remain open.
+
+
+### Complete current lint-fixer source classification: 2026-10-29
+
+The additional source-bound review in
+`research/remaining-mutating-fixer-disposition-review.json` covers the 50
+remaining `lint:fix` rows, including Storybook's cross-workspace source writes.
+All 186 current lint-fixer commands remain fresh, as do the two already
+reviewed persistent services. There are 2,383 final-disposition gaps; the 186
+separate read-only lint computations remain unqualified. This is source
+classification with unchanged configuration, not runtime or adoption proof.
+
+
+### Complete current persistent-service classification: 2026-10-29
+
+`research/remaining-persistent-service-disposition-review.json` reviews ten
+more exact Portless commands: Bun watchers, Vite development, Storybook
+development and Vite preview. All twelve configured persistent executable
+computations now have source-bound keep-fresh dispositions. Finite build
+counterparts remain unfinished. The current total is 198 reviewed fresh
+boundaries with 2,373 final-disposition gaps; no service was launched.

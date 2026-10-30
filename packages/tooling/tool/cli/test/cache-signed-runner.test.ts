@@ -107,7 +107,7 @@ const fixture = Effect.fn("SignedRunnerTest.fixture")(function* (fault: typeof F
   vi.spyOn(Evidence, "hashCacheExperimentExecutable").mockReturnValue(
     Effect.succeed(fault === "pin" ? Sha256Hex.make(Str.repeat(64)("b")) : digest)
   );
-  const process = vi.spyOn(CacheRuntimeProcess, "runCapturedStreams").mockImplementation(
+  const capturedProcess = vi.spyOn(CacheRuntimeProcess, "runCapturedStreams").mockImplementation(
     Effect.fn("SignedRunnerTest.process")(function* (options) {
       if (options.command === "/usr/bin/git")
         return CacheRuntimeProcess.CapturedStreams.make({
@@ -118,12 +118,20 @@ const fixture = Effect.fn("SignedRunnerTest.fixture")(function* (fault: typeof F
         });
       expect(options.command).toBe("/usr/bin/bwrap");
       expect(options.extendEnv).toBe(false);
-      expect(options.args).toContain("--unshare-all");
-      expect(options.args).not.toContain(issuer);
-      const worker = O.getOrThrow(A.last(options.args ?? []));
+      const args = O.getOrThrow(O.fromUndefinedOr(options.args));
+      expect(args).toContain("--unshare-all");
+      expect(args).not.toContain(issuer);
+      expect(options.env?.PATH).toBe("/tools:/usr/bin");
+      expect(A.window(args, 3)).toContainEqual(["--ro-bind", yield* fs.realPath(process.execPath), "/tools/bun"]);
+      expect(A.window(args, 3)).toContainEqual(["--ro-bind", tool, "/tools/node"]);
+      const worker = O.getOrThrow(A.last(args));
       const directory = path.dirname(worker);
+      expect((yield* fs.stat(directory)).mode & 0o777).toBe(0o700);
+      expect(Str.startsWith(`${root}/`)(directory)).toBe(false);
+      expect(Str.startsWith(`${sourceRoot}/`)(directory)).toBe(false);
+      expect(yield* fs.readLink(path.join(directory, "node_modules"))).toBe(path.join(root, "node_modules"));
       const config = `--config=${path.join(directory, "bunfig.toml")}`;
-      expect(options.args).toContain(config);
+      expect(args).toContain(config);
       expect(yield* fs.readFileString(path.join(directory, "bunfig.toml"))).toBe("");
       expect(yield* fs.readFileString(worker)).toContain("runCacheSignedPilotWorker");
       const protect = (pair: (typeof signedPilotInput.pairs)[number]) => ({
@@ -156,7 +164,7 @@ const fixture = Effect.fn("SignedRunnerTest.fixture")(function* (fault: typeof F
       });
     }, Effect.orDie)
   );
-  return { root, issuer, request, admission, process };
+  return { root, issuer, request, admission, process: capturedProcess };
 });
 
 it.layer(
@@ -181,6 +189,13 @@ it.layer(
       }
       expect(admission).toHaveBeenCalledTimes(2);
       expect(process).toHaveBeenCalledTimes(4);
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      for (const [options] of process.mock.calls) {
+        if (options.command !== "/usr/bin/bwrap") continue;
+        const worker = O.getOrThrow(A.last(options.args ?? []));
+        expect(yield* fs.exists(path.dirname(worker))).toBe(false);
+      }
     })
   );
   it.effect.prop(
@@ -218,6 +233,29 @@ it.layer(
         onFailure: (error) => expect(error.message).toContain("Linux x64"),
       });
       expect(captured).not.toHaveBeenCalled();
+    })
+  );
+  it.effect("refuses a private storage alias inside a source mount before writing the request", () =>
+    Effect.gen(function* () {
+      const { root, request, process } = yield* fixture("none");
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const alias = path.join(root, "private-storage-alias");
+      yield* fs.makeDirectory(alias);
+      const result = yield* runCacheSignedPilotExperiment(root, request).pipe(
+        Effect.provideService(FileSystem.FileSystem, {
+          ...fs,
+          realPath: (file) =>
+            Str.startsWith("/tmp/beep-cache-supervisor-")(file) ? Effect.succeed(alias) : fs.realPath(file),
+        }),
+        Effect.result
+      );
+      Result.match(result, {
+        onSuccess: () => expect.fail("Supervisor accepted a source-visible private directory"),
+        onFailure: (error) => expect(error.message).toContain("Private supervisor storage must remain outside"),
+      });
+      expect(yield* fs.exists(path.join(alias, "request.json"))).toBe(false);
+      expect(process).toHaveBeenCalledTimes(1);
     })
   );
   it.effect("refuses issuer material inside a read-only input mount before starting the worker", () =>
