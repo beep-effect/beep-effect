@@ -139,7 +139,24 @@
       "current normal-source stable/canary native matrix and repaired confinement",
       "pinned actual adapter/grant proof and protected immutable producer publication",
       "signed trial credential handoff, rotation, rollback, and representative windows"
-    ]
+    ],
+    "actualPrivateStorageImports": {
+      "schemaVersion": "cache-private-storage-import-probe/v1",
+      "recordedAt": "2026-10-30T00:01:29.053746+00:00",
+      "sourceRevision": "eaad669d575b18696049f67faf30841bc6898128",
+      "scope": "Actual bwrap/Bun load of the generated worker dependency and Cache module imports from private external storage; no Turbo execution, credentials, networking, R2 or signing activation",
+      "exit": 0,
+      "observed": {
+        "fixtureImports": true,
+        "requestImported": true,
+        "workerImported": true
+      },
+      "stdoutSha256": "be41a09c0d481d08b78630b38a02cfc3b78bfd8f5ad4024c6b6fea3d4553cc10",
+      "stderrBytes": 0,
+      "boundedSeconds": 60,
+      "workerEnvironmentNames": ["CI", "HOME", "NO_COLOR", "PATH"],
+      "moduleSourceSha256": "8f8eefcba55057ce3b5d5426b0617c37a23997ccaaa0f75af7cb8626e3e2ece5"
+    }
   },
   "activePosture": {
     "ordinaryR2": "unchanged",
