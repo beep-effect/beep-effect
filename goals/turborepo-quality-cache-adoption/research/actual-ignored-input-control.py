@@ -10,10 +10,20 @@ import sys
 import tempfile
 
 if sys.flags.optimize:
-    print("Ignored-input verification requires Python assertions; optimized execution is refused.")
+    print(
+        "Ignored-input verification requires Python assertions; optimized execution is refused."
+    )
     raise SystemExit(64)
 
-r = pathlib.Path.cwd()
+r = pathlib.Path(__file__).resolve().parents[3]
+source_status = subprocess.check_output(["git", "status", "--porcelain"], cwd=r)
+source_revision = subprocess.check_output(
+    ["git", "rev-parse", "HEAD"], cwd=r, text=True
+).strip()
+configuration_source = {
+    name: hashlib.sha256((r / name).read_bytes()).hexdigest()
+    for name in ("turbo.json", "package.json", "bun.lock", ".gitignore")
+}
 base = pathlib.Path.home() / ".cache/beep/turbo-cache-lab/clients"
 env = {k: os.environ[k] for k in ("HOME", "PATH")}
 env.update(
@@ -124,6 +134,11 @@ finally:
             pass
 out = r / ".beep/producer-upload/actual-ignored-input-observation.json"
 out.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+assert subprocess.check_output(["git", "status", "--porcelain"], cwd=r) == source_status
+assert all(
+    hashlib.sha256((r / name).read_bytes()).hexdigest() == digest
+    for name, digest in configuration_source.items()
+)
 out.write_text(
     json.dumps(
         {
@@ -133,6 +148,19 @@ out.write_text(
             "observations": rows,
             "remoteUse": False,
             "taskExecution": False,
+            "sourceRevision": source_revision,
+            "sourceWorkingTree": {
+                "statusEntries": len(source_status.splitlines()),
+                "statusUnchanged": True,
+                "configurationUnchanged": True,
+            },
+            "configurationSourceSha256": configuration_source,
+            "driver": {
+                "path": pathlib.Path(__file__).resolve().relative_to(r).as_posix(),
+                "sha256": hashlib.sha256(
+                    pathlib.Path(__file__).read_bytes()
+                ).hexdigest(),
+            },
         },
         indent=2,
     )

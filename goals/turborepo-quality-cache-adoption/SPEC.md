@@ -315,6 +315,45 @@ review is `research/current-runtime-baseline-review.md`.
   the documentation wording; no scheduler capacity, proof floor or cache flag
   is altered by this correction.
 
+
+### Go workspace discovery applicability, 2026-10-30
+
+- Retain the disabled Go workspace flag. The accepted tree has no root go.work,
+  Go modules or Go source, and none of its tracked manifest scripts directly
+  invokes the enumerated Go build/module commands. No computation or graph
+  edge in this repository can benefit from this discovery feature today.
+- Record this feature as accepted-not-applicable with its exact source and
+  client identities. Canary documentation absence does not establish runtime
+  non-support. Existing Cargo and Python consumers keep their separate reviews.
+- Reopen when a Go consumer or discovery-contract change appears. Require
+  exact-client positive/negative evidence before any proposed activation.
+  Reversal sets this review back to pending; it changes no runtime setting.
+
+
+### Exact-native future-flag availability observations, 2026-10-30
+
+- Add isolated configuration observations for every schema-listed future flag
+  on each exact pinned native client. Set one flag false/true per case, keep
+  cache local/read-only, and use dry-run with a command that would leave a
+  marker and exit 37 if accidentally executed. Require both baseline acceptance
+  and an unknown-key refusal control on each client.
+- All 56 flag cases parse on these pins; both unknown controls refuse and no
+  sentinel executes. This proves the observed configuration boundary only.
+  It grants no feature semantics, task qualification, production safety or
+  performance claim. Applicable features still need their complete regressions.
+- Retain the recorded observations if later semantic cases fail. Reverse the
+  matrix annotation by removing its observation links; no runtime setting changes.
+
+### Constrained publication replay, 2026-10-30
+
+- Use the existing hosted escape after the generator-repair publisher spends
+  more than thirteen minutes in admission and local gates. Cancel that owned
+  publisher, retain the scoped native proofs, push the completed repair wave
+  and let current hosted checks provide the broad proof.
+- The interrupted publisher is not a passing local proof. Keep the PR in draft
+  until its current content-final requirements are met; preserve all existing
+  acceptance and review gates. Reversal is an ordinary repair/revert PR.
+
 ### Attempt and publication identities, 2026-10-30
 
 - Preserve the attempt's starting head, resolved source and diff fingerprint.
@@ -344,6 +383,67 @@ review is `research/current-runtime-baseline-review.md`.
 - Reverse through an ordinary repair/revert PR; keep historical attempt facts.
 
 
+### Task descriptions feature disposition, 2026-10-30
+
+- Retain the current absence of optional task descriptions. The current canonical
+  census covers 190 workspaces and 22 Turbo configuration files; none of 101
+  explicit task definitions declares this field. This feature supplies human
+  metadata, not an execution or caching benefit that warrants a second source
+  of task documentation in the current repository.
+- Both pinned native clients exclude description from resolved task definitions
+  while including raw `turbo.json` in task inputs. Assert addition/edit misses and
+  exact earlier-hash reuse after removal. Never exclude a real configuration
+  input merely to make a documentation edit hit.
+- Reopen this current-tree decision for a concrete task-inspection/UI consumer
+  with reviewed maintenance and invalidation costs. This is a final no-change
+  feature decision, not a qualification exception or a deferred eligible task.
+  All computation, trust, hosted status and observation requirements remain.
+
+### Native task-selection semantics, 2026-10-30
+
+- Retain a bounded native selection driver beside the existing input and
+  availability drivers. The existing entrypoint attachment owner establishes
+  source identity, not this runtime behavior; do not add another runtime owner
+  or qualification state store. Use the exact two pins, finite environments,
+  offline fixture setup, local-only execution and explicit process budgets.
+- Compare strict selection false/true without changing the three fixed flags.
+  Assert transit preservation, explicit missing tasks, graph-only requests,
+  empty selection, filter refusals and actual native execution records. A zero
+  native exit alone must never become successful selected-task evidence.
+- Treat `--only` according to the observed named-task semantics: other-name
+  prerequisites disappear, while same-name transit dependencies remain. Keep
+  real inputs and graph closure intact in any later task qualification.
+- Preserve the current production setting and all 33 unfinished feature reviews
+  until real consumers, remaining selector families and qualified changes are
+  reviewed. Reverse this evidence addition by removing its driver/report and
+  matrix links together; no production setting changes in this component.
+
+### Nested Python workspace feature decision, 2026-10-30
+
+- Retain the absent experimental root uv discovery flag. The tracked nested
+  `beep-photo-face` project is standalone; there is no root uv workspace. Its
+  lint and test commands remain explicitly owned by the Beep CLI package audit.
+  Do not add another discovery path without a concrete consumer and measured
+  benefit, or mistake a missing root workspace for missing Python quality work.
+- This final no-change feature decision grants no task qualification. Review
+  the Python quality computations and their complete source, lockfile, tool and
+  interpreter inputs independently. Never infer whole-task reuse for external
+  person-matching or model verdicts from this discovery decision.
+- Reopen for a proposed root uv workspace, independent Python quality ownership
+  or a changed client/discovery contract. Exact-client real uv graph and
+  execution controls precede any activation. Reverse this decision by restoring
+  the feature row to pending; runtime configuration is unchanged.
+
+### Existing external-security boundary review, 2026-10-30
+
+- Preserve fresh `repo-sanity:bun-audit` execution. The current command combines
+  current vulnerability information with wall-clock expiry of OSV exceptions;
+  an unchanged tree cannot prove a current verdict. Retain its existing
+  `cache: false`, empty outputs and explicit local proof-reuse exclusion.
+- Record one final whole-task keep-fresh disposition without running the audit
+  or asserting a vulnerability outcome. Any pure parser decomposition needs
+  independent qualification and cannot replace the external verdict. Reverse
+  only the review projection to pending; existing safety behavior stays fresh.
 ### Markdown test-resource isolation, 2026-10-30
 
 - Keep the Markdown parser unchanged and preserve the per-file 100% coverage

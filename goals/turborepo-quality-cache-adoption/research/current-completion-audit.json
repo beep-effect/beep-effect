@@ -3,7 +3,7 @@
   "goal": "turborepo-quality-cache-adoption",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "242022902b8b77a9634f171b9c5a45bb900aa1f991aea62fddc7b861399a7b97",
+  "specSha256": "a5c62133cbf7d74af84c17f3596edd067efab7d340d33a6cc809ceaa467d4b98",
   "acceptance": [
     {
       "id": "AC-01",
@@ -230,10 +230,71 @@
   "priorSpecSha256AtRemainingFixerReview": "f7fd00e00643a346a41e6f4b5f1fc3f4ca9cca07291859cf75936e70bf07a477",
   "priorSpecSha256AtRemainingServiceReview": "15cee72051ba3b06cddc0ac1c39121b79072b969be51f4688e50544573a9f95c",
   "priorSpecSha256BeforePublicationAdmissionWording": "3ce2ae7c88aa3a8d7e11fcb2eeb652b146f256fa6a7c73aa288e91b2c6180a47",
+  "priorSpecSha256AtGoApplicability": "8bd5c1c4151645d7a6829dae972793b35a3419ab0fbfef7bc49d7067a5e54bca",
+  "goWorkspaceFeatureReview": "research/go-workspace-feature-review.json",
+  "priorSpecSha256AtFutureFlagAvailability": "2a0493c5035ef207a9dc492fb27732485cf32b5d4a434dc7d376749a09a943b3",
+  "nativeFutureFlagAvailability": "research/native-future-flag-availability.json",
+  "nativeFutureFlagAvailabilityDriver": {
+    "path": "goals/turborepo-quality-cache-adoption/research/native-future-flag-availability.py",
+    "sha256": "e2e51ecc6b3a3ca2e0553a13a061ebfc9b39d6239c8d935bbdbd411296c54736",
+    "scope": "Retained driver, fresh sixty-case replay, explicit raw-report hash and owned cleanup. Syntax only; no additional feature acceptance, task qualification or production activation."
+  },
+  "retainedDriverReplays": {
+    "nativeInputControls": {
+      "path": "research/native-input-controls.json",
+      "driverSha256": "fa9da8492570fbe75c956916bfbaa22706eafee32d74ea7870f4209aa3d0fb1b",
+      "cases": 22,
+      "priorDriverSha256": "8085f81aca6de135e1f5bcbf5a4b377ad4b95616e05cf5185c3987a00b2d8694",
+      "replayedAt": "2026-10-30T19:06:18.231530+00:00",
+      "bindingGeneratedByDriver": true,
+      "sourceRevision": "91322bf96426b34daaae6d0e4c577303d1847a7a"
+    },
+    "actualIgnoredInput": {
+      "path": "research/actual-ignored-input-observation.json",
+      "driverSha256": "48f955724c7c7ea13a6802355cbd1ca98d293cabcae695d094b88263b12a8fac",
+      "clients": 2,
+      "taskExecution": false,
+      "remoteUse": false,
+      "priorDriverSha256": "098afa7cd4088e7cc68f0dd2ad08cf06698c9c5423a89ee22885d8b2e5963c82",
+      "replayedAt": "2026-10-30T12:18:46.651280+00:00",
+      "bindingGeneratedByDriver": true
+    },
+    "authority": "Fresh retained-driver observations only. No acceptance criterion or qualification transition is completed."
+  },
+  "priorSpecSha256AtConstrainedPublication": "dde95da4ebd1978da6c29a6dc151f325287648d082dcf3fc6f7dde6abd7a5e65",
+  "constrainedPublicationReplay": {
+    "publisherJob": "c38ed02e-282f-4b24-bcf9-add48135149d",
+    "publisherResult": "deliberately cancelled after more than thirteen minutes; not a local pass",
+    "scope": "Use the standing hosted escape; current full proof, hosted acceptance and review remain required."
+  },
   "priorSpecSha256AtPublishedHeadIdentity": "8bd5c1c4151645d7a6829dae972793b35a3419ab0fbfef7bc49d7067a5e54bca",
   "publicationHeadIdentityCheckpoint": "research/published-head-identity-checkpoint.json",
   "priorSpecSha256BeforePublicationRepairHostedEscape": "d1c909a293cfdecfb08dd544dc40d6f5c0af8b50add3eea31adcbd0eb1338ad4",
   "priorSpecSha256BeforeProveFirstReview": "021bfb72be90e48429519d047dbb29be25474e13f10c54827ad3e1fc7c198d58",
+  "priorSpecSha256AtTaskDescriptions": "9ee8292499806305827411bea9e4f60358810c35fa84fcd20b7e08cfd52315c0",
+  "taskDescriptionsFeatureReview": "research/task-descriptions-feature-review.json",
+  "priorSpecSha256AtSelectionSemantics": "b5cc4ff0957ff16267722927f3870301597d660b177fd639a874685f3d0ac3d8",
+  "nativeSelectionSemanticsCheckpoint": "research/selection-semantics-checkpoint.json",
+  "priorSpecSha256AtPythonWorkspaceReview": "6dd4fa867db490b4ea34c99f1b3a69c0a765ad5006543c5c19912c31e36a87b8",
+  "pythonWorkspaceFeatureReview": "research/python-workspace-feature-review.json",
+  "priorSpecSha256AtExternalSecurityReview": "3801fef11d324f035903d5d217acd045f6c161bea28ab11b0027e9a80a6c3623",
+  "externalSecurityDispositionReview": "research/external-security-disposition-review.json",
   "priorSpecSha256AtMarkdownIsolation": "c1ca04ceb9afeb4c353345ac349487ce3f03b28081a1724abe8f8eaff76903e6",
-  "markdownCoverageIsolationCheckpoint": "research/markdown-coverage-isolation-checkpoint.json"
+  "markdownCoverageIsolationCheckpoint": "research/markdown-coverage-isolation-checkpoint.json",
+  "priorSpecSha256AtAcceptedConformanceMerge": {
+    "local": "785a582f9f4407366c4884236b2c1ea7ccbb7e014c5457a1d664d79f9048a939",
+    "accepted": "242022902b8b77a9634f171b9c5a45bb900aa1f991aea62fddc7b861399a7b97"
+  },
+  "priorRetainedDriverReplayAtTaskDescriptions": {
+    "nativeInputControls": {
+      "path": "research/native-input-controls.json",
+      "driverSha256": "8085f81aca6de135e1f5bcbf5a4b377ad4b95616e05cf5185c3987a00b2d8694",
+      "cases": 18,
+      "priorDriverSha256": "89151a8ee3f5127eacc513385cf05f6cf61adbd0025931974ad71bfca3c75d85",
+      "replayedAt": "2026-10-30T12:18:45.690570+00:00",
+      "bindingGeneratedByDriver": true,
+      "sourceRevision": "6958340c791e94e88eee64d56cf2aecfbeedfa2b",
+      "pathScope": "The relative artifact path binds bytes at sourceRevision, not the current working tree."
+    }
+  }
 }
