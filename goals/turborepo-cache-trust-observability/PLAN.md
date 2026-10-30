@@ -928,3 +928,11 @@ producer now selects that capability at its own boundary; both typed warming
 examples compile again. The refined source passes the current96-case Node/Bun replay, quick checking,
 canonical metadata and the repeated exclusivity control. Its complete package
 evidence remains pending; the earlier pass retains its exact source scope.
+
+### Private-output complete package verification
+
+The current unpublished implementation passed the complete package audit and
+Docgen after its separately attributed earlyoom interruption. The checkpoint
+retains both attempts and exact source hashes. After the producer-execution
+parent accepts, replay only this lane's own commits after its recorded boundary
+and obtain fresh combined local/hosted proof; no live producer grant is implied.

@@ -76,22 +76,22 @@
       "thresholdChanges": false
     },
     "defaultPackage": {
-      "status": "incomplete-environment-interruption",
-      "sourceRevision": "f1ec51b74e51eb7da37626c4e265e3a75ac045b1",
-      "exit": 1,
-      "elapsedSeconds": 1012.575,
-      "finishedAt": "2026-10-30T23:08:46.381335+00:00",
+      "status": "passed-current-unpublished-implementation",
+      "sourceRevision": "a0c32d79e741fb3a4eb9e78851a7386fdd7a59d2",
+      "exit": 0,
+      "elapsedSeconds": 1068.313,
+      "finishedAt": "2026-10-30T23:50:20.065929+00:00",
       "audit": {
-        "exit": 143,
-        "seconds": 969.8,
-        "attribution": "System earlyoom journal records SIGTERM of this checkout's Vitest process at 23:08:04 UTC during low-memory/swap exhaustion. The audit did not complete."
+        "exit": 0,
+        "seconds": 1028.3
       },
       "docgen": {
         "exit": 0,
-        "seconds": 41.2
+        "seconds": 38.4
       },
-      "retry": "Required on unchanged implementation after active heavy proofs settle. Narrow focused passes do not substitute for this complete package audit.",
-      "sourceOrQualityThresholdsChangedForFailure": false
+      "implementationChangedForRetry": false,
+      "qualityFloorsChanged": false,
+      "scope": "Current unpublished producer implementation only; accepted-parent combined local/hosted proof and actual protected execution remain required."
     }
   },
   "limits": [
@@ -170,5 +170,23 @@
     }
   },
   "productionRuntimeOrInfrastructureChanges": false,
-  "writerServiceRefinementParent": "c99a60cb499887d072191b52efa474afe4ef278c"
+  "writerServiceRefinementParent": "c99a60cb499887d072191b52efa474afe4ef278c",
+  "priorInterruptedDefaultPackage": {
+    "status": "incomplete-environment-interruption",
+    "sourceRevision": "f1ec51b74e51eb7da37626c4e265e3a75ac045b1",
+    "exit": 1,
+    "elapsedSeconds": 1012.575,
+    "finishedAt": "2026-10-30T23:08:46.381335+00:00",
+    "audit": {
+      "exit": 143,
+      "seconds": 969.8,
+      "attribution": "System earlyoom journal records SIGTERM of this checkout's Vitest process at 23:08:04 UTC during low-memory/swap exhaustion. The audit did not complete."
+    },
+    "docgen": {
+      "exit": 0,
+      "seconds": 41.2
+    },
+    "retry": "Required on unchanged implementation after active heavy proofs settle. Narrow focused passes do not substitute for this complete package audit.",
+    "sourceOrQualityThresholdsChangedForFailure": false
+  }
 }

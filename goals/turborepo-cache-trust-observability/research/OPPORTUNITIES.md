@@ -1525,3 +1525,10 @@ in the owning producer PR; preserve it until the accepted-parent replay.
   quality floor, timeout relaxation or unrelated process termination is justified.
 - Prevention: serialize complete local package audits with other heavy proofs
   when workstation memory is pressured, and retain hosted proof authority.
+
+- Unchanged-implementation retry completed: full package verification passed in
+  1068.313 seconds, with audit 1028.3 seconds and Docgen 38.4 seconds. The
+  interrupted attempt remains preserved as exit 143; no source fix, threshold
+  change or privileged operation was used to obtain the pass. This proves the
+  current unpublished package implementation, not the future accepted-parent
+  combination or real protected producer execution.
